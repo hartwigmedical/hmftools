@@ -20,7 +20,7 @@ Genomic events are categorized in six categories and evidence is matched for eve
 For small variants (SNVs and INDELs) determined by [PURPLE](../purple/README.md) the following matching is performed:
  - If the evidence is defined on the exact variant (hotspot) then evidence is always considered applicable
  - If the variant falls within the range in which the evidence is applicable then the evidence is applicable if the variant mutation type
- passes the filter defined as part of the SERVE evidence rule.
+ passes the filter defined as part of the SERVE evidence rule and the combination of variants affecting that variant have a high driver likelihood (> 80%).
  - If a variant affects a gene for which evidence is applicable on a gene level (activation, inactivation, or any mutation), 
  then the evidence is considered applicable if the combination of variants affecting that gene have a high driver likelihood (> 80%). 
  
@@ -29,7 +29,7 @@ present in the germline already or has been acquired by the tumor somatically.
 
 #### Copy numbers
 
-Evidence on amplifications and deletions is considered applicable in case a gene has been classified as amplified or deleted by 
+Evidence on amplifications/overexpressions and deletions/underexpressions is considered applicable in case a gene has been classified as amplified or deleted by 
 [PURPLE](../purple/README.md). In addition, a deletion is assumed to inactivate a gene and hence evidence on 
 gene inactivation is considered applicable in case of a deletion. 
 
@@ -41,8 +41,8 @@ on a gene level with event either inactivation, deletion or any mutation.
 #### Fusions
 
 For fusions that are deemed reportable according to [LINX](../linx/README.md) the following matching is performed:
- - Evidence defined on a promiscuous gene level is always considered applicable if a fusion with that gene is reported either in 5' or 3' 
- position.
+ - Evidence defined on a promiscuous gene level is only considered applicable if a fusion with that gene is reported either in 5' or 3' 
+ position matching on the reported type defined in [LINX](../linx/README.md).
  - Evidence that is applicable on an exact fusion pair has to match with the actual fusion pair, and also has to match the (optional) 
  exonic range defined as a restriction on the evidence.
 
@@ -56,6 +56,18 @@ viral presence is only reported in case the virus itself is reported and has bee
 
 Evidence on signatures is matched based on the comparator and cutoff defined by the evidence rule. 
 If the evidence rule provides no comparator and cutoff, the interpretation of the algorithm producing the signature is used to match.  
+
+#### HLA
+Evidence on HLA Class type I in their germline is considered applicable when matching the HLA of the patient (2 digits). 
+
+#### Wild-types
+Evidence on wild-types matches only when the gene is considered as wild-type. Currently, all the matching wild-type evidence is set to unreportable. 
+A gene is considered as wild-type in case nothing is reported of that gene:
+- The gene is part of HMF gene panel 
+- The gene has no reported germline or somatic variants 
+- The gene has no reported copy number event 
+- The gene has no reported fusion event 
+- The gene has no reported (homozygous) disruption
 
 ## Determining whether evidence is on-label
 
@@ -121,9 +133,13 @@ rangeRank | In case of EXON or CODON, the index of the exon or codon on which th
 evidenceUrls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
 
 ## Version History and Download Links
-- (Upcoming)
-  - Support matching of HLA matching 
-  - Make distinction of amplification verus over-expression and deletion versus under-expression
+- [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.3)
+  - Support for making a distinction between amplification/overexpression and deletion/underexpression 
+  - Support the evidence matching of HLA Class I evidence
+  - Support the evidence matching in case the gene is wild-type 
+  - Updating the matching of the codon/exon evidence only when the gene is annotated with high driver likelihood (> 80%)
+  - Improve the promiscuous fusion matching to match only the evidence of that gene if a fusion with that gene is reported either in 5' or 3'
+    position matching on the reported type defined
 - [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.2)
   - Fixed bug in hotspot matching in case everything matches except for the alt (eg V600K against V600R).
   - Add consolidation for no benefit evidence.
