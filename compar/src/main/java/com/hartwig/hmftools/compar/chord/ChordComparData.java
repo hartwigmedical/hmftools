@@ -44,6 +44,9 @@ public class ChordComparData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
+        values.add(format("%.2f", Chord.BRCA1Value()));
+        values.add(format("%.2f", Chord.BRCA2Value()));
+        values.add(format("%.2f", Chord.hrdValue()));
         values.add(format("%s", Chord.hrStatus()));
         values.add(format("%s", Chord.hrdType()));
         return values;
@@ -67,7 +70,7 @@ public class ChordComparData implements ComparableItem
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(diffs, FLD_BRCA1, Chord.BRCA1Value(), otherData.Chord.BRCA1Value(), thresholds);
-        checkDiff(diffs, FLD_BRCA1, Chord.BRCA2Value(), otherData.Chord.BRCA2Value(), thresholds);
+        checkDiff(diffs, FLD_BRCA2, Chord.BRCA2Value(), otherData.Chord.BRCA2Value(), thresholds);
         checkDiff(diffs, FLD_SCORE, Chord.hrdValue(), otherData.Chord.hrdValue(), thresholds);
         checkDiff(diffs, FLD_TYPE, Chord.hrdType(), otherData.Chord.hrdType());
         checkDiff(diffs, FLD_STATUS, Chord.hrStatus().toString(), otherData.Chord.hrStatus().toString());

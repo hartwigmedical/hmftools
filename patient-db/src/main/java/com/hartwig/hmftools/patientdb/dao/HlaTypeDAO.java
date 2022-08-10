@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.HLATYPE
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.hartwig.hmftools.common.hla.HlaTypes;
-
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 

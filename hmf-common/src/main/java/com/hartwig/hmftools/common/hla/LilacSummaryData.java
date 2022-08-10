@@ -20,7 +20,23 @@ public abstract class LilacSummaryData
     @NotNull
     public abstract List<LilacAllele> alleles();
 
+    public int somaticVariantCount()
+    {
+        return (int)alleles().stream().mapToDouble(x -> x.somaticVariantCount()).sum();
+    }
+
     private static final Logger LOGGER = LogManager.getLogger(LilacSummaryData.class);
+
+    public static LilacSummaryData read(final String basePath, final String sampleId) throws IOException
+    {
+        LilacQcData qcData = LilacQcData.read(LilacQcData.generateFilename(basePath, sampleId));
+        List<LilacAllele> alleles = LilacAllele.read(LilacAllele.generateFilename(basePath, sampleId));
+
+        return ImmutableLilacSummaryData.builder()
+                .qc(qcData.status())
+                .alleles(alleles)
+                .build();
+    }
 
     public static LilacSummaryData load(final String lilacQcCsv, final String lilacResultCsv) throws IOException
     {

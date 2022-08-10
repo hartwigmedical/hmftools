@@ -41,6 +41,11 @@ public abstract class LilacAllele {
     public abstract double somaticSynonymous();
     public abstract double somaticInframeIndel();
 
+    public double somaticVariantCount()
+    {
+        return somaticMissense() + somaticNonsenseOrFrameshift() + somaticSplice() + somaticSynonymous() + somaticInframeIndel();
+    }
+
     protected static final String DELIMITER = ",";
     private static final String FILE_EXTENSION = ".lilac.csv";
 

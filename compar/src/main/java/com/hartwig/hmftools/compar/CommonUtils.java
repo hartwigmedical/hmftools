@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.Category.FUSION;
 import static com.hartwig.hmftools.compar.Category.GERMLINE_DELETION;
 import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
+import static com.hartwig.hmftools.compar.Category.LILAC;
 import static com.hartwig.hmftools.compar.Category.PURITY;
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
@@ -19,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.compar.chord.ChordComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
+import com.hartwig.hmftools.compar.lilac.LilacComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
 import com.hartwig.hmftools.compar.purple.GermlineDeletionComparer;
@@ -64,6 +66,9 @@ public class CommonUtils
 
         if(config.Categories.containsKey(CHORD))
             comparators.add(new ChordComparer(config));
+
+        if(config.Categories.containsKey(LILAC))
+            comparators.add(new LilacComparer(config));
 
         comparators.forEach(x -> x.registerThresholds(config.Thresholds));
 
