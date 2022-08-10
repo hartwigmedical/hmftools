@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar;
 
+import static com.hartwig.hmftools.compar.Category.CHORD;
 import static com.hartwig.hmftools.compar.Category.CUPPA;
 import static com.hartwig.hmftools.compar.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.Category.DRIVER;
@@ -15,6 +16,7 @@ import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.compar.chord.ChordComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
@@ -59,6 +61,9 @@ public class CommonUtils
 
         if(config.Categories.containsKey(CUPPA))
             comparators.add(new CuppaComparer(config));
+
+        if(config.Categories.containsKey(CHORD))
+            comparators.add(new ChordComparer(config));
 
         comparators.forEach(x -> x.registerThresholds(config.Thresholds));
 

@@ -87,7 +87,7 @@ public class CuppaComparer implements ItemComparer
         }
         catch(IOException e)
         {
-            CMP_LOGGER.info("sample({}) failed to load driver data: {}", sampleId, e.toString());
+            CMP_LOGGER.info("sample({}) failed to load Cuppa data: {}", sampleId, e.toString());
         }
 
         return comparableItems;
