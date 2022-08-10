@@ -3,10 +3,8 @@ package com.hartwig.hmftools.cup.utils;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 
 import java.util.List;
-import java.util.Map;
 import java.util.StringJoiner;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.cup.common.SampleResult;
 
@@ -22,28 +20,10 @@ public final class CompareUtils
         return dataType1.equals(dataType2); // || (isGenPosDataType(dataType1) && isGenPosDataType(dataType2));
     }
 
-    /*
-    private static boolean isGenPosDataType(final String dataType)
-    {
-        return dataType.equals(GENOMIC_POSITION_SIMILARITY.toString()) || dataType.equals(GENOMIC_POSITION_PAIRWISE.toString());
-    }
-    */
-
     public static String topRefResult(final SampleResult result)
     {
-        double topValue = 0;
-        String topCancerType = "";
-
-        for(Map.Entry<String,Double> entry : result.CancerTypeValues.entrySet())
-        {
-            if(entry.getValue() > topValue)
-            {
-                topValue = entry.getValue();
-                topCancerType = entry.getKey();
-            }
-        }
-
-        return topCancerType;
+        List<String> rankedCancerTypes = CuppaDataFile.getRankedCancerTypes(result.CancerTypeValues);
+        return rankedCancerTypes.get(0);
     }
 
     public static List<String> getRankedCancerTypes(final SampleResult result)

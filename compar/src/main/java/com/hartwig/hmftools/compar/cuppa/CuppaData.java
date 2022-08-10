@@ -27,7 +27,7 @@ public class CuppaData implements ComparableItem
     {
         ClassifierResult = result;
 
-        mKey = result.Classifier.toString();
+        mKey = result.DataType.toString();
     }
 
     @Override
@@ -55,7 +55,7 @@ public class CuppaData implements ComparableItem
     public boolean matches(final ComparableItem other)
     {
         final CuppaData otherCuppaData = (CuppaData)other;
-        return otherCuppaData.ClassifierResult.Classifier == ClassifierResult.Classifier;
+        return otherCuppaData.ClassifierResult.DataType.equals(ClassifierResult.DataType);
     }
 
     @Override
@@ -71,5 +71,11 @@ public class CuppaData implements ComparableItem
         checkDiff(diffs, FLD_LIKELIHOOD, ClassifierResult.TopRefCancerValue, otherCuppaData.ClassifierResult.TopRefCancerValue, thresholds);
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
+    }
+
+    public String toString()
+    {
+        return format("type(%s) top(cancer=%s value=%.3f)",
+            ClassifierResult.DataType, ClassifierResult.TopRefCancerType, ClassifierResult.TopRefCancerValue);
     }
 }

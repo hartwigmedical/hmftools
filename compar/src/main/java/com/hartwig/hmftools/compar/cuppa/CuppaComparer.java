@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.cuppa;
 
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENDER;
 import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.getRankedCancerTypes;
 import static com.hartwig.hmftools.compar.Category.CUPPA;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
@@ -72,7 +73,7 @@ public class CuppaComparer implements ItemComparer
 
             for(CuppaDataFile cuppaData : cuppaDataList)
             {
-                if(cuppaData.Result != ResultType.CLASSIFIER)
+                if(cuppaData.Result != ResultType.CLASSIFIER || cuppaData.DataType.equals(GENDER.toString()))
                     continue;
 
                 if(cuppaData.CancerTypeValues.isEmpty())
@@ -81,9 +82,7 @@ public class CuppaComparer implements ItemComparer
                 List<String> rankedCancerTypes = getRankedCancerTypes(cuppaData.CancerTypeValues);
                 String topRefCancerType = rankedCancerTypes.get(0);
                 double topCancerValue = cuppaData.CancerTypeValues.get(topRefCancerType);
-                ClassifierType classifierType = ClassifierType.fromString(cuppaData.DataType);
-
-                comparableItems.add(new CuppaData(new ClassifierData(classifierType, topRefCancerType, topCancerValue)));
+                comparableItems.add(new CuppaData(new ClassifierData(cuppaData.DataType, topRefCancerType, topCancerValue)));
             }
         }
         catch(IOException e)

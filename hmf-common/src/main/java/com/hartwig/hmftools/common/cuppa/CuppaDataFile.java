@@ -2,7 +2,15 @@ package com.hartwig.hmftools.common.cuppa;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.cuppa.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.FEATURE;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.GENE_EXP;
+import static com.hartwig.hmftools.common.cuppa.CategoryType.SNV;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.ALT_SJ_COHORT;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.EXPRESSION_PAIRWISE;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENOMIC_POSITION_COHORT;
+import static com.hartwig.hmftools.common.cuppa.ClassifierType.SNV_96_PAIRWISE;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.BufferedReader;
@@ -35,6 +43,11 @@ public class CuppaDataFile
     public static final String FLD_REF_VALUE = "RefValue";
 
     public static final String CUPPA_DATAFILE = ".cup.data.csv";
+
+    // support for pre-1.7
+    public static final String OLD_CATEGORY_CLASSIFIER = "CLASSIFIER";
+    public static final String OLD_DATATYPE_SNV_PAIRWISE = "SNV_96_PAIRWISE_SIMILARITY";
+    public static final String OLD_DATATYPE_GEN_POS_SIMILARITY = "GENOMIC_POSITION_SIMILARITY";
 
     public CuppaDataFile(
             final CategoryType category, final ResultType resultType,
@@ -104,11 +117,26 @@ public class CuppaDataFile
 
             String categoryStr = values[categoryIndex];
 
-            CategoryType category = CategoryType.valueOf(categoryStr);
-            ResultType resultType = ResultType.valueOf(values[resultTypeIndex]);
+            CategoryType category;
+            ResultType resultType;
 
-            if(category == COMBINED)
+            if(isOldCategoryClassifierType(categoryStr)) // support for pre-1.7
+            {
+                dataType = mapOldDataType(dataType);
                 resultType = ResultType.CLASSIFIER;
+                category = mapOldCategoryType(dataType);
+
+                if(category == null)
+                    continue;
+            }
+            else
+            {
+                category = CategoryType.valueOf(categoryStr);
+                resultType = ResultType.valueOf(values[resultTypeIndex]);
+
+                if(category == COMBINED)
+                    resultType = ResultType.CLASSIFIER;
+            }
 
             String value = values[valueIndex];
             String refCancerType = values[refCancerTypeIndex];
@@ -124,6 +152,38 @@ public class CuppaDataFile
         }
 
         return results;
+    }
+
+    public static boolean isOldCategoryClassifierType(final String categoryStr)
+    {
+        return categoryStr.equals(OLD_CATEGORY_CLASSIFIER);
+    }
+
+    public static String mapOldDataType(final String dataType)
+    {
+        if(dataType.equals(OLD_DATATYPE_SNV_PAIRWISE))
+            return SNV_96_PAIRWISE.toString();
+        else if(dataType.equals(OLD_DATATYPE_GEN_POS_SIMILARITY))
+            return GENOMIC_POSITION_COHORT.toString();
+        else
+            return dataType;
+    }
+
+    public static CategoryType mapOldCategoryType(final String dataType)
+    {
+        // translate old types:
+        if(dataType.equals(SNV_96_PAIRWISE.toString()))
+            return SNV;
+        else if(dataType.equals(GENOMIC_POSITION_COHORT.toString()))
+            return SNV;
+        else if(dataType.equals(ClassifierType.FEATURE.toString()))
+            return FEATURE;
+        else if(dataType.equals(ALT_SJ_COHORT.toString()))
+            return ALT_SJ;
+        else if(dataType.equals(EXPRESSION_PAIRWISE.toString()))
+            return GENE_EXP;
+        else
+            return null;
     }
 
     public static List<String> getRankedCancerTypes(final Map<String,Double> cancerTypeValues)

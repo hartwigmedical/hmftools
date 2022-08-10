@@ -8,32 +8,24 @@ import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_REF_CANCER_TYP
 import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_REF_VALUE;
 import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_RESULT_TYPE;
 import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_VALUE;
+import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.isOldCategoryClassifierType;
+import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.mapOldCategoryType;
+import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.mapOldDataType;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.common.cuppa.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
-import static com.hartwig.hmftools.common.cuppa.CategoryType.FEATURE;
-import static com.hartwig.hmftools.common.cuppa.CategoryType.GENE_EXP;
-import static com.hartwig.hmftools.common.cuppa.CategoryType.SNV;
-import static com.hartwig.hmftools.common.cuppa.ClassifierType.ALT_SJ_COHORT;
-import static com.hartwig.hmftools.common.cuppa.ClassifierType.EXPRESSION_PAIRWISE;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENDER;
-import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENOMIC_POSITION_COHORT;
-import static com.hartwig.hmftools.common.cuppa.ClassifierType.SNV_96_PAIRWISE;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
-import com.hartwig.hmftools.common.cuppa.ClassifierType;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.ResultType;
 
@@ -118,27 +110,13 @@ public class SampleResult
 
                 CategoryType category;
 
-                if(categoryStr.equals("CLASSIFIER")) // support for pre-1.7
+                if(isOldCategoryClassifierType(categoryStr)) // support for pre-1.7
                 {
+                    dataType = mapOldDataType(dataType);
                     resultType = ResultType.CLASSIFIER;
+                    category = mapOldCategoryType(dataType);
 
-                    if(dataType.equals("SNV_96_PAIRWISE_SIMILARITY"))
-                        dataType = SNV_96_PAIRWISE.toString();
-                    else if(dataType.equals("GENOMIC_POSITION_SIMILARITY"))
-                        dataType = GENOMIC_POSITION_COHORT.toString();
-
-                    // translate old types:
-                    if(dataType.equals(SNV_96_PAIRWISE.toString()))
-                        category = SNV;
-                    else if(dataType.equals(GENOMIC_POSITION_COHORT.toString()))
-                        category = SNV;
-                    else if(dataType.equals(ClassifierType.FEATURE.toString()))
-                        category = FEATURE;
-                    else if(dataType.equals(ALT_SJ_COHORT.toString()))
-                        category = ALT_SJ;
-                    else if(dataType.equals(EXPRESSION_PAIRWISE.toString()))
-                        category = GENE_EXP;
-                    else
+                    if(category == null)
                         continue;
                 }
                 else

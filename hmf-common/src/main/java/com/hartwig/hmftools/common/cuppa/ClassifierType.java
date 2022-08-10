@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.common.cuppa;
 
+import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.OLD_DATATYPE_GEN_POS_SIMILARITY;
+import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.OLD_DATATYPE_SNV_PAIRWISE;
+import static com.hartwig.hmftools.common.cuppa.DataTypes.DATA_TYPE_COMBINED;
+import static com.hartwig.hmftools.common.cuppa.DataTypes.DATA_TYPE_DNA_COMBINED;
+import static com.hartwig.hmftools.common.cuppa.DataTypes.DATA_TYPE_RNA_COMBINED;
+
 public enum ClassifierType
 {
     SNV_96_PAIRWISE,
@@ -29,11 +35,14 @@ public enum ClassifierType
 
     public static ClassifierType fromString(final String classiferType)
     {
-        if(classiferType.equals("SNV_96_PAIRWISE_SIMILARITY")) // backwards compatibility (earlier than 1.7)
+        if(classiferType.equals(OLD_DATATYPE_SNV_PAIRWISE)) // backwards compatibility (earlier than 1.7)
             return SNV_96_PAIRWISE;
 
-        if(classiferType.equals("GENOMIC_POSITION_SIMILARITY")) // as above
+        if(classiferType.equals(OLD_DATATYPE_GEN_POS_SIMILARITY)) // as above
             return GENOMIC_POSITION_COHORT;
+
+        if(classiferType.equals(DATA_TYPE_DNA_COMBINED) || classiferType.equals(DATA_TYPE_RNA_COMBINED) || classiferType.equals(DATA_TYPE_COMBINED))
+            return COMBINED;
 
         return ClassifierType.valueOf(classiferType);
     }
