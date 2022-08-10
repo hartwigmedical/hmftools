@@ -10,6 +10,7 @@ SERVE harmonizes various sources of evidence into a single unified model that ca
 * [What is generated as final SERVE output?](#outputs)
 * [How are genomic events extracted from the source knowledgebases?](#extraction-of-genomic-events-and-tumor-characteristics-from-knowledgebases)
 * [What is done in terms of curation and harmonization?](#curation-and-harmonization-of-individual-knowledgebases)
+* [What is done in terms of curation and harmonization of relevant treatment approaches?](#Relevant-treatment-approaches-of-the-evidence)
 * [How does SERVE deal with multiple reference genome versions?](#handling-of-multiple-reference-genome-versions)
 * [How does everything come together?](#overview-of-the-serve-algorithm)
 * [Version history and download links](#version-history-and-download-links)
@@ -47,6 +48,8 @@ they are compliant with the usage of the data itself.
 
 SERVE generates clinical evidence in the following datamodel:
  - Treatment (name of trial or drug(s))
+ - Relevant treatment approaches of the knowledgebase (the drug classes of the treatment related to the event)
+ - Curated treatment approaches of the knowledgebase (the curated drug classes of the treatment related to the event)
  - Cancer type (annotated with DOID) for which the treatment is considered on-label.
  - Blacklist cancer types (annotated with DOID) that should be children of the main cancer type and are used for blacklisting 
  specific types of the main cancer type.
@@ -166,13 +169,15 @@ ANY | Any mutation is considered valid for this range.
 ### Gene level event determination
 
 For evidence that is applicable when a gene-wide level event has happened, the type of event required to match evidence to a 
-mutation is derived from the knowledgebase event. In case a knowledgebase provides insufficient details to make a decision, the Hartwig 
-driver catalog is used to determine what event qualifies for the evidence. 
+mutation is derived from the knowledgebase event and no further interpretation is done. In case a knowledgebase provides insufficient 
+details to make a decision (eg. mutant), we annotate to ANY_MUTATION. 
 
 Gene level event  | Description
 ---|---
 AMPLIFICATION  | Evidence is applicable when the gene has been amplified.
+OVEREXPRESSION | Evidence is applicable when the gene has been amplified.
 DELETION | Evidence is applicable when the gene has been completely deleted from the genome.
+UNDEREXPRESSION | Evidence is applicable when the gene has been completely deleted from the genome.
 ACTIVATION | Evidence is applicable when a gene has been activated. Downstream algorithms are expected to interpret this.
 INACTIVATION | Evidence is applicable when a gene has been inactivated. Downstream algorithms are expected to interpret this.
 ANY_MUTATION | SERVE does not restrict this evidence based on the type of mutation and considers every type of mutation applicable for this evidence.
@@ -206,8 +211,7 @@ EBV_POSITIVE | Evidence is applicable when viral presence of some form of EBV ha
 
 ### Presence of HLA alleles 
 
-Every patient has a specific HLA Class type I in their germline. If this class matches to HLA class type I which is derived from the 
-knowledgebase this patient is applicable for the evidence.
+For evidence on HLA Class Type I, no further interpretation is done. Only the exact HLA type should be known in 2 digits.
 
 ## Curation and harmonization of individual knowledgebases
 
@@ -310,7 +314,17 @@ FILTER_EXACT_VARIANT_FULLNAME  | Any specific variant can be removed through thi
 FILTER_ALL_EVIDENCE_ON_GENE  | Is primarily used to remove evidence on genes which are simply not modeled correctly in Hartwig's gene model and hence can't be mapped properly
 FILTER_EVIDENCE_FOR_EXONS_ON_GENE  | Some genes may have evidence on specific exons which don't exist on the ensembl transcript used by Hartwig
 FILTER_SECONDARY_GENE_WHEN_FUSION_LEG  | Usage of this filter is similar to the use case for removing all evidence on genes. 
-    
+
+## Relevant treatment approaches of the evidence
+External knowledgebases can be annotate evidence (treatment/event) with the relevant treatment approach. For making this usuable downstream, this 
+is curated for harmonize the knowledge. The following filters can be configured: 
+
+Filter  | Description
+---|---
+TREATMENT_APPROACH_CURATION  | The treatment approaches which should curated for downstream usages
+DIRECTION_TREATMENT_APPROACH_CURATION_IGNORE | The treatment approach wouldn't be used because we didn't use the treatment approach for this direction 
+EVENT_TREATMENT_APPROACH_CURATION_IGNORE | The treatment approach wouldn't be used because event is ignored for further interpretation 
+
 ## Handling of multiple reference genome versions
  
 External knowledgebases generally define their knowledge for one specific reference genome version (v37 or v38). SERVE merges knowledgebases 
@@ -370,9 +384,11 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
-- (Upcoming)
-  - Make distinction of amplification verus over-expression and deletion versus under-expression
-  - Add drug classes of drugs 
+- [1.12](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.12)
+  - Support for generating a mySQL database
+  - Support for adding the relevant treatment approaches to the output (which contains only drug classes when the source is CKB)
+  - Support the distinction of amplification/overexpression and deletion/underexpression
+  - When the knowledgebase defined evidence related to mutant, this evidence isn't anymore interpret as inactivation/activated related to TSG/ONCO gene
 - [1.11](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.11)
   - Use correct blacklisted tumor locations for solid tumors 
   - Update bug in mutation type filter for exon insertions and deletions
