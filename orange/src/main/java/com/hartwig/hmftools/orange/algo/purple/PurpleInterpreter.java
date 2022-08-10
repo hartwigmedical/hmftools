@@ -2,7 +2,7 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleData;
@@ -23,7 +23,7 @@ public final class PurpleInterpreter {
 
     @NotNull
     public static PurpleInterpretedData interpret(@NotNull PurpleData purple, @NotNull List<ProtectEvidence> evidences,
-            @NotNull List<DriverGene> driverGenes, @NotNull ChordAnalysis chord) {
+            @NotNull List<DriverGene> driverGenes, @NotNull ChordData chord) {
         List<ReportableVariant> additionalSuspectSomaticVariants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(purple.allSomaticVariants(),
                         purple.reportableSomaticVariants(),

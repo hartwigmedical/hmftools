@@ -3,8 +3,8 @@ package com.hartwig.hmftools.rose;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.chord.ChordDataLoader;
+import com.hartwig.hmftools.common.chord.ChordData;
+import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
@@ -124,7 +124,7 @@ public class RoseAlgo {
     }
 
     @NotNull
-    private static ChordAnalysis loadChordAnalysis(@NotNull RoseConfig config) throws IOException {
-        return ChordDataLoader.load(config.chordPredictionTxt());
+    private static ChordData loadChordAnalysis(@NotNull RoseConfig config) throws IOException {
+        return ChordDataFile.read(config.chordPredictionTxt(), true);
     }
 }

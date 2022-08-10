@@ -2,7 +2,7 @@ package com.hartwig.hmftools.rose;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -36,7 +36,7 @@ public abstract class RoseData {
     public abstract VirusInterpreterData virusInterpreter();
 
     @NotNull
-    public abstract ChordAnalysis chord();
+    public abstract ChordData chord();
 
     @NotNull
     public abstract MolecularTissueOrigin molecularTissueOrigin();

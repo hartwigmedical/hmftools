@@ -9,8 +9,8 @@ public final class ChordTestFactory {
     }
 
     @NotNull
-    public static ChordAnalysis createMinimalTestChordAnalysis() {
-        return ImmutableChordAnalysis.builder()
+    public static ChordData createMinimalTestChordAnalysis() {
+        return ImmutableChordData.builder()
                 .BRCA1Value(0D)
                 .BRCA2Value(0D)
                 .hrdValue(0D)

@@ -7,8 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.chord.ChordFileReader;
+import com.hartwig.hmftools.common.chord.ChordData;
+import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -45,8 +45,8 @@ public class LoadChordData {
             DatabaseAccess dbWriter = databaseAccess(cmd);
 
             LOGGER.info("Extracting and writing chord for {}", predictionFile);
-            ChordAnalysis chordAnalysis = ChordFileReader.read(predictionFile);
-            dbWriter.writeChord(sample, chordAnalysis);
+            ChordData chordData = ChordDataFile.read(predictionFile);
+            dbWriter.writeChord(sample, chordData);
 
             LOGGER.info("Complete");
         } else {

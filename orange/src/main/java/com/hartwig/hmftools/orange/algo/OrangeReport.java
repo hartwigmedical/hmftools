@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.lilac.LilacData;
@@ -71,7 +71,7 @@ public abstract class OrangeReport {
     public abstract VirusInterpreterData virusInterpreter();
 
     @NotNull
-    public abstract ChordAnalysis chord();
+    public abstract ChordData chord();
 
     @NotNull
     public abstract CuppaData cuppa();

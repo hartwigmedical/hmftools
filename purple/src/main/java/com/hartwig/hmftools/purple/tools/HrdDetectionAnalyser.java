@@ -3,7 +3,6 @@ package com.hartwig.hmftools.purple.tools;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.containsFlag;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
@@ -16,14 +15,10 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.gene.ExonData;
-import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -90,21 +85,21 @@ public class HrdDetectionAnalyser
     {
         final List<PurpleCopyNumber> copyNumbers = mDbAccess.readCopynumbers(sampleId);
         final PurityContext purityContext = mDbAccess.readPurityContext(sampleId);
-        final ChordAnalysis chordAnalysis = mDbAccess.readChord(sampleId);
+        final ChordData chordData = mDbAccess.readChord(sampleId);
 
-        if(chordAnalysis == null || purityContext == null)
+        if(chordData == null || purityContext == null)
         {
             PPL_LOGGER.info("sample({}) invalid purity({}) or chord({}) data",
-                    sampleId, purityContext != null ? "valid" : "missing", chordAnalysis != null ? "valid" : "missing");
+                    sampleId, purityContext != null ? "valid" : "missing", chordData != null ? "valid" : "missing");
             return;
         }
 
         PPL_LOGGER.debug(format("sample(%s) ploidy(%.1f) cnRecords(%d) chord(%s %.3f)",
-                sampleId, purityContext.bestFit().ploidy(), copyNumbers.size(), chordAnalysis.hrStatus(), chordAnalysis.hrdValue()));
+                sampleId, purityContext.bestFit().ploidy(), copyNumbers.size(), chordData.hrStatus(), chordData.hrdValue()));
 
         final HrdData hrdData = mHrdDetection.calculateHrdData(copyNumbers, purityContext.bestFit().ploidy());
 
-        writeSampleData(sampleId, chordAnalysis, hrdData);
+        writeSampleData(sampleId, chordData, hrdData);
     }
 
     private BufferedWriter initialiseWriter(final String outputDir)
@@ -128,12 +123,12 @@ public class HrdDetectionAnalyser
         }
     }
 
-    private synchronized void writeSampleData(final String sampleId, final ChordAnalysis chordAnalysis, final HrdData hrdData)
+    private synchronized void writeSampleData(final String sampleId, final ChordData chordData, final HrdData hrdData)
     {
         try
         {
             mWriter.write(format("%s,%s,%.3f,%.3f,%.3f",
-                    sampleId, chordAnalysis.hrStatus(), chordAnalysis.hrdValue(), chordAnalysis.BRCA1Value(), chordAnalysis.BRCA2Value()));
+                    sampleId, chordData.hrStatus(), chordData.hrdValue(), chordData.BRCA1Value(), chordData.BRCA2Value()));
 
             mWriter.write(format(",%d,%.1f,%d,%.1f",
                     hrdData.LohSegments, hrdData.SegmentBreaks, hrdData.SegmentImbalances, hrdData.score()));

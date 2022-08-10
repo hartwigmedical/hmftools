@@ -10,7 +10,7 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
@@ -350,7 +350,7 @@ public class ConclusionAlgo {
         }
     }
 
-    public static void generateHrdConclusion(@NotNull Map<Integer, String> conclusion, @NotNull ChordAnalysis chordAnalysis,
+    public static void generateHrdConclusion(@NotNull Map<Integer, String> conclusion, @NotNull ChordData chordAnalysis,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Set<String> oncogenic,
             @NotNull Set<String> actionable, @NotNull Set<String> HRD) {
         if (chordAnalysis.hrStatus() == ChordStatus.HR_DEFICIENT) {

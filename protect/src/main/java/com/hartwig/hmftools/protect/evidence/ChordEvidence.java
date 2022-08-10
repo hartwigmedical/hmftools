@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.protect.characteristic.CharacteristicsFunctions;
@@ -31,7 +31,7 @@ public class ChordEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidence> evidence(@NotNull ChordAnalysis chordAnalysis) {
+    public List<ProtectEvidence> evidence(@NotNull ChordData chordAnalysis) {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableCharacteristic characteristic : actionableCharacteristics) {
             if (CharacteristicsFunctions.hasExplicitCutoff(characteristic)) {

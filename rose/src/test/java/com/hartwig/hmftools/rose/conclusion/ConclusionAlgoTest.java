@@ -13,10 +13,10 @@ import java.util.Set;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
-import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
+import com.hartwig.hmftools.common.chord.ImmutableChordData;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
@@ -268,7 +268,7 @@ public class ConclusionAlgoTest {
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap, "HRD", TypeAlteration.POSITIVE, "HRD", Condition.ALWAYS, "HRD");
 
-        ChordAnalysis analysis = ImmutableChordAnalysis.builder()
+        ChordData analysis = ImmutableChordData.builder()
                 .from(ChordTestFactory.createMinimalTestChordAnalysis())
                 .hrdValue(0.8)
                 .hrStatus(ChordStatus.HR_DEFICIENT)
@@ -285,7 +285,7 @@ public class ConclusionAlgoTest {
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap, "HRD", TypeAlteration.POSITIVE, "HRD", Condition.ALWAYS, "HRD");
 
-        ChordAnalysis analysis = ImmutableChordAnalysis.builder()
+        ChordData analysis = ImmutableChordData.builder()
                 .from(ChordTestFactory.createMinimalTestChordAnalysis())
                 .hrdValue(0.4)
                 .hrStatus(ChordStatus.HR_PROFICIENT)

@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
@@ -304,7 +304,7 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String hrDeficiencyString() {
-        ChordAnalysis chord = report.chord();
+        ChordData chord = report.chord();
         if (chord.hrStatus() == ChordStatus.CANNOT_BE_DETERMINED) {
             return ChordStatus.CANNOT_BE_DETERMINED.display();
         }

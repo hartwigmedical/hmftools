@@ -6,11 +6,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.chord.ChordDataLoader;
+import com.hartwig.hmftools.common.chord.ChordData;
+import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.lilac.LilacData;
 import com.hartwig.hmftools.common.lilac.LilacDataLoader;
 import com.hartwig.hmftools.common.linx.LinxData;
@@ -112,7 +111,7 @@ public class ProtectAlgo {
         PurpleData purpleData = loadPurpleData(config);
         LinxData linxData = loadLinxData(config);
         VirusInterpreterData virusInterpreterData = loadVirusInterpreterData(config);
-        ChordAnalysis chordAnalysis = ChordDataLoader.load(config.chordPredictionTxt());
+        ChordData chordAnalysis = ChordDataFile.read(config.chordPredictionTxt(), true);
         LilacData lilacData = loadLilacData(config);
 
         return determineEvidence(purpleData, linxData, virusInterpreterData, chordAnalysis, lilacData);
@@ -152,7 +151,7 @@ public class ProtectAlgo {
 
     @NotNull
     private List<ProtectEvidence> determineEvidence(@NotNull PurpleData purpleData, @NotNull LinxData linxData,
-            @NotNull VirusInterpreterData virusInterpreterData, @NotNull ChordAnalysis chordAnalysis, @NotNull LilacData lilacData) {
+            @NotNull VirusInterpreterData virusInterpreterData, @NotNull ChordData chordAnalysis, @NotNull LilacData lilacData) {
         LOGGER.info("Evidence extraction started");
         List<ProtectEvidence> variantEvidence = variantEvidenceFactory.evidence(purpleData.reportableGermlineVariants(),
                 purpleData.reportableSomaticVariants(),

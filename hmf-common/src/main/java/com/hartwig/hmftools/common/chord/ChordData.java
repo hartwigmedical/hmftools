@@ -6,7 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ChordAnalysis {
+public abstract class ChordData
+{
 
     public abstract double BRCA1Value();
 

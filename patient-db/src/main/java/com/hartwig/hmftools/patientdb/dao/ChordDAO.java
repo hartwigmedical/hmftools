@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CHORD;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITY;
 
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
+import com.hartwig.hmftools.common.chord.ImmutableChordData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -20,14 +19,14 @@ class ChordDAO {
         this.context = context;
     }
 
-    public ChordAnalysis readChord(final String sampleId)
+    public ChordData readChord(final String sampleId)
     {
         Record result = context.select().from(CHORD).where(CHORD.SAMPLEID.eq(sampleId)).fetchOne();
         if (result == null) {
             return null;
         }
 
-        return ImmutableChordAnalysis.builder()
+        return ImmutableChordData.builder()
                 .hrdValue(result.getValue(CHORD.HRD))
                 .BRCA1Value(result.getValue(CHORD.BRCA1))
                 .BRCA2Value(result.getValue(CHORD.BRCA2))
@@ -38,7 +37,7 @@ class ChordDAO {
                 .build();
     }
 
-    void writeChord(@NotNull String sample, @NotNull ChordAnalysis chordAnalysis) {
+    void writeChord(@NotNull String sample, @NotNull ChordData chordData) {
         deleteChordForSample(sample);
 
         context.insertInto(CHORD,
@@ -51,13 +50,13 @@ class ChordDAO {
                 CHORD.REMARKSHRSTATUS,
                 CHORD.REMARKSHRDTYPE)
                 .values(sample,
-                        DatabaseUtil.decimal(chordAnalysis.BRCA1Value()),
-                        DatabaseUtil.decimal(chordAnalysis.BRCA2Value()),
-                        DatabaseUtil.decimal(chordAnalysis.hrdValue()),
-                        chordAnalysis.hrStatus().toString(),
-                        chordAnalysis.hrdType(),
-                        chordAnalysis.remarksHrStatus(),
-                        chordAnalysis.remarksHrdType())
+                        DatabaseUtil.decimal(chordData.BRCA1Value()),
+                        DatabaseUtil.decimal(chordData.BRCA2Value()),
+                        DatabaseUtil.decimal(chordData.hrdValue()),
+                        chordData.hrStatus().toString(),
+                        chordData.hrdType(),
+                        chordData.remarksHrStatus(),
+                        chordData.remarksHrdType())
                 .execute();
     }
 

@@ -6,10 +6,10 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
-import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
+import com.hartwig.hmftools.common.chord.ImmutableChordData;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
@@ -44,7 +44,7 @@ public class ChordEvidenceTest {
         ChordEvidence chordEvidence =
                 new ChordEvidence(EvidenceTestFactory.create(), Lists.newArrayList(signature1, signature2, signature3));
 
-        ChordAnalysis hrDeficient = create(ChordStatus.HR_DEFICIENT, 0.5);
+        ChordData hrDeficient = create(ChordStatus.HR_DEFICIENT, 0.5);
         List<ProtectEvidence> evidence = chordEvidence.evidence(hrDeficient);
         assertEquals(1, evidence.size());
 
@@ -52,16 +52,16 @@ public class ChordEvidenceTest {
         assertTrue(evidence1.reported());
         assertEquals(ChordEvidence.HR_DEFICIENCY_EVENT, evidence1.event());
 
-        ChordAnalysis hrProficientWithHighScore = create(ChordStatus.HR_PROFICIENT, 0.85);
+        ChordData hrProficientWithHighScore = create(ChordStatus.HR_PROFICIENT, 0.85);
         assertEquals(1, chordEvidence.evidence(hrProficientWithHighScore).size());
 
-        ChordAnalysis hrProficientWithLowScore = create(ChordStatus.HR_PROFICIENT, 0.2);
+        ChordData hrProficientWithLowScore = create(ChordStatus.HR_PROFICIENT, 0.2);
         assertEquals(0, chordEvidence.evidence(hrProficientWithLowScore).size());
     }
 
     @NotNull
-    private static ChordAnalysis create(@NotNull ChordStatus status, double hrdValue) {
-        return ImmutableChordAnalysis.builder()
+    private static ChordData create(@NotNull ChordStatus status, double hrdValue) {
+        return ImmutableChordData.builder()
                 .from(ChordTestFactory.createMinimalTestChordAnalysis())
                 .hrStatus(status)
                 .hrdValue(hrdValue)
