@@ -77,6 +77,12 @@ public class DriverComparer implements ItemComparer
             List<DriverCatalog> drivers =
                     DriverCatalogFile.read(LinxDriver.generateCatalogFilename(fileSources.Linx, sampleId, true));
 
+            // add germline as well
+            List<DriverCatalog> germlineDrivers =
+                    DriverCatalogFile.read(DriverCatalogFile.generateGermlineFilename(fileSources.Purple, sampleId));
+
+            drivers.addAll(germlineDrivers);
+
             for(DriverCatalog driver : drivers)
             {
                 comparableItems.add(new DriverData(driver));
