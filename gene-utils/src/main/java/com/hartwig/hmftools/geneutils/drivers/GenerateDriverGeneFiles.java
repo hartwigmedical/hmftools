@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +23,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -47,6 +47,7 @@ public class GenerateDriverGeneFiles
     private final String mDriverGenePanelFile;
     private final String mResourceRepoDir;
     private final String mOutputDir;
+    private final List<String> mPanelGeneOverrides;
 
     // config
     private static final String DRIVER_GENE_PANEL_TSV = "driver_gene_panel";
@@ -55,6 +56,7 @@ public class GenerateDriverGeneFiles
     private static final String GENE_PANEL_DIR = "gene_panel";
     private static final String SAGE_DIR = "sage";
     private static final String ENSEMBL_DIR = "ensembl_data_cache";
+    private static final String PANEL_GENE_OVERRIDES = "panel_gene_overrides";
 
     public GenerateDriverGeneFiles(final CommandLine cmd)
     {
@@ -63,6 +65,13 @@ public class GenerateDriverGeneFiles
         mDriverGenePanelFile = cmd.getOptionValue(DRIVER_GENE_PANEL_TSV);
         mResourceRepoDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_REPO_DIR));
         mOutputDir = parseOutputDir(cmd);
+
+        mPanelGeneOverrides = Lists.newArrayList();
+
+        if(cmd.hasOption(PANEL_GENE_OVERRIDES))
+        {
+            Arrays.stream(cmd.getOptionValue(PANEL_GENE_OVERRIDES).split(",", -1)).forEach(x -> mPanelGeneOverrides.add(x));
+        }
     }
 
     public void run() throws IOException
@@ -136,9 +145,6 @@ public class GenerateDriverGeneFiles
         {
             List<GeneData> geneDataList = chrGeneDataMap.get(refGenomeVersion.versionedChromosome(chromosome.toString()));
 
-            int previousRegionEnd = 0;
-            String previousGene = "";
-
             for(GeneData geneData : geneDataList)
             {
                 DriverGene driverGene = driverGenes.stream().filter(x -> x.gene().equals(geneData.GeneName)).findFirst().orElse(null);
@@ -146,13 +152,13 @@ public class GenerateDriverGeneFiles
                 if(driverGene == null)
                     continue;
 
-                if(!driverGene.reportSomatic() && !driverGene.reportGermline())
+                if(!driverGene.reportSomatic() && !driverGene.reportGermline() && !mPanelGeneOverrides.contains(geneData.GeneName))
                     continue;
 
                 TranscriptData transData = ensemblDataCache.getTranscriptData(geneData.GeneId, "");
 
-                List<GenomeRegion> regionsWithUtr = getTranscriptRegions(geneData, transData, true, previousRegionEnd);
-                List<GenomeRegion> regionsWithoutUtr = getTranscriptRegions(geneData, transData, false, previousRegionEnd);
+                List<GenomeRegion> regionsWithUtr = getTranscriptRegions(geneData, transData, true);
+                List<GenomeRegion> regionsWithoutUtr = getTranscriptRegions(geneData, transData, false);
 
                 // merge any overlap with the previous gene region
                 for(int i = 0; i <= 1; ++i)
@@ -195,19 +201,6 @@ public class GenerateDriverGeneFiles
                     }
                 }
 
-                /*
-                int minRegionStart = regionsWithUtr.stream().mapToInt(x -> x.start()).min().orElse(0);
-
-                if(previousRegionEnd > 0 && previousRegionEnd >= minRegionStart - 1)
-                {
-                    GU_LOGGER.warn("gene({}) regionStart({}) overlaps previous gene({}) regionEnd({})",
-                            geneData.GeneName, minRegionStart, previousGene, previousRegionEnd);
-                }
-
-                previousRegionEnd = regionsWithUtr.stream().mapToInt(x -> x.end()).max().orElse(0);
-                previousGene = geneData.GeneName;
-                */
-
                 regionsWithUtr.stream()
                         .map(x -> ImmutableNamedBed.builder().from(x).name(geneData.GeneName).build())
                         .forEach(x -> panelRegionsWithUtr.add(x));
@@ -237,14 +230,10 @@ public class GenerateDriverGeneFiles
 
     private static final int SPLICE_SIZE = 10;
 
-    private List<GenomeRegion> getTranscriptRegions(
-            final GeneData geneData, final TranscriptData transData, boolean includeUTR, int previousRegionEnd)
+    private List<GenomeRegion> getTranscriptRegions(final GeneData geneData, final TranscriptData transData, boolean includeUTR)
     {
         int startPosition = includeUTR || transData.nonCoding() ? transData.TransStart : transData.CodingStart;
         int endPosition = includeUTR || transData.nonCoding() ? transData.TransEnd : transData.CodingEnd;
-
-        // ensure regions from previous genes do no overlap
-        startPosition = max(previousRegionEnd + 1, startPosition);
 
         final List<GenomeRegion> regions = Lists.newArrayList();
 
@@ -336,6 +325,7 @@ public class GenerateDriverGeneFiles
 
         options.addOption(DRIVER_GENE_PANEL_TSV, true, "File containing the driver gene panel for 37");
         options.addOption(RESOURCE_REPO_DIR, true, "The directory holding the public hmf resources repo");
+        options.addOption(PANEL_GENE_OVERRIDES, true, "List of comma-separated genes to include in panel");
         addOutputDir(options);
         addLoggingOptions(options);
 
