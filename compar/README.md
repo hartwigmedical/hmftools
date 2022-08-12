@@ -21,7 +21,7 @@ Filter | Description
 ---|---
 sample | Tumor sample ID or
 sample_id_file | File with column header SampleId and then list of sample IDs
-categories | 'ALL', otherwise specify a comma-separated list from PURITY, COPY_NUMBER, DRIVER, SOMATIC_VARIANT, LINX_DATA, FUSION, DISRUPTION
+categories | 'ALL', otherwise specify a comma-separated list from PURITY, COPY_NUMBER, DRIVER, SOMATIC_VARIANT, LINX_DATA, FUSION, DISRUPTION, CUPPA, CHORD, LILAC
 match_level | REPORTABLE (default) or DETAILED
 file_sources | List of sources and their file locations - see format below
 db_sources |  List of sources and their DB locations - see format below
@@ -157,7 +157,6 @@ likelihoodMethod | Exact
 driverLikelihood | [0.1]
 minCopyNumber | max(0.2, 10%) for AMPs and DELs
 
-
 ### Fusions
 Data key: SampleId, Fusion name
 
@@ -186,6 +185,34 @@ codingContext | Exact
 nextSpliceExonRank | Exact
 undisruptedCopyNumber | max(0.2, 10%)
 
+### Cuppa
+Data key: SampleId, ClassifierName
+
+Field | Match Type & Thresholds 
+---|---
+topRefCancerType | Exact
+topRefValue | 0.1
+
+### Chord
+Data key: SampleId
+
+Field | Match Type & Thresholds 
+---|---
+BRCA1 | 0.1
+BRCA2 | 0.1
+status | Exact
+type | Exact
+hrdScore | 0.1
+
+### Lilac
+Data key: SampleId
+
+Field | Match Type & Thresholds 
+---|---
+status | Exact
+alleles | Exact - checks all 6 alleles match
+somaticVariants | Exact - number of annotated somatic variants match
 
 ## Version History and Download Links
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.1)
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.0)

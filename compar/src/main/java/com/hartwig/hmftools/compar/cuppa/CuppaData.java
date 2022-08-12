@@ -26,8 +26,7 @@ public class CuppaData implements ComparableItem
     public CuppaData(final ClassifierData result)
     {
         ClassifierResult = result;
-
-        mKey = result.DataType.toString();
+        mKey = result.DataType;
     }
 
     @Override
