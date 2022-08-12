@@ -16,16 +16,6 @@ public class CanonicalAnnotation
     private final Set<String> mDriverCatalogGenes;
     private final Map<String, String> mTranscriptGeneMap;
 
-    /*
-    public CanonicalAnnotation(final Set<String> driverGenes, final List<HmfTranscriptRegion> transcripts)
-    {
-        mDriverCatalogGenes = driverGenes;
-
-        mTranscriptGeneMap = transcripts.stream()
-                .collect(Collectors.toMap(TranscriptRegion::transName, TranscriptRegion::geneName));
-    }
-    */
-
     public CanonicalAnnotation(final Set<String> driverGenes, final Map<String,String> transGeneMap)
     {
         mDriverCatalogGenes = driverGenes;

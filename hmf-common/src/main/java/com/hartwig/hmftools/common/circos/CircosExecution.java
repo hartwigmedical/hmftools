@@ -13,7 +13,6 @@ import htsjdk.samtools.util.CollectionUtil;
 
 public class CircosExecution
 {
-
     private static final Logger LOGGER = LogManager.getLogger(CircosExecution.class);
 
     private final String executable;
