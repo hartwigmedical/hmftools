@@ -26,40 +26,94 @@ interface IVJReadLayoutAdaptor
 //                                                          |___________________|
 //                                                                 J anchor
 // Most functions here rely on this.
-class VJReadLayoutAdaptor : IVJReadLayoutAdaptor
+class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
 {
-    private val sLogger = LogManager.getLogger(javaClass)
-
-    fun readCandidateToLayoutRead(readCandidate: VJReadCandidate, trimBases: Int) : ReadLayout.Read
+    companion object
     {
-        val retainStart: Int
-        val retainEnd: Int
+        private val sLogger = LogManager.getLogger(VJReadLayoutAdaptor::class.java)
+
+        private fun numTrailingPolyG(seq: String, sliceEnd: Int) : Int
+        {
+            for (i in 0 until sliceEnd)
+            {
+                if (seq[sliceEnd - i - 1] != 'G')
+                {
+                    return i
+                }
+            }
+            return sliceEnd
+        }
+
+        private fun numLeadingPolyC(seq: String, sliceStart: Int) : Int
+        {
+            for (i in sliceStart until seq.length)
+            {
+                if (seq[i] != 'C')
+                {
+                    return i
+                }
+            }
+            return seq.length - sliceStart
+        }
+    }
+
+    fun readCandidateToLayoutRead(readCandidate: VJReadCandidate) : ReadLayout.Read?
+    {
+        // work out the slice start and end
+        var sliceStart: Int = trimBases
+        var sliceEnd: Int = readCandidate.readLength - trimBases
         val alignedPosition: Int
+
+        // now we also want to try poly G tail trimming
+        // we want to work out there the tail is.
+        // the tail is on the right side and poly G if useReverseComplement == read.readNegativeStrandFlag
+        // the tail is on the left side and poly C otherwise
+        if (readCandidate.useReverseComplement == readCandidate.read.readNegativeStrandFlag)
+        {
+            // ends with poly G, but take trim bases into account
+            val numGs = numTrailingPolyG(readCandidate.readSequence, sliceEnd)
+            if (numGs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
+            {
+                sLogger.info("read: {}, poly G tail found: {}", readCandidate.read, readCandidate.readSequence)
+                sliceEnd -= numGs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
+            }
+        }
+        else
+        {
+            val numCs = numLeadingPolyC(readCandidate.readSequence, sliceStart)
+            if (numCs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
+            {
+                sLogger.info("read: {}, poly G tail found: {}", readCandidate.read, readCandidate.readSequence)
+                sliceStart += numCs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
+            }
+        }
 
         if (readCandidate.vjGeneType.vj == VJ.V)
         {
             // for V, we layout from the anchor start, left to right
             // we are only interested in what comes after anchor start
-            retainStart = Math.max(readCandidate.anchorOffsetStart, trimBases)
-            retainEnd = readCandidate.readLength - trimBases
+            sliceStart = Math.max(readCandidate.anchorOffsetStart, sliceStart)
 
             // aligned position we must take into account that we remove all bases before vAnchor start
-            alignedPosition = readCandidate.anchorOffsetEnd - 1 - retainStart
+            alignedPosition = readCandidate.anchorOffsetEnd - 1 - sliceStart
         }
         else
         {
             // for J, we layout from the anchor last, right to left
             // we are only interested in what comes before anchor end
-            retainStart = trimBases
-            retainEnd = Math.min(readCandidate.anchorOffsetEnd, readCandidate.readLength - trimBases)
+            sliceEnd = Math.min(readCandidate.anchorOffsetEnd, sliceEnd)
 
             // aligned position we must take into account that we remove all bases before vAnchor start
-            alignedPosition = readCandidate.anchorOffsetStart - retainStart
+            alignedPosition = readCandidate.anchorOffsetStart - sliceStart
         }
 
+        // if nothing left return null
+        if (sliceStart >= sliceEnd)
+            return null
+
         return ReadLayout.Read(readCandidate, ReadKey(readCandidate.read.readName, readCandidate.read.firstOfPairFlag),
-            readCandidate.readSequence.substring(retainStart, retainEnd),
-            readCandidate.baseQualities.sliceArray(retainStart until retainEnd),
+            readCandidate.readSequence.substring(sliceStart, sliceEnd),
+            readCandidate.baseQualities.sliceArray(sliceStart until sliceEnd),
             alignedPosition)
     }
 
@@ -95,7 +149,7 @@ class VJReadLayoutAdaptor : IVJReadLayoutAdaptor
         else
             null
 
-        if (anchorRange == null)
+        if (anchorRange == null || anchorRange.first >= layout.length)
             return null
 
         // protect against 0 and end
@@ -126,39 +180,58 @@ class VJReadLayoutAdaptor : IVJReadLayoutAdaptor
 
     fun getAnchorSequence(geneType: VJGeneType, layout: ReadLayout) : String
     {
-        return layout.consensusSequence().substring(getAnchorRange(geneType, layout)!!)
+        val range = getAnchorRange(geneType, layout)
+        return if (range != null)
+            layout.consensusSequence().substring(range)
+        else String()
     }
 
     fun getAnchorSupport(geneType: VJGeneType, layout: ReadLayout) : String
     {
-        return layout.highQualSupportString().substring(getAnchorRange(geneType, layout)!!)
+        val range = getAnchorRange(geneType, layout)
+        return if (range != null)
+            layout.highQualSupportString().substring(range)
+        else String()
     }
 
     fun getCdr3Sequence(geneType: VJGeneType, layout: ReadLayout) : String
     {
-        return layout.consensusSequence().substring(getCdr3Range(geneType, layout)!!)
+        val range = getCdr3Range(geneType, layout)
+        return if (range != null)
+            layout.consensusSequence().substring(range)
+        else String()
     }
 
     fun getCdr3Support(geneType: VJGeneType, layout: ReadLayout) : String
     {
-        return layout.highQualSupportString().substring(getCdr3Range(geneType, layout)!!)
+        val range = getCdr3Range(geneType, layout)
+        return if (range != null)
+            layout.highQualSupportString().substring(range)
+        else String()
     }
 
     fun buildLayouts(geneType: VJGeneType, readCandidates: List<VJReadCandidate>,
-                     minBaseQuality: Int, minMatchedBases: Int, minMatchRatio: Double,
-                     numBasesToTrim: Int = 0)
+                     minBaseQuality: Int, minMatchedBases: Int, minMatchRatio: Double)
     : List<ReadLayout>
     {
         sLogger.info("building {} layouts from {} reads", geneType, readCandidates.size)
 
-        val layoutInputs = readCandidates.map({ o -> readCandidateToLayoutRead(o, numBasesToTrim) }).toList()
-        // for V type we build from left, J we build from right
+        val layoutInputs = ArrayList<ReadLayout.Read>()
+
+        for (r in readCandidates)
+        {
+            val layoutRead = readCandidateToLayoutRead(r)
+            if (layoutRead != null)
+                layoutInputs.add(layoutRead)
+        }
+
         val layoutBuilder = ReadLayoutBuilder(
             inputReads = layoutInputs,
             minBaseQuality = minBaseQuality,
             minMatchedBases = minMatchedBases,
             minMatchRatio = minMatchRatio,
-            alignLeft = geneType.vj == VJ.V)
+            alignLeft = geneType.vj == VJ.V         // for V type we build from left, J we build from right
+        )
         val readOverlays = layoutBuilder.build()
         return readOverlays
     }

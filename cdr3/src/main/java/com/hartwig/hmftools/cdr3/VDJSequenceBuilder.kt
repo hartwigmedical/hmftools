@@ -104,7 +104,10 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         // we want to use the indices to work where things are
         val layoutSeq: String = layout.consensusSequence()
 
-        val layoutAnchorRange: IntRange = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)!!
+        val layoutAnchorRange: IntRange? = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)
+
+        if (layoutAnchorRange == null)
+            return null
 
         val searchStart = if (targetAnchorType.vj == VJ.V) 0 else layoutAnchorRange.last + 1
         val searchEnd = if (targetAnchorType.vj == VJ.V) layoutAnchorRange.first else layoutSeq.length
@@ -116,19 +119,22 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         if (anchorBlosumMatch == null)
             return null
 
-        var vAnchorRange: IntRange
-        var jAnchorRange: IntRange
+        var vAnchorRange: IntRange?
+        var jAnchorRange: IntRange?
 
         if (layoutGeneType.vj == VJ.V)
         {
-            vAnchorRange = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)!!
+            vAnchorRange = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)
             jAnchorRange = anchorBlosumMatch.anchorStart until anchorBlosumMatch.anchorEnd
         }
         else
         {
             vAnchorRange = anchorBlosumMatch.anchorStart until anchorBlosumMatch.anchorEnd
-            jAnchorRange = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)!!
+            jAnchorRange = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)
         }
+
+        if (vAnchorRange == null || jAnchorRange == null)
+            return null
 
         val layoutStart = vAnchorRange.first
         val layoutEnd = jAnchorRange.last + 1 // inclusive to exclusive

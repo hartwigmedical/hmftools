@@ -77,7 +77,7 @@ public class Cdr3Application
         //String readTsvFile = Cdr3ReadTsvWriter.generateFilename(mParams.OutputDir, mParams.SampleId);
         //Cdr3ReadTsvWriter.write(readTsvFile, readProcessor.getVJReadCandidates());
 
-        var vjReadLayoutAdaptor = new VJReadLayoutAdaptor();
+        var vjReadLayoutAdaptor = new VJReadLayoutAdaptor(mParams.numBasesToTrim);
 
         Map<VJGeneType, List<ReadLayout>> layoutMap = buildLayouts(vjReadLayoutAdaptor, readProcessor.getVJReadCandidates().values());
 
@@ -171,7 +171,7 @@ public class Cdr3Application
             }
 
             List<ReadLayout> readLayouts = vjReadLayoutAdaptor.buildLayouts(geneType, readsOfGeneType,
-                    mParams.MinBaseQuality, 20, 1.0, mParams.numBasesToTrim);
+                    mParams.MinBaseQuality, 20, 1.0);
 
             // now log the sequences
             for (ReadLayout layout : readLayouts)

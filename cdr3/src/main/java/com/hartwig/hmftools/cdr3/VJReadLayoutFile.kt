@@ -31,7 +31,7 @@ object VJReadLayoutFile
 
     private fun writeLayouts(writer: BufferedWriter, geneType: VJGeneType, overlayList: List<ReadLayout>)
     {
-        val vjReadLayoutAdaptor = VJReadLayoutAdaptor()
+        val vjReadLayoutAdaptor = VJReadLayoutAdaptor(0)
 
         // sort the overlays by number of reads
         val sortedOverlayList = overlayList.sortedByDescending({ o -> o.reads.size })
@@ -55,7 +55,12 @@ object VJReadLayoutFile
         val numSplitReads10Bases = overlay.reads.map { o -> vjReadLayoutAdaptor.toReadCandidate(o) }
             .count { o -> Math.max(o.leftSoftClip, o.rightSoftClip) >= 10 }
 
-        val anchorRange = vjReadLayoutAdaptor.getAnchorRange(geneType, overlay)!!
+        val anchorRange = vjReadLayoutAdaptor.getAnchorRange(geneType, overlay)
+
+        // if there is no anchor within this layout then don't write it
+        if (anchorRange == null)
+            return
+
         var sequence = overlay.consensusSequence()
         var support = overlay.highQualSupportString()
 

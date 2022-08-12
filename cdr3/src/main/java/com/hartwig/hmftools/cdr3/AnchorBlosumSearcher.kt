@@ -143,7 +143,7 @@ class AnchorBlosumSearcher(
             if (potentialAnchorAA.contains(Codons.UNKNOWN))
                 return null
 
-            val score: Int = calcSimilarityScore(geneType, templateAnchorAA, potentialAnchorAA)
+            val score: Int = calcSimilarityScore(templateAnchorAA, potentialAnchorAA)
 
             //if (score >= 0)
             //{
@@ -164,7 +164,7 @@ class AnchorBlosumSearcher(
 
     // we do with amino acid sequence
     // diff of 0 means exact match
-    fun calcBlosumDistance(anchorGeneType: VJGeneType, refAnchorAA: String, seqAA: String) : Int
+    fun calcBlosumDistance(refAnchorAA: String, seqAA: String) : Int
     {
         if (refAnchorAA.length != seqAA.length)
             return Int.MAX_VALUE
@@ -173,9 +173,9 @@ class AnchorBlosumSearcher(
         return blosumMapping.calcSequenceSum(refAnchorAA) - blosumMapping.calcSequenceSum(refAnchorAA, seqAA)
     }
 
-    fun calcSimilarityScore(anchorGeneType: VJGeneType, refAnchorAA: String, seqAA: String) : Int
+    fun calcSimilarityScore(refAnchorAA: String, seqAA: String) : Int
     {
-        val score = maxBlosumDistancePerAminoAcid * (seqAA.length - similarityScoreConstant) - calcBlosumDistance(anchorGeneType, refAnchorAA, seqAA)
+        val score = maxBlosumDistancePerAminoAcid * seqAA.length - similarityScoreConstant - calcBlosumDistance(refAnchorAA, seqAA)
         return score
     }
 
