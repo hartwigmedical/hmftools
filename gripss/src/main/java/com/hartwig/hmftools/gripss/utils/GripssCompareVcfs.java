@@ -89,6 +89,7 @@ public class GripssCompareVcfs
     private final boolean mIgnorePonDiff;
     private final boolean mKeyByCoords; // instead of assuming VCF Ids match
     private final boolean mWriteAllDiffs; // instead of assuming VCF Ids match
+    private final boolean mGridssDiffsOnly;
 
     private final List<VcfCompareField> mVcfCheckFields;
 
@@ -97,6 +98,7 @@ public class GripssCompareVcfs
     private static final String IGNORE_PON_DIFF = "ignore_pon_diff";
     private static final String KEY_BY_COORDS = "key_by_coords";
     private static final String WRITE_ALL_DIFFS = "write_all_diffs";
+    private static final String GRIDSS_ONLY = "gridss_only";
 
     private static final int DEFAULT_MAX_DIFF = 20;
     private static final double DEFAULT_MAX_DIFF_PERC = 0.2;
@@ -117,11 +119,17 @@ public class GripssCompareVcfs
         mIgnorePonDiff = cmd.hasOption(IGNORE_PON_DIFF);
         mKeyByCoords = cmd.hasOption(KEY_BY_COORDS);
         mWriteAllDiffs = cmd.hasOption(WRITE_ALL_DIFFS);
+        mGridssDiffsOnly = cmd.hasOption(GRIDSS_ONLY);
 
         mVcfCheckFields = Lists.newArrayList();
 
-        mVcfCheckFields.add(new VcfCompareField(VT_REF, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(VT_REFPAIR, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+
+        if(!mGridssDiffsOnly)
+        {
+            mVcfCheckFields.add(new VcfCompareField(VT_REF, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+            mVcfCheckFields.add(new VcfCompareField(VT_REFPAIR, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        }
+
         mVcfCheckFields.add(new VcfCompareField(VT_SB, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
         mVcfCheckFields.add(new VcfCompareField(VT_SR, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
         mVcfCheckFields.add(new VcfCompareField(VT_IC, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
@@ -318,39 +326,31 @@ public class GripssCompareVcfs
                     continue;
                 }
 
-                /*
-                // check qual
-                int origQual = (int)origSv.contextStart().getPhredScaledQual();
-                int newQual = (int)newSv.contextStart().getPhredScaledQual();
-
-                if(hasDiff(origQual, newQual))
-                {
-                    writeDiffs(origSv, newSv, "QUAL", String.valueOf(origQual), String.valueOf(newQual));
-                    ++diffCount;
-                    continue;
-                }
-                */
-
                 // check specified VCF tags
                 for(VcfCompareField compareField : mVcfCheckFields)
                 {
                     checkVcfFieldDiff(origSv, newSv, compareField);
                 }
 
-                // check local and remote linked by for assembled links
-                boolean origHasStartAssembled = origStart.Context.getAttributeAsString(LOCAL_LINKED_BY, "").contains("asm");
-                boolean newHasStartAssembled = newStart.Context.getAttributeAsString(LOCAL_LINKED_BY, "").contains("asm");
-                boolean origHasEndAssembled = !origSv.isSgl() && origStart.Context.getAttributeAsString(REMOTE_LINKED_BY, "").contains("asm");
-                boolean newHasEndAssembled = !origSv.isSgl() && newStart.Context.getAttributeAsString(REMOTE_LINKED_BY, "").contains("asm");
-
-                if(origHasStartAssembled != newHasStartAssembled || origHasEndAssembled != newHasEndAssembled)
+                if(!mGridssDiffsOnly)
                 {
-                    writeDiffs(
-                            origSv, newSv, "ASSEMBLY",
-                            format("%s_%s", origHasStartAssembled, origHasEndAssembled),
-                            format("%s_%s", newHasStartAssembled, newHasEndAssembled));
-                    ++diffCount;
-                    continue;
+                    // check local and remote linked by for assembled links
+                    boolean origHasStartAssembled = origStart.Context.getAttributeAsString(LOCAL_LINKED_BY, "").contains("asm");
+                    boolean newHasStartAssembled = newStart.Context.getAttributeAsString(LOCAL_LINKED_BY, "").contains("asm");
+                    boolean origHasEndAssembled =
+                            !origSv.isSgl() && origStart.Context.getAttributeAsString(REMOTE_LINKED_BY, "").contains("asm");
+                    boolean newHasEndAssembled =
+                            !origSv.isSgl() && newStart.Context.getAttributeAsString(REMOTE_LINKED_BY, "").contains("asm");
+
+                    if(origHasStartAssembled != newHasStartAssembled || origHasEndAssembled != newHasEndAssembled)
+                    {
+                        writeDiffs(
+                                origSv, newSv, "ASSEMBLY",
+                                format("%s_%s", origHasStartAssembled, origHasEndAssembled),
+                                format("%s_%s", newHasStartAssembled, newHasEndAssembled));
+                        ++diffCount;
+                        continue;
+                    }
                 }
             }
 
@@ -602,6 +602,7 @@ public class GripssCompareVcfs
         options.addOption(IGNORE_PON_DIFF, false, "Ignore diffs if just PON filter");
         options.addOption(KEY_BY_COORDS, false, "Match SVs on coords rather than VcfId");
         options.addOption(WRITE_ALL_DIFFS, false, "Write all VCF field diffs, not just the first");
+        options.addOption(GRIDSS_ONLY, false, "Only compare fields written by Grids (ie no Gripss)");
 
         addOutputOptions(options);
         addLoggingOptions(options);
