@@ -16,8 +16,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.sv.ExcludedRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -29,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFCodec;
@@ -42,13 +45,15 @@ public class DepthAnnotator
     private final DepthConfig mConfig;
     private final Map<String,Integer> mSampleVcfGenotypeIds;
 
-    private final Map<String, List<VariantContext>> mChrVariantMap;
+    private final Map<String,List<VariantContext>> mChrVariantMap;
+    private final List<ChrBaseRegion> mExcludedRegions;
 
     public DepthAnnotator(final CommandLine cmd)
     {
         mConfig = new DepthConfig(cmd);
         mChrVariantMap = Maps.newHashMap();
         mSampleVcfGenotypeIds = Maps.newHashMap();
+        mExcludedRegions = ExcludedRegions.getPolyGRegions(mConfig.RefGenVersion);
     }
 
     public void run()
@@ -100,7 +105,13 @@ public class DepthAnnotator
                     currentChromosome = chromosome;
                 }
 
-                variantsList.add(variantContext);
+                // create new instances of each variant to set depth values against
+                VariantContext newVariant = new VariantContextBuilder(variantContext)
+                        .genotypes(variantContext.getGenotypes())
+                        .filters(variantContext.getFilters())
+                        .make();
+
+                variantsList.add(newVariant);
             }
         }
         catch(IOException e)
@@ -189,7 +200,7 @@ public class DepthAnnotator
             if(depthTask == null)
                 continue;
 
-            depthTask.newVariants().forEach(x -> writer.add(x));
+            depthTask.variants().forEach(x -> writer.add(x));
         }
 
         writer.close();
@@ -228,6 +239,9 @@ public class DepthAnnotator
 
     private boolean excludeVariant(final VariantContext variant)
     {
+        if(mExcludedRegions.stream().anyMatch(x -> x.containsPosition(variant.getStart())))
+            return true;
+
         if(mConfig.SpecificRegions.isEmpty())
             return false;
 

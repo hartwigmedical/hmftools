@@ -49,7 +49,6 @@ public class DepthTask implements Callable
     private final DepthConfig mConfig;
     private final Map<String,Integer> mSampleVcfGenotypeIds;
     private final List<VariantContext> mVariantsList;
-    private final List<VariantContext> mNewVariantsList;
     private final String mChromosome;
     private int mBamRecords;
 
@@ -58,7 +57,6 @@ public class DepthTask implements Callable
 
     private final Map<String,SamReadGroup> mReadGroups;
 
-    private final List<ChrBaseRegion> mExcludedRegions;
     private final PerformanceCounter mPerfCounter;
 
     public DepthTask(final String chromosome, final DepthConfig config, final Map<String,Integer> sampleVcfGenotypeIds)
@@ -68,7 +66,6 @@ public class DepthTask implements Callable
         mSampleVcfGenotypeIds = sampleVcfGenotypeIds;
 
         mVariantsList = Lists.newArrayList();
-        mNewVariantsList = Lists.newArrayList();
         mBamRecords = 0;
 
         mBamSlicer = new BamSlicer(0, false, true, false);
@@ -81,15 +78,16 @@ public class DepthTask implements Callable
             mSamReaders.add(SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenome)).open(new File(bamFile)));
         }
 
-        mExcludedRegions = getPolyGRegions(mConfig.RefGenVersion).stream()
-                .filter(x -> x.Chromosome.equals(chromosome)).collect(Collectors.toList());
-
         mPerfCounter = new PerformanceCounter("Slice");
     }
 
     public String chromosome() { return mChromosome; }
-    public void addVariants(final List<VariantContext> variants) { mVariantsList.addAll(variants); }
-    public List<VariantContext> newVariants() { return mNewVariantsList; }
+    public void addVariants(final List<VariantContext> variants)
+    {
+        mVariantsList.addAll(variants);
+    }
+
+    public List<VariantContext> variants() { return mVariantsList; }
     public PerformanceCounter getPerfCounter() { return mPerfCounter; }
 
     @Override
@@ -104,12 +102,6 @@ public class DepthTask implements Callable
             VariantContext variant = mVariantsList.get(index);
             int posStart = variant.getStart();
 
-            if(inExcludedRegion(posStart))
-            {
-                ++index;
-                continue;
-            }
-
             List<VariantContext> variants = Lists.newArrayList(variant);
 
             int posEnd = posStart;
@@ -118,9 +110,6 @@ public class DepthTask implements Callable
             {
                 VariantContext nextVariant = mVariantsList.get(nextIndex);
                 if(nextVariant.getStart() - posEnd > MAX_GAP)
-                    break;
-
-                if(inExcludedRegion(nextVariant.getStart()))
                     break;
 
                 posEnd = nextVariant.getStart();
@@ -146,11 +135,6 @@ public class DepthTask implements Callable
         return (long)0;
     }
 
-    private boolean inExcludedRegion(int position)
-    {
-        return mExcludedRegions.stream().anyMatch(x -> x.containsPosition(position));
-    }
-
     private void retrieveDepth(final List<VariantContext> variants, int posStart, int posEnd)
     {
         mPerfCounter.start();
@@ -164,17 +148,9 @@ public class DepthTask implements Callable
                 mChromosome, posStart - MAX_FRAGMENT_LENGTH, posEnd + MAX_FRAGMENT_LENGTH);
 
         List<RefSupportCounts> sampleTotalCounts = Lists.newArrayList();
-        List<VariantContext> newVariants = Lists.newArrayList();
 
-        for(VariantContext variant : variants)
+        for(int i = 0; i < variants.size(); ++i)
         {
-            VariantContext newVariant = new VariantContextBuilder(variant)
-                    .genotypes(variant.getGenotypes())
-                    .filters(variant.getFilters())
-                    .make();
-
-            newVariants.add(newVariant);
-
             sampleTotalCounts.add(new RefSupportCounts());
         }
 
@@ -195,34 +171,30 @@ public class DepthTask implements Callable
             {
                 VariantContext variant = variants.get(j);
                 RefSupportCounts totalCounts = sampleTotalCounts.get(j);
-                VariantContext newVariant = newVariants.get(j);
-
-                calculateVariantSupport(variant, newVariant, sampleId, totalCounts);
+                calculateVariantSupport(variant, sampleId, totalCounts);
             }
         }
 
         for(int j = 0; j < variants.size(); ++j)
         {
             RefSupportCounts totalCounts = sampleTotalCounts.get(j);
-            VariantContext newVariant = newVariants.get(j);
+            VariantContext variant = variants.get(j);
 
-            setRefDepthValue(newVariant, totalCounts.RefSupport, REFERENCE_BREAKEND_READ_COVERAGE, VCF_TAG_REF_GRIDSS);
-            setRefDepthValue(newVariant, totalCounts.RefPairSupport, REFERENCE_BREAKEND_READPAIR_COVERAGE, VCF_TAG_REFPAIR_GRIDSS);
-
-            mNewVariantsList.add(newVariant);
+            setRefDepthValue(variant, totalCounts.RefSupport, REFERENCE_BREAKEND_READ_COVERAGE, VCF_TAG_REF_GRIDSS);
+            setRefDepthValue(variant, totalCounts.RefPairSupport, REFERENCE_BREAKEND_READPAIR_COVERAGE, VCF_TAG_REFPAIR_GRIDSS);
         }
 
         mPerfCounter.stop();
 
         if(mPerfCounter.getLastTime() > 2)
         {
-            SV_LOGGER.warn("variants({}) chr({}) span({}-{}) high depth retrieval time({}) totalFrags({})",
-                    variants.size(), mChromosome, posStart, posEnd, format("%.3f", mPerfCounter.getLastTime()), readGroupTotal);
+            SV_LOGGER.warn("chr({}) span({}-{}) variants({}) high depth retrieval time({}) totalFrags({})",
+                    mChromosome, posStart, posEnd, variants.size(), format("%.3f", mPerfCounter.getLastTime()), readGroupTotal);
         }
     }
 
     private void calculateVariantSupport(
-            final VariantContext variant, final VariantContext newVariant, final String sampleId, final RefSupportCounts totalCounts)
+            final VariantContext variant, final String sampleId, final RefSupportCounts totalCounts)
     {
         int variantPosition = variant.getStart();
         byte variantOrientation = getOrientation(variant);
@@ -246,7 +218,7 @@ public class DepthTask implements Callable
         RefSupportCounts sampleCounts = calculateSupport(variantPosition, varPosStart, varPosEnd, variantOrientation, variantFragCount);
 
         int vcfSampleIndex = mSampleVcfGenotypeIds.get(sampleId);
-        Genotype genotype = newVariant.getGenotype(vcfSampleIndex);
+        Genotype genotype = variant.getGenotype(vcfSampleIndex);
 
         if(mConfig.LogDiffs || SV_LOGGER.isTraceEnabled())
         {
