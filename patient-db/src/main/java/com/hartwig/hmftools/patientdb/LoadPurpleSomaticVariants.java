@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -11,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.common.utils.FileReaderUtils;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -123,7 +123,7 @@ public class LoadPurpleSomaticVariants
             final String sampleId, final String referenceId, final String rnaId,
             final DatabaseAccess dbAccess, final String purpleDir, boolean dryRunOnly) throws Exception
     {
-        final String somaticVcf = purpleDir + sampleId + PURPLE_SOMATIC_VCF_SUFFIX;
+        final String somaticVcf = PurpleCommon.purpleSomaticVcfFile(purpleDir, sampleId);
 
         if(!Files.exists(Paths.get(somaticVcf)))
         {

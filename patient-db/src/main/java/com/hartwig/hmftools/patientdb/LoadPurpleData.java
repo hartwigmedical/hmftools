@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_GERMLINE_VCF_SUFFIX;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticVcfFile;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSvFile;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -17,6 +16,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -141,8 +141,8 @@ public class LoadPurpleData
         final String copyNumberFile = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
         final String purityRangeFile = FittedPurityRangeFile.generateFilenameForReading(purpleDir, sampleId);
         final String somaticDriversFile = DriverCatalogFile.generateSomaticFilename(purpleDir, sampleId);
-        final String somaticVcf = purpleDir + sampleId + PURPLE_SOMATIC_VCF_SUFFIX;
-        final String svVcf = purpleDir + sampleId + PURPLE_SV_VCF_SUFFIX;
+        final String somaticVcf = purpleSomaticVcfFile(purpleDir, sampleId);
+        final String svVcf = purpleSvFile(purpleDir, sampleId);
 
         // skip loading if any files are missing
         List<String> requiredFiles = Lists.newArrayList(
@@ -200,7 +200,7 @@ public class LoadPurpleData
             final String sampleId, final String referenceId, final String rnaId,
             final DatabaseAccess dbAccess, final String purpleDir) throws Exception
     {
-        final String germlineVcf = purpleDir + sampleId + PURPLE_GERMLINE_VCF_SUFFIX;
+        final String germlineVcf = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
         final String germlineDeletionsFile = GermlineDeletion.generateFilename(purpleDir, sampleId);
         final String germlineDriverFile = DriverCatalogFile.generateGermlineFilename(purpleDir, sampleId);
 

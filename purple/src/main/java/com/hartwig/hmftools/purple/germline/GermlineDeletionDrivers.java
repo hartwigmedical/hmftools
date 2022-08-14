@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.drivercatalog.CNADrivers.MAX_COPY_NUMB
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_DEL_CN_CONSISTENCY_MACN_PERC;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_DEL_CN_CONSISTENCY_MIN;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_DEL_COHORT_FREQ;

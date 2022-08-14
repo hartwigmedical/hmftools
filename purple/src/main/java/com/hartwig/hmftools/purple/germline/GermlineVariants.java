@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_GERMLINE_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.VAR_TRANS_IMPACT_ANNOATATION;
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
 import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.VariantHeader;
@@ -94,7 +94,7 @@ public class GermlineVariants
         if(germlineVcf.isEmpty())
             return;
 
-        final String outputVCF = mConfig.OutputDir + File.separator + tumorSample + PURPLE_GERMLINE_VCF_SUFFIX;
+        final String outputVCF = PurpleCommon.purpleGermlineVcfFile(mConfig.OutputDir, tumorSample);
 
         loadGermlineVariants(germlineVcf, false);
 

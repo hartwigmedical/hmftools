@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.purple.somatic;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.VAR_TRANS_IMPACT_ANNOATATION;
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,6 +12,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.purple.SomaticVariantCache;
 import com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
@@ -69,7 +69,7 @@ public class SomaticStream
 
         mGenePanel = referenceData.DriverGenes;
         mPeakModel = peakModel;
-        mOutputVCF = config.OutputDir + config.TumorId + PURPLE_SOMATIC_VCF_SUFFIX;
+        mOutputVCF = PurpleCommon.purpleSomaticVcfFile(config.OutputDir, config.TumorId);
         mEnabled = somaticVariants.hasData();
         mTumorMutationalLoad = new TumorMutationalLoad(mReferenceData.TargetRegions);
         mMicrosatelliteIndels = new MicrosatelliteIndels(mReferenceData.TargetRegions);

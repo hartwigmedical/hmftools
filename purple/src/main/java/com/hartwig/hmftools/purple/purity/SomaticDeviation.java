@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.purity;
 
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;

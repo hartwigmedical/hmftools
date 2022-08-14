@@ -2,8 +2,8 @@ package com.hartwig.hmftools.cup.svs;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSvFile;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SV;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSvFile;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupConstants.UNDEFINED_PERC_MAX_MULTIPLE;
 import static com.hartwig.hmftools.common.cuppa.ResultType.LIKELIHOOD;

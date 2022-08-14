@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.compar.somatic;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
@@ -22,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -238,7 +238,7 @@ public class SomaticVariantComparer implements ItemComparer
 
         // use the Purple suffix if not specified
         String vcfFile = !fileSources.SomaticVcf.isEmpty() ?
-                fileSources.SomaticVcf : fileSources.Purple + sampleId + PURPLE_SOMATIC_VCF_SUFFIX;
+                fileSources.SomaticVcf : PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId);
 
         try
         {

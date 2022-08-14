@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_CO
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SNV;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENOMIC_POSITION_COHORT;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.SNV_96_PAIRWISE;
@@ -53,6 +52,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.utils.VectorUtils;
@@ -335,7 +335,7 @@ public class RefSomatics implements RefClassifier
             }
             else
             {
-                final String somaticVcfFile = purpleSomaticVcfFile(mConfig.PurpleDir, sampleId);
+                final String somaticVcfFile = PurpleCommon.purpleSomaticVcfFile(mConfig.PurpleDir, sampleId);
                 variants.addAll(loadSomaticVariants(somaticVcfFile, Lists.newArrayList(SNP)));
             }
 

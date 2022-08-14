@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
 
 import java.io.IOException;

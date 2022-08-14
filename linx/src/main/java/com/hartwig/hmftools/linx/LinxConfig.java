@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelCon
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
@@ -24,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.linx.analysis.AnnotationExtension;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
@@ -129,11 +131,11 @@ public class LinxConfig
 
             if(svVcfFile.isEmpty() && mSampleIds.size() == 1)
             {
-                svVcfFile = SampleDataPath + mSampleIds.get(0) + ".purple.sv.vcf.gz";
+                svVcfFile = PurpleCommon.purpleSvFile(SampleDataPath, mSampleIds.get(0));
             }
             else
             {
-                svVcfFile = SampleDataPath + "*.purple.sv.vcf.gz";
+                svVcfFile = SampleDataPath + "*" + PURPLE_SV_VCF_SUFFIX;
             }
         }
         else

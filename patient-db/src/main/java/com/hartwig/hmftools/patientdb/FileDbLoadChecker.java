@@ -3,8 +3,6 @@ package com.hartwig.hmftools.patientdb;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -25,12 +23,11 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
@@ -233,7 +230,7 @@ public class FileDbLoadChecker
                 return;
             }
 
-            final String somaticVcf = purpleDir + sampleId + PURPLE_SOMATIC_VCF_SUFFIX;
+            final String somaticVcf = PurpleCommon.purpleSomaticVcfFile(purpleDir, sampleId);
 
             if(!Files.exists(Paths.get(somaticVcf)))
             {
@@ -250,7 +247,7 @@ public class FileDbLoadChecker
 
                 final String geneCopyNumberFile = GeneCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
                 final String copyNumberFile = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
-                final String svVcf = purpleDir + sampleId + PURPLE_SV_VCF_SUFFIX;
+                final String svVcf = PurpleCommon.purpleSvFile(purpleDir, sampleId);
 
                 List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberFile);
                 List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(copyNumberFile);

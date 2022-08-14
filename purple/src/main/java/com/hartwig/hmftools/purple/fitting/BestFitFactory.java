@@ -4,8 +4,8 @@ import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
 import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.PurpleCommon.formatPurity;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.PurpleUtils.formatPurity;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_BAF_TOTAL;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MAX;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MIN;
@@ -32,7 +32,6 @@ import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.apache.commons.compress.utils.Lists;
-import org.jetbrains.annotations.NotNull;
 
 public class BestFitFactory
 {

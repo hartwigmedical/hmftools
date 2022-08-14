@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.segment;
 
 import static com.hartwig.hmftools.common.genome.position.GenomePositions.union;
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;

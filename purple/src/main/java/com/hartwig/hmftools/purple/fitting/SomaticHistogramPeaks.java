@@ -3,7 +3,7 @@ package com.hartwig.hmftools.purple.fitting;
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.Arrays;
 import java.util.List;

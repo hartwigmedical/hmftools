@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
 import java.util.List;
@@ -20,7 +20,6 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;

@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.purple;
 
+import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleGermlineVcfFile;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticVcfFile;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -22,6 +25,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeFactory;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
@@ -43,18 +47,34 @@ import org.jetbrains.annotations.Nullable;
 
 public final class PurpleDataLoader
 {
-
     private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
 
-    private PurpleDataLoader()
+    private PurpleDataLoader() {}
+
+    @NotNull
+    public static PurpleData load(final String tumorSample, @Nullable final String referenceSample, @Nullable final String rnaSample,
+            final String purpleDir, final RefGenomeVersion refGenomeVersion) throws IOException
     {
+        String qcFile = PurpleQCFile.generateFilename(purpleDir, tumorSample);
+        String purityTsv = PurityContextFile.generateFilenameForReading(purpleDir, tumorSample);
+        String somaticDriverCatalogTsv = DriverCatalogFile.generateSomaticFilename(purpleDir, tumorSample);
+        String somaticVariantVcf = purpleSomaticVcfFile(purpleDir, tumorSample);
+        String germlineDriverCatalogTsv = DriverCatalogFile.generateGermlineFilename(purpleDir, tumorSample);
+        String germlineVariantVcf = purpleGermlineVcfFile(purpleDir, tumorSample);
+        String geneCopyNumberTsv = GeneCopyNumberFile.generateFilenameForReading(purpleDir, tumorSample);
+        String copyNumberTsv = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, tumorSample);
+        String germlineDeletionTsv = GermlineDeletion.generateFilename(purpleDir, tumorSample);
+
+        return load(tumorSample, referenceSample, rnaSample, qcFile, purityTsv, somaticDriverCatalogTsv, somaticVariantVcf,
+                germlineDriverCatalogTsv, germlineVariantVcf, geneCopyNumberTsv, copyNumberTsv, germlineDeletionTsv,
+                refGenomeVersion);
     }
 
     @NotNull
     public static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @Nullable String rnaSample,
             @NotNull String qcFile, @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
-            @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @Nullable String purpleGeneCopyNumberTsv,
-            @Nullable String purpleSomaticCopyNumberTsv, @Nullable String purpleGermlineDeletionTsv,
+            @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @Nullable String geneCopyNumberTsv,
+            @Nullable String copyNumberTsv, @Nullable String germlineDeletionTsv,
             @Nullable RefGenomeVersion refGenomeVersion) throws IOException
     {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
@@ -69,10 +89,10 @@ public final class PurpleDataLoader
 
         List<GeneCopyNumber> allSomaticGeneCopyNumbers = Lists.newArrayList();
         List<GainLoss> allSomaticGainsLosses = Lists.newArrayList();
-        if(purpleGeneCopyNumberTsv != null)
+        if(geneCopyNumberTsv != null)
         {
-            allSomaticGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCopyNumberTsv);
-            LOGGER.debug(" Loaded {} gene copy numbers entries from {}", allSomaticGeneCopyNumbers.size(), purpleGeneCopyNumberTsv);
+            allSomaticGeneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberTsv);
+            LOGGER.debug(" Loaded {} gene copy numbers entries from {}", allSomaticGeneCopyNumbers.size(), geneCopyNumberTsv);
 
             allSomaticGainsLosses =
                     extractAllGainsLosses(purityContext.qc().status(), purityContext.bestFit().ploidy(), allSomaticGeneCopyNumbers);
@@ -80,12 +100,12 @@ public final class PurpleDataLoader
         }
 
         List<CnPerChromosomeArmData> copyNumberPerChromosome = Lists.newArrayList();
-        if(purpleSomaticCopyNumberTsv != null && refGenomeVersion != null)
+        if(copyNumberTsv != null && refGenomeVersion != null)
         {
             RefGenomeCoordinates refGenomeCoordinates =
                     refGenomeVersion == RefGenomeVersion.V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-            copyNumberPerChromosome = CnPerChromosomeFactory.generate(purpleSomaticCopyNumberTsv, refGenomeCoordinates);
-            LOGGER.debug(" Generated chromosomal arm copy numbers from {}", purpleSomaticCopyNumberTsv);
+            copyNumberPerChromosome = CnPerChromosomeFactory.generate(copyNumberTsv, refGenomeCoordinates);
+            LOGGER.debug(" Generated chromosomal arm copy numbers from {}", copyNumberTsv);
         }
 
         List<SomaticVariant> allGermlineVariants = Lists.newArrayList();
@@ -110,15 +130,15 @@ public final class PurpleDataLoader
 
         List<GermlineDeletion> allGermlineDeletions = Lists.newArrayList();
         List<GermlineDeletion> reportableGermlineDeletions = Lists.newArrayList();
-        if(purpleGermlineDeletionTsv != null)
+        if(germlineDeletionTsv != null)
         {
-            allGermlineDeletions = GermlineDeletion.read(purpleGermlineDeletionTsv);
+            allGermlineDeletions = GermlineDeletion.read(germlineDeletionTsv);
             reportableGermlineDeletions = selectReportedDeletions(allGermlineDeletions);
 
             LOGGER.info(" Loaded {} germline deletions (of which {} are reportable) from {}",
                     allGermlineDeletions.size(),
                     reportableGermlineDeletions.size(),
-                    purpleGermlineDeletionTsv);
+                    germlineDeletionTsv);
         }
 
         List<SomaticVariant> allSomaticVariants =

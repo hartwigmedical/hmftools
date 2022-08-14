@@ -2,9 +2,7 @@ package com.hartwig.hmftools.purple;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_GERMLINE_VCF_SUFFIX;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSvFile;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
 import static com.hartwig.hmftools.common.purple.gene.GeneCopyNumber.listToMap;
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityMethod.NORMAL;
@@ -16,12 +14,11 @@ import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;
 import static com.hartwig.hmftools.purple.gene.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -44,6 +41,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.purple.purity.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleQC;
@@ -476,7 +474,7 @@ public class PurpleApplication
 
         if(mConfig.runTumor())
         {
-            String somaticVcf = purpleDataPath + tumorSample + PURPLE_SOMATIC_VCF_SUFFIX;
+            String somaticVcf = PurpleCommon.purpleSomaticVcfFile(purpleDataPath, tumorSample);
 
             SomaticVariantCache somaticVariantCache = new SomaticVariantCache(mConfig);
             ListMultimap<Chromosome, VariantHotspot> emptyHotspots = ArrayListMultimap.create(); // already annotated in VCF
@@ -488,7 +486,7 @@ public class PurpleApplication
 
         if(mConfig.runGermline())
         {
-            final String germlineVcf = purpleDataPath + tumorSample + PURPLE_GERMLINE_VCF_SUFFIX;
+            final String germlineVcf = PurpleCommon.purpleGermlineVcfFile(purpleDataPath, tumorSample);
 
             if(Files.exists(Paths.get(germlineVcf)))
             {
@@ -641,7 +639,7 @@ public class PurpleApplication
 
         PPL_LOGGER.info("loading structural variants from {}", sampleDataFiles.SvVcfFile);
 
-        final String outputVcf = mConfig.OutputDir + File.separator + tumorSample + PURPLE_SV_VCF_SUFFIX;
+        final String outputVcf = purpleSvFile(mConfig.OutputDir, tumorSample);
 
         return new StructuralVariantCache(mPurpleVersion.version(), sampleDataFiles.SvVcfFile, outputVcf, mReferenceData);
     }

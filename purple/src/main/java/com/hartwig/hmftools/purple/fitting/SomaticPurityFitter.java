@@ -3,8 +3,8 @@ package com.hartwig.hmftools.purple.fitting;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.PurpleCommon.formatPurity;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.PurpleUtils.formatPurity;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_MAX_SNV_COUNT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_VAF_PROBABILITY;
 

@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.cup;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 
@@ -43,13 +42,13 @@ public class CuppaRefFiles
     public static final String purpleSomaticVcfFile(final String sampleDir, final String sampleId)
     {
         String basePath = formSamplePath(sampleDir, sampleId);
-        return basePath + sampleId + PURPLE_SOMATIC_VCF_SUFFIX;
+        return PurpleCommon.purpleSomaticVcfFile(basePath, sampleId);
     }
 
     public static final String purpleSvFile(final String sampleDir, final String sampleId)
     {
         String basePath = formSamplePath(sampleDir, sampleId);
-        return basePath + sampleId + PURPLE_SV_VCF_SUFFIX;
+        return PurpleCommon.purpleSvFile(basePath, sampleId);
     }
 
     public static final String purplePurityFile(final String sampleDir, final String sampleId)

@@ -2,13 +2,12 @@ package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.purple.Gender.FEMALE;
 import static com.hartwig.hmftools.common.purple.Gender.MALE;
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -27,7 +26,6 @@ import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 
 import org.apache.commons.cli.ParseException;
-import org.jetbrains.annotations.NotNull;
 
 public class AmberData
 {

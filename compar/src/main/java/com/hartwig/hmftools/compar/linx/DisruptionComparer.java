@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.compar.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
@@ -15,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
@@ -77,7 +77,7 @@ public class DisruptionComparer implements ItemComparer
         {
             final List<StructuralVariantData> svDataList = Lists.newArrayList();
 
-            String vcfFile = fileSources.Purple + sampleId + PURPLE_SV_VCF_SUFFIX;
+            String vcfFile = PurpleCommon.purpleSvFile(fileSources.Purple, sampleId);
             List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter());
             List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 

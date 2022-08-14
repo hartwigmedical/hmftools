@@ -1,12 +1,6 @@
 package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
-
-import java.util.Map;
-
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.VariantTier;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

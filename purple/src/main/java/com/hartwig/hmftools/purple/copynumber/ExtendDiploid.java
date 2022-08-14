@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.copynumber;
 
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.text.DecimalFormat;
 import java.util.Collection;

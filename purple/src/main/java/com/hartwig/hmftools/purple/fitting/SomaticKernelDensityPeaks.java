@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.fitting;
 
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.KATAEGIS_FLAG;
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
