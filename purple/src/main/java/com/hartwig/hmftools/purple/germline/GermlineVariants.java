@@ -8,7 +8,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.VariantHeader;
 import com.hartwig.hmftools.purple.config.PurpleConfig;

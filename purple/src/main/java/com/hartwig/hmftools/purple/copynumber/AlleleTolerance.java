@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.copynumber;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple;
+package com.hartwig.hmftools.purple.purity;
 
 import java.util.Collection;
 import java.util.Map;

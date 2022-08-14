@@ -15,9 +15,6 @@ import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
-import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
-import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
-import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
@@ -79,7 +76,7 @@ public class QCFailReporter {
             PurityContext purityContext = PurityContextFile.readWithQC(config.purpleQcFile(), purplePurityTsv);
 
             String formattedPurity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
-            boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
+            boolean hasReliablePurity = PurityContext.checkHasReliablePurity(purityContext);
 
             wgsPurityString = hasReliablePurity ? formattedPurity : Lims.PURITY_NOT_RELIABLE_STRING;
             purpleQc = purityContext.qc().status();

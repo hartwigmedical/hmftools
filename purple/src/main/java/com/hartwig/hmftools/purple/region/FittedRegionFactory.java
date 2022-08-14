@@ -9,8 +9,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.PurityAdjusterAbnormalChromosome;
+import com.hartwig.hmftools.purple.purity.PurityAdjuster;
+import com.hartwig.hmftools.purple.purity.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.purple.segment.ExpectedBAF;
 import com.hartwig.hmftools.common.utils.Doubles;
 

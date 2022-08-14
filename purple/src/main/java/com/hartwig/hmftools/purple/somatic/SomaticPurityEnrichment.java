@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.somatic;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.variant.VariantHeader;

@@ -1,6 +1,7 @@
-package com.hartwig.hmftools.common.purple;
+package com.hartwig.hmftools.purple.purity;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.Gender;
 
 import org.jetbrains.annotations.NotNull;
 

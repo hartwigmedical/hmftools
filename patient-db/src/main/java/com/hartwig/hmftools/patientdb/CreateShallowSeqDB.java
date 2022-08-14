@@ -11,7 +11,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.ImmutableLimsShallowSeqData;
 import com.hartwig.hmftools.common.lims.LimsShallowSeqData;
-import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
@@ -95,7 +94,7 @@ public class CreateShallowSeqDB {
             PurpleQC purpleQC = purityContext.qc();
 
             boolean hasReliableQuality = purpleQC.pass();
-            boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
+            boolean hasReliablePurity = PurityContext.checkHasReliablePurity(purityContext);
             String purity = new DecimalFormat("0.00").format(purityContext.bestFit().purity());
 
             boolean inFile = false;

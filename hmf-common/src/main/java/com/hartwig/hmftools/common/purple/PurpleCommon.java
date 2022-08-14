@@ -14,7 +14,8 @@ public final class PurpleCommon
 
     public static final String DELIMITER = "\t";
 
-    public static DecimalFormat decimalFormat(@NotNull String format) {
-        return new DecimalFormat(format,  DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+    public static DecimalFormat decimalFormat(@NotNull String format)
+    {
+        return new DecimalFormat(format, DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     }
 }

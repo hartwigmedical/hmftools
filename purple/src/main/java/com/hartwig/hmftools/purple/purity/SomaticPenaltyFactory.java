@@ -6,7 +6,6 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
-import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 

@@ -4,8 +4,8 @@ import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 
 @Value.Immutable
-public abstract class FittedPurity implements Comparable<FittedPurity> {
-
+public abstract class FittedPurity implements Comparable<FittedPurity>
+{
     public abstract double purity();
 
     public abstract double normFactor();

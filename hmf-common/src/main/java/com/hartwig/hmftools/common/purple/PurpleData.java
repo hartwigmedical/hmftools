@@ -18,7 +18,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface PurpleData {
+public interface PurpleData
+{
 
     @NotNull
     PurpleQC qc();

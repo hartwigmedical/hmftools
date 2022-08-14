@@ -16,13 +16,15 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PurpleQC {
+public abstract class PurpleQC
+{
 
     public abstract Set<PurpleQCStatus> status();
 
     public abstract FittedPurityMethod method();
 
-    public boolean pass() {
+    public boolean pass()
+    {
         return status().size() == 1 && status().contains(PurpleQCStatus.PASS);
     }
 
@@ -48,7 +50,8 @@ public abstract class PurpleQC {
     public abstract Set<GermlineAberration> germlineAberrations();
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return status().stream().map(Enum::toString).collect(Collectors.joining(STATUS_DELIM));
     }
 }

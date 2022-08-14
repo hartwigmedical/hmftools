@@ -41,11 +41,13 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class PurpleDataLoader {
+public final class PurpleDataLoader
+{
 
     private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
 
-    private PurpleDataLoader() {
+    private PurpleDataLoader()
+    {
     }
 
     @NotNull
@@ -53,7 +55,8 @@ public final class PurpleDataLoader {
             @NotNull String qcFile, @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
             @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @Nullable String purpleGeneCopyNumberTsv,
             @Nullable String purpleSomaticCopyNumberTsv, @Nullable String purpleGermlineDeletionTsv,
-            @Nullable RefGenomeVersion refGenomeVersion) throws IOException {
+            @Nullable RefGenomeVersion refGenomeVersion) throws IOException
+    {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
         PurityContext purityContext = readPurityContext(qcFile, purityTsv);
@@ -66,7 +69,8 @@ public final class PurpleDataLoader {
 
         List<GeneCopyNumber> allSomaticGeneCopyNumbers = Lists.newArrayList();
         List<GainLoss> allSomaticGainsLosses = Lists.newArrayList();
-        if (purpleGeneCopyNumberTsv != null) {
+        if(purpleGeneCopyNumberTsv != null)
+        {
             allSomaticGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCopyNumberTsv);
             LOGGER.debug(" Loaded {} gene copy numbers entries from {}", allSomaticGeneCopyNumbers.size(), purpleGeneCopyNumberTsv);
 
@@ -76,7 +80,8 @@ public final class PurpleDataLoader {
         }
 
         List<CnPerChromosomeArmData> copyNumberPerChromosome = Lists.newArrayList();
-        if (purpleSomaticCopyNumberTsv != null && refGenomeVersion != null) {
+        if(purpleSomaticCopyNumberTsv != null && refGenomeVersion != null)
+        {
             RefGenomeCoordinates refGenomeCoordinates =
                     refGenomeVersion == RefGenomeVersion.V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
             copyNumberPerChromosome = CnPerChromosomeFactory.generate(purpleSomaticCopyNumberTsv, refGenomeCoordinates);
@@ -85,7 +90,8 @@ public final class PurpleDataLoader {
 
         List<SomaticVariant> allGermlineVariants = Lists.newArrayList();
         List<ReportableVariant> reportableGermlineVariants = Lists.newArrayList();
-        if (referenceSample != null) {
+        if(referenceSample != null)
+        {
             List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(germlineDriverCatalogTsv);
             LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), germlineDriverCatalogTsv);
 
@@ -96,13 +102,16 @@ public final class PurpleDataLoader {
                     allGermlineVariants.size(),
                     reportableGermlineVariants.size(),
                     germlineVariantVcf);
-        } else {
+        }
+        else
+        {
             LOGGER.debug(" Skipped loading germline variants since no reference sample configured");
         }
 
         List<GermlineDeletion> allGermlineDeletions = Lists.newArrayList();
         List<GermlineDeletion> reportableGermlineDeletions = Lists.newArrayList();
-        if (purpleGermlineDeletionTsv != null) {
+        if(purpleGermlineDeletionTsv != null)
+        {
             allGermlineDeletions = GermlineDeletion.read(purpleGermlineDeletionTsv);
             reportableGermlineDeletions = selectReportedDeletions(allGermlineDeletions);
 
@@ -125,7 +134,7 @@ public final class PurpleDataLoader {
                 .qc(purityContext.qc())
                 .hasReliableQuality(purityContext.qc().pass())
                 .fittedPurityMethod(purityContext.method())
-                .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
+                .hasReliablePurity(PurityContext.checkHasReliablePurity(purityContext))
                 .purity(purityContext.bestFit().purity())
                 .minPurity(purityContext.score().minPurity())
                 .maxPurity(purityContext.score().maxPurity())
@@ -153,7 +162,8 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static PurityContext readPurityContext(@NotNull String qcFile, @NotNull String purityTsv) throws IOException {
+    private static PurityContext readPurityContext(@NotNull String qcFile, @NotNull String purityTsv) throws IOException
+    {
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
 
         DecimalFormat purityFormat = new DecimalFormat("#'%'");
@@ -175,15 +185,18 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static List<GainLoss> somaticGainsLossesFromDrivers(@NotNull List<DriverCatalog> drivers) {
+    private static List<GainLoss> somaticGainsLossesFromDrivers(@NotNull List<DriverCatalog> drivers)
+    {
         List<GainLoss> gainsLosses = Lists.newArrayList();
 
         Map<DriverCatalogKey, DriverCatalog> geneDriverMap = DriverCatalogMap.toDriverMap(drivers);
-        for (DriverCatalogKey key : geneDriverMap.keySet()) {
+        for(DriverCatalogKey key : geneDriverMap.keySet())
+        {
             DriverCatalog geneDriver = geneDriverMap.get(key);
 
-            if (geneDriver.driver() == DriverType.AMP || geneDriver.driver() == DriverType.PARTIAL_AMP
-                    || geneDriver.driver() == DriverType.DEL) {
+            if(geneDriver.driver() == DriverType.AMP || geneDriver.driver() == DriverType.PARTIAL_AMP
+                    || geneDriver.driver() == DriverType.DEL)
+            {
                 gainsLosses.add(toGainLoss(geneDriver));
             }
         }
@@ -192,9 +205,11 @@ public final class PurpleDataLoader {
 
     @NotNull
     private static List<GainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, double ploidy,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers) {
+            @NotNull List<GeneCopyNumber> geneCopyNumbers)
+    {
         List<DriverGene> allGenes = Lists.newArrayList();
-        for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
+        for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
+        {
             allGenes.add(ImmutableDriverGene.builder()
                     .gene(geneCopyNumber.geneName())
                     .reportMissenseAndInframe(false)
@@ -220,7 +235,8 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static GainLoss toGainLoss(@NotNull DriverCatalog driver) {
+    private static GainLoss toGainLoss(@NotNull DriverCatalog driver)
+    {
         return ImmutableGainLoss.builder()
                 .chromosome(driver.chromosome())
                 .chromosomeBand(driver.chromosomeBand())
@@ -234,10 +250,13 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static List<GermlineDeletion> selectReportedDeletions(@NotNull List<GermlineDeletion> allGermlineDeletions) {
+    private static List<GermlineDeletion> selectReportedDeletions(@NotNull List<GermlineDeletion> allGermlineDeletions)
+    {
         List<GermlineDeletion> reported = Lists.newArrayList();
-        for (GermlineDeletion deletion : allGermlineDeletions) {
-            if (deletion.Reported) {
+        for(GermlineDeletion deletion : allGermlineDeletions)
+        {
+            if(deletion.Reported)
+            {
                 reported.add(deletion);
             }
         }

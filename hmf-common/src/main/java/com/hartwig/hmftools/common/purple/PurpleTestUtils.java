@@ -24,12 +24,14 @@ public class PurpleTestUtils
 {
     private static final String CHROMOSOME = "1";
 
-    public static double nextDouble(@NotNull final Random random) {
+    public static double nextDouble(@NotNull final Random random)
+    {
         return Math.round(random.nextDouble() * 10000D) / 10000D;
     }
 
     @NotNull
-    public static ImmutableFittedPurity.Builder createRandomPurityBuilder(@NotNull Random random) {
+    public static ImmutableFittedPurity.Builder createRandomPurityBuilder(@NotNull Random random)
+    {
         return ImmutableFittedPurity.builder()
                 .purity(nextDouble(random))
                 .normFactor(nextDouble(random))
@@ -40,7 +42,8 @@ public class PurpleTestUtils
     }
 
     @NotNull
-    public static ImmutableCobaltRatio.Builder cobalt(@NotNull final String chromosome, int position, double ratio) {
+    public static ImmutableCobaltRatio.Builder cobalt(@NotNull final String chromosome, int position, double ratio)
+    {
         return ImmutableCobaltRatio.builder()
                 .chromosome(chromosome)
                 .position(position)
@@ -53,7 +56,8 @@ public class PurpleTestUtils
 
     @NotNull
     public static ImmutablePurpleCopyNumber.Builder createCopyNumber(@NotNull final String chromosome, final int start, final int end,
-            final double copyNumber) {
+            final double copyNumber)
+    {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome(chromosome)
                 .start(start)
@@ -74,7 +78,8 @@ public class PurpleTestUtils
     @NotNull
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariant(@NotNull final String startChromosome,
             final int startPosition, @NotNull final String endChromosome, final int endPosition,
-            @NotNull final StructuralVariantType type, double startVaf, double endVaf) {
+            @NotNull final StructuralVariantType type, double startVaf, double endVaf)
+    {
         return ImmutableStructuralVariantImpl.builder()
                 .id(Strings.EMPTY)
                 .insertSequence(Strings.EMPTY)
@@ -92,7 +97,8 @@ public class PurpleTestUtils
     @NotNull
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariant(@NotNull final String startChromosome,
             final int startPosition, @NotNull final String endChromosome, final int endPosition,
-            @NotNull final StructuralVariantType type) {
+            @NotNull final StructuralVariantType type)
+    {
         return ImmutableStructuralVariantImpl.builder()
                 .id(Strings.EMPTY)
                 .insertSequence(Strings.EMPTY)
@@ -103,13 +109,14 @@ public class PurpleTestUtils
                 .recovered(false)
                 .start(createStartLeg(startChromosome, startPosition, type).build())
                 .end(createEndLeg(endChromosome, endPosition, type).build())
-                .startContext(dummyContext() )
+                .startContext(dummyContext())
                 .imprecise(true);
     }
 
     @NotNull
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariantSingleBreakend(@NotNull final String startChromosome,
-            final int startPosition, double startVaf) {
+            final int startPosition, double startVaf)
+    {
         return ImmutableStructuralVariantImpl.builder()
                 .id(Strings.EMPTY)
                 .insertSequence(Strings.EMPTY)
@@ -125,9 +132,11 @@ public class PurpleTestUtils
 
     @NotNull
     public static ImmutableStructuralVariantLegImpl.Builder createStartLeg(@NotNull final String startChromosome, final int startPosition,
-            @NotNull final StructuralVariantType type) {
+            @NotNull final StructuralVariantType type)
+    {
         final byte startOrientation;
-        switch (type) {
+        switch(type)
+        {
             case DUP:
                 startOrientation = -1;
                 break;
@@ -150,9 +159,11 @@ public class PurpleTestUtils
 
     @NotNull
     private static ImmutableStructuralVariantLegImpl.Builder createEndLeg(@NotNull final String endChromosome, final int endPosition,
-            @NotNull final StructuralVariantType type) {
+            @NotNull final StructuralVariantType type)
+    {
         final byte endOrientation;
-        switch (type) {
+        switch(type)
+        {
             case DUP:
                 endOrientation = 1;
                 break;
@@ -174,7 +185,8 @@ public class PurpleTestUtils
     }
 
     @NotNull
-    private static VariantContext dummyContext() {
+    private static VariantContext dummyContext()
+    {
         final Collection<Allele> alleles = Lists.newArrayList(Allele.create("N", true));
 
         return new VariantContextBuilder("purple", "2", 1, 1, alleles)
