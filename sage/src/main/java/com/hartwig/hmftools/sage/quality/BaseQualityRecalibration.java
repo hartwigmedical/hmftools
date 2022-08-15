@@ -253,6 +253,8 @@ public class BaseQualityRecalibration
             regionTasks.addAll(chrRegionTasks);
         }
 
+        Collections.sort(regionTasks, new PartitionTask.PartitionTaskComparator());
+
         return regionTasks;
     }
 

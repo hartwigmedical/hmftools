@@ -116,7 +116,10 @@ public class GenerateBedRegions
             }
         }
 
-        loadSpecificRegions(mSourceDir + cmd.getOptionValue(SPECIFIC_REGIONS_FILE, ""));
+        if(cmd.hasOption(SPECIFIC_REGIONS_FILE))
+        {
+            loadSpecificRegions(mSourceDir + cmd.getOptionValue(SPECIFIC_REGIONS_FILE, ""));
+        }
 
         final List<String> geneIds = mCodingGenes.stream().map(x -> x.GeneId).collect(Collectors.toList());
         mEnsemblDataCache.loadTranscriptData(geneIds);
@@ -188,8 +191,8 @@ public class GenerateBedRegions
                 if(exon.Start > endPosition)
                     break;
 
-                int regionMin = max(exon.Start, transData.CodingStart);
-                int regionMax = min(exon.End, transData.CodingEnd);
+                int regionMin = max(exon.Start, startPosition);
+                int regionMax = min(exon.End, endPosition);
 
                 RegionData regionData = new RegionData(geneData.GeneName, new ChrBaseRegion(geneData.Chromosome, regionMin, regionMax), CODING);
                 addRegion(regionData);
