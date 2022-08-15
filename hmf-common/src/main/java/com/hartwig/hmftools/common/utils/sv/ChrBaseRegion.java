@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.chromosome.ContigComparator;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
@@ -121,7 +120,13 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
             return 1;
         }
 
-        return ContigComparator.INSTANCE.compare(Chromosome, other.Chromosome);
+        int rank1 = HumanChromosome.chromosomeRank(Chromosome);
+        int rank2 = HumanChromosome.chromosomeRank(other.Chromosome);
+
+        if(rank1 == rank2)
+            return 0;
+
+        return rank1 < rank2 ? -1 : 1;
     }
 
     // config loading to filter on specific regions
