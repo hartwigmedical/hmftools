@@ -58,6 +58,7 @@ public class GenerateBedRegions
     private final Map<String,List<RegionData>> mCombinedRegions; // combined, non-overlapping regions
     private final String mSourceDir;
     private final String mOutputFile;
+    private final boolean mIncludeUTR;
 
     private static final String SPECIFIC_REGIONS_FILE = "specific_regions_file";
     private static final String CODING_GENE_FILE = "coding_genes_file";
@@ -65,6 +66,7 @@ public class GenerateBedRegions
     private static final String COMPARISON_BED_FILES = "comparison_bed_files";
     private static final String SOURCE_DIR = "source_dir";
     private static final String OUTPUT_FILE = "output_file";
+    private static final String INCLUDE_UTR = "include_utr";
 
     private static final Logger LOGGER = LogManager.getLogger(GenerateBedRegions.class);
 
@@ -81,6 +83,8 @@ public class GenerateBedRegions
         mEnsemblDataCache = new EnsemblDataCache(cmd, mRefGenVersion);
         mEnsemblDataCache.setRequiredData(true, false, false, false);
         mEnsemblDataCache.load(true);
+
+        mIncludeUTR = cmd.hasOption(INCLUDE_UTR);
 
         mSourceDir = checkAddDirSeparator(cmd.getOptionValue(SOURCE_DIR));
 
@@ -173,12 +177,15 @@ public class GenerateBedRegions
             if(transData.BioType.equals("nonsense_mediated_decay"))
                 continue;
 
+            int startPosition = mIncludeUTR || transData.nonCoding() ? transData.TransStart : transData.CodingStart;
+            int endPosition = mIncludeUTR || transData.nonCoding() ? transData.TransEnd : transData.CodingEnd;
+
             for(ExonData exon : transData.exons())
             {
-                if(exon.End < transData.CodingStart)
+                if(exon.End < startPosition)
                     continue;
 
-                if(exon.Start > transData.CodingEnd)
+                if(exon.Start > endPosition)
                     break;
 
                 int regionMin = max(exon.Start, transData.CodingStart);
@@ -421,6 +428,7 @@ public class GenerateBedRegions
         options.addOption(CODING_GENE_FILE, true, "External LINE data sample counts");
         options.addOption(TRANS_TSL_FILE, true, "Ensembl valid TSL transcript IDs");
         options.addOption(COMPARISON_BED_FILES, true, "Comparison BED file");
+        options.addOption(INCLUDE_UTR, false, "Include UTR in bed regions");
         options.addOption(OUTPUT_FILE, true, "Output BED filename");
         addEnsemblDir(options);
         addRefGenomeConfig(options);
