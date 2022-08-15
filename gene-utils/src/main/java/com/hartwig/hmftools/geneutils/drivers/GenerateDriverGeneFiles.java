@@ -152,7 +152,10 @@ public class GenerateDriverGeneFiles
                 if(driverGene == null)
                     continue;
 
-                if(!driverGene.reportSomatic() && !driverGene.reportGermline() && !mPanelGeneOverrides.contains(geneData.GeneName))
+                boolean includeGene = driverGene.reportSomatic() || driverGene.reportGermline() || driverGene.reportPGX()
+                        || mPanelGeneOverrides.contains(geneData.GeneName);
+
+                if(!includeGene)
                     continue;
 
                 TranscriptData transData = ensemblDataCache.getTranscriptData(geneData.GeneId, "");

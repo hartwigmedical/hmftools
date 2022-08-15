@@ -42,6 +42,8 @@ public interface DriverGene extends Comparable<DriverGene>
 
     List<String> additionalReportedTranscripts();
 
+    boolean reportPGX();
+
     @Override
     default int compareTo(@NotNull final DriverGene o)
     {

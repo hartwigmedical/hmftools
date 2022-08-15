@@ -545,6 +545,7 @@ public class ConclusionAlgoTest {
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .likelihoodType(likelihoodMethod)
                 .reportGermlineDisruption(true)
+                .reportPGX(false)
                 .build();
     }
 

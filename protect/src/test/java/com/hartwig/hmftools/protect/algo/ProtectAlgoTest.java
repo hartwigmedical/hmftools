@@ -29,7 +29,7 @@ public class ProtectAlgoTest {
 
     private static final String DOID_JSON = Resources.getResource("doid/example_doid.json").getPath();
 
-    private static final String DRIVER_GENE_TSV = Resources.getResource("drivercatalog/driver.gene.panel.tsv").getPath();
+    private static final String DRIVER_GENE_TSV = Resources.getResource("drivercatalog/driver_gene_panel_test.tsv").getPath();
 
     private static final String SERVE_DIR = Resources.getResource("serve").getPath();
 

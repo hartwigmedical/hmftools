@@ -243,6 +243,7 @@ public final class PurpleDataLoader
                     .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                     .reportGermlineDisruption(false)
                     .likelihoodType(DriverCategory.ONCO)
+                    .reportPGX(false)
                     .build());
         }
         CNADrivers drivers = new CNADrivers(qcStatus, ImmutableDriverGenePanel.builder().driverGenes(allGenes).build());

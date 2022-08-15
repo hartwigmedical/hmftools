@@ -68,6 +68,7 @@ public class ReportablePredicateTest {
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
                 .reportGermlineDisruption(false)
+                .reportPGX(false)
                 .build());
 
         return DriverGenePanelFactory.create(driverGenes);

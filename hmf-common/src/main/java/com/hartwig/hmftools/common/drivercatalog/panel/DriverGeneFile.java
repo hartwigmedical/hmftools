@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
@@ -57,10 +58,11 @@ public final class DriverGeneFile
                 fieldsIndexMap.get("reportSomaticHotspot") : fieldsIndexMap.get("reportHotspot"); // for older files
 
         int likelihoodTypeIndex = fieldsIndexMap.get("likelihoodType");
-        Integer germlineVariantIndex = fieldsIndexMap.get("reportGermlineVariant");
-        Integer germlineHotspotIndex = fieldsIndexMap.get("reportGermlineHotspot");
-        Integer germlineDisruptionIndex = fieldsIndexMap.get("reportGermlineDisruption");
-        Integer altTransIndex = fieldsIndexMap.get("additionalReportedTranscripts");
+        int germlineVariantIndex = fieldsIndexMap.get("reportGermlineVariant");
+        int germlineHotspotIndex = fieldsIndexMap.get("reportGermlineHotspot");
+        int germlineDisruptionIndex = fieldsIndexMap.get("reportGermlineDisruption");
+        int altTransIndex = fieldsIndexMap.get("additionalReportedTranscripts");
+        Integer reportPGXIndex = fieldsIndexMap.get("reportPGX");
 
         ImmutableDriverGene.Builder builder = ImmutableDriverGene.builder();
 
@@ -68,14 +70,9 @@ public final class DriverGeneFile
         {
             String[] values = line.split(DELIMITER, -1);
 
-            List<String> otherReportableTrans = Lists.newArrayList();
-
-            if(altTransIndex != null)
-            {
-                Arrays.stream(values[altTransIndex].split(OTHER_TRANS_DELIM))
-                        .filter(x -> !x.isEmpty())
-                        .forEach(x -> otherReportableTrans.add(x));
-            }
+            List<String> otherReportableTrans = Arrays.stream(values[altTransIndex].split(OTHER_TRANS_DELIM))
+                    .filter(x -> !x.isEmpty())
+                    .collect(Collectors.toList());
 
             builder.gene(values[geneIndex])
                     .reportMissenseAndInframe(Boolean.parseBoolean(values[missenseIndex]))
@@ -86,17 +83,11 @@ public final class DriverGeneFile
                     .reportAmplification(Boolean.parseBoolean(values[amplificationIndex]))
                     .reportSomaticHotspot(Boolean.parseBoolean(values[somaticHotspotIndex]))
                     .likelihoodType(DriverCategory.valueOf(values[likelihoodTypeIndex]))
-                    .reportGermlineVariant(germlineVariantIndex != null
-                            ?
-                            DriverGeneGermlineReporting.valueOf(values[germlineVariantIndex].toUpperCase())
-                            : DriverGeneGermlineReporting.NONE)
-                    .reportGermlineHotspot(germlineHotspotIndex != null
-                            ?
-                            DriverGeneGermlineReporting.valueOf(values[germlineHotspotIndex].toUpperCase())
-                            : DriverGeneGermlineReporting.NONE)
-                    .reportGermlineDisruption(germlineDisruptionIndex != null ?
-                            Boolean.parseBoolean(values[germlineDisruptionIndex]) : Boolean.parseBoolean(values[disruptionIndex]))
-                    .additionalReportedTranscripts(otherReportableTrans);
+                    .reportGermlineVariant(DriverGeneGermlineReporting.valueOf(values[germlineVariantIndex].toUpperCase()))
+                    .reportGermlineHotspot(DriverGeneGermlineReporting.valueOf(values[germlineHotspotIndex].toUpperCase()))
+                    .reportGermlineDisruption(Boolean.parseBoolean(values[germlineDisruptionIndex]))
+                    .additionalReportedTranscripts(otherReportableTrans)
+                    .reportPGX(reportPGXIndex != null ? Boolean.parseBoolean(values[reportPGXIndex]) : false);
 
             driverGenes.add(builder.build());
         }
@@ -114,7 +105,6 @@ public final class DriverGeneFile
         return sj.toString();
     }
 
-    @NotNull
     private static String header()
     {
         return new StringJoiner(DELIMITER).add("gene")
@@ -130,11 +120,11 @@ public final class DriverGeneFile
                 .add("reportGermlineHotspot")
                 .add("reportGermlineDisruption")
                 .add("additionalReportedTranscripts")
+                .add("reportPGX")
                 .toString();
     }
 
-    @NotNull
-    private static String toString(@NotNull final DriverGene gene)
+    private static String toString(final DriverGene gene)
     {
         return new StringJoiner(DELIMITER)
                 .add(gene.gene())
@@ -150,11 +140,11 @@ public final class DriverGeneFile
                 .add(String.valueOf(gene.reportGermlineHotspot()))
                 .add(String.valueOf(gene.reportGermlineDisruption()))
                 .add(otherReportableTransStr(gene.additionalReportedTranscripts()))
+                .add(String.valueOf(gene.reportPGX()))
                 .toString();
     }
 
-    @NotNull
-    private static List<String> toLines(@NotNull final List<DriverGene> driverGenes)
+    private static List<String> toLines(final List<DriverGene> driverGenes)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());

@@ -37,9 +37,9 @@ public class HlaEvidence {
         List<ProtectEvidence> result = Lists.newArrayList();
 
         for (ActionableHLA hla : actionableHLA) {
-            if (hla.hlaType().equals(lilacAllele.name().split(":")[0])) {
+            if (hla.hlaType().equals(lilacAllele.allele().split(":")[0])) {
                     ProtectEvidence evidence = personalizedEvidenceFactory.evidenceBuilder(hla)
-                            .event(lilacAllele.name())
+                            .event(lilacAllele.allele())
                             .reported(lilacQc.equals("PASS"))
                             .germline(false)
                             .build();

@@ -18,7 +18,6 @@ import org.junit.Test;
 
 public class DriverCatalogFactoryTest
 {
-
     private static final double EPSILON = 0.0001;
 
     private Map<String, DndsDriverGeneLikelihood> tsg;

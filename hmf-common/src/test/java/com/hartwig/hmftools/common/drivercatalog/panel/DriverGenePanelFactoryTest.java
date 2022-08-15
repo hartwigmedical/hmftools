@@ -23,7 +23,7 @@ public class DriverGenePanelFactoryTest {
 
     @NotNull
     private static List<DriverGene> builtIn() {
-        final InputStream inputStream = DriverGenePanelFactoryTest.class.getResourceAsStream("/drivercatalog/driver.gene.panel.tsv");
+        final InputStream inputStream = DriverGenePanelFactoryTest.class.getResourceAsStream("/drivercatalog/driver_gene_panel_test.tsv");
 
         List<String> lines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList());
         return DriverGeneFile.fromLines(lines);

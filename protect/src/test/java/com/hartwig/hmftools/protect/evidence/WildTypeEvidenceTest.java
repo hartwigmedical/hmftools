@@ -267,6 +267,7 @@ public class WildTypeEvidenceTest {
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .likelihoodType(TSG)
                 .reportGermlineDisruption(true)
+                .reportPGX(false)
                 .build();
     }
 

@@ -5,13 +5,10 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class DriverGeneTestFactory {
-
-    private DriverGeneTestFactory() {
-    }
-
-    @NotNull
-    public static ImmutableDriverGene.Builder builder() {
+public final class DriverGeneTestFactory
+{
+    public static ImmutableDriverGene.Builder builder()
+    {
         return ImmutableDriverGene.builder()
                 .gene(Strings.EMPTY)
                 .reportMissenseAndInframe(false)
@@ -24,6 +21,7 @@ public final class DriverGeneTestFactory {
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .likelihoodType(DriverCategory.ONCO)
-                .reportGermlineDisruption(false);
+                .reportGermlineDisruption(false)
+                .reportPGX(false);
     }
 }

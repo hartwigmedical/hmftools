@@ -160,6 +160,7 @@ public class GeneTestUtils
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .likelihoodType(TSG)
                 .reportGermlineDisruption(true)
+                .reportPGX(false)
                 .build();
     }
 
