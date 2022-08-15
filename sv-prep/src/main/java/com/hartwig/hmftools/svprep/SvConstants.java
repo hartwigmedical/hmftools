@@ -20,7 +20,7 @@ public final class SvConstants
     public static final int MAX_SOFT_CLIP_LOW_QUAL_COUNT = 5;
     public static final int MIN_INSERT_LENGTH_SUPPORT = 10;
     public static final int MIN_INDEL_LENGTH = 32;
-    public static final int MIN_INDEL_SUPPORT_LENGTH = 20;
+    public static final int MIN_INDEL_SUPPORT_LENGTH = 15;
     public static final int LOW_BASE_QUALITY = 20;
 
     public static final int REPEAT_BREAK_CHECK_LENGTH = 9;
