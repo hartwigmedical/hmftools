@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.compar.MismatchType.VALUE;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.DiffThresholds;

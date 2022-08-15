@@ -1,11 +1,6 @@
 package com.hartwig.hmftools.common.linx;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
-import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
-import com.hartwig.hmftools.common.sv.linx.ImmutableLinxBreakend;
-import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

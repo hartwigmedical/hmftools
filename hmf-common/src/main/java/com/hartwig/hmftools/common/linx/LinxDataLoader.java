@@ -4,12 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
-import com.hartwig.hmftools.common.sv.linx.LinxDriver;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
-import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
-import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
-
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

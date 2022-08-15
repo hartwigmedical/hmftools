@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
-import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.FusionPhasedType;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

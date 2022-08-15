@@ -7,8 +7,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.FusionPhasedType;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.orange.algo.protect.EvidenceEvaluator;
 
 import org.apache.commons.compress.utils.Lists;

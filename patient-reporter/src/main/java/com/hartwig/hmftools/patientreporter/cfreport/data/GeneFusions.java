@@ -6,8 +6,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 
 import org.jetbrains.annotations.NotNull;
 

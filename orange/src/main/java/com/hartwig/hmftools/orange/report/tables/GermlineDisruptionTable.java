@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.report.tables;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;

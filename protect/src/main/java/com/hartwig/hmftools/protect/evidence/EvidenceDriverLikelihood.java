@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.protect.evidence;
 
-import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 
 import org.jetbrains.annotations.NotNull;

@@ -3,14 +3,13 @@ package com.hartwig.hmftools.compar.linx;
 import static com.hartwig.hmftools.compar.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
-import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.DiffThresholds;

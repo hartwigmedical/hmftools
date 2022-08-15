@@ -11,7 +11,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
-import com.hartwig.hmftools.common.sv.linx.LinxDriver;
+import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;

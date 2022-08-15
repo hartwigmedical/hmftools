@@ -12,12 +12,12 @@ import java.util.Map;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
-import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
-import com.hartwig.hmftools.common.sv.linx.ImmutableLinxBreakend;
-import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.linx.FusionPhasedType;
+import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
+import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

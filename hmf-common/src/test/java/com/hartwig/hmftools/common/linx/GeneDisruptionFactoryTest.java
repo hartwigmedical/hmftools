@@ -7,11 +7,6 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sv.linx.ImmutableLinxBreakend;
-import com.hartwig.hmftools.common.sv.linx.ImmutableLinxSvAnnotation;
-import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
-import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
-import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

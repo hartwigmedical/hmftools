@@ -32,7 +32,7 @@ import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
-import com.hartwig.hmftools.common.sv.linx.LinxCluster;
+import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class SvDataLoader

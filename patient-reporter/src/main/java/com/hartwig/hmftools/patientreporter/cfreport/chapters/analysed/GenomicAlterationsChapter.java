@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;

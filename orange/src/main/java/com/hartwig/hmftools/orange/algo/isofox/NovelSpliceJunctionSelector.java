@@ -8,7 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.orange.algo.linx.DNAFusionEvaluator;
 
 import org.jetbrains.annotations.NotNull;

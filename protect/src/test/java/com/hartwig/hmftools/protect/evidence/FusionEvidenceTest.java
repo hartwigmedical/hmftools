@@ -22,8 +22,8 @@ import com.hartwig.hmftools.common.protect.EvidenceType;
 import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
@@ -33,7 +33,6 @@ import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class FusionEvidenceTest {

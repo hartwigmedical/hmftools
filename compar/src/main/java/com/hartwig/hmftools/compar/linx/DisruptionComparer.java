@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
-import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.CommonUtils;

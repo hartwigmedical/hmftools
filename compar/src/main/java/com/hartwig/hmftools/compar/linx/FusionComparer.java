@@ -18,7 +18,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;

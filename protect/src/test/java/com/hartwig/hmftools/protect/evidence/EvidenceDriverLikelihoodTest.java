@@ -3,7 +3,7 @@ package com.hartwig.hmftools.protect.evidence;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 
 import org.junit.Test;

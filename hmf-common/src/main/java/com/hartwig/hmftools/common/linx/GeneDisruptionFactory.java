@@ -7,8 +7,6 @@ import java.util.Objects;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
-import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.lang3.tuple.Pair;

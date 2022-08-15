@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;

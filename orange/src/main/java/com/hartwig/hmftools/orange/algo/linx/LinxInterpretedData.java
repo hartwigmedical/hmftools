@@ -4,10 +4,10 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
-import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
-import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
-import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

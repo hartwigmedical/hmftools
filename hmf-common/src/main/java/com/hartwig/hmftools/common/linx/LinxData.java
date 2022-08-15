@@ -2,12 +2,6 @@ package com.hartwig.hmftools.common.linx;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
-import com.hartwig.hmftools.common.sv.linx.LinxDriver;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
-import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
-import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

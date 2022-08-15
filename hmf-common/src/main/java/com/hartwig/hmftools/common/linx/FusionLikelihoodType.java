@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.sv.linx;
+package com.hartwig.hmftools.common.linx;
 
 public enum FusionLikelihoodType
 {

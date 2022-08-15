@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.sv.linx;
+package com.hartwig.hmftools.common.linx;
 
 import static java.util.stream.Collectors.toList;
 
@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-
-import org.jetbrains.annotations.NotNull;
 
 public class LinxViralInsertion
 {

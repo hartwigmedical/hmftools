@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 
 import org.apache.logging.log4j.LogManager;

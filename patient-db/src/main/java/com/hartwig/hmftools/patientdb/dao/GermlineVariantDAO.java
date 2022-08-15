@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.common.genotype.GenotypeStatus.UNKNOWN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTGERMLINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Germlinevariant.GERMLINEVARIANT;
 
@@ -12,19 +11,15 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
 import com.hartwig.hmftools.common.variant.ImmutableGermlineVariantImpl;
-import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;

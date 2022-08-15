@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.common.sv.linx;
+package com.hartwig.hmftools.common.linx;
 
-import static com.hartwig.hmftools.common.sv.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.linx.LinxCluster.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -12,9 +12,9 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
+import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 
 import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
 
 @Value.Immutable
 public abstract class LinxFusion

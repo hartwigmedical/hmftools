@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -23,9 +22,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.common.sv.linx.LinxCluster;
-import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.linx.LinxCluster;
+import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 
 public class LineElementMatcher

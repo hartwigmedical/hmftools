@@ -2,7 +2,7 @@ package com.hartwig.hmftools.orange.algo.linx;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 
 import org.jetbrains.annotations.NotNull;
 

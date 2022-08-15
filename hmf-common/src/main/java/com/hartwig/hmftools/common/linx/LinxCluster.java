@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.common.sv.linx;
-
-import static java.util.stream.Collectors.toList;
+package com.hartwig.hmftools.common.linx;
 
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
@@ -12,9 +10,9 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.linx.ImmutableLinxCluster;
 
 import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
 
 @Value.Immutable
 public abstract class LinxCluster

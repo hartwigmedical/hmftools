@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.cuppa.SvDataType;
-import com.hartwig.hmftools.common.sv.linx.LinxCluster;
+import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;

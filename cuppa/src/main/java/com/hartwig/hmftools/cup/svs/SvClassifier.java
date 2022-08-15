@@ -23,7 +23,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.cuppa.SvDataType;
-import com.hartwig.hmftools.common.sv.linx.LinxCluster;
+import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;

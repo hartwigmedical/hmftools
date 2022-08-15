@@ -14,15 +14,15 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_BOTH;
-import static com.hartwig.hmftools.common.sv.linx.FusionPhasedType.INFRAME;
-import static com.hartwig.hmftools.common.sv.linx.FusionPhasedType.OUT_OF_FRAME;
-import static com.hartwig.hmftools.common.sv.linx.FusionPhasedType.SKIPPED_EXONS;
+import static com.hartwig.hmftools.common.linx.FusionPhasedType.INFRAME;
+import static com.hartwig.hmftools.common.linx.FusionPhasedType.OUT_OF_FRAME;
+import static com.hartwig.hmftools.common.linx.FusionPhasedType.SKIPPED_EXONS;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.UNSET;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
-import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
-import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
+import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.linx.FusionPhasedType;
 
 public class GeneFusion
 {

@@ -6,8 +6,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

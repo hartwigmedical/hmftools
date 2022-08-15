@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.sv.linx;
+package com.hartwig.hmftools.common.linx;
 
 import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
@@ -12,8 +12,6 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-
-import org.jetbrains.annotations.NotNull;
 
 public final class LinxGermlineSv
 {
