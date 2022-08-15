@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
+import com.hartwig.hmftools.common.purple.ChromosomeArm;
 
 public class LikelihoodCalc
 {

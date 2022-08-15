@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
+import com.hartwig.hmftools.common.purple.ChromosomeArm;
 
 import java.util.List;
 

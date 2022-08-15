@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import com.hartwig.hmftools.common.purple.PurpleQC;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
+import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;

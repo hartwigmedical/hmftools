@@ -23,7 +23,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.gripss.GripssFilters;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.utils.Doubles;

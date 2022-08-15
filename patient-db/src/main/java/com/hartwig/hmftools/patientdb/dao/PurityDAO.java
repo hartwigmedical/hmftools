@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityMethod.NO_TUMOR;
+import static com.hartwig.hmftools.common.purple.FittedPurityMethod.NO_TUMOR;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.PASS;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITY;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITYRANGE;
@@ -12,18 +12,18 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
+import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
+import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
-import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
-import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
-import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.RunMode;
+import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.FittedPurityMethod;
+import com.hartwig.hmftools.common.purple.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

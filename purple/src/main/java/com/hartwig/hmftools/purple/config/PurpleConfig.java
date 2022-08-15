@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.purple.purity.RunMode;
+import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.variant.VariantTier;
 
 import org.apache.commons.cli.CommandLine;

@@ -18,15 +18,15 @@ import com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.plot.RChartData;
 

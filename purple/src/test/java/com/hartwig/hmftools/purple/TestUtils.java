@@ -15,7 +15,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;

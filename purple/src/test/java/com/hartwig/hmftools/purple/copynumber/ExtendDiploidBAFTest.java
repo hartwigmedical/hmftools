@@ -12,7 +12,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;

@@ -10,8 +10,8 @@ import com.hartwig.hmftools.common.genome.region.ImmutableHmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.ImmutableHmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;

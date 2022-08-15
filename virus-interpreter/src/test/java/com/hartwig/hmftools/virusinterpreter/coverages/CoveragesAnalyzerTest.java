@@ -6,8 +6,8 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
 
 import org.junit.Test;
 

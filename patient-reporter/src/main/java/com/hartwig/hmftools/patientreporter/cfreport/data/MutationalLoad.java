@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
-import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 
 public final class MutationalLoad {
 

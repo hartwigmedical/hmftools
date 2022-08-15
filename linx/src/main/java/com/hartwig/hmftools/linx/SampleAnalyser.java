@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.linx.SvFileLoader.loadSampleSvDataFromFile;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.asStr;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
 
 import java.io.IOException;
 import java.util.List;
@@ -44,7 +44,7 @@ import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionResources;
 import com.hartwig.hmftools.linx.gene.BreakendGenePrep;
 import com.hartwig.hmftools.linx.types.ArmCluster;
-import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
+import com.hartwig.hmftools.common.purple.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;

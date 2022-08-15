@@ -5,8 +5,8 @@ import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.CENTROMERE;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -19,8 +19,8 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLength;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomeLength;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 

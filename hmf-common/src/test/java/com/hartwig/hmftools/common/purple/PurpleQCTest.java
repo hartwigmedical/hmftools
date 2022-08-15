@@ -10,7 +10,6 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

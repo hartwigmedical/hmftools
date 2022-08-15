@@ -4,9 +4,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
+import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 

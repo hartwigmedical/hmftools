@@ -12,7 +12,7 @@ import com.hartwig.hmftools.purple.purity.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

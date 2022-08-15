@@ -13,12 +13,12 @@ import java.util.List;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
-import com.hartwig.hmftools.common.purple.gene.GermlineDetectionMethod;
-import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.CopyNumberMethod;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
+import com.hartwig.hmftools.common.purple.ImmutableGeneCopyNumber;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

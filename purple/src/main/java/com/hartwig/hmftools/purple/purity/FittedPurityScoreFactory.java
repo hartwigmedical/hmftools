@@ -6,10 +6,10 @@ import java.util.Collection;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
-import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
+import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.FittedPurityScore;
 
 import org.jetbrains.annotations.NotNull;
 

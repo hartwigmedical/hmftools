@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;

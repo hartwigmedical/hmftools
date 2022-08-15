@@ -9,9 +9,9 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.CopyNumberMethod;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.linx.types.SvVarData;
 

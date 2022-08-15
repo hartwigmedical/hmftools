@@ -11,10 +11,10 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
-import com.hartwig.hmftools.common.purple.interpretation.ImmutableGainLoss;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.loader.GainLoss;
+import com.hartwig.hmftools.common.purple.loader.ImmutableGainLoss;
 import com.hartwig.hmftools.orange.algo.protect.EvidenceEvaluator;
 
 import org.apache.commons.compress.utils.Lists;

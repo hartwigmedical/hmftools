@@ -10,10 +10,10 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.CopyNumberMethod;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

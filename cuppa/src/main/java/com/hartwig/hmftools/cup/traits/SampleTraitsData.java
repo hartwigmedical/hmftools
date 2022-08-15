@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContext;
 
 public class SampleTraitsData
 {

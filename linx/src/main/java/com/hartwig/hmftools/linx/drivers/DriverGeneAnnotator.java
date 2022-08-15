@@ -1,17 +1,13 @@
 package com.hartwig.hmftools.linx.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE_DELETION;
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE_DISRUPTION;
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE_MUTATION;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.PARTIAL_AMP;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.drivers.GeneCopyNumberRegion.calcGeneCopyNumberRegion;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.getDisruptionGeneTranscripts;
 import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DRIVER;
 
@@ -23,12 +19,11 @@ import java.util.Map;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.copynumber;
 
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 final class Extend

@@ -5,9 +5,9 @@ import java.util.List;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.purple.PurpleData;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.purple.loader.PurpleData;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 
 import org.apache.logging.log4j.LogManager;

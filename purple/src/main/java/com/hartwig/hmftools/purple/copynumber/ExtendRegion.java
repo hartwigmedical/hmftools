@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.copynumber;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
+import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 
 import org.jetbrains.annotations.NotNull;
 

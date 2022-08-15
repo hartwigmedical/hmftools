@@ -9,11 +9,9 @@ import static com.hartwig.hmftools.linx.drivers.GeneCopyNumberRegion.calcGeneCop
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
@@ -22,10 +20,10 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 

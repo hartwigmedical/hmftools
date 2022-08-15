@@ -14,7 +14,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.purple.purity.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;

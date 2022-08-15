@@ -4,8 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.common.virus.VirusBreakend;

@@ -2,10 +2,10 @@ package com.hartwig.hmftools.linx.cn;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.CENTROMERE;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.NONE;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.TELOMERE;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -26,11 +26,11 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 

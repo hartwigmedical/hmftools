@@ -23,10 +23,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.PurpleQC;
-import com.hartwig.hmftools.common.purple.PurpleQCFile;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;

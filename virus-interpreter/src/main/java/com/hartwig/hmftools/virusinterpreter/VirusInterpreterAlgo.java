@@ -6,7 +6,7 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;

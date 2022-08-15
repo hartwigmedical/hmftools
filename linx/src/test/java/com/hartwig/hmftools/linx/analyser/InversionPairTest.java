@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvCluster;

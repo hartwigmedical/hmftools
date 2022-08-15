@@ -5,10 +5,6 @@ import java.util.Random;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;

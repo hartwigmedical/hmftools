@@ -13,10 +13,8 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
-
-import org.jetbrains.annotations.NotNull;
 
 public final class SegmentFile
 {

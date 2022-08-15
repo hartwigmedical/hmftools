@@ -6,10 +6,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
-import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
-import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
+import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
+import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.loader.GainLoss;
+import com.hartwig.hmftools.common.purple.ChromosomeArm;
 import com.hartwig.hmftools.common.utils.DataUtil;
 
 import org.jetbrains.annotations.NotNull;

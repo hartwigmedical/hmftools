@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 
 public class GeneCopyNumberRegion

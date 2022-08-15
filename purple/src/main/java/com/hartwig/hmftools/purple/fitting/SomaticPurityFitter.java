@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
+import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 

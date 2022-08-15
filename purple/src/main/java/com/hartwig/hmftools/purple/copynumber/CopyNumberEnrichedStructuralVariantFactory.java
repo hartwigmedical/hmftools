@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegCopyNumber;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegCopyNumberChangeFactory;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegCopyNumberFactory;

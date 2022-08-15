@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;

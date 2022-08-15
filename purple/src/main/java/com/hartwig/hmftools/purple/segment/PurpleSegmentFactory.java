@@ -12,7 +12,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.common.sv.StructuralVariant;

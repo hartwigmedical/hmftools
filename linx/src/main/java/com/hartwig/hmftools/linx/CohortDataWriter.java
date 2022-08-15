@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.asStr;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_LINE;
 import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_OTHER;

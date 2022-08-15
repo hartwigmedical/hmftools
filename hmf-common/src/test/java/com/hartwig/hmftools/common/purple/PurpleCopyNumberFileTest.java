@@ -1,23 +1,16 @@
 package com.hartwig.hmftools.common.purple;
 
 import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createCopyNumber;
-import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile.fromLines;
-import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile.toLines;
+import static com.hartwig.hmftools.common.purple.PurpleCopyNumberFile.fromLines;
+import static com.hartwig.hmftools.common.purple.PurpleCopyNumberFile.toLines;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

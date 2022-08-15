@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.segment;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 
 public class PurpleSegment implements GenomeRegion
 {

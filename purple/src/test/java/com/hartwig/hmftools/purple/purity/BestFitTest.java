@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.purity.BestFit;
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.BestFit;
+import com.hartwig.hmftools.common.purple.FittedPurity;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

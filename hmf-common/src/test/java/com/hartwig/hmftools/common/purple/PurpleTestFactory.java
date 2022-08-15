@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.common.purple;
 
-import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
+import com.hartwig.hmftools.common.purple.loader.ImmutablePurpleData;
+import com.hartwig.hmftools.common.purple.loader.PurpleData;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 
 import org.jetbrains.annotations.NotNull;
 

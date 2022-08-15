@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;

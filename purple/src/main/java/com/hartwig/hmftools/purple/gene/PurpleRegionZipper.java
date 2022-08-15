@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;

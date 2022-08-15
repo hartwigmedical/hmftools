@@ -4,7 +4,7 @@ import com.beust.jcommander.*
 import com.hartwig.hmftools.common.genome.gc.GCMedianReadCountFile
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile
-import com.hartwig.hmftools.common.purple.purity.PurityContextFile
+import com.hartwig.hmftools.common.purple.PurityContextFile
 import com.hartwig.hmftools.common.utils.FileWriterUtils
 import com.hartwig.hmftools.common.utils.config.LoggingOptions
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator

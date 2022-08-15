@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
+import com.hartwig.hmftools.common.purple.ChromosomeArm;
 
 public class DriverGeneData
 {

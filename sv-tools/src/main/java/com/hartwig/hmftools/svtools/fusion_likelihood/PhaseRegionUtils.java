@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.intAs
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
+import com.hartwig.hmftools.common.purple.ChromosomeArm;
 
 public class PhaseRegionUtils
 {

@@ -4,10 +4,10 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
-import com.hartwig.hmftools.common.purple.PurpleData;
+import com.hartwig.hmftools.common.purple.loader.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableCharacteristic;

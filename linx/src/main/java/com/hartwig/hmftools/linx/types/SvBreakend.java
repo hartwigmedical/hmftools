@@ -2,12 +2,12 @@ package com.hartwig.hmftools.linx.types;
 
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 
 import java.util.List;
 
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
-import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
+import com.hartwig.hmftools.common.purple.ChromosomeArm;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.cn.SvCNData;

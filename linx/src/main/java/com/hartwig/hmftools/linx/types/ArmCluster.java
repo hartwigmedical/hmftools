@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
+import com.hartwig.hmftools.common.purple.ChromosomeArm;
 
 // clusters of proximate SVs on an arm
 public class ArmCluster

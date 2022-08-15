@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.NONE;
 import static com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication.wholeGenomeDuplication;
 import static com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory.polyclonalProportion;
 
@@ -9,17 +9,17 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
+import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.BestFit;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.BestFit;
 import com.hartwig.hmftools.common.purple.PurpleQC;
-import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
 

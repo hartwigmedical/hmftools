@@ -2,10 +2,10 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
-import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 

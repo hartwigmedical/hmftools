@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.circos.CircosINDELWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
 import com.hartwig.hmftools.common.circos.CircosSNPWriter;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;

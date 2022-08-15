@@ -3,8 +3,8 @@ package com.hartwig.hmftools.cup;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 
 import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
-import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
 
 public class CuppaRefFiles
 {

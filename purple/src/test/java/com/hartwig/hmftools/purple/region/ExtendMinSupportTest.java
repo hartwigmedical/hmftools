@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

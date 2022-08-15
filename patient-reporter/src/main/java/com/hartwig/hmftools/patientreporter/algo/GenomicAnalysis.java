@@ -9,12 +9,12 @@ import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
-import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
+import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 
 import org.immutables.value.Value;

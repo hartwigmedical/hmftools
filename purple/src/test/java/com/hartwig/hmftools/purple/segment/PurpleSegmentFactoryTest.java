@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.purple.segment;
 
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.BND;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.MULTIPLE;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.BND;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.CENTROMERE;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.MULTIPLE;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.NONE;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.TELOMERE;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,7 +14,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;

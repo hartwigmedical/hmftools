@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContext;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 
 import org.apache.logging.log4j.LogManager;

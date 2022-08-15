@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.svtools.fusion_likelihood;
 
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.Q_ARM;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.UNKNOWN;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.UNKNOWN;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_NON_CODING;
 
 import java.util.List;
@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
+import com.hartwig.hmftools.common.purple.ChromosomeArm;
 
 public class GeneRangeData
 {
@@ -71,7 +71,7 @@ public class GeneRangeData
 
     private static String makeChrArmStr(final String chr, final ChromosomeArm arm)
     {
-        return chr + "_" + com.hartwig.hmftools.common.purple.segment.ChromosomeArm.asStr(arm);
+        return chr + "_" + com.hartwig.hmftools.common.purple.ChromosomeArm.asStr(arm);
     }
 
     public final List<GenePhaseRegion> getPhaseRegions() { return mPhaseRegions; }

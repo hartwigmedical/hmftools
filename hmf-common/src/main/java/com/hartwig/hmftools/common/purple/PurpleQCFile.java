@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
 import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
-import static com.hartwig.hmftools.common.purple.PurpleQCStatus.fromString;
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityMethod.NORMAL;
+import static com.hartwig.hmftools.common.purple.FittedPurityMethod.NORMAL;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +13,6 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
 
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getValue;
 

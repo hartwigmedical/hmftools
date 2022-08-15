@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.cn;
 
-import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
+import com.hartwig.hmftools.common.purple.ChromosomeArm;
 
 public class CnArmStats
 {

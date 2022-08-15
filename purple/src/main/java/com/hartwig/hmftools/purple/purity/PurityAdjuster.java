@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.purity;
 
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;

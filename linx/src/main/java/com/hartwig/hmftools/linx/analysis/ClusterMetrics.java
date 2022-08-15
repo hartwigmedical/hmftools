@@ -3,8 +3,8 @@ package com.hartwig.hmftools.linx.analysis;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_DB_LENGTH;

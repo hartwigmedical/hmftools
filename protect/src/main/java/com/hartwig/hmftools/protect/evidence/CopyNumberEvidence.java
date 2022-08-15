@@ -6,8 +6,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 

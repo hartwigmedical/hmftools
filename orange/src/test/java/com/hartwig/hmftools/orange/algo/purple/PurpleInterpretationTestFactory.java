@@ -3,9 +3,9 @@ package com.hartwig.hmftools.orange.algo.purple;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQC;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
+import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 
 import org.jetbrains.annotations.NotNull;
 

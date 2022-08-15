@@ -8,7 +8,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.purple.somatic.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;

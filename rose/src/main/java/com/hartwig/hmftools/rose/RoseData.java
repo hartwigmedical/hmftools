@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.linx.LinxData;
-import com.hartwig.hmftools.common.purple.PurpleData;
+import com.hartwig.hmftools.common.purple.loader.PurpleData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.rose.actionability.ActionabilityEntry;
 

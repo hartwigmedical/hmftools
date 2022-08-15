@@ -2,8 +2,8 @@ package com.hartwig.hmftools.linx.misc;
 
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.findCentromereBreakendIndex;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;

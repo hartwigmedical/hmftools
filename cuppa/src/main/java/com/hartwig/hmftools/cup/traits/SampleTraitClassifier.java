@@ -28,8 +28,8 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.cuppa.ClassifierType;

@@ -3,8 +3,8 @@ package com.hartwig.hmftools.orange.report.chapters;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.interpretation.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.orange.algo.OrangeReport;

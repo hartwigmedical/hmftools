@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.isShortArmChromosom
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN_ARM;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN_CHR;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 
 import java.util.List;
 import java.util.Map;

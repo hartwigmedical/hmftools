@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
+import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 

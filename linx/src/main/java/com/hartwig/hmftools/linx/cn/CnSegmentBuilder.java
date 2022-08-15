@@ -2,34 +2,34 @@ package com.hartwig.hmftools.linx.cn;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityMethod.NORMAL;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
+import static com.hartwig.hmftools.common.purple.FittedPurityMethod.NORMAL;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.CENTROMERE;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.UNKNOWN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
-import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
-import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
-import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
+import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
+import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
+import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQC;
-import com.hartwig.hmftools.common.purple.purity.RunMode;
+import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;

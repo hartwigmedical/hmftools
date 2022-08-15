@@ -11,11 +11,11 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
+import com.hartwig.hmftools.common.purple.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberTestFactory;
-import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class SampleTraitsDataLoader

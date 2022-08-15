@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar.purple;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.Category.GERMLINE_DELETION;
-import static com.hartwig.hmftools.compar.Category.PURITY;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
@@ -11,7 +10,7 @@ import static com.hartwig.hmftools.compar.MismatchType.VALUE;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.DiffThresholds;

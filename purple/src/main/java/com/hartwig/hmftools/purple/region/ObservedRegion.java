@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.region;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 public class ObservedRegion implements GenomeRegion

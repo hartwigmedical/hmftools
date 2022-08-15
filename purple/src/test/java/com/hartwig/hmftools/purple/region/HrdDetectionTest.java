@@ -1,19 +1,19 @@
 package com.hartwig.hmftools.purple.region;
 
-import static com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod.BAF_WEIGHTED;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.BND;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.DEL;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
+import static com.hartwig.hmftools.common.purple.CopyNumberMethod.BAF_WEIGHTED;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.BND;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.CENTROMERE;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.DEL;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.TELOMERE;
 
 import static junit.framework.TestCase.assertEquals;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.purple.tools.HrdDetection;
 
 import org.junit.Test;

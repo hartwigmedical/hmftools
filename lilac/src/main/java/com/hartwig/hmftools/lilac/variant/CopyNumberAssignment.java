@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;

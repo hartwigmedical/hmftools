@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.protect;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.protect.variant.OtherEffectsInterpreter;
-import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
+import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ReportableVariant;

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.svtools.mult_biopsy;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.NONE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 
 import java.util.Arrays;

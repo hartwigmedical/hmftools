@@ -6,9 +6,9 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.Q_ARM;
-import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.UNKNOWN;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.UNKNOWN;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.FusionLikelihood.FLC_LOGGER;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.hasAnyPhaseMatch;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.haveOverlap;
@@ -40,7 +40,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
+import com.hartwig.hmftools.common.purple.ChromosomeArm;
 
 // routines for calculating expected fusion rates across the whole genome for a set of pre-described SV and length categories
 public class CohortExpFusions

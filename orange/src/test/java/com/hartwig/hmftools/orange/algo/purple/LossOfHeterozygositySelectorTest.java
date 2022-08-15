@@ -7,8 +7,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberTestFactory;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
 import org.junit.Test;

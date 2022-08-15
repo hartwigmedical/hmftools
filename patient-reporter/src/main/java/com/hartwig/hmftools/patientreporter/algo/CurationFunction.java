@@ -11,8 +11,8 @@ import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
 import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
-import com.hartwig.hmftools.common.purple.interpretation.GainLoss;
-import com.hartwig.hmftools.common.purple.interpretation.ImmutableGainLoss;
+import com.hartwig.hmftools.common.purple.loader.GainLoss;
+import com.hartwig.hmftools.common.purple.loader.ImmutableGainLoss;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 

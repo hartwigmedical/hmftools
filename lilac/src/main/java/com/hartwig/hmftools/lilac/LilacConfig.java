@@ -25,7 +25,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import java.nio.file.Files;
