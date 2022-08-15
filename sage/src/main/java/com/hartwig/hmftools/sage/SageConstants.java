@@ -32,6 +32,8 @@ public class SageConstants
 
     public static final int SC_INSERT_MIN_SC_LENGTH = 12;
     public static final int SC_INSERT_MIN_LENGTH = 5;
+    public static final int MIN_INSERT_ALIGNMENT_OVERLAP = 5;
+    public static final int DEFAULT_READ_LENGTH = 151;
 
     public static final int NORMAL_RAW_ALT_BQ_MAX = 25;
     public static final int LONG_GERMLINE_INSERT_LENGTH = 10;

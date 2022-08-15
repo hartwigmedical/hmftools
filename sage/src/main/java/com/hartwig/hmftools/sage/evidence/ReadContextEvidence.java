@@ -27,7 +27,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextEvidence
 {
-    private final int mTypicalReadLength;
     private final SageConfig mSageConfig;
     private final RefGenomeInterface mRefGenome;
     private final ReadContextCounterFactory mFactory;
@@ -48,7 +47,6 @@ public class ReadContextEvidence
         mSageConfig = config;
         mRefGenome = refGenome;
         mFactory = new ReadContextCounterFactory(config);
-        mTypicalReadLength = config.typicalReadLength();
         mQualityRecalibrationMap = qualityRecalibrationMap;
 
         mRefSequence = null;
@@ -80,7 +78,8 @@ public class ReadContextEvidence
 
         final ChrBaseRegion sliceRegion = new ChrBaseRegion(
                 firstCandidate.chromosome(),
-                max(firstCandidate.position() - mTypicalReadLength, 1), lastCandidate.position() + mTypicalReadLength);
+                max(firstCandidate.position() - mSageConfig.ExpectedReadLength, 1),
+                lastCandidate.position() + mSageConfig.ExpectedReadLength);
 
         mVariantPhaser = variantPhaser;
 

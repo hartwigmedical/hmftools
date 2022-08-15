@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH_PAN
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MNV;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.ITEM_DELIM;
 
@@ -72,6 +73,7 @@ public class SageConfig
     public final int MaxReadDepth;
     public final int MaxReadDepthPanel;
     public final int ReadContextFlankSize;
+    public final int ExpectedReadLength;
 
     public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
@@ -87,11 +89,6 @@ public class SageConfig
     private boolean mIsValid;
 
     public final ValidationStringency Stringency;
-
-    public int typicalReadLength()
-    {
-        return 151;
-    }
 
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
     private static final String RESOURCE_DIR = "resource_dir";
@@ -116,6 +113,7 @@ public class SageConfig
     private static final String COVERAGE_BED = "coverage_bed";
     private static final String VALIDATION_STRINGENCY = "validation_stringency";
     private static final String INCLUDE_MT = "include_mt";
+    private static final String EXPECTED_READ_LENGTH = "read_length";
 
     private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String LOG_LPS_DATA = "log_lps_data";
@@ -199,6 +197,7 @@ public class SageConfig
         MinMapQuality = getConfigValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY);
         MaxReadDepth = getConfigValue(cmd, MAX_READ_DEPTH, DEFAULT_MAX_READ_DEPTH);
         MaxReadDepthPanel = getConfigValue(cmd, MAX_READ_DEPTH_PANEL, DEFAULT_MAX_READ_DEPTH_PANEL);
+        ExpectedReadLength = getConfigValue(cmd, EXPECTED_READ_LENGTH, 151);
 
         Filter = new FilterConfig(cmd);
         Quality = new QualityConfig(cmd);
@@ -345,6 +344,7 @@ public class SageConfig
         options.addOption(REF_GENOME_VERSION, true, "Assembly, must be one of [37, 38]");
         options.addOption(OUTPUT_VCF, true, "Output vcf");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
+        options.addOption(EXPECTED_READ_LENGTH, true, "Expected read length [" + DEFAULT_READ_LENGTH + "]");
         addSpecificChromosomesRegionsConfig(options);
         options.addOption(SPECIFIC_POSITIONS, true, "Run for specific positions(s) separated by ';', for debug purposes");
         options.addOption(INCLUDE_MT, false, "Call MT variants");
@@ -392,6 +392,7 @@ public class SageConfig
         MaxReadDepth = DEFAULT_MAX_READ_DEPTH;
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
         ReadContextFlankSize = DEFAULT_READ_CONTEXT_FLANK_SIZE;
+        ExpectedReadLength = DEFAULT_READ_LENGTH;
         RefGenomeFile = "refGenome";
         HighConfidenceBed = "highConf";
         CoverageBed = "coverage";

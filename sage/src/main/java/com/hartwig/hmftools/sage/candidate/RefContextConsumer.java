@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.sage.candidate;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_SC_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
+
+import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
 import java.util.Set;
@@ -134,6 +139,9 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             @Override
             public void handleLeftSoftClip(final SAMRecord record, final CigarElement element)
             {
+                if(ignoreSoftClipAdapter(record))
+                    return;
+
                 AltRead altRead = processSoftClip(
                         record, element.getLength(), 0, refBases, readExceedsQuality, numberOfEvents, true);
 
@@ -144,6 +152,9 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             @Override
             public void handleRightSoftClip(final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
             {
+                if(ignoreSoftClipAdapter(record))
+                    return;
+
                 AltRead altRead = processSoftClip(
                         record, element.getLength(), readIndex, refBases, readExceedsQuality, numberOfEvents, false);
 
@@ -157,6 +168,19 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         checkCoreExtension(altReads);
 
         altReads.forEach(AltRead::updateRefContext);
+    }
+
+    public static boolean ignoreSoftClipAdapter(final SAMRecord record)
+    {
+        // ignore soft-clips from short fragments indicating adatper bases are present
+        int fragmentLength = abs(record.getInferredInsertSize());
+
+        if(fragmentLength >= record.getReadBases().length + MIN_INSERT_ALIGNMENT_OVERLAP)
+            return false;
+
+        int alignedBases = record.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
+        int insertAlignmentOverlap = abs(fragmentLength - alignedBases);
+        return insertAlignmentOverlap < MIN_INSERT_ALIGNMENT_OVERLAP;
     }
 
     private int calcAdjustedMapQualLessEventsPenalty(final SAMRecord record, int numberOfEvents)

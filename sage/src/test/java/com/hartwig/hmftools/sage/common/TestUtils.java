@@ -167,6 +167,7 @@ public class TestUtils
         record.setReadUnmappedFlag(false);
         record.setProperPairFlag(true);
         record.setReadPairedFlag(true);
+        record.setInferredInsertSize(600);
         return record;
     }
 

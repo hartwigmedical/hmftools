@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
+
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.ExpandedBasesFactory;
@@ -32,17 +34,20 @@ public class RawContextCigarHandler implements CigarHandler
     @Override
     public void handleLeftSoftClip(final SAMRecord record, final CigarElement element)
     {
-        if(mVariant.position() <= record.getAlignmentStart())
-        {
-            int readStartPos = record.getReadPositionAtReferencePosition(record.getAlignmentStart());
-            int readIndex = readStartPos - 1 - record.getAlignmentStart()
-                    + mVariant.position() - mVariant.alt().length() + mVariant.ref().length();
+        if(mVariant.position() > record.getAlignmentStart())
+            return;
 
-            boolean altSupport = mIsInsert && element.getLength() >= mVariant.alt().length() && matchesString(record, readIndex, mVariant.alt());
-            int baseQuality = altSupport ? avgBaseQuality(readIndex, record, mVariant.alt().length()) : 0;
+        if(ignoreSoftClipAdapter(record))
+            return;
 
-            mResult = RawContext.inSoftClip(readIndex, altSupport, baseQuality);
-        }
+        int readStartPos = record.getReadPositionAtReferencePosition(record.getAlignmentStart());
+        int readIndex = readStartPos - 1 - record.getAlignmentStart()
+                + mVariant.position() - mVariant.alt().length() + mVariant.ref().length();
+
+        boolean altSupport = mIsInsert && element.getLength() >= mVariant.alt().length() && matchesString(record, readIndex, mVariant.alt());
+        int baseQuality = altSupport ? avgBaseQuality(readIndex, record, mVariant.alt().length()) : 0;
+
+        mResult = RawContext.inSoftClip(readIndex, altSupport, baseQuality);
     }
 
     @Override
@@ -54,6 +59,9 @@ public class RawContextCigarHandler implements CigarHandler
         int refPositionEnd = refPosition + element.getLength() - 1;
         if(refPositionEnd < mVariant.position())
             return;
+
+         if(ignoreSoftClipAdapter(record))
+             return;
 
         if(mIsInsert)
         {
