@@ -117,20 +117,6 @@ public final class DataUtils {
         return k - 1;
     }
 
-    public static void initRandom(Matrix matrix, double min, double max, final Random rnGenerator)
-    {
-        // uniform random in range
-        double[][] data = matrix.getData();
-
-        for(int i= 0; i < matrix.Rows; i++)
-        {
-            for(int j = 0; j < matrix.Cols; j++)
-            {
-                data[i][j] = rnGenerator.nextDouble() * (max - min) + min;
-            }
-        }
-    }
-
     public static String sizeToStr(double size)
     {
         return sizeToStr(size, false);

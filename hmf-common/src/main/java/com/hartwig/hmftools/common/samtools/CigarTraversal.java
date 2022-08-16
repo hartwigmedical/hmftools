@@ -53,9 +53,9 @@ public final class CigarTraversal
                 case M:
                 case EQ:
                 case X:
-                    boolean isFollowedByIndel = i < cigar.numCigarElements() - 1 && cigar.getCigarElement(i + 1).getOperator().isIndel();
-                    final CigarElement element = isFollowedByIndel ? new CigarElement(e.getLength() - 1, e.getOperator()) : e;
-                    handler.handleAlignment(record, element, readIndex, refBase);
+                    boolean beforeIndel = i < cigar.numCigarElements() - 1 && cigar.getCigarElement(i + 1).getOperator().isIndel();
+                    final CigarElement element = beforeIndel ? new CigarElement(e.getLength() - 1, e.getOperator()) : e;
+                    handler.handleAlignment(record, element, beforeIndel, readIndex, refBase);
                     readIndex += e.getLength();
                     refBase += e.getLength();
                     break;

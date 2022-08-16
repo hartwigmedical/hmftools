@@ -177,7 +177,7 @@ public class BaseQualityRegionCounter implements CigarHandler
         }
     }
 
-    public void processRecord(@NotNull final SAMRecord record)
+    public void processRecord(final SAMRecord record)
     {
         ++mReadCounter;
         CigarTraversal.traverseCigar(record, this);
@@ -187,19 +187,19 @@ public class BaseQualityRegionCounter implements CigarHandler
     }
 
     @Override
-    public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPos)
+    public void handleInsert(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
     {
         // need to add one because indel is actually AFTER this by convention
         int indelPos = refPos + 1;
-        handleAlignment(record, SINGLE, readIndex, refPos);
+        handleAlignment(record, SINGLE, false, readIndex, refPos);
         markIndelPosition(indelPos);
     }
 
     @Override
-    public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPos)
+    public void handleDelete(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
     {
         int indelPos = refPos + 1;
-        handleAlignment(record, SINGLE, readIndex, refPos);
+        handleAlignment(record, SINGLE, false, readIndex, refPos);
         markIndelPosition(indelPos);
     }
 
@@ -215,7 +215,7 @@ public class BaseQualityRegionCounter implements CigarHandler
     }
 
     @Override
-    public void handleAlignment(final SAMRecord record, final CigarElement cigarElement, final int startReadIndex, final int refPos)
+    public void handleAlignment(final SAMRecord record, final CigarElement cigarElement, boolean beforeIndel, final int startReadIndex, final int refPos)
     {
         for(int i = 0; i < cigarElement.getLength(); i++)
         {

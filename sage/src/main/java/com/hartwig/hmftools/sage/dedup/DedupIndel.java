@@ -26,7 +26,7 @@ public final class DedupIndel
         List<SageVariant> candidates = variants.stream()
                 .filter(x -> x.isPassing())
                 .filter(x -> x.hasLocalPhaseSets())
-                .collect(Collectors.toList());;
+                .collect(Collectors.toList());
 
         int index = 0;
         while(index < candidates.size() - 1)
