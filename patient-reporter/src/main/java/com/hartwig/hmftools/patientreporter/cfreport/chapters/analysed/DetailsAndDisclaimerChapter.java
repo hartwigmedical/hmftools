@@ -133,6 +133,10 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 + "always be performed by the treating physician."));
         div.add(createContentParagraph("Based on a tumor purity of at least 20%, the test has a sensitivity of >95% for detection of "
                 + "somatic variants and >95% for detection of translocations and gene copy number changes."));
+        div.add(createContentParagraph("Based on the Dutch Act on Exceptional Medical Treatments (in Dutch: ‘Wet op de bijzondere"
+                + " medische verrichten’) Stichting Hartwig Medical Foundation is not allowed to provide genetic counseling and"
+                + " therefore will not share specific germline information, unless otherwise instructed and on explicit request "
+                + "of a hospital that is authorised to provide genetic counseling to individual patients."));
         div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA + "."));
         div.add(createContentParagraph("For questions about the contents of this report, please contact ",
                 ReportResources.CONTACT_EMAIL_GENERAL + "."));
