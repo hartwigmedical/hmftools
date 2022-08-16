@@ -28,14 +28,14 @@ interface IAnchorBlosumSearcher
 class AnchorBlosumSearcher(
     val vjGeneStore: VJGeneStore,
     val minPartialAnchorAminoAcidLength: Int,
-    val maxBlosumDistancePerAminoAcid: Int,
-    val similarityScoreConstant: Int) : IAnchorBlosumSearcher
+    val allowNegativeSimilarity: Boolean) : IAnchorBlosumSearcher
 {
     val blosumMapping = BlosumMapping()
 
-    override fun searchForAnchor(dnaSeq: String, targetAnchorGeneType: VJGeneType, startOffset: Int, endOffset: Int) : AnchorBlosumMatch?
+    override fun searchForAnchor(dnaSeq: String, targetAnchorGeneType: VJGeneType, startOffset: Int, endOffset: Int)
+    : AnchorBlosumMatch?
     {
-        sLogger.debug("finding anchor for {}, seq: {}, offset: {}-{}", targetAnchorGeneType, dnaSeq, startOffset, endOffset)
+        sLogger.trace("finding anchor for {}, seq: {}, offset: {}-{}", targetAnchorGeneType, dnaSeq, startOffset, endOffset)
 
         val templateAnchorSequences : Set<String> = vjGeneStore.getAnchorSequenceSet(targetAnchorGeneType)
         val anchorBlosumMatches = ArrayList<AnchorBlosumMatch>()
@@ -45,8 +45,8 @@ class AnchorBlosumSearcher(
             // we want to find the J anchor, by searching forward
             for (i in startOffset until endOffset - 3)
             {
-                val aa = Codons.codonToAminoAcid(dnaSeq.substring(i, i + 3))
-                if (aa == Cdr3Utils.conservedAA(targetAnchorGeneType)) // we might revisit this case later
+                val aa = Codons.codonToAminoAcid(dnaSeq, i)
+                if (aa == CiderUtils.conservedAA(targetAnchorGeneType)) // we might revisit this case later
                 {
                     // this is a potential match
                     for (templateAnchorSeq in templateAnchorSequences)
@@ -55,7 +55,7 @@ class AnchorBlosumSearcher(
                         val end: Int = i + templateAnchorSeq.length
                         // make sure the anchor is long enough, for now we don't allow short anchors
                         val anchorHomolog = tryMatchWithBlosum(targetAnchorGeneType, dnaSeq, start, end, templateAnchorSeq)
-                        if (anchorHomolog != null)
+                        if (anchorHomolog != null && (allowNegativeSimilarity || anchorHomolog.similarityScore >= 0))
                             anchorBlosumMatches.add(anchorHomolog)
                     }
                 }
@@ -66,8 +66,8 @@ class AnchorBlosumSearcher(
             // if we got the V anchor, we have to search in the reverse direction
             for (i in (endOffset - 1) downTo  startOffset + 3)
             {
-                val aa = Codons.codonToAminoAcid(dnaSeq.substring(i - 3, i))
-                if (aa == Cdr3Utils.conservedAA(targetAnchorGeneType))
+                val aa = Codons.codonToAminoAcid(dnaSeq, i - 3)
+                if (aa == CiderUtils.conservedAA(targetAnchorGeneType))
                 {
                     // V anchor ends with C
                     for (templateAnchorSeq in templateAnchorSequences)
@@ -75,7 +75,7 @@ class AnchorBlosumSearcher(
                         val start: Int = i - templateAnchorSeq.length
                         val end: Int = i
                         val anchorHomolog = tryMatchWithBlosum(targetAnchorGeneType, dnaSeq, start, end, templateAnchorSeq)
-                        if (anchorHomolog != null)
+                        if (anchorHomolog != null && (allowNegativeSimilarity || anchorHomolog.similarityScore >= 0))
                             anchorBlosumMatches.add(anchorHomolog)
                     }
                 }
@@ -102,11 +102,15 @@ class AnchorBlosumSearcher(
         var anchorEnd = inputAnchorEnd
         var trimmedTemplateAnchorSeq = templateAnchorSeq
 
-        // we might want to deal with partial sequence matches
+        // we might want to deal with partial sequence matches, by trimming the
+        // template anchor to be same size as the input anchor
         if (anchorStart < 0)
         {
-            if (geneType.vj != VJ.V)
+            if (geneType.vj == VJ.J)
+            {
+                // we don't want to allow removing the conserved F or W AA
                 return null
+            }
 
             // since we are searching backwards in the sequence, we just have to deal
             // with partial anchor match, and we want to make sure the full length
@@ -118,8 +122,11 @@ class AnchorBlosumSearcher(
 
         if (anchorEnd >= dnaSeq.length)
         {
-            if (geneType.vj != VJ.J)
+            if (geneType.vj == VJ.V)
+            {
+                // we don't want to allow removing the conserved C
                 return null
+            }
 
             val rightTrim = roundToMultiple(anchorEnd - dnaSeq.length, 3)
             anchorEnd -= rightTrim
@@ -128,15 +135,18 @@ class AnchorBlosumSearcher(
 
         val templateAnchorAA: String = Codons.aminoAcidFromBases(trimmedTemplateAnchorSeq)
 
-        if (templateAnchorAA.length < minPartialAnchorAminoAcidLength)
-            // not enough amino acids
-            return null
-
         val potentialAnchor: String = dnaSeq.substring(anchorStart, anchorEnd)
 
         assert(trimmedTemplateAnchorSeq.length == potentialAnchor.length)
 
         val potentialAnchorAA: String = Codons.aminoAcidFromBases(potentialAnchor)
+
+        if (trimmedTemplateAnchorSeq.length < templateAnchorSeq.length &&
+            potentialAnchorAA.length < minPartialAnchorAminoAcidLength)
+        {
+            // partial and not enough amino acids
+            return null
+        }
 
         if (anchorStart >= 0 && anchorEnd <= dnaSeq.length)
         {
@@ -175,8 +185,9 @@ class AnchorBlosumSearcher(
 
     fun calcSimilarityScore(refAnchorAA: String, seqAA: String) : Int
     {
-        val score = maxBlosumDistancePerAminoAcid * seqAA.length - similarityScoreConstant - calcBlosumDistance(refAnchorAA, seqAA)
-        return score
+        return CiderConstants.MAX_BLOSUM_DIFF_PER_AA * seqAA.length -
+                CiderConstants.BLOSUM_SIMILARITY_SCORE_CONSTANT -
+                calcBlosumDistance(refAnchorAA, seqAA)
     }
 
     companion object

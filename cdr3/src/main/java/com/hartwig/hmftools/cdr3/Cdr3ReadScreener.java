@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cdr3;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +31,8 @@ public class Cdr3ReadScreener
 
     // collect the reads and sort by types
     private VJGeneStore mVJGeneStore;
+
+    private IAnchorBlosumSearcher mAnchorBlosumSearcher;
     int mMaxAnchorAlignDistance;
     int mMinAnchorOverlap;
 
@@ -40,9 +43,11 @@ public class Cdr3ReadScreener
 
     private final List<SAMRecord> mAllMatchedReads = new ArrayList<>();
 
-    public Cdr3ReadScreener(VJGeneStore vjGeneStore, int maxAnchorAlignDistance, int minAnchorOverlap)
+    public Cdr3ReadScreener(VJGeneStore vjGeneStore, IAnchorBlosumSearcher anchorBlosumSearcher,
+            int maxAnchorAlignDistance, int minAnchorOverlap)
     {
         mVJGeneStore = vjGeneStore;
+        mAnchorBlosumSearcher = anchorBlosumSearcher;
         mMaxAnchorAlignDistance = maxAnchorAlignDistance;
         mMinAnchorOverlap = minAnchorOverlap;
     }
@@ -82,10 +87,12 @@ public class Cdr3ReadScreener
         {
             matchFound |= tryMatchByAlignment(samRecord, mapped, matchedGeneTypes);
         }
-
-        // next match by direct compare, we always have to do both, reason is that if this is a
-        // CDR3 gene then a read could match V, D, or J
-        matchFound |= tryMatchByExact(samRecord, matchedGeneTypes);
+        else
+        {
+            // next match by direct compare, we always have to do both, reason is that if this is a
+            // CDR3 gene then a read could match V, D, or J
+            matchFound |= tryMatchByBlosum(samRecord);
+        }
 
         if (matchFound)
         {
@@ -107,10 +114,30 @@ public class Cdr3ReadScreener
 
             if (readCandidate != null)
             {
-                mCdr3ReadMatchMap.put(new ReadKey(samRecord.getReadName(), samRecord.getFirstOfPairFlag()), readCandidate);
                 anchorFound = true;
             }
         }
+
+        if (!anchorFound)
+        {
+            int leftSoftClip = CigarUtils.leftSoftClip(samRecord);
+            int rightSoftClip = CigarUtils.rightSoftClip(samRecord);
+
+            if (leftSoftClip != 0 || rightSoftClip != 0)
+            {
+                for (IgConstantRegion igConstantRegion : mVJGeneStore.getIgConstantRegions())
+                {
+                    // now try to match around location of constant regions
+                    @Nullable VJReadCandidate readCandidate = tryMatchFromConstantRegion(samRecord, mapped, igConstantRegion);
+
+                    if (readCandidate != null)
+                    {
+                        anchorFound = true;
+                    }
+                }
+            }
+        }
+
         return anchorFound;
     }
 
@@ -120,59 +147,94 @@ public class Cdr3ReadScreener
     {
         int readLength = samRecord.getReadLength();
 
-        // see if the anchor location is mapped around here
-        if ((anchorLocation.getStart() - readLength < mapped.end() &&
-            anchorLocation.getEnd() + readLength > mapped.start()) &&
-            anchorLocation.getChromosome().equals(mapped.chromosome()))
+        if (!isRelevantToAnchorLocation(readLength, mapped, anchorLocation))
+            return null;
+
+        int anchorLength = anchorLocation.baseLength();
+
+        if (anchorLength != 30)
         {
-            int anchorLength = anchorLocation.baseLength();
+            throw new RuntimeException("unexpected anchor length");
+        }
 
-            if (anchorLength != 30)
+        IntPair readAnchorRange = extrapolateAnchorReadRange(samRecord, anchorLocation);
+
+        if (readAnchorRange == null)
+        {
+            return null;
+        }
+
+        int readAnchorStart = readAnchorRange.left;
+        int readAnchorEnd = readAnchorRange.right;
+
+        // as long as the record overlaps with the anchor location, we include it as candidate
+        if (readAnchorStart + mMinAnchorOverlap < samRecord.getReadLength() && readAnchorEnd > mMinAnchorOverlap)
+        {
+            if (anchorLocation.getStrand() == Strand.REVERSE)
             {
-                throw new RuntimeException("unexpected anchor length");
+                // say if read length is 2, and read anchor start is 1, read anchor end is 2
+                // reverse it we want start = 1, end = 2
+                int revStart = samRecord.getReadLength() - readAnchorEnd;
+                readAnchorEnd = samRecord.getReadLength() - readAnchorStart;
+                readAnchorStart = revStart;
             }
 
-            IntPair readAnchorRange = extrapolateAnchorReadRange(samRecord, anchorLocation);
+            // we want to make sure same gene is not included twice
+            List<VJGene> genes = mVJGeneStore.getByAnchorGeneLocation(anchorLocation).stream()
+                    .filter(o -> !matchedGenes.contains(o))
+                    .collect(Collectors.toList());
 
-            if (readAnchorRange == null)
+            if (!genes.isEmpty())
             {
-                return null;
-            }
+                matchedGenes.addAll(genes.stream().map(VJGene::getType).collect(Collectors.toList()));
 
-            int readAnchorStart = readAnchorRange.left;
-            int readAnchorEnd = readAnchorRange.right;
-
-            // as long as the record overlaps with the anchor location, we include it as candidate
-            if (readAnchorStart + mMinAnchorOverlap < samRecord.getReadLength() && readAnchorEnd > mMinAnchorOverlap)
-            {
-                if (anchorLocation.getStrand() == Strand.REVERSE)
-                {
-                    // say if read length is 2, and read anchor start is 1, read anchor end is 2
-                    // reverse it we want start = 1, end = 2
-                    int revStart = samRecord.getReadLength() - readAnchorEnd;
-                    readAnchorEnd = samRecord.getReadLength() - readAnchorStart;
-                    readAnchorStart = revStart;
-                }
-
-                // we want to make sure same gene is not included twice
-                List<VJGene> genes = mVJGeneStore.getByAnchorGeneLocation(anchorLocation).stream()
-                        .filter(o -> !matchedGenes.contains(o))
-                        .collect(Collectors.toList());
-
-                if (!genes.isEmpty())
-                {
-                    matchedGenes.addAll(genes.stream().map(VJGene::getType).collect(Collectors.toList()));
-
-                    return createCdr3ReadMatch(samRecord,
-                            genes,
-                            VJReadCandidate.AnchorMatchMethod.ALIGN,
-                            anchorLocation.getStrand() == Strand.REVERSE,
-                            readAnchorStart,
-                            readAnchorEnd, anchorLocation.getGeneLocation());
-                }
+                return createCdr3ReadMatch(samRecord,
+                        genes,
+                        VJReadCandidate.AnchorMatchMethod.ALIGN,
+                        anchorLocation.getStrand() == Strand.REVERSE,
+                        readAnchorStart,
+                        readAnchorEnd, anchorLocation.getGeneLocation());
             }
         }
         return null;
+    }
+
+    private boolean tryMatchByBlosum(final SAMRecord samRecord)
+    {
+        AnchorBlosumMatch anchorBlosumMatch = null;
+
+        for (Strand strand : Strand.values())
+        {
+            String readString = samRecord.getReadString();
+
+            if (strand == Strand.REVERSE)
+                readString = SequenceUtil.reverseComplement(readString);
+
+            for (VJGeneType vjGeneType : VJGeneType.values())
+            {
+                anchorBlosumMatch = mAnchorBlosumSearcher.searchForAnchor(readString,
+                        vjGeneType,
+                        0,
+                        samRecord.getReadLength());
+
+                if (anchorBlosumMatch != null && anchorBlosumMatch.getSimilarityScore() > 0)
+                {
+                    VJReadCandidate readCandidate = createCdr3ReadMatch(samRecord,
+                            anchorBlosumMatch.getTemplateGenes(),
+                            VJReadCandidate.AnchorMatchMethod.BLOSUM,
+                            strand == Strand.REVERSE,
+                            anchorBlosumMatch.getAnchorStart(),
+                            anchorBlosumMatch.getAnchorEnd(), null);
+
+                    if (readCandidate != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     public boolean tryMatchByExact(SAMRecord samRecord, Set<VJGeneType> matchedGenes)
@@ -205,15 +267,13 @@ public class Cdr3ReadScreener
 
                 if (!genes.isEmpty())
                 {
-                    VJReadCandidate readCandidate = createCdr3ReadMatch(samRecord,
+                    createCdr3ReadMatch(samRecord,
                             genes,
                             VJReadCandidate.AnchorMatchMethod.EXACT,
                             useRevComp,
                             anchorIndex,
                             anchorIndex + anchorSeq.length(),
                             null);
-
-                    mCdr3ReadMatchMap.put(new ReadKey(samRecord.getReadName(), samRecord.getFirstOfPairFlag()), readCandidate);
 
                     matchFound = true;
                 }
@@ -223,49 +283,152 @@ public class Cdr3ReadScreener
         return matchFound;
     }
 
+
     @Nullable
-    public VJReadCandidate createCdr3ReadMatch(SAMRecord samRecord, List<VJGene> VJGenes,
-            VJReadCandidate.AnchorMatchMethod templateMatchType, boolean useRevComp,
+    public VJReadCandidate tryMatchFromConstantRegion(
+            final SAMRecord samRecord, final GenomeRegion mapped, IgConstantRegion igConstantRegion)
+    {
+        int readLength = samRecord.getReadLength();
+        GeneLocation igcLocation = igConstantRegion.getGeneLocation();
+
+        // see if the anchor location is mapped around here
+        if ((igcLocation.getPosStart() - readLength < mapped.end() &&
+                igcLocation.getPosEnd() + readLength > mapped.start()) &&
+                igcLocation.getChromosome().equals(mapped.chromosome()))
+        {
+            // this is mapped to an IG constant region
+            // we want to then see if there is any clipping going on
+            // only with soft clip can we say this is actually potentially a J region
+            // If these are in positive strand:
+            // VVVVV-DDDD-JJ-CCCC
+            // If the read is mapped to the constant CCCC region, then the left soft clip might
+            // contain J
+            // in negative strand, it would be right soft clip
+
+            AnchorBlosumMatch anchorBlosumMatch = null;
+
+            if (igcLocation.getStrand() == Strand.FORWARD)
+            {
+                int leftSoftClip = CigarUtils.leftSoftClip(samRecord);
+
+                if (leftSoftClip == 0)
+                    return null;
+
+                // now try to find an anchor here
+                anchorBlosumMatch = mAnchorBlosumSearcher.searchForAnchor(samRecord.getReadString(),
+                        igConstantRegion.getCorrespondingJ(),
+                        0,
+                        leftSoftClip);
+            }
+            else
+            {
+                int rightSoftClip = CigarUtils.rightSoftClip(samRecord);
+
+                if (rightSoftClip == 0)
+                    return null;
+
+                String reverseCompSeq = SequenceUtil.reverseComplement(samRecord.getReadString());
+                anchorBlosumMatch = mAnchorBlosumSearcher.searchForAnchor(reverseCompSeq,
+                        igConstantRegion.getCorrespondingJ(), 0, rightSoftClip);
+            }
+
+            if (anchorBlosumMatch != null && anchorBlosumMatch.getSimilarityScore() > 0)
+            {
+                return createCdr3ReadMatch(samRecord,
+                        anchorBlosumMatch.getTemplateGenes(),
+                        VJReadCandidate.AnchorMatchMethod.BLOSUM_FROM_CONSTANT_REGION,
+                        igcLocation.getStrand() == Strand.REVERSE,
+                        anchorBlosumMatch.getAnchorStart(),
+                        anchorBlosumMatch.getAnchorEnd(), null);
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    public VJReadCandidate createCdr3ReadMatch(SAMRecord samRecord, Collection<VJGene> vjGenes,
+            VJReadCandidate.AnchorMatchMethod templateMatchMethod, boolean useRevComp,
             int readAnchorStart, int readAnchorEnd, @Nullable GeneLocation templateLocation)
     {
-        if (VJGenes.isEmpty())
+        if (vjGenes.isEmpty())
             return null;
 
-        String seq = samRecord.getReadString();
-
-        if (useRevComp)
-            seq = SequenceUtil.reverseComplement(seq);
-
-        String anchorSeq = seq.substring(Math.max(readAnchorStart, 0), Math.min(readAnchorEnd, seq.length()));
-
         // find out the imgt gene type. They should be the same type
-        VJGeneType geneType = VJGenes.stream().findFirst().get().getType();
+        VJGeneType geneType = vjGenes.stream().findFirst().get().getType();
 
         // check to make sure all the same
-        if (VJGenes.stream().anyMatch(o -> o.getType() != geneType))
+        if (vjGenes.stream().anyMatch(o -> o.getType() != geneType))
         {
-            sLogger.error("multiple gene types found in same match: {}", VJGenes);
+            sLogger.error("multiple gene types found in same match: {}", vjGenes);
             throw new RuntimeException("multiple gene types found in same match");
         }
+
+        String templateAnchorAA = vjGenes.stream().findFirst().get().getAnchorAminoAcidSequence();
 
         // since we don't actually know whether the aligned part is the anchor sequence, we have to use
         // the soft clip that we think make sense
         int leftSoftClip = CigarUtils.leftSoftClip(samRecord);
         int rightSoftClip = CigarUtils.rightSoftClip(samRecord);
 
-        VJReadCandidate readMatch = new VJReadCandidate(samRecord, VJGenes, geneType, templateMatchType, useRevComp,
+        VJReadCandidate readMatch = new VJReadCandidate(samRecord, vjGenes, geneType, templateMatchMethod, useRevComp,
                 readAnchorStart, readAnchorEnd, templateLocation, leftSoftClip, rightSoftClip);
 
-        List<String> geneNames = VJGenes.stream().map(o -> o.getName()).distinct().collect(Collectors.toList());
+        List<String> geneNames = vjGenes.stream().map(o -> o.getName()).distinct().collect(Collectors.toList());
 
-        sLogger.info("genes: {} read({}) match type({}) anchor range([{},{})) template loc({}) "
-                        + "anchor AA({}) anchor seq({})",
-                geneNames, samRecord, templateMatchType,
+        sLogger.info("genes: {} read({}) match method({}) anchor range([{},{})) template loc({}) "
+                        + "anchor AA({}) template AA({})",
+                geneNames, samRecord, templateMatchMethod,
                 readMatch.getAnchorOffsetStart(), readMatch.getAnchorOffsetEnd(),
                 templateLocation,
-                readMatch.getAnchorAA(), readMatch.getAnchorSequence());
+                readMatch.getAnchorAA(), templateAnchorAA);
+
+        // add it to list
+        mCdr3ReadMatchMap.put(new ReadKey(samRecord.getReadName(), samRecord.getFirstOfPairFlag()), readMatch);
 
         return readMatch;
+    }
+
+    public static boolean isRelevantToAnchorLocation(int readLength, final GenomeRegion mapped,
+            final VJAnchorReferenceLocation anchorLocation)
+    {
+        if (!anchorLocation.getChromosome().equals(mapped.chromosome()))
+            return false;
+
+        // for V we only allow reads that are mapped upstream
+        // for J we only allow reads that are mapped downstream
+        // --------V-----------J--------
+        // *****                  ******
+        // reads mapped around the star sections are ok
+        // we translate it to the genome coord space.
+
+        int halfAnchorLength = anchorLocation.baseLength() / 2;
+        boolean isMappedAroundHere;
+
+        if (anchorLocation.getVj() == VJ.V && anchorLocation.getStrand() == Strand.FORWARD ||
+                (anchorLocation.getVj() == VJ.J && anchorLocation.getStrand() == Strand.REVERSE))
+        {
+            // here we want the anchor to be downstream
+            // we want anchor mapped to higher coord than or equal read
+            // we allow anchor to overshoot the mapped region by half the anchor length
+            //        |__read__|
+            //    |_______________________________|     allowed anchor range
+            // half anchor         read length
+            isMappedAroundHere = anchorLocation.getStart() > mapped.start() - halfAnchorLength &&
+                    anchorLocation.getEnd() < mapped.end() + readLength;
+        }
+        else
+        {
+            // here we want the anchor to be upstream
+            // we want anchor mapped to lower coord than or equal read
+            // we allow anchor to overshoot the mapped region by half the anchor length
+            //                    |__read__|
+            // |_______________________________|     allowed anchor range
+            //   read length             half anchor
+            isMappedAroundHere = anchorLocation.getEnd() < mapped.end() + halfAnchorLength &&
+                    anchorLocation.getStart() > mapped.start() - readLength;
+        }
+
+        return isMappedAroundHere;
     }
 
     // 0 based read offset

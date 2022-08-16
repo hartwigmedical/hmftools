@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cdr3.layout
 
-import com.hartwig.hmftools.cdr3.Cdr3Utils
+import com.hartwig.hmftools.cdr3.CiderUtils
 import com.hartwig.hmftools.cdr3.ReadKey
 import java.util.*
 import kotlin.collections.ArrayList
@@ -198,7 +198,7 @@ class ReadLayout(var id: String = String())
 
         fun supportString(): String
         {
-            return Cdr3Utils.countsToString(counts())
+            return CiderUtils.countsToString(counts())
         }
 
         fun counts(): IntArray

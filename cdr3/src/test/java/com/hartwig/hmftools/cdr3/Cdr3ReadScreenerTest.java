@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.cdr3;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertTrue;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -137,6 +138,92 @@ public class Cdr3ReadScreenerTest
     }
 
     @Test
+    public void testIsRelevantToAnchorLocation1()
+    {
+        int readLength = 150;
+        int mappedLength = 100;
+
+        // positive strand
+        int anchorRefStart = 10000;
+        int anchorRefEnd = 10030;
+
+        // this tests the function to work out if a read is potentially near and on the
+        // correct side of the anchor genome location
+        VJAnchorReferenceLocation[] anchorLocations = {
+                new VJAnchorReferenceLocation(VJ.V, new GeneLocation("1", anchorRefStart, anchorRefEnd, Strand.FORWARD)),
+                new VJAnchorReferenceLocation(VJ.J, new GeneLocation("1", anchorRefStart, anchorRefEnd, Strand.REVERSE)),
+        };
+
+        for (VJAnchorReferenceLocation anchorLocation : anchorLocations)
+        {
+            // we should only allow reads that are mapped at lower genome location, i.e.
+            // read ------ anchor ----CDR3
+            // or reads that overlap the anchor by at least 15 bases
+
+            // first try reads that are lower
+            int mappedEnd = anchorRefEnd - readLength + 15;
+            int mappedStart = mappedEnd - mappedLength;
+            GenomeRegion mapped = GenomeRegions.create(anchorLocation.getChromosome(), mappedStart, mappedEnd);
+            assertTrue(Cdr3ReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation));
+
+            // reads with coords above and not overlapping anchor are not relevant
+            mappedStart = anchorRefEnd + anchorLocation.baseLength();
+            mappedEnd = mappedStart + mappedLength;
+            mapped = GenomeRegions.create(anchorLocation.getChromosome(), mappedStart, mappedEnd);
+            assertFalse(Cdr3ReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation));
+
+            // reads that overlap with anchor by 15 bases or more are relevant
+            mappedEnd = anchorRefEnd + anchorLocation.baseLength() / 2;
+            mappedStart = mappedEnd - mappedLength;
+            mapped = GenomeRegions.create(anchorLocation.getChromosome(), mappedStart, mappedEnd);
+            assertTrue(Cdr3ReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation));
+        }
+    }
+
+    @Test
+    public void testIsRelevantToAnchorLocation2()
+    {
+        int readLength = 150;
+        int mappedLength = 100;
+
+        // positive strand
+        int anchorRefStart = 10000;
+        int anchorRefEnd = 10030;
+
+        // this tests the function to work out if a read is potentially near and on the
+        // correct side of the anchor genome location
+        VJAnchorReferenceLocation[] anchorLocations = {
+                new VJAnchorReferenceLocation(VJ.V, new GeneLocation("1", anchorRefStart, anchorRefEnd, Strand.REVERSE)),
+                new VJAnchorReferenceLocation(VJ.J, new GeneLocation("1", anchorRefStart, anchorRefEnd, Strand.FORWARD)),
+        };
+
+        for (VJAnchorReferenceLocation anchorLocation : anchorLocations)
+        {
+            // we should only allow reads that are mapped at higher genome location, i.e.
+            // CDR3 ------ anchor ----read
+            // or reads that overlap the anchor by at least 15 bases
+
+            // first try reads that are mapped at higher coord
+            int mappedStart = anchorRefStart + readLength - 15;
+            int mappedEnd = mappedStart + mappedLength;
+            GenomeRegion mapped = GenomeRegions.create(anchorLocation.getChromosome(), mappedStart, mappedEnd);
+            assertTrue(Cdr3ReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation));
+
+            // reads with coords below and not overlapping anchor are not relevant
+            mappedEnd = anchorRefStart - anchorLocation.baseLength();
+            mappedStart = mappedEnd - mappedLength;
+            mapped = GenomeRegions.create(anchorLocation.getChromosome(), mappedStart, mappedEnd);
+            assertFalse(Cdr3ReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation));
+
+            // reads that overlap with anchor by 15 bases or more are relevant
+            mappedStart = anchorRefStart - anchorLocation.baseLength() / 2;
+            mappedEnd = mappedStart + mappedLength;
+            mapped = GenomeRegions.create(anchorLocation.getChromosome(), mappedStart, mappedEnd);
+            assertTrue(Cdr3ReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation));
+        }
+    }
+
+    @Test
     public void testFindAnchorPositionRNA()
     {
         // read: A00624:61:HVW7TDSXX:4:2344:18674:2018 1/2 151b aligned to 14:106322274-106330832., aligned: 121
@@ -151,6 +238,7 @@ public class Cdr3ReadScreenerTest
 
         // based on a RNA read we have come across
         final SAMRecord record = new SAMRecord(null);
+        record.setReadName("read1");
         record.setReferenceName("14");
         record.setAlignmentStart(alignmentStart);
         record.setCigarString("49M7085N20M1389N16M66S");
@@ -173,7 +261,10 @@ public class Cdr3ReadScreenerTest
                 "TGGGGCCAGGGCACCCTGGTCACCGTCTCC",
                 new GeneLocation("14", 106330801, 106330830, Strand.REVERSE));
         var vjGeneStore = new TestVJGeneStore(List.of(ighJ1));
-        Cdr3ReadScreener cdr3ReadScreener = new Cdr3ReadScreener(vjGeneStore, 151, 6);
+        var mockAnchorBlosumSearcher = new MockAnchorBlosumSearcher();
+
+        Cdr3ReadScreener cdr3ReadScreener = new Cdr3ReadScreener(vjGeneStore, mockAnchorBlosumSearcher,
+                151, 6);
 
         // make sure we set it up correctly
         assertEquals(1, record.getReadPositionAtReferencePosition(alignmentStart));

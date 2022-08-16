@@ -24,6 +24,8 @@ enum class VJ
     V, J
 }
 
+// make this a inner type of VJGene
+// create a new type called IgLocus to house IGH, TRA, TRB etc
 enum class VJGeneType(val vj: VJ)
 {
     IGHV(VJ.V),
@@ -42,6 +44,7 @@ enum class VJGeneType(val vj: VJ)
     TRGJ(VJ.J);
 }
 
+// TODO: rename to VJRegion
 data class VJGene
     (
     val id: String,

@@ -24,18 +24,6 @@ class MockVJReadLayoutAdaptor : IVJReadLayoutAdaptor
     }
 }
 
-// create a mock anchor blosum searcher that returns the match that we give it
-class MockAnchorBlosumSearcher : IAnchorBlosumSearcher
-{
-    var anchorBlosumMatch: AnchorBlosumMatch? = null
-
-    override fun searchForAnchor(dnaSeq: String, targetAnchorGeneType: VJGeneType, startOffset: Int,
-                        endOffset: Int) : AnchorBlosumMatch?
-    {
-        return anchorBlosumMatch
-    }
-}
-
 class VDJSequenceBuilderTest
 {
     @Before
@@ -82,7 +70,7 @@ class VDJSequenceBuilderTest
         assertIs<VJAnchorByBlosum>(vdjSeq.jAnchor)
         assertEquals("GAATACC", vdjSeq.vAnchorSequence)
         assertEquals("GAGTG", vdjSeq.jAnchorSequence)
-        assertEquals("CACATCCTGA", vdjSeq.dSequenceShort)
+        assertEquals("CACATCCTGA", vdjSeq.cdr3SequenceShort)
     }
 
     // build a VDJ from a layout with just J anchor
@@ -121,7 +109,7 @@ class VDJSequenceBuilderTest
         assertIs<VJAnchorByReadMatch>(vdjSeq.jAnchor)
         assertEquals("GAATACC", vdjSeq.vAnchorSequence)
         assertEquals("GAGTG", vdjSeq.jAnchorSequence)
-        assertEquals("CACATCCTGA", vdjSeq.dSequenceShort)
+        assertEquals("CACATCCTGA", vdjSeq.cdr3SequenceShort)
     }
 
     // test building VDJ sequence by merging overlapping V layout and J layout
@@ -160,7 +148,7 @@ class VDJSequenceBuilderTest
         assertIs<VJAnchorByReadMatch>(vdjSeq.jAnchor)
         assertEquals("GAATACC", vdjSeq.vAnchorSequence)
         assertEquals("GAGTG", vdjSeq.jAnchorSequence)
-        assertEquals("CACATCCTGA", vdjSeq.dSequenceShort)
+        assertEquals("CACATCCTGA", vdjSeq.cdr3SequenceShort)
     }
 
     @Test

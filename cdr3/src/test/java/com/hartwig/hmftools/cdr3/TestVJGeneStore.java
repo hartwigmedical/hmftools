@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cdr3;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,6 +20,8 @@ public class TestVJGeneStore implements VJGeneStore
 
     private final Map<VJGeneType, Multimap<String, VJGene>> mGeneTypeAnchorSeqMap = new HashMap<>();
     private final Multimap<VJAnchorReferenceLocation, VJGene> mGeneLocationVJGeneMap = ArrayListMultimap.create();
+
+    private final List<IgConstantRegion> mIgConstantRegions = new ArrayList<>();
 
     @Override
     public List<VJGene> getVJGenes()
@@ -63,6 +66,9 @@ public class TestVJGeneStore implements VJGeneStore
     {
         return mGeneLocationVJGeneMap.keySet();
     }
+
+    @Override
+    public Collection<IgConstantRegion> getIgConstantRegions() { return mIgConstantRegions; }
 
     public TestVJGeneStore(List<VJGene> vjGenes)
     {

@@ -41,13 +41,13 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 
-public class Cdr3Application
+public class CiderApplication
 {
-    public static final Logger sLogger = LogManager.getLogger(Cdr3Application.class);
+    public static final Logger sLogger = LogManager.getLogger(CiderApplication.class);
     
     // add the options
     @ParametersDelegate
-    private final Cdr3Params mParams = new Cdr3Params();
+    private final CiderParams mParams = new CiderParams();
 
     // add to the logging options
     @ParametersDelegate
@@ -70,30 +70,32 @@ public class Cdr3Application
 
         Instant start = Instant.now();
 
-        VJGeneStore vjGeneStore = new Cdr3GeneLoader(mParams.refGenomeVersion);
-        Cdr3ReadScreener readProcessor = new Cdr3ReadScreener(vjGeneStore, mParams.MaxAnchorAlignDistance, CiderConstants.MIN_CANDIDATE_READ_ANCHOR_OVERLAP);
-        readBamFile(readProcessor, vjGeneStore);
+        VJGeneStore vjGeneStore = new Cdr3GeneLoader(mParams.refGenomeVersion, mParams.ensemblDataDir);
+        var candidateBlosumSearcher = new AnchorBlosumSearcher(
+                vjGeneStore,
+                CiderConstants.CANDIDATE_MIN_PARTIAL_ANCHOR_AA_LENGTH,
+                false);
 
-        //String readTsvFile = Cdr3ReadTsvWriter.generateFilename(mParams.OutputDir, mParams.SampleId);
-        //Cdr3ReadTsvWriter.write(readTsvFile, readProcessor.getVJReadCandidates());
+        Cdr3ReadScreener readProcessor = new Cdr3ReadScreener(vjGeneStore, candidateBlosumSearcher,
+                mParams.MaxAnchorAlignDistance, CiderConstants.MIN_CANDIDATE_READ_ANCHOR_OVERLAP);
+        readBamFile(readProcessor, vjGeneStore);
 
         var vjReadLayoutAdaptor = new VJReadLayoutAdaptor(mParams.numBasesToTrim);
 
         Map<VJGeneType, List<ReadLayout>> layoutMap = buildLayouts(vjReadLayoutAdaptor, readProcessor.getVJReadCandidates().values());
 
-        var anchorBlosumSearcher = new AnchorBlosumSearcher(
+        var vdjBuilderBlosumSearcher = new AnchorBlosumSearcher(
                 vjGeneStore,
-                CiderConstants.MIN_PARTIAL_ANCHOR_AA_LENGTH,
-                CiderConstants.MAX_BLOSUM_DIFF_PER_AA,
-                CiderConstants.ANCHOR_SIMILARITY_SCORE_CONSTANT);
-        var vdjSeqBuilder = new VDJSequenceBuilder(vjReadLayoutAdaptor, anchorBlosumSearcher, (byte)mParams.MinBaseQuality,
+                CiderConstants.VDJ_MIN_PARTIAL_ANCHOR_AA_LENGTH,
+                true);
+
+        var vdjSeqBuilder = new VDJSequenceBuilder(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher, (byte)mParams.MinBaseQuality,
                 CiderConstants.MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES);
         List<VDJSequence> vdjSequences = vdjSeqBuilder.buildVDJSequences(layoutMap);
 
         VDJSequenceTsvWriter.writeVDJSequences(mParams.OutputDir, mParams.SampleId, vdjSequences);
 
         writeCdr3Bam(readProcessor.getAllMatchedReads());
-
 
         Instant finish = Instant.now();
         long seconds = Duration.between(start, finish).getSeconds();
@@ -121,8 +123,10 @@ public class Cdr3Application
                         // indicates finish
                         return;
                     readProcessor.processSamRecord(record);
-                } catch (InterruptedException e)
+                }
+                catch (InterruptedException e)
                 {
+                    sLogger.warn("bam record processing thread interrupted");
                     break;
                 }
             }
@@ -138,6 +142,11 @@ public class Cdr3Application
         Collection<GenomeRegion> genomeRegions = vjGeneStore.getVJAnchorReferenceLocations().stream()
                 .map(o -> GenomeRegions.create(o.getChromosome(), o.getStart() - mParams.MaxAnchorAlignDistance, o.getEnd() + mParams.MaxAnchorAlignDistance))
                 .collect(Collectors.toList());
+
+        genomeRegions.addAll(vjGeneStore.getIgConstantRegions().stream()
+                        .map(IgConstantRegion::getGeneLocation)
+                        .map(o -> GenomeRegions.create(o.getChromosome(), o.getPosStart(), o.getPosEnd()))
+                        .collect(Collectors.toList()));
 
         AsyncBamReader.processBam(mParams.BamPath, readerFactory, genomeRegions, lociBamRecordHander, mParams.ThreadCount, 0);
 
@@ -181,7 +190,7 @@ public class Cdr3Application
                 int numSplitReads = (int) overlayReads.stream().filter(o -> Math.max(o.getLeftSoftClip(), o.getRightSoftClip()) > 5).count();
                 int anchorLength =
                         overlayReads.stream().map(o -> o.getAnchorOffsetEnd() - o.getAnchorOffsetStart()).max(Integer::compareTo).orElse(0);
-                sLogger.info("Overlay type: {}， read count: {}, split read count: {}, anchor length: {}",
+                sLogger.info("Layout type: {}， read count: {}, split read count: {}, anchor length: {}",
                         geneType, layout.getReads().size(), numSplitReads, anchorLength);
 
                 // get the sequence, remember aligned position is the anchor start
@@ -246,7 +255,7 @@ public class Cdr3Application
         }
     }
 
-    private static SamReaderFactory readerFactory(final Cdr3Params params)
+    private static SamReaderFactory readerFactory(final CiderParams params)
     {
         final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(params.Stringency);
         if(params.RefGenomePath != null)
@@ -261,15 +270,15 @@ public class Cdr3Application
         sLogger.info("{}", LocalDateTime.now());
         sLogger.info("args: {}", String.join(" ", args));
 
-        Cdr3Application cdr3Application = new Cdr3Application();
+        CiderApplication ciderApplication = new CiderApplication();
         JCommander commander = JCommander.newBuilder()
-                .addObject(cdr3Application)
+                .addObject(ciderApplication)
                 .build();
 
         // use unix style formatter
         commander.setUsageFormatter(new UnixStyleUsageFormatter(commander));
         // help message show in order parameters are declared
-        commander.setParameterDescriptionComparator(new DeclaredOrderParameterComparator(Cdr3Application.class));
+        commander.setParameterDescriptionComparator(new DeclaredOrderParameterComparator(CiderApplication.class));
 
         try
         {
@@ -282,6 +291,14 @@ public class Cdr3Application
             System.exit(1);
         }
 
-        System.exit(cdr3Application.run());
+        // set all thread exception handler
+        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
+        {
+            sLogger.error(t + " throws exception: " + e);
+            e.printStackTrace(System.err);
+            System.exit(1);
+        });
+
+        System.exit(ciderApplication.run());
     }
 }

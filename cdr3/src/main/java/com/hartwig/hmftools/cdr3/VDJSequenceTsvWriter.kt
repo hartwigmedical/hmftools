@@ -103,11 +103,11 @@ object VDJSequenceTsvWriter
                     aminoAcidFromBases(jAnchorByBlosum.templateAnchorSeq)
                 else "null")
                 Column.jSimilarityScore -> csvPrinter.print(jAnchorByBlosum?.similarityScore ?: "null")
-                Column.cdr3Seq -> csvPrinter.print(vdj.dSequence)
-                Column.cdr3AA -> csvPrinter.print(aminoAcidFromBases(vdj.dSequence))
+                Column.cdr3Seq -> csvPrinter.print(vdj.cdr3Sequence)
+                Column.cdr3AA -> csvPrinter.print(aminoAcidFromBases(vdj.cdr3Sequence))
                 Column.layoutId -> csvPrinter.print(vdj.layout.id)
                 Column.vdjSeq -> csvPrinter.print(vdj.sequence)
-                Column.support -> csvPrinter.print(Cdr3Utils.countsToString(vdj.supportCounts))
+                Column.support -> csvPrinter.print(CiderUtils.countsToString(vdj.supportCounts))
             }
         }
         csvPrinter.println()

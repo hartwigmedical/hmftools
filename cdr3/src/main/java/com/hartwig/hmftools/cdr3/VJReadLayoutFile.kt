@@ -93,6 +93,6 @@ object VJReadLayoutFile
 
     private fun insertDashes(str: String, anchorRange: IntRange): String
     {
-        return Cdr3Utils.insertDashes(str, anchorRange.first, anchorRange.last + 1)
+        return CiderUtils.insertDashes(str, anchorRange.first, anchorRange.last + 1)
     }
 }

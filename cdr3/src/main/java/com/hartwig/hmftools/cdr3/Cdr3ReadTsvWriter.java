@@ -67,8 +67,8 @@ public class Cdr3ReadTsvWriter
                 csvPrinter.print(mainMatch.getRead().getAlignmentStart());
                 csvPrinter.print(mainMatch.getRead().getAlignmentEnd());
 
-                csvPrinter.print(vMatch != null ? vMatch.getVjGenes().get(0).getName() : "none");
-                csvPrinter.print(jMatch != null ? jMatch.getVjGenes().get(0).getName() : "none");
+                //csvPrinter.print(vMatch != null ? vMatch.getVjGenes().get(0).getName() : "none");
+                //csvPrinter.print(jMatch != null ? jMatch.getVjGenes().get(0).getName() : "none");
 
                 csvPrinter.print(vMatch != null ? vMatch.getAnchorMatchMethod() : "none");
                 csvPrinter.print(jMatch != null ? jMatch.getAnchorMatchMethod() : "none");

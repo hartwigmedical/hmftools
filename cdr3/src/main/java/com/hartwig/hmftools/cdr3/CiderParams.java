@@ -6,11 +6,9 @@ import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.Parameter;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
-import org.jetbrains.annotations.Nullable;
-
 import htsjdk.samtools.ValidationStringency;
 
-public class Cdr3Params
+public class CiderParams
 {
     public static final int DEFAULT_THREADS = 1;
     public static final int DEFAULT_MAX_ANCHOR_ALIGN_DISTANCE = 150;
@@ -48,6 +46,11 @@ public class Cdr3Params
                description = RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC,
                converter = RefGenomeVersionConverter.class)
     public RefGenomeVersion refGenomeVersion;
+
+    @Parameter(names = "-ensembl_data_dir",
+               required = true,
+               description = "Ensembl data file directory")
+    public String ensemblDataDir;
 
     @Parameter(names = "-min_base_quality",
                description = "Minimum quality for a base to be considered")

@@ -147,9 +147,9 @@ class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
         else if (vj == VJ.J)
             layout.alignedPosition until layout.alignedPosition + anchorLength
         else
-            null
+            return null
 
-        if (anchorRange == null || anchorRange.first >= layout.length)
+        if (anchorRange.first >= layout.length || anchorRange.last < 0)
             return null
 
         // protect against 0 and end
@@ -232,7 +232,7 @@ class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
             minMatchRatio = minMatchRatio,
             alignLeft = geneType.vj == VJ.V         // for V type we build from left, J we build from right
         )
-        val readOverlays = layoutBuilder.build()
-        return readOverlays
+        val readLayouts = layoutBuilder.build()
+        return readLayouts
     }
 }

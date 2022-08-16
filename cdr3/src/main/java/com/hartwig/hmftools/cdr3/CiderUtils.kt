@@ -6,11 +6,11 @@ import htsjdk.samtools.SamReader
 import htsjdk.samtools.SamReaderFactory
 import java.io.File
 
-object Cdr3Utils
+object CiderUtils
 {
     const val DEFAULT_PARTITION_SIZE = 10000000
 
-    fun openSamReader(config: Cdr3Params): SamReader
+    fun openSamReader(config: CiderParams): SamReader
     {
         var factory = SamReaderFactory.makeDefault()
         if (config.RefGenomePath != null && !config.RefGenomePath!!.isEmpty())
@@ -21,7 +21,7 @@ object Cdr3Utils
     }
 
     @JvmStatic
-    fun createPartitions(config: Cdr3Params): List<GenomeRegion>
+    fun createPartitions(config: CiderParams): List<GenomeRegion>
     {
         val samReader = openSamReader(config)
         val samSequences = samReader.fileHeader.sequenceDictionary.sequences
@@ -111,7 +111,20 @@ object Cdr3Utils
         return stringBuilder.toString()
     }
 
-    private fun safeSubstring(str: String, range: IntRange): String
+    fun safeSubstring(str: String, start: Int, end: Int): String
+    {
+        if (start >= str.length)
+        {
+            return ""
+        }
+        if (end >= str.length)
+        {
+            return str.substring(start)
+        }
+        return str.substring(start, end)
+    }
+
+    fun safeSubstring(str: String, range: IntRange): String
     {
         if (str.length <= range.first)
         {

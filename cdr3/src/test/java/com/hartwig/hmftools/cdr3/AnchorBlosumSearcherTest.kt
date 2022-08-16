@@ -39,12 +39,11 @@ class AnchorBlosumSearcherTest
 
     val vjGeneStore = TestVJGeneStore(listOf(ighJ1, ighJ6, ighV1_18, ighV3_7))
 
-    val minDSegmentLength = 20
-
     @Test
     fun testFindJAnchor()
     {
-        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 8, 2, 8)
+        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore,
+            8, true)
 
         val vAnchorSeq = "CGAGTCGAAGACACGGCTGTGTATTACTGT"
         val jAnchorSeq = "TGGGGCCAAGGGACCACGGTCACCGTCTCC"
@@ -65,12 +64,13 @@ class AnchorBlosumSearcherTest
         assertNotNull(anchorBlosumMatch)
         assertEquals(45, anchorBlosumMatch.anchorStart)
         assertEquals(jAnchorSeq, testSeq.substring(anchorBlosumMatch.anchorStart, anchorBlosumMatch.anchorEnd))
+        assertEquals(15, anchorBlosumMatch.similarityScore)
     }
 
     @Test
     fun testFindJAnchorPartial()
     {
-        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 7, 2, 7)
+        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 7, true)
 
         val vAnchorSeq = "CGAGTCGAAGACACGGCTGTGTATTACTGT"
         val jAnchorSeq = "TGGGGCCAAGGGACCACGGTCACCGTCTCC".dropLast(8) // chop off 8 bases
@@ -90,12 +90,13 @@ class AnchorBlosumSearcherTest
         assertNotNull(anchorBlosumMatch)
         assertEquals(45, anchorBlosumMatch.anchorStart)
         assertEquals(jAnchorSeq.dropLast(1), testSeq.substring(anchorBlosumMatch.anchorStart, anchorBlosumMatch.anchorEnd))
+        assertEquals(9, anchorBlosumMatch.similarityScore)
     }
 
     @Test
     fun testFindVAnchor()
     {
-        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 8, 2, 8)
+        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 8, true)
 
         val vAnchorSeq = "CGAGTCGAAGACACGGCTGTGTATTACTGT"
         val jAnchorSeq = "TGGGGCCAAGGGACCACGGTCACCGTCTCC"
@@ -114,12 +115,13 @@ class AnchorBlosumSearcherTest
         assertNotNull(anchorBlosumMatch)
         assertEquals(27, anchorBlosumMatch.anchorStart)
         assertEquals(vAnchorSeq, testSeq.substring(anchorBlosumMatch.anchorStart, anchorBlosumMatch.anchorEnd))
+        assertEquals(11, anchorBlosumMatch.similarityScore)
     }
 
     @Test
     fun testFindVAnchorPartial()
     {
-        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 7, 2, 7)
+        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 7, true)
 
         val vAnchorSeq = "CGAGTCGAAGACACGGCTGTGTATTACTGT".drop(8) // chop off 8
         val jAnchorSeq = "TGGGGCCAAGGGACCACGGTCACCGTCTCC"
@@ -137,5 +139,6 @@ class AnchorBlosumSearcherTest
         assertNotNull(anchorBlosumMatch)
         assertEquals(1, anchorBlosumMatch.anchorStart)
         assertEquals(vAnchorSeq.drop(1), testSeq.substring(anchorBlosumMatch.anchorStart, anchorBlosumMatch.anchorEnd))
+        assertEquals(9, anchorBlosumMatch.similarityScore)
     }
 }

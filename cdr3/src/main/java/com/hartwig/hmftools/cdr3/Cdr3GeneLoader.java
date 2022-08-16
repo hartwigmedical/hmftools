@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.cdr3;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -11,10 +10,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.io.Files;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 
@@ -23,9 +24,6 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
-import htsjdk.samtools.reference.FastaSequenceFile;
-import htsjdk.samtools.reference.ReferenceSequence;
 
 public class Cdr3GeneLoader implements VJGeneStore
 {
@@ -37,6 +35,8 @@ public class Cdr3GeneLoader implements VJGeneStore
     private final Map<VJGeneType, Multimap<String, VJGene>> mGeneTypeAnchorSeqMap = new HashMap<>();
 
     private final Multimap<VJAnchorReferenceLocation, VJGene> mGeneLocationVJGeneMap = ArrayListMultimap.create();
+
+    private final List<IgConstantRegion> mIgConstantRegions = new ArrayList<>();
 
     @Override
     public List<VJGene> getVJGenes()
@@ -82,7 +82,10 @@ public class Cdr3GeneLoader implements VJGeneStore
         return mGeneLocationVJGeneMap.keySet();
     }
 
-    public Cdr3GeneLoader(RefGenomeVersion refGenomeVersion) throws IOException
+    @Override
+    public Collection<IgConstantRegion> getIgConstantRegions() { return mIgConstantRegions; }
+
+    public Cdr3GeneLoader(RefGenomeVersion refGenomeVersion, String ensemblDataDir) throws IOException
     {
         mVJGenes = loadImgtGeneTsv(refGenomeVersion);
 
@@ -102,47 +105,9 @@ public class Cdr3GeneLoader implements VJGeneStore
             }
         }
 
+        loadConstantRegionGenes(refGenomeVersion, ensemblDataDir);
+
         sLogger.info("found {} gene locations", mGeneLocationVJGeneMap.keySet().size());
-    }
-
-    public static List<ReferenceSequence> loadFasta(String resourcePath) throws IOException
-    {
-        List<ReferenceSequence> seqList = new ArrayList<>();
-        try (java.io.InputStream fastaStream = Cdr3GeneLoader.class.getClassLoader().getResourceAsStream(resourcePath))
-        {
-            if (fastaStream == null)
-            {
-                sLogger.error("unable to find resource file: {}", resourcePath);
-                throw new RuntimeException("unable to find resource file: " + resourcePath);
-            }
-
-            File tempFile = null;
-            // write the resource out to a temp file and read it back
-            try
-            {
-                tempFile = java.io.File.createTempFile(Files.getNameWithoutExtension(resourcePath), ".fa");
-                Files.write(fastaStream.readAllBytes(), tempFile);
-                try (var fastaFile = new FastaSequenceFile(tempFile, false))
-                {
-                    ReferenceSequence seq = fastaFile.nextSequence();
-                    while (seq != null)
-                    {
-                        seqList.add(seq);
-                        seq = fastaFile.nextSequence();
-                    }
-                }
-            }
-            finally
-            {
-                if (tempFile != null)
-                {
-                    //noinspection ResultOfMethodCallIgnored
-                    tempFile.delete();
-                }
-            }
-        }
-
-        return seqList;
     }
 
     private static List<VJGene> loadImgtGeneTsv(RefGenomeVersion refGenomeVersion) throws IOException
@@ -189,9 +154,6 @@ public class Cdr3GeneLoader implements VJGeneStore
                 String anchorSequence = record.get("anchorSequence");
                 String chromosome = record.get("chr");
 
-                if (refGenomeVersion.is37())
-                    chromosome = chromosome.replace("chr", "");
-
                 String strandStr = record.get("strand");
                 Strand strand = null;
                 if (strandStr.equals("+"))
@@ -207,6 +169,8 @@ public class Cdr3GeneLoader implements VJGeneStore
 
                 if (!chromosome.isEmpty())
                 {
+                    chromosome = refGenomeVersion.versionedChromosome(chromosome);
+
                     if (posStart <= 0 || posEnd <= 0)
                     {
                         throw new RuntimeException("chromosome exist but pos start or pos end invalid");
@@ -229,5 +193,42 @@ public class Cdr3GeneLoader implements VJGeneStore
             }
         }
         return VJGeneList;
+    }
+
+    private void loadConstantRegionGenes(RefGenomeVersion refGenomeVersion, String ensemblDataDir)
+    {
+        final EnsemblDataCache ensemblDataCache = new EnsemblDataCache(ensemblDataDir, refGenomeVersion);
+        ensemblDataCache.load(true);
+
+        // find all the constant region genes
+        Map<String,List<GeneData>> chrGeneDataMap = ensemblDataCache.getChrGeneDataMap();
+        List<GeneData> geneDataList = chrGeneDataMap.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+
+        // find every gene that is constant region
+        for (GeneData geneData : geneDataList)
+        {
+            if (geneData.GeneName.length() <= 4)
+                continue;
+
+            String geneNamePrefix = geneData.GeneName.substring(0, 4);
+            IgConstantRegion.Type igConstantRegionType;
+
+            try
+            {
+                igConstantRegionType = IgConstantRegion.Type.valueOf(geneNamePrefix);
+            }
+            catch (IllegalArgumentException ignored)
+            {
+                continue;
+            }
+
+            GeneLocation geneLocation = new GeneLocation(geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd,
+                    geneData.forwardStrand() ? Strand.FORWARD : Strand.REVERSE);
+
+            mIgConstantRegions.add(new IgConstantRegion(igConstantRegionType, geneLocation));
+
+            sLogger.info("found constant region gene: {}, type: {}, location: {}",
+                    geneData.GeneName, igConstantRegionType, geneLocation);
+        }
     }
 }

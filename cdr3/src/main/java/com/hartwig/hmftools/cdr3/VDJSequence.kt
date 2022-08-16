@@ -73,17 +73,23 @@ class VDJSequence(
 
     val sequenceFormatted: String get()
     {
-        return Cdr3Utils.insertDashes(sequence, vAnchor.anchorBoundary, jAnchor.anchorBoundary)
+        return CiderUtils.insertDashes(sequence, vAnchor.anchorBoundary, jAnchor.anchorBoundary)
     }
 
     val aminoAcidSequence: String get()
     {
-        return Codons.aminoAcidFromBases(sequence)
+        val codonAlignedSeq = sequence.drop(vAnchor.anchorBoundary % 3)
+        return Codons.aminoAcidFromBases(codonAlignedSeq)
     }
 
     val aminoAcidSequenceFormatted: String get()
     {
-        return Cdr3Utils.insertDashes(aminoAcidSequence, vAnchor.anchorBoundary / 3, jAnchor.anchorBoundary / 3)
+        // we print the pre J anchor part first then the J anchor. This ensures that if J anchor is not aligned to codon
+        // it will still get printed the way we want it
+        val codonAlignedSeqBeforeJ = sequence.substring(0, jAnchor.anchorBoundary).drop(vAnchor.anchorBoundary % 3)
+
+        return CiderUtils.insertDashes(Codons.aminoAcidFromBases(codonAlignedSeqBeforeJ), vAnchor.anchorBoundary / 3) + '-' +
+                Codons.aminoAcidFromBases(jAnchorSequence)
     }
 
     val vAnchorLength: Int get()
@@ -107,14 +113,14 @@ class VDJSequence(
     }
 
     // does not include the C and W
-    val dSequenceShort: String get()
+    val cdr3SequenceShort: String get()
     {
         return sequence.substring(vAnchor.anchorBoundary, jAnchor.anchorBoundary)
     }
 
-    val dSequence: String get()
+    val cdr3Sequence: String get()
     {
-        return sequence.substring(vAnchor.anchorBoundary - 3, jAnchor.anchorBoundary + 3)
+        return sequence.substring(Math.max(vAnchor.anchorBoundary - 3, 0), Math.min(jAnchor.anchorBoundary + 3, length))
     }
 
     val supportCounts: IntArray get()
@@ -124,14 +130,15 @@ class VDJSequence(
 
     val supportString: String get()
     {
-        return Cdr3Utils.countsToString(supportCounts)
+        return CiderUtils.countsToString(supportCounts)
     }
 
     val supportMin: Int get() = supportCounts.minOrNull() ?: 0
 
     val cdr3SupportMin: Int get()
     {
-        return supportCounts.slice(vAnchor.anchorBoundary - 3 until jAnchor.anchorBoundary + 3).minOrNull() ?: 0
+        return supportCounts.slice(Math.max(vAnchor.anchorBoundary - 3, 0) until
+                Math.min(jAnchor.anchorBoundary + 3, length)).minOrNull() ?: 0
     }
 
     fun getSupportAt(index: Int) : Map.Entry<Char, Int>
