@@ -20,6 +20,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
+import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneDisruptions;
@@ -33,6 +34,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.ViralPresence;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
@@ -90,6 +92,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
         reportDocument.add(createVirusTable(genomicAnalysis.reportableViruses(), sampleReport.reportViralPresence()));
         reportDocument.add(createPeachGenotypesTable(patientReport.peachGenotypes(), sampleReport.reportPharmogenetics()));
+        reportDocument.add(createGermlineTable(contentWidth()));
     }
 
     @NotNull
@@ -364,6 +367,21 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
             return TableUtil.createWrappingReportTable(title, null, contentTable);
         }
+    }
+
+    @NotNull
+    private static Div createGermlineTable(float witdth) {
+        Div div = new Div().setKeepTogether(true).setWidth(witdth);
+
+        String title = "Germline results";
+        String text = "Germline results can be requested by the clinical geneticist, after consent of the patients.";
+
+        div.add(new Paragraph(title).addStyle(ReportResources.sectionTitleStyle()));
+
+        div.add(new Paragraph(text).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
+
+        div.add(LineDivider.createLineDivider(witdth));
+        return div;
     }
 
     @NotNull
