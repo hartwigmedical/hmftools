@@ -139,7 +139,7 @@ public class DepthAnnotator
             if(variantsList == null)
                 continue;
 
-            DepthTask depthTask = new DepthTask(chromosome.toString(), mConfig, mSampleVcfGenotypeIds);
+            DepthTask depthTask = new DepthTask(chrStr, mConfig, mSampleVcfGenotypeIds);
             depthTask.addVariants(variantsList);
             depthTasks.add(depthTask);
         }
@@ -195,7 +195,8 @@ public class DepthAnnotator
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
-            DepthTask depthTask = depthTasks.stream().filter(x -> x.chromosome().equals(chromosome.toString())).findFirst().orElse(null);
+            String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
+            DepthTask depthTask = depthTasks.stream().filter(x -> x.chromosome().equals(chrStr)).findFirst().orElse(null);
 
             if(depthTask == null)
                 continue;
