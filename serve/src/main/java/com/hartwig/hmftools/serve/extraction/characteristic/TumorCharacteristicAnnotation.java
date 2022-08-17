@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.serve.extraction.characteristic;
 
 public enum TumorCharacteristicAnnotation {
-    MICROSATELLITE_UNSTABLE,
+    MICROSATELLITE_INSTABLE,
     MICROSATELLITE_STABLE,
     HIGH_TUMOR_MUTATIONAL_LOAD,
     LOW_TUMOR_MUTATIONAL_LOAD,

@@ -70,7 +70,7 @@ public final class EventExtractorFactory {
                         refGenomeResource.knownFusionCache(),
                         config.exonicDelDupFusionKeyPhrases(),
                         driverInconsistencyMode),
-                new TumorCharacteristicExtractor(config.microsatelliteUnstableKeyPhrases(),
+                new TumorCharacteristicExtractor(config.microsatelliteInstableKeyPhrases(),
                         config.microsatelliteStableKeyPhrases(),
                         config.highTumorMutationalLoadKeyPhrases(),
                         config.lowTumorMutationalLoadKeyPhrases(),

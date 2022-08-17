@@ -84,7 +84,7 @@ public final class EventMatcherFactory {
     @NotNull
     private static Set<String> allCharacteristicKeyPhrases(@NotNull EventClassifierConfig config) {
         Set<String> tumorCharacteristics = Sets.newHashSet();
-        tumorCharacteristics.addAll(config.microsatelliteUnstableKeyPhrases());
+        tumorCharacteristics.addAll(config.microsatelliteInstableKeyPhrases());
         tumorCharacteristics.addAll(config.microsatelliteStableKeyPhrases());
         tumorCharacteristics.addAll(config.highTumorMutationalLoadKeyPhrases());
         tumorCharacteristics.addAll(config.lowTumorMutationalLoadKeyPhrases());

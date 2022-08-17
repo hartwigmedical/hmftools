@@ -24,7 +24,7 @@ public class PurpleSignatureEvidence {
     private static final double DEFAULT_HIGH_TMB_CUTOFF = 10D;
 
     static final Set<TumorCharacteristicAnnotation> PURPLE_CHARACTERISTICS =
-            Sets.newHashSet(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE,
+            Sets.newHashSet(TumorCharacteristicAnnotation.MICROSATELLITE_INSTABLE,
                     TumorCharacteristicAnnotation.MICROSATELLITE_STABLE,
                     TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD,
                     TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD,
@@ -49,7 +49,7 @@ public class PurpleSignatureEvidence {
         for (ActionableCharacteristic signature : actionableSignatures) {
             ProtectEvidence evidence;
             switch (signature.name()) {
-                case MICROSATELLITE_UNSTABLE: {
+                case MICROSATELLITE_INSTABLE: {
                     evidence = evaluateMSI(signature, purpleData);
                     break;
                 }

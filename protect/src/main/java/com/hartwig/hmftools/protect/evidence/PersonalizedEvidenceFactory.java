@@ -169,7 +169,7 @@ public class PersonalizedEvidenceFactory {
     @NotNull
     private static EvidenceType fromActionableCharacteristic(@NotNull ActionableCharacteristic characteristic) {
         switch (characteristic.name()) {
-            case MICROSATELLITE_UNSTABLE:
+            case MICROSATELLITE_INSTABLE:
             case MICROSATELLITE_STABLE:
             case HIGH_TUMOR_MUTATIONAL_LOAD:
             case LOW_TUMOR_MUTATIONAL_LOAD:
