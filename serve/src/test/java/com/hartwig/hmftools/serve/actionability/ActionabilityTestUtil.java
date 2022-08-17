@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.cancertype.CancerType;
-import com.hartwig.hmftools.serve.treatment.Treatment;
+import com.hartwig.hmftools.common.serve.actionability.Treatment;
 
 import org.jetbrains.annotations.NotNull;
 

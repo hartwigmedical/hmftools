@@ -30,7 +30,7 @@ class EvidenceKey {
 
     @NotNull
     public static EvidenceKey create(@NotNull ProtectEvidence evidence) {
-        return new EvidenceKey(evidence.gene(), evidence.event(), evidence.treatment());
+        return new EvidenceKey(evidence.gene(), evidence.event(), evidence.treatment().treament());
     }
 
     private EvidenceKey(@Nullable final String gene, @NotNull final String event, @NotNull final String treatment) {

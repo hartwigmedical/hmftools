@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -28,11 +29,23 @@ public class EvidenceConsolidationTest {
         Knowledgebase knowledgebase2 = Knowledgebase.VICC_CIVIC;
 
         ProtectEvidence evidence1 =
-                builder().treatment(treatment1).sources(Sets.newHashSet(ProtectTestFactory.createSource(knowledgebase1))).build();
+                builder().treatment(ImmutableTreatment.builder()
+                        .treament(treatment1)
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet("AA"))
+                        .relevantTreatmentApproaches(Sets.newHashSet("A"))
+                        .build()).sources(Sets.newHashSet(ProtectTestFactory.createSource(knowledgebase1))).build();
         ProtectEvidence evidence2 =
-                builder().treatment(treatment1).sources(Sets.newHashSet(ProtectTestFactory.createSource(knowledgebase2))).build();
+                builder().treatment(ImmutableTreatment.builder()
+                        .treament(treatment1)
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet("AA"))
+                        .relevantTreatmentApproaches(Sets.newHashSet("A"))
+                        .build()).sources(Sets.newHashSet(ProtectTestFactory.createSource(knowledgebase2))).build();
         ProtectEvidence evidence3 =
-                builder().treatment(treatment2).sources(Sets.newHashSet(ProtectTestFactory.createSource(knowledgebase2))).build();
+                builder().treatment(ImmutableTreatment.builder()
+                        .treament(treatment2)
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet("AA"))
+                        .relevantTreatmentApproaches(Sets.newHashSet("A"))
+                        .build()).sources(Sets.newHashSet(ProtectTestFactory.createSource(knowledgebase2))).build();
 
         List<ProtectEvidence> consolidated = EvidenceConsolidation.consolidate(Lists.newArrayList(evidence1, evidence2, evidence3));
 
@@ -51,7 +64,7 @@ public class EvidenceConsolidationTest {
     @NotNull
     private static ProtectEvidence findByTreatment(@NotNull Iterable<ProtectEvidence> evidences, @NotNull String treatment) {
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.treatment().equals(treatment)) {
+            if (evidence.treatment().treament().equals(treatment)) {
                 return evidence;
             }
         }

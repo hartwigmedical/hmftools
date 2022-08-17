@@ -48,7 +48,7 @@ public final class EvidenceReportingCuration {
 
     private static boolean hasBlacklistedTreatment(@NotNull ProtectEvidence evidence) {
         for (String entry : TREATMENT_REPORTING_BLACKLIST) {
-            if (evidence.treatment().equals(entry)) {
+            if (evidence.treatment().treament().equals(entry)) {
                 return true;
             }
         }

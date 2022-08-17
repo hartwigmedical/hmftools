@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +20,11 @@ public final class ProtectTestFactory {
                 .event(Strings.EMPTY)
                 .germline(false)
                 .reported(true)
-                .treatment(Strings.EMPTY)
+                .treatment(ImmutableTreatment.builder()
+                        .treament(Strings.EMPTY)
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet())
+                        .relevantTreatmentApproaches(Sets.newHashSet())
+                        .build())
                 .onLabel(false)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.treatment;
+package com.hartwig.hmftools.common.serve.actionability;
 
 import java.util.Set;
 

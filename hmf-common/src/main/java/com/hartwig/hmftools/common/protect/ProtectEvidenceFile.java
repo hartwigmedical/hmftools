@@ -16,6 +16,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 public final class ProtectEvidenceFile {
 
     private static final String EXTENSION = ".protect.tsv";
+    private static final String TREATMENT_APPROACH_DELIMITER = ",";
 
     private static final String FIELD_DELIMITER = "\t";
     private static final String SOURCES_DELIMITER = ";";
@@ -69,6 +71,8 @@ public final class ProtectEvidenceFile {
                 .add("germline")
                 .add("reported")
                 .add("treatment")
+                .add("sourceRelevantTreatmentApproach")
+                .add("relevantTreatmentApproach")
                 .add("onLabel")
                 .add("level")
                 .add("direction")
@@ -85,7 +89,9 @@ public final class ProtectEvidenceFile {
                 .add(nullToEmpty(evidence.eventIsHighDriver()))
                 .add(String.valueOf(evidence.germline()))
                 .add(String.valueOf(evidence.reported()))
-                .add(evidence.treatment())
+                .add(evidence.treatment().treament())
+                .add(treatmentApproachToString(evidence.treatment().sourceRelevantTreatmentApproaches()))
+                .add(treatmentApproachToString(evidence.treatment().relevantTreatmentApproaches()))
                 .add(String.valueOf(evidence.onLabel()))
                 .add(evidence.level().toString())
                 .add(evidence.direction().toString())
@@ -105,12 +111,33 @@ public final class ProtectEvidenceFile {
                 .eventIsHighDriver(emptyToNullBoolean(values[fields.get("eventIsHighDriver")]))
                 .germline(Boolean.parseBoolean(values[fields.get("germline")]))
                 .reported(Boolean.parseBoolean(values[fields.get("reported")]))
-                .treatment(values[fields.get("treatment")])
+                .treatment(ImmutableTreatment.builder()
+                        .treament(values[fields.get("treatment")])
+                        .sourceRelevantTreatmentApproaches(fields.containsKey("sourceRelevantTreatmentApproach") ? stringToDrugClasses(
+                                values[fields.get("sourceRelevantTreatmentApproach")]) : Sets.newHashSet())
+                        .relevantTreatmentApproaches(fields.containsKey("relevantTreatmentApproach")
+                                ? stringToDrugClasses(values[fields.get("relevantTreatmentApproach")])
+                                : Sets.newHashSet())
+                        .build())
                 .onLabel(Boolean.parseBoolean(values[fields.get("onLabel")]))
                 .level(EvidenceLevel.valueOf(values[fields.get("level")]))
                 .direction(EvidenceDirection.valueOf(values[fields.get("direction")]))
                 .sources(stringToSources(values[fields.get("sources")]))
                 .build();
+    }
+
+    @NotNull
+    public static String treatmentApproachToString(@NotNull Set<String> treatmentApproaches) {
+        StringJoiner joiner = new StringJoiner(TREATMENT_APPROACH_DELIMITER);
+        for (String url : treatmentApproaches) {
+            joiner.add(url);
+        }
+        return joiner.toString();
+    }
+    
+    @NotNull
+    private static Set<String> stringToDrugClasses(@NotNull String fieldValue) {
+        return Sets.newHashSet(fieldValue.split(TREATMENT_APPROACH_DELIMITER));
     }
 
     @NotNull

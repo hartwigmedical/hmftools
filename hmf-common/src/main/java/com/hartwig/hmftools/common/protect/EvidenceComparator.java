@@ -46,9 +46,25 @@ public class EvidenceComparator implements Comparator<ProtectEvidence> {
             return onLabelCompare;
         }
 
-        int treatmentCompare = evidence1.treatment().compareTo(evidence2.treatment());
+        int treatmentCompare = evidence1.treatment().treament().compareTo(evidence2.treatment().treament());
         if (treatmentCompare != 0) {
             return treatmentCompare;
+        }
+
+        int sourceRelevantTreatmentApproachCompare = evidence1.treatment()
+                .sourceRelevantTreatmentApproaches()
+                .toString()
+                .compareTo(evidence2.treatment().sourceRelevantTreatmentApproaches().toString());
+        if (sourceRelevantTreatmentApproachCompare != 0) {
+            return sourceRelevantTreatmentApproachCompare;
+        }
+
+        int relevantTreatmentApproachCompare = evidence1.treatment()
+                .relevantTreatmentApproaches()
+                .toString()
+                .compareTo(evidence2.treatment().relevantTreatmentApproaches().toString());
+        if (relevantTreatmentApproachCompare != 0) {
+            return relevantTreatmentApproachCompare;
         }
 
         int directionCompare = evidence1.direction().compareTo(evidence2.direction());

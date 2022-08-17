@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -65,19 +66,31 @@ public class EvidenceReportingFunctionsTest {
     private static List<ProtectEvidence> createTestEvidencesForKnowledgebase(@NotNull Knowledgebase knowledgebase) {
         return Lists.newArrayList(ImmutableProtectEvidence.builder()
                         .from(ON_LABEL_RESPONSIVE_B)
-                        .treatment("treatment A")
+                        .treatment(ImmutableTreatment.builder()
+                                .treament("treatment A")
+                                .sourceRelevantTreatmentApproaches(Sets.newHashSet("AA"))
+                                .relevantTreatmentApproaches(Sets.newHashSet("A"))
+                                .build())
                         .direction(EvidenceDirection.RESPONSIVE)
                         .sources(Sets.newHashSet(ProtectTestFactory.createSource(knowledgebase)))
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(ON_LABEL_RESPONSIVE_C)
-                        .treatment("treatment B")
+                        .treatment(ImmutableTreatment.builder()
+                                .treament("treatment B")
+                                .sourceRelevantTreatmentApproaches(Sets.newHashSet("AA"))
+                                .relevantTreatmentApproaches(Sets.newHashSet("A"))
+                                .build())
                         .direction(EvidenceDirection.RESPONSIVE)
                         .sources(Sets.newHashSet(ProtectTestFactory.createSource(knowledgebase)))
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(OFF_LABEL_RESPONSIVE_C)
-                        .treatment("treatment C")
+                        .treatment(ImmutableTreatment.builder()
+                                .treament("treatment C")
+                                .sourceRelevantTreatmentApproaches(Sets.newHashSet("AA"))
+                                .relevantTreatmentApproaches(Sets.newHashSet("A"))
+                                .build())
                         .direction(EvidenceDirection.PREDICTED_RESPONSIVE)
                         .sources(Sets.newHashSet(ProtectTestFactory.createSource(knowledgebase)))
                         .build());
@@ -203,7 +216,11 @@ public class EvidenceReportingFunctionsTest {
                 .onLabel(onLabel)
                 .level(level)
                 .direction(direction)
-                .treatment("A")
+                .treatment(ImmutableTreatment.builder()
+                        .treament("A")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet("AA"))
+                        .relevantTreatmentApproaches(Sets.newHashSet("A"))
+                        .build())
                 .sources(Sets.newHashSet(ProtectTestFactory.createSource(Knowledgebase.CKB)))
                 .build();
     }
