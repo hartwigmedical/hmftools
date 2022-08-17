@@ -10,7 +10,7 @@
 
     <modules>
         <module>hmf-common</module>
-<!--        <module>patient-db</module>-->
+        <module>patient-db</module>
 <!--        <module>gene-utils</module>-->
 <!--        <module>stat-calcs</module>-->
 <!--        <module>hmf-id-generator</module>-->
@@ -34,11 +34,11 @@
 <!--        <module>cuppa</module>-->
 <!--        <module>isofox</module>-->
 <!--        <module>pave</module>-->
-        <module>ckb-importer</module>
-        <module>iclusion-importer</module>
-        <module>vicc-importer</module>
-        <module>serve</module>
-        <module>protect</module>
+<!--        <module>ckb-importer</module>-->
+<!--        <module>iclusion-importer</module>-->
+<!--        <module>vicc-importer</module>-->
+<!--        <module>serve</module>-->
+<!--        <module>protect</module>-->
 <!--        <module>orange</module>-->
 <!--        <module>rose</module>-->
 <!--        <module>patient-reporter</module>-->
