@@ -108,7 +108,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                 }
 
                 altReads.addAll(processAlignment(
-                        record, readIndex, refPosition, element.getLength(), beforeIndel, refBases, numberOfEvents,
+                        record, readIndex, refPosition, element.getLength(), refBases, numberOfEvents,
                         readExceedsScAdjustedQuality));
             }
 
@@ -265,13 +265,10 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
     private List<AltRead> processAlignment(
             final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
-            boolean beforeIndel, final IndexedBases refBases, int numberOfEvents, boolean readExceedsQuality)
+            final IndexedBases refBases, int numberOfEvents, boolean readExceedsQuality)
     {
         final List<AltRead> result = Lists.newArrayList();
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
-
-        // the last base is handled by the INDEL processing, but this may then miss an SNV at the base where an INDEL starts - intentionally?
-        int elementLength = beforeIndel ? alignmentLength + 1 : alignmentLength;
 
         int refIndex = refBases.index(refPositionStart);
 
@@ -313,10 +310,9 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                         {
                             ++nextReadIndex;
 
-                            // MNVs cannot extend past the end of this Cigar element, but note the alignment length has been cut short
-                            // if followed by an indel
-                            // if(nextReadIndex >= elementLength)
-                            //    break;
+                            // MNVs cannot extend past the end of this Cigar element
+                            if(nextReadIndex >= alignmentLength)
+                                break;
 
                             final String mnvRef = new String(refBases.Bases, refBaseIndex, mnvLength);
                             final String mnvAlt = new String(record.getReadBases(), readBaseIndex, mnvLength);
