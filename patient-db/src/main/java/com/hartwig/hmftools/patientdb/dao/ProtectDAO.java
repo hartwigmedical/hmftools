@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PROTECT
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Iterables;
@@ -13,10 +14,14 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep19;
+import org.jooq.InsertValuesStep21;
 
 class ProtectDAO {
+
+    private static final String TREATMENT_APPROACH_DELIMITER = ",";
 
     @NotNull
     private final DSLContext context;
@@ -30,7 +35,7 @@ class ProtectDAO {
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
         for (List<ProtectEvidence> batch : Iterables.partition(evidence, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep19 inserter = context.insertInto(PROTECT,
+            InsertValuesStep21 inserter = context.insertInto(PROTECT,
                     PROTECT.SAMPLEID,
                     PROTECT.GENE,
                     PROTECT.TRANSCRIPT,
@@ -40,6 +45,8 @@ class ProtectDAO {
                     PROTECT.GERMLINE,
                     PROTECT.REPORTED,
                     PROTECT.TREATMENT,
+                    PROTECT.SOURCETREATMENTAPPROACH,
+                    PROTECT.TREATMENTAPPROACH,
                     PROTECT.ONLABEL,
                     PROTECT.LEVEL,
                     PROTECT.DIRECTION,
@@ -55,7 +62,7 @@ class ProtectDAO {
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep19 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep21 inserter, @NotNull String sample,
             @NotNull ProtectEvidence evidence) {
         for (KnowledgebaseSource source : evidence.sources()) {
             StringJoiner sourceUrlJoiner = new StringJoiner(",");
@@ -76,7 +83,9 @@ class ProtectDAO {
                     evidence.eventIsHighDriver(),
                     evidence.germline(),
                     evidence.reported(),
-                    evidence.treatment(),
+                    evidence.treatment().treament(),
+                    treatmentApproachToString(evidence.treatment().sourceRelevantTreatmentApproaches()),
+                    treatmentApproachToString(evidence.treatment().relevantTreatmentApproaches()),
                     evidence.onLabel(),
                     evidence.level().toString(),
                     evidence.direction().toString(),
@@ -88,6 +97,15 @@ class ProtectDAO {
                     evidenceUrlJoiner.toString().isEmpty() ? null : evidenceUrlJoiner.toString(),
                     timestamp);
         }
+    }
+
+    @Nullable
+    public static String treatmentApproachToString(@NotNull Set<String> treatmentApproaches) {
+        StringJoiner joiner = new StringJoiner(TREATMENT_APPROACH_DELIMITER);
+        for (String url : treatmentApproaches) {
+            joiner.add(url);
+        }
+        return joiner.toString().isEmpty() ? null : joiner.toString();
     }
 
     void deleteEvidenceForSample(@NotNull String sample) {

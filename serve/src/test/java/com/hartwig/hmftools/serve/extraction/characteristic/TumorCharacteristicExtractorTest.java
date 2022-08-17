@@ -29,7 +29,7 @@ public class TumorCharacteristicExtractorTest {
 
         TumorCharacteristic characteristic = extractor.extract(EventType.CHARACTERISTIC, MSI);
 
-        assertEquals(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE, characteristic.name());
+        assertEquals(TumorCharacteristicAnnotation.MICROSATELLITE_INSTABLE, characteristic.name());
         assertNull(characteristic.comparator());
         assertNull(characteristic.cutoff());
     }

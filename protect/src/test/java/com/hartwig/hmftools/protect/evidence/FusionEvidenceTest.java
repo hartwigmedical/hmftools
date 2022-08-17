@@ -24,13 +24,13 @@ import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
-import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -224,7 +224,7 @@ public class FusionEvidenceTest {
     private static ProtectEvidence findByFusion(@NotNull List<ProtectEvidence> evidences, @NotNull LinxFusion fusion, @NotNull String treatment) {
         String event = EventGenerator.fusionEvent(fusion);
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.event().equals(event) && evidence.treatment().equals(treatment)) {
+            if (evidence.event().equals(event) && evidence.treatment().treament().equals(treatment)) {
                 return evidence;
             }
         }
@@ -291,7 +291,7 @@ public class FusionEvidenceTest {
     @NotNull
     private static KnowledgebaseSource findByKnowledgebase(@NotNull ProtectEvidence evidence, @NotNull String event,
             @NotNull Knowledgebase knowledgebaseToFind, @NotNull String treatment) {
-        if (evidence.treatment().equals(treatment) && evidence.event().equals(event)) {
+        if (evidence.treatment().treament().equals(treatment) && evidence.event().equals(event)) {
             for (KnowledgebaseSource source : evidence.sources()) {
                 if (source.name() == knowledgebaseToFind) {
                     return source;

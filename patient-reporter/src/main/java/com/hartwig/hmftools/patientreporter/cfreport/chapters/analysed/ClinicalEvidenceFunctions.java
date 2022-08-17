@@ -62,7 +62,7 @@ public class ClinicalEvidenceFunctions {
                 if (!hasHigherOrEqualEvidenceForEventAndTreatment(treatmentEvidences, evidence)) {
                     treatmentEvidences.add(evidence);
                 }
-                evidencePerTreatmentMap.put(evidence.treatment(), treatmentEvidences);
+                evidencePerTreatmentMap.put(evidence.treatment().treament(), treatmentEvidences);
             }
         }
         return evidencePerTreatmentMap;
@@ -279,7 +279,7 @@ public class ClinicalEvidenceFunctions {
                     return item1.level().compareTo(item2.level());
                 }
             } else {
-                return item1.treatment().compareTo(item2.treatment());
+                return item1.treatment().treament().compareTo(item2.treatment().treament());
             }
         }).collect(Collectors.toList());
     }

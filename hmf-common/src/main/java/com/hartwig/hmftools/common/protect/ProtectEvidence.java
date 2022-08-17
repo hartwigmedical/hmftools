@@ -4,6 +4,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.serve.actionability.Treatment;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +35,7 @@ public abstract class ProtectEvidence {
     public abstract boolean reported();
 
     @NotNull
-    public abstract String treatment();
+    public abstract Treatment treatment();
 
     public abstract boolean onLabel();
 

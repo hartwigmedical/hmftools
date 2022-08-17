@@ -44,6 +44,8 @@ public final class PatientReporterTestFactory {
     private static final String ANNOTATED_VIRUS_TSV = RUN_DIRECTORY + "/virusbreakend/sample.virus.annotated.tsv";
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/sample.peach.genotype.tsv";
     private static final String PROTECT_EVIDENCE_TSV = RUN_DIRECTORY + "/protect/sample.protect.tsv";
+    private static final String LILAC_RESULT_CSV = RUN_DIRECTORY + "/lilac/tumor_sample.lilac.csv";
+    private static final String LILAC_QC_CSV = RUN_DIRECTORY + "/lilac/tumor_sample.lilac.qc.csv";
 
     private static final String SIGNATURE_PATH = Resources.getResource("signature/signature_test.png").getPath();
     private static final String RVA_LOGO_PATH = Resources.getResource("rva_logo/rva_logo_test.jpg").getPath();
@@ -91,6 +93,8 @@ public final class PatientReporterTestFactory {
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
                 .protectEvidenceTsv(PROTECT_EVIDENCE_TSV)
+                .lilacResultCsv(LILAC_RESULT_CSV)
+                .lilacQcCsv(LILAC_QC_CSV)
                 .germlineReportingTsv(Strings.EMPTY)
                 .sampleSummaryTsv(SAMPLE_SUMMARY_TSV)
                 .sampleSpecialRemarkTsv(SAMPLE_SPECIAL_REMARK_TSV)

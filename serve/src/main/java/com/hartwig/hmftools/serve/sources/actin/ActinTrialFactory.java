@@ -4,10 +4,10 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
 import com.hartwig.hmftools.serve.cancertype.CancerTypeConstants;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
-import com.hartwig.hmftools.serve.treatment.ImmutableTreatment;
-import com.hartwig.hmftools.serve.treatment.Treatment;
+import com.hartwig.hmftools.common.serve.actionability.Treatment;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

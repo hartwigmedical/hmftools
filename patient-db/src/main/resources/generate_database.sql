@@ -1169,6 +1169,7 @@ CREATE TABLE cuppa
     KEY(sampleId)
 );
 
+
 DROP TABLE IF EXISTS protect;
 CREATE TABLE protect
 (   id int NOT NULL AUTO_INCREMENT,
@@ -1182,6 +1183,8 @@ CREATE TABLE protect
     germline BOOLEAN NOT NULL,
     reported BOOLEAN NOT NULL,
     treatment varchar(255) NOT NULL,
+    sourceTreatmentApproach varchar(500),
+    treatmentApproach varchar(500),
     onLabel BOOLEAN NOT NULL,
     level varchar(255) NOT NULL,
     direction varchar(255) NOT NULL,

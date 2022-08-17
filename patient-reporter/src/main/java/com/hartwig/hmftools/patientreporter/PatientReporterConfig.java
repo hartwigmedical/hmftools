@@ -68,6 +68,8 @@ public interface PatientReporterConfig {
     String MOLECULAR_TISSUE_ORIGIN_PLOT = "molecular_tissue_origin_plot";
     String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
+    String LILAC_RESULT_CSV = "lilac_result_csv";
+    String LILAC_QC_CSV = "lilac_qc_csv";
 
     // Resources used for generating an analysed patient report
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
@@ -131,6 +133,8 @@ public interface PatientReporterConfig {
         options.addOption(MOLECULAR_TISSUE_ORIGIN_PLOT, true, "Path towards the molecular tissue origin plot.");
         options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
+        options.addOption(LILAC_RESULT_CSV, true, "Path towards the LILAC result CSV.");
+        options.addOption(LILAC_QC_CSV, true, "Path towards the LILAC QC CSV.");
 
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
@@ -251,6 +255,12 @@ public interface PatientReporterConfig {
     String protectEvidenceTsv();
 
     @NotNull
+    String lilacResultCsv();
+
+    @NotNull
+    String lilacQcCsv();
+
+    @NotNull
     String germlineReportingTsv();
 
     @NotNull
@@ -323,6 +333,8 @@ public interface PatientReporterConfig {
         String annotatedVirusTsv = Strings.EMPTY;
         String peachGenotypeTsv = Strings.EMPTY;
         String protectEvidenceTsv = Strings.EMPTY;
+        String lilacResultCsv = Strings.EMPTY;
+        String lilacQcCsv = Strings.EMPTY;
 
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
@@ -358,6 +370,8 @@ public interface PatientReporterConfig {
             annotatedVirusTsv = nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV);
             peachGenotypeTsv = nonOptionalFile(cmd, PEACH_GENOTYPE_TSV);
             protectEvidenceTsv = nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV);
+            lilacQcCsv = nonOptionalFile(cmd, LILAC_QC_CSV);
+            lilacResultCsv = nonOptionalFile(cmd, LILAC_RESULT_CSV);
 
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
@@ -397,6 +411,8 @@ public interface PatientReporterConfig {
                 .annotatedVirusTsv(annotatedVirusTsv)
                 .peachGenotypeTsv(peachGenotypeTsv)
                 .protectEvidenceTsv(protectEvidenceTsv)
+                .lilacResultCsv(lilacResultCsv)
+                .lilacQcCsv(lilacQcCsv)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
                 .sampleSpecialRemarkTsv(sampleSpecialRemarkTsv)

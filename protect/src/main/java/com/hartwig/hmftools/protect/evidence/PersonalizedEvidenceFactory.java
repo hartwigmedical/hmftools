@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.protect.EvidenceType;
 import com.hartwig.hmftools.common.protect.ImmutableKnowledgebaseSource;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
+import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
@@ -52,7 +53,11 @@ public class PersonalizedEvidenceFactory {
     @NotNull
     public ImmutableProtectEvidence.Builder evidenceBuilder(@NotNull ActionableEvent actionable) {
         return ImmutableProtectEvidence.builder()
-                .treatment(actionable.treatment().treament())
+                .treatment(ImmutableTreatment.builder()
+                        .treament(actionable.treatment().treament())
+                        .sourceRelevantTreatmentApproaches(actionable.treatment().sourceRelevantTreatmentApproaches())
+                        .relevantTreatmentApproaches(actionable.treatment().relevantTreatmentApproaches())
+                        .build())
                 .onLabel(isOnLabel(actionable.applicableCancerType(), actionable.blacklistCancerTypes(), actionable.treatment().treament()))
                 .level(actionable.level())
                 .direction(actionable.direction())
@@ -169,7 +174,7 @@ public class PersonalizedEvidenceFactory {
     @NotNull
     private static EvidenceType fromActionableCharacteristic(@NotNull ActionableCharacteristic characteristic) {
         switch (characteristic.name()) {
-            case MICROSATELLITE_UNSTABLE:
+            case MICROSATELLITE_INSTABLE:
             case MICROSATELLITE_STABLE:
             case HIGH_TUMOR_MUTATIONAL_LOAD:
             case LOW_TUMOR_MUTATIONAL_LOAD:

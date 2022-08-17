@@ -121,7 +121,7 @@ public class ProtectEvidenceFileTest {
     private static ProtectEvidence findByTreatmentAndEvent(@NotNull Iterable<ProtectEvidence> evidences, @NotNull String treatment,
             @NotNull String event) {
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.treatment().equals(treatment) && evidence.event().equals(event)) {
+            if (evidence.treatment().treament().equals(treatment) && evidence.event().equals(event)) {
                 return evidence;
             }
         }
