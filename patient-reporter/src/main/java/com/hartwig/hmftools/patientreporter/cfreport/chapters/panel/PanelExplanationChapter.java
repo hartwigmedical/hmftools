@@ -46,17 +46,14 @@ public class PanelExplanationChapter implements ReportChapter {
 
         div.add(new Paragraph("Details on the report general ").addStyle(ReportResources.smallBodyHeadingStyle()));
         div.add(createContentParagraph("The variant calling of the sequencing data is based on reference genome version GRCh38."));
-        div.add(createContentDivWithLinkThree("The transcript list can be found at ",
-                "https://resources.hartwigmedicalfoundation.nl",
-                " in the directory " + "'Patient-Reporting.",
-                "https://resources.hartwigmedicalfoundation.nl"));
+        div.add(createContentDivWithLinkThree("The gene name list can be found at ", "https://resources.hartwigmedicalfoundation.nl",
+                " in the directory 'Patient-Reporting."));
 
         div.add(new Paragraph("").addStyle(ReportResources.smallBodyHeadingStyle()));
         div.add(new Paragraph("Details on the VCF file").addStyle(ReportResources.smallBodyHeadingStyle()));
         div.add(createContentDivWithLinkThree("A short description of the headers present in the VCF file can be found at ",
                 "https://resources.hartwigmedicalfoundation.nl",
-                " in the directory 'Patient-Reporting.",
-                "https://resources.hartwigmedicalfoundation.nl"));
+                " in the directory 'Patient-Reporting."));
         return div;
     }
 
@@ -66,20 +63,18 @@ public class PanelExplanationChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Div createContentDivWithLinkThree(@NotNull String string1, @NotNull String string2, @NotNull String string3,
-            @NotNull String link) {
+    private static Div createContentDivWithLinkThree(@NotNull String string1, @NotNull String link, @NotNull String string3) {
         Div div = new Div();
 
-        div.add(createParaGraphWithLinkThree(string1, string2, string3, link));
+        div.add(createParaGraphWithLinkThree(string1, link, string3));
         return div;
     }
 
     @NotNull
-    private static Paragraph createParaGraphWithLinkThree(@NotNull String string1, @NotNull String string2, @NotNull String string3,
-            @NotNull String link) {
+    private static Paragraph createParaGraphWithLinkThree(@NotNull String string1, @NotNull String link, @NotNull String string3) {
         return new Paragraph(string1).addStyle(ReportResources.subTextStyle())
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
-                .add(new Text(string2).addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(link)))
+                .add(new Text(link).addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(link)))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add(new Text(string3).addStyle(ReportResources.subTextStyle()))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
