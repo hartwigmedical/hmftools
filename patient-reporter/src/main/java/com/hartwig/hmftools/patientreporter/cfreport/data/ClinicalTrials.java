@@ -27,7 +27,7 @@ public final class ClinicalTrials {
     public static int uniqueTrialCount(@NotNull List<ProtectEvidence> trials) {
         Set<String> acronyms = Sets.newHashSet();
         for (ProtectEvidence trial : trials) {
-            acronyms.add(trial.treatment());
+            acronyms.add(trial.treatment().treament());
         }
         return acronyms.size();
     }

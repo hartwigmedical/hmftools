@@ -371,14 +371,14 @@ public class FrontPageChapter implements ReportChapter {
         Set<String> treatments = Sets.newHashSet();
         for (ProtectEvidence evidence : protect.reportableEvidences()) {
             if (evidence.onLabel() == requireOnLabel) {
-                treatments.add(evidence.treatment());
+                treatments.add(evidence.treatment().treament());
                 levels.add(evidence.level().toString());
             }
         }
 
         for (ProtectEvidence evidence : protect.unreportedEvidences()) {
             if (evidence.onLabel() == requireOnLabel) {
-                treatments.add(evidence.treatment());
+                treatments.add(evidence.treatment().treament());
                 levels.add(evidence.level().toString());
             }
         }
