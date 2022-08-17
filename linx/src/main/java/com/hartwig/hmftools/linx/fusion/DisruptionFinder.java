@@ -805,7 +805,7 @@ public class DisruptionFinder implements CohortFileInterface
 
             if(driverCatalogs.stream()
                     .filter(x -> x.gene().equals(disruptionData.Gene.GeneName))
-                    .anyMatch(x -> x.driver() == HOM_DUP_DISRUPTION || x.driver() == HOM_DEL_DISRUPTION))
+                    .anyMatch(x -> x.driver() == HOM_DUP_DISRUPTION || x.driver() == HOM_DEL_DISRUPTION || x.driver() == DriverType.DISRUPTION))
             {
                 continue;
             }
