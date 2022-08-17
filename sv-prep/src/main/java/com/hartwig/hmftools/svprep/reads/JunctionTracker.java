@@ -898,6 +898,16 @@ public class JunctionTracker
 
         // 1 junction read, 2 exact supporting reads altogether and 1 map-qual read
         int junctionFrags = junctionData.JunctionGroups.size();
+        int exactSupportCount = junctionData.ExactSupportGroups.size();
+
+        // check for a hotspot match
+        if(mHotspotRegions.stream().anyMatch(x -> x.containsPosition(junctionData.Position)))
+        {
+            junctionData.markHotspot();
+
+            if(junctionFrags + exactSupportCount >= MIN_HOTSPOT_JUNCTION_SUPPORT)
+                return true;
+        }
 
         boolean hasPassingMapQualRead = junctionData.ReadTypeReads.get(JUNCTION).stream().anyMatch(x -> x.mapQuality() > MIN_MAP_QUALITY);
 
@@ -913,19 +923,8 @@ public class JunctionTracker
         if(!hasPassingMapQualRead)
             return false;
 
-        int exactSupportCount = junctionData.ExactSupportGroups.size();
-
         if(junctionFrags + exactSupportCount >= mFilterConfig.MinJunctionSupport)
             return true;
-
-        // check for a hotspot match
-        if(mHotspotRegions.stream().anyMatch(x -> x.containsPosition(junctionData.Position)))
-        {
-            junctionData.markHotspot();
-
-            if(junctionFrags + exactSupportCount >= MIN_HOTSPOT_JUNCTION_SUPPORT)
-                return true;
-        }
 
         return false;
     }
