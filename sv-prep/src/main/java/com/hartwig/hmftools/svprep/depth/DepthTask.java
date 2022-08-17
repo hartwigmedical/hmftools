@@ -5,9 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegions;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READPAIR_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READ_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
@@ -18,7 +16,7 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
-import static com.hartwig.hmftools.svprep.SvConstants.MAX_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.svprep.depth.DepthAnnotator.VCF_TAG_REFPAIR_GRIDSS;
 import static com.hartwig.hmftools.svprep.depth.DepthAnnotator.VCF_TAG_REF_GRIDSS;
 import static com.hartwig.hmftools.svprep.depth.DepthConfig.MAX_GAP;
@@ -27,7 +25,6 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -42,7 +39,6 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class DepthTask implements Callable
 {
@@ -145,7 +141,7 @@ public class DepthTask implements Callable
         // FragmentSize < max size from distribution
 
         ChrBaseRegion region = new ChrBaseRegion(
-                mChromosome, posStart - MAX_FRAGMENT_LENGTH, posEnd + MAX_FRAGMENT_LENGTH);
+                mChromosome, posStart - DEFAULT_MAX_FRAGMENT_LENGTH, posEnd + DEFAULT_MAX_FRAGMENT_LENGTH);
 
         List<RefSupportCounts> sampleTotalCounts = Lists.newArrayList();
 
@@ -360,13 +356,13 @@ public class DepthTask implements Callable
                 byte orientation = !record.getReadNegativeStrandFlag() ? POS_ORIENT : NEG_ORIENT;
 
                 if(orientation == POS_ORIENT && readEnd <= max(variantPosition, varPosMax) && !hasLowerPosRead
-                && abs(record.getInferredInsertSize()) < MAX_FRAGMENT_LENGTH)
+                && abs(record.getInferredInsertSize()) < DEFAULT_MAX_FRAGMENT_LENGTH)
                 {
                     hasLowerPosRead = true;
                     strandCount += record.getReadNegativeStrandFlag() ? -1 : 1;
                 }
                 else if(orientation == NEG_ORIENT && readStart >= min(variantPosition, varPosMin) && !hasUpperPosRead
-                && abs(record.getInferredInsertSize()) < MAX_FRAGMENT_LENGTH)
+                && abs(record.getInferredInsertSize()) < DEFAULT_MAX_FRAGMENT_LENGTH)
                 {
                     hasUpperPosRead = true;
                     strandCount += record.getReadNegativeStrandFlag() ? -1 : 1;

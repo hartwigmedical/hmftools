@@ -158,8 +158,8 @@ public class ReadFilters
         if(record.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
             return true;
 
-        // or an fragment length beyond the observed distribution
-        if(abs(record.getInferredInsertSize()) > config.fragmentLengthMax()) //  || record.getInferredInsertSize() < mFragmentLengthMin
+        // or an fragment length outside the observed distribution
+        if(abs(record.getInferredInsertSize()) > config.fragmentLengthMax())
             return true;
 
         // an unmapped mate

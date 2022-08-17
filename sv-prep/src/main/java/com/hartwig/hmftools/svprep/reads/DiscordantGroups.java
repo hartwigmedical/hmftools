@@ -152,18 +152,18 @@ public final class DiscordantGroups
         }
     }
 
-    public static boolean isDiscordantGroup(final ReadGroup readGroup, final int maxFragmentLength)
+    public static boolean isDiscordantGroup(final ReadGroup readGroup, final int minFragmentLength, final int maxFragmentLength)
     {
         // only the first read is used and so only that is checked
-        return isDiscordantRead(readGroup.reads().get(0), maxFragmentLength);
+        return isDiscordantRead(readGroup.reads().get(0), minFragmentLength, maxFragmentLength);
     }
 
-    private static boolean isDiscordantRead(final ReadRecord read, final int maxFragmentLength)
+    private static boolean isDiscordantRead(final ReadRecord read, final int minFragmentLength, final int maxFragmentLength)
     {
         if(read.Chromosome.equals(UNMAPPED_CHR) || read.MateChromosome.equals(UNMAPPED_CHR))
             return false;
 
-        if(read.fragmentInsertSize() > maxFragmentLength)
+        if(read.fragmentInsertSize() < minFragmentLength || read.fragmentInsertSize() > maxFragmentLength)
             return true;
 
         if(!read.Chromosome.equals(read.MateChromosome))

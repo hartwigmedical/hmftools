@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.svprep;
 
-import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
@@ -99,10 +98,12 @@ public class SvPrepApplication
         FragmentSizeDistribution fragSizeDistribution = new FragmentSizeDistribution(mConfig);
         fragSizeDistribution.run();
 
-        final int[] lengthRange = fragSizeDistribution.calcFragmentLengthRange();
-        int fragLengthFilterMin = max(mConfig.ReadLength, (int)(lengthRange[0] * 0.5));
-        int fragLengthFilterMax = (int)(lengthRange[1] * 1.5);
-        mConfig.ReadFiltering.config().setFragmentLengthMin(fragLengthFilterMin, fragLengthFilterMax);
+        final int[] fragmentDistLengths = fragSizeDistribution.calculatePercentileLengths();
+
+        SV_LOGGER.info("fragment length distribution percentile values(min={} max={})",
+                fragmentDistLengths[0], fragmentDistLengths[1]);
+
+        mConfig.ReadFiltering.config().setFragmentLengths(fragmentDistLengths[0], fragmentDistLengths[1]);
     }
 
     public static void main(@NotNull final String[] args) throws Exception

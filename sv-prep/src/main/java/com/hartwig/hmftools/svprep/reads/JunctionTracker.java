@@ -52,8 +52,8 @@ public class JunctionTracker
     private final ChrBaseRegion mRegion;
     private final SvConfig mConfig;
     private final ReadFilterConfig mFilterConfig;
-    private final HotspotCache mHotspotCache;
     private final List<BaseRegion> mBlacklistRegions;
+    private final List<ChrBaseRegion> mHotspotRegions;
 
     private final Map<String,ReadGroup> mReadGroupMap; // keyed by readId
     private final Set<String> mExpectedReadIds; // as indicated by another partition
@@ -73,7 +73,8 @@ public class JunctionTracker
         mRegion = region;
         mConfig = config;
         mFilterConfig = config.ReadFiltering.config();
-        mHotspotCache = hotspotCache;
+
+        mHotspotRegions = hotspotCache.findMatchingRegions(region);
 
         mBlacklistRegions = Lists.newArrayList();
 
@@ -276,7 +277,8 @@ public class JunctionTracker
                 mRemoteCandidateReadGroups.add(readGroup);
             }
 
-            if(mConfig.FindDiscordantGroups && !hasBlacklistedRead && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMax()))
+            if(mConfig.FindDiscordantGroups && !hasBlacklistedRead &&
+            isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
             {
                 mCandidateDiscordantGroups.add(readGroup);
             }
@@ -603,7 +605,7 @@ public class JunctionTracker
 
     private boolean reachedFragmentCap(final int fragments)
     {
-        return mFilterConfig.JunctionFragmentCap > 0 && fragments >= mFilterConfig.JunctionFragmentCap;
+        return mConfig.JunctionFragmentCap > 0 && fragments >= mConfig.JunctionFragmentCap;
     }
 
     private void setLastJunctionIndex(int index)
@@ -676,10 +678,10 @@ public class JunctionTracker
 
     private boolean readWithinJunctionRange(final ReadRecord read, final JunctionData junctionData)
     {
-        if(abs(read.end() - junctionData.Position) <= mFilterConfig.MaxDiscordantFragmentDistance)
+        if(abs(read.end() - junctionData.Position) <= mFilterConfig.maxSupportingFragmentDistance())
             return true;
 
-        if(abs(read.start() - junctionData.Position) <= mFilterConfig.MaxDiscordantFragmentDistance)
+        if(abs(read.start() - junctionData.Position) <= mFilterConfig.maxSupportingFragmentDistance())
             return true;
 
         return false;
@@ -704,7 +706,7 @@ public class JunctionTracker
         }
         else
         {
-            if(read.start() < junctionData.Position || abs(read.end() - junctionData.Position) > filterConfig.MaxDiscordantFragmentDistance)
+            if(read.start() < junctionData.Position || abs(read.end() - junctionData.Position) > filterConfig.maxSupportingFragmentDistance())
                 return false;
 
             junctionDistance = abs(read.start() - junctionData.Position);
@@ -721,7 +723,7 @@ public class JunctionTracker
         }
 
         // otherwise can be distant if chimeric
-        if(junctionDistance <= filterConfig.MaxDiscordantFragmentDistance)
+        if(junctionDistance <= filterConfig.maxSupportingFragmentDistance())
             return isChimericRead(read.record(), filterConfig);
 
         return false;
@@ -894,7 +896,7 @@ public class JunctionTracker
         if(junctionData.discordantGroup())
             return true;
 
-        // 1 junction read, 3 exact supporting reads altogether and 1 map-qual read
+        // 1 junction read, 2 exact supporting reads altogether and 1 map-qual read
         int junctionFrags = junctionData.JunctionGroups.size();
 
         boolean hasPassingMapQualRead = junctionData.ReadTypeReads.get(JUNCTION).stream().anyMatch(x -> x.mapQuality() > MIN_MAP_QUALITY);
@@ -917,11 +919,7 @@ public class JunctionTracker
             return true;
 
         // check for a hotspot match
-        boolean matchesHotspot = junctionData.RemoteJunctions.stream()
-                .anyMatch(x -> mHotspotCache.matchesHotspot(
-                        mRegion.Chromosome, x.Chromosome, junctionData.Position, x.Position, junctionData.Orientation, x.Orientation));
-
-        if(matchesHotspot)
+        if(mHotspotRegions.stream().anyMatch(x -> x.containsPosition(junctionData.Position)))
         {
             junctionData.markHotspot();
 

@@ -10,6 +10,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -18,12 +19,15 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 public class HotspotCache
 {
     private final Map<String,List<KnownHotspot>> mHotspotRegions; // keyed by chromosome start
+    private final boolean mIsValid;
 
     public HotspotCache(final String filename)
     {
         mHotspotRegions = Maps.newHashMap();
-        loadFile(filename);
+        mIsValid = loadFile(filename);
     }
+
+    public boolean isValid() { return mIsValid; }
 
     public boolean matchesHotspot(final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd)
     {
@@ -40,10 +44,31 @@ public class HotspotCache
         return false;
     }
 
-    private void loadFile(final String filename)
+    public List<ChrBaseRegion> findMatchingRegions(final ChrBaseRegion region)
+    {
+        List<ChrBaseRegion> matchedRegions = Lists.newArrayList();
+
+        List<KnownHotspot> knownHotspots = mHotspotRegions.get(region.Chromosome);
+
+        if(knownHotspots != null)
+        {
+            for(KnownHotspot knownHotspot : knownHotspots)
+            {
+                if(knownHotspot.RegionStart.overlaps(region))
+                    matchedRegions.add(knownHotspot.RegionStart);
+
+                if(knownHotspot.RegionEnd.overlaps(region))
+                    matchedRegions.add(knownHotspot.RegionEnd);
+            }
+        }
+
+        return matchedRegions;
+    }
+
+    private boolean loadFile(final String filename)
     {
         if(filename == null)
-            return;
+            return true;
 
         try
         {
@@ -59,7 +84,7 @@ public class HotspotCache
                 if(values.length < 10)
                 {
                     SV_LOGGER.error("invalid hotspot entry: {}", line);
-                    return;
+                    return false;
                 }
 
                 String chrStart = values[0];
@@ -105,8 +130,10 @@ public class HotspotCache
         catch(IOException e)
         {
             SV_LOGGER.error("failed to load hotspot data file({}): {}", filename, e.toString());
-            return;
+            return false;
         }
+
+        return true;
     }
 
     public class KnownHotspot

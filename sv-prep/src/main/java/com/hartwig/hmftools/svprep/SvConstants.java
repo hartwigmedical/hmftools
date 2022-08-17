@@ -9,6 +9,8 @@ public final class SvConstants
     public static final int DOWN_SAMPLE_FRACTION = 20; // split partition into segments
     public static final int DOWN_SAMPLE_THRESHOLD = 1_500_000; // per partition
 
+    public static final int DEFAULT_READ_LENGTH = 151;
+
     // candidate junction fragments
     public static final int MIN_ALIGNMENT_BASES = 50;
     public static final int MIN_MAP_QUALITY = 20;
@@ -28,9 +30,8 @@ public final class SvConstants
     public static final int REPEAT_BREAK_MIN_SC_LENGTH = 50;
 
     // supporting reads
-    public static final int JUNCTION_SUPPORT_CAP = 0; // no limit
     public static final int MIN_SUPPORTING_READ_DISTANCE = 50;
-    public static final int MAX_DISCORDANT_READ_DISTANCE = 1000;
+    public static final int MAX_SUPPORT_FRAGMENT_DISTANCE = 1000;
     public static final int MAX_HIGH_QUAL_BASE_MISMATCHES = 1;
 
     // discordant groups
@@ -38,11 +39,15 @@ public final class SvConstants
     public static final int DISCORDANT_GROUP_MAX_DISTANCE = 500;
 
     // final junction filtering
-    public static final int MIN_HOTSPOT_JUNCTION_SUPPORT = 2;
-    public static final int MIN_JUNCTION_SUPPORT = 3;
+    public static final int MIN_HOTSPOT_JUNCTION_SUPPORT = 1;
+    public static final int MIN_JUNCTION_SUPPORT = 2;
 
     // fragment length distribution and filtering
     public static final int FRAG_LENGTH_DIST_SAMPLE_SIZE = 10000;
-    public static final int MAX_FRAGMENT_LENGTH = 1100;
-    public static final int DEFAULT_READ_LENGTH = 151;
+    public static final int FRAG_LENGTH_DIST_MIN_QUAL = 60;
+    public static final int DISCORDANT_FRAGMENT_LENGTH_MIN = 1100;
+    public static final int FRAG_LENGTH_DIST_MAX_LENGTH = 1500;
+    public static final double FRAG_LENGTH_DIST_PERCENTILE = 0.9975;
+
+    public static final int DEFAULT_MAX_FRAGMENT_LENGTH = DISCORDANT_FRAGMENT_LENGTH_MIN;
 }

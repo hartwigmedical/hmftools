@@ -1,13 +1,15 @@
 package com.hartwig.hmftools.svprep;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.floor;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svprep.SvConstants.FRAG_LENGTH_DIST_MAX_LENGTH;
+import static com.hartwig.hmftools.svprep.SvConstants.FRAG_LENGTH_DIST_MIN_QUAL;
+import static com.hartwig.hmftools.svprep.SvConstants.FRAG_LENGTH_DIST_PERCENTILE;
 import static com.hartwig.hmftools.svprep.SvConstants.FRAG_LENGTH_DIST_SAMPLE_SIZE;
-import static com.hartwig.hmftools.svprep.SvConstants.MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.svprep.WriteType.FRAGMENT_LENGTH_DIST;
 
 import java.io.BufferedWriter;
@@ -50,7 +52,7 @@ public class FragmentSizeDistribution
         for(int i = 1; i <= 10; ++i)
         {
             String chromosome = String.valueOf(i);
-            String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
+            String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome);
 
             if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosomeStr))
                 continue;
@@ -71,19 +73,43 @@ public class FragmentSizeDistribution
             mergeDistributions(mLengthFrequencies, chrTask.lengthFrequencies());
         }
 
-        final int[] lengthRange = calcFragmentLengthRange();
+        int minLength = mLengthFrequencies.get(0).Length;
+        int maxLength = mLengthFrequencies.get(mLengthFrequencies.size() - 1).Length;
 
-        SV_LOGGER.info("fragment size distribution complete: min({}) max({})", lengthRange[0], lengthRange[1]);
+        SV_LOGGER.debug("fragment size distribution complete: min({}) max({})", minLength, maxLength);
 
         if(mConfig.WriteTypes.contains(FRAGMENT_LENGTH_DIST))
             writeDistribution();
     }
 
-    public final int[] calcFragmentLengthRange()
+    public int[] calculatePercentileLengths()
     {
-        int minLength = mLengthFrequencies.get(0).Length;
-        int maxLength = mLengthFrequencies.get(mLengthFrequencies.size() - 1).Length;
-        return new int[] { minLength, maxLength };
+        int[] percentileLengths = { 0, 0 };
+
+        int totalFragments = mLengthFrequencies.stream().mapToInt(x -> x.Frequency).sum();
+        int cumulativeTotal = 0;
+        int requiredMinTotal = (int)floor(totalFragments * (1 - FRAG_LENGTH_DIST_PERCENTILE));
+        int requiredMaxTotal = (int)floor(totalFragments * FRAG_LENGTH_DIST_PERCENTILE);
+
+        for(LengthFrequency lengthData : mLengthFrequencies)
+        {
+            if(percentileLengths[0] == 0 && lengthData.Frequency + cumulativeTotal >= requiredMinTotal)
+            {
+                percentileLengths[0] = lengthData.Length;
+            }
+
+            if(lengthData.Frequency + cumulativeTotal >= requiredMaxTotal)
+            {
+                percentileLengths[1] = lengthData.Length;
+                break;
+            }
+            else
+            {
+                cumulativeTotal += lengthData.Frequency;
+            }
+        }
+
+        return percentileLengths;
     }
 
     private void mergeDistributions(final List<LengthFrequency> lengthFrequencies, final List<LengthFrequency> otherFrequencies)
@@ -161,7 +187,7 @@ public class FragmentSizeDistribution
             mProcessedReads = 0;
 
             mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
-            mBamSlicer = new BamSlicer(60, false, false, false);
+            mBamSlicer = new BamSlicer(FRAG_LENGTH_DIST_MIN_QUAL, false, false, false);
 
             mLengthFrequencies = Lists.newArrayList();
         }
@@ -201,7 +227,7 @@ public class FragmentSizeDistribution
                 return false;
 
             int fragmentLength = abs(record.getInferredInsertSize());
-            if(fragmentLength > MAX_FRAGMENT_LENGTH)
+            if(fragmentLength > FRAG_LENGTH_DIST_MAX_LENGTH)
                 return false;
 
             // ignore translocations and inversions
@@ -211,7 +237,6 @@ public class FragmentSizeDistribution
             if(record.isSecondaryOrSupplementary())
                 return false;
 
-            // ignore split and soft-clipped reads above the read length
             if(record.getCigar().containsOperator(CigarOperator.N) || record.getCigar().containsOperator(CigarOperator.S))
                 return false;
 

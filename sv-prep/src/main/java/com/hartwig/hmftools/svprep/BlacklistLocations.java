@@ -17,14 +17,16 @@ import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 public class BlacklistLocations
 {
     private final Map<String,List<BaseRegion>> mChrLocationsMap; // keyed by chromosome start
+    private final boolean mIsValid;
 
     public BlacklistLocations(final String filename)
     {
         mChrLocationsMap = Maps.newHashMap();
-        loadFile(filename);
+        mIsValid = loadFile(filename);
     }
 
     public List<BaseRegion> getRegions(final String chromosome) { return mChrLocationsMap.get(chromosome); }
+    public boolean isValid() { return mIsValid; }
 
     public boolean inBlacklistLocation(final String chromosome, final int posStart, int posEnd)
     {
@@ -71,10 +73,10 @@ public class BlacklistLocations
         }
     }
 
-    private void loadFile(final String filename)
+    private boolean loadFile(final String filename)
     {
         if(filename == null)
-            return;
+            return true;
 
         try
         {
@@ -93,7 +95,7 @@ public class BlacklistLocations
                 if(values.length < 3)
                 {
                     SV_LOGGER.error("invalid blacklist entry: {}", line);
-                    return;
+                    return false;
                 }
 
                 String chromosome = values[0];
@@ -111,7 +113,9 @@ public class BlacklistLocations
         catch(IOException e)
         {
             SV_LOGGER.error("failed to load hotspot data file({}): {}", filename, e.toString());
-            return;
+            return false;
         }
+
+        return true;
     }
 }
