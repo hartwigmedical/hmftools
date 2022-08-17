@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.ReadFilterConfig;
 
 import htsjdk.samtools.SAMFlag;
@@ -14,11 +15,15 @@ public final class SvPrepTestUtils
 {
     public static final String CHR_1 = "1";
     public static final String CHR_2 = "2";
-    public static final String CHR_3 = "3";
-    public static final String CHR_4 = "4";
 
     public static final int DEFAULT_MAP_QUAL = 60;
     public static final int DEFAULT_BASE_QUAL = 37;
+
+    public static final int PARTITION_SIZE = 10000;
+    public static final ChrBaseRegion REGION_1 = new ChrBaseRegion(CHR_1, 1, PARTITION_SIZE - 1);
+    public static final ChrBaseRegion REGION_2 = new ChrBaseRegion(CHR_1, REGION_1.end() + 1, REGION_1.end() + PARTITION_SIZE);
+    public static final ChrBaseRegion REGION_3 = new ChrBaseRegion(CHR_1, REGION_2.end() + 1, REGION_2.end() + PARTITION_SIZE);
+
 
     public static final ReadFilterConfig READ_FILTERS = ReadFilterConfig.from(null);
     public static final HotspotCache HOTSPOT_CACHE = new HotspotCache(null);
@@ -77,7 +82,7 @@ public final class SvPrepTestUtils
         record.setMateReferenceName(mateChr);
         record.setMateAlignmentStart(mateStart);
 
-        if(!suppData.isEmpty())
+        if(suppData != null && !suppData.isEmpty())
             record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, suppData);
 
         return record;

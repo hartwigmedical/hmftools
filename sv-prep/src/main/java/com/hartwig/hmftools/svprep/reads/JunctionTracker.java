@@ -59,6 +59,7 @@ public class JunctionTracker
     private final Set<String> mExpectedReadIds; // as indicated by another partition
     private final List<ReadGroup> mExpectedReadGroups;
     private final List<ReadGroup> mRemoteCandidateReadGroups; // reads with their mate(s) in another partition, but not suppporting a junction
+    private final List<ReadGroup> mCandidateDiscordantGroups;
 
     private final List<JunctionData> mJunctions; // ordered by position
     private int mLastJunctionIndex;
@@ -89,6 +90,7 @@ public class JunctionTracker
         mExpectedReadIds = Sets.newHashSet();
         mExpectedReadGroups = Lists.newArrayList();
         mRemoteCandidateReadGroups = Lists.newArrayList();
+        mCandidateDiscordantGroups = Lists.newArrayList();
         mJunctions = Lists.newArrayList();
         mLastJunctionIndex = -1;
         mInitialSupportingFrags = 0;
@@ -169,6 +171,20 @@ public class JunctionTracker
 
     public void assignFragments()
     {
+        assignJunctionFragmentsAndSupport();
+
+        filterJunctions();
+
+        findDiscordantGroups();
+
+        if(mBaseDepth != null)
+        {
+            mJunctions.forEach(x -> x.setDepth(getBaseDepth(x.Position)));
+        }
+    }
+
+    public void assignJunctionFragmentsAndSupport()
+    {
         List<ReadGroup> candidateSupportGroups = Lists.newArrayList();
 
         // create junctions from read groups and then assignment supporting of various kinds
@@ -216,7 +232,6 @@ public class JunctionTracker
         // order by first read's start position to assist with efficient junction look-up using the last junction index
         Collections.sort(candidateSupportGroups, new ReadGroup.ReadGroupComparator());
 
-        List<ReadGroup> candidateDiscordantGroups = Lists.newArrayList();
         Map<JunctionData,ReadType> supportedJunctions = Maps.newHashMap();
         for(ReadGroup readGroup : candidateSupportGroups)
         {
@@ -263,33 +278,31 @@ public class JunctionTracker
 
             if(mConfig.FindDiscordantGroups && !hasBlacklistedRead && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMax()))
             {
-                candidateDiscordantGroups.add(readGroup);
+                mCandidateDiscordantGroups.add(readGroup);
             }
         }
+    }
 
-        if(mConfig.FindDiscordantGroups)
+    public void findDiscordantGroups()
+    {
+        if(!mConfig.FindDiscordantGroups)
+            return;
+
+        if(mCandidateDiscordantGroups.size() > 1000)
         {
-            if(candidateDiscordantGroups.size() > 1000)
-            {
-                SV_LOGGER.debug("region({}) checking discordant groups from {} read groups", mRegion, candidateDiscordantGroups.size());
-            }
-
-            List<JunctionData> discordantJunctions = formDiscordantJunctions(mRegion, candidateDiscordantGroups);
-
-            if(!discordantJunctions.isEmpty())
-            {
-                SV_LOGGER.debug("region({}) found {} discordant group junctions", mRegion, discordantJunctions.size());
-                discordantJunctions.forEach(x -> addJunction(x));
-            }
-
-            // no obvious need to re-check support at these junctions since all proximate facing read groups have already been tested
-            // and allocated to these groups
+            SV_LOGGER.debug("region({}) checking discordant groups from {} read groups", mRegion, mCandidateDiscordantGroups.size());
         }
 
-        if(mBaseDepth != null)
+        List<JunctionData> discordantJunctions = formDiscordantJunctions(mRegion, mCandidateDiscordantGroups);
+
+        if(!discordantJunctions.isEmpty())
         {
-            mJunctions.forEach(x -> x.setDepth(getBaseDepth(x.Position)));
+            SV_LOGGER.debug("region({}) found {} discordant group junctions", mRegion, discordantJunctions.size());
+            discordantJunctions.forEach(x -> addJunction(x));
         }
+
+        // no obvious need to re-check support at these junctions since all proximate facing read groups have already been tested
+        // and allocated to these groups
     }
 
     private void createJunction(final ReadGroup readGroup)
@@ -847,7 +860,7 @@ public class JunctionTracker
         return true;
     }
 
-    public void filterJunctions()
+    private void filterJunctions()
     {
         // alternatively when processing then also just remove all processed junctions
         int index = 0;
@@ -859,6 +872,16 @@ public class JunctionTracker
                 ++index;
             else
                 mJunctions.remove(index);
+        }
+
+        // reset read group junction positions, to remove those for purged junctions
+        mReadGroupMap.values().forEach(x -> x.clearJunctionPositions());
+
+        for(JunctionData junctionData : mJunctions)
+        {
+            junctionData.JunctionGroups.forEach(x -> x.addJunctionPosition(junctionData.Position));
+            junctionData.ExactSupportGroups.forEach(x -> x.addJunctionPosition(junctionData.Position));
+            junctionData.SupportingGroups.forEach(x -> x.addJunctionPosition(junctionData.Position));
         }
     }
 
@@ -929,43 +952,4 @@ public class JunctionTracker
         int baseIndex = position - mRegion.start();
         return baseIndex >= 0 && baseIndex < mBaseDepth.length ? mBaseDepth[baseIndex] : 0;
     }
-
-    /*
-    private boolean hasFragmentOverlaps(final JunctionData junctionData, int index, boolean searchNext)
-    {
-        JunctionData nextJunction = null;
-
-        if(searchNext)
-        {
-            if(index + 1 >= mJunctions.size())
-                return false;
-
-            nextJunction = mJunctions.get(index + 1);
-        }
-        else
-        {
-            if(index == 0)
-                return false;
-
-            nextJunction = mJunctions.get(index - 1);
-        }
-
-        if(nextJunction.Orientation != junctionData.Orientation)
-            return false;
-
-        if(abs(nextJunction.Position - junctionData.Orientation) > 10)
-            return false;
-
-        if(!junctionHasSupport(nextJunction))
-            return false;
-
-        for(ReadGroup readGroup : nextJunction.ExactSupportGroups)
-        {
-            if(readGroup.hasJunctionPosition(junctionData.Position))
-                return true;
-        }
-
-        return false;
-    }
-    */
 }

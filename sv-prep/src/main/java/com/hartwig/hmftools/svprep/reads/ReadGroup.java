@@ -62,6 +62,8 @@ public class ReadGroup
         mJunctionPositions.add(position);
     }
 
+    public void clearJunctionPositions() { mJunctionPositions = null; }
+
     public ReadGroupStatus groupStatus() { return mStatus; }
 
     public boolean hasRemoteJunctionReads() { return mHasRemoteJunctionReads; }

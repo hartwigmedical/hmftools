@@ -5,7 +5,9 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.BLACKLIST_LOCATIONS;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.CHR_1;
+import static com.hartwig.hmftools.svprep.SvPrepTestUtils.CHR_2;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.HOTSPOT_CACHE;
+import static com.hartwig.hmftools.svprep.SvPrepTestUtils.REGION_1;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.buildFlags;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.createSamRecord;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.readIdStr;
@@ -20,13 +22,18 @@ import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.svprep.reads.DiscordantGroups;
 import com.hartwig.hmftools.svprep.reads.JunctionData;
 import com.hartwig.hmftools.svprep.reads.JunctionTracker;
+import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
 import com.hartwig.hmftools.svprep.reads.ReadType;
 
+import org.apache.commons.compress.utils.Lists;
 import org.junit.Test;
 
 public class JunctionsTest
@@ -111,7 +118,7 @@ public class JunctionsTest
 
         addRead(suppRead4, CANDIDATE_SUPPORT);
 
-        mJunctionTracker.assignFragments();
+        mJunctionTracker.assignJunctionFragmentsAndSupport();
 
         assertEquals(4, mJunctionTracker.junctions().size());
 
@@ -178,7 +185,7 @@ public class JunctionsTest
 
         addRead(read3, JUNCTION);
 
-        mJunctionTracker.assignFragments();
+        mJunctionTracker.assignJunctionFragmentsAndSupport();
 
         assertEquals(4, mJunctionTracker.junctions().size());
 
@@ -231,7 +238,7 @@ public class JunctionsTest
 
         addRead(read3, JUNCTION);
 
-        mJunctionTracker.assignFragments();
+        mJunctionTracker.assignJunctionFragmentsAndSupport();
 
         assertEquals(4, mJunctionTracker.junctions().size());
         assertEquals(119, mJunctionTracker.junctions().get(0).Position);
@@ -267,41 +274,58 @@ public class JunctionsTest
         suppRead1.setReadType(CANDIDATE_SUPPORT);
         junctionTracker.processRead(suppRead1);
 
-        junctionTracker.assignFragments();
+        junctionTracker.assignJunctionFragmentsAndSupport();
 
         assertTrue(junctionTracker.junctions().isEmpty());
+    }
+
+    private void addDiscordantCandidate(
+            final List<ReadGroup> discordantCandidates, final String readId, final String chr1, int pos1, final String chr2, int pos2)
+    {
+        ReadRecord read = ReadRecord.from(createSamRecord(readId, chr1, pos1, chr2, pos2, true, false, null));
+        read.setReadType(CANDIDATE_SUPPORT);
+        read.record().setMateNegativeStrandFlag(true);
+        discordantCandidates.add(new ReadGroup(read));
     }
 
     @Test
-    public void testProximateJunctions()
+    public void testDiscordantGroups()
     {
         int readId = 0;
 
-        ReadRecord read1 = ReadRecord.from(createSamRecord(
-                readIdStr(++readId), CHR_1, 800, REF_BASES.substring(0, 100), "30S70M"));
+        // 5 fragments are required to support a discordant junction, unassigned to other junctions
+        List<ReadGroup> discordantCandidates = Lists.newArrayList();
 
-        read1.setReadType(JUNCTION);
+        addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 401, CHR_1, 5200);
+        addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 421, CHR_2, 5000); // unrelated
+        addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 431, CHR_1, 5100);
 
-        ReadRecord read2 = ReadRecord.from(createSamRecord(
-                readIdStr(++readId), CHR_1, 820, REF_BASES.substring(20, 120), "100M"));
+        List<JunctionData> junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates);
+        assertEquals(0, junctions.size());
 
-        /*
-        read2.setReadType(JUNCTION);
-        addRead();
-        junctionTracker.processRead(read1);
-        junctionTracker.processRead(read2);
+        addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 441, CHR_1, 5050);
 
-        ReadRecord suppRead1 = ReadRecord.from(createSamRecord(
-                readIdStr(++readId), CHR_1, 800, REF_BASES.substring(0, 73), "3S70M"));
+        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates);
+        assertEquals(2, junctions.size());
+        assertTrue(junctions.get(0).JunctionGroups.isEmpty());
+        assertEquals(540, junctions.get(0).Position);
+        assertEquals(POS_ORIENT, junctions.get(0).Orientation);
+        assertEquals(5050, junctions.get(1).Position);
+        assertEquals(NEG_ORIENT, junctions.get(1).Orientation);
 
-        suppRead1.setReadType(CANDIDATE_SUPPORT);
-        junctionTracker.processRead(suppRead1);
+        addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 540, CHR_1, 105000); // unrelated
+        addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 550, CHR_1, 5300);
+        addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 560, CHR_1, 6000); // too far
+        addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 570, CHR_1, 5000);
 
-        junctionTracker.assignFragments();
+        // initially none because they are assigned to existing junctions
+        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates);
+        assertEquals(0, junctions.size());
 
-        assertTrue(junctionTracker.junctions().isEmpty());
-         */
+        discordantCandidates.forEach(x -> x.clearJunctionPositions());
+        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates);
+        assertEquals(2, junctions.size());
+        assertEquals(5, junctions.get(0).SupportingGroups.size());
     }
-
 
 }

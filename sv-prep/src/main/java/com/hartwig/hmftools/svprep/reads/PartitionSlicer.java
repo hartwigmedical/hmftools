@@ -117,7 +117,6 @@ public class PartitionSlicer
         mJunctionTracker.setExpectedReads(mSpanningReadCache.getExpectedReadIds(mRegion));
 
         mJunctionTracker.assignFragments();
-        mJunctionTracker.filterJunctions();
 
         mPerCounters[PC_JUNCTIONS].stop();
 

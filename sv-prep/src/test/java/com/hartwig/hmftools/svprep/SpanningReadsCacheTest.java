@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.svprep;
 
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.CHR_1;
+import static com.hartwig.hmftools.svprep.SvPrepTestUtils.PARTITION_SIZE;
+import static com.hartwig.hmftools.svprep.SvPrepTestUtils.REGION_1;
+import static com.hartwig.hmftools.svprep.SvPrepTestUtils.REGION_2;
+import static com.hartwig.hmftools.svprep.SvPrepTestUtils.REGION_3;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.createSamRecord;
 import static com.hartwig.hmftools.svprep.SvPrepTestUtils.readIdStr;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
@@ -22,11 +26,6 @@ import org.junit.Test;
 
 public class SpanningReadsCacheTest
 {
-    private static final int PARTITION_SIZE = 10000;
-    private static final ChrBaseRegion REGION_1 = new ChrBaseRegion(CHR_1, 1, PARTITION_SIZE - 1);
-    private static final ChrBaseRegion REGION_2 = new ChrBaseRegion(CHR_1, REGION_1.end() + 1, REGION_1.end() + PARTITION_SIZE);
-    private static final ChrBaseRegion REGION_3 = new ChrBaseRegion(CHR_1, REGION_2.end() + 1, REGION_2.end() + PARTITION_SIZE);
-
     private final SvConfig mConfig;
     private final SpanningReadCache mSpanningReadCache;
 

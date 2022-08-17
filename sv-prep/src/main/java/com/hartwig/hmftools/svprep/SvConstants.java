@@ -33,6 +33,10 @@ public final class SvConstants
     public static final int MAX_DISCORDANT_READ_DISTANCE = 1000;
     public static final int MAX_HIGH_QUAL_BASE_MISMATCHES = 1;
 
+    // discordant groups
+    public static final int DISCORDANT_GROUP_MIN_FRAGMENTS = 3;
+    public static final int DISCORDANT_GROUP_MAX_DISTANCE = 500;
+
     // final junction filtering
     public static final int MIN_HOTSPOT_JUNCTION_SUPPORT = 2;
     public static final int MIN_JUNCTION_SUPPORT = 3;

@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.svprep.SvConstants.DISCORDANT_GROUP_MAX_DISTANCE;
+import static com.hartwig.hmftools.svprep.SvConstants.DISCORDANT_GROUP_MIN_FRAGMENTS;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.UNMAPPED_CHR;
 
 import java.util.List;
@@ -19,16 +21,12 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public final class DiscordantGroups
 {
-    public static final int MIN_FRAGMENT_COUNT = 6;
-    public static final int MAX_START_DISTANCE = 500;
-    public static final int MAX_END_DISTANCE = 1000;
-
     public static List<JunctionData> formDiscordantJunctions(final ChrBaseRegion region, final List<ReadGroup> readGroups)
     {
         List<JunctionData> discordantJunctions = Lists.newArrayList();
         Set<String> assignedGroups = Sets.newHashSet();
 
-        for(int i = 0; i < readGroups.size() - MIN_FRAGMENT_COUNT;)
+        for(int i = 0; i < readGroups.size() - DISCORDANT_GROUP_MIN_FRAGMENTS;)
         {
             ReadGroup group1 = readGroups.get(i);
 
@@ -63,7 +61,7 @@ public final class DiscordantGroups
 
                 int group2Boundary = read2.orientation() == POS_ORIENT ? read2.end() : read2.start();
 
-                if(abs(group2Boundary - group1Boundaries[SE_START].Position) > MAX_START_DISTANCE)
+                if(abs(group2Boundary - group1Boundaries[SE_START].Position) > DISCORDANT_GROUP_MAX_DISTANCE)
                 {
                     lastSkippedIndex = min(j, lastSkippedIndex);
                     break;
@@ -119,8 +117,8 @@ public final class DiscordantGroups
 
     private static boolean hasSufficientUnassignedFragments(final List<ReadGroup> readGroups)
     {
-        return readGroups.size() >= MIN_FRAGMENT_COUNT
-                && readGroups.stream().filter(x -> x.junctionPositions() == null).count() >= MIN_FRAGMENT_COUNT;
+        return readGroups.size() >= DISCORDANT_GROUP_MIN_FRAGMENTS
+                && readGroups.stream().filter(x -> x.junctionPositions() == null).count() >= DISCORDANT_GROUP_MIN_FRAGMENTS;
     }
 
     private static void addJunctions(
@@ -198,8 +196,8 @@ public final class DiscordantGroups
 
             if(!positionWithin(
                     boundaries2[se].Position,
-                    boundaries1[se].Position - MAX_START_DISTANCE,
-                    boundaries1[se].Position + MAX_START_DISTANCE))
+                    boundaries1[se].Position - DISCORDANT_GROUP_MAX_DISTANCE,
+                    boundaries1[se].Position + DISCORDANT_GROUP_MAX_DISTANCE))
             {
                 return false;
             }
