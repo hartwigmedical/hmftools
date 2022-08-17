@@ -1,3 +1,0 @@
-gene	reportMissense	reportNonsense	reportSplice	reportDeletion	reportDisruption	reportAmplification	reportSomaticHotspot	likelihoodType
-ABCB1	true	true	true	true	true	false	true	TSG
-ABL1	true	false	false	false	false	true	true	ONCO
