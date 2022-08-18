@@ -14,4 +14,13 @@ public class SampleReportFactoryTest {
         assertEquals("Ovary", SampleReportFactory.curateBiopsyLocation("ovary"));
         assertNull(SampleReportFactory.curateBiopsyLocation(null));
     }
+
+    @Test
+    public void canTestInterpretReferenceBarcode(){
+        assertNull(SampleReportFactory.interpretRefBarcode(null));
+        assertEquals("FR123", SampleReportFactory.interpretRefBarcode("FR123"));
+        assertEquals("FR123", SampleReportFactory.interpretRefBarcode("FR123"));
+        assertEquals("FR123", SampleReportFactory.interpretRefBarcode("FR123-c2f220514"));
+        assertEquals("FR123", SampleReportFactory.interpretRefBarcode("FR123_c2f220514"));
+    }
 }
