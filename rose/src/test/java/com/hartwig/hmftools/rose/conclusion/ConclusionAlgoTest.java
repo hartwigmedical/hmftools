@@ -59,19 +59,6 @@ import org.junit.Test;
 public class ConclusionAlgoTest {
 
     @Test
-    public void canGenerateConclusionString() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
-        conclusion.put(0, "fusion");
-        conclusion.put(1, "variant");
-        conclusion.put(2, "variant");
-        conclusion.put(3, "variant");
-        conclusion.put(4, "loss");
-        conclusion.put(5, "amplification");
-        assertEquals(ConclusionAlgo.generateConslusionString(conclusion),
-                "fusion <enter> variant <enter> variant <enter> variant <enter> loss <enter> amplification <enter> ");
-    }
-
-    @Test
     public void canResolveTumorLocation() {
         PatientPrimaryTumor patientPrimaryTumorWithLocationAndType = ImmutablePatientPrimaryTumor.builder()
                 .patientIdentifier("patient ID")
@@ -116,19 +103,21 @@ public class ConclusionAlgoTest {
 
     @Test
     public void canGenerateCUPPAConclusion() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap, "CUPPA", TypeAlteration.CUPPA, "CUPPA", Condition.OTHER, "CUPPA");
 
         MolecularTissueOrigin molecularTissueOrigin =
                 ImmutableMolecularTissueOrigin.builder().plotPath(Strings.EMPTY).conclusion("Melanoma").build();
         ConclusionAlgo.generateCUPPAConclusion(conclusion, molecularTissueOrigin, actionabilityMap);
+
+        assertEquals(1, conclusion.size());
         assertEquals(conclusion.get(0), "- CUPPA Melanoma");
     }
 
     @Test
     public void canGenerateCUPPAConclusionInconclusive() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
 
         actionabilityMap = testActionabilityMap(actionabilityMap,
@@ -141,6 +130,8 @@ public class ConclusionAlgoTest {
         MolecularTissueOrigin molecularTissueOrigin =
                 ImmutableMolecularTissueOrigin.builder().plotPath(Strings.EMPTY).conclusion("results inconclusive").build();
         ConclusionAlgo.generateCUPPAConclusion(conclusion, molecularTissueOrigin, actionabilityMap);
+
+        assertEquals(1, conclusion.size());
         assertEquals(conclusion.get(0), "- results inconclusive");
     }
 
@@ -153,7 +144,7 @@ public class ConclusionAlgoTest {
         driverGenesMap.put("BRCA2", createDriverGene("BRCA2", DriverCategory.TSG));
         driverGenesMap.put("BRCA1", createDriverGene("BRCA1", DriverCategory.TSG));
 
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap =
                 testActionabilityMap(actionabilityMap, "CHEK2", TypeAlteration.INACTIVATION, "CHEK2", Condition.ONLY_HIGH, "CHEK2");
@@ -183,18 +174,17 @@ public class ConclusionAlgoTest {
                 Sets.newHashSet(),
                 Sets.newHashSet(),
                 Sets.newHashSet());
-        assertEquals(conclusion.size(), 3);
+        assertEquals(3, conclusion.size());
         assertEquals(conclusion.get(0), "- CHEK2 (c.123A>C splice) CHEK2 not biallelic");
         assertEquals(conclusion.get(1), "- APC (p.Val600Arg) APC");
 
         assertEquals(conclusion.get(2), "- BRCA2 (c.123A>C splice) BRCA2");
-        assertNull(conclusion.get(3));
     }
 
     @Test
     public void canGenerateCNVConclusion() {
         List<GainLoss> gainLosse = gainloss();
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
 
         actionabilityMap = testActionabilityMap(actionabilityMap, "BRAF", TypeAlteration.AMPLIFICATION, "BRAF", Condition.ALWAYS, "BRAF");
@@ -203,7 +193,7 @@ public class ConclusionAlgoTest {
         actionabilityMap = testActionabilityMap(actionabilityMap, "EGFR", TypeAlteration.LOSS, "EGFR", Condition.ALWAYS, "EGFR");
 
         ConclusionAlgo.generateCNVConclusion(conclusion, gainLosse, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
-        assertEquals(conclusion.size(), 4);
+        assertEquals(4, conclusion.size());
         assertEquals(conclusion.get(0), "- BRAF BRAF");
         assertEquals(conclusion.get(1), "- KRAS KRAS");
         assertEquals(conclusion.get(2), "- CDKN2A CDKN2A");
@@ -213,7 +203,7 @@ public class ConclusionAlgoTest {
     @Test
     public void canGenerateFusionConclusion() {
         List<LinxFusion> fusions = createFusion();
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap =
                 testActionabilityMap(actionabilityMap, "BRAF", TypeAlteration.INTERNAL_DELETION, "BRAF", Condition.ALWAYS, "BRAF");
@@ -222,18 +212,17 @@ public class ConclusionAlgoTest {
                 testActionabilityMap(actionabilityMap, "EGFR", TypeAlteration.KINASE_DOMAIN_DUPLICATION, "EGFR", Condition.ALWAYS, "EGFR");
 
         ConclusionAlgo.generateFusionConclusion(conclusion, fusions, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
-        assertEquals(conclusion.size(), 4);
+        assertEquals(4, conclusion.size());
         assertEquals(conclusion.get(0), "- BRAF-BRAF BRAF");
         assertEquals(conclusion.get(1), "- CAV2-MET MET");
         assertEquals(conclusion.get(2), "- EGFR-EGFR EGFR");
         assertEquals(conclusion.get(3), "- EGFR-EGFR EGFR");
-
     }
 
     @Test
     public void canGenerateHomozygousDisruptionConclusion() {
         List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList(createHomozygousDisruption("PTEN"));
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap, "PTEN", TypeAlteration.INACTIVATION, "PTEN", Condition.ALWAYS, "PTEN");
 
@@ -243,28 +232,28 @@ public class ConclusionAlgoTest {
                 Sets.newHashSet(),
                 Sets.newHashSet());
 
-        assertEquals(conclusion.size(), 1);
+        assertEquals(1, conclusion.size());
         assertEquals(conclusion.get(0), "- PTEN PTEN");
     }
 
     @Test
     public void canGenerateVirusConclusion() {
         List<AnnotatedVirus> annotatedVirus = annotatedVirus();
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
 
         actionabilityMap = testActionabilityMap(actionabilityMap, "EBV", TypeAlteration.POSITIVE, "EBV", Condition.ALWAYS, "EBV");
         actionabilityMap = testActionabilityMap(actionabilityMap, "HPV", TypeAlteration.POSITIVE, "HPV", Condition.ALWAYS, "HPV");
 
         ConclusionAlgo.generateVirusConclusion(conclusion, annotatedVirus, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
-        assertEquals(conclusion.size(), 2);
+        assertEquals(2, conclusion.size());
         assertEquals(conclusion.get(0), "- EBV EBV");
         assertEquals(conclusion.get(1), "- HPV HPV");
     }
 
     @Test
     public void canGenerateHrdConclusion() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap, "HRD", TypeAlteration.POSITIVE, "HRD", Condition.ALWAYS, "HRD");
 
@@ -276,12 +265,14 @@ public class ConclusionAlgoTest {
         Set<String> HRD = Sets.newHashSet();
         HRD.add("BRCA1");
         ConclusionAlgo.generateHrdConclusion(conclusion, analysis, actionabilityMap, Sets.newHashSet(), Sets.newHashSet(), HRD);
+
+        assertEquals(1, conclusion.size());
         assertEquals(conclusion.get(0), "- HRD (0.8) HRD");
     }
 
     @Test
     public void canGenerateHrpConclusion() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap, "HRD", TypeAlteration.POSITIVE, "HRD", Condition.ALWAYS, "HRD");
 
@@ -296,12 +287,13 @@ public class ConclusionAlgoTest {
                 Sets.newHashSet(),
                 Sets.newHashSet(),
                 Sets.newHashSet());
-        assertNull(conclusion.get(0));
+
+        assertEquals(0, conclusion.size());
     }
 
     @Test
     public void canGenerateMSIConclusion() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap, "MSI", TypeAlteration.POSITIVE, "MSI", Condition.ALWAYS, "MSI");
 
@@ -311,12 +303,14 @@ public class ConclusionAlgoTest {
                 actionabilityMap,
                 Sets.newHashSet(),
                 Sets.newHashSet());
+
+        assertEquals(1, conclusion.size());
         assertEquals(conclusion.get(0), "- MSI (4.5) MSI");
     }
 
     @Test
     public void canGenerateMSSConclusion() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap, "MSI", TypeAlteration.POSITIVE, "MSI", Condition.ALWAYS, "MSI");
 
@@ -326,12 +320,12 @@ public class ConclusionAlgoTest {
                 actionabilityMap,
                 Sets.newHashSet(),
                 Sets.newHashSet());
-        assertNull(conclusion.get(0));
+        assertEquals(0, conclusion.size());
     }
 
     @Test
     public void canGenerateTMLHighConclusion() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap, "High-TML", TypeAlteration.POSITIVE, "High-TML", Condition.ALWAYS, "TML");
 
@@ -341,12 +335,14 @@ public class ConclusionAlgoTest {
                 actionabilityMap,
                 Sets.newHashSet(),
                 Sets.newHashSet());
+
+        assertEquals(1, conclusion.size());
         assertEquals(conclusion.get(0), "- TML (200) TML");
     }
 
     @Test
     public void canGenerateTMLLowConclusion() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap, "High-TML", TypeAlteration.POSITIVE, "High-TML", Condition.ALWAYS, "TML");
 
@@ -356,54 +352,59 @@ public class ConclusionAlgoTest {
                 actionabilityMap,
                 Sets.newHashSet(),
                 Sets.newHashSet());
-        assertNull(conclusion.get(0));
+
+        assertEquals(0, conclusion.size());
     }
 
     @Test
     public void canGenerateTMBHighConclusion() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap, "High-TMB", TypeAlteration.POSITIVE, "High-TMB", Condition.ALWAYS, "TMB");
 
         ConclusionAlgo.generateTMBConclusion(conclusion, 15, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
+
+        assertEquals(1, conclusion.size());
         assertEquals(conclusion.get(0), "- TMB (15.0) TMB");
     }
 
     @Test
     public void canGenerateTMBLowConclusion() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap, "High-TMB", TypeAlteration.POSITIVE, "High-TMB", Condition.ALWAYS, "TMB");
 
         ConclusionAlgo.generateTMBConclusion(conclusion, 9, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
-        assertNull(conclusion.get(0));
+        assertEquals(0, conclusion.size());
     }
 
     @Test
     public void canGenertatePurityConclusionBelow() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap =
                 testActionabilityMap(actionabilityMap, "PURITY", TypeAlteration.PURITY, "PURITY", Condition.OTHER, "low purity (XX%)");
 
-        ConclusionAlgo.genertatePurityConclusion(conclusion, 0.1, true, actionabilityMap);
+        ConclusionAlgo.generatePurityConclusion(conclusion, 0.1, true, actionabilityMap);
+
+        assertEquals(1, conclusion.size());
         assertEquals(conclusion.get(0), "- low purity (0.1%)");
     }
 
     @Test
     public void canGenertatePurityConclusionAbove() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap =
                 testActionabilityMap(actionabilityMap, "PURITY", TypeAlteration.PURITY, "PURITY", Condition.OTHER, "low purity (XX%)");
 
-        ConclusionAlgo.genertatePurityConclusion(conclusion, 0.3, true, actionabilityMap);
-        assertNull(conclusion.get(0));
+        ConclusionAlgo.generatePurityConclusion(conclusion, 0.3, true, actionabilityMap);
+        assertEquals(0, conclusion.size());
     }
 
     @Test
     public void canGenertatePurityConclusionReliable() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap,
                 "PURITY_UNRELIABLE",
@@ -412,13 +413,15 @@ public class ConclusionAlgoTest {
                 Condition.OTHER,
                 "unreliable");
 
-        ConclusionAlgo.genertatePurityConclusion(conclusion, 0.3, false, actionabilityMap);
+        ConclusionAlgo.generatePurityConclusion(conclusion, 0.3, false, actionabilityMap);
+
+        assertEquals(1, conclusion.size());
         assertEquals(conclusion.get(0), "- unreliable");
     }
 
     @Test
     public void canGenerateTotalResultsOncogenic() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap,
                 "NO_ONCOGENIC",
@@ -428,13 +431,15 @@ public class ConclusionAlgoTest {
                 "no_oncogenic");
 
         ConclusionAlgo.generateTotalResults(conclusion, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
+
+        assertEquals(1, conclusion.size());
         assertEquals(conclusion.get(0), "- no_oncogenic");
     }
 
     @Test
     public void canGenerateTotalResultsActionable() {
         Set<String> oncogenic = Sets.newHashSet();
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap,
                 "NO_ACTIONABLE",
@@ -445,18 +450,22 @@ public class ConclusionAlgoTest {
 
         oncogenic.add("fusion");
         ConclusionAlgo.generateTotalResults(conclusion, actionabilityMap, oncogenic, Sets.newHashSet());
+
+        assertEquals(1, conclusion.size());
         assertEquals(conclusion.get(0), "- no_actionable");
 
     }
 
     @Test
     public void canGenerateFindings() {
-        Map<Integer, String> conclusion = Maps.newHashMap();
+        List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap =
                 testActionabilityMap(actionabilityMap, "FINDINGS", TypeAlteration.FINDINGS, "FINDINGS", Condition.OTHER, "findings");
 
         ConclusionAlgo.generateFindings(conclusion, actionabilityMap);
+
+        assertEquals(1, conclusion.size());
         assertEquals(conclusion.get(0), "- findings");
     }
 

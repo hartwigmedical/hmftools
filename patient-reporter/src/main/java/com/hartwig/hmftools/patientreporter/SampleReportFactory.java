@@ -21,23 +21,40 @@ public final class SampleReportFactory {
     private SampleReportFactory() {
     }
 
+    @Nullable
+    public static String interpretRefBarcode(@Nullable String refSampleBarcode){
+        String interpretRefSampleBarcode = Strings.EMPTY;
+        if (refSampleBarcode != null) {
+            if (refSampleBarcode.contains("-")) {
+                interpretRefSampleBarcode = refSampleBarcode.split("-")[0];
+            } else if (refSampleBarcode.contains("_")) {
+                interpretRefSampleBarcode = refSampleBarcode.split("_")[0];
+            } else {
+                interpretRefSampleBarcode = refSampleBarcode;
+            }
+        } else {
+            interpretRefSampleBarcode = refSampleBarcode;
+        }
+        return interpretRefSampleBarcode;
+    }
+
     @NotNull
     public static SampleReport fromLimsModel(@NotNull SampleMetadata sampleMetadata, @NotNull Lims lims,
             @Nullable PatientPrimaryTumor patientPrimaryTumor, boolean allowDefaultCohortConfig) {
-        String refSampleBarcode = sampleMetadata.refSampleBarcode();
+        String interpretRefSampleBarcode = interpretRefBarcode(sampleMetadata.refSampleBarcode());
         String refSampleId = sampleMetadata.refSampleId();
         String tumorSampleBarcode = sampleMetadata.tumorSampleBarcode();
         String tumorSampleId = sampleMetadata.tumorSampleId();
 
         LocalDate arrivalDateRefSample = null;
 
-        if (refSampleBarcode != null && refSampleId != null) {
-            if (!refSampleBarcode.equals(refSampleId) || !tumorSampleBarcode.equals(tumorSampleId)){
+        if (interpretRefSampleBarcode != null && refSampleId != null) {
+            if (!interpretRefSampleBarcode.equals(refSampleId) || !tumorSampleBarcode.equals(tumorSampleId)){
                 // Don't need to check for anonymised runs
-                lims.validateSampleBarcodeCombination(refSampleBarcode, refSampleId, tumorSampleBarcode, tumorSampleId);
+                lims.validateSampleBarcodeCombination(interpretRefSampleBarcode, refSampleId, tumorSampleBarcode, tumorSampleId);
             }
 
-            arrivalDateRefSample = lims.arrivalDate(refSampleBarcode, refSampleId);
+            arrivalDateRefSample = lims.arrivalDate(interpretRefSampleBarcode, refSampleId);
             if (arrivalDateRefSample == null) {
                 LOGGER.warn("Could not find arrival date for ref sample: {}", refSampleId);
             }
@@ -70,9 +87,9 @@ public final class SampleReportFactory {
                 .sampleMetadata(sampleMetadata)
                 .patientPrimaryTumor(patientPrimaryTumor)
                 .biopsyLocation(curatedBiopsyLocation)
-                .germlineReportingLevel(lims.germlineReportingChoice(tumorSampleBarcode))
-                .reportViralPresence(lims.reportViralPresence(tumorSampleBarcode))
-                .reportPharmogenetics(lims.reportPgx(tumorSampleBarcode))
+                .germlineReportingLevel(lims.germlineReportingChoice(tumorSampleBarcode, allowDefaultCohortConfig))
+                .reportViralPresence(allowDefaultCohortConfig || lims.reportViralPresence(tumorSampleBarcode))
+                .reportPharmogenetics(allowDefaultCohortConfig || lims.reportPgx(tumorSampleBarcode))
                 .refArrivalDate(arrivalDateRefSample)
                 .tumorArrivalDate(arrivalDateTumorSample)
                 .shallowSeqPurityString(lims.purityShallowSeq(tumorSampleBarcode))

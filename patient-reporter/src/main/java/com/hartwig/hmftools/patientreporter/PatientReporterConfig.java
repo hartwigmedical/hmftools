@@ -32,6 +32,7 @@ public interface PatientReporterConfig {
     String OUTPUT_DIRECTORY_REPORT = "output_dir_report";
     String OUTPUT_DIRECTORY_DATA = "output_dir_data";
 
+    String KNOWN_FUSION_FILE = "known_fusion_file";
     String PRIMARY_TUMOR_TSV = "primary_tumor_tsv";
     String LIMS_DIRECTORY = "lims_dir";
     String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
@@ -71,6 +72,9 @@ public interface PatientReporterConfig {
     String LILAC_RESULT_CSV = "lilac_result_csv";
     String LILAC_QC_CSV = "lilac_qc_csv";
 
+    String ADD_ROSE = "add_rose";
+    String ROSE_TSV = "rose_tsv";
+
     // Resources used for generating an analysed patient report
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
@@ -99,6 +103,7 @@ public interface PatientReporterConfig {
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
         options.addOption(OUTPUT_DIRECTORY_REPORT, true, "Path to where the PDF report will be written to.");
         options.addOption(OUTPUT_DIRECTORY_DATA, true, "Path to where the data of the report will be written to.");
+        options.addOption(KNOWN_FUSION_FILE, true, "Path to the known fusion file.");
 
         options.addOption(PRIMARY_TUMOR_TSV, true, "Path towards the (curated) primary tumor TSV.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
@@ -135,9 +140,10 @@ public interface PatientReporterConfig {
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
         options.addOption(LILAC_RESULT_CSV, true, "Path towards the LILAC result CSV.");
         options.addOption(LILAC_QC_CSV, true, "Path towards the LILAC QC CSV.");
+        options.addOption(ADD_ROSE, true, "If set, the ROSE TSV file will be used.");
+        options.addOption(ROSE_TSV, true, "Path towards the ROSE TSV file.");
 
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
-        options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
         options.addOption(SAMPLE_SPECIAL_REMARK_TSV, true, "Path towards a TSV containing the special remarks of the samples.");
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
@@ -173,6 +179,9 @@ public interface PatientReporterConfig {
 
     @NotNull
     String outputDirReport();
+
+    @NotNull
+    String knownFusionFile();
 
     @NotNull
     String outputDirData();
@@ -260,11 +269,13 @@ public interface PatientReporterConfig {
     @NotNull
     String lilacQcCsv();
 
-    @NotNull
-    String germlineReportingTsv();
+    boolean addRose();
+
+    @Nullable
+    String roseTsv();
 
     @NotNull
-    String sampleSummaryTsv();
+    String germlineReportingTsv();
 
     @NotNull
     String sampleSpecialRemarkTsv();
@@ -335,9 +346,11 @@ public interface PatientReporterConfig {
         String protectEvidenceTsv = Strings.EMPTY;
         String lilacResultCsv = Strings.EMPTY;
         String lilacQcCsv = Strings.EMPTY;
+        boolean addRose = false;
+        String roseTsv = null;
 
+        String knownFusionFile = Strings.EMPTY;
         String germlineReportingTsv = Strings.EMPTY;
-        String sampleSummaryTsv = Strings.EMPTY;
         String sampleSpecialRemarkTsv = Strings.EMPTY;
 
         if (isQCFail && qcFailReason.isDeepWGSDataAvailable()) {
@@ -372,10 +385,15 @@ public interface PatientReporterConfig {
             protectEvidenceTsv = nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV);
             lilacQcCsv = nonOptionalFile(cmd, LILAC_QC_CSV);
             lilacResultCsv = nonOptionalFile(cmd, LILAC_RESULT_CSV);
+            addRose = cmd.hasOption(REQUIRE_PIPELINE_VERSION_FILE);
+            if (addRose) {
+                roseTsv = nonOptionalFile(cmd, ROSE_TSV);
+            }
 
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
-            sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
             sampleSpecialRemarkTsv = nonOptionalFile(cmd, SAMPLE_SPECIAL_REMARK_TSV);
+            knownFusionFile = nonOptionalDir(cmd, KNOWN_FUSION_FILE);
+
         }
 
         return ImmutablePatientReporterConfig.builder()
@@ -413,8 +431,10 @@ public interface PatientReporterConfig {
                 .protectEvidenceTsv(protectEvidenceTsv)
                 .lilacResultCsv(lilacResultCsv)
                 .lilacQcCsv(lilacQcCsv)
+                .addRose(addRose)
+                .roseTsv(roseTsv)
                 .germlineReportingTsv(germlineReportingTsv)
-                .sampleSummaryTsv(sampleSummaryTsv)
+                .knownFusionFile(knownFusionFile)
                 .sampleSpecialRemarkTsv(sampleSpecialRemarkTsv)
                 .comments(cmd.getOptionValue(COMMENTS))
                 .isCorrectedReport(cmd.hasOption(CORRECTED_REPORT))

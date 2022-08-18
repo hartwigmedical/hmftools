@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class SpecialRemarkFile {
 
-    private static final Logger LOGGER = LogManager.getLogger(SummaryFile.class);
+    private static final Logger LOGGER = LogManager.getLogger(SpecialRemarkFile.class);
 
     private static final String SEPARATOR = "\t";
 

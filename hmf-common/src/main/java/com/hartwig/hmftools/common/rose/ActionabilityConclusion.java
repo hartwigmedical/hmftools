@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.rose.conclusion;
+package com.hartwig.hmftools.common.rose;
+
+import java.util.List;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -10,5 +12,5 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ActionabilityConclusion {
 
     @NotNull
-    public abstract String conclusion();
+    public abstract List<String> conclusion();
 }

@@ -324,7 +324,7 @@ public class Lims {
     }
 
     @NotNull
-    public LimsGermlineReportingLevel germlineReportingChoice(@NotNull String sampleBarcode) {
+    public LimsGermlineReportingLevel germlineReportingChoice(@NotNull String sampleBarcode, boolean allowDefaultCohortConfig) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             String germlineReportingLevelString = sampleData.germlineReportingLevel();
@@ -335,10 +335,14 @@ public class Lims {
                 }
             }
 
-            return germlineReportingLevelString != null ? LimsGermlineReportingLevel.fromLimsInputs(reportGermlineVariants(sampleBarcode),
-                    germlineReportingLevelString,
-                    sampleId(sampleBarcode),
-                    cohortConfig(sampleBarcode)) : LimsGermlineReportingLevel.NO_REPORTING;
+            if (allowDefaultCohortConfig) {
+                return LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION;
+            } else {
+                return germlineReportingLevelString != null ? LimsGermlineReportingLevel.fromLimsInputs(reportGermlineVariants(sampleBarcode),
+                        germlineReportingLevelString,
+                        sampleId(sampleBarcode),
+                        cohortConfig(sampleBarcode)) : LimsGermlineReportingLevel.NO_REPORTING;
+            }
         } else {
             return LimsGermlineReportingLevel.NO_REPORTING;
         }

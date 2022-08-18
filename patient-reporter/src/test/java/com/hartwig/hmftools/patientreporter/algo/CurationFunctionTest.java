@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.purple.loader.ImmutableGainLoss;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
@@ -177,8 +178,7 @@ public class CurationFunctionTest {
     }
 
     @NotNull
-    private static String findByGeneHomozygousDisruption(List<HomozygousDisruption> curate, @NotNull String gene,
-            boolean isCanonical) {
+    private static String findByGeneHomozygousDisruption(List<HomozygousDisruption> curate, @NotNull String gene, boolean isCanonical) {
         for (HomozygousDisruption disruption : curate) {
             if (disruption.gene().equals(gene) && disruption.isCanonical() == isCanonical) {
                 return disruption.gene();
@@ -196,7 +196,11 @@ public class CurationFunctionTest {
                 .event("amp")
                 .germline(true)
                 .reported(true)
-                .treatment("TryMe")
+                .treatment(ImmutableTreatment.builder()
+                        .treament("TryMe")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet())
+                        .relevantTreatmentApproaches(Sets.newHashSet())
+                        .build())
                 .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
@@ -214,7 +218,11 @@ public class CurationFunctionTest {
                 .event("amp")
                 .germline(true)
                 .reported(true)
-                .treatment("TryMe")
+                .treatment(ImmutableTreatment.builder()
+                        .treament("TryMe")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet())
+                        .relevantTreatmentApproaches(Sets.newHashSet())
+                        .build())
                 .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
@@ -232,7 +240,11 @@ public class CurationFunctionTest {
                 .event("amp")
                 .germline(true)
                 .reported(true)
-                .treatment("TryMe")
+                .treatment(ImmutableTreatment.builder()
+                        .treament("TryMe")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet())
+                        .relevantTreatmentApproaches(Sets.newHashSet())
+                        .build())
                 .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
@@ -264,21 +276,12 @@ public class CurationFunctionTest {
 
     @NotNull
     public List<GainLoss> gainloss() {
-        GainLoss gainLoss1 = ImmutableGainLoss.builder()
-                .from(GainLossTestFactory.createTestGainLoss())
-                .gene("BRAF")
-                .isCanonical(true)
-                .build();
-        GainLoss gainLoss2 = ImmutableGainLoss.builder()
-                .from(GainLossTestFactory.createTestGainLoss())
-                .gene("CDKN2A")
-                .isCanonical(true)
-                .build();
-        GainLoss gainLoss3 = ImmutableGainLoss.builder()
-                .from(GainLossTestFactory.createTestGainLoss())
-                .gene("CDKN2A")
-                .isCanonical(false)
-                .build();
+        GainLoss gainLoss1 =
+                ImmutableGainLoss.builder().from(GainLossTestFactory.createTestGainLoss()).gene("BRAF").isCanonical(true).build();
+        GainLoss gainLoss2 =
+                ImmutableGainLoss.builder().from(GainLossTestFactory.createTestGainLoss()).gene("CDKN2A").isCanonical(true).build();
+        GainLoss gainLoss3 =
+                ImmutableGainLoss.builder().from(GainLossTestFactory.createTestGainLoss()).gene("CDKN2A").isCanonical(false).build();
         return Lists.newArrayList(gainLoss1, gainLoss2, gainLoss3);
     }
 

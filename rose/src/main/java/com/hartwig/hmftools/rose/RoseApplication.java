@@ -2,9 +2,9 @@ package com.hartwig.hmftools.rose;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.rose.conclusion.ActionabilityConclusion;
+import com.hartwig.hmftools.common.rose.ActionabilityConclusion;
 import com.hartwig.hmftools.rose.conclusion.ConclusionAlgo;
-import com.hartwig.hmftools.rose.conclusion.RoseConclusionFile;
+import com.hartwig.hmftools.common.rose.RoseConclusionFile;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -57,6 +57,6 @@ public class RoseApplication {
 
         String filename = RoseConclusionFile.generateFilename(config.outputDir(), config.tumorSampleId());
         LOGGER.info("Writing actionability conclusion to file: {}", filename);
-        RoseConclusionFile.write(filename, actionabilityConclusion, config.tumorSampleId());
+        RoseConclusionFile.write(filename, actionabilityConclusion);
     }
 }

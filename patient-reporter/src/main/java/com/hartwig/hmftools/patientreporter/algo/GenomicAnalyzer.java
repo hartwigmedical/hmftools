@@ -11,7 +11,11 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.linx.GeneDisruption;
+import com.hartwig.hmftools.common.linx.GeneDisruptionFactory;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -26,6 +30,7 @@ import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
+import com.hartwig.hmftools.patientreporter.algo.orange.BreakendSelector;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 
 import org.apache.logging.log4j.LogManager;
@@ -46,7 +51,7 @@ public class GenomicAnalyzer {
 
     @NotNull
     public GenomicAnalysis run(@NotNull String tumorSampleId, @Nullable String referenceSampleId, @NotNull PatientReporterConfig config,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel) throws IOException {
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, @NotNull KnownFusionCache knownFusionCache) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
                 referenceSampleId,
                 null,
@@ -68,6 +73,15 @@ public class GenomicAnalyzer {
                 null,
                 null);
 
+        List<GeneDisruption> additionalSuspectBreakends = GeneDisruptionFactory.convert(BreakendSelector.selectInterestingUnreportedBreakends(
+                linxData.allBreakends(),
+                linxData.reportableFusions(),
+                knownFusionCache), linxData.allStructuralVariants());
+
+        List<GeneDisruption> reportableGeneDisruptions = Lists.newArrayList();
+        reportableGeneDisruptions.addAll(linxData.reportableGeneDisruptions());
+        reportableGeneDisruptions.addAll(additionalSuspectBreakends);
+
         VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(config.annotatedVirusTsv());
 
         List<ReportableVariant> reportableVariants =
@@ -77,6 +91,8 @@ public class GenomicAnalyzer {
                 determineNotify(reportableVariants, germlineReportingModel, germlineReportingLevel);
 
         ChordData chordAnalysis = ChordDataFile.read(config.chordPredictionTxt(), true);
+
+        LilacSummaryData lilacSummaryData = LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
 
         List<ProtectEvidence> reportableEvidenceItems = extractReportableEvidenceItems(config.protectEvidenceTsv());
         List<ProtectEvidence> nonTrialsOnLabel = ReportableEvidenceItemFactory.extractNonTrialsOnLabel(reportableEvidenceItems);
@@ -104,9 +120,10 @@ public class GenomicAnalyzer {
                 .gainsAndLosses(purpleData.reportableSomaticGainsLosses())
                 .cnPerChromosome(purpleData.copyNumberPerChromosome())
                 .geneFusions(linxData.reportableFusions())
-                .geneDisruptions(linxData.reportableGeneDisruptions())
+                .geneDisruptions(reportableGeneDisruptions)
                 .homozygousDisruptions(linxData.homozygousDisruptions())
                 .reportableViruses(virusInterpreterData.reportableViruses())
+                .lilac(lilacSummaryData)
                 .build();
     }
 

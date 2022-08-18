@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.algo.linx;
+package com.hartwig.hmftools.patientreporter.algo.orange;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -85,4 +85,5 @@ public class BreakendSelectorTest {
     private static KnownFusionData knownFusion(@NotNull KnownFusionType type, @NotNull String fiveGene, @NotNull String threeGene) {
         return new KnownFusionData(type, fiveGene, threeGene, Strings.EMPTY, Strings.EMPTY);
     }
+
 }
