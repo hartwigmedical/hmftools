@@ -149,7 +149,6 @@ ROSE produces a tsv with the clinical eligibility of that sample
 
 Field  | Description | Example
 ---|---|---
-tumor sample | Sample ID | HMF123
 conclusion | The clinical conclusion of the sample | BRCA2 inactivation, potential benefit from PARP inhibitors <enter> BRCA1 inactivation, potential benefit from PARP inhibitors <enter>
 
 ## Known issues 

@@ -23,15 +23,15 @@ public class RoseConclusionFile {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    public static void write(@NotNull String file, @NotNull ActionabilityConclusion actionabilityConclusion, @NotNull String sampleId)
+    public static void write(@NotNull String file, @NotNull ActionabilityConclusion actionabilityConclusion)
             throws IOException {
         List<String> lines = Lists.newArrayList();
-        lines.add(toLine(actionabilityConclusion.conclusion(), sampleId));
+        lines.add(toLine(actionabilityConclusion.conclusion()));
         Files.write(new File(file).toPath(), lines);
     }
 
     @NotNull
-    private static String toLine(@NotNull String conclusion, @NotNull String sampleId) {
-        return new StringJoiner(FIELD_DELIMITER).add(sampleId).add(conclusion).toString();
+    private static String toLine(@NotNull String conclusion) {
+        return new StringJoiner(FIELD_DELIMITER).add(conclusion).toString();
     }
 }
