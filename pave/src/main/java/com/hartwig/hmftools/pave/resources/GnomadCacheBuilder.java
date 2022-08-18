@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave.external;
+package com.hartwig.hmftools.pave.resources;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;

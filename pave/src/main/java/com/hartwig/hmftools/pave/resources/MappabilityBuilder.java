@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave.external;
+package com.hartwig.hmftools.pave.resources;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;

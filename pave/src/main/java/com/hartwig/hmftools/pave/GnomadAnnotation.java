@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.external.GnomadCacheBuilder.GNOMAD_FILE_ID;
-import static com.hartwig.hmftools.pave.external.GnomadCacheBuilder.formFileId;
+import static com.hartwig.hmftools.pave.resources.GnomadCacheBuilder.GNOMAD_FILE_ID;
+import static com.hartwig.hmftools.pave.resources.GnomadCacheBuilder.formFileId;
 
 import java.io.BufferedReader;
 import java.io.IOException;

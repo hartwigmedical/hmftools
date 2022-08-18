@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave.external;
+package com.hartwig.hmftools.pave.resources;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;

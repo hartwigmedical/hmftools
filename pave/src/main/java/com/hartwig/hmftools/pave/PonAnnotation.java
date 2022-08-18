@@ -39,6 +39,8 @@ public class PonAnnotation
     public static final String PON_FILTER = "PON";
     public static final String PON_ARTEFACT_FILTER = "PONArtefact";
 
+    public static final String PON_DELIM = "\t";
+
     public PonAnnotation(final String filename, boolean loadOnDemand)
     {
         mPonEntries = Maps.newHashMap();
@@ -148,7 +150,7 @@ public class PonAnnotation
             mFileReader = filename.endsWith(".gz") ? createGzipBufferedReader(filename) : createBufferedReader(filename);
 
             String line = mFileReader.readLine();
-            final String[] values = line.split("\t", -1);
+            final String[] values = line.split(PON_DELIM, -1);
             mColumnCount = values.length;
 
             if(mColumnCount < 4)
@@ -200,7 +202,7 @@ public class PonAnnotation
 
             while((line = mFileReader.readLine()) != null)
             {
-                final String[] values = line.split("\t", -1);
+                final String[] values = line.split(PON_DELIM, -1);
 
                 int colIndex = 0;
                 String chromosome = values[colIndex++];
