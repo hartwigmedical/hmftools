@@ -41,7 +41,7 @@
         <module>protect</module>
         <module>orange</module>
         <module>rose</module>
-<!--        <module>patient-reporter</module>-->
+        <module>patient-reporter</module>
     </modules>
 
     <properties>

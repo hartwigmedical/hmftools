@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -25,7 +26,11 @@ public class ClinicalTrialFactoryTest {
                 .event("event")
                 .germline(false)
                 .reported(true)
-                .treatment("acronym")
+                .treatment(ImmutableTreatment.builder()
+                        .treament("acronym")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet())
+                        .relevantTreatmentApproaches(Sets.newHashSet())
+                        .build())
                 .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
@@ -41,6 +46,6 @@ public class ClinicalTrialFactoryTest {
 
         assertEquals(1, trial.size());
         assertEquals("event", trial.get(0).event());
-        assertEquals("acronym", trial.get(0).treatment());
+        assertEquals("acronym", trial.get(0).treatment().treament());
     }
 }

@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.protect.EvidenceType;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -22,7 +23,11 @@ public class ReportableEvidenceItemFactoryTest {
     public void reportableFactoryWorksForTrivialCase() {
         ProtectEvidence item1 = ProtectTestFactory.builder()
                 .event("A")
-                .treatment("A")
+                .treatment(ImmutableTreatment.builder()
+                        .treament("A")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet())
+                        .relevantTreatmentApproaches(Sets.newHashSet())
+                        .build())
                 .onLabel(true)
                 .level(EvidenceLevel.A)
                 .sources(Sets.newHashSet(ImmutableKnowledgebaseSource.builder()
@@ -34,7 +39,11 @@ public class ReportableEvidenceItemFactoryTest {
                 .build();
         ProtectEvidence item2 = ProtectTestFactory.builder()
                 .event("A")
-                .treatment("A")
+                .treatment(ImmutableTreatment.builder()
+                        .treament("A")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet())
+                        .relevantTreatmentApproaches(Sets.newHashSet())
+                        .build())
                 .onLabel(true)
                 .level(EvidenceLevel.A)
                 .sources(Sets.newHashSet(ImmutableKnowledgebaseSource.builder()
@@ -46,7 +55,11 @@ public class ReportableEvidenceItemFactoryTest {
                 .build();
         ProtectEvidence item3 = ProtectTestFactory.builder()
                 .event("B")
-                .treatment("B")
+                .treatment(ImmutableTreatment.builder()
+                        .treament("B")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet())
+                        .relevantTreatmentApproaches(Sets.newHashSet())
+                        .build())
                 .onLabel(true)
                 .level(EvidenceLevel.A)
                 .sources(Sets.newHashSet(ImmutableKnowledgebaseSource.builder()
@@ -58,7 +71,11 @@ public class ReportableEvidenceItemFactoryTest {
                 .build();
         ProtectEvidence item4 = ProtectTestFactory.builder()
                 .event("C")
-                .treatment("C")
+                .treatment(ImmutableTreatment.builder()
+                        .treament("C")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet())
+                        .relevantTreatmentApproaches(Sets.newHashSet())
+                        .build())
                 .onLabel(true)
                 .level(EvidenceLevel.C)
                 .sources(Sets.newHashSet(ImmutableKnowledgebaseSource.builder()
