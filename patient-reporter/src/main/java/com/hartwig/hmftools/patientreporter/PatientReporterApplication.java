@@ -167,6 +167,7 @@ public class PatientReporterApplication {
         return AnalysedReportDataLoader.buildFromFiles(buildBaseReportData(config),
                 config.germlineReportingTsv(),
                 config.sampleSummaryTsv(),
-                config.sampleSpecialRemarkTsv());
+                config.sampleSpecialRemarkTsv(),
+                config.knownFusionFile());
     }
 }

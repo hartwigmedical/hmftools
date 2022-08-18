@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.patientreporter.ReportData;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.remarks.SpecialRemarkModel;
@@ -22,4 +23,7 @@ public abstract class AnalysedReportData implements ReportData {
 
     @NotNull
     public abstract SpecialRemarkModel specialRemarkModel();
+
+    @NotNull
+    public abstract KnownFusionCache knownFusionCache();
 }

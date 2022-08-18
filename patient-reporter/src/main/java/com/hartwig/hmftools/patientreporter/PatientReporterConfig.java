@@ -32,6 +32,7 @@ public interface PatientReporterConfig {
     String OUTPUT_DIRECTORY_REPORT = "output_dir_report";
     String OUTPUT_DIRECTORY_DATA = "output_dir_data";
 
+    String KNOWN_FUSION_FILE = "known_fusion_file";
     String PRIMARY_TUMOR_TSV = "primary_tumor_tsv";
     String LIMS_DIRECTORY = "lims_dir";
     String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
@@ -99,6 +100,7 @@ public interface PatientReporterConfig {
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
         options.addOption(OUTPUT_DIRECTORY_REPORT, true, "Path to where the PDF report will be written to.");
         options.addOption(OUTPUT_DIRECTORY_DATA, true, "Path to where the data of the report will be written to.");
+        options.addOption(KNOWN_FUSION_FILE, true, "Path to the known fusion file.");
 
         options.addOption(PRIMARY_TUMOR_TSV, true, "Path towards the (curated) primary tumor TSV.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
@@ -173,6 +175,9 @@ public interface PatientReporterConfig {
 
     @NotNull
     String outputDirReport();
+
+    @NotNull
+    String knownFusionFile();
 
     @NotNull
     String outputDirData();
@@ -336,6 +341,7 @@ public interface PatientReporterConfig {
         String lilacResultCsv = Strings.EMPTY;
         String lilacQcCsv = Strings.EMPTY;
 
+        String knownFusionFile = Strings.EMPTY;
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
         String sampleSpecialRemarkTsv = Strings.EMPTY;
@@ -376,6 +382,8 @@ public interface PatientReporterConfig {
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
             sampleSpecialRemarkTsv = nonOptionalFile(cmd, SAMPLE_SPECIAL_REMARK_TSV);
+            knownFusionFile = nonOptionalDir(cmd, KNOWN_FUSION_FILE);
+
         }
 
         return ImmutablePatientReporterConfig.builder()
@@ -414,6 +422,7 @@ public interface PatientReporterConfig {
                 .lilacResultCsv(lilacResultCsv)
                 .lilacQcCsv(lilacQcCsv)
                 .germlineReportingTsv(germlineReportingTsv)
+                .knownFusionFile(nonOptionalDir(cmd, KNOWN_FUSION_FILE))
                 .sampleSummaryTsv(sampleSummaryTsv)
                 .sampleSpecialRemarkTsv(sampleSpecialRemarkTsv)
                 .comments(cmd.getOptionValue(COMMENTS))

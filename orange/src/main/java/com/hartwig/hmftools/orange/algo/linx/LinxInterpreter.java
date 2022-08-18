@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.linx.BreakendSelector;
 import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.GeneDisruptionFactory;
 import com.hartwig.hmftools.common.linx.LinxData;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.algo.linx;
+package com.hartwig.hmftools.common.linx;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.linx.LinxFusion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class BreakendSelector {
+public final class BreakendSelector {
 
     static final String DOWNSTREAM_ORIENTATION = "Downstream";
     static final String UPSTREAM_ORIENTATION = "Upstream";
