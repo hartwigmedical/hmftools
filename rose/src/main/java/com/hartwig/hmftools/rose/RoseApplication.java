@@ -2,9 +2,9 @@ package com.hartwig.hmftools.rose;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.rose.conclusion.ActionabilityConclusion;
+import com.hartwig.hmftools.common.rose.ActionabilityConclusion;
 import com.hartwig.hmftools.rose.conclusion.ConclusionAlgo;
-import com.hartwig.hmftools.rose.conclusion.RoseConclusionFile;
+import com.hartwig.hmftools.common.rose.RoseConclusionFile;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;

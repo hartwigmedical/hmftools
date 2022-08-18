@@ -4,7 +4,6 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.patientreporter.ReportData;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.remarks.SpecialRemarkModel;
-import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

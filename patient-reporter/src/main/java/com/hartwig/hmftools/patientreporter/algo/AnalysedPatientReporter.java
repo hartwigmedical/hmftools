@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.common.rose.RoseConclusionFile;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
@@ -54,13 +55,12 @@ public class AnalysedPatientReporter {
         PatientPrimaryTumor patientPrimaryTumor =
                 PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(), patientId);
 
-        SampleReport sampleReport = SampleReportFactory.fromLimsModel(
-                sampleMetadata,
+        SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata,
                 reportData.limsModel(),
                 patientPrimaryTumor,
                 config.allowDefaultCohortConfig());
 
-        String clinicalSummary = config.addRose() ? Strings.EMPTY : null;
+        String clinicalSummary = config.addRose() || config.roseTsv() != null ? RoseConclusionFile.read(config.roseTsv()) : null;
         String specialRemark = reportData.specialRemarkModel().findSpecialRemarkForSample(sampleMetadata.tumorSampleId());
 
         String pipelineVersion = null;
@@ -75,7 +75,8 @@ public class AnalysedPatientReporter {
         GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
                 sampleMetadata.refSampleId(),
                 config,
-                sampleReport.germlineReportingLevel(), reportData.knownFusionCache());
+                sampleReport.germlineReportingLevel(),
+                reportData.knownFusionCache());
 
         GenomicAnalysis filteredAnalysis =
                 ConsentFilterFunctions.filter(genomicAnalysis, sampleReport.germlineReportingLevel(), sampleReport.reportViralPresence());
@@ -106,8 +107,10 @@ public class AnalysedPatientReporter {
                 .specialRemark(specialRemark)
                 .pipelineVersion(pipelineVersion)
                 .genomicAnalysis(curateGeneName)
-                .molecularTissueOrigin(curateGeneName.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION)
-                        || !curateGeneName.hasReliablePurity() ? null : molecularTissueOrigin)
+                .molecularTissueOrigin(
+                        curateGeneName.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION) || !curateGeneName.hasReliablePurity()
+                                ? null
+                                : molecularTissueOrigin)
                 .circosPath(config.purpleCircosPlot())
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectedReport())

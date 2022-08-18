@@ -17,8 +17,6 @@ import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.remarks.SpecialRemarkFile;
 import com.hartwig.hmftools.patientreporter.remarks.SpecialRemarkModel;
-import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
-import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

@@ -1,13 +1,18 @@
-package com.hartwig.hmftools.rose.conclusion;
+package com.hartwig.hmftools.common.rose;
+
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class RoseConclusionFile {
@@ -23,15 +28,25 @@ public class RoseConclusionFile {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    public static void write(@NotNull String file, @NotNull ActionabilityConclusion actionabilityConclusion)
-            throws IOException {
-        List<String> lines = Lists.newArrayList();
-        lines.add(toLine(actionabilityConclusion.conclusion()));
-        Files.write(new File(file).toPath(), lines);
+    @NotNull
+    public static String read(@NotNull String file) throws IOException {
+        String conclusion = Strings.EMPTY;
+        List<String> lines = Files.readAllLines(new File(file).toPath());
+
+        for (String line : lines) {
+            conclusion = conclusion.concat(line + " <enter> ");
+        }
+        return conclusion;
     }
 
-    @NotNull
-    private static String toLine(@NotNull String conclusion) {
-        return new StringJoiner(FIELD_DELIMITER).add(conclusion).toString();
+
+    public static void write(@NotNull String file, @NotNull ActionabilityConclusion actionabilityConclusion)
+            throws IOException {
+
+        List<String> lines = Lists.newArrayList();
+        for (String conclusion : actionabilityConclusion.conclusion()) {
+            lines.add(conclusion);
+        }
+        Files.write(new File(file).toPath(), lines);
     }
 }

@@ -8,8 +8,6 @@ import com.hartwig.hmftools.patientreporter.germline.GermlineReportingFile;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.remarks.SpecialRemarkFile;
 import com.hartwig.hmftools.patientreporter.remarks.SpecialRemarkModel;
-import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
-import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 
 import org.jetbrains.annotations.NotNull;
 
