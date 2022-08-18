@@ -19,9 +19,6 @@ public abstract class AnalysedReportData implements ReportData {
     public abstract GermlineReportingModel germlineReportingModel();
 
     @NotNull
-    public abstract SummaryModel summaryModel();
-
-    @NotNull
     public abstract SpecialRemarkModel specialRemarkModel();
 
     @NotNull

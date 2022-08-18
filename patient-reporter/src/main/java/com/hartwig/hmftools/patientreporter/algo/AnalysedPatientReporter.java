@@ -60,7 +60,7 @@ public class AnalysedPatientReporter {
                 patientPrimaryTumor,
                 config.allowDefaultCohortConfig());
 
-        String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
+        String clinicalSummary = config.addRose() ? Strings.EMPTY : null;
         String specialRemark = reportData.specialRemarkModel().findSpecialRemarkForSample(sampleMetadata.tumorSampleId());
 
         String pipelineVersion = null;

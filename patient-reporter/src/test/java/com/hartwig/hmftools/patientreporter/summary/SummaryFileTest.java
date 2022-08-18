@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class SummaryFileTest {
 
-    private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
+    private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("test_run/rose/tumor_sample.rose.tsv").getPath();
 
     @Test
     public void summaryFromTsvWithNewLines() throws IOException {

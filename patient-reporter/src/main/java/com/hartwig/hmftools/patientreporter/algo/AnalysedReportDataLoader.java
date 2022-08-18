@@ -20,9 +20,8 @@ public final class AnalysedReportDataLoader {
 
     @NotNull
     public static AnalysedReportData buildFromFiles(@NotNull ReportData reportData, @NotNull String germlineReportingTsv,
-            @NotNull String sampleSummaryTsv, @NotNull String sampleSpecialRemarkTsv, @NotNull String knownFusionFile) throws IOException {
+             @NotNull String sampleSpecialRemarkTsv, @NotNull String knownFusionFile) throws IOException {
         GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(germlineReportingTsv);
-        SummaryModel summaryModel = SummaryFile.buildFromTsv(sampleSummaryTsv);
         SpecialRemarkModel specialRemarkModel = SpecialRemarkFile.buildFromTsv(sampleSpecialRemarkTsv);
 
         KnownFusionCache knownFusionCache = new KnownFusionCache();
@@ -33,7 +32,6 @@ public final class AnalysedReportDataLoader {
         return ImmutableAnalysedReportData.builder()
                 .from(reportData)
                 .germlineReportingModel(germlineReportingModel)
-                .summaryModel(summaryModel)
                 .specialRemarkModel(specialRemarkModel)
                 .knownFusionCache(knownFusionCache)
                 .build();

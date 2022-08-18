@@ -25,7 +25,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @Override
     public abstract String qsFormNumber();
 
-    @NotNull
+    @Nullable
     public abstract String clinicalSummary();
 
     @NotNull
