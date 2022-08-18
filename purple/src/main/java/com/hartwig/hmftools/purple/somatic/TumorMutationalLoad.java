@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.common.variant.VariantVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_CN_DIFF;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_CN_PERC_DIFF;
 import static com.hartwig.hmftools.purple.config.TargetRegionsData.TMB_GENE_EXCLUSIONS;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -61,8 +65,9 @@ public class TumorMutationalLoad
 
             // - VCN <= Major Allele CN + min(20%,0.5)
             double majorAlleleCn = variant.decorator().adjustedCopyNumber() - variant.decorator().minorAlleleCopyNumber();
-
-
+            double diffThreshold = min(TARGET_REGIONS_CN_DIFF, majorAlleleCn * TARGET_REGIONS_CN_PERC_DIFF);
+            if(variant.copyNumber() > majorAlleleCn + diffThreshold)
+                return;
         }
 
         mBurden++;

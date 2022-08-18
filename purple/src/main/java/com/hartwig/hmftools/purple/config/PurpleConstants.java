@@ -7,8 +7,11 @@ public class PurpleConstants
     // common
     public static final int WINDOW_SIZE = 1000;
 
+    // TMB calcs
     public static final double MB_PER_GENOME = 2859;
     public static final double CODING_BASES_PER_GENOME = 3.188e7; // calculated from GRCh38 canonical transcripts (overlaps ignored)
+    public static final double TARGET_REGIONS_CN_DIFF = 0.5;
+    public static final double TARGET_REGIONS_CN_PERC_DIFF = 0.2;
 
     // no-tumor
     public static final int NO_TUMOR_BAF_TOTAL = 3000;
