@@ -11,6 +11,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
@@ -78,6 +79,8 @@ public class GenomicAnalyzer {
 
         ChordData chordAnalysis = ChordDataFile.read(config.chordPredictionTxt(), true);
 
+        LilacSummaryData lilacSummaryData = LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
+
         List<ProtectEvidence> reportableEvidenceItems = extractReportableEvidenceItems(config.protectEvidenceTsv());
         List<ProtectEvidence> nonTrialsOnLabel = ReportableEvidenceItemFactory.extractNonTrialsOnLabel(reportableEvidenceItems);
         List<ProtectEvidence> trialsOnLabel = ClinicalTrialFactory.extractOnLabelTrials(reportableEvidenceItems);
@@ -107,6 +110,7 @@ public class GenomicAnalyzer {
                 .geneDisruptions(linxData.reportableGeneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
                 .reportableViruses(virusInterpreterData.reportableViruses())
+                .lilac(lilacSummaryData)
                 .build();
     }
 

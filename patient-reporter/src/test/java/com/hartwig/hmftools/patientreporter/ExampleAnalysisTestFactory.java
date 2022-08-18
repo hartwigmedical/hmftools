@@ -18,6 +18,10 @@ import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
+import com.hartwig.hmftools.common.hla.ImmutableLilacSummaryData;
+import com.hartwig.hmftools.common.hla.LilacAllele;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
+import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
@@ -112,6 +116,7 @@ public final class ExampleAnalysisTestFactory {
         List<GeneDisruption> disruptions = createCOLO829Disruptions();
         List<AnnotatedVirus> viruses = Lists.newArrayList();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
+        LilacSummaryData lilac = createTestLilacData();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), config.reportGermline(), config.limsCohortConfig());
 
@@ -183,6 +188,7 @@ public final class ExampleAnalysisTestFactory {
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .reportableViruses(viruses)
+                .lilac(lilac)
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
@@ -1348,6 +1354,15 @@ public final class ExampleAnalysisTestFactory {
                 .panelVersion("PGx_min_DPYD_v1.2")
                 .repoVersion("1.6")
                 .build());
+    }
+
+    @NotNull
+    private static LilacSummaryData createTestLilacData() {
+        List<LilacAllele> alleles = Lists.newArrayList();
+        alleles.add(LilacTestFactory.builder().allele("Allele 1").build());
+        alleles.add(LilacTestFactory.builder().allele("Allele 2").somaticInframeIndel(1D).build());
+
+        return ImmutableLilacSummaryData.builder().qc("PASS").alleles(alleles).build();
     }
 
     @NotNull

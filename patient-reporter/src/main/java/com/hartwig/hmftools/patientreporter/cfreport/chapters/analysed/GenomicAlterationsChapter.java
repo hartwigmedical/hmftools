@@ -3,6 +3,8 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.hla.LilacAllele;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
@@ -26,6 +28,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.HLAAllele;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
@@ -91,6 +94,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createHomozygousDisruptionsTable(genomicAnalysis.homozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
         reportDocument.add(createVirusTable(genomicAnalysis.reportableViruses(), sampleReport.reportViralPresence()));
+        reportDocument.add(createImmunoTable(genomicAnalysis.lilac(), hasReliablePurity));
         reportDocument.add(createPeachGenotypesTable(patientReport.peachGenotypes(), sampleReport.reportPharmogenetics()));
         reportDocument.add(createGermlineTable(contentWidth()));
     }
@@ -337,6 +341,33 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     hasReliablePurity)).setTextAlignment(TextAlignment.CENTER));
         }
         return TableUtil.createWrappingReportTable(title, null, contentTable);
+    }
+
+    @NotNull
+    private static Table createImmunoTable(@NotNull LilacSummaryData lilac, boolean hasReliablePurity) {
+        String title = "HLA Alleles";
+
+        if (!lilac.qc().equals("PASS")) {
+            String noConsent = "The QC of the HLA types do not meet the QC cut-offs";
+            return TableUtil.createNoConsentReportTable(title, noConsent);
+        } else {
+            Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1, 3 },
+                    new Cell[] { TableUtil.createHeaderCell("Allele"), TableUtil.createHeaderCell("Ref Frags"),
+                            TableUtil.createHeaderCell("Tumor Frags"), TableUtil.createHeaderCell("Tumor CN"),
+                            TableUtil.createHeaderCell("Somatic #mutations") });
+
+            for (LilacAllele allele : HLAAllele.sort(lilac.alleles())) {
+                table.addCell(TableUtil.createContentCell(allele.allele()));
+                table.addCell(TableUtil.createContentCell(String.valueOf(allele.refFragments())));
+                table.addCell(TableUtil.createContentCell(String.valueOf(allele.tumorFragments())));
+                table.addCell(TableUtil.createContentCell(hasReliablePurity
+                        ? HLAAllele.SINGLE_DIGIT.format(allele.tumorCopyNumber())
+                        : DataUtil.NA_STRING).setTextAlignment(TextAlignment.CENTER));
+                table.addCell(TableUtil.createContentCell(HLAAllele.mutationString(allele)));
+            }
+
+            return TableUtil.createWrappingReportTable(title, null, table);
+        }
     }
 
     @NotNull

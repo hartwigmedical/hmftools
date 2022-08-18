@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -85,4 +86,7 @@ public abstract class GenomicAnalysis {
 
     @NotNull
     public abstract List<AnnotatedVirus> reportableViruses();
+
+    @NotNull
+    public abstract LilacSummaryData lilac();
 }
