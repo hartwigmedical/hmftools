@@ -8,7 +8,8 @@ import org.apache.logging.log4j.LogManager
 // create an interface to make it easier to test
 interface IVJReadLayoutAdaptor
 {
-    fun getAnchorMatchType(layout: ReadLayout) : VJReadCandidate.AnchorMatchMethod
+    fun getAnchorMatchMethod(layout: ReadLayout) : VJReadCandidate.AnchorMatchMethod
+    fun getTemplateAnchorSequence(layout: ReadLayout) : String
     fun getAnchorRange(vj: VJ, layout: ReadLayout) : IntRange?
 }
 
@@ -127,9 +128,27 @@ class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
         return layout.reads.map({ read: ReadLayout.Read -> toReadCandidate(read)})
     }
 
-    override fun getAnchorMatchType(layout: ReadLayout): VJReadCandidate.AnchorMatchMethod
+    override fun getAnchorMatchMethod(layout: ReadLayout): VJReadCandidate.AnchorMatchMethod
     {
-        return getReadCandidates(layout).first().anchorMatchMethod
+        val readCandidates = getReadCandidates(layout)
+
+        // we need to get a few values from read candidates
+        if (readCandidates.isEmpty())
+            throw IllegalArgumentException("read candidate list is empty")
+
+        // just return first one for now, not the best but should be fine
+        return readCandidates.first().anchorMatchMethod
+    }
+
+    override fun getTemplateAnchorSequence(layout: ReadLayout) : String
+    {
+        val readCandidates = getReadCandidates(layout)
+
+        // we need to get a few values from read candidates
+        if (readCandidates.isEmpty())
+            throw IllegalArgumentException("read candidate list is empty")
+
+        return readCandidates.maxByOrNull({ r -> r.similarityScore })?.templateAnchorSequence ?: ""
     }
 
     override fun getAnchorRange(vj: VJ, layout: ReadLayout) : IntRange?

@@ -46,7 +46,7 @@ class VjTemplateGeneWriter
 
         val geneLocMap: Map<String, Pair<GeneLocation, String>> = geneLocationMap()
 
-        val VJGeneList: MutableList<VJGene> = ArrayList()
+        val VJAnchorTemplateList: MutableList<VJAnchorTemplate> = ArrayList()
 
         while (true)
         {
@@ -82,7 +82,7 @@ class VjTemplateGeneWriter
                 geneLoc = correctGeneLocation(seqString, geneLocSeq, geneLoc, 20, 30)
             }
 
-            var VJGene: VJGene? = null
+            var VJAnchorTemplate: VJAnchorTemplate? = null
 
             // if (geneLoc != null)
 
@@ -149,7 +149,7 @@ class VjTemplateGeneWriter
                 // v gene
                 sLogger.info("IGHV gene: {}, anchor: {}, offset from end: {}, anchor AA: {}", geneName, anchor, anchorOffsetFromEnd, aaSeq)
 
-                VJGene = VJGene(sequence.name, geneName, allele, geneLoc, seqString, anchor, anchorLocation)
+                VJAnchorTemplate = VJAnchorTemplate(sequence.name, geneName, allele, geneLoc, seqString, anchor, anchorLocation)
             }
 
             if (geneName.startsWith("IGHJ") ||
@@ -207,21 +207,21 @@ class VjTemplateGeneWriter
                     }
                 }
 
-                VJGene = VJGene(sequence.name, geneName, allele, geneLoc, seqString, anchor, anchorLocation)
+                VJAnchorTemplate = VJAnchorTemplate(sequence.name, geneName, allele, geneLoc, seqString, anchor, anchorLocation)
             }
 
-            if (VJGene != null)
+            if (VJAnchorTemplate != null)
             {
-                if (VJGene.anchorLocation != null)
+                if (VJAnchorTemplate.anchorLocation != null)
                 {
                     // validate the anchor sequence
-                    validateAgainstRefGenome(VJGene.anchorSequence, VJGene.anchorLocation!!, refGenomeFile)
+                    validateAgainstRefGenome(VJAnchorTemplate.anchorSequence, VJAnchorTemplate.anchorLocation!!, refGenomeFile)
                 }
-                VJGeneList.add(VJGene)
+                VJAnchorTemplateList.add(VJAnchorTemplate)
             }
         }
 
-        writeOutput(outputTsv, VJGeneList)
+        writeOutput(outputTsv, VJAnchorTemplateList)
 
         return 0
     }
@@ -301,7 +301,7 @@ class VjTemplateGeneWriter
         }
 
         @Throws(IOException::class)
-        fun writeOutput(filename: String, VJGeneList: List<VJGene>)
+        fun writeOutput(filename: String, VJAnchorTemplateList: List<VJAnchorTemplate>)
         {
             val csvFormat = CSVFormat.Builder.create()
                 .setDelimiter('\t').setRecordSeparator('\n')
@@ -309,7 +309,7 @@ class VjTemplateGeneWriter
                 .build()
 
             csvFormat.print(FileWriterUtils.createBufferedWriter(filename)).use { csvPrinter ->
-                for (gene: VJGene in VJGeneList)
+                for (gene: VJAnchorTemplate in VJAnchorTemplateList)
                 {
                     for (col in Column.values())
                     {

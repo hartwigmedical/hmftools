@@ -252,7 +252,7 @@ public class Cdr3ReadScreenerTest
         record.setFirstOfPairFlag(true);
         record.setReadPairedFlag(true);
 
-        var ighJ1 = new VJGene(
+        var ighJ1 = new VJAnchorTemplate(
                 "IGHJ1*01",
                 "IGHJ1",
                 "01",

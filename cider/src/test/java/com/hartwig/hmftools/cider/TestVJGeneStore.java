@@ -15,19 +15,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class TestVJGeneStore implements VJGeneStore
 {
-    private final List<VJGene> mVJGenes;
-    private final Multimap<String, VJGene> mAnchorSequenceMap = ArrayListMultimap.create();
+    private final Multimap<String, VJAnchorTemplate> mAnchorSequenceMap = ArrayListMultimap.create();
 
-    private final Map<VJGeneType, Multimap<String, VJGene>> mGeneTypeAnchorSeqMap = new HashMap<>();
-    private final Multimap<VJAnchorReferenceLocation, VJGene> mGeneLocationVJGeneMap = ArrayListMultimap.create();
+    private final Map<VJGeneType, Multimap<String, VJAnchorTemplate>> mGeneTypeAnchorSeqMap = new HashMap<>();
+    private final Multimap<VJAnchorReferenceLocation, VJAnchorTemplate> mGeneLocationVJGeneMap = ArrayListMultimap.create();
 
-    private final List<IgConstantRegion> mIgConstantRegions = new ArrayList<>();
-
-    @Override
-    public List<VJGene> getVJGenes()
-    {
-        return mVJGenes;
-    }
+    private final List<IgTcrConstantRegion> mIgTcrConstantRegions = new ArrayList<>();
 
     @Override
     public Set<String> getAnchorSequenceSet()
@@ -38,25 +31,25 @@ public class TestVJGeneStore implements VJGeneStore
     @Override
     public Set<String> getAnchorSequenceSet(@NotNull VJGeneType geneType)
     {
-        Multimap<String, VJGene> anchorSeqMap = mGeneTypeAnchorSeqMap.get(geneType);
+        Multimap<String, VJAnchorTemplate> anchorSeqMap = mGeneTypeAnchorSeqMap.get(geneType);
         return anchorSeqMap != null ? anchorSeqMap.keySet() : Collections.emptySet();
     }
 
     @Override
-    public Collection<VJGene> getByAnchorSequence(@NotNull String anchorSeq)
+    public Collection<VJAnchorTemplate> getByAnchorSequence(@NotNull String anchorSeq)
     {
         return mAnchorSequenceMap.get(anchorSeq);
     }
 
     @Override
-    public Collection<VJGene> getByAnchorSequence(@NotNull VJGeneType geneType, @NotNull String anchorSeq)
+    public Collection<VJAnchorTemplate> getByAnchorSequence(@NotNull VJGeneType geneType, @NotNull String anchorSeq)
     {
-        Multimap<String, VJGene> anchorSeqMap = mGeneTypeAnchorSeqMap.get(geneType);
+        Multimap<String, VJAnchorTemplate> anchorSeqMap = mGeneTypeAnchorSeqMap.get(geneType);
         return anchorSeqMap != null ? anchorSeqMap.get(anchorSeq) : Collections.emptySet();
     }
 
     @Override
-    public Collection<VJGene> getByAnchorGeneLocation(@NotNull VJAnchorReferenceLocation vjAnchorReferenceLocation)
+    public Collection<VJAnchorTemplate> getByAnchorGeneLocation(@NotNull VJAnchorReferenceLocation vjAnchorReferenceLocation)
     {
         return mGeneLocationVJGeneMap.get(vjAnchorReferenceLocation);
     }
@@ -68,14 +61,12 @@ public class TestVJGeneStore implements VJGeneStore
     }
 
     @Override
-    public Collection<IgConstantRegion> getIgConstantRegions() { return mIgConstantRegions; }
+    public Collection<IgTcrConstantRegion> getIgConstantRegions() { return mIgTcrConstantRegions; }
 
-    public TestVJGeneStore(List<VJGene> vjGenes)
+    public TestVJGeneStore(List<VJAnchorTemplate> vjAnchorTemplates)
     {
-        mVJGenes = vjGenes;
-
         // from this we find all the anchor sequence locations and fix them
-        for (VJGene gene : mVJGenes)
+        for (VJAnchorTemplate gene : vjAnchorTemplates)
         {
             if (gene.getAnchorLocation() != null)
             {

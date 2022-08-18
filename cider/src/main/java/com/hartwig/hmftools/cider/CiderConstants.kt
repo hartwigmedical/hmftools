@@ -3,8 +3,9 @@ package com.hartwig.hmftools.cider
 object CiderConstants
 {
     // following are constants for BLOSUM search
-    const val MAX_BLOSUM_DIFF_PER_AA: Int = 2
-    const val BLOSUM_SIMILARITY_SCORE_CONSTANT: Int = 5
+    const val MAX_BLOSUM_DIFF_PER_AA: Int = 3
+    const val BLOSUM_SIMILARITY_SCORE_CONSTANT: Int = 6
+
     const val CANDIDATE_MIN_PARTIAL_ANCHOR_AA_LENGTH: Int = 10
     const val VDJ_MIN_PARTIAL_ANCHOR_AA_LENGTH: Int = 1
 

@@ -144,7 +144,7 @@ public class CiderApplication
                 .collect(Collectors.toList());
 
         genomeRegions.addAll(vjGeneStore.getIgConstantRegions().stream()
-                        .map(IgConstantRegion::getGeneLocation)
+                        .map(IgTcrConstantRegion::getGeneLocation)
                         .map(o -> GenomeRegions.create(o.getChromosome(), o.getPosStart(), o.getPosEnd()))
                         .collect(Collectors.toList()));
 

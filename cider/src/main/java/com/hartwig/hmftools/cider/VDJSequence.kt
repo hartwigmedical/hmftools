@@ -5,42 +5,41 @@ import com.hartwig.hmftools.common.codon.Codons
 
 interface VJAnchor
 {
-    enum class Type
-    {
-        V, J
-    }
-
-    val type: Type
+    val vj: VJ
     val geneType: VJGeneType
     val anchorBoundary: Int // end of V or start of J
     val matchMethod: String
+    val templateAnchorSeq: String
 }
 
 data class VJAnchorByBlosum(
-    override val type: VJAnchor.Type,
+    override val vj: VJ,
+    override val geneType: VJGeneType,
     override val anchorBoundary: Int,
-    val templateAnchorSeq: String,
-    val templateGenes: Collection<VJGene>,
+    override val templateAnchorSeq: String,
+    val templateGenes: Collection<VJAnchorTemplate>,
     val similarityScore: Int
 ) : VJAnchor
 {
-    override val geneType: VJGeneType
     override val matchMethod: String get() = "blosum"
 
     init
     {
-        val geneTypes: List<VJGeneType> = templateGenes.map({ o -> o.type }).distinct()
-        if (geneTypes.size != 1)
-            throw IllegalStateException("VJAnchorByBlosum: gene types(${geneTypes}) size != 1")
-        geneType = geneTypes.first()
+        val geneTypeList: List<VJGeneType> = templateGenes.map({ o -> o.type }).distinct()
+        if (geneTypeList.size != 1)
+            throw IllegalStateException("VJAnchorByBlosum: gene types(${geneTypeList}) size != 1")
+        if (geneTypeList[0] != geneType)
+            throw IllegalStateException("VJAnchorByBlosum: gene type mismatch: ${geneType} != ${geneTypeList[0]}")
     }
 }
 
 data class VJAnchorByReadMatch(
-    override val type: VJAnchor.Type,
+    override val vj: VJ,
     override val geneType: VJGeneType,
     override val anchorBoundary: Int,
-    override val matchMethod: String
+    override val matchMethod: String,
+    override val templateAnchorSeq: String,
+    val numReads: Int
 ) : VJAnchor
 {
 }
@@ -110,6 +109,18 @@ class VDJSequence(
     val jAnchorSequence: String get()
     {
         return sequence.substring(jAnchor.anchorBoundary)
+    }
+
+    val vAnchorAA: String get()
+    {
+        val vAnchorSeq = vAnchorSequence
+        // codon align
+        return Codons.aminoAcidFromBases(vAnchorSeq.drop(vAnchorSeq.length % 3))
+    }
+
+    val jAnchorAA: String get()
+    {
+        return Codons.aminoAcidFromBases(jAnchorSequence)
     }
 
     // does not include the C and W

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cider
 
-data class IgConstantRegion(val type: Type, val geneLocation: GeneLocation)
+data class IgTcrConstantRegion(val type: Type, val geneLocation: GeneLocation)
 {
     enum class Type
     {

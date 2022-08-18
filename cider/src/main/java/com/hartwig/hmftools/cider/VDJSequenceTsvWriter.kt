@@ -11,6 +11,9 @@ import kotlin.collections.HashMap
 
 object VDJSequenceTsvWriter
 {
+    const val CDR3_FILTER_AA_MIN_LENGTH = 4
+    const val CDR3_FILTER_AA_MAX_LENGTH = 40
+
     private enum class Column
     {
         cdr3Seq,
@@ -18,6 +21,8 @@ object VDJSequenceTsvWriter
         filter,
         minHighQualBaseReads,
         assignedReads,
+        vAlignedReads,
+        jAlignedReads,
         inFrame,
         containsStop,
         vType,
@@ -85,8 +90,8 @@ object VDJSequenceTsvWriter
 
     private fun writeVDJSequence(csvPrinter: CSVPrinter, vdj: VDJSequence, isDuplicate: Boolean)
     {
-        val vAnchorByBlosum: VJAnchorByBlosum? = vdj.vAnchor as? VJAnchorByBlosum
-        val jAnchorByBlosum: VJAnchorByBlosum? = vdj.jAnchor as? VJAnchorByBlosum
+        val vAnchorByReadMatch: VJAnchorByReadMatch? = vdj.vAnchor as? VJAnchorByReadMatch
+        val jAnchorByReadMatch: VJAnchorByReadMatch? = vdj.jAnchor as? VJAnchorByReadMatch
 
         for (c in Column.values())
         {
@@ -97,26 +102,24 @@ object VDJSequenceTsvWriter
                 Column.filter -> csvPrinter.print(filterString(vdj, isDuplicate))
                 Column.minHighQualBaseReads -> csvPrinter.print(vdj.cdr3SupportMin)
                 Column.assignedReads -> csvPrinter.print(vdj.numReads)
+                Column.vAlignedReads -> csvPrinter.print(vAnchorByReadMatch?.numReads ?: 0)
+                Column.jAlignedReads -> csvPrinter.print(jAnchorByReadMatch?.numReads ?: 0)
                 Column.inFrame -> csvPrinter.print(vdj.isInFrame)
                 Column.containsStop -> csvPrinter.print(vdj.aminoAcidSequence.contains(Codons.STOP_AMINO_ACID))
                 Column.vType -> csvPrinter.print(vdj.vAnchor.geneType)
                 Column.vAnchorEnd -> csvPrinter.print(vdj.vAnchor.anchorBoundary)
                 Column.vAnchorSeq -> csvPrinter.print(vdj.vAnchorSequence)
-                Column.vAnchorTemplateSeq -> csvPrinter.print(vAnchorByBlosum?.templateAnchorSeq ?: "null")
+                Column.vAnchorTemplateSeq -> csvPrinter.print(vdj.vAnchor.templateAnchorSeq)
                 Column.vAnchorAA -> csvPrinter.print(aminoAcidFromBases(vdj.vAnchorSequence))
-                Column.vAnchorTemplateAA -> csvPrinter.print(if (vAnchorByBlosum != null)
-                    aminoAcidFromBases(vAnchorByBlosum.templateAnchorSeq)
-                    else "null")
-                Column.vSimilarityScore -> csvPrinter.print(vAnchorByBlosum?.similarityScore ?: "null")
+                Column.vAnchorTemplateAA -> csvPrinter.print(aminoAcidFromBases(vdj.vAnchor.templateAnchorSeq))
+                Column.vSimilarityScore -> csvPrinter.print(calcAnchorSimilarity(vdj, vdj.vAnchor))
                 Column.jType -> csvPrinter.print(vdj.jAnchor.geneType)
                 Column.jAnchorStart -> csvPrinter.print(vdj.jAnchor.anchorBoundary)
                 Column.jAnchorSeq -> csvPrinter.print(vdj.jAnchorSequence)
-                Column.jAnchorTemplateSeq -> csvPrinter.print(jAnchorByBlosum?.templateAnchorSeq ?: "null")
+                Column.jAnchorTemplateSeq -> csvPrinter.print(vdj.jAnchor.templateAnchorSeq)
                 Column.jAnchorAA -> csvPrinter.print(aminoAcidFromBases(vdj.jAnchorSequence))
-                Column.jAnchorTemplateAA -> csvPrinter.print(if (jAnchorByBlosum != null)
-                    aminoAcidFromBases(jAnchorByBlosum.templateAnchorSeq)
-                else "null")
-                Column.jSimilarityScore -> csvPrinter.print(jAnchorByBlosum?.similarityScore ?: "null")
+                Column.jAnchorTemplateAA -> csvPrinter.print(aminoAcidFromBases(vdj.jAnchor.templateAnchorSeq))
+                Column.jSimilarityScore -> csvPrinter.print(calcAnchorSimilarity(vdj, vdj.jAnchor))
                 Column.layoutId -> csvPrinter.print(vdj.layout.id)
                 Column.vdjSeq -> csvPrinter.print(vdj.sequence)
                 Column.support -> csvPrinter.print(CiderUtils.countsToString(vdj.supportCounts))
@@ -138,6 +141,30 @@ object VDJSequenceTsvWriter
         return aminoAcidFromBases(vdj.cdr3Sequence) + suffix
     }
 
+    fun calcAnchorSimilarity(vdj: VDJSequence, anchor: VJAnchor) : Int
+    {
+        val seq: String
+        val templateAnchorSeq: String = anchor.templateAnchorSeq
+
+        if (anchor.vj == VJ.V)
+        {
+            seq = vdj.vAnchorSequence
+        }
+        else
+        {
+            seq = vdj.jAnchorSequence
+        }
+
+        try
+        {
+            return BlosumSimilarityCalc.calcSimilarityScore(anchor.vj, templateAnchorSeq, seq)
+        }
+        catch (e: java.lang.IllegalArgumentException)
+        {
+            throw IllegalArgumentException("cannot calc similarity score: ${templateAnchorSeq} and ${seq}")
+        }
+    }
+
     fun filterString(vdj: VDJSequence, isDuplicate: Boolean): String
     {
         val filters = ArrayList<String>()
@@ -154,9 +181,17 @@ object VDJSequenceTsvWriter
         {
             filters.add("DUPLICATE")
         }
+        if (vdj.cdr3Sequence.length < CDR3_FILTER_AA_MIN_LENGTH * 3)
+        {
+            filters.add("MIN_LENGTH")
+        }
+        if (vdj.cdr3Sequence.length > CDR3_FILTER_AA_MAX_LENGTH * 3)
+        {
+            filters.add("MAX_LENGTH")
+        }
         if (filters.isEmpty())
             filters.add("PASS")
 
-        return filters.joinToString(separator = ",")
+        return filters.joinToString(separator = ";")
     }
 }

@@ -13,9 +13,14 @@ class MockVJReadLayoutAdaptor : IVJReadLayoutAdaptor
 {
     val anchorRangeMap = IdentityHashMap<ReadLayout, IntRange>()
 
-    override fun getAnchorMatchType(layout: ReadLayout): VJReadCandidate.AnchorMatchMethod
+    override fun getAnchorMatchMethod(layout: ReadLayout): VJReadCandidate.AnchorMatchMethod
     {
         return VJReadCandidate.AnchorMatchMethod.ALIGN
+    }
+
+    override fun getTemplateAnchorSequence(layout: ReadLayout) : String
+    {
+        return "TGACCC"
     }
 
     override fun getAnchorRange(vj: VJ, layout: ReadLayout) : IntRange?
@@ -230,19 +235,26 @@ class VDJSequenceBuilderTest
             assertTrue(layoutStart + vAnchorBoundary < layout.length)
             assertTrue(layoutStart + jAnchorBoundary <= layout.length)
 
+            val vAnchorSeq = layout.consensusSequence().drop(layoutStart).substring(0, vAnchorBoundary)
+            val jAnchorSeq = layout.consensusSequence().substring(jAnchorBoundary)
+
             // create VJ anchor
             val vAnchor = VJAnchorByReadMatch(
-                type = VJAnchor.Type.V,
+                vj = VJ.V,
                 geneType = VJGeneType.IGHV,
                 anchorBoundary = vAnchorBoundary,
-                matchMethod = "exact"
+                matchMethod = "exact",
+                templateAnchorSeq = vAnchorSeq,
+                numReads = layout.reads.size
             )
 
             val jAnchor = VJAnchorByReadMatch(
-                type = VJAnchor.Type.J,
+                vj = VJ.J,
                 geneType = VJGeneType.IGHJ,
                 anchorBoundary = jAnchorBoundary,
-                matchMethod = "exact"
+                matchMethod = "exact",
+                templateAnchorSeq = jAnchorSeq,
+                numReads = layout.reads.size
             )
 
             val vdj = VDJSequence("id", layout, layoutStart, layoutEnd, vAnchor, jAnchor)

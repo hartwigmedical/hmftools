@@ -29,20 +29,13 @@ public class Cdr3GeneLoader implements VJGeneStore
 {
     private static final Logger sLogger = LogManager.getLogger(Cdr3GeneLoader.class);
 
-    private final List<VJGene> mVJGenes;
-    private final Multimap<String, VJGene> mAnchorSequenceMap = ArrayListMultimap.create();
+    private final Multimap<String, VJAnchorTemplate> mAnchorSequenceMap = ArrayListMultimap.create();
 
-    private final Map<VJGeneType, Multimap<String, VJGene>> mGeneTypeAnchorSeqMap = new HashMap<>();
+    private final Map<VJGeneType, Multimap<String, VJAnchorTemplate>> mGeneTypeAnchorSeqMap = new HashMap<>();
 
-    private final Multimap<VJAnchorReferenceLocation, VJGene> mGeneLocationVJGeneMap = ArrayListMultimap.create();
+    private final Multimap<VJAnchorReferenceLocation, VJAnchorTemplate> mGeneLocationVJGeneMap = ArrayListMultimap.create();
 
-    private final List<IgConstantRegion> mIgConstantRegions = new ArrayList<>();
-
-    @Override
-    public List<VJGene> getVJGenes()
-    {
-        return mVJGenes;
-    }
+    private final List<IgTcrConstantRegion> mIgTcrConstantRegions = new ArrayList<>();
 
     @Override
     public Set<String> getAnchorSequenceSet()
@@ -53,25 +46,25 @@ public class Cdr3GeneLoader implements VJGeneStore
     @Override
     public Set<String> getAnchorSequenceSet(@NotNull VJGeneType geneType)
     {
-        Multimap<String, VJGene> anchorSeqMap = mGeneTypeAnchorSeqMap.get(geneType);
+        Multimap<String, VJAnchorTemplate> anchorSeqMap = mGeneTypeAnchorSeqMap.get(geneType);
         return anchorSeqMap != null ? anchorSeqMap.keySet() : Collections.emptySet();
     }
 
     @Override
-    public Collection<VJGene> getByAnchorSequence(@NotNull String anchorSeq)
+    public Collection<VJAnchorTemplate> getByAnchorSequence(@NotNull String anchorSeq)
     {
         return mAnchorSequenceMap.get(anchorSeq);
     }
 
     @Override
-    public Collection<VJGene> getByAnchorSequence(@NotNull VJGeneType geneType, @NotNull String anchorSeq)
+    public Collection<VJAnchorTemplate> getByAnchorSequence(@NotNull VJGeneType geneType, @NotNull String anchorSeq)
     {
-        Multimap<String, VJGene> anchorSeqMap = mGeneTypeAnchorSeqMap.get(geneType);
+        Multimap<String, VJAnchorTemplate> anchorSeqMap = mGeneTypeAnchorSeqMap.get(geneType);
         return anchorSeqMap != null ? anchorSeqMap.get(anchorSeq) : Collections.emptySet();
     }
 
     @Override
-    public Collection<VJGene> getByAnchorGeneLocation(@NotNull VJAnchorReferenceLocation vjAnchorReferenceLocation)
+    public Collection<VJAnchorTemplate> getByAnchorGeneLocation(@NotNull VJAnchorReferenceLocation vjAnchorReferenceLocation)
     {
         return mGeneLocationVJGeneMap.get(vjAnchorReferenceLocation);
     }
@@ -83,14 +76,14 @@ public class Cdr3GeneLoader implements VJGeneStore
     }
 
     @Override
-    public Collection<IgConstantRegion> getIgConstantRegions() { return mIgConstantRegions; }
+    public Collection<IgTcrConstantRegion> getIgConstantRegions() { return mIgTcrConstantRegions; }
 
     public Cdr3GeneLoader(RefGenomeVersion refGenomeVersion, String ensemblDataDir) throws IOException
     {
-        mVJGenes = loadImgtGeneTsv(refGenomeVersion);
+        List<VJAnchorTemplate> vjAnchorTemplates = loadImgtGeneTsv(refGenomeVersion);
 
         // from this we find all the anchor sequence locations and fix them
-        for (VJGene gene : mVJGenes)
+        for (VJAnchorTemplate gene : vjAnchorTemplates)
         {
             if (gene.getAnchorLocation() != null)
             {
@@ -110,7 +103,7 @@ public class Cdr3GeneLoader implements VJGeneStore
         sLogger.info("found {} gene locations", mGeneLocationVJGeneMap.keySet().size());
     }
 
-    private static List<VJGene> loadImgtGeneTsv(RefGenomeVersion refGenomeVersion) throws IOException
+    private static List<VJAnchorTemplate> loadImgtGeneTsv(RefGenomeVersion refGenomeVersion) throws IOException
     {
         String resourcePath;
 
@@ -126,7 +119,7 @@ public class Cdr3GeneLoader implements VJGeneStore
         {
             throw new IllegalArgumentException("unknown ref genome version: " + refGenomeVersion.toString());
         }
-        List<VJGene> VJGeneList = new ArrayList<>();
+        List<VJAnchorTemplate> VJAnchorTemplateList = new ArrayList<>();
 
         java.io.InputStream tsvStream = Cdr3GeneLoader.class.getClassLoader().getResourceAsStream(resourcePath);
         if (tsvStream == null)
@@ -187,12 +180,12 @@ public class Cdr3GeneLoader implements VJGeneStore
                         anchorLocation = new GeneLocation(chromosome, anchorStart, anchorEnd, strand);
                 }
 
-                VJGene VJGene = new VJGene(
+                VJAnchorTemplate VJAnchorTemplate = new VJAnchorTemplate(
                         id, name, allele, geneLocation, sequence, anchorSequence, anchorLocation);
-                VJGeneList.add(VJGene);
+                VJAnchorTemplateList.add(VJAnchorTemplate);
             }
         }
-        return VJGeneList;
+        return VJAnchorTemplateList;
     }
 
     private void loadConstantRegionGenes(RefGenomeVersion refGenomeVersion, String ensemblDataDir)
@@ -211,11 +204,11 @@ public class Cdr3GeneLoader implements VJGeneStore
                 continue;
 
             String geneNamePrefix = geneData.GeneName.substring(0, 4);
-            IgConstantRegion.Type igConstantRegionType;
+            IgTcrConstantRegion.Type igConstantRegionType;
 
             try
             {
-                igConstantRegionType = IgConstantRegion.Type.valueOf(geneNamePrefix);
+                igConstantRegionType = IgTcrConstantRegion.Type.valueOf(geneNamePrefix);
             }
             catch (IllegalArgumentException ignored)
             {
@@ -225,7 +218,7 @@ public class Cdr3GeneLoader implements VJGeneStore
             GeneLocation geneLocation = new GeneLocation(geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd,
                     geneData.forwardStrand() ? Strand.FORWARD : Strand.REVERSE);
 
-            mIgConstantRegions.add(new IgConstantRegion(igConstantRegionType, geneLocation));
+            mIgTcrConstantRegions.add(new IgTcrConstantRegion(igConstantRegionType, geneLocation));
 
             sLogger.info("found constant region gene: {}, type: {}, location: {}",
                     geneData.GeneName, igConstantRegionType, geneLocation);

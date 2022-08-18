@@ -163,13 +163,13 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         if (layoutGeneType.vj == VJ.V)
         {
             vAnchor = createVJAnchorByReadMatch(
-                type = VJAnchor.Type.V,
                 anchorBoundary = vAnchorRange.last + 1,
                 vjGeneType = layoutGeneType,
-                matchMethod = vjLayoutAdaptor.getAnchorMatchType(layout)
+                layout = layout
             )
             jAnchor = VJAnchorByBlosum(
-                type = VJAnchor.Type.J,
+                vj = VJ.J,
+                geneType = targetAnchorType,
                 anchorBoundary = jAnchorRange.first,
                 templateAnchorSeq = anchorBlosumMatch.templateAnchorSeq,
                 templateGenes = anchorBlosumMatch.templateGenes,
@@ -179,7 +179,8 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         else
         {
             vAnchor = VJAnchorByBlosum(
-                type = VJAnchor.Type.V,
+                vj = VJ.V,
+                geneType = targetAnchorType,
                 anchorBoundary = vAnchorRange.last + 1,
                 templateAnchorSeq = anchorBlosumMatch.templateAnchorSeq,
                 templateGenes = anchorBlosumMatch.templateGenes,
@@ -187,10 +188,9 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             )
 
             jAnchor = createVJAnchorByReadMatch(
-                type = VJAnchor.Type.J,
                 anchorBoundary = jAnchorRange.first,
                 vjGeneType = layoutGeneType,
-                matchMethod = vjLayoutAdaptor.getAnchorMatchType(layout)
+                layout = layout
             )
         }
 
@@ -303,15 +303,13 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         val jAnchor: VJAnchor
 
         vAnchor = createVJAnchorByReadMatch(
-            type = VJAnchor.Type.V,
             anchorBoundary = vAnchorBoundary,
             vjGeneType = vLayoutGeneType,
-            matchMethod = vjLayoutAdaptor.getAnchorMatchType(vLayout))
+            layout = vLayout)
         jAnchor = createVJAnchorByReadMatch(
-            type = VJAnchor.Type.J,
             anchorBoundary = jAnchorBoundary,
             vjGeneType = jLayoutGeneType,
-            matchMethod = vjLayoutAdaptor.getAnchorMatchType(jLayout))
+            layout = jLayout)
 
         val vdj = VDJSequence("", combinedVjLayout, layoutSliceStart, layoutSliceEnd, vAnchor, jAnchor)
 
@@ -322,6 +320,25 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             vLayout.id, vLayout.consensusSequence(), jLayout.id, jLayout.consensusSequence())
 
         return vdj
+    }
+
+    fun createVJAnchorByReadMatch(
+        anchorBoundary: Int,
+        layout: ReadLayout,
+        vjGeneType: VJGeneType) : VJAnchorByReadMatch
+    {
+        val matchMethodStr =
+            when (vjLayoutAdaptor.getAnchorMatchMethod(layout))
+            {
+                VJReadCandidate.AnchorMatchMethod.ALIGN -> "align"
+                VJReadCandidate.AnchorMatchMethod.EXACT -> "exact"
+                VJReadCandidate.AnchorMatchMethod.BLOSUM -> "blosum"
+            }
+
+        val templateAnchorSeq = vjLayoutAdaptor.getTemplateAnchorSequence(layout)
+
+        return VJAnchorByReadMatch(vjGeneType.vj, vjGeneType, anchorBoundary, matchMethodStr,
+            templateAnchorSeq, layout.reads.size)
     }
 
     companion object
@@ -454,6 +471,15 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                 vdj2.aminoAcidSequenceFormatted, vdj2.vAnchor.matchMethod, vdj2.jAnchor.matchMethod, vdj2.layout.alignedPosition,
                 vdj2.layoutSliceStart, vdj2.layoutSliceEnd, vdj2.vAnchor.anchorBoundary, vdj2.jAnchor.anchorBoundary)
 
+            val vAnchorBoundary = Math.max(vdj1.vAnchor.anchorBoundary, vdj2.vAnchor.anchorBoundary)
+            val jAnchorBoundary = Math.max(vdj1.jAnchor.anchorBoundary, vdj2.jAnchor.anchorBoundary)
+
+            // merge the anchor objects together
+            val vAnchor: VJAnchor = mergeAnchors(vdj1.vAnchor, vdj2.vAnchor, vdj1.vAnchorLength, vdj2.vAnchorLength, vAnchorBoundary)
+            val jAnchor: VJAnchor = mergeAnchors(vdj1.jAnchor, vdj2.jAnchor, vdj1.jAnchorLength, vdj2.jAnchorLength, jAnchorBoundary)
+
+            val jAnchorLength: Int = Math.max(vdj1.jAnchorLength, vdj2.jAnchorLength)
+
             if (vdj1.supportMin > vdj2.supportMin)
             {
                 vdjPrimary = vdj1
@@ -465,40 +491,6 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                 vdjSecondary = vdj1
             }
 
-            val vAnchorBoundary = Math.max(vdj1.vAnchor.anchorBoundary, vdj2.vAnchor.anchorBoundary)
-            val jAnchorBoundary = Math.max(vdj1.jAnchor.anchorBoundary, vdj2.jAnchor.anchorBoundary)
-
-            // we first prefer anchor that is longer, then we prefer anchor
-            // that is by read match
-            val vAnchorTemplate: VJAnchor
-            val jAnchorTemplate: VJAnchor
-            val jAnchorLength: Int
-
-            if (vdjPrimary.vAnchorLength < vdjSecondary.vAnchorLength ||
-                vdjPrimary.vAnchor !is VJAnchorByReadMatch && vdjSecondary.vAnchor is VJAnchorByReadMatch)
-            {
-                vAnchorTemplate = vdjSecondary.vAnchor
-            }
-            else
-            {
-                vAnchorTemplate = vdjPrimary.vAnchor
-            }
-            if (vdjPrimary.jAnchorLength < vdjSecondary.jAnchorLength ||
-                vdjPrimary.jAnchor !is VJAnchorByReadMatch && vdjSecondary.jAnchor is VJAnchorByReadMatch)
-            {
-                jAnchorTemplate = vdjSecondary.jAnchor
-                jAnchorLength = vdjSecondary.jAnchorLength
-            }
-            else
-            {
-                jAnchorTemplate = vdjPrimary.jAnchor
-                jAnchorLength = vdjPrimary.jAnchorLength
-            }
-
-            // create the V and J anchors from template
-            val vAnchor: VJAnchor = copyVjAnchorTemplate(vAnchorTemplate, vAnchorBoundary)
-            val jAnchor: VJAnchor = copyVjAnchorTemplate(jAnchorTemplate, jAnchorBoundary)
-
             // we calculate the aligned position for both sequences with respect to the V anchor boundary
             val primaryAlignedPos = vdjPrimary.layout.alignedPosition - vdjPrimary.layoutSliceStart - vdjPrimary.vAnchor.anchorBoundary
             val secondaryAlignedPos = vdjSecondary.layout.alignedPosition - vdjSecondary.layoutSliceStart - vdjSecondary.vAnchor.anchorBoundary
@@ -506,7 +498,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             // this would shift them to overlap each other
             val secondaryLayoutOffsetShift = primaryAlignedPos - secondaryAlignedPos
             val mergedLayout = ReadLayout.merge(vdjPrimary.layout, vdjSecondary.layout, 0, secondaryLayoutOffsetShift, minBaseQuality)
-            mergedLayout.id = "${vdjPrimary.id},${vdjSecondary.id}"
+            mergedLayout.id = "${vdjPrimary.id};${vdjSecondary.id}"
 
             // now we have to work out where to place the layout, using the final aligned position
             val posStartWithinLayout = vdjPrimary.layoutSliceStart +
@@ -624,39 +616,46 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             return Pair(range1, range2)
         }
 
-        fun copyVjAnchorTemplate(anchorTemplate: VJAnchor, anchorBoundary: Int): VJAnchor
+        fun mergeAnchors(anchor1: VJAnchor, anchor2: VJAnchor,
+                         anchor1Length: Int, anchor2Length: Int,
+                         newAnchorBoundary: Int) : VJAnchor
         {
+            if (anchor1 is VJAnchorByReadMatch)
+            {
+                if (anchor2 is VJAnchorByReadMatch)
+                {
+                    // both are by read candidate match
+                    // choose the anchor that has higher number of reads
+                    val anchorWithMoreReads: VJAnchorByReadMatch = maxOf(anchor1, anchor1, Comparator.comparingInt(VJAnchorByReadMatch::numReads))
+
+                    // sum the number of reads together
+                    return anchorWithMoreReads.copy(anchorBoundary = newAnchorBoundary, numReads = anchor1.numReads + anchor2.numReads)
+                }
+                // copy anchor 1
+                return anchor1.copy(anchorBoundary = newAnchorBoundary)
+            }
+            else if (anchor2 is VJAnchorByReadMatch)
+            {
+                // anchor1 is not by Read match
+                // copy anchor 2
+                return anchor2.copy(anchorBoundary = newAnchorBoundary)
+            }
+
+            // neither are by read match, we choose the longer one
+            val anchorTemplate: VJAnchor = if (anchor1Length >= anchor2Length) anchor1 else anchor2
+
             if (anchorTemplate is VJAnchorByReadMatch)
             {
                 // smart casted to VJAnchorByReadMatch
-                return anchorTemplate.copy(anchorBoundary = anchorBoundary)
+                return anchorTemplate.copy(anchorBoundary = newAnchorBoundary)
             }
             else if (anchorTemplate is VJAnchorByBlosum)
             {
                 // smart casted to VJAnchorByBlosum
-                return anchorTemplate.copy(anchorBoundary = anchorBoundary)
+                return anchorTemplate.copy(anchorBoundary = newAnchorBoundary)
             }
-            else
-            {
-                throw IllegalArgumentException("unknown VJAnchor child type")
-            }
-        }
 
-        fun createVJAnchorByReadMatch(
-            type: VJAnchor.Type,
-            anchorBoundary: Int,
-            vjGeneType: VJGeneType,
-            matchMethod: VJReadCandidate.AnchorMatchMethod) : VJAnchorByReadMatch
-        {
-            val matchMethodStr =
-                when (matchMethod)
-                {
-                    VJReadCandidate.AnchorMatchMethod.ALIGN -> "align"
-                    VJReadCandidate.AnchorMatchMethod.EXACT -> "exact"
-                    VJReadCandidate.AnchorMatchMethod.BLOSUM -> "blosum"
-                    VJReadCandidate.AnchorMatchMethod.BLOSUM_FROM_CONSTANT_REGION -> "blosumConstRegion"
-                }
-            return VJAnchorByReadMatch(type, vjGeneType, anchorBoundary, matchMethodStr)
+            throw IllegalArgumentException("unknown VJAnchor subtype: ${anchorTemplate::class}")
         }
     }
 }

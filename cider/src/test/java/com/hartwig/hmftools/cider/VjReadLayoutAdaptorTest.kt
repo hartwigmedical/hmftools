@@ -148,7 +148,8 @@ class VjReadLayoutAdaptorTest
         record.baseQualityString = "F".repeat(seq.length)
         val vjGeneType = if (vj == VJ.V) VJGeneType.TRAV else VJGeneType.TRAJ
 
-        return VJReadCandidate(record, emptyList(), vjGeneType, VJReadCandidate.AnchorMatchMethod.ALIGN,
+        return VJReadCandidate(record, emptyList(), vjGeneType,
+            "CACGTG", VJReadCandidate.AnchorMatchMethod.ALIGN,
                                 useReverseComplement, anchorOffsetStart, anchorOffsetEnd,
                                 null, 0, 0)
     }

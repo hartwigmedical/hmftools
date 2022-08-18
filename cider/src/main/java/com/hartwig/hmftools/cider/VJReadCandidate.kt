@@ -16,8 +16,9 @@ data class VJReadRecordKey(
 // match perfectly. We just match by anchor
 data class VJReadCandidate(
     val read: SAMRecord,
-    val vjGenes: Collection<VJGene>,
+    val vjAnchorTemplates: Collection<VJAnchorTemplate>,
     val vjGeneType: VJGeneType,
+    val templateAnchorSequence: String,
     val anchorMatchMethod: AnchorMatchMethod,
     val useReverseComplement: Boolean,
     val anchorOffsetStart: Int, // this is after reverse complement if needed, can be negative
@@ -29,8 +30,10 @@ data class VJReadCandidate(
 {
     enum class AnchorMatchMethod
     {
-        ALIGN, EXACT, BLOSUM, BLOSUM_FROM_CONSTANT_REGION
+        ALIGN, EXACT, BLOSUM
     }
+
+    var similarityScore: Int = Int.MIN_VALUE
 
     val readLength: Int get()
     {

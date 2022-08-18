@@ -3,17 +3,23 @@ package com.hartwig.hmftools.cider
 import com.hartwig.hmftools.common.codon.Codons
 import org.apache.logging.log4j.LogManager
 import kotlin.math.ceil
+import kotlin.math.floor
 
-fun roundToMultiple(v: Int, m: Int) : Int
+fun roundUpToMultiple(v: Int, m: Int) : Int
 {
     return (ceil(v / m.toDouble()) * m).toInt()
+}
+
+fun roundDownToMultiple(v: Int, m: Int) : Int
+{
+    return (floor(v / m.toDouble()) * m).toInt()
 }
 
 data class AnchorBlosumMatch(
     val anchorStart: Int,
     val anchorEnd: Int,
     val templateAnchorSeq: String,
-    val templateGenes: Collection<VJGene>,
+    val templateGenes: Collection<VJAnchorTemplate>,
     val similarityScore: Int)
 
 // create a very simple interface so we can mock the data
@@ -27,10 +33,10 @@ interface IAnchorBlosumSearcher
 // looks like an anchor
 class AnchorBlosumSearcher(
     val vjGeneStore: VJGeneStore,
-    val minPartialAnchorAminoAcidLength: Int,
+    minPartialAnchorAminoAcidLength: Int,
     val allowNegativeSimilarity: Boolean) : IAnchorBlosumSearcher
 {
-    val blosumMapping = BlosumMapping()
+    val minPartialAnchorBaseLength = minPartialAnchorAminoAcidLength * 3
 
     override fun searchForAnchor(dnaSeq: String, targetAnchorGeneType: VJGeneType, startOffset: Int, endOffset: Int)
     : AnchorBlosumMatch?
@@ -115,7 +121,7 @@ class AnchorBlosumSearcher(
             // since we are searching backwards in the sequence, we just have to deal
             // with partial anchor match, and we want to make sure the full length
             // is multiple of 3
-            val leftTrim: Int = roundToMultiple(-anchorStart, 3)
+            val leftTrim: Int = roundUpToMultiple(-anchorStart, 3)
             anchorStart += leftTrim
             trimmedTemplateAnchorSeq = trimmedTemplateAnchorSeq.substring(leftTrim)
         }
@@ -128,21 +134,17 @@ class AnchorBlosumSearcher(
                 return null
             }
 
-            val rightTrim = roundToMultiple(anchorEnd - dnaSeq.length, 3)
+            val rightTrim = roundUpToMultiple(anchorEnd - dnaSeq.length, 3)
             anchorEnd -= rightTrim
             trimmedTemplateAnchorSeq = trimmedTemplateAnchorSeq.dropLast(rightTrim)
         }
-
-        val templateAnchorAA: String = Codons.aminoAcidFromBases(trimmedTemplateAnchorSeq)
 
         val potentialAnchor: String = dnaSeq.substring(anchorStart, anchorEnd)
 
         assert(trimmedTemplateAnchorSeq.length == potentialAnchor.length)
 
-        val potentialAnchorAA: String = Codons.aminoAcidFromBases(potentialAnchor)
-
         if (trimmedTemplateAnchorSeq.length < templateAnchorSeq.length &&
-            potentialAnchorAA.length < minPartialAnchorAminoAcidLength)
+            potentialAnchor.length < minPartialAnchorBaseLength)
         {
             // partial and not enough amino acids
             return null
@@ -150,10 +152,7 @@ class AnchorBlosumSearcher(
 
         if (anchorStart >= 0 && anchorEnd <= dnaSeq.length)
         {
-            if (potentialAnchorAA.contains(Codons.UNKNOWN))
-                return null
-
-            val score: Int = calcSimilarityScore(templateAnchorAA, potentialAnchorAA)
+            val score: Int = BlosumSimilarityCalc.calcSimilarityScore(geneType.vj, trimmedTemplateAnchorSeq, potentialAnchor)
 
             //if (score >= 0)
             //{
@@ -162,7 +161,7 @@ class AnchorBlosumSearcher(
                     dnaSeq, geneType, potentialAnchor
                 )*/
 
-                val templateGenes: Collection<VJGene> = vjGeneStore.getByAnchorSequence(geneType, templateAnchorSeq)
+                val templateGenes: Collection<VJAnchorTemplate> = vjGeneStore.getByAnchorSequence(geneType, templateAnchorSeq)
                 val anchorBlosumMatch = AnchorBlosumMatch(anchorStart = anchorStart, anchorEnd = anchorEnd,
                     templateAnchorSeq = templateAnchorSeq,
                     templateGenes = templateGenes, similarityScore = score)
@@ -170,24 +169,6 @@ class AnchorBlosumSearcher(
             //}
         }
         return null
-    }
-
-    // we do with amino acid sequence
-    // diff of 0 means exact match
-    fun calcBlosumDistance(refAnchorAA: String, seqAA: String) : Int
-    {
-        if (refAnchorAA.length != seqAA.length)
-            return Int.MAX_VALUE
-
-        // calculate the blosum score
-        return blosumMapping.calcSequenceSum(refAnchorAA) - blosumMapping.calcSequenceSum(refAnchorAA, seqAA)
-    }
-
-    fun calcSimilarityScore(refAnchorAA: String, seqAA: String) : Int
-    {
-        return CiderConstants.MAX_BLOSUM_DIFF_PER_AA * seqAA.length -
-                CiderConstants.BLOSUM_SIMILARITY_SCORE_CONSTANT -
-                calcBlosumDistance(refAnchorAA, seqAA)
     }
 
     companion object

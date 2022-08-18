@@ -54,6 +54,10 @@ public class BlosumMapping
     public int selfMapping(final char aa)
     {
         int aaIndex = aminoAcidIndex(aa);
+
+        if (aaIndex == INVALID_AMINO_ACID)
+            throw new IllegalArgumentException("invalid amino acid: " + aa);
+
         return mMappings[aaIndex][aaIndex];
     }
 
@@ -68,8 +72,11 @@ public class BlosumMapping
         int aa2Index = aminoAcidIndex(aa2);
 
         // better to fail than return a potentially incorrect value
-        //if(aa1Index == INVALID_AMINO_ACID || aa2Index == INVALID_AMINO_ACID)
-        //    return 0;
+        if (aa1Index == INVALID_AMINO_ACID)
+            throw new IllegalArgumentException("invalid amino acid: " + aa1);
+
+        if (aa2Index == INVALID_AMINO_ACID)
+            throw new IllegalArgumentException("invalid amino acid: " + aa2);
 
         return mMappings[aa1Index][aa2Index];
     }
