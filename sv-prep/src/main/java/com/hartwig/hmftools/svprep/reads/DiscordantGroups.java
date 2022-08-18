@@ -7,9 +7,11 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvConstants.DISCORDANT_GROUP_MAX_DISTANCE;
 import static com.hartwig.hmftools.svprep.SvConstants.DISCORDANT_GROUP_MIN_FRAGMENTS;
+import static com.hartwig.hmftools.svprep.SvConstants.DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.UNMAPPED_CHR;
 
 import java.util.List;
@@ -21,7 +23,8 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public final class DiscordantGroups
 {
-    public static List<JunctionData> formDiscordantJunctions(final ChrBaseRegion region, final List<ReadGroup> readGroups)
+    public static List<JunctionData> formDiscordantJunctions(
+            final ChrBaseRegion region, final List<ReadGroup> readGroups, int shortFragmentLength)
     {
         List<JunctionData> discordantJunctions = Lists.newArrayList();
         Set<String> assignedGroups = Sets.newHashSet();
@@ -98,7 +101,7 @@ public final class DiscordantGroups
                 }
             }
 
-            if(closeGroups != null && hasSufficientUnassignedFragments(closeGroups))
+            if(closeGroups != null && hasSufficientUnassignedFragments(closeGroups, innerBoundaries, shortFragmentLength))
             {
                 addJunctions(closeGroups, innerBoundaries, boundaryReads, region, discordantJunctions);
                 closeGroups.forEach(x -> assignedGroups.add(x.id()));
@@ -115,10 +118,15 @@ public final class DiscordantGroups
         return discordantJunctions;
     }
 
-    private static boolean hasSufficientUnassignedFragments(final List<ReadGroup> readGroups)
+    private static boolean hasSufficientUnassignedFragments(
+            final List<ReadGroup> readGroups, final GroupBoundary[] innerBoundaries, int shortFragmentLength)
     {
-        return readGroups.size() >= DISCORDANT_GROUP_MIN_FRAGMENTS
-                && readGroups.stream().filter(x -> x.junctionPositions() == null).count() >= DISCORDANT_GROUP_MIN_FRAGMENTS;
+        boolean isShortLocalDel = innerBoundaries[SE_START].Chromosome.equals(innerBoundaries[SE_END].Chromosome)
+                && innerBoundaries[SE_START].Orientation == POS_ORIENT && innerBoundaries[SE_START].Orientation == NEG_ORIENT
+                && innerBoundaries[SE_END].Position - innerBoundaries[SE_START].Position < shortFragmentLength;
+
+        int minFragments = isShortLocalDel ? DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT : DISCORDANT_GROUP_MIN_FRAGMENTS;
+        return readGroups.size() >= minFragments && readGroups.stream().filter(x -> x.junctionPositions() == null).count() >= minFragments;
     }
 
     private static void addJunctions(

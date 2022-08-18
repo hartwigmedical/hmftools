@@ -295,7 +295,7 @@ public class JunctionTracker
             SV_LOGGER.debug("region({}) checking discordant groups from {} read groups", mRegion, mCandidateDiscordantGroups.size());
         }
 
-        List<JunctionData> discordantJunctions = formDiscordantJunctions(mRegion, mCandidateDiscordantGroups);
+        List<JunctionData> discordantJunctions = formDiscordantJunctions(mRegion, mCandidateDiscordantGroups, mFilterConfig.fragmentLengthMax());
 
         if(!discordantJunctions.isEmpty())
         {

@@ -36,6 +36,7 @@ public final class SvConstants
 
     // discordant groups
     public static final int DISCORDANT_GROUP_MIN_FRAGMENTS = 3;
+    public static final int DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT = 5;
     public static final int DISCORDANT_GROUP_MAX_DISTANCE = 500;
 
     // final junction filtering
