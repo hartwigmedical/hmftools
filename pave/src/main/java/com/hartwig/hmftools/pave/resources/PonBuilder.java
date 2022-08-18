@@ -109,6 +109,11 @@ public class PonBuilder
         {
             int varCount = 0;
 
+            int lastPosition = 0;
+            String lastChromosome = "";
+            String lastRef = "";
+            String lastAlt = "";
+
             for(VariantContext variantContext : vcfReader.iterator())
             {
                 double qual = variantContext.getPhredScaledQual();
@@ -122,12 +127,20 @@ public class PonBuilder
 
                 int position = variantContext.getStart();
                 String chromosome = variantContext.getContig();
-
                 String ref = variantContext.getReference().getBaseString();
                 String alt = variantContext.getAlternateAlleles().get(0).toString();
 
+                // ignore duplicates (eg with different read-contexts)
+                if(chromosome.equals(lastChromosome) && lastPosition == position && lastRef.equals(ref) && lastAlt.equals(alt))
+                    continue;
+
                 addVariant(chromosome, position, ref, alt, 1);
                 ++varCount;
+
+                lastChromosome = chromosome;
+                lastPosition = position;
+                lastRef = ref;
+                lastAlt = alt;
             }
 
             PV_LOGGER.info("sample({}) read {} variants from vcf({})", sampleId, varCount, vcfFilename);
