@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_AF_INFO;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_MINOR_ALLELE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_VARIANT_CN_INFO;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,12 +15,12 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
+import com.hartwig.hmftools.common.variant.VariantVcfTags;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.VariantHeader;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -112,6 +112,6 @@ public class GermlinePurityEnrichment
 
     public VCFHeader enrichHeader(final VCFHeader template)
     {
-        return VariantHeader.germlineHeader(mVersion, template);
+        return VariantVcfTags.purpleGermlineHeader(mVersion, template);
     }
 }

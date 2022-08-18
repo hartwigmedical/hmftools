@@ -15,12 +15,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.sage.SageMetaData;
+import com.hartwig.hmftools.common.variant.VariantVcfTags;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -29,7 +28,6 @@ import com.hartwig.hmftools.pave.compare.RefVariantData;
 
 import org.apache.logging.log4j.util.Strings;
 
-import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantData
@@ -176,7 +174,7 @@ public class VariantData
         VariantData variant = new VariantData(chromosome, variantPosition, ref, alt);
         variant.setContext(variantContext);
 
-        List<Integer> localPhaseSets = variantContext.getAttributeAsIntList(SageMetaData.LOCAL_PHASE_SET, NO_LOCAL_PHASE_SET);
+        List<Integer> localPhaseSets = variantContext.getAttributeAsIntList(VariantVcfTags.LOCAL_PHASE_SET, NO_LOCAL_PHASE_SET);
 
         variant.setVariantDetails(
                 !localPhaseSets.isEmpty() ? localPhaseSets.get(0) : NO_LOCAL_PHASE_SET,

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.somatic;
 
-import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.VAR_TRANS_IMPACT_ANNOATATION;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 

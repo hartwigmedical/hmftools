@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.append;
 
-import static com.hartwig.hmftools.common.sage.SageMetaData.TIER;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.TIER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_EVENTS;

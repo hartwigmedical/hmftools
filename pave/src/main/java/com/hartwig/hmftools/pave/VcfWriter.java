@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.pave;
 
-import static com.hartwig.hmftools.pave.GnomadAnnotation.GNOMAD_FREQ;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.pave.PonAnnotation.PON_COUNT;
 import static com.hartwig.hmftools.pave.PonAnnotation.PON_MAX;
 

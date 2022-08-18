@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_VARIANT_CN_INFO;
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
 
@@ -17,9 +17,8 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
-import com.hartwig.hmftools.common.sage.SageMetaData;
+import com.hartwig.hmftools.common.variant.VariantVcfTags;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.test.VariantContextFromString;
 
 import org.jetbrains.annotations.NotNull;
@@ -236,7 +235,7 @@ public class GermlineReportedEnrichmentTest
         final String line =
                 "11\t1000\tCOSM123;COSM456\tG\tA\t100\t" + filter + "\t" + PURPLE_BIALLELIC_FLAG + "=" + biallelic + ";" + hotspotFlag
                         + ";SEC=" + gene + ",ENST00000393562,UTR_variant," + codingEffect.toString() + ",c.-275T>G,;CLNSIG=" + clinSig + ";"
-                        + PURPLE_VARIANT_CN_INFO + "=" + variantCopyNumber + ";" + SageMetaData.LOCAL_PHASE_SET + "=" + localPhaseSet
+                        + PURPLE_VARIANT_CN_INFO + "=" + variantCopyNumber + ";" + VariantVcfTags.LOCAL_PHASE_SET + "=" + localPhaseSet
                         + "\tGT:AD:DP\t0/1:73,17:91";
         return new GermlineVariant(VariantContextFromString.decode(line));
     }

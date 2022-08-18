@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.KATAEGIS_FLAG;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PASS;
-
-import java.util.Set;
 
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 

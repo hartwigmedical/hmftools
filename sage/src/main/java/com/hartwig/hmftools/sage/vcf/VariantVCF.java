@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.vcf;
 
-import static com.hartwig.hmftools.common.variant.VariantHeader.PASS;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PASS;
 
 import java.util.Collections;
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.sage.SageMetaData;
+import com.hartwig.hmftools.common.variant.VariantVcfTags;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
@@ -148,7 +148,7 @@ public class VariantVCF implements AutoCloseable
 
     private static VCFHeader header(final String version, final List<String> allSamples)
     {
-        VCFHeader header = SageMetaData.addSageMetaData(new VCFHeader(Collections.emptySet(), allSamples));
+        VCFHeader header = VariantVcfTags.addSageMetaData(new VCFHeader(Collections.emptySet(), allSamples));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 LOCAL_PHASE_SET_READ_COUNT, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, LPS_READ_COUNT_DESCRIPTION));

@@ -1,38 +1,21 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_GERMLINE_INFO;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.StringJoiner;
-import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.sage.SageMetaData;
-import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
-import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
-import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.filter.CompoundFilter;
-import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 import htsjdk.variant.vcf.VCFCodec;
-import htsjdk.variant.vcf.VCFHeader;
 
 public final class GermlineVariantFactory
 {

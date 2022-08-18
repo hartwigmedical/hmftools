@@ -36,6 +36,8 @@ public class TargetRegionsData
 
     private static final String CODING_REGION_ID = "CODING";
 
+    public static final List<String> TMB_GENE_EXCLUSIONS = Lists.newArrayList("HLA-A","HLA-B","HLA-C","PIM1","BCL2");
+
     public TargetRegionsData(boolean tumorOnly, final String bedFile, final String ratiosFile, final String msiIndelsFile)
     {
         mTumorOnly = tumorOnly;

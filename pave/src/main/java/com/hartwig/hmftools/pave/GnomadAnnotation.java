@@ -3,6 +3,8 @@ package com.hartwig.hmftools.pave;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.GNOMAD_FREQ;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.GNOMAD_FREQ_DESC;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.resources.GnomadCacheBuilder.GNOMAD_FILE_ID;
 import static com.hartwig.hmftools.pave.resources.GnomadCacheBuilder.formFileId;
@@ -44,7 +46,6 @@ public class GnomadAnnotation
     private static final String GNOMAD_LOAD_CHR_ON_DEMAND = "gnomad_load_chr_on_demand";
     private static final String GNOMAD_PON_FILTER = "gnomad_pon_filter";
 
-    public static final String GNOMAD_FREQ = "GND_FREQ";
     public static final String PON_GNOMAD_FILTER = "PONGnomad";
 
     private static final double DEFAULT_PON_FILTER_THRESHOLD = 0.00015;
@@ -280,9 +281,7 @@ public class GnomadAnnotation
 
     public static void addHeader(final VCFHeader header)
     {
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                GNOMAD_FREQ, 1, VCFHeaderLineType.Float, "Gnomad variant frequency"));
-
+        header.addMetaDataLine(new VCFInfoHeaderLine(GNOMAD_FREQ, 1, VCFHeaderLineType.Float, GNOMAD_FREQ_DESC));
         header.addMetaDataLine(new VCFFilterHeaderLine(PON_GNOMAD_FILTER, "Filter Gnoamd PON"));
     }
 

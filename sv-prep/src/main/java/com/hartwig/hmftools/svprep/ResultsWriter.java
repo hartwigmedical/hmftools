@@ -276,7 +276,7 @@ public class ResultsWriter
                         for(int i = 0; i < min(junctionData.RemoteJunctions.size(), 10); ++i)
                         {
                             RemoteJunction remoteJunction = junctionData.RemoteJunctions.get(i);
-                            sj.add(format("%s:%d:%d;%d",
+                            sj.add(format("%s:%d:%d:%d",
                                     remoteJunction.Chromosome, remoteJunction.Position, remoteJunction.Orientation, remoteJunction.Fragments));
                             // junctionData.RemoteJunctions.forEach(x -> sj.add(format("%s:%d:%d", x.Chromosome, x.Position, x.Orientation)));
                         }

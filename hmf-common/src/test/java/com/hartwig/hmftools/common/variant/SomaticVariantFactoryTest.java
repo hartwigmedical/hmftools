@@ -68,34 +68,6 @@ public class SomaticVariantFactoryTest {
     }
 
     @Test
-    public void isMinorAlleleCopyNumberBackwardsCompatible() {
-        final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tSUB;\tGT:AD:DP\t0/1:59,60:120";
-        final SomaticVariant variantMap = assertedGet(victim.createVariant(SAMPLE, codec.decode(line.replace("SUB", "PURPLE_MAP=1.9"))));
-        final SomaticVariant variantMacn = assertedGet(victim.createVariant(SAMPLE, codec.decode(line.replace("SUB", "PURPLE_MACN=1.9"))));
-
-        assertEquals(1.9, variantMap.minorAlleleCopyNumber(), 0.01);
-        assertEquals(variantMap, variantMacn);
-
-        final SomaticVariant both =
-                assertedGet(victim.createVariant(SAMPLE, codec.decode(line.replace("SUB", "PURPLE_MAP=1.8;PURPLE_MACN=1.7"))));
-        assertEquals(1.7, both.minorAlleleCopyNumber(), 0.01);
-    }
-
-    @Test
-    public void isVariantCopyNumberBackwardsCompatible() {
-        final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tSUB;\tGT:AD:DP\t0/1:59,60:120";
-        final SomaticVariant variantMap = assertedGet(victim.createVariant(SAMPLE, codec.decode(line.replace("SUB", "PURPLE_PLOIDY=1.9"))));
-        final SomaticVariant variantMacn = assertedGet(victim.createVariant(SAMPLE, codec.decode(line.replace("SUB", "PURPLE_VCN=1.9"))));
-
-        assertEquals(1.9, variantMap.variantCopyNumber(), 0.01);
-        assertEquals(variantMap, variantMacn);
-
-        final SomaticVariant both =
-                assertedGet(victim.createVariant(SAMPLE, codec.decode(line.replace("SUB", "PURPLE_PLOIDY=1.8;PURPLE_VCN=1.7"))));
-        assertEquals(1.7, both.variantCopyNumber(), 0.01);
-    }
-
-    @Test
     public void handleZeroReadCount() {
         final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:0,0:0";
         final Optional<SomaticVariant> missingAFVariant = victim.createVariant(SAMPLE, codec.decode(line));

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.compare;
 
-import static com.hartwig.hmftools.common.variant.VariantHeader.PASS;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PASS;
 
 import java.util.Set;
 

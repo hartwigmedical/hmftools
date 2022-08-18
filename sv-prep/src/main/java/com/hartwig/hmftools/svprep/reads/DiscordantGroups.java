@@ -122,8 +122,8 @@ public final class DiscordantGroups
             final List<ReadGroup> readGroups, final GroupBoundary[] innerBoundaries, int shortFragmentLength)
     {
         boolean isShortLocalDel = innerBoundaries[SE_START].Chromosome.equals(innerBoundaries[SE_END].Chromosome)
-                && innerBoundaries[SE_START].Orientation == POS_ORIENT && innerBoundaries[SE_START].Orientation == NEG_ORIENT
-                && innerBoundaries[SE_END].Position - innerBoundaries[SE_START].Position < shortFragmentLength;
+                && innerBoundaries[SE_START].Orientation != innerBoundaries[SE_END].Orientation
+                && abs(innerBoundaries[SE_END].Position - innerBoundaries[SE_START].Position) < shortFragmentLength * 2;
 
         int minFragments = isShortLocalDel ? DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT : DISCORDANT_GROUP_MIN_FRAGMENTS;
         return readGroups.size() >= minFragments && readGroups.stream().filter(x -> x.junctionPositions() == null).count() >= minFragments;

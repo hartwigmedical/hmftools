@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sage.vcf;
 
-import static com.hartwig.hmftools.common.sage.SageMetaData.LOCAL_PHASE_SET;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PASS;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PASS;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.MIXED_SOMATIC_GERMLINE;

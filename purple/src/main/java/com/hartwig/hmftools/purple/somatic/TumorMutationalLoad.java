@@ -1,6 +1,11 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
+import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
+import static com.hartwig.hmftools.common.variant.VariantType.SNP;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
+import static com.hartwig.hmftools.purple.config.TargetRegionsData.TMB_GENE_EXCLUSIONS;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
@@ -31,12 +36,36 @@ public class TumorMutationalLoad
 
     public void processVariant(final SomaticVariant variant)
     {
-        if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(variant.chromosome(), variant.position()))
-            return;
+        final VariantImpact variantImpact = variant.variantImpact();
+
+        if(mTargetRegions.hasTargetRegions())
+        {
+            if(variant.isHotspot())
+                return;
+
+            if(variant.type() != SNP)
+                return;
+
+            if(!mTargetRegions.inTargetRegions(variant.chromosome(), variant.position()))
+                return;
+
+            if(variantImpact.WorstCodingEffect == NONE || variantImpact.WorstCodingEffect == UNDEFINED)
+                return;
+
+            if(TMB_GENE_EXCLUSIONS.contains(variantImpact.CanonicalGeneName))
+                return;
+
+            double gnomadFreq = variant.context().getAttributeAsDouble(GNOMAD_FREQ, 0);
+            if(gnomadFreq > 0)
+                return;
+
+            // - VCN <= Major Allele CN + min(20%,0.5)
+            double majorAlleleCn = variant.decorator().adjustedCopyNumber() - variant.decorator().minorAlleleCopyNumber();
+
+
+        }
 
         mBurden++;
-
-        final VariantImpact variantImpact = variant.variantImpact();
 
         if(variantImpact.WorstCodingEffect.equals(CodingEffect.MISSENSE))
             mLoad++;

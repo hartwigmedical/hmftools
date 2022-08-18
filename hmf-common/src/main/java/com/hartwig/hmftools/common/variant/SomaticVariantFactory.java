@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_GERMLINE_INFO;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -14,7 +14,6 @@ import java.util.function.Consumer;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
@@ -230,9 +229,9 @@ public class SomaticVariantFactory implements VariantContextFilter
                 .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))
                 .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false));
 
-        if(context.hasAttribute(SageMetaData.LOCAL_PHASE_SET))
+        if(context.hasAttribute(VariantVcfTags.LOCAL_PHASE_SET))
         {
-            builder.localPhaseSets(context.getAttributeAsIntList(SageMetaData.LOCAL_PHASE_SET, 0));
+            builder.localPhaseSets(context.getAttributeAsIntList(VariantVcfTags.LOCAL_PHASE_SET, 0));
         }
 
         return builder;

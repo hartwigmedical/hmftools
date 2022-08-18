@@ -2,14 +2,12 @@ package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStr;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_AF_INFO;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_MINOR_ALLELE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_CN_INFO;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_PLOIDY_INFO;
-import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
@@ -27,7 +25,6 @@ import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.pathogenic.Pathogenicity;
-import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 
@@ -178,10 +175,7 @@ public class VariantContextDecorator implements GenomePosition
         return mContext.getPhredScaledQual();
     }
 
-    public double adjustedCopyNumber()
-    {
-        return mContext.getAttributeAsDouble(PURPLE_CN_INFO, 0);
-    }
+    public double adjustedCopyNumber() { return mContext.getAttributeAsDouble(PURPLE_CN_INFO, 0); }
 
     public double adjustedVaf()
     {
@@ -190,30 +184,24 @@ public class VariantContextDecorator implements GenomePosition
 
     public boolean biallelic() { return mContext.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false); }
 
-    public double minorAlleleCopyNumber()
-    {
-        return mContext.getAttributeAsDouble(PURPLE_MINOR_ALLELE_CN_INFO, mContext.getAttributeAsDouble(PURPLE_MINOR_ALLELE_PLOIDY_INFO, 0));
-    }
+    public double minorAlleleCopyNumber() { return mContext.getAttributeAsDouble(PURPLE_MINOR_ALLELE_CN_INFO, 0); }
 
-    public double variantCopyNumber()
-    {
-        return mContext.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, mContext.getAttributeAsDouble(PURPLE_VARIANT_PLOIDY_INFO, 0));
-    }
+    public double variantCopyNumber() { return mContext.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, 0); }
 
     @Nullable
     public String localPhaseSetsToString()
     {
-        List<Integer> localPhaseSets = mContext.getAttributeAsIntList(SageMetaData.LOCAL_PHASE_SET, 0);
+        List<Integer> localPhaseSets = mContext.getAttributeAsIntList(VariantVcfTags.LOCAL_PHASE_SET, 0);
         return localPhaseSetsStr(localPhaseSets);
     }
 
     @Nullable
     public Integer localPhaseSet()
     {
-        if(!mContext.hasAttribute(SageMetaData.LOCAL_PHASE_SET))
+        if(!mContext.hasAttribute(VariantVcfTags.LOCAL_PHASE_SET))
             return null;
 
-        List<Integer> localPhaseSets = mContext.getAttributeAsIntList(SageMetaData.LOCAL_PHASE_SET, 0);
+        List<Integer> localPhaseSets = mContext.getAttributeAsIntList(VariantVcfTags.LOCAL_PHASE_SET, 0);
         return !localPhaseSets.isEmpty() ? localPhaseSets.get(0) : null;
     }
 

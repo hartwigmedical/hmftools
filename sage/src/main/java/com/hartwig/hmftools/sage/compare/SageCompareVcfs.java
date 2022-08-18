@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.compare;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.sage.SageMetaData.LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import static com.hartwig.hmftools.common.variant.VariantHeader.PASS;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PASS;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.compare.DiffType.ALLELE_DEPTH;
 import static com.hartwig.hmftools.sage.compare.DiffType.FILTER_DIFF;
@@ -35,7 +35,6 @@ import static com.hartwig.hmftools.sage.compare.DiffType.hasValueDiff;
 import static com.hartwig.hmftools.sage.compare.VariantData.comparePositions;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.purple.germline;
 
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
-import static com.hartwig.hmftools.common.variant.VariantHeader.PASS;
-import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.REPORTED_FLAG;
 
 import java.util.Set;
 
