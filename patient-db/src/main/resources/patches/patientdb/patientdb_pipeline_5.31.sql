@@ -9,3 +9,10 @@ ALTER TABLE protect
 
 ALTER TABLE protect
     ADD COLUMN treatmentApproach varchar(500) after sourceTreatmentApproach;
+
+# PatientDB anonymization
+CREATE TABLE sampleIdMapping
+(   sampleId varchar(50) NOT NULL,
+    isolationBarcode varchar(50) NOT NULL,
+    PRIMARY KEY (sampleId)
+);

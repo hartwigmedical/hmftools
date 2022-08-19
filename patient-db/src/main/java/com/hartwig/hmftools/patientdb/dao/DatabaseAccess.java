@@ -134,6 +134,8 @@ public class DatabaseAccess implements AutoCloseable {
     private final HlaTypeDAO hlaTypeDAO;
     @NotNull
     private final ProtectDAO protectDAO;
+    @NotNull
+    private final SampleIdMappingDAO sampleIdMappingDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         System.setProperty("org.jooq.no-logo", "true");
@@ -170,6 +172,7 @@ public class DatabaseAccess implements AutoCloseable {
         this.virusInterpreterDAO = new VirusInterpreterDAO(context);
         this.hlaTypeDAO = new HlaTypeDAO(context);
         this.protectDAO = new ProtectDAO(context);
+        this.sampleIdMappingDAO = new SampleIdMappingDAO(context);
     }
 
     public static void addDatabaseCmdLineArgs(@NotNull Options options) {
@@ -341,6 +344,10 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     public List<LinxBreakend> readBreakends(@NotNull String sample) {
         return structuralVariantFusionDAO.readBreakends(sample);
+    }
+
+    public void writeSampleIdMapping(@NotNull String sample, @NotNull String barcode) {
+        sampleIdMappingDAO.write(sample, barcode);
     }
 
     public void writeCanonicalTranscripts(
@@ -603,6 +610,9 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting PROTECT data for sample: {}", sample);
         protectDAO.deleteEvidenceForSample(sample);
+
+        LOGGER.info("Deleting sample id mapping data for sample: {}", sample);
+        sampleIdMappingDAO.deleteSampleIdMappingForSample(sample);
 
         LOGGER.info("All data for sample '{}' has been deleted", sample);
     }

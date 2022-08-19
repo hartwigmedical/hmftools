@@ -1328,4 +1328,11 @@ CREATE TABLE rnaFusion
     INDEX(name)
 );
 
+DROP TABLE IF EXISTS sampleIdMapping;
+CREATE TABLE sampleIdMapping
+(   sampleId varchar(50) NOT NULL,
+    isolationBarcode varchar(50) NOT NULL,
+    PRIMARY KEY (sampleId)
+);
+
 SET FOREIGN_KEY_CHECKS = 1;
