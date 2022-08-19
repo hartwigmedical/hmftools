@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.snpeff;
+package com.hartwig.hmftools.serve.extraction.snpeff;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

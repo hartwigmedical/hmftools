@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.variant.impact;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
-import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.fromSnpEffEnrichedVariant;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -62,11 +61,7 @@ public final class VariantImpactSerialiser
 
     public static VariantImpact fromVariantContext(final VariantContext context)
     {
-        if(context.hasAttribute(VAR_IMPACT))
-            return fromAttributeValues(context.getAttributeAsStringList(VAR_IMPACT, ""));
-
-        // revert to SnpEff until migration is complete
-        return fromSnpEffEnrichedVariant(context);
+        return fromAttributeValues(context.getAttributeAsStringList(VAR_IMPACT, ""));
     }
 
     public static VariantImpact fromAttributeValues(final List<String> impactValues)

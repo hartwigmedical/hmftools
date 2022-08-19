@@ -3,8 +3,8 @@ package com.hartwig.hmftools.serve.extraction.exon.tools;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
+import com.hartwig.hmftools.serve.extraction.snpeff.SnpEffAnnotation;
+import com.hartwig.hmftools.serve.extraction.snpeff.SnpEffAnnotationParser;
 import com.hartwig.hmftools.serve.extraction.codon.tools.AnnotatedCodonVCFChecker;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 

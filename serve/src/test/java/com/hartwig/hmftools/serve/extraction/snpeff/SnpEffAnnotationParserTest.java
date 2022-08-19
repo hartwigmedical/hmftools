@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.common.variant.snpeff;
+package com.hartwig.hmftools.serve.extraction.snpeff;
 
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_DONOR_CONSEQUENCE;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
-import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser.SNPEFF_IDENTIFIER;
+import static com.hartwig.hmftools.serve.extraction.snpeff.SnpEffAnnotationParser.SNPEFF_IDENTIFIER;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

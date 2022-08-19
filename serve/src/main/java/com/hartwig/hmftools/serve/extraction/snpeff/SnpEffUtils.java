@@ -1,6 +1,8 @@
-package com.hartwig.hmftools.common.variant.snpeff;
+package com.hartwig.hmftools.serve.extraction.snpeff;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
+import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
+import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.fromAttributeValues;
 
 import java.util.List;
 
@@ -57,5 +59,14 @@ public final class SnpEffUtils
         return new VariantImpact(
                 canonicalGeneName, canonicalTranscript, canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact,
                 canonicalHgvsProteinImpact, canonicalSpliceRegion, otherReportableEffects, worstCodingEffect, genesAffected);
+    }
+
+    public static VariantImpact fromVariantContext(final VariantContext context)
+    {
+        if(context.hasAttribute(VAR_IMPACT))
+            return fromAttributeValues(context.getAttributeAsStringList(VAR_IMPACT, ""));
+
+        // revert to SnpEff until migration is complete
+        return fromSnpEffEnrichedVariant(context);
     }
 }

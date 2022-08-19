@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.serve.extraction.snpeff;
 
 import java.util.List;
 import java.util.Map;
@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 

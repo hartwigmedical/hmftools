@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.codon.AminoAcids;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
+import com.hartwig.hmftools.serve.extraction.snpeff.SnpEffAnnotation;
+import com.hartwig.hmftools.serve.extraction.snpeff.SnpEffAnnotationParser;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 
 import org.apache.logging.log4j.Level;

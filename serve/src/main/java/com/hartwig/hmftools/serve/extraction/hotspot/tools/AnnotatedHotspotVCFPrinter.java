@@ -12,9 +12,9 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
+import com.hartwig.hmftools.serve.extraction.snpeff.CanonicalAnnotation;
+import com.hartwig.hmftools.serve.extraction.snpeff.SnpEffAnnotation;
+import com.hartwig.hmftools.serve.extraction.snpeff.SnpEffAnnotationParser;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 
 import org.apache.logging.log4j.LogManager;

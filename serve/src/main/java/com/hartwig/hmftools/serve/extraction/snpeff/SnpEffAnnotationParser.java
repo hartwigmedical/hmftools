@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.snpeff;
+package com.hartwig.hmftools.serve.extraction.snpeff;
 
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_DONOR_CONSEQUENCE;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.VARIANT_CONSEQ_DELIM;
