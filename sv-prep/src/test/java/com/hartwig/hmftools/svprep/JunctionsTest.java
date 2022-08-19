@@ -301,12 +301,13 @@ public class JunctionsTest
         addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 421, CHR_2, 5000); // unrelated
         addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 431, CHR_1, 5100);
 
-        List<JunctionData> junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
+        List<JunctionData> junctions = DiscordantGroups.formDiscordantJunctions(
+                REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH, BLACKLIST_LOCATIONS);
         assertEquals(0, junctions.size());
 
         addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 441, CHR_1, 5050);
 
-        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
+        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH, BLACKLIST_LOCATIONS);
         assertEquals(2, junctions.size());
         assertTrue(junctions.get(0).JunctionGroups.isEmpty());
         assertEquals(540, junctions.get(0).Position);
@@ -320,11 +321,11 @@ public class JunctionsTest
         addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 570, CHR_1, 5000);
 
         // initially none because they are assigned to existing junctions
-        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
+        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH, BLACKLIST_LOCATIONS);
         assertEquals(0, junctions.size());
 
         discordantCandidates.forEach(x -> x.clearJunctionPositions());
-        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
+        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH, BLACKLIST_LOCATIONS);
         assertEquals(2, junctions.size());
         assertEquals(5, junctions.get(0).SupportingGroups.size());
 
@@ -333,12 +334,12 @@ public class JunctionsTest
         addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 401, CHR_1, 1200);
         addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 401, CHR_1, 1200);
         addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 401, CHR_1, 1200);
-        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
+        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH, BLACKLIST_LOCATIONS);
         assertEquals(0, junctions.size());
 
         addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 401, CHR_1, 1200);
         addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 401, CHR_1, 1200);
-        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
+        junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH, BLACKLIST_LOCATIONS);
         assertEquals(2, junctions.size());
     }
 

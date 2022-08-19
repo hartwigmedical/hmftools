@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.DISCORDANT_GROUP_MAX_DISTANCE;
 import static com.hartwig.hmftools.svprep.SvConstants.DISCORDANT_GROUP_MIN_FRAGMENTS;
 import static com.hartwig.hmftools.svprep.SvConstants.DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
@@ -20,11 +21,13 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.svprep.BlacklistLocations;
+import com.hartwig.hmftools.svprep.HotspotCache;
 
 public final class DiscordantGroups
 {
     public static List<JunctionData> formDiscordantJunctions(
-            final ChrBaseRegion region, final List<ReadGroup> readGroups, int shortFragmentLength)
+            final ChrBaseRegion region, final List<ReadGroup> readGroups, int shortFragmentLength, final BlacklistLocations blacklist)
     {
         List<JunctionData> discordantJunctions = Lists.newArrayList();
         Set<String> assignedGroups = Sets.newHashSet();
@@ -39,8 +42,15 @@ public final class DiscordantGroups
                 continue;
             }
 
-            GroupBoundary[] group1Boundaries = groupBoundaries(group1);
             ReadRecord read1 = group1.reads().get(0);
+
+            if(blacklist.inBlacklistLocation(read1.MateChromosome, read1.MatePosStart, read1.MatePosStart + DEFAULT_READ_LENGTH))
+            {
+                ++i;
+                continue;
+            }
+
+            GroupBoundary[] group1Boundaries = groupBoundaries(group1);
             ReadRecord[] boundaryReads = null;
             GroupBoundary[] innerBoundaries = null;
             List<ReadGroup> closeGroups = null;
@@ -55,6 +65,12 @@ public final class DiscordantGroups
                     continue;
 
                 ReadRecord read2 = group2.reads().get(0);
+
+                if(blacklist.inBlacklistLocation(read2.MateChromosome, read2.MatePosStart, read2.MatePosStart + DEFAULT_READ_LENGTH))
+                {
+                    ++i;
+                    continue;
+                }
 
                 if(read2.orientation() != read1.orientation() || read2.mateOrientation() != read1.mateOrientation())
                 {

@@ -54,6 +54,7 @@ public class JunctionTracker
     private final ReadFilterConfig mFilterConfig;
     private final List<BaseRegion> mBlacklistRegions;
     private final List<ChrBaseRegion> mHotspotRegions;
+    private final BlacklistLocations mBlacklist;
 
     private final Map<String,ReadGroup> mReadGroupMap; // keyed by readId
     private final Set<String> mExpectedReadIds; // as indicated by another partition
@@ -76,6 +77,7 @@ public class JunctionTracker
 
         mHotspotRegions = hotspotCache.findMatchingRegions(region);
 
+        mBlacklist = blacklist;
         mBlacklistRegions = Lists.newArrayList();
 
         List<BaseRegion> chrRegions = blacklist.getRegions(mRegion.Chromosome);
@@ -295,7 +297,8 @@ public class JunctionTracker
             SV_LOGGER.debug("region({}) checking discordant groups from {} read groups", mRegion, mCandidateDiscordantGroups.size());
         }
 
-        List<JunctionData> discordantJunctions = formDiscordantJunctions(mRegion, mCandidateDiscordantGroups, mFilterConfig.fragmentLengthMax());
+        List<JunctionData> discordantJunctions = formDiscordantJunctions(
+                mRegion, mCandidateDiscordantGroups, mFilterConfig.fragmentLengthMax(), mBlacklist);
 
         if(!discordantJunctions.isEmpty())
         {
