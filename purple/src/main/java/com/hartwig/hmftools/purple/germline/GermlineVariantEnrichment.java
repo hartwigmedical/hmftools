@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.purple.somatic.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.purple.config.ReferenceData;
-import com.hartwig.hmftools.purple.somatic.SnpEffEnrichment;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -23,7 +22,6 @@ public class GermlineVariantEnrichment
 {
     private final GermlinePurityEnrichment mPurityEnrichment;
     private final SomaticRefContextEnrichment mRefGenomeEnrichment;
-    private final SnpEffEnrichment mSnpEffEnrichment;
     private final GermlineReportedEnrichment mReportableEnrichment;
     private final HotspotEnrichment mHotspotEnrichment;
     private final GermlineGenotypeEnrichment mGenotypeEnrichment;
@@ -32,23 +30,13 @@ public class GermlineVariantEnrichment
     public GermlineVariantEnrichment(
             final String purpleVersion, final String referenceSample, final String tumorSample, final ReferenceData refData,
             @Nullable final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers,
-            final Multimap<Chromosome, VariantHotspot> germlineHotspots, final Set<String> somaticReportedGenes,
-            boolean snpEffEnrichmentEnabled)
+            final Multimap<Chromosome, VariantHotspot> germlineHotspots, final Set<String> somaticReportedGenes)
     {
         final Set<String> germlineGenes = refData.DriverGenes.driverGenes().stream()
                 .filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
 
         mReportableEnrichment = new GermlineReportedEnrichment(refData.DriverGenes.driverGenes(), somaticReportedGenes);
         mRefGenomeEnrichment = new SomaticRefContextEnrichment(refData.RefGenome, null);
-
-        if(snpEffEnrichmentEnabled)
-        {
-            mSnpEffEnrichment = new SnpEffEnrichment(germlineGenes, refData.GeneTransCache, refData.OtherReportableTranscripts);
-        }
-        else
-        {
-            mSnpEffEnrichment = null;
-        }
 
         mLowVafRescueEnrichment = new GermlineRescueLowVAF(referenceSample);
 
@@ -71,9 +59,6 @@ public class GermlineVariantEnrichment
 
         GermlineLowTumorVCNFilter.processVariant(variant);
 
-        if(mSnpEffEnrichment != null)
-            mSnpEffEnrichment.processVariant(variant.context());
-
         mRefGenomeEnrichment.processVariant(variant.context());
         GermlinePathogenicEnrichment.processVariant(variant.context());
         mReportableEnrichment.processVariant(variant);
@@ -89,9 +74,6 @@ public class GermlineVariantEnrichment
         VCFHeader header = mPurityEnrichment.enrichHeader(template);
         header = mHotspotEnrichment.enrichHeader(header);
         header = mRefGenomeEnrichment.enrichHeader(header);
-
-        if(mSnpEffEnrichment != null)
-            header = mSnpEffEnrichment.enrichHeader(header);
 
         header = GermlineLowTumorVCNFilter.enrichHeader(header);
         header = mReportableEnrichment.enrichHeader(header);

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.VAR_TRANS_IMPACT_ANNOATATION;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
@@ -100,15 +99,13 @@ public class GermlineVariants
 
         VCFFileReader vcfReader = new VCFFileReader(new File(germlineVcf), false);
 
-        boolean isPaveAnnotated = vcfReader.getFileHeader().hasInfoLine(VAR_TRANS_IMPACT_ANNOATATION);
-
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
                 .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                 .build();
 
         final GermlineVariantEnrichment enrichment = new GermlineVariantEnrichment(
                 mVersion, referenceId, tumorSample, mReferenceData, purityAdjuster, copyNumbers,
-                mReferenceData.GermlineHotspots, somaticReportedGenes, !isPaveAnnotated);
+                mReferenceData.GermlineHotspots, somaticReportedGenes);
 
         VCFHeader header = enrichment.enrichHeader(vcfReader.getFileHeader());
         writer.writeHeader(header);

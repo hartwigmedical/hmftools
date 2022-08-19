@@ -22,12 +22,10 @@ public class SomaticVariantEnrichment
     private final KataegisEnrichment mKataegisEnrichment;
     private final SomaticRefContextEnrichment mSomaticRefContextEnrichment;
     private final SubclonalLikelihoodEnrichment mSubclonalLikelihoodEnrichment;
-    private final SnpEffEnrichment mSnpEffEnrichment;
     private final SomaticGenotypeEnrichment mGenotypeEnrichment;
 
     public SomaticVariantEnrichment(
-            boolean snpEffEnrichmentEnabled, final String purpleVersion,
-            final String referenceId, final String tumorSample, final ReferenceData refData,
+            final String purpleVersion, final String referenceId, final String tumorSample, final ReferenceData refData,
             final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions,
             final List<PeakModel> peakModel)
     {
@@ -40,25 +38,10 @@ public class SomaticVariantEnrichment
         mKataegisEnrichment = new KataegisEnrichment();
 
         mSomaticRefContextEnrichment = new SomaticRefContextEnrichment(refData.RefGenome, null);
-
-        if(snpEffEnrichmentEnabled)
-        {
-            final Set<String> somaticGenes = refData.DriverGenes.driverGenes().stream()
-                    .filter(DriverGene::reportSomatic).map(DriverGene::gene).collect(Collectors.toSet());
-
-            mSnpEffEnrichment = new SnpEffEnrichment(somaticGenes, refData.GeneTransCache, refData.OtherReportableTranscripts);
-        }
-        else
-        {
-            mSnpEffEnrichment = null;
-        }
     }
 
     public void enrich(final SomaticVariant variant)
     {
-        if(mSnpEffEnrichment != null)
-            mSnpEffEnrichment.processVariant(variant.context());
-
         mSomaticRefContextEnrichment.processVariant(variant.context());
 
         mKataegisEnrichment.processVariant(variant);
@@ -79,10 +62,6 @@ public class SomaticVariantEnrichment
         header = KataegisEnrichment.enrichHeader(header);
         header = SubclonalLikelihoodEnrichment.enrichHeader(header);
         header = HotspotEnrichment.enrichHeader(header);
-
-        if(mSnpEffEnrichment != null)
-            header = SnpEffEnrichment.enrichHeader(header);
-
         return mPurityEnrichment.enrichHeader(header);
     }
 
