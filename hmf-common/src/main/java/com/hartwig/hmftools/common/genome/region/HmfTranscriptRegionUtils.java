@@ -45,35 +45,6 @@ public class HmfTranscriptRegionUtils
                 .build();
     }
 
-    public static GeneData createGeneData(final HmfTranscriptRegion transcriptRegion)
-    {
-        return createGeneData(transcriptRegion, null);
-    }
-
-    public static GeneData createGeneData(final HmfTranscriptRegion transcriptRegion, final String geneNameOverride)
-    {
-        return new GeneData(
-                transcriptRegion.geneId(), geneNameOverride != null ? geneNameOverride : transcriptRegion.geneName(),
-                transcriptRegion.chromosome(), transcriptRegion.strand().asByte(),
-                transcriptRegion.geneStart(), transcriptRegion.geneEnd(), transcriptRegion.chromosomeBand());
-    }
-
-    public static TranscriptData createTranscriptData(final HmfTranscriptRegion transcriptRegion, int transId)
-    {
-        TranscriptData transData = new TranscriptData(
-                transId++, transcriptRegion.transName(), transcriptRegion.geneId(), transcriptRegion.isCanonical(),
-                transcriptRegion.strand().asByte(), (int)transcriptRegion.start(), (int)transcriptRegion.end(),
-                transcriptRegion.codingStart(), transcriptRegion.codingEnd(), "");
-
-        for(HmfExonRegion exon : transcriptRegion.exons())
-        {
-            transData.exons().add(new ExonData(
-                    transId, (int)exon.start(), (int)exon.end(), exon.exonRank(), -1, -1));
-        }
-
-        return transData;
-    }
-
     @Nullable
     public static List<GenomeRegion> codonByIndex(final HmfTranscriptRegion transcript, int index)
     {

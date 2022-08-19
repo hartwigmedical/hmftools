@@ -45,6 +45,7 @@ import com.hartwig.hmftools.common.purple.ImmutableBestFit;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.purple.purity.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleQC;
@@ -80,7 +81,6 @@ import com.hartwig.hmftools.purple.germline.GermlineDrivers;
 import com.hartwig.hmftools.purple.fitting.BestFitFactory;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
 import com.hartwig.hmftools.purple.fitting.PeakModelFile;
-import com.hartwig.hmftools.purple.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
 import com.hartwig.hmftools.purple.purity.FittedPurityFactory;
@@ -342,7 +342,8 @@ public class PurpleApplication
 
             final List<ObservedRegion> enrichedObservedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
 
-            geneCopyNumbers.addAll(GeneCopyNumberFactory.geneCopyNumbers(mReferenceData.GeneTransCache, copyNumbers));
+            geneCopyNumbers.addAll(GeneCopyNumberBuilder.createGeneCopyNumbers(
+                    mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers));
 
             PPL_LOGGER.debug("post-fit memory({}mb)", calcMemoryUsage());
 

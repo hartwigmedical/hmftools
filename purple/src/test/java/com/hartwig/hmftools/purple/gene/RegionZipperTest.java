@@ -11,10 +11,11 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 
 import org.junit.Test;
 
-public class RegionZipperTest {
-
+public class RegionZipperTest
+{
     @Test
-    public void testZipper() {
+    public void testZipper()
+    {
         @SuppressWarnings("unchecked")
         RegionZipperHandler<GenomeRegion, GenomeRegion> handler = mock(RegionZipperHandler.class);
 
@@ -30,16 +31,12 @@ public class RegionZipperTest {
 
         RegionZipper.zip(primary, secondary, handler);
 
-        verify(handler).enterChromosome("1");
         verify(handler).primary(primary.get(0));
         verify(handler).primary(primary.get(1));
         verify(handler).secondary(secondary.get(0));
-        verify(handler).enterChromosome("2");
         verify(handler).primary(primary.get(2));
         verify(handler).secondary(secondary.get(1));
-        verify(handler).enterChromosome("3");
         verify(handler).secondary(secondary.get(2));
-        verify(handler).enterChromosome("4");
         verify(handler).primary(primary.get(3));
     }
 }

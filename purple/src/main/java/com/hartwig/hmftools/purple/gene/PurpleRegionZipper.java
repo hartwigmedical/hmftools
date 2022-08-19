@@ -30,12 +30,6 @@ public class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber,
     }
 
     @Override
-    public void enterChromosome(final String chromosome)
-    {
-        // Empty
-    }
-
-    @Override
     public void primary(final PurpleCopyNumber region)
     {
         mConsolidatedRegion = region;
@@ -60,9 +54,8 @@ public class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber,
         return insertSmoothRegions(smoothRegions, fittedRegions);
     }
 
-    @NotNull
-    private static List<ObservedRegion> insertSmoothRegions(final List<PurpleCopyNumber> smoothRegions,
-            final List<ObservedRegion> fittedRegions)
+    private static List<ObservedRegion> insertSmoothRegions(
+            final List<PurpleCopyNumber> smoothRegions, final List<ObservedRegion> fittedRegions)
     {
         BiFunction<PurpleCopyNumber, ObservedRegion, ObservedRegion> transform =
                 (consolidatedRegion, copyNumber) -> transformRegion(

@@ -6,23 +6,21 @@ import java.util.StringJoiner;
 
 public enum ReadFilterType
 {
-    MIN_ALIGN_MATCH(1, 0, "Aligned base count"),
-    MIN_MAP_QUAL(2, 1, "Min map quality"),
-    INSERT_MAP_OVERLAP(4, 2,"Insert size vs aligned bases"),
-    SOFT_CLIP_LENGTH(8, 3, "Soft-clip length"),
-    SOFT_CLIP_BASE_QUAL(16, 4,  "Soft-clip insufficient high base qual"),
-    BREAK_IN_REPEAT(32, 5,  "Repeat break"),
-    POLY_G_SC(64, 6,  "Poly-G"),
-    SOFT_CLIP_LOW_BASE_QUAL(128, 6,  "Soft-clip excessive low base qual");
+    MIN_ALIGN_MATCH(1, "Aligned base count"),
+    MIN_MAP_QUAL(2, "Min map quality"),
+    INSERT_MAP_OVERLAP(4, "Insert size vs aligned bases"),
+    SOFT_CLIP_LENGTH(8, "Soft-clip length"),
+    SOFT_CLIP_BASE_QUAL(16,  "Soft-clip insufficient high base qual"),
+    BREAK_IN_REPEAT(32, "Repeat break"),
+    POLY_G_SC(64, "Poly-G"),
+    SOFT_CLIP_LOW_BASE_QUAL(128, "Soft-clip excessive low base qual");
 
     private final int mFlag;
-    private final int mIndex;
     private final String mDescription;
 
-    ReadFilterType(int flag, int index, String description)
+    ReadFilterType(int flag, String description)
     {
         mFlag = flag;
-        mIndex = index;
         mDescription = description;
     }
 
@@ -30,7 +28,7 @@ public enum ReadFilterType
     {
         return mFlag;
     }
-    public int index() { return mIndex; }
+    public int index() { return ordinal(); }
     public String description()
     {
         return mDescription;

@@ -1,20 +1,24 @@
 package com.hartwig.hmftools.purple.gene;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_2;
+
 import static org.junit.Assert.assertEquals;
 
-import java.util.Collections;
+import java.util.List;
 
-import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.genome.region.ImmutableHmfExonRegion;
-import com.hartwig.hmftools.common.genome.region.ImmutableHmfTranscriptRegion;
-import com.hartwig.hmftools.common.genome.region.Strand;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.test.GeneTestUtils;
 
-import org.jetbrains.annotations.NotNull;
-import org.junit.Before;
 import org.junit.Test;
 
 public class GeneCopyNumberBuilderTest
@@ -22,128 +26,93 @@ public class GeneCopyNumberBuilderTest
     private static final String CHROMOSOME = "1";
     private static final double EPSILON = 1E-10;
 
-    private GeneCopyNumberBuilder victim;
+    private final GeneData mGeneData = GeneTestUtils.createEnsemblGeneData(
+            GENE_ID_1, GENE_NAME_1, CHR_1, POS_STRAND,1001, 10000);
 
-    @Before
-    public void setup()
-    {
-        HmfTranscriptRegion gene = create(1001, 10000);
-        victim = new GeneCopyNumberBuilder(gene);
-    }
+    private TranscriptData mTransData = GeneTestUtils.createTransExons(
+            GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] { 1001, 3001}, 999, null, null, true, "");
+
+    private TranscriptData mTransDataSingleExon = GeneTestUtils.createTransExons(
+            GENE_ID_1, TRANS_ID_2, POS_STRAND, new int[] { 1001 }, 999, null, null, true, "");
 
     @Test
     public void testOneCopyNumberOneExon()
     {
-        addCopyNumber(1, 10000, 2);
-        addExon(1001, 2000);
-        assertCopyNumber(1, 1, 2, 2);
+        List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
+        copyNumbers.add(createCopyNumber(1, 10000, 2));
+
+        GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(mGeneData, mTransDataSingleExon, copyNumbers);
+        GeneCopyNumber geneCopyNumber = builder.create();
+        assertCopyNumber(geneCopyNumber, 1,  2, 2);
     }
 
     @Test
     public void testOneCopyNumberTwoExons()
     {
-        addCopyNumber(1, 10000, 2);
-        addExon(1001, 2000);
-        addExon(3001, 4000);
-        assertCopyNumber(1, 1, 2, 2);
+        List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
+        copyNumbers.add(createCopyNumber(1, 10000, 2));
+
+        GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(mGeneData, mTransData, copyNumbers);
+        GeneCopyNumber geneCopyNumber = builder.create();
+        assertCopyNumber(geneCopyNumber, 1, 2, 2);
     }
 
     @Test
     public void testAverageOfExonBases()
     {
-        addCopyNumber(1, 1500, 2);
-        addExon(1001, 2000);
-        addCopyNumber(1501, 10000, 3);
-        addExon(3001, 4000);
-        assertCopyNumber(2, 1, 2, 3);
+        List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
+        copyNumbers.add(createCopyNumber(1, 1500, 2));
+        copyNumbers.add(createCopyNumber(1501, 10000, 3));
+
+        GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(mGeneData, mTransData, copyNumbers);
+        GeneCopyNumber geneCopyNumber = builder.create();
+        assertCopyNumber(geneCopyNumber, 2, 2, 3);
     }
 
     @Test
     public void testCopyNumberChangeInIntron()
     {
-        addCopyNumber(1, 2500, 2);
-        addExon(1001, 2000);
-        addCopyNumber(2501, 3000, 3);
-        addCopyNumber(3001, 10000, 2);
-        addExon(3001, 4000);
-        assertCopyNumber(1, 1, 2, 2);
-    }
+        List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
+        copyNumbers.add(createCopyNumber(1, 2500, 2));
+        copyNumbers.add(createCopyNumber(2501, 3000, 3));
+        copyNumbers.add(createCopyNumber(3001, 10000, 2));
 
-    @Test
-    public void testGermlineAmplificationInExon()
-    {
-        addCopyNumber(1, 2500, 2);
-        addExon(1001, 3000);
-        addCopyNumber(2501, 3000, 3);
-        addCopyNumber(3001, 10000, 2);
-        addExon(3001, 4000);
-        assertCopyNumber(3, 2, 2, 3);
+        GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(mGeneData, mTransDataSingleExon, copyNumbers);
+        GeneCopyNumber geneCopyNumber = builder.create();
+        assertCopyNumber(geneCopyNumber, 1,  2, 2);
     }
 
     @Test
     public void testSingleNegativeRegion()
     {
-        addCopyNumber(1, 2500, -0.8);
-        addExon(1001, 2000);
-        assertCopyNumber(1, 1, -0.8, -0.8);
+        List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
+        copyNumbers.add(createCopyNumber(1, 2500, -0.8));
+
+        GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(mGeneData, mTransDataSingleExon, copyNumbers);
+        GeneCopyNumber geneCopyNumber = builder.create();
+        assertCopyNumber(geneCopyNumber, 1, -0.8, -0.8);
     }
 
     @Test
     public void testSingleZeroRegion()
     {
-        addCopyNumber(1, 2500, 0);
-        addExon(1001, 2000);
-        assertCopyNumber(1, 1, 0, 0);
+        List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
+        copyNumbers.add(createCopyNumber(1, 2500, 0));
+
+        GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(mGeneData, mTransDataSingleExon, copyNumbers);
+        GeneCopyNumber geneCopyNumber = builder.create();
+        assertCopyNumber(geneCopyNumber, 1, 0, 0);
     }
 
-    private void assertCopyNumber(int somaticCount, final int minCount, double expectedMin, double expectedMax)
+    private void assertCopyNumber(final GeneCopyNumber geneCopyNumber, int somaticCount, double expectedMin, double expectedMax)
     {
-        final GeneCopyNumber geneCopyNumber = victim.build();
         assertEquals(somaticCount, geneCopyNumber.somaticRegions());
         assertEquals(expectedMin, geneCopyNumber.minCopyNumber(), EPSILON);
         assertEquals(expectedMax, geneCopyNumber.maxCopyNumber(), EPSILON);
     }
 
-    private void addExon(int start, int end)
-    {
-        victim.secondary(exon(start, end));
-    }
-
-    private void addCopyNumber(int start, int end, double copyNumber)
-    {
-        victim.primary(createCopyNumber(start, end, copyNumber));
-    }
-
-    @NotNull
     private static PurpleCopyNumber createCopyNumber(int start, int end, double copyNumber)
     {
         return PurpleTestUtils.createCopyNumber(CHROMOSOME, start, end, copyNumber).build();
-    }
-
-    @NotNull
-    private static HmfExonRegion exon(int start, int end)
-    {
-        return ImmutableHmfExonRegion.builder().exonRank(1).chromosome(CHROMOSOME).start(start).end(end).build();
-    }
-
-    @NotNull
-    private static HmfTranscriptRegion create(int start, int end)
-    {
-        return ImmutableHmfTranscriptRegion.builder()
-                .chromosome(CHROMOSOME)
-                .start(start)
-                .end(end)
-                .geneName("GENE")
-                .transName("ID")
-                .isCanonical(true)
-                .chromosomeBand("BAND")
-                .entrezId(Collections.singletonList(1))
-                .geneId("ID")
-                .geneStart(start)
-                .geneEnd(end)
-                .codingStart(0)
-                .codingEnd(0)
-                .strand(Strand.FORWARD)
-                .build();
     }
 }
