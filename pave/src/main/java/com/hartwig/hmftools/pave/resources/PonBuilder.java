@@ -233,10 +233,8 @@ public class PonBuilder
                 ++variant.SampleCount;
                 return;
             }
-            else
-            {
-                break;
-            }
+
+            ++index;
         }
 
         VariantData newVariant = new VariantData(chromosome, position, ref, alt);
