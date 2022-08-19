@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
@@ -250,6 +251,10 @@ public class JunctionTracker
                     hasBlacklistedRead = true;
                     continue;
                 }
+                else if(readMateInBlacklist(read))
+                {
+                    hasBlacklistedRead = true;
+                }
 
                 // allow reads that match a junction to be considered for support (eg exact) for other junctions
                 if(read.readType() == CANDIDATE_SUPPORT || read.readType() == JUNCTION)
@@ -297,8 +302,7 @@ public class JunctionTracker
             SV_LOGGER.debug("region({}) checking discordant groups from {} read groups", mRegion, mCandidateDiscordantGroups.size());
         }
 
-        List<JunctionData> discordantJunctions = formDiscordantJunctions(
-                mRegion, mCandidateDiscordantGroups, mFilterConfig.fragmentLengthMax(), mBlacklist);
+        List<JunctionData> discordantJunctions = formDiscordantJunctions(mRegion, mCandidateDiscordantGroups, mFilterConfig.fragmentLengthMax());
 
         if(!discordantJunctions.isEmpty())
         {
@@ -388,6 +392,11 @@ public class JunctionTracker
     private boolean readInBlacklist(final ReadRecord read)
     {
         return mBlacklistRegions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), read.start(), read.end()));
+    }
+
+    private boolean readMateInBlacklist(final ReadRecord read)
+    {
+        return mBlacklist.inBlacklistLocation(read.MateChromosome, read.MatePosStart, read.MatePosStart + DEFAULT_READ_LENGTH);
     }
 
     private boolean positionInBlacklist(int junctionPosition)

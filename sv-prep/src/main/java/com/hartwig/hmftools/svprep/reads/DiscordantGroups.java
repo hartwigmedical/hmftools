@@ -27,7 +27,7 @@ import com.hartwig.hmftools.svprep.HotspotCache;
 public final class DiscordantGroups
 {
     public static List<JunctionData> formDiscordantJunctions(
-            final ChrBaseRegion region, final List<ReadGroup> readGroups, int shortFragmentLength, final BlacklistLocations blacklist)
+            final ChrBaseRegion region, final List<ReadGroup> readGroups, int shortFragmentLength)
     {
         List<JunctionData> discordantJunctions = Lists.newArrayList();
         Set<String> assignedGroups = Sets.newHashSet();
@@ -44,12 +44,6 @@ public final class DiscordantGroups
 
             ReadRecord read1 = group1.reads().get(0);
 
-            if(blacklist.inBlacklistLocation(read1.MateChromosome, read1.MatePosStart, read1.MatePosStart + DEFAULT_READ_LENGTH))
-            {
-                ++i;
-                continue;
-            }
-
             GroupBoundary[] group1Boundaries = groupBoundaries(group1);
             ReadRecord[] boundaryReads = null;
             GroupBoundary[] innerBoundaries = null;
@@ -65,12 +59,6 @@ public final class DiscordantGroups
                     continue;
 
                 ReadRecord read2 = group2.reads().get(0);
-
-                if(blacklist.inBlacklistLocation(read2.MateChromosome, read2.MatePosStart, read2.MatePosStart + DEFAULT_READ_LENGTH))
-                {
-                    ++i;
-                    continue;
-                }
 
                 if(read2.orientation() != read1.orientation() || read2.mateOrientation() != read1.mateOrientation())
                 {
