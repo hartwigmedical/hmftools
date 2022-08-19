@@ -24,6 +24,9 @@ public class CNADrivers
 
     private static final Set<SegmentSupport> MERE = Sets.newHashSet(SegmentSupport.CENTROMERE, SegmentSupport.TELOMERE);
 
+    private static final List<String> TARGET_REGIONS_PARTIAL_AMP_GENES = Lists.newArrayList(
+            "BRAF", "EGFR", "CTNNB1", "CBL", "MET", "ALK", "PDGFRA");
+
     private final Set<PurpleQCStatus> mQcStatus;
     private final Map<String, DriverGene> mAmplificationTargets;
     private final Map<String, DriverGene> mDeletionTargets;
@@ -45,10 +48,10 @@ public class CNADrivers
 
     public List<DriverCatalog> amplifications(final double ploidy, final List<GeneCopyNumber> geneCopyNumbers)
     {
-        return amplifications(ploidy, geneCopyNumbers, true);
+        return amplifications(ploidy, geneCopyNumbers, false);
     }
 
-    public List<DriverCatalog> amplifications(final double ploidy, final List<GeneCopyNumber> geneCopyNumbers, boolean allowPartials)
+    public List<DriverCatalog> amplifications(final double ploidy, final List<GeneCopyNumber> geneCopyNumbers, boolean isTargetRegions)
     {
         Predicate<GeneCopyNumber> targetPredicate = x -> mAmplificationTargets.containsKey(x.geneName());
         Predicate<GeneCopyNumber> qcStatusPredicate =
@@ -66,9 +69,13 @@ public class CNADrivers
                 {
                     result.add(createAmpDriver(geneCopyNumber));
                 }
-                else if(allowPartials && maxCopyNumberPredicate.test(geneCopyNumber))
+                else
                 {
-                    result.add(createPartialAmpDriver(geneCopyNumber));
+                    if(isTargetRegions && !TARGET_REGIONS_PARTIAL_AMP_GENES.contains(geneCopyNumber.geneName()))
+                        continue;
+
+                    if(maxCopyNumberPredicate.test(geneCopyNumber))
+                        result.add(createPartialAmpDriver(geneCopyNumber));
                 }
             }
         }

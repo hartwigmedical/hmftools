@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.purple.loader.PurpleData;
+
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,11 +15,21 @@ import org.jetbrains.annotations.Nullable;
 
 public final class LinxDataLoader
 {
-
     private static final Logger LOGGER = LogManager.getLogger(LinxDataLoader.class);
 
-    private LinxDataLoader()
+    private LinxDataLoader() {}
+
+    @NotNull
+    public static LinxData load(final String tumorSample, final String linxDir) throws IOException
     {
+        String svAnnotationFile = LinxSvAnnotation.generateFilename(linxDir, tumorSample, false);
+        final String breakendFile = LinxBreakend.generateFilename(linxDir, tumorSample);
+        final String fusionFile = LinxFusion.generateFilename(linxDir, tumorSample);
+        final String driversFile = LinxDriver.generateFilename(linxDir, tumorSample);
+        final String driverCatalogFile = LinxDriver.generateCatalogFilename(linxDir, tumorSample, true);
+        final String germlineSvFile = LinxGermlineSv.generateFilename(linxDir, tumorSample);
+
+        return load(svAnnotationFile, fusionFile, breakendFile, driverCatalogFile, driversFile, germlineSvFile);
     }
 
     @NotNull
