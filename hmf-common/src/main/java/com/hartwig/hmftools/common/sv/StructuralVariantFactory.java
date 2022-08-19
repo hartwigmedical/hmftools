@@ -24,7 +24,6 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.TextCigarCodec;
-import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
@@ -53,8 +52,6 @@ public class StructuralVariantFactory
     public static final String PON_COUNT = "PON_COUNT";
 
     private static final String INS_SEQ = "SVINSSEQ";
-    private static final String LEFT_INS_SEQ = "LEFT_SVINSSEQ";
-    private static final String RIGHT_INS_SEQ = "RIGHT_SVINSSEQ";
     private static final String HOM_SEQ = "HOMSEQ";
     private static final String BPI_AF = "BPI_AF";
     private static final String SOMATIC_SCORE = "SOMATICSCORE"; // only applicable for Manta and will be removed when fully on GRIDSS
@@ -143,7 +140,7 @@ public class StructuralVariantFactory
             }
             else
             {
-                mCompleteVariants.add(createFromMantaWithBPI(context));
+                // not from Gridss and not supported
             }
         }
     }
@@ -166,99 +163,6 @@ public class StructuralVariantFactory
 
     public void removeUnmatchedVariant(final String id) { mUnmatchedVariants.remove(id); }
     public boolean hasUnmatchedVariant(final String id) { return mUnmatchedVariants.containsKey(id); }
-
-    private static StructuralVariant createFromMantaWithBPI(final VariantContext context)
-    {
-        final StructuralVariantType type = type(context);
-        Preconditions.checkArgument(!BND.equals(type));
-
-        final int start = context.getStart();
-        final int end = context.getEnd();
-
-        // Don't try and use TAF
-        final List<Double> af = context.getAttributeAsDoubleList(BPI_AF, 0.0);
-
-        byte startOrientation = 0, endOrientation = 0;
-        switch(type)
-        {
-            case INV:
-                if(context.hasAttribute("INV3"))
-                {
-                    startOrientation = endOrientation = 1;
-                }
-                else if(context.hasAttribute("INV5"))
-                {
-                    startOrientation = endOrientation = -1;
-                }
-                break;
-            case DEL:
-                startOrientation = 1;
-                endOrientation = -1;
-                break;
-            case INS:
-                startOrientation = 1;
-                endOrientation = -1;
-                break;
-            case DUP:
-                startOrientation = -1;
-                endOrientation = 1;
-                break;
-        }
-
-        String insertedSequence = "";
-
-        if(type == StructuralVariantType.INS)
-        {
-            final String leftInsertSeq = context.getAttributeAsString(LEFT_INS_SEQ, "");
-            final String rightInsertSeq = context.getAttributeAsString(RIGHT_INS_SEQ, "");
-            if(!leftInsertSeq.isEmpty() && !rightInsertSeq.isEmpty())
-            {
-                insertedSequence = leftInsertSeq + "|" + rightInsertSeq;
-            }
-            else
-            {
-                List<Allele> alleles = context.getAlleles();
-                if(alleles.size() > 1)
-                {
-                    insertedSequence = alleles.get(1).toString();
-
-                    // remove the ref base from the start
-                    insertedSequence = insertedSequence.substring(1);
-                }
-            }
-        }
-        else
-        {
-            insertedSequence = context.getAttributeAsString(INS_SEQ, "");
-        }
-        final boolean isSmallDelDup =
-                (end - start) <= SMALL_DELDUP_SIZE && (type == StructuralVariantType.DEL || type == StructuralVariantType.DUP);
-        final StructuralVariantLeg startLeg = setLegCommon(ImmutableStructuralVariantLegImpl.builder(),
-                context,
-                isSmallDelDup,
-                startOrientation).chromosome(context.getContig())
-                .position(start)
-                .homology(context.getAttributeAsString(HOM_SEQ, ""))
-                .alleleFrequency(af.size() == 2 ? af.get(0) : null)
-                .build();
-
-        final StructuralVariantLeg endLeg = setLegCommon(ImmutableStructuralVariantLegImpl.builder(),
-                context,
-                isSmallDelDup,
-                endOrientation).chromosome(context.getContig())
-                .position(end)
-                .homology("")
-                .alleleFrequency(af.size() == 2 ? af.get(1) : null)
-                .build();
-
-        return setCommon(ImmutableStructuralVariantImpl.builder(), context).start(startLeg)
-                .end(endLeg)
-                .insertSequence(insertedSequence)
-                .type(type)
-                .filter(filters(context, null))
-                .startContext(context)
-                .build();
-    }
 
     @NotNull
     public static StructuralVariant create(@NotNull VariantContext first, @NotNull VariantContext second)
@@ -444,7 +348,6 @@ public class StructuralVariantFactory
         builder.startOffset(ciLeft);
         builder.endOffset(ciRight);
         int supportWidth = 0;
-        int supportCi = 0;
         if(context.hasAttribute(ANCHOR_SUPPORT_CIGAR))
         {
             Cigar cigar = TextCigarCodec.decode(context.getAttributeAsString(ANCHOR_SUPPORT_CIGAR, ""));
@@ -454,7 +357,6 @@ public class StructuralVariantFactory
                 {
                     case X:
                     case N:
-                        supportCi += ce.getLength();
                         break;
                     case D:
                     case M:
@@ -466,7 +368,6 @@ public class StructuralVariantFactory
                                 ce.getOperator().toString()));
                 }
             }
-            //assert(supportCi - 1 == ciLeft + ciRight);
         }
         if(supportWidth > 0)
         {
