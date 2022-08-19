@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.common.variant.VariantVcfTags.GNOMAD_FREQ;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_CN_DIFF;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_CN_PERC_DIFF;
@@ -44,13 +45,13 @@ public class TumorMutationalLoad
 
         if(mTargetRegions.hasTargetRegions())
         {
+            if(!mTargetRegions.inTargetRegions(variant.chromosome(), variant.position()))
+                return;
+
             if(variant.isHotspot())
                 return;
 
             if(variant.type() != SNP)
-                return;
-
-            if(!mTargetRegions.inTargetRegions(variant.chromosome(), variant.position()))
                 return;
 
             if(variantImpact.WorstCodingEffect == NONE || variantImpact.WorstCodingEffect == UNDEFINED)
@@ -68,6 +69,8 @@ public class TumorMutationalLoad
             double diffThreshold = min(TARGET_REGIONS_CN_DIFF, majorAlleleCn * TARGET_REGIONS_CN_PERC_DIFF);
             if(variant.copyNumber() > majorAlleleCn + diffThreshold)
                 return;
+
+            PPL_LOGGER.trace("var({}) for target-regions TMB", variant.toString());
         }
 
         mBurden++;

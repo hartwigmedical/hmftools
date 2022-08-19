@@ -533,7 +533,7 @@ public class PurpleApplication
 
             // partial AMPs are only allowed for WGS
             somaticDriverCatalog.addAll(cnaDrivers.amplifications(
-                    purityContext.bestFit().ploidy(), geneCopyNumbers, !mConfig.TargetRegionsMode));
+                    purityContext.bestFit().ploidy(), geneCopyNumbers, mConfig.TargetRegionsMode));
 
             DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilename(mConfig.OutputDir, tumorSample), somaticDriverCatalog);
         }
