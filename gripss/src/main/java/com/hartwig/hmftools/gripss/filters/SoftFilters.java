@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.HOM_INV_LENGTH;
@@ -41,7 +42,6 @@ import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IC;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REFPAIR;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.getGenotypeAttributeAsInt;
 
 import java.util.List;
 
@@ -277,10 +277,10 @@ public class SoftFilters
         if(sv.isSgl() || sv.isShortLocal())
             return false;
 
-        return VcfUtils.getGenotypeAttributeAsInt(breakend.RefGenotype, VT_RP, 0) == 0
-                && VcfUtils.getGenotypeAttributeAsInt(breakend.RefGenotype, VT_ASRP, 0) == 0
-                && VcfUtils.getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_RP, 0) == 0
-                && VcfUtils.getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_ASRP, 0) == 0;
+        return getGenotypeAttributeAsInt(breakend.RefGenotype, VT_RP, 0) == 0
+                && getGenotypeAttributeAsInt(breakend.RefGenotype, VT_ASRP, 0) == 0
+                && getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_RP, 0) == 0
+                && getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_ASRP, 0) == 0;
     }
 
     private boolean minLength(final SvData sv)

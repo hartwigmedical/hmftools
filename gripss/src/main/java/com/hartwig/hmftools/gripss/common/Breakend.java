@@ -3,10 +3,11 @@ package com.hartwig.hmftools.gripss.common;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsDouble;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IHOMPOS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.sglFragmentCount;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
@@ -108,11 +109,11 @@ public class Breakend
         if(mSvData.type() == SGL)
         {
             final String qualTag = IsLineInsertion ? VT_BQ : VT_BAQ;
-            Qual = VcfUtils.getGenotypeAttributeAsDouble(tumorGenotype, qualTag, 0);
+            Qual = getGenotypeAttributeAsDouble(tumorGenotype, qualTag, 0);
         }
         else
         {
-            Qual = VcfUtils.getGenotypeAttributeAsDouble(tumorGenotype, VT_QUAL, 0);
+            Qual = getGenotypeAttributeAsDouble(tumorGenotype, VT_QUAL, 0);
         }
 
         if(context.hasAttribute(VT_IHOMPOS))

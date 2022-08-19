@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LIN
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.TAF;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 
 import java.util.List;
@@ -121,17 +122,6 @@ public class VcfUtils
         return new GenotypeIds(referenceOrdinal, tumorOrdinal, vcfRefefenceId, vcfTumorId);
     }
 
-    public static int getGenotypeAttributeAsInt(final Genotype genotype, final String attribute, int defaultVaue)
-    {
-        Object value = genotype.getExtendedAttribute(attribute);
-        return value == null ? defaultVaue : Integer.parseInt(value.toString());
-    }
-
-    public static double getGenotypeAttributeAsDouble(final Genotype genotype, final String attribute, double defaultVaue)
-    {
-        Object value = genotype.getExtendedAttribute(attribute);
-        return value == null ? defaultVaue : Double.parseDouble(value.toString());
-    }
 
     public static final Interval confidenceInterval(final VariantContext variantContext, final String attribute)
     {

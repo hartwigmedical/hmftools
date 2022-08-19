@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.variant;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineCount;
@@ -47,6 +48,18 @@ public final class VariantVcfTags
     private static final String PURPLE_MINOR_ALLELE_PLOIDY_DESC = "Purity adjusted minor allele ploidy surrounding variant location";
 
     private VariantVcfTags() { }
+
+    public static int getGenotypeAttributeAsInt(final Genotype genotype, final String attribute, int defaultVaue)
+    {
+        Object value = genotype.getExtendedAttribute(attribute);
+        return value == null ? defaultVaue : Integer.parseInt(value.toString());
+    }
+
+    public static double getGenotypeAttributeAsDouble(final Genotype genotype, final String attribute, double defaultVaue)
+    {
+        Object value = genotype.getExtendedAttribute(attribute);
+        return value == null ? defaultVaue : Double.parseDouble(value.toString());
+    }
 
     @NotNull
     public static VCFHeader addSageMetaData(@NotNull final VCFHeader header)

@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.gripss.filters;
 
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsDouble;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
@@ -54,11 +56,11 @@ public class HardFilters
             boolean isLineInsertion = isMobileLineElement(altInsertCoords.Orientation, altInsertCoords.InsertSequence);
 
             final String qualTag = isLineInsertion ? VT_BQ : VT_BAQ;
-            qual = VcfUtils.getGenotypeAttributeAsDouble(tumorGenotype, qualTag, 0);
+            qual = getGenotypeAttributeAsDouble(tumorGenotype, qualTag, 0);
         }
         else
         {
-            qual = VcfUtils.getGenotypeAttributeAsDouble(tumorGenotype, VT_QUAL, 0);
+            qual = getGenotypeAttributeAsDouble(tumorGenotype, VT_QUAL, 0);
         }
 
         return qual < mFilterConstants.MinTumorQual;
@@ -82,8 +84,8 @@ public class HardFilters
         }
         else
         {
-            refFrags = VcfUtils.getGenotypeAttributeAsInt(refGenotype, VT_VF, 0);
-            tumorFrags = VcfUtils.getGenotypeAttributeAsInt(tumorGenotype, VT_VF, 0);
+            refFrags = getGenotypeAttributeAsInt(refGenotype, VT_VF, 0);
+            tumorFrags = getGenotypeAttributeAsInt(tumorGenotype, VT_VF, 0);
         }
 
         if(refFrags > mFilterConstants.HardMaxNormalRelativeSupport * tumorFrags)

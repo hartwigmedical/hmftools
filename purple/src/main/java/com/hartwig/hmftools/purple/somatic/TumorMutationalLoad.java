@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
@@ -70,7 +71,8 @@ public class TumorMutationalLoad
             if(variant.copyNumber() > majorAlleleCn + diffThreshold)
                 return;
 
-            PPL_LOGGER.trace("var({}) for target-regions TMB", variant.toString());
+            PPL_LOGGER.debug("var({}) copyNumber({}) for target-regions TMB",
+                    variant.toString(), format("vcn=%.2f majorCn=%.2f", variant.copyNumber(), majorAlleleCn));
         }
 
         mBurden++;

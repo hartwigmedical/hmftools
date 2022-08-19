@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READPAIR_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READ_COVERAGE;
@@ -15,10 +16,9 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
-import static com.hartwig.hmftools.svprep.depth.DepthAnnotator.VCF_TAG_REFPAIR_GRIDSS;
-import static com.hartwig.hmftools.svprep.depth.DepthAnnotator.VCF_TAG_REF_GRIDSS;
 import static com.hartwig.hmftools.svprep.depth.DepthConfig.MAX_GAP;
 
 import java.io.File;
@@ -31,8 +31,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-
-import org.apache.logging.log4j.Level;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -176,8 +174,10 @@ public class DepthTask implements Callable
             RefSupportCounts totalCounts = sampleTotalCounts.get(j);
             VariantContext variant = variants.get(j);
 
-            setRefDepthValue(variant, totalCounts.RefSupport, REFERENCE_BREAKEND_READ_COVERAGE, VCF_TAG_REF_GRIDSS);
-            setRefDepthValue(variant, totalCounts.RefPairSupport, REFERENCE_BREAKEND_READPAIR_COVERAGE, VCF_TAG_REFPAIR_GRIDSS);
+            setRefDepthValue(variant, totalCounts.RefSupport, REFERENCE_BREAKEND_READ_COVERAGE);
+            setRefDepthValue(variant, totalCounts.RefPairSupport, REFERENCE_BREAKEND_READPAIR_COVERAGE);
+            // variant.getCommonInfo().putAttribute(REFERENCE_BREAKEND_READ_COVERAGE, totalCounts.RefSupport);
+            // variant.getCommonInfo().putAttribute(REFERENCE_BREAKEND_READPAIR_COVERAGE, totalCounts.RefPairSupport);
         }
 
         mPerfCounter.stop();
@@ -216,68 +216,27 @@ public class DepthTask implements Callable
         int vcfSampleIndex = mSampleVcfGenotypeIds.get(sampleId);
         Genotype genotype = variant.getGenotype(vcfSampleIndex);
 
-        if(mConfig.LogDiffs || SV_LOGGER.isTraceEnabled())
-        {
-            int vcfRef = getGenotypeAttributeAsInt(genotype, REFERENCE_BREAKEND_READ_COVERAGE, 0);
-            int vcfRefPair = getGenotypeAttributeAsInt(genotype, REFERENCE_BREAKEND_READPAIR_COVERAGE, 0);
-
-            boolean hasDiffs = hasDiff(vcfRef, sampleCounts.RefSupport) || hasDiff(vcfRefPair, sampleCounts.RefPairSupport);
-
-            Level level = hasDiffs ? Level.DEBUG : Level.TRACE;
-
-            SV_LOGGER.log(level, "sample({}) var({}:{}) {} REF(vcf={} calc={}) REFPAIR(vcf={} calc={})",
-                    sampleId, variant.getContig(), variantPosition, hasDiffs ? "has diffs" : "equal",
-                    vcfRef, sampleCounts.RefSupport, vcfRefPair, sampleCounts.RefPairSupport);
-        }
-
         totalCounts.RefSupport += sampleCounts.RefSupport;
         totalCounts.RefPairSupport += sampleCounts.RefPairSupport;
 
-        setRefDepthValue(genotype, sampleCounts.RefSupport, REFERENCE_BREAKEND_READ_COVERAGE, VCF_TAG_REF_GRIDSS);
-        setRefDepthValue(genotype, sampleCounts.RefPairSupport, REFERENCE_BREAKEND_READPAIR_COVERAGE, VCF_TAG_REFPAIR_GRIDSS);
+        genotype.getExtendedAttributes().put(REFERENCE_BREAKEND_READ_COVERAGE, sampleCounts.RefSupport);
+        genotype.getExtendedAttributes().put(REFERENCE_BREAKEND_READPAIR_COVERAGE, sampleCounts.RefPairSupport);
+
+        int variantFrags = getGenotypeAttributeAsInt(genotype, VARIANT_FRAGMENT_BREAKPOINT_COVERAGE, 0) +
+                getGenotypeAttributeAsInt(genotype, VARIANT_FRAGMENT_BREAKEND_COVERAGE, 0);
+
+        double total = variantFrags + sampleCounts.RefSupport + sampleCounts.RefPairSupport;
+        double af = variantFrags / total;
+
+        genotype.getExtendedAttributes().put(ALLELE_FRACTION, af);
     }
 
-    private void setRefDepthValue(final Genotype genotype, int refCount, final String vcfTag, final String oldValueTag)
-    {
-        if(genotype.hasExtendedAttribute(vcfTag))
-        {
-            int oldValue = getGenotypeAttributeAsInt(genotype, vcfTag, 0);
-
-            if(mConfig.WriteGridssRefValues)
-                genotype.getExtendedAttributes().put(oldValueTag, oldValue);
-        }
-
-        genotype.getExtendedAttributes().put(vcfTag, refCount);
-    }
-
-    private void setRefDepthValue(final VariantContext variant, int refCount, final String vcfTag, final String oldValueTag)
+    private void setRefDepthValue(final VariantContext variant, int refCount, final String vcfTag)
     {
         if(variant.hasAttribute(vcfTag))
-        {
-            int oldValue = variant.getAttributeAsInt(vcfTag, 0);
             variant.getCommonInfo().removeAttribute(vcfTag);
 
-            if(mConfig.WriteGridssRefValues)
-                variant.getCommonInfo().putAttribute(oldValueTag, oldValue);
-        }
-
         variant.getCommonInfo().putAttribute(vcfTag, refCount);
-    }
-
-    private static final int ABS_DIFF_MAX = 3;
-    private static final double ABS_DIFF_PERC = 0.1;
-
-    private boolean hasDiff(int value1, int value2)
-    {
-        int diff = abs(value1 - value2);
-        double diffPerc = diff / (double)max(value1, value2);
-        return diffPerc > ABS_DIFF_PERC && diff > ABS_DIFF_MAX;
-    }
-
-    private static int getGenotypeAttributeAsInt(final Genotype genotype, final String attribute, int defaultVaue)
-    {
-        Object value = genotype.getExtendedAttribute(attribute);
-        return value == null ? defaultVaue : Integer.parseInt(value.toString());
     }
 
     private byte getOrientation(final VariantContext variant)

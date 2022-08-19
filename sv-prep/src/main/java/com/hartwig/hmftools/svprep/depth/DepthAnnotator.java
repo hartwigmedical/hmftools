@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svprep.depth;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION_DESC;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -163,33 +165,20 @@ public class DepthAnnotator
         perfCounter.logStats();
     }
 
-    public static final String VCF_TAG_REF_GRIDSS = "REF_GRIDSS";
-    public static final String VCF_TAG_REFPAIR_GRIDSS = "REFPAIR_GRIDSS";
-
     private void writeVcf(final VCFHeader header, final List<DepthTask> depthTasks)
     {
         SV_LOGGER.info("writing VCF: {}", mConfig.OutputVcf);
-
-        // VCFHeader newHeader = new VCFHeader(header);
-        // newHeader.addMetaDataLine(new VCFHeaderLine("PaveVersion", paveVersion));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(
-                VCF_TAG_REF_GRIDSS, 1, VCFHeaderLineType.Integer, "GRIDSS REF value"));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(
-                VCF_TAG_REFPAIR_GRIDSS, 1, VCFHeaderLineType.Integer, "GRIDSS REFPAIR value"));
-
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                VCF_TAG_REF_GRIDSS, 1, VCFHeaderLineType.Integer, "GRIDSS REF value"));
-
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                VCF_TAG_REFPAIR_GRIDSS, 1, VCFHeaderLineType.Integer, "GRIDSS REFPAIR value"));
 
         VariantContextWriter writer = new VariantContextWriterBuilder()
                 .setReferenceDictionary(header.getSequenceDictionary())
                 .setOutputFile(mConfig.OutputVcf)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                 .build();
+
+        if(!header.hasFormatLine(ALLELE_FRACTION))
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(ALLELE_FRACTION, 1, VCFHeaderLineType.Float, ALLELE_FRACTION_DESC));
+        }
 
         writer.writeHeader(header);
 
