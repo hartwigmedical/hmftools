@@ -8,8 +8,6 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
-import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.SNPEFF_CANONICAL;
-import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.SNPEFF_WORST;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_ARTEFACTS_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILTERS;
@@ -183,13 +181,6 @@ public class PaveApplication
             if(!variantContext.getFilters().isEmpty() && !variantContext.getFilters().contains(PASS_FILTER))
                 return;
         }
-
-        // remove once SnpEff fully gone from HMF Tools
-        if(variantContext.hasAttribute(SNPEFF_CANONICAL))
-            variantContext.getCommonInfo().removeAttribute(SNPEFF_CANONICAL);
-
-        if(variantContext.hasAttribute(SNPEFF_WORST))
-            variantContext.getCommonInfo().removeAttribute(SNPEFF_WORST);
 
         try
         {

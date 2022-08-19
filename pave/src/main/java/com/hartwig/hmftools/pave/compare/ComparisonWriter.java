@@ -69,8 +69,8 @@ public class ComparisonWriter
             writer.write(VariantData.csvHeader());
             writer.write(",GeneName,IsDriver,CanonEffects,CanonCodingEffect,HgvsCoding,HgvsProtein");
             writer.write(",WorstCodingEffect,Reported,GenesAffected");
-            writer.write(",SnpEffGeneName,SnpEffCanonEffects,SnpEffCanonCodingEffect");
-            writer.write(",SnpEffWorstCodingEffect,SnpEffHgvsCoding,SnpEffHgvsProtein,SnpEffReported");
+            writer.write(",OrigGeneName,OrigCanonEffects,OrigCanonCodingEffect");
+            writer.write(",OrigWorstCodingEffect,OrigHgvsCoding,OrigHgvsProtein,OrigReported");
             writer.newLine();
 
             return writer;
@@ -127,7 +127,7 @@ public class ComparisonWriter
                     VariantData.csvHeader(), VariantTransImpact.csvHeader(), CodingContext.csvHeader(), ProteinContext.csvHeader()));
 
             writer.write(",RealignHgvsCoding,RealignHgvsProtein");
-            writer.write(",SnpEffCanonEffects,SnpEffHgvsCoding,SnpEffHgvsProtein");
+            writer.write(",OrigCanonEffects,OrigHgvsCoding,OrigHgvsProtein");
 
             writer.newLine();
 
@@ -149,10 +149,7 @@ public class ComparisonWriter
 
         if(!variant.getImpacts().containsKey(geneName))
         {
-            // check for a name-mapping
-            geneName = mGeneDataCache.getGeneNameFromSnpEff(refVariant.Gene);
-
-            if(!variant.getImpacts().containsKey(geneName))
+            if(!variant.getImpacts().containsKey(refVariant.Gene))
                 return;
         }
 

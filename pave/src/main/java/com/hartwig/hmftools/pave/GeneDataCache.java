@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.pave.PaveConstants.GENE_UPSTREAM_DISTANCE;
 import static com.hartwig.hmftools.pave.PaveUtils.withinTransRange;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,7 +19,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.GeneMappingData;
 import com.hartwig.hmftools.common.ensemblcache.GeneNameMapping;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -34,8 +32,6 @@ public class GeneDataCache
     private final List<DriverGene> mDriverGenes;
     private final Set<String> mDriverGeneNames;
     private final Map<String,List<String>> mOtherReportableTranscripts;
-
-    private final GeneNameMapping mGeneNameMapping; // only relevant when converting from or checking SnpEff names
 
     private final boolean mUseIndexing;
     private String mCurrentChromosome;
@@ -61,8 +57,6 @@ public class GeneDataCache
         mCurrentPosStrandGeneIndex = 0;
         mCurrentNegStrandGeneIndex = 0;
         mCurrentGenes = Lists.newArrayList();
-
-        mGeneNameMapping = requireMapping ? new GeneNameMapping() : null;
     }
 
     public EnsemblDataCache getEnsemblCache() { return mEnsemblDataCache; }
@@ -268,33 +262,5 @@ public class GeneDataCache
             geneRangeEnd += GENE_UPSTREAM_DISTANCE;
 
         return positionsOverlap(startPosition, endPosition, geneRangeStart, geneRangeEnd);
-    }
-
-    public GeneData findSnpEffGeneData(final String geneId, final String geneName)
-    {
-        if(geneId.isEmpty())
-            return null;
-
-        GeneData geneData = mEnsemblDataCache.getGeneDataById(geneId);
-
-        if(geneData != null)
-            return geneData;
-
-        GeneMappingData mappingData = mGeneNameMapping.getMappingDataByOld(geneName);
-
-        if(mappingData == null)
-            return null;
-
-        return mEnsemblDataCache.getGeneDataById(mappingData.GeneId);
-    }
-
-    public String getSnpEffGeneName(final String geneName)
-    {
-        return mGeneNameMapping.isUnchanged(geneName) ? geneName : mGeneNameMapping.getOldName(geneName);
-    }
-
-    public String getGeneNameFromSnpEff(final String snpEffGeneName)
-    {
-        return mGeneNameMapping.getNewName(snpEffGeneName);
     }
 }
