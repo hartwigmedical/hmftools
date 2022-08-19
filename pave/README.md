@@ -211,7 +211,7 @@ The filters can be set per variant tier in the form: 'TIER;SAMPLE_COUNT_LIMIT;MA
 will mark any variant of tier = HOTSPOT as PON if it matches an entry with 5+ SamplesCount and 5+ MaxSampleReads, 2+ and 5+ for a PANEL tier variant, and 2+ for any other tier variant.
 
 ### GNOMAD Population Frequency
-We annotate the population frequency using gnomAD (v3.1.2 for hg38, v2.1.1 for GRCH37). We filter the Gnomad file for variants with at least 0.00005 frequency and and we annotate with a resolution of 0.0001. The VCF tag 'GND_FREQ' will report the frequency.
+We annotate the population frequency using gnomAD v3.1.2 for hg38 (merged with gnomAD v2.1.1 liftover for exome regions only) and v2.1.1 for GRCH37. We filter the Gnomad file for variants with at least 0.00005 frequency and and we annotate with a resolution of 0.0001. The VCF tag 'GND_FREQ' will report the frequency.
 
 ### PON settings used in the HMF pipeline
 
