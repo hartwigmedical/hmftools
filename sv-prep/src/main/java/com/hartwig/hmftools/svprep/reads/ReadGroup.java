@@ -62,7 +62,7 @@ public class ReadGroup
         mJunctionPositions.add(position);
     }
 
-    public void clearJunctionPositions() { mJunctionPositions = null; }
+    public void clearJunctionPositions() { mJunctionPositions.clear(); }
 
     public ReadGroupStatus groupStatus() { return mStatus; }
 

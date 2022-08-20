@@ -80,10 +80,8 @@ public class SpanningReadCache
     public synchronized Set<String> getExpectedReadIds(final ChrBaseRegion partitionRegion)
     {
         String chrPartition = chrPartition(partitionRegion.Chromosome, partitionRegion.start());
-
         Set<String> expectedReadIds = mJunctionPartitionReadIds.get(chrPartition);
-
-        return expectedReadIds != null ? expectedReadIds : Sets.newHashSet();
+        return expectedReadIds != null ? Sets.newHashSet(expectedReadIds) : Sets.newHashSet();
     }
 
     public synchronized void processSpanningReadGroups(final ChrBaseRegion partitionRegion, final Map<String,ReadGroup> spanningGroups)

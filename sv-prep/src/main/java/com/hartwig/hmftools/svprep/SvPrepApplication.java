@@ -77,7 +77,10 @@ public class SvPrepApplication
         }
 
         if(mConfig.UseCacheBam)
+        {
+            mSpanningReadCache.reset(); // clear data before candidate assignment
             mSpanningReadCache.candidateBamWriter().assignCandidateReads(mWriter);
+        }
 
         mWriter.close();
 

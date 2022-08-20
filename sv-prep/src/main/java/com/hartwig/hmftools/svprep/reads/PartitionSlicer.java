@@ -7,9 +7,9 @@ import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_THRESHOLD;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -25,7 +25,6 @@ import com.hartwig.hmftools.svprep.WriteType;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class PartitionSlicer
 {
@@ -114,7 +113,8 @@ public class PartitionSlicer
 
         mPerCounters[PC_JUNCTIONS].start();
 
-        mJunctionTracker.setExpectedReads(mSpanningReadCache.getExpectedReadIds(mRegion));
+        Set<String> expectedJunctionReadIds = mSpanningReadCache.getExpectedReadIds(mRegion);
+        mJunctionTracker.setExpectedReads(expectedJunctionReadIds);
 
         mJunctionTracker.assignFragments();
 
