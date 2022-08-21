@@ -90,7 +90,11 @@ public class SvPrepApplication
         if(combinedStats.ReadStats.TotalReads > 10000 || timeTakenMs > 10000)
         {
             SV_LOGGER.info("final stats: {}", combinedStats.ReadStats.toString());
-            combinedStats.PerfCounters.forEach(x -> x.logStats());
+
+            if(mConfig.PerfDebug)
+                combinedStats.PerfCounters.forEach(x -> x.logIntervalStats());
+            else
+                combinedStats.PerfCounters.forEach(x -> x.logStats());
         }
 
         SV_LOGGER.info("SvPrep complete, mins({})", format("%.3f", timeTakeMins));

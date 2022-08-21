@@ -95,7 +95,10 @@ public class ChromosomeTask implements AutoCloseable
 
         if(mCombinedStats.ReadStats.TotalReads > 10000)
         {
-            mCombinedStats.PerfCounters.forEach(x -> x.logStats());
+            if(mConfig.PerfDebug)
+                mCombinedStats.PerfCounters.forEach(x -> x.logIntervalStats(5));
+            else
+                mCombinedStats.PerfCounters.forEach(x -> x.logStats());
         }
     }
 

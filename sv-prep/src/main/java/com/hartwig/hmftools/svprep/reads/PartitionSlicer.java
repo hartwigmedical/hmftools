@@ -103,15 +103,15 @@ public class PartitionSlicer
     {
         SV_LOGGER.debug("processing region({})", mRegion);
 
-        mPerCounters[PC_TOTAL].start();
+        perfCounterStart(PC_TOTAL);
 
-        mPerCounters[PC_SLICE].start();
+        perfCounterStart(PC_SLICE);
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
 
         mPerCounters[PC_SLICE].stop();
 
-        mPerCounters[PC_JUNCTIONS].start();
+        perfCounterStart(PC_JUNCTIONS);
 
         Set<String> expectedJunctionReadIds = mSpanningReadCache.getExpectedReadIds(mRegion);
         mJunctionTracker.setExpectedReads(expectedJunctionReadIds);
@@ -279,6 +279,14 @@ public class PartitionSlicer
             else
                 ++mStats.LocalIncompleteGroups;
         }
+    }
+
+    private void perfCounterStart(int pcIndex)
+    {
+        if(mConfig.PerfDebug)
+            mPerCounters[pcIndex].start(mRegion.toString());
+        else
+            mPerCounters[pcIndex].start();
     }
 
     private boolean checkReadRateLimits(int positionStart)

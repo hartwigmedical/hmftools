@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_Y_FRAGMENT_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_WILDCARD_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.LilacConstants.getNucleotideExonBoundaries;
@@ -25,7 +23,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -39,8 +36,6 @@ public class FragmentAlleleMapper
 
     private final Map<HlaAllele,List<Fragment>> mStopLossAlleleFragments;
 
-    private final PerformanceCounter mPerfCounterFrag;
-
     public FragmentAlleleMapper(
             final Map<String, Map<Integer,Set<String>>> geneAminoAcidHetLociMap,
             final Map<String,List<Integer>> refNucleotideHetLoci, final List<Set<String>> refNucleotides)
@@ -51,8 +46,6 @@ public class FragmentAlleleMapper
         mRefNucleotides = refNucleotides;
 
         mStopLossAlleleFragments = Maps.newHashMap();
-
-        mPerfCounterFrag = new PerformanceCounter("Frags");
     }
 
     public void setHetAminoAcidLoci(final Map<String, Map<Integer,Set<String>>> geneAminoAcidHetLociMap)
@@ -66,11 +59,6 @@ public class FragmentAlleleMapper
         mStopLossAlleleFragments.putAll(knownStopLossFragments);
     }
 
-    public void logPerfData()
-    {
-        mPerfCounterFrag.logStats();
-    }
-
     public List<FragmentAlleles> createFragmentAlleles(
             final List<Fragment> refCoverageFragments, final List<HlaSequenceLoci> candidateAminoAcidSequences,
             final List<HlaSequenceLoci> candidateNucleotideSequences)
@@ -80,8 +68,6 @@ public class FragmentAlleleMapper
                 mRefNucleotideHetLoci.size(), candidateNucleotideSequences.size(), mRefNucleotides.size(),
                 mStopLossAlleleFragments.values().stream().mapToInt(x -> x.size()).sum());
 
-        mPerfCounterFrag.reset();
-
         List<FragmentAlleles> results = Lists.newArrayList();
 
         for(Fragment fragment : refCoverageFragments)
@@ -89,14 +75,10 @@ public class FragmentAlleleMapper
             if(fragment.scope() == HLA_Y) // ignore if previously established
                 continue;
 
-            mPerfCounterFrag.start();
-
             FragmentAlleles fragAllele = checkStopLossAlleleFragments(fragment);
 
             if(fragAllele == null)
                 fragAllele = mapFragmentToAlleles(fragment, candidateAminoAcidSequences, candidateNucleotideSequences);
-
-            mPerfCounterFrag.stop();
 
             // drop wild-only alleles since their support can't be clearly established
             if(!fragAllele.getFull().isEmpty())

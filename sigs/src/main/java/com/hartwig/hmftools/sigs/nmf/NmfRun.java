@@ -153,7 +153,7 @@ public class NmfRun {
         sigReporter.runAnalysis();
 
         mPerfCounter.logStats();
-        runPC.logStats(false); // mConfig.LogVerbose
+        runPC.logStats();
 
         return mValid;
     }

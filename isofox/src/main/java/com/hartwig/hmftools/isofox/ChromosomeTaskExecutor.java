@@ -22,12 +22,9 @@ import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.getChromosomeLength;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.HIGH_LOG_COUNT;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
@@ -50,9 +47,7 @@ import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
 import com.hartwig.hmftools.isofox.fusion.ChromosomeFusions;
-import com.hartwig.hmftools.isofox.fusion.FusionFinder;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
-import com.hartwig.hmftools.isofox.fusion.FusionReadGroup;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
