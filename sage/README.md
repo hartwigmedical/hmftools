@@ -574,6 +574,7 @@ Variant calling Improvements
 - **BQR at long palindromicsequences** - some library preparations frequently have errors in palindromic regions.  Adjusting for this would reduce FP.
 - **Germline filtering for very long core regions** - If the core is very long we may have insufficient coverage in the germline to filter.
 - **Low VAF FP in high depth regions for samples with high C>A DNA damage** - Some samples may have severe degradation of C>A in certain mutation contexts sometimes affecting greater than 1% of all fragments.  Whilst we do adjust against this with BQR, for very high depth regions we may still call FP mutations with very low VAF
+- **Low MAPQ** - Sage penalises low MAPQ reads harshly.   No truth set is available in these regions, so it is unclear whether this behaviour is the correct decision.
 
 Phasing improvements
 - **Only first tumor sample is currently phased** - Reference and additional tumor samples are not utilised for phasing
