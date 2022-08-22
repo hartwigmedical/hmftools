@@ -32,6 +32,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.rose.RoseData;
 import com.hartwig.hmftools.rose.actionability.ActionabilityEntry;
 import com.hartwig.hmftools.rose.actionability.ActionabilityKey;
@@ -78,7 +79,14 @@ public class ConclusionAlgo {
         genertateTumorLocationConclusion(conclusion, roseData.patientPrimaryTumors(), roseData.patientId());
         generatePurityConclusion(conclusion, roseData.purple().purity(), roseData.purple().hasReliablePurity(), actionabilityMap);
         generateCUPPAConclusion(conclusion, roseData.molecularTissueOrigin(), actionabilityMap);
-        generateVariantConclusion(conclusion, reportableVariants, actionabilityMap, driverGenesMap, oncogenic, actionable, HRD);
+        generateVariantConclusion(conclusion,
+                reportableVariants,
+                actionabilityMap,
+                driverGenesMap,
+                oncogenic,
+                actionable,
+                HRD,
+                roseData.chord());
         generateCNVConclusion(conclusion, reportableGainLosses, actionabilityMap, oncogenic, actionable);
         generateFusionConclusion(conclusion, reportableFusions, actionabilityMap, oncogenic, actionable);
         generateHomozygousDisruptionConclusion(conclusion, homozygousDisruptions, actionabilityMap, oncogenic, actionable);
@@ -180,13 +188,16 @@ public class ConclusionAlgo {
 
     public static void generateVariantConclusion(@NotNull List<String> conclusion, @NotNull List<ReportableVariant> reportableVariants,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Map<String, DriverGene> driverGenesMap,
-            @NotNull Set<String> oncogenic, @NotNull Set<String> actionable, @NotNull Set<String> HRD) {
+            @NotNull Set<String> oncogenic, @NotNull Set<String> actionable, @NotNull Set<String> HRD, @NotNull ChordData chordAnalysis) {
 
         for (ReportableVariant reportableVariant : reportableVariants) {
+            boolean HRDgene = false;
+
             String variant = EventGenerator.variantEvent(reportableVariant);
 
             if (HRD_GENES.contains(reportableVariant.gene())) {
                 HRD.add(reportableVariant.gene());
+                HRDgene = true;
             }
             oncogenic.add(reportableVariant.source() == ReportableVariantSource.SOMATIC ? "somaticVariant" : "germlineVariant");
             ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder()
@@ -216,6 +227,10 @@ public class ConclusionAlgo {
                     } else {
                         conclusion.add("- " + reportableVariant.gene() + " (" + variant + ") " + entry.conclusion());
                     }
+                } else if (HRDgene && chordAnalysis.hrStatus() == ChordStatus.HR_DEFICIENT) {
+                    conclusion.add("- " + reportableVariant.gene() + " (" + variant + ") " + entry.conclusion());
+                    actionable.add(
+                            reportableVariant.source() == ReportableVariantSource.SOMATIC ? "somaticVariant" : "germlineVariant");
                 }
             }
         }
@@ -272,7 +287,7 @@ public class ConclusionAlgo {
                         .build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
-                    conclusion.add("- " + fusion.name() + " " + entry.conclusion());
+                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " " + entry.conclusion());
                     actionable.add("fusion");
                 }
             } else if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString())) {
@@ -280,7 +295,7 @@ public class ConclusionAlgo {
                         ImmutableActionabilityKey.builder().match(fusion.geneStart()).type(TypeAlteration.INTERNAL_DELETION).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
-                    conclusion.add("- " + fusion.name() + " " + entry.conclusion());
+                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " " + entry.conclusion());
                     actionable.add("fusion");
                 }
             } else if (FUSION_TYPES.contains(fusion.reportedType())) {
@@ -293,10 +308,10 @@ public class ConclusionAlgo {
                 ActionabilityEntry entryEnd = actionabilityMap.get(keyFusionEnd);
 
                 if (entryStart != null && entryStart.condition() == Condition.ALWAYS) {
-                    conclusion.add("- " + fusion.name() + " " + entryStart.conclusion());
+                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " " + entryStart.conclusion());
                     actionable.add("fusion");
                 } else if (entryEnd != null && entryEnd.condition() == Condition.ALWAYS) {
-                    conclusion.add("- " + fusion.name() + " " + entryEnd.conclusion());
+                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " " + entryEnd.conclusion());
                     actionable.add("fusion");
                 }
             }
@@ -335,6 +350,11 @@ public class ConclusionAlgo {
             if (entry != null && entry.condition() == Condition.ALWAYS) {
                 conclusion.add("- " + annotatedVirus.interpretation() + " " + entry.conclusion());
                 actionable.add("virus");
+            } else if (entry == null) {
+                if (annotatedVirus.interpretation() != null && (annotatedVirus.virusDriverLikelihoodType() == VirusLikelihoodType.LOW
+                        || annotatedVirus.virusDriverLikelihoodType() == VirusLikelihoodType.HIGH)) {
+                    conclusion.add("- " + annotatedVirus.interpretation() + " positive");
+                }
             }
         }
     }
