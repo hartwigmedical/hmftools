@@ -2,6 +2,9 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.svprep.reads.ReadRecord.getSoftClippedBases;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,7 +17,6 @@ public class JunctionData
     public final int Position;
     public final byte Orientation;
 
-    public final ReadRecord InitialRead;
     public final List<ReadGroup> JunctionGroups; // with a read matching the junction
     public final List<ReadGroup> SupportingGroups;
     public final List<ReadGroup> ExactSupportGroups;
@@ -22,6 +24,7 @@ public class JunctionData
 
     public final Map<ReadType,List<ReadRecord>> ReadTypeReads;
 
+    private ReadRecord mTopJunctionRead;
     private boolean mInternalIndel;
     private boolean mDiscordantGroup;
     private boolean mHotspot;
@@ -42,7 +45,7 @@ public class JunctionData
         ReadTypeReads.put(ReadType.SUPPORT, Lists.newArrayList());
         ReadTypeReads.put(ReadType.EXACT_SUPPORT, Lists.newArrayList());
 
-        InitialRead = read;
+        mTopJunctionRead = read; // initially set to the first
 
         mHotspot = false;
         mInternalIndel = false;
@@ -50,7 +53,9 @@ public class JunctionData
         mDepth = 0;
     }
 
-    public boolean isExisting() { return InitialRead == null; }
+    public boolean isExisting() { return mTopJunctionRead == null; }
+
+    public ReadRecord topJunctionRead() { return mTopJunctionRead; }
 
     public int junctionFragmentCount() { return JunctionGroups.size(); }
     public int supportingFragmentCount() { return SupportingGroups.size(); }
@@ -75,6 +80,53 @@ public class JunctionData
         {
             ReadTypeReads.get(type).add(read);
         }
+    }
+
+    public void setInitialRead(int minSoftClipHighQual)
+    {
+        if(mInternalIndel)
+            return;
+
+        // select the junction read with the highest number of high-qual bases in the soft-clip
+        int maxHighQualBases = 0;
+        ReadRecord topRead = null;
+
+        boolean useLeftSoftClip = Orientation == NEG_ORIENT;
+
+        List<ReadRecord> junctionReads = ReadTypeReads.get(ReadType.JUNCTION);
+
+        if(junctionReads.size() == 1)
+        {
+            mTopJunctionRead = junctionReads.get(0);
+            return;
+        }
+
+        for(ReadRecord read : junctionReads)
+        {
+            String scBases = getSoftClippedBases(read.record(), useLeftSoftClip);
+
+            if(scBases.length() < maxHighQualBases)
+                continue;
+
+            final byte[] baseQualities = read.record().getBaseQualities();
+            int scRangeStart = useLeftSoftClip ? 0 : baseQualities.length - scBases.length();
+            int scRangeEnd = useLeftSoftClip ? scBases.length() : baseQualities.length;
+
+            int aboveQual = 0;
+            for(int i = scRangeStart; i < scRangeEnd; ++i)
+            {
+                if(baseQualities[i] >= minSoftClipHighQual)
+                    ++aboveQual;
+            }
+
+            if(aboveQual > maxHighQualBases)
+            {
+                topRead = read;
+                maxHighQualBases = aboveQual;
+            }
+        }
+
+        mTopJunctionRead = topRead;
     }
 
     public void addRemoteJunction(final RemoteJunction remoteJunction)

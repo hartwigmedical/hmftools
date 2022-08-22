@@ -260,7 +260,7 @@ public class ResultsWriter
 
                 mJunctionWriter.write(format(",%d,%d,%s,%s,%s,%s,%s",
                         maxSoftClip, junctionData.depth(), hasPloyAT, junctionData.internalIndel(), junctionData.hotspot(),
-                        softClipBases, junctionData.InitialRead != null ? junctionData.InitialRead.id() : "EXISTING"));
+                        softClipBases, junctionData.topJunctionRead() != null ? junctionData.topJunctionRead().id() : "EXISTING"));
 
                 if(mConfig.TrackRemotes)
                 {

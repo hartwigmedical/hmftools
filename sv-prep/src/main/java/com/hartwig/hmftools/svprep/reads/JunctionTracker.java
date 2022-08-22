@@ -265,6 +265,8 @@ public class JunctionTracker
             }
         }
 
+        mJunctions.forEach(x -> x.setInitialRead(mFilterConfig.MinSoftClipHighQual));
+
         perfCounterStop(PerfCounters.InitJunctions);
 
         if(mJunctions.isEmpty())
@@ -802,7 +804,7 @@ public class JunctionTracker
         Check if the 10 bases match the last 3 M and first 7S of the original read allowing for low base qual mismatches.
          If they do then that counts as an additional read even though it is much shorter soft clip and does not exactly match the base.
          */
-        final ReadRecord juncRead = junctionData.InitialRead;
+        final ReadRecord juncRead = junctionData.topJunctionRead();
 
         if(junctionData.Orientation == POS_ORIENT)
         {
