@@ -14,6 +14,8 @@ public class PurpleConstants
     public static final double TARGET_REGIONS_CN_PERC_DIFF = 0.2;
     public static final double TARGET_REGIONS_MAX_AF = 0.9;
     public static final double TARGET_REGIONS_MAX_AF_DIFF = 0.08;
+    public static final double TARGET_REGIONS_MSI_2_3_BASE_AF = 0.15;
+    public static final double TARGET_REGIONS_MSI_4_BASE_AF = 0.08;
 
     // no-tumor
     public static final int NO_TUMOR_BAF_TOTAL = 3000;

@@ -28,8 +28,8 @@ import htsjdk.variant.vcf.VCFConstants;
 public class TumorMutationalLoad
 {
     private final TargetRegionsData mTargetRegions;
-    private int mLoad;
-    private int mBurden;
+    private double mLoad;
+    private double mBurden;
     private int mUnclearBurdenVariants;
     private int mUnclearLoadVariants;
 
@@ -42,10 +42,16 @@ public class TumorMutationalLoad
         mUnclearLoadVariants = 0;
     }
 
-    public int load() { return mLoad; }
-    public int burden() { return mBurden; }
+    public double load() { return mLoad; }
+    public double burden() { return mBurden; }
 
-    public int tml() { return mTargetRegions.calcTml(mLoad); }
+    public int tml()
+    {
+        if(!mTargetRegions.hasTargetRegions())
+            return (int)round(mLoad);
+        else
+            return mTargetRegions.calcTml(mBurden);
+    }
 
     public double burdenPerMb() { return mBurden / MB_PER_GENOME; }
 

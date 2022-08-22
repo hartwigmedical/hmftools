@@ -78,43 +78,27 @@ public class TargetRegionsData
         return chrRegions.stream().anyMatch(x -> position == x);
     }
 
-    public int calcTml(int rawTml)
+    public int calcTml(double rawTml)
     {
-        if(mTargetRegions.isEmpty() && !mTumorOnly)
-            return rawTml;
-
-        double adjusted = rawTml;
-
-        if(!mTargetRegions.isEmpty())
-            adjusted *= CODING_BASES_PER_GENOME / mCodingBases * mTmlRatio;
-
-        // if(mTumorOnly)
-        //    adjusted = max(adjusted - mTmlDeduction, 0);
-
+        double adjusted = rawTml * CODING_BASES_PER_GENOME / mCodingBases * mTmlRatio;
         return (int)round(adjusted);
     }
 
     public double calcTmb(int adjustedTml, double adjustedMsiIndels)
     {
         return adjustedMsiIndels + adjustedTml * mTmbRatio;
-
-        // # of variants in targetedRegions * RefGenomeSize / TargetRegionSize * Constant
-        // return rawTmb * MB_PER_GENOME / mTotalBases * mTmbRatio;
     }
 
     public double calcMsiIndels(int rawCount)
     {
-        if(mTargetRegionsMsiIndels.isEmpty() && !mTumorOnly)
-            return (double) rawCount / MB_PER_GENOME;
+        if(mTargetRegionsMsiIndels.isEmpty())
+            return (double)rawCount / MB_PER_GENOME;
 
         double adjusted = rawCount;
 
         // # of MSI indels in MSI-marked target regions  * Constant
         if(!mTargetRegionsMsiIndels.isEmpty())
             adjusted *= mMsiIndelRatio;
-
-        // if(mTumorOnly)
-        //    adjusted = max(adjusted - mMsiIndelDeduction, 0);
 
         return adjusted;
     }

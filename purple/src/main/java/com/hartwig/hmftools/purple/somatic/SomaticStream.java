@@ -199,7 +199,7 @@ public class SomaticStream
             mVcfWriter.close();
             mRChartData.write();
 
-            PPL_LOGGER.info(String.format("load(%d tml=%d) burden(%d perMb=%.4f) msiIndels(%d perMb=%.4f)",
+            PPL_LOGGER.info(String.format("load(%.1f tml=%d) burden(%.1f perMb=%.4f) msiIndels(%d perMb=%.4f)",
                     mTumorMutationalLoad.load(), mTumorMutationalLoad.tml(),
                     mTumorMutationalLoad.burden(), tumorMutationalBurdenPerMb(),
                     mMicrosatelliteIndels.msiIndelCount(), mMicrosatelliteIndels.msiIndelsPerMb()));

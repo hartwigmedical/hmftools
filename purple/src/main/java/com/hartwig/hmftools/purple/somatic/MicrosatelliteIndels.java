@@ -2,10 +2,13 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MSI_2_3_BASE_AF;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MSI_4_BASE_AF;
 
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.config.TargetRegionsData;
 
 import org.apache.logging.log4j.util.Strings;
@@ -25,7 +28,6 @@ public class MicrosatelliteIndels
     private static final int MIN_REPEAT_COUNT_FOR_SHORT_REPEATS = 5;
 
     private static final int MAX_REF_ALT_LENGTH = 50;
-    private static final double MIN_TARGET_REGIONS_AF = 0.15;
 
     public MicrosatelliteIndels(final TargetRegionsData referenceData)
     {
@@ -45,19 +47,44 @@ public class MicrosatelliteIndels
 
     public void processVariant(final SomaticVariant variant)
     {
-        final VariantContext context = variant.context();
+        if(variant.type() != VariantType.INDEL)
+            return;
 
-        if(!isValidIndel(context))
+        int altLength = variant.decorator().alt().length();
+        int refLength = variant.decorator().ref().length();
+
+        if(refLength >= MAX_REF_ALT_LENGTH || altLength >= MAX_REF_ALT_LENGTH)
             return;
 
         if(mTargetRegions.hasTargetRegions())
         {
-            if(!mTargetRegions.isTargetRegionsMsiIndel(context.getContig(), context.getStart()))
+            if(!mTargetRegions.isTargetRegionsMsiIndel(variant.chromosome(), variant.position()))
                 return;
 
-            if(variant.alleleFrequency() < MIN_TARGET_REGIONS_AF)
-                return;
+            if(altLength > refLength)
+            {
+                if(variant.alleleFrequency() < TARGET_REGIONS_MSI_4_BASE_AF)
+                    return;
+            }
+            else
+            {
+                if(refLength == 2)
+                    return;
+
+                if(refLength <= 4)
+                {
+                    if(variant.alleleFrequency() < TARGET_REGIONS_MSI_2_3_BASE_AF)
+                        return;
+                }
+                else
+                {
+                    if(variant.alleleFrequency() < TARGET_REGIONS_MSI_4_BASE_AF)
+                        return;
+                }
+            }
         }
+
+        final VariantContext context = variant.context();
 
         int repeatCount = context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0);
         int repeatSequenceLength = context.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY).length();
