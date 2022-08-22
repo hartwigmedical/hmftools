@@ -9,8 +9,11 @@ import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MSI_2_3_BASE_AF;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MSI_4_BASE_AF;
 
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.config.TargetRegionsData;
@@ -26,6 +29,7 @@ public class MicrosatelliteIndels
 {
     private final TargetRegionsData mTargetRegions;
     private int mIndelCount;
+    private final Set<String> mIndelPositions; // cached to determine uniqu
 
     private static final int MIN_SEQUENCE_LENGTH_FOR_LONG_REPEATS = 2;
     private static final int MAX_SEQUENCE_LENGTH_FOR_LONG_REPEATS = 4;
@@ -38,6 +42,7 @@ public class MicrosatelliteIndels
     {
         mTargetRegions = referenceData;
         mIndelCount = 0;
+        mIndelPositions = Sets.newHashSet();
     }
 
     public int msiIndelCount()
@@ -66,8 +71,6 @@ public class MicrosatelliteIndels
             if(!mTargetRegions.isTargetRegionsMsiIndel(variant.chromosome(), variant.position()))
                 return;
 
-            double rawAf = getGenotypeAttributeAsDouble(variant.context().getGenotype(0), VCFConstants.ALLELE_FREQUENCY_KEY, 0);
-
             if(altLength > refLength)
             {
                 if(variant.alleleFrequency() < TARGET_REGIONS_MSI_4_BASE_AF)
@@ -89,28 +92,30 @@ public class MicrosatelliteIndels
                         return;
                 }
             }
+        }
+
+        int repeatCount = variant.context().getAttributeAsInt(REPEAT_COUNT_FLAG, 0);
+        int repeatSequenceLength = variant.context().getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY).length();
+
+        if(!repeatContextIsRelevant(repeatCount, repeatSequenceLength))
+            return;
+
+        if(mTargetRegions.hasTargetRegions())
+        {
+            // only count once per position
+            String chrPosition = format("%s_%d", variant.chromosome(), variant.position());
+            if(mIndelPositions.contains(chrPosition))
+                return;
+
+            mIndelPositions.add(chrPosition);
+
+            double rawAf = getGenotypeAttributeAsDouble(variant.context().getGenotype(0), VCFConstants.ALLELE_FREQUENCY_KEY, 0);
 
             PPL_LOGGER.debug(format("indel(%s) af(%.2f p=%.2f) included in target-regions TMB",
                     variant.toString(), rawAf, variant.alleleFrequency()));
         }
 
-        final VariantContext context = variant.context();
-
-        int repeatCount = context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0);
-        int repeatSequenceLength = context.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY).length();
-
-        if(repeatContextIsRelevant(repeatCount, repeatSequenceLength))
-        {
-            mIndelCount++;
-        }
-    }
-
-    private static boolean isValidIndel(final VariantContext context)
-    {
-        int altLength = alt(context).length();
-        int refLength = context.getReference().getBaseString().length();
-
-        return context.isIndel() && refLength < MAX_REF_ALT_LENGTH && altLength < MAX_REF_ALT_LENGTH;
+        mIndelCount++;
     }
 
     private static boolean repeatContextIsRelevant(int repeatCount, int repeatSequenceLength)
