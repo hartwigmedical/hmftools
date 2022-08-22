@@ -24,16 +24,17 @@ public class CombinedStats
         ReadStats.add(stats);
     }
 
-    public synchronized void addPerfCounters(final PerformanceCounter[] perfCounters)
+    public synchronized void addPerfCounters(final List<PerformanceCounter> perfCounters)
     {
         if(PerfCounters.isEmpty())
         {
-            Arrays.stream(perfCounters).forEach(x -> PerfCounters.add(x));
+            perfCounters.forEach(x -> PerfCounters.add(x));
+            return;
         }
 
         for(int i = 0; i < PerfCounters.size(); ++i)
         {
-            PerfCounters.get(i).merge(perfCounters[i]);
+            PerfCounters.get(i).merge(perfCounters.get(i));
         }
     }
 }

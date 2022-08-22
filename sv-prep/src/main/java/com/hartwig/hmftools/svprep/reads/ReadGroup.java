@@ -53,6 +53,7 @@ public class ReadGroup
     }
 
     public boolean hasJunctionPosition(int position) { return mJunctionPositions != null && mJunctionPositions.contains(position); }
+    public boolean hasJunctionPositions() { return mJunctionPositions != null && !mJunctionPositions.isEmpty(); }
 
     public void addJunctionPosition(int position)
     {

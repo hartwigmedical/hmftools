@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegion;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
 import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_THRESHOLD;
@@ -47,11 +48,19 @@ public class PartitionSlicer
     private final ReadRateTracker mReadRateTracker;
     private boolean mRateLimitTriggered;
     private boolean mLogReadIds;
-    private final PerformanceCounter[] mPerCounters;
+    private final List<PerformanceCounter> mPerfCounters;
+
+    private enum PerfCounters
+    {
+        Slice,
+        Junctions,
+        Total;
+    }
 
     private static final int PC_SLICE = 0;
     private static final int PC_JUNCTIONS = 1;
-    private static final int PC_TOTAL = 2;
+    private static final int PC_FILTERS = 2;
+    private static final int PC_TOTAL = 3;
 
     public PartitionSlicer(
             final int id, final ChrBaseRegion region, final SvConfig config, final SamReader samReader, final BamSlicer bamSlicer,
@@ -91,10 +100,12 @@ public class PartitionSlicer
 
         mStats = new PartitionStats();
 
-        mPerCounters = new PerformanceCounter[PC_TOTAL+1];
-        mPerCounters[PC_SLICE] = new PerformanceCounter("Slice");
-        mPerCounters[PC_JUNCTIONS] = new PerformanceCounter("Junctions");
-        mPerCounters[PC_TOTAL] = new PerformanceCounter("Total");
+        mPerfCounters = Lists.newArrayListWithExpectedSize(3);
+
+        for(PerfCounters pc : PerfCounters.values())
+        {
+            mPerfCounters.add(pc.ordinal(), new PerformanceCounter(pc.toString()));
+        }
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
     }
@@ -103,22 +114,21 @@ public class PartitionSlicer
     {
         SV_LOGGER.debug("processing region({})", mRegion);
 
-        perfCounterStart(PC_TOTAL);
-
-        perfCounterStart(PC_SLICE);
+        perfCounterStart(PerfCounters.Total);
+        perfCounterStart(PerfCounters.Slice);
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
 
-        mPerCounters[PC_SLICE].stop();
+        perfCounterStop(PerfCounters.Slice);
 
-        perfCounterStart(PC_JUNCTIONS);
+        perfCounterStart(PerfCounters.Junctions);
 
         Set<String> expectedJunctionReadIds = mSpanningReadCache.getExpectedReadIds(mRegion);
         mJunctionTracker.setExpectedReads(expectedJunctionReadIds);
 
         mJunctionTracker.assignFragments();
 
-        mPerCounters[PC_JUNCTIONS].stop();
+        perfCounterStop(PerfCounters.Junctions);
 
         writeData();
 
@@ -127,10 +137,12 @@ public class PartitionSlicer
             SV_LOGGER.debug("region({}) complete, stats({})", mRegion, mStats.toString());
         }
 
-        mPerCounters[PC_TOTAL].stop();
+        perfCounterStop(PerfCounters.Total);
 
         mCombinedStats.addPartitionStats(mStats);
-        mCombinedStats.addPerfCounters(mPerCounters);
+
+        mPerfCounters.addAll(mJunctionTracker.perfCounters());
+        mCombinedStats.addPerfCounters(mPerfCounters);
 
         if(mRateLimitTriggered)
             System.gc();
@@ -152,7 +164,7 @@ public class PartitionSlicer
 
         if(mFilterRegion != null)
         {
-            if(mFilterRegion.containsPosition(readStart) || mFilterRegion.containsPosition(readStart + mConfig.ReadLength))
+            if(positionsOverlap(readStart, readStart + mConfig.ReadLength, mFilterRegion.start(), mFilterRegion.end()))
                 return;
         }
 
@@ -193,11 +205,13 @@ public class PartitionSlicer
     private void processFilteredRead(final SAMRecord record, final int filters)
     {
         // check criteria to keep an otherwise filtered, to see if it supports a non-filtered read or location
-        // record filters by type
-        for(ReadFilterType type : ReadFilterType.values())
+        if(mConfig.PerfDebug)
         {
-            if(type.isSet(filters))
-                ++mStats.ReadFilterCounts[type.index()];
+            for(ReadFilterType type : ReadFilterType.values())
+            {
+                if(type.isSet(filters))
+                    ++mStats.ReadFilterCounts[type.index()];
+            }
         }
 
         // check for any evidence of support for an SV
@@ -284,10 +298,22 @@ public class PartitionSlicer
     private void perfCounterStart(int pcIndex)
     {
         if(mConfig.PerfDebug)
-            mPerCounters[pcIndex].start(mRegion.toString());
+            mPerfCounters.get(pcIndex).start(mRegion.toString());
         else
-            mPerCounters[pcIndex].start();
+            mPerfCounters.get(pcIndex).start();
     }
+
+    private void perfCounterStart(final PerfCounters pc)
+    {
+        if(mConfig.PerfDebug)
+            mPerfCounters.get(pc.ordinal()).start(mRegion.toString());
+        else
+            mPerfCounters.get(pc.ordinal()).start();
+    }
+
+    private void perfCounterStop(final PerfCounters pc) { mPerfCounters.get(pc.ordinal()).stop(); }
+    private void perfCounterPause(final PerfCounters pc) { mPerfCounters.get(pc.ordinal()).pause(); }
+    private void perfCounterResume(final PerfCounters pc) { mPerfCounters.get(pc.ordinal()).resume(); }
 
     private boolean checkReadRateLimits(int positionStart)
     {

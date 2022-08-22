@@ -73,6 +73,12 @@ public class FragmentSizeDistribution
             mergeDistributions(mLengthFrequencies, chrTask.lengthFrequencies());
         }
 
+        if(mLengthFrequencies.isEmpty())
+        {
+            SV_LOGGER.debug("no fragment lengths recorded");
+            return;
+        }
+
         int minLength = mLengthFrequencies.get(0).Length;
         int maxLength = mLengthFrequencies.get(mLengthFrequencies.size() - 1).Length;
 
@@ -85,6 +91,9 @@ public class FragmentSizeDistribution
     public int[] calculatePercentileLengths()
     {
         int[] percentileLengths = { 0, 0 };
+
+        if(mLengthFrequencies.isEmpty())
+            return percentileLengths;
 
         int totalFragments = mLengthFrequencies.stream().mapToInt(x -> x.Frequency).sum();
         int cumulativeTotal = 0;

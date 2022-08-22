@@ -96,6 +96,7 @@ public class SvConfig
     private static final String THREADS = "threads";
     private static final String READ_LENGTH = "read_length";
     private static final String CALC_FRAG_LENGTH = "calc_fragment_length";
+    private static final String PARTITION_SIZE = "partition_size";
 
     private static final String LOG_READ_IDS = "log_read_ids";
     private static final String MAX_PARTITION_READS = "max_partition_reads";
@@ -134,8 +135,7 @@ public class SvConfig
 
         ExistingJunctionFile = cmd.getOptionValue(EXISTING_JUNCTION_FILE);
 
-        PartitionSize = DEFAULT_CHR_PARTITION_SIZE;
-
+        PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_CHR_PARTITION_SIZE)));
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, String.valueOf(DEFAULT_READ_LENGTH)));
 
         ReadFiltering = new ReadFilters(ReadFilterConfig.from(cmd));
@@ -294,7 +294,8 @@ public class SvConfig
         options.addOption(KNOWN_FUSION_BED, true, "Known fusion hotspot BED file");
         options.addOption(BLACKLIST_BED, true, "Blacklist regions BED file");
         options.addOption(EXISTING_JUNCTION_FILE, true, "Load existing junction file to find supporting reads");
-        options.addOption(READ_LENGTH, true, "Read length");
+        options.addOption(READ_LENGTH, true, "Read length, default: " + DEFAULT_READ_LENGTH);
+        options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_CHR_PARTITION_SIZE);
         options.addOption(CALC_FRAG_LENGTH, false, "Calculate distribution for fragment length");
         options.addOption(WRITE_TYPES, true, "Write types: " + WriteType.values().toString());
         addSpecificChromosomesRegionsConfig(options);

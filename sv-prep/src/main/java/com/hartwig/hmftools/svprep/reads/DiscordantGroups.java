@@ -130,7 +130,7 @@ public final class DiscordantGroups
                 && abs(innerBoundaries[SE_END].Position - innerBoundaries[SE_START].Position) < shortFragmentLength * 2;
 
         int minFragments = isShortLocalDel ? DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT : DISCORDANT_GROUP_MIN_FRAGMENTS;
-        return readGroups.size() >= minFragments && readGroups.stream().filter(x -> x.junctionPositions() == null).count() >= minFragments;
+        return readGroups.size() >= minFragments && readGroups.stream().filter(x -> !x.hasJunctionPositions()).count() >= minFragments;
     }
 
     private static void addJunctions(

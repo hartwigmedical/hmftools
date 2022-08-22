@@ -110,7 +110,8 @@ public class SvPrepApplication
         SV_LOGGER.info("fragment length distribution percentile values(min={} max={})",
                 fragmentDistLengths[0], fragmentDistLengths[1]);
 
-        mConfig.ReadFiltering.config().setFragmentLengths(fragmentDistLengths[0], fragmentDistLengths[1]);
+        if(fragmentDistLengths[0] > 0 && fragmentDistLengths[1] > 0)
+            mConfig.ReadFiltering.config().setFragmentLengths(fragmentDistLengths[0], fragmentDistLengths[1]);
     }
 
     public static void main(@NotNull final String[] args) throws Exception

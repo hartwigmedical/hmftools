@@ -42,6 +42,7 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.SoftClipSide;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.BlacklistLocations;
@@ -68,6 +69,16 @@ public class JunctionTracker
 
     private int mInitialSupportingFrags;
     private final int[] mBaseDepth;
+
+    private final List<PerformanceCounter> mPerfCounters;
+
+    private enum PerfCounters
+    {
+        InitJunctions,
+        JunctionSupport,
+        DiscordantGroups,
+        JunctionFilter;
+    };
 
     public JunctionTracker(
             final ChrBaseRegion region, final SvConfig config, final HotspotCache hotspotCache, final BlacklistLocations blacklist)
@@ -100,9 +111,17 @@ public class JunctionTracker
         mInitialSupportingFrags = 0;
 
         mBaseDepth = config.CaptureDepth ? new int[mRegion.baseLength()] : null;
+
+        mPerfCounters = Lists.newArrayList();
+
+        for(PerfCounters pc : PerfCounters.values())
+        {
+            mPerfCounters.add(pc.ordinal(), new PerformanceCounter(pc.toString()));
+        }
     }
 
     public List<JunctionData> junctions() { return mJunctions; }
+    public List<PerformanceCounter> perfCounters() { return mPerfCounters; }
 
     public List<ReadGroup> formUniqueAssignedGroups()
     {
@@ -191,6 +210,8 @@ public class JunctionTracker
     {
         List<ReadGroup> candidateSupportGroups = Lists.newArrayList();
 
+        perfCounterStart(PerfCounters.InitJunctions);
+
         // create junctions from read groups and then assignment supporting of various kinds
         // NOTE: the read groups are not ordered by position until the discordant group routine below
         for(ReadGroup readGroup : mReadGroupMap.values())
@@ -227,11 +248,15 @@ public class JunctionTracker
             }
         }
 
+        perfCounterStop(PerfCounters.InitJunctions);
+
         if(mJunctions.isEmpty())
             return;
 
         mLastJunctionIndex = -1; // reset before supporting fragment assignment
         mInitialSupportingFrags = candidateSupportGroups.size();
+
+        perfCounterStart(PerfCounters.JunctionSupport);
 
         // order by first read's start position to assist with efficient junction look-up using the last junction index
         Collections.sort(candidateSupportGroups, new ReadGroup.ReadGroupComparator());
@@ -290,12 +315,16 @@ public class JunctionTracker
                 mCandidateDiscordantGroups.add(readGroup);
             }
         }
+
+        perfCounterStop(PerfCounters.JunctionSupport);
     }
 
     public void findDiscordantGroups()
     {
         if(!mConfig.FindDiscordantGroups)
             return;
+
+        perfCounterStart(PerfCounters.DiscordantGroups);
 
         if(mCandidateDiscordantGroups.size() > 1000)
         {
@@ -312,6 +341,8 @@ public class JunctionTracker
 
         // no obvious need to re-check support at these junctions since all proximate facing read groups have already been tested
         // and allocated to these groups
+
+        perfCounterStop(PerfCounters.DiscordantGroups);
     }
 
     private void createJunction(final ReadGroup readGroup)
@@ -876,6 +907,8 @@ public class JunctionTracker
 
     private void filterJunctions()
     {
+        perfCounterStart(PerfCounters.JunctionFilter);
+
         // alternatively when processing then also just remove all processed junctions
         int index = 0;
         while(index < mJunctions.size())
@@ -897,6 +930,8 @@ public class JunctionTracker
             junctionData.ExactSupportGroups.forEach(x -> x.addJunctionPosition(junctionData.Position));
             junctionData.SupportingGroups.forEach(x -> x.addJunctionPosition(junctionData.Position));
         }
+
+        perfCounterStop(PerfCounters.JunctionFilter);
     }
 
     private boolean junctionHasSupport(final JunctionData junctionData)
@@ -940,6 +975,9 @@ public class JunctionTracker
 
         return false;
     }
+
+    private void perfCounterStart(final PerfCounters pc) { mPerfCounters.get(pc.ordinal()).start(); }
+    private void perfCounterStop(final PerfCounters pc) { mPerfCounters.get(pc.ordinal()).stop(); }
 
     private void captureDepth(final ReadGroup readGroup)
     {

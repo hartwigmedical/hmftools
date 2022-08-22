@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -88,8 +89,11 @@ public class ChromosomeTask implements AutoCloseable
         SV_LOGGER.info("chromosome({}) {} regions complete, stats: {}",
                 mChromosome, regionCount, mCombinedStats.ReadStats.toString());
 
-        SV_LOGGER.debug("chromosome({}) filters({})",
-                mChromosome, ReadFilterType.filterCountsToString(mCombinedStats.ReadStats.ReadFilterCounts));
+        if(Arrays.stream(mCombinedStats.ReadStats.ReadFilterCounts).anyMatch(x -> x > 0))
+        {
+            SV_LOGGER.debug("chromosome({}) filters({})",
+                    mChromosome, ReadFilterType.filterCountsToString(mCombinedStats.ReadStats.ReadFilterCounts));
+        }
 
         mSpanningReadCache.logStats();
 
