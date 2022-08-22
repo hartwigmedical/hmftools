@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
+import com.beust.jcommander.internal.Nullable;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -15,6 +16,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public class ReadGroup
 {
+    private final String mReadId;
     private final List<ReadRecord> mReads;
 
     private ReadGroupStatus mStatus;
@@ -23,8 +25,9 @@ public class ReadGroup
     private Set<Integer> mJunctionPositions;
     private boolean mHasRemoteJunctionReads;
 
-    public ReadGroup(final ReadRecord read)
+    public ReadGroup(final ReadRecord read, @Nullable final String readId)
     {
+        mReadId = readId;
         mReads = Lists.newArrayListWithCapacity(2);
         mStatus = ReadGroupStatus.UNSET;
         mRemotePartitions = Sets.newHashSet();
@@ -34,7 +37,12 @@ public class ReadGroup
         addRead(read);
     }
 
-    public final String id() { return mReads.get(0).id(); }
+    public ReadGroup(final ReadRecord read)
+    {
+        this(read, null);
+    }
+
+    public final String id() { return mReadId != null ? mReadId : mReads.get(0).id(); }
     public List<ReadRecord> reads() { return mReads; }
     public int size() { return mReads.size(); }
 

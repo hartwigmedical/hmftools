@@ -5,6 +5,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.svprep.SpanningReadCache.chrFromChrPartition;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.WriteType.CACHE_BAM;
+import static com.hartwig.hmftools.svprep.reads.ReadRecord.findReadIdTrimIndex;
+import static com.hartwig.hmftools.svprep.reads.ReadRecord.trimReadId;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 
 import java.io.File;
@@ -37,6 +39,7 @@ public class CandidateBamWriter
     private final Map<String,String> mCandidatesWriterBamFiles;
 
     private final Map<String,Set<String>> mChrJunctionReadIds;
+    private int mReadIdTrimIndex;
 
     public CandidateBamWriter(final SvConfig config)
     {
@@ -44,6 +47,7 @@ public class CandidateBamWriter
         mCandidatesWriters = Maps.newHashMap();
         mCandidatesWriterBamFiles = Maps.newHashMap();
         mChrJunctionReadIds = Maps.newHashMap();
+        mReadIdTrimIndex = -1;
     }
 
     public void addJunctionReadId(final Set<String> remotePartitions, final String readId)
@@ -196,8 +200,21 @@ public class CandidateBamWriter
         }
     }
 
-    private boolean checkJunctionRead(final String chromosome, final String readId)
+    private boolean checkJunctionRead(final String chromosome, final String readName)
     {
+        String readId;
+        if(mConfig.TrimReadId)
+        {
+            if(mReadIdTrimIndex < 0)
+                mReadIdTrimIndex = findReadIdTrimIndex(readName);
+
+            readId = trimReadId(readName, mReadIdTrimIndex);
+        }
+        else
+        {
+            readId = readName;
+        }
+
         Set<String> readIds = mChrJunctionReadIds.get(chromosome);
         if(readIds == null)
             return false;

@@ -132,7 +132,7 @@ public class SpanningReadCache
 
         if(mConfig.UseCacheBam)
         {
-            mCandidateBamWriter.addJunctionReadId(readGroup.remotePartitions(), read.id());
+            mCandidateBamWriter.addJunctionReadId(readGroup.remotePartitions(), readGroup.id());
         }
         else
         {
@@ -238,7 +238,7 @@ public class SpanningReadCache
 
         if(cachedReadGroup == null)
         {
-            cachedReadGroup = new CachedReadGroup();
+            cachedReadGroup = new CachedReadGroup(readGroup.id());
         }
 
         cachedReadGroup.Reads.add(read);
@@ -281,7 +281,7 @@ public class SpanningReadCache
         for(CachedReadGroup cachedReadGroup : cachedReadGroups.values())
         {
             if(cachedReadGroup.Partitions.stream().noneMatch(x -> !mProcessedPartitions.contains(x)))
-                purgedGroupReadIds.add(cachedReadGroup.id());
+                purgedGroupReadIds.add(cachedReadGroup.ReadId);
         }
 
         purgedGroupReadIds.forEach(x -> cachedReadGroups.remove(x));
@@ -336,19 +336,20 @@ public class SpanningReadCache
 
     private class CachedReadGroup
     {
+        public final String ReadId;
         public final List<ReadRecord> Reads;
         public final Set<String> Partitions;
 
-        public CachedReadGroup()
+        public CachedReadGroup(final String readId)
         {
+            ReadId = readId;
             Reads = Lists.newArrayList();
             Partitions = Sets.newHashSet();
         }
 
-        public String id() { return !Reads.isEmpty() ? Reads.get(0).id() : ""; }
         public String toString()
         {
-            return format("reads(%s) partitions(%s) id(%s)", Reads.size(), id(), Partitions);
+            return format("reads(%s) partitions(%s) id(%s)", Reads.size(), ReadId, Partitions);
         }
     }
 

@@ -25,6 +25,8 @@ import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.reads.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.svprep.reads.ReadGroup.addUniqueReadGroups;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.findIndelCoords;
+import static com.hartwig.hmftools.svprep.reads.ReadRecord.findReadIdTrimIndex;
+import static com.hartwig.hmftools.svprep.reads.ReadRecord.trimReadId;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXACT_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXPECTED;
@@ -67,6 +69,7 @@ public class JunctionTracker
     private final List<JunctionData> mJunctions; // ordered by position
     private int mLastJunctionIndex;
 
+    private int mReadIdTrimIndex;
     private int mInitialSupportingFrags;
     private final int[] mBaseDepth;
 
@@ -109,6 +112,7 @@ public class JunctionTracker
         mJunctions = Lists.newArrayList();
         mLastJunctionIndex = -1;
         mInitialSupportingFrags = 0;
+        mReadIdTrimIndex = -1;
 
         mBaseDepth = config.CaptureDepth ? new int[mRegion.baseLength()] : null;
 
@@ -161,11 +165,24 @@ public class JunctionTracker
 
     public void processRead(final ReadRecord read)
     {
-        ReadGroup readGroup = mReadGroupMap.get(read.id());
+        String readId;
+        if(mConfig.TrimReadId)
+        {
+            if(mReadIdTrimIndex < 0)
+                mReadIdTrimIndex = findReadIdTrimIndex(read.id());
+
+            readId = trimReadId(read.id(), mReadIdTrimIndex);
+        }
+        else
+        {
+            readId = read.id();
+        }
+
+        ReadGroup readGroup = mReadGroupMap.get(readId);
 
         if(readGroup == null)
         {
-            readGroup = new ReadGroup(read);
+            readGroup = new ReadGroup(read, readId);
             mReadGroupMap.put(readGroup.id(), readGroup);
             return;
         }
@@ -976,8 +993,21 @@ public class JunctionTracker
         return false;
     }
 
-    private void perfCounterStart(final PerfCounters pc) { mPerfCounters.get(pc.ordinal()).start(); }
-    private void perfCounterStop(final PerfCounters pc) { mPerfCounters.get(pc.ordinal()).stop(); }
+    private void perfCounterStart(final PerfCounters pc)
+    {
+        if(!mConfig.PerfDebug)
+            return;
+
+        mPerfCounters.get(pc.ordinal()).start();
+    }
+
+    private void perfCounterStop(final PerfCounters pc)
+    {
+        if(!mConfig.PerfDebug)
+            return;
+
+        mPerfCounters.get(pc.ordinal()).stop();
+    }
 
     private void captureDepth(final ReadGroup readGroup)
     {

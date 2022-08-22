@@ -136,7 +136,9 @@ public class PartitionSlicer
 
         mCombinedStats.addPartitionStats(mStats);
 
-        mPerfCounters.addAll(mJunctionTracker.perfCounters());
+        if(mConfig.PerfDebug)
+            mPerfCounters.addAll(mJunctionTracker.perfCounters());
+
         mCombinedStats.addPerfCounters(mPerfCounters);
 
         if(mRateLimitTriggered)
@@ -290,14 +292,6 @@ public class PartitionSlicer
         }
     }
 
-    private void perfCounterStart(int pcIndex)
-    {
-        if(mConfig.PerfDebug)
-            mPerfCounters.get(pcIndex).start(mRegion.toString());
-        else
-            mPerfCounters.get(pcIndex).start();
-    }
-
     private void perfCounterStart(final PerfCounters pc)
     {
         if(mConfig.PerfDebug)
@@ -307,8 +301,6 @@ public class PartitionSlicer
     }
 
     private void perfCounterStop(final PerfCounters pc) { mPerfCounters.get(pc.ordinal()).stop(); }
-    private void perfCounterPause(final PerfCounters pc) { mPerfCounters.get(pc.ordinal()).pause(); }
-    private void perfCounterResume(final PerfCounters pc) { mPerfCounters.get(pc.ordinal()).resume(); }
 
     private boolean checkReadRateLimits(int positionStart)
     {

@@ -66,6 +66,7 @@ public class SvConfig
 
     public final int Threads;
     public final boolean UseCacheBam;
+    public final boolean TrimReadId;
 
     // debug
     public final List<String> SpecificChromosomes;
@@ -105,6 +106,7 @@ public class SvConfig
     private static final String CAPTURE_DEPTH = "capture_depth";
     private static final String TRACK_REMOTES = "track_remotes";
     private static final String USE_CACHE_BAM = "use_cache_bam";
+    private static final String TRIM_READ_ID = "trim_read_id";
     private static final String PERF_DEBUG = "perf_debug";
     private static final String JUNCTION_FRAGS_CAP = "junction_frags_cap";
 
@@ -141,6 +143,7 @@ public class SvConfig
         ReadFiltering = new ReadFilters(ReadFilterConfig.from(cmd));
 
         CalcFragmentLength = cmd.hasOption(CALC_FRAG_LENGTH);
+        TrimReadId = cmd.hasOption(TRIM_READ_ID);
 
         WriteTypes = Sets.newHashSet();
 
@@ -278,6 +281,7 @@ public class SvConfig
         TrackRemotes = true;
         UseCacheBam = false;
         PerfDebug = false;
+        TrimReadId = false;
         JunctionFragmentCap = 0;
     }
 
@@ -306,6 +310,7 @@ public class SvConfig
         options.addOption(APPLY_DOWNSAMPLING, false, "Apply downsampling of reads in high-depth regions");
         options.addOption(USE_CACHE_BAM, false, "Write a BAM to cache candidate reads");
         options.addOption(TRACK_REMOTES, false, "Track support for remote junctions");
+        options.addOption(TRIM_READ_ID, false, "Use a shortened readId internally");
         options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
         options.addOption(JUNCTION_FRAGS_CAP, true, "Limit to supporting reads added to a junction");
         options.addOption(THREADS, true, "Thread count");
