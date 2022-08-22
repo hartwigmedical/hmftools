@@ -239,14 +239,14 @@ public class ConclusionAlgo {
                 mergedVariantKeyList.put(entry.getKey(), entry.getValue().get(0));
 
             } else {
-                StringBuilder sb = new StringBuilder();
+                StringBuilder stringBuilder = new StringBuilder();
                 for (VariantKey key : entry.getValue()) {
-                    sb.append(key.variantAnnotation()).append(",");
+                    stringBuilder.append(key.variantAnnotation()).append(",");
                 }
                 mergedVariantKeyList.put(entry.getKey(),
                         ImmutableVariantKey.builder()
                                 .from(entry.getValue().get(0))
-                                .variantAnnotation(sb.toString().substring(0, sb.toString().length()-1))
+                                .variantAnnotation(stringBuilder.substring(0, stringBuilder.toString().length()-1))
                                 .build());
             }
         }
