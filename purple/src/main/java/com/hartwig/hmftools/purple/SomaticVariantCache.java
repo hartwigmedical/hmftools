@@ -105,7 +105,8 @@ public class SomaticVariantCache
             }
         }
 
-        PPL_LOGGER.info("loaded somatic variants({} pass={}) from {}", mVariants.size(), mFittingVariants.size(), somaticVcf);
+        PPL_LOGGER.info("loaded somatic variants({} fitting={}) from {}",
+                mVariants.size(), mFittingVariants.size(), somaticVcf);
     }
 
     public VCFHeader getVcfHeader() { return mVcfHeader; }

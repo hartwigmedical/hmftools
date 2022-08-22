@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MSI_2_3_BASE_AF;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MSI_4_BASE_AF;
 
@@ -16,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFConstants;
 
 public class MicrosatelliteIndels
 {
@@ -61,6 +66,8 @@ public class MicrosatelliteIndels
             if(!mTargetRegions.isTargetRegionsMsiIndel(variant.chromosome(), variant.position()))
                 return;
 
+            double rawAf = getGenotypeAttributeAsDouble(variant.context().getGenotype(0), VCFConstants.ALLELE_FREQUENCY_KEY, 0);
+
             if(altLength > refLength)
             {
                 if(variant.alleleFrequency() < TARGET_REGIONS_MSI_4_BASE_AF)
@@ -82,6 +89,9 @@ public class MicrosatelliteIndels
                         return;
                 }
             }
+
+            PPL_LOGGER.debug(format("indel(%s) af(%.2f p=%.2f) included in target-regions TMB",
+                    variant.toString(), rawAf, variant.alleleFrequency()));
         }
 
         final VariantContext context = variant.context();
