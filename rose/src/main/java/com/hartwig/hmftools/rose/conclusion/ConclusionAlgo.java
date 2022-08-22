@@ -337,8 +337,8 @@ public class ConclusionAlgo {
                 conclusion.add("- " + annotatedVirus.interpretation() + " " + entry.conclusion());
                 actionable.add("virus");
             } else if (entry == null) {
-                if (annotatedVirus.virusDriverLikelihoodType() == VirusLikelihoodType.LOW
-                        || annotatedVirus.virusDriverLikelihoodType() == VirusLikelihoodType.HIGH) {
+                if (annotatedVirus.interpretation() != null && (annotatedVirus.virusDriverLikelihoodType() == VirusLikelihoodType.LOW
+                        || annotatedVirus.virusDriverLikelihoodType() == VirusLikelihoodType.HIGH)) {
                     conclusion.add("- " + annotatedVirus.interpretation() + " positive");
                 }
             }
