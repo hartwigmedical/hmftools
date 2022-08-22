@@ -213,10 +213,10 @@ public class ConclusionAlgoTest {
 
         ConclusionAlgo.generateFusionConclusion(conclusion, fusions, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertEquals(4, conclusion.size());
-        assertEquals(conclusion.get(0), "- BRAF-BRAF BRAF");
-        assertEquals(conclusion.get(1), "- CAV2-MET MET");
-        assertEquals(conclusion.get(2), "- EGFR-EGFR EGFR");
-        assertEquals(conclusion.get(3), "- EGFR-EGFR EGFR");
+        assertEquals(conclusion.get(0), "- BRAF - BRAF BRAF");
+        assertEquals(conclusion.get(1), "- CAV2 - MET MET");
+        assertEquals(conclusion.get(2), "- EGFR - EGFR EGFR");
+        assertEquals(conclusion.get(3), "- EGFR - EGFR EGFR");
     }
 
     @Test

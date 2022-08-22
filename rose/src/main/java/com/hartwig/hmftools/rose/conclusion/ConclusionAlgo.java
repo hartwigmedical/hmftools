@@ -272,7 +272,7 @@ public class ConclusionAlgo {
                         .build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
-                    conclusion.add("- " + fusion.name() + " " + entry.conclusion());
+                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " " + entry.conclusion());
                     actionable.add("fusion");
                 }
             } else if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString())) {
@@ -280,7 +280,7 @@ public class ConclusionAlgo {
                         ImmutableActionabilityKey.builder().match(fusion.geneStart()).type(TypeAlteration.INTERNAL_DELETION).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
-                    conclusion.add("- " + fusion.name() + " " + entry.conclusion());
+                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " " + entry.conclusion());
                     actionable.add("fusion");
                 }
             } else if (FUSION_TYPES.contains(fusion.reportedType())) {
@@ -293,10 +293,10 @@ public class ConclusionAlgo {
                 ActionabilityEntry entryEnd = actionabilityMap.get(keyFusionEnd);
 
                 if (entryStart != null && entryStart.condition() == Condition.ALWAYS) {
-                    conclusion.add("- " + fusion.name() + " " + entryStart.conclusion());
+                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " " + entryStart.conclusion());
                     actionable.add("fusion");
                 } else if (entryEnd != null && entryEnd.condition() == Condition.ALWAYS) {
-                    conclusion.add("- " + fusion.name() + " " + entryEnd.conclusion());
+                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " " + entryEnd.conclusion());
                     actionable.add("fusion");
                 }
             }
