@@ -18,12 +18,16 @@ public class CuppaDAO {
         this.context = context;
     }
 
-    void writeCuppa(@NotNull String sample, @NotNull MolecularTissueOrginData molecularTissueOrginData) {
+    void writeCuppa(@NotNull String sample, @NotNull String isolationBarcode, @NotNull MolecularTissueOrginData molecularTissueOrginData) {
         deleteCuppaForSample(sample);
         LocalDateTime timestamp = LocalDateTime.now();
 
-        context.insertInto(CUPPA, CUPPA.MODIFIED, CUPPA.SAMPLEID, CUPPA.CUPPATUMORLOCATION, CUPPA.CUPPAPREDICTION)
-                .values(timestamp, sample, molecularTissueOrginData.predictedOrigin(), molecularTissueOrginData.predictionLikelihood())
+        context.insertInto(CUPPA, CUPPA.MODIFIED, CUPPA.SAMPLEID, CUPPA.ISOLATIONBARCODE, CUPPA.CUPPATUMORLOCATION, CUPPA.CUPPAPREDICTION)
+                .values(timestamp,
+                        sample,
+                        isolationBarcode,
+                        molecularTissueOrginData.predictedOrigin(),
+                        molecularTissueOrginData.predictionLikelihood())
                 .execute();
     }
 

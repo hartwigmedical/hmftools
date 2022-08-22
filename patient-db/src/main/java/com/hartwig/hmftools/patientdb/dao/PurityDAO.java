@@ -28,7 +28,7 @@ import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep8;
+import org.jooq.InsertValuesStep9;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -141,7 +141,7 @@ class PurityDAO {
         return sampleIds;
     }
 
-    void write(@NotNull String sample, @NotNull PurityContext purity, @NotNull PurpleQC checks) {
+    void write(@NotNull String sample, @NotNull String isolationBarcode, @NotNull PurityContext purity, @NotNull PurpleQC checks) {
         FittedPurity bestFit = purity.bestFit();
         FittedPurityScore score = purity.score();
 
@@ -149,43 +149,45 @@ class PurityDAO {
         context.delete(PURITY).where(PURITY.SAMPLEID.eq(sample)).execute();
 
         context.insertInto(PURITY,
-                PURITY.VERSION,
-                PURITY.SAMPLEID,
-                PURITY.PURITY_,
-                PURITY.GENDER,
-                PURITY.FITMETHOD,
-                PURITY.QCSTATUS,
-                PURITY.RUNMODE,
-                PURITY.NORMFACTOR,
-                PURITY.SCORE,
-                PURITY.SOMATICPENALTY,
-                PURITY.PLOIDY,
-                PURITY.DIPLOIDPROPORTION,
-                PURITY.MINDIPLOIDPROPORTION,
-                PURITY.MAXDIPLOIDPROPORTION,
-                PURITY.MINPURITY,
-                PURITY.MAXPURITY,
-                PURITY.MINPLOIDY,
-                PURITY.MAXPLOIDY,
-                PURITY.POLYCLONALPROPORTION,
-                PURITY.WHOLEGENOMEDUPLICATION,
-                PURITY.MSINDELSPERMB,
-                PURITY.MSSTATUS,
-                PURITY.TMBPERMB,
-                PURITY.TMBSTATUS,
-                PURITY.TML,
-                PURITY.TMLSTATUS,
-                PURITY.SVTMB,
-                PURITY.DELETEDGENES,
-                PURITY.COPYNUMBERSEGMENTS,
-                PURITY.UNSUPPORTEDCOPYNUMBERSEGMENTS,
-                PURITY.CONTAMINATION,
-                PURITY.GERMLINEABERRATION,
-                PURITY.AMBERGENDER,
-                PURITY.TARGETED,
-                PURITY.MODIFIED)
+                        PURITY.VERSION,
+                        PURITY.SAMPLEID,
+                        PURITY.ISOLATIONBARCODE,
+                        PURITY.PURITY_,
+                        PURITY.GENDER,
+                        PURITY.FITMETHOD,
+                        PURITY.QCSTATUS,
+                        PURITY.RUNMODE,
+                        PURITY.NORMFACTOR,
+                        PURITY.SCORE,
+                        PURITY.SOMATICPENALTY,
+                        PURITY.PLOIDY,
+                        PURITY.DIPLOIDPROPORTION,
+                        PURITY.MINDIPLOIDPROPORTION,
+                        PURITY.MAXDIPLOIDPROPORTION,
+                        PURITY.MINPURITY,
+                        PURITY.MAXPURITY,
+                        PURITY.MINPLOIDY,
+                        PURITY.MAXPLOIDY,
+                        PURITY.POLYCLONALPROPORTION,
+                        PURITY.WHOLEGENOMEDUPLICATION,
+                        PURITY.MSINDELSPERMB,
+                        PURITY.MSSTATUS,
+                        PURITY.TMBPERMB,
+                        PURITY.TMBSTATUS,
+                        PURITY.TML,
+                        PURITY.TMLSTATUS,
+                        PURITY.SVTMB,
+                        PURITY.DELETEDGENES,
+                        PURITY.COPYNUMBERSEGMENTS,
+                        PURITY.UNSUPPORTEDCOPYNUMBERSEGMENTS,
+                        PURITY.CONTAMINATION,
+                        PURITY.GERMLINEABERRATION,
+                        PURITY.AMBERGENDER,
+                        PURITY.TARGETED,
+                        PURITY.MODIFIED)
                 .values(purity.version(),
                         sample,
+                        isolationBarcode,
                         DatabaseUtil.decimal(bestFit.purity()),
                         purity.gender().toString(),
                         purity.method().toString(),
@@ -222,12 +224,13 @@ class PurityDAO {
                 .execute();
     }
 
-    void write(@NotNull String sample, @NotNull List<FittedPurity> purities) {
+    void write(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<FittedPurity> purities) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(PURITYRANGE).where(PURITYRANGE.SAMPLEID.eq(sample)).execute();
 
-        InsertValuesStep8 inserter = context.insertInto(PURITYRANGE,
+        InsertValuesStep9 inserter = context.insertInto(PURITYRANGE,
                 PURITYRANGE.SAMPLEID,
+                PURITYRANGE.ISOLATIONBARCODE,
                 PURITYRANGE.PURITY,
                 PURITYRANGE.NORMFACTOR,
                 PURITYRANGE.SCORE,
@@ -236,13 +239,14 @@ class PurityDAO {
                 PURITYRANGE.DIPLOIDPROPORTION,
                 PURITYRANGE.MODIFIED);
 
-        purities.forEach(x -> addPurity(timestamp, inserter, sample, x));
+        purities.forEach(x -> addPurity(timestamp, inserter, sample, isolationBarcode, x));
         inserter.execute();
     }
 
-    private static void addPurity(@NotNull Timestamp timestamp, @NotNull InsertValuesStep8 inserter, @NotNull String sample,
-            @NotNull FittedPurity purity) {
+    private static void addPurity(@NotNull Timestamp timestamp, @NotNull InsertValuesStep9 inserter, @NotNull String sample,
+            @NotNull String isolationBarcode, @NotNull FittedPurity purity) {
         inserter.values(sample,
+                isolationBarcode,
                 DatabaseUtil.decimal(purity.purity()),
                 DatabaseUtil.decimal(purity.normFactor()),
                 DatabaseUtil.decimal(purity.score()),

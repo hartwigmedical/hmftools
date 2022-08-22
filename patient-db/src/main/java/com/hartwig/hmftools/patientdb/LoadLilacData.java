@@ -21,6 +21,8 @@ public class LoadLilacData {
     private static final Logger LOGGER = LogManager.getLogger(LoadLilacData.class);
 
     private static final String SAMPLE = "sample";
+    private static final String ISOLATION_BARCODE = "isolation_barcode";
+
     private static final String LILAC_DIR = "lilac_dir";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
@@ -30,6 +32,7 @@ public class LoadLilacData {
 
         /*
         final String sample = cmd.getOptionValue(SAMPLE);
+        final String isolationBarcode = cmd.getOptionValue(ISOLATION_BARCODE);
         final String lilacOutputFile = cmd.getOptionValue(LILAC_OUTPUT_FILE);
         final String lilacQcMetricsFile = cmd.getOptionValue(LILAC_QC_METRICS_FILE);
 
@@ -38,7 +41,7 @@ public class LoadLilacData {
         final List<HlaTypeDetails> details = HlaFiles.typeDetails(lilacOutputFile);
 
         LOGGER.info("Persisting lilac data to db for {}", sample);
-        dbAccess.writeHla(sample, type, details);
+        dbAccess.writeHla(sample, isolationBarcode, type, details);
          */
 
         LOGGER.info("Complete");
@@ -48,6 +51,7 @@ public class LoadLilacData {
     private static Options createOptions() {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Sample ID");
+        options.addOption(ISOLATION_BARCODE, true, "Isolation barcode of the sample");
         options.addOption(LILAC_DIR, true, "Lilac directory");
         addDatabaseCmdLineArgs(options);
         return options;

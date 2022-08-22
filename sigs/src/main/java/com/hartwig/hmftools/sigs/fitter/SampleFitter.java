@@ -49,6 +49,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class SampleFitter
@@ -311,7 +312,7 @@ public class SampleFitter
         if(mDbAccess != null && mUploadToDb)
         {
             SIG_LOGGER.debug("sample({}) writing {} allocations to database", sampleId, sigAllocations.size());
-            mDbAccess.writeSignatures(sampleId, sigAllocations);
+            mDbAccess.writeSignatures(sampleId, Strings.EMPTY, sigAllocations);
         }
     }
 

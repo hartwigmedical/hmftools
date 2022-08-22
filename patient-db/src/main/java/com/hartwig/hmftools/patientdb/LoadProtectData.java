@@ -26,7 +26,7 @@ public class LoadProtectData {
     private static final Logger LOGGER = LogManager.getLogger(LoadProtectData.class);
 
     private static final String SAMPLE = "sample";
-
+    private static final String ISOLATION_BARCODE = "isolation_barcode";
     private static final String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
@@ -35,8 +35,9 @@ public class LoadProtectData {
 
         String evidenceTsv = cmd.getOptionValue(PROTECT_EVIDENCE_TSV);
         String sample = cmd.getOptionValue(SAMPLE);
+        String isolationBarcode = cmd.getOptionValue(ISOLATION_BARCODE);
 
-        if (Utils.anyNull(evidenceTsv, sample) || !new File(evidenceTsv).exists()) {
+        if (Utils.anyNull(evidenceTsv, sample, isolationBarcode) || !new File(evidenceTsv).exists()) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-DB - Load PROTECT Data", options);
             System.exit(1);
@@ -46,7 +47,7 @@ public class LoadProtectData {
 
         LOGGER.info("Reading PROTECT data for {} from {}", sample, evidenceTsv);
         List<ProtectEvidence> evidences = ProtectEvidenceFile.read(evidenceTsv);
-        dbWriter.writeProtectEvidence(sample, evidences);
+        dbWriter.writeProtectEvidence(sample, isolationBarcode, evidences);
         LOGGER.info("Done writing {} PROTECT evidence items to database for {}", evidences.size(), sample);
     }
 
@@ -54,6 +55,7 @@ public class LoadProtectData {
     private static Options createOptions() {
         Options options = new Options();
         options.addOption(SAMPLE, true, "The tumor sample.");
+        options.addOption(ISOLATION_BARCODE, true, "The isolation barcode of the sample.");
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence tsv.");
         addDatabaseCmdLineArgs(options);
         return options;

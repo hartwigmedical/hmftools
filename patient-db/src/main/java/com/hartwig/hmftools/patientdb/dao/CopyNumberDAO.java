@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.purple.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep18;
+import org.jooq.InsertValuesStep19;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -59,13 +59,14 @@ class CopyNumberDAO {
         return copyNumbers;
     }
 
-    void writeCopyNumber(@NotNull String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
+    void writeCopyNumber(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<PurpleCopyNumber> copyNumbers) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
         for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep18 inserter = context.insertInto(COPYNUMBER,
+            InsertValuesStep19 inserter = context.insertInto(COPYNUMBER,
                     COPYNUMBER.SAMPLEID,
+                    COPYNUMBER.ISOLATIONBARCODE,
                     COPYNUMBER.CHROMOSOME,
                     COPYNUMBER.START,
                     COPYNUMBER.END,
@@ -83,14 +84,15 @@ class CopyNumberDAO {
                     COPYNUMBER.MINSTART,
                     COPYNUMBER.MAXSTART,
                     COPYNUMBER.MODIFIED);
-            splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
+            splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, isolationBarcode, x));
             inserter.execute();
         }
     }
 
-    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep18 inserter, @NotNull String sample,
-            @NotNull PurpleCopyNumber region) {
+    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep19 inserter, @NotNull String sample,
+            @NotNull String isolationBarcode, @NotNull PurpleCopyNumber region) {
         inserter.values(sample,
+                isolationBarcode,
                 region.chromosome(),
                 region.start(),
                 region.end(),

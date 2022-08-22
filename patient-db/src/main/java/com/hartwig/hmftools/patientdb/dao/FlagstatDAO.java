@@ -17,32 +17,35 @@ public class FlagstatDAO {
         this.context = context;
     }
 
-    void writeFlagstats(@NotNull String sample, @NotNull Flagstat refFlagstat, @NotNull Flagstat tumorFlagstat) {
+    void writeFlagstats(@NotNull String sample, @NotNull String isolationBarcode, @NotNull Flagstat refFlagstat,
+            @NotNull Flagstat tumorFlagstat) {
         deleteFlagstatsForSample(sample);
 
         boolean passQC = FlagstatQC.pass(refFlagstat) && FlagstatQC.pass(tumorFlagstat);
         context.insertInto(FLAGSTAT,
-                FLAGSTAT.SAMPLEID,
-                FLAGSTAT.REFUNIQUEREADCOUNT,
-                FLAGSTAT.REFSECONDARYCOUNT,
-                FLAGSTAT.REFSUPPLEMENTARYCOUNT,
-                FLAGSTAT.REFDUPLICATEPROPORTION,
-                FLAGSTAT.REFMAPPEDPROPORTION,
-                FLAGSTAT.REFPAIREDINSEQUENCINGPROPORTION,
-                FLAGSTAT.REFPROPERLYPAIREDPROPORTION,
-                FLAGSTAT.REFWITHITSELFANDMATEMAPPEDPROPORTION,
-                FLAGSTAT.REFSINGLETONPROPORTION,
-                FLAGSTAT.TUMORUNIQUEREADCOUNT,
-                FLAGSTAT.TUMORSECONDARYCOUNT,
-                FLAGSTAT.TUMORSUPPLEMENTARYCOUNT,
-                FLAGSTAT.TUMORDUPLICATEPROPORTION,
-                FLAGSTAT.TUMORMAPPEDPROPORTION,
-                FLAGSTAT.TUMORPAIREDINSEQUENCINGPROPORTION,
-                FLAGSTAT.TUMORPROPERLYPAIREDPROPORTION,
-                FLAGSTAT.TUMORWITHITSELFANDMATEMAPPEDPROPORTION,
-                FLAGSTAT.TUMORSINGLETONPROPORTION,
-                FLAGSTAT.PASSQC)
+                        FLAGSTAT.SAMPLEID,
+                        FLAGSTAT.ISOLATIONBARCODE,
+                        FLAGSTAT.REFUNIQUEREADCOUNT,
+                        FLAGSTAT.REFSECONDARYCOUNT,
+                        FLAGSTAT.REFSUPPLEMENTARYCOUNT,
+                        FLAGSTAT.REFDUPLICATEPROPORTION,
+                        FLAGSTAT.REFMAPPEDPROPORTION,
+                        FLAGSTAT.REFPAIREDINSEQUENCINGPROPORTION,
+                        FLAGSTAT.REFPROPERLYPAIREDPROPORTION,
+                        FLAGSTAT.REFWITHITSELFANDMATEMAPPEDPROPORTION,
+                        FLAGSTAT.REFSINGLETONPROPORTION,
+                        FLAGSTAT.TUMORUNIQUEREADCOUNT,
+                        FLAGSTAT.TUMORSECONDARYCOUNT,
+                        FLAGSTAT.TUMORSUPPLEMENTARYCOUNT,
+                        FLAGSTAT.TUMORDUPLICATEPROPORTION,
+                        FLAGSTAT.TUMORMAPPEDPROPORTION,
+                        FLAGSTAT.TUMORPAIREDINSEQUENCINGPROPORTION,
+                        FLAGSTAT.TUMORPROPERLYPAIREDPROPORTION,
+                        FLAGSTAT.TUMORWITHITSELFANDMATEMAPPEDPROPORTION,
+                        FLAGSTAT.TUMORSINGLETONPROPORTION,
+                        FLAGSTAT.PASSQC)
                 .values(sample,
+                        isolationBarcode,
                         refFlagstat.uniqueReadCount(),
                         refFlagstat.secondaryCount(),
                         refFlagstat.supplementaryCount(),

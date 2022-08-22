@@ -244,8 +244,9 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
-    public BufferedWriter<VariantContext> germlineVariantWriter(String tumorSample, String referenceSample, String rnaSample) {
-        return germlineVariantDAO.writer(tumorSample, referenceSample, rnaSample);
+    public BufferedWriter<VariantContext> germlineVariantWriter(String tumorSample, @NotNull String isolationBarcode,
+            String referenceSample, String rnaSample) {
+        return germlineVariantDAO.writer(tumorSample, isolationBarcode, referenceSample, rnaSample);
     }
 
     @NotNull
@@ -343,21 +344,23 @@ public class DatabaseAccess implements AutoCloseable {
         return structuralVariantFusionDAO.readBreakends(sample);
     }
 
-    public void writeCanonicalTranscripts(
-            final String refGenomeVersion, final List<GeneData> geneDataList, final List<TranscriptData> transcripts) {
+    public void writeCanonicalTranscripts(final String refGenomeVersion, final List<GeneData> geneDataList,
+            final List<TranscriptData> transcripts) {
         canonicalTranscriptDAO.write(refGenomeVersion, geneDataList, transcripts);
     }
 
-    public void writePurity(@NotNull String sampleId, @NotNull PurityContext context, @NotNull PurpleQC checks) {
-        purityDAO.write(sampleId, context, checks);
+    public void writePurity(@NotNull String sampleId, @NotNull String isolationBarcode, @NotNull PurityContext context,
+            @NotNull PurpleQC checks) {
+        purityDAO.write(sampleId, isolationBarcode, context, checks);
     }
 
-    public void writeBestFitPerPurity(@NotNull String sampleId, @NotNull List<FittedPurity> bestFitPerPurity) {
-        purityDAO.write(sampleId, bestFitPerPurity);
+    public void writeBestFitPerPurity(@NotNull String sampleId, @NotNull String isolationBarcode,
+            @NotNull List<FittedPurity> bestFitPerPurity) {
+        purityDAO.write(sampleId, isolationBarcode, bestFitPerPurity);
     }
 
-    public void writeCopynumbers(@NotNull String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
-        copyNumberDAO.writeCopyNumber(sample, copyNumbers);
+    public void writeCopynumbers(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<PurpleCopyNumber> copyNumbers) {
+        copyNumberDAO.writeCopyNumber(sample, isolationBarcode, copyNumbers);
     }
 
     public void writeAmberMapping(@NotNull String sample, List<AmberMapping> mapping) {
@@ -400,98 +403,108 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
-    public BufferedWriter<SomaticVariant> somaticVariantWriter(@NotNull final String sampleId) {
-        return somaticVariantDAO.writer(sampleId);
+    public BufferedWriter<SomaticVariant> somaticVariantWriter(@NotNull final String sampleId, @NotNull String isolationBarcode) {
+        return somaticVariantDAO.writer(sampleId, isolationBarcode);
     }
 
-    public void writeStructuralVariants(@NotNull String sampleId, @NotNull List<StructuralVariantData> variants) {
-        structuralVariantDAO.write(sampleId, variants);
+    public void writeStructuralVariants(@NotNull String sampleId, @NotNull String isolationBarcode,
+            @NotNull List<StructuralVariantData> variants) {
+        structuralVariantDAO.write(sampleId, isolationBarcode, variants);
     }
 
-    public void writeSvClusters(@NotNull String sample, @NotNull List<LinxCluster> clusters) {
-        structuralVariantClusterDAO.writeClusters(sample, clusters);
+    public void writeSvClusters(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<LinxCluster> clusters) {
+        structuralVariantClusterDAO.writeClusters(sample, isolationBarcode, clusters);
     }
 
-    public void writeSvLinxData(@NotNull String sample, @NotNull List<LinxSvAnnotation> svData) {
-        structuralVariantClusterDAO.writeSvData(sample, svData);
+    public void writeSvLinxData(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<LinxSvAnnotation> svData) {
+        structuralVariantClusterDAO.writeSvData(sample, isolationBarcode, svData);
     }
 
-    public void writeSvLinks(@NotNull String sample, @NotNull List<LinxLink> links) {
-        structuralVariantClusterDAO.writeLinks(sample, links);
+    public void writeSvLinks(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<LinxLink> links) {
+        structuralVariantClusterDAO.writeLinks(sample, isolationBarcode, links);
     }
 
-    public void writeSvDrivers(@NotNull String sample, @NotNull List<LinxDriver> drivers) {
-        structuralVariantClusterDAO.writeDrivers(sample, drivers);
+    public void writeSvDrivers(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<LinxDriver> drivers) {
+        structuralVariantClusterDAO.writeDrivers(sample, isolationBarcode, drivers);
     }
 
-    public void writeGermlineSVs(@NotNull String sample, @NotNull List<LinxGermlineSv> germlineSvs) {
-        germlineVariantDAO.writeGermlineSVs(sample, germlineSvs);
+    public void writeGermlineSVs(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<LinxGermlineSv> germlineSvs) {
+        germlineVariantDAO.writeGermlineSVs(sample, isolationBarcode, germlineSvs);
     }
 
-    public void writeSignatures(@NotNull String sample, @NotNull List<SignatureAllocation> sigAllocations) {
-        signatureDAO.write(sample, sigAllocations);
+    public void writeSignatures(@NotNull String sample, @NotNull String isolationBarcode,
+            @NotNull List<SignatureAllocation> sigAllocations) {
+        signatureDAO.write(sample, isolationBarcode, sigAllocations);
     }
 
-    public void writeGeneCopyNumbers(@NotNull String sample, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
-        geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
+    public void writeGeneCopyNumbers(@NotNull String sample, @NotNull String isolationBarcode,
+            @NotNull List<GeneCopyNumber> geneCopyNumbers) {
+        geneCopyNumberDAO.writeCopyNumber(sample, isolationBarcode, geneCopyNumbers);
     }
 
-    public void writeGermlineDeletions(@NotNull String sample, @NotNull List<GermlineDeletion> deletions) {
-        geneCopyNumberDAO.writeGermlineDeletions(sample, deletions);
+    public void writeGermlineDeletions(@NotNull String sample, @NotNull String isolationBarcode,
+            @NotNull List<GermlineDeletion> deletions) {
+        geneCopyNumberDAO.writeGermlineDeletions(sample, isolationBarcode, deletions);
     }
 
-    public void writeLinxDriverCatalog(
-            @NotNull String sample, @NotNull List<DriverCatalog> driverCatalog, final EnumSet<DriverType> driverTypes) {
-        driverCatalogDAO.writeLinxDrivers(sample, driverCatalog, driverTypes);
+    public void writeLinxDriverCatalog(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<DriverCatalog> driverCatalog,
+            final EnumSet<DriverType> driverTypes) {
+        driverCatalogDAO.writeLinxDrivers(sample, isolationBarcode, driverCatalog, driverTypes);
     }
 
-    public void writePurpleDriverCatalog(
-            @NotNull String sample, @Nullable List<DriverCatalog> somaticCatalog, @Nullable List<DriverCatalog> germlineCatalog) {
-        driverCatalogDAO.writePurpleDrivers(sample, somaticCatalog, germlineCatalog);
+    public void writePurpleDriverCatalog(@NotNull String sample, @NotNull String isolationBarcode,
+            @Nullable List<DriverCatalog> somaticCatalog, @Nullable List<DriverCatalog> germlineCatalog) {
+        driverCatalogDAO.writePurpleDrivers(sample, isolationBarcode, somaticCatalog, germlineCatalog);
     }
 
-    public void writeMetrics(@NotNull String sample, @NotNull WGSMetricWithQC metrics) {
-        metricDAO.writeMetrics(sample, metrics);
+    public void writeMetrics(@NotNull String sample, @NotNull String isolationBarcode, @NotNull WGSMetricWithQC metrics) {
+        metricDAO.writeMetrics(sample, isolationBarcode, metrics);
     }
 
-    public void writeFlagstats(@NotNull String sample, @NotNull Flagstat refFlagstat, @NotNull Flagstat tumorFlagstat) {
-        flagstatDAO.writeFlagstats(sample, refFlagstat, tumorFlagstat);
+    public void writeFlagstats(@NotNull String sample, @NotNull String isolationBarcode, @NotNull Flagstat refFlagstat,
+            @NotNull Flagstat tumorFlagstat) {
+        flagstatDAO.writeFlagstats(sample, isolationBarcode, refFlagstat, tumorFlagstat);
     }
 
-    public void writePeach(@NotNull String sample, @NotNull List<PeachGenotype> peachGenotypes, @NotNull List<PeachCalls> peachCalls) {
-        peachDAO.writePeach(sample, peachGenotypes, peachCalls);
+    public void writePeach(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<PeachGenotype> peachGenotypes,
+            @NotNull List<PeachCalls> peachCalls) {
+        peachDAO.writePeach(sample, isolationBarcode, peachGenotypes, peachCalls);
     }
 
-    public void writeCuppa(@NotNull String sample, @NotNull MolecularTissueOrginData molecularTissueOrginData) {
-        cuppaDAO.writeCuppa(sample, molecularTissueOrginData);
+    public void writeCuppa(@NotNull String sample, @NotNull String isolationBarcode,
+            @NotNull MolecularTissueOrginData molecularTissueOrginData) {
+        cuppaDAO.writeCuppa(sample, isolationBarcode, molecularTissueOrginData);
     }
 
-    public void writeVirusBreakend(@NotNull String sample, @NotNull List<VirusBreakend> virusBreakends) {
-        virusBreakendDAO.writeVirusBreakend(sample, virusBreakends);
+    public void writeVirusBreakend(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<VirusBreakend> virusBreakends) {
+        virusBreakendDAO.writeVirusBreakend(sample, isolationBarcode, virusBreakends);
     }
 
-    public void writeVirusInterpreter(@NotNull String sample, @NotNull List<AnnotatedVirus> virusAnnotations) {
-        virusInterpreterDAO.writeVirusInterpreter(sample, virusAnnotations);
+    public void writeVirusInterpreter(@NotNull String sample, @NotNull String isolationBarcode,
+            @NotNull List<AnnotatedVirus> virusAnnotations) {
+        virusInterpreterDAO.writeVirusInterpreter(sample, isolationBarcode, virusAnnotations);
     }
 
-    public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidence> evidence) {
-        protectDAO.write(sample, evidence);
+    public void writeProtectEvidence(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<ProtectEvidence> evidence) {
+        protectDAO.write(sample, isolationBarcode, evidence);
     }
 
-    public void writeChord(@NotNull String sample, @NotNull ChordData chordData) {
-        chordDAO.writeChord(sample, chordData);
+    public void writeChord(@NotNull String sample, @NotNull String isolationBarcode, @NotNull ChordData chordData) {
+        chordDAO.writeChord(sample, isolationBarcode, chordData);
     }
 
-    public ChordData readChord(final String sampleId) { return chordDAO.readChord(sampleId); }
+    public ChordData readChord(final String sampleId) {
+        return chordDAO.readChord(sampleId);
+    }
 
-    public void writeSnpCheck(@NotNull String sample, boolean isPass) {
-        snpCheckDAO.write(sample, isPass);
+    public void writeSnpCheck(@NotNull String sample, @NotNull String isolationBarcode, boolean isPass) {
+        snpCheckDAO.write(sample, isolationBarcode, isPass);
     }
 
     /*
-    public void writeHla(@NotNull final String sample, @NotNull final HlaTypes type, @NotNull final List<HlaTypeDetails> details) {
-        hlaTypeDAO.writeType(sample, type);
-        hlaTypeDAO.writeTypeDetails(sample, details);
+    public void writeHla(@NotNull final String sample, @NotNull String isolationBarcode, @NotNull final HlaTypes type, @NotNull final List<HlaTypeDetails> details) {
+        hlaTypeDAO.writeType(sample, isolationBarcode, type);
+        hlaTypeDAO.writeTypeDetails(sample, isolationBarcode, details);
     }
     */
 

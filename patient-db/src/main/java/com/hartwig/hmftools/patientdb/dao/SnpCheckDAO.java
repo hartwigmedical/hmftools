@@ -14,9 +14,11 @@ public class SnpCheckDAO {
         this.context = context;
     }
 
-    void write(@NotNull String sample, boolean isPass) {
+    void write(@NotNull String sample, @NotNull String isolationBarcode, boolean isPass) {
         deleteSnpCheckForSample(sample);
-        context.insertInto(SNPCHECK, SNPCHECK.SAMPLEID, SNPCHECK.ISPASS).values(sample, isPass ? (byte) 1 : (byte) 0).execute();
+        context.insertInto(SNPCHECK, SNPCHECK.SAMPLEID, SNPCHECK.ISOLATIONBARCODE, SNPCHECK.ISPASS)
+                .values(sample, isolationBarcode, isPass ? (byte) 1 : (byte) 0)
+                .execute();
     }
 
     void deleteSnpCheckForSample(@NotNull String sample) {

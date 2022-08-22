@@ -16,8 +16,7 @@ import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep19;
-import org.jooq.InsertValuesStep21;
+import org.jooq.InsertValuesStep22;
 
 class ProtectDAO {
 
@@ -30,13 +29,14 @@ class ProtectDAO {
         this.context = context;
     }
 
-    void write(@NotNull String sample, @NotNull List<ProtectEvidence> evidence) {
+    void write(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<ProtectEvidence> evidence) {
         deleteEvidenceForSample(sample);
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
         for (List<ProtectEvidence> batch : Iterables.partition(evidence, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep21 inserter = context.insertInto(PROTECT,
+            InsertValuesStep22 inserter = context.insertInto(PROTECT,
                     PROTECT.SAMPLEID,
+                    PROTECT.ISOLATIONBARCODE,
                     PROTECT.GENE,
                     PROTECT.TRANSCRIPT,
                     PROTECT.ISCANONICAL,
@@ -57,13 +57,13 @@ class ProtectDAO {
                     PROTECT.RANGERANK,
                     PROTECT.EVIDENCEURLS,
                     PROTECT.MODIFIED);
-            batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
+            batch.forEach(entry -> addRecord(timestamp, inserter, sample, isolationBarcode, entry));
             inserter.execute();
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep21 inserter, @NotNull String sample,
-            @NotNull ProtectEvidence evidence) {
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep22 inserter, @NotNull String sample,
+            @NotNull String isolationBarcode, @NotNull ProtectEvidence evidence) {
         for (KnowledgebaseSource source : evidence.sources()) {
             StringJoiner sourceUrlJoiner = new StringJoiner(",");
             for (String sourceUrl : source.sourceUrls()) {
@@ -76,6 +76,7 @@ class ProtectDAO {
             }
 
             inserter.values(sample,
+                    isolationBarcode,
                     evidence.gene(),
                     evidence.transcript(),
                     evidence.isCanonical(),

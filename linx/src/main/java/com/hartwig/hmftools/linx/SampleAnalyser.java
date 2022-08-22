@@ -59,6 +59,8 @@ import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
+import org.apache.logging.log4j.util.Strings;
+
 public class SampleAnalyser implements Callable
 {
     private final int mId;
@@ -408,11 +410,11 @@ public class SampleAnalyser implements Callable
             final List<LinxSvAnnotation> linxSvData, final List<LinxCluster> clusterData, final List<LinxLink> linksData,
             final List<DriverCatalog> driverCatalogs, final List<LinxDriver> linxDrivers)
     {
-        dbAccess.writeSvLinxData(sampleId, linxSvData);
-        dbAccess.writeSvClusters(sampleId, clusterData);
-        dbAccess.writeSvLinks(sampleId, linksData);
-        dbAccess.writeLinxDriverCatalog(sampleId, driverCatalogs, DRIVERS_LINX_SOMATIC);
-        dbAccess.writeSvDrivers(sampleId, linxDrivers);
+        dbAccess.writeSvLinxData(sampleId, Strings.EMPTY, linxSvData);
+        dbAccess.writeSvClusters(sampleId, Strings.EMPTY, clusterData);
+        dbAccess.writeSvLinks(sampleId, Strings.EMPTY, linksData);
+        dbAccess.writeLinxDriverCatalog(sampleId, Strings.EMPTY, driverCatalogs, DRIVERS_LINX_SOMATIC);
+        dbAccess.writeSvDrivers(sampleId, Strings.EMPTY, linxDrivers);
     }
 
     public void writeSampleWithNoSVs()

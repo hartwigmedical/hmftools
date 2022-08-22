@@ -55,6 +55,7 @@ import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.logging.log4j.util.Strings;
 
 public class FusionDisruptionAnalyser
 {
@@ -383,7 +384,7 @@ public class FusionDisruptionAnalyser
         LNX_LOGGER.debug("persisting {} breakends and {} fusions to database", breakends.size(), fusions.size());
 
         final StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
-        annotationDAO.writeBreakendsAndFusions(sampleId, breakends, fusions);
+        annotationDAO.writeBreakendsAndFusions(sampleId, Strings.EMPTY, breakends, fusions);
     }
 
     private void findFusions(final List<SvVarData> svList, final List<SvCluster> clusters)

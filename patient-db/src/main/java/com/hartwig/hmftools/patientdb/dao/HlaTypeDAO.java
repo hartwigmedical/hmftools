@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
+import org.jooq.InsertValuesStep16;
 
 class HlaTypeDAO {
 
@@ -17,25 +18,26 @@ class HlaTypeDAO {
     HlaTypeDAO(@NotNull final DSLContext context) {
         this.context = context;
     }
-
-    /*
-    void writeType(@NotNull final String sample, @NotNull HlaTypes type) {
+     /*
+    void writeType(@NotNull final String sample, @NotNull String isolationBarcode, @NotNull HlaTypes type) {
         context.delete(HLATYPE).where(HLATYPE.SAMPLEID.eq(sample)).execute();
 
         LocalDateTime timestamp = LocalDateTime.now();
         context.insertInto(HLATYPE,
-                HLATYPE.MODIFIED,
-                HLATYPE.SAMPLEID,
-                HLATYPE.STATUS,
-                HLATYPE.TYPEA1,
-                HLATYPE.TYPEA2,
-                HLATYPE.TYPEB1,
-                HLATYPE.TYPEB2,
-                HLATYPE.TYPEC1,
-                HLATYPE.TYPEC2,
-                HLATYPE.SOMATICVARIANTS)
+                        HLATYPE.MODIFIED,
+                        HLATYPE.SAMPLEID,
+                        HLATYPE.ISOLATIONBARCODE,
+                        HLATYPE.STATUS,
+                        HLATYPE.TYPEA1,
+                        HLATYPE.TYPEA2,
+                        HLATYPE.TYPEB1,
+                        HLATYPE.TYPEB2,
+                        HLATYPE.TYPEC1,
+                        HLATYPE.TYPEC2,
+                        HLATYPE.SOMATICVARIANTS)
                 .values(timestamp,
                         sample,
+                        isolationBarcode,
                         type.status(),
                         type.typeA1(),
                         type.typeA2(),
@@ -47,13 +49,14 @@ class HlaTypeDAO {
                 .execute();
     }
 
-    void writeTypeDetails(@NotNull final String sample, @NotNull List<HlaTypeDetails> typeDetails) {
+    void writeTypeDetails(@NotNull final String sample, @NotNull String isolationBarcode, @NotNull List<HlaTypeDetails> typeDetails) {
         context.delete(HLATYPEDETAILS).where(HLATYPEDETAILS.SAMPLEID.eq(sample)).execute();
         LocalDateTime timestamp = LocalDateTime.now();
 
-        InsertValuesStep15 inserter = context.insertInto(HLATYPEDETAILS,
+        InsertValuesStep16 inserter = context.insertInto(HLATYPEDETAILS,
                 HLATYPEDETAILS.MODIFIED,
                 HLATYPEDETAILS.SAMPLEID,
+                HLATYPEDETAILS.ISOLATIONBARCODE,
                 HLATYPEDETAILS.TYPE,
                 HLATYPEDETAILS.REFUNIQUECOVERAGE,
                 HLATYPEDETAILS.REFSHAREDCOVERAGE,
@@ -66,10 +69,11 @@ class HlaTypeDAO {
                 HLATYPEDETAILS.SOMATICNONSENSEORFRAMESHIFT,
                 HLATYPEDETAILS.SOMATICSPLICE,
                 HLATYPEDETAILS.SOMATICSYNONYMOUS,
-                HLATYPEDETAILS.SOMATICINFRAMEINDEL                );
+                HLATYPEDETAILS.SOMATICINFRAMEINDEL);
         for (HlaTypeDetails type : typeDetails) {
             inserter.values(timestamp,
                     sample,
+                    isolationBarcode,
                     type.type(),
                     type.referenceUniqueCoverage(),
                     type.referenceSharedCoverage(),
@@ -82,15 +86,12 @@ class HlaTypeDAO {
                     type.somaticNonsenseOrFrameshift(),
                     type.somaticSplice(),
                     type.somaticSynonymous(),
-                    type.somaticInframeIndel()
-                    );
+                    type.somaticInframeIndel());
         }
         inserter.execute();
     }
     */
-
-    public void deleteSampleData(@NotNull String sample)
-    {
+    public void deleteSampleData(@NotNull String sample) {
         context.delete(HLATYPE).where(HLATYPE.SAMPLEID.eq(sample)).execute();
         context.delete(HLATYPEDETAILS).where(HLATYPEDETAILS.SAMPLEID.eq(sample)).execute();
 

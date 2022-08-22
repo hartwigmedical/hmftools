@@ -22,15 +22,14 @@ import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep19;
 import org.jooq.InsertValuesStep20;
-import org.jooq.InsertValuesStep5;
-import org.jooq.InsertValuesStep8;
+import org.jooq.InsertValuesStep21;
+import org.jooq.InsertValuesStep6;
+import org.jooq.InsertValuesStep9;
 import org.jooq.Record;
 import org.jooq.Result;
 
-class StructuralVariantClusterDAO
-{
+class StructuralVariantClusterDAO {
     @NotNull
     private final DSLContext context;
 
@@ -38,16 +37,15 @@ class StructuralVariantClusterDAO
         this.context = context;
     }
 
-    public void writeClusters(final String sample, final List<LinxCluster> clusters)
-    {
+    public void writeClusters(final String sample, @NotNull String isolationBarcode, final List<LinxCluster> clusters) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         context.delete(SVCLUSTER).where(SVCLUSTER.SAMPLEID.eq(sample)).execute();
 
-        for (List<LinxCluster> batch : Iterables.partition(clusters, DB_BATCH_INSERT_SIZE))
-        {
-            InsertValuesStep8 inserter = context.insertInto(SVCLUSTER,
+        for (List<LinxCluster> batch : Iterables.partition(clusters, DB_BATCH_INSERT_SIZE)) {
+            InsertValuesStep9 inserter = context.insertInto(SVCLUSTER,
                     SVCLUSTER.SAMPLEID,
+                    SVCLUSTER.ISOLATIONBARCODE,
                     SVCLUSTER.MODIFIED,
                     SVCLUSTER.CLUSTERID,
                     SVCLUSTER.CATEGORY,
@@ -56,15 +54,15 @@ class StructuralVariantClusterDAO
                     SVCLUSTER.CLUSTERCOUNT,
                     SVCLUSTER.CLUSTERDESC);
 
-            batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
+            batch.forEach(entry -> addRecord(timestamp, inserter, sample, isolationBarcode, entry));
             inserter.execute();
         }
     }
 
-    private static void addRecord(
-            final Timestamp timestamp, final InsertValuesStep8 inserter, final String sample, final LinxCluster cluster)
-    {
+    private static void addRecord(final Timestamp timestamp, final InsertValuesStep9 inserter, final String sample,
+            @NotNull String isolationBarcode, final LinxCluster cluster) {
         inserter.values(sample,
+                isolationBarcode,
                 timestamp,
                 cluster.clusterId(),
                 cluster.category(),
@@ -74,16 +72,15 @@ class StructuralVariantClusterDAO
                 DatabaseUtil.checkStringLength(cluster.clusterDesc(), SVCLUSTER.CLUSTERDESC));
     }
 
-    public void writeSvData(final String sample, final List<LinxSvAnnotation> svData)
-    {
+    public void writeSvData(final String sample, @NotNull String isolationBarcode, final List<LinxSvAnnotation> svData) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         context.delete(SVANNOTATION).where(SVANNOTATION.SAMPLEID.eq(sample)).execute();
 
-        for (List<LinxSvAnnotation> batch : Iterables.partition(svData, DB_BATCH_INSERT_SIZE))
-        {
-            InsertValuesStep20 inserter = context.insertInto(SVANNOTATION,
+        for (List<LinxSvAnnotation> batch : Iterables.partition(svData, DB_BATCH_INSERT_SIZE)) {
+            InsertValuesStep21 inserter = context.insertInto(SVANNOTATION,
                     SVANNOTATION.SAMPLEID,
+                    SVANNOTATION.ISOLATIONBARCODE,
                     SVANNOTATION.MODIFIED,
                     SVANNOTATION.SVID,
                     SVANNOTATION.CLUSTERID,
@@ -104,15 +101,15 @@ class StructuralVariantClusterDAO
                     SVANNOTATION.LOCALTICOUNTSTART,
                     SVANNOTATION.LOCALTICOUNTEND);
 
-            batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
+            batch.forEach(entry -> addRecord(timestamp, inserter, sample, isolationBarcode, entry));
             inserter.execute();
         }
     }
 
-    private static void addRecord(
-            final Timestamp timestamp, final InsertValuesStep20 inserter, final String sample, final LinxSvAnnotation svData)
-    {
+    private static void addRecord(final Timestamp timestamp, final InsertValuesStep21 inserter, final String sample,
+            @NotNull String isolationBarcode, final LinxSvAnnotation svData) {
         inserter.values(sample,
+                isolationBarcode,
                 timestamp,
                 svData.svId(),
                 svData.clusterId(),
@@ -134,16 +131,15 @@ class StructuralVariantClusterDAO
                 svData.localTICountEnd());
     }
 
-    public void writeLinks(final String sample, final List<LinxLink> links)
-    {
+    public void writeLinks(final String sample, @NotNull String isolationBarcode, final List<LinxLink> links) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         context.delete(SVLINK).where(SVLINK.SAMPLEID.eq(sample)).execute();
 
-        for (List<LinxLink> batch : Iterables.partition(links, DB_BATCH_INSERT_SIZE))
-        {
-            InsertValuesStep19 inserter = context.insertInto(SVLINK,
+        for (List<LinxLink> batch : Iterables.partition(links, DB_BATCH_INSERT_SIZE)) {
+            InsertValuesStep20 inserter = context.insertInto(SVLINK,
                     SVLINK.SAMPLEID,
+                    SVLINK.ISOLATIONBARCODE,
                     SVLINK.MODIFIED,
                     SVLINK.CLUSTERID,
                     SVLINK.CHAINID,
@@ -163,15 +159,15 @@ class StructuralVariantClusterDAO
                     SVLINK.PSEUDOGENEINFO,
                     SVLINK.ECDNA);
 
-            batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
+            batch.forEach(entry -> addRecord(timestamp, inserter, sample, isolationBarcode, entry));
             inserter.execute();
         }
     }
 
-    private static void addRecord(
-            final Timestamp timestamp, final InsertValuesStep19 inserter, final String sample, final LinxLink link)
-    {
+    private static void addRecord(final Timestamp timestamp, final InsertValuesStep20 inserter, final String sample,
+            @NotNull String isolationBarcode, final LinxLink link) {
         inserter.values(sample,
+                isolationBarcode,
                 timestamp,
                 link.clusterId(),
                 link.chainId(),
@@ -192,30 +188,29 @@ class StructuralVariantClusterDAO
                 link.ecDna());
     }
 
-    public void writeDrivers(final String sample, final List<LinxDriver> drivers)
-    {
+    public void writeDrivers(final String sample, @NotNull String isolationBarcode, final List<LinxDriver> drivers) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         context.delete(SVDRIVER).where(SVDRIVER.SAMPLEID.eq(sample)).execute();
 
-        for (List<LinxDriver> batch : Iterables.partition(drivers, DB_BATCH_INSERT_SIZE))
-        {
-            InsertValuesStep5 inserter = context.insertInto(SVDRIVER,
+        for (List<LinxDriver> batch : Iterables.partition(drivers, DB_BATCH_INSERT_SIZE)) {
+            InsertValuesStep6 inserter = context.insertInto(SVDRIVER,
                     SVDRIVER.SAMPLEID,
+                    SVDRIVER.ISOLATIONBARCODE,
                     SVDRIVER.MODIFIED,
                     SVDRIVER.CLUSTERID,
                     SVDRIVER.GENE,
                     SVDRIVER.EVENTTYPE);
 
-            batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
+            batch.forEach(entry -> addRecord(timestamp, inserter, sample, isolationBarcode, entry));
             inserter.execute();
         }
     }
 
-    private static void addRecord(
-            final Timestamp timestamp, final InsertValuesStep5 inserter, final String sample, final LinxDriver driver)
-    {
+    private static void addRecord(final Timestamp timestamp, final InsertValuesStep6 inserter, final String sample,
+            @NotNull String isolationBarcode, final LinxDriver driver) {
         inserter.values(sample,
+                isolationBarcode,
                 timestamp,
                 driver.clusterId() == -1 ? null : driver.clusterId(),
                 driver.gene(),
@@ -223,14 +218,12 @@ class StructuralVariantClusterDAO
     }
 
     @NotNull
-    public List<LinxSvAnnotation> readAnnotations(final String sample)
-    {
+    public List<LinxSvAnnotation> readAnnotations(final String sample) {
         List<LinxSvAnnotation> svAnnotations = Lists.newArrayList();
 
         Result<Record> result = context.select().from(SVANNOTATION).where(SVANNOTATION.SAMPLEID.eq(sample)).fetch();
 
-        for (Record record : result)
-        {
+        for (Record record : result) {
             LinxSvAnnotation svData = ImmutableLinxSvAnnotation.builder()
                     .svId(record.getValue(SVANNOTATION.SVID))
                     .vcfId("")
@@ -260,14 +253,12 @@ class StructuralVariantClusterDAO
     }
 
     @NotNull
-    public List<LinxCluster> readClusters(final String sample)
-    {
+    public List<LinxCluster> readClusters(final String sample) {
         List<LinxCluster> clusterList = Lists.newArrayList();
 
         Result<Record> result = context.select().from(SVCLUSTER).where(SVCLUSTER.SAMPLEID.eq(sample)).fetch();
 
-        for (Record record : result)
-        {
+        for (Record record : result) {
             LinxCluster cluster = ImmutableLinxCluster.builder()
                     .clusterId(record.getValue(SVCLUSTER.CLUSTERID))
                     .category(record.getValue(SVCLUSTER.CATEGORY))
@@ -284,14 +275,12 @@ class StructuralVariantClusterDAO
     }
 
     @NotNull
-    public List<LinxDriver> readSvDrivers(final String sample)
-    {
+    public List<LinxDriver> readSvDrivers(final String sample) {
         List<LinxDriver> driverList = Lists.newArrayList();
 
         Result<Record> result = context.select().from(SVDRIVER).where(SVDRIVER.SAMPLEID.eq(sample)).fetch();
 
-        for (Record record : result)
-        {
+        for (Record record : result) {
             LinxDriver driver = ImmutableLinxDriver.builder()
                     .clusterId(DatabaseUtil.valueNotNull(record.getValue(SVDRIVER.CLUSTERID)))
                     .eventType(record.getValue(SVDRIVER.EVENTTYPE))
@@ -304,8 +293,7 @@ class StructuralVariantClusterDAO
         return driverList;
     }
 
-    public void deleteClusterDataForSample(final String sample)
-    {
+    public void deleteClusterDataForSample(final String sample) {
         context.delete(SVCLUSTER).where(SVCLUSTER.SAMPLEID.eq(sample)).execute();
         context.delete(SVLINK).where(SVLINK.SAMPLEID.eq(sample)).execute();
         context.delete(SVANNOTATION).where(SVANNOTATION.SAMPLEID.eq(sample)).execute();

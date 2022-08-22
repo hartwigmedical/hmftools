@@ -37,44 +37,45 @@ public class LoadLinxData {
     private static final Logger LOGGER = LogManager.getLogger(LoadLinxData.class);
 
     private static final String SAMPLE = "sample";
+    private static final String ISOLATION_BARCODE = "isolation_barcode";
     private static final String LINX_DIR = "linx_dir";
 
     private static final String SOMATIC_ONLY = "somatic_only";
     private static final String GERMLINE_ONLY = "germline_only";
 
-    public static void main(@NotNull String[] args) throws ParseException, IOException
-    {
+    public static void main(@NotNull String[] args) throws ParseException, IOException {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
         DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
-        if(dbAccess == null)
-        {
+        if (dbAccess == null) {
             LOGGER.error("Failed to create DB connection");
             System.exit(1);
         }
 
         String sampleId = cmd.getOptionValue(SAMPLE);
+        String isolationBarcode = cmd.getOptionValue(ISOLATION_BARCODE);
+
         String linxDir = cmd.getOptionValue(LINX_DIR);
 
         boolean loadGermline = !cmd.hasOption(SOMATIC_ONLY);
         boolean loadSomatic = !cmd.hasOption(GERMLINE_ONLY);
 
-        dbAccess.context().transaction(tr ->
-        {
-            if(loadSomatic)
-                loadSomaticData(dbAccess, sampleId, linxDir);
+        dbAccess.context().transaction(tr -> {
+            if (loadSomatic) {
+                loadSomaticData(dbAccess, sampleId, isolationBarcode, linxDir);
+            }
 
-            if(loadGermline)
-                loadGermlineData(dbAccess, sampleId, linxDir);
+            if (loadGermline) {
+                loadGermlineData(dbAccess, sampleId, isolationBarcode, linxDir);
+            }
         });
 
         LOGGER.info("Linx data loading complete");
     }
 
-    private static void loadSomaticData(final DatabaseAccess dbAccess, final String sampleId, final String linxDir)
-            throws IOException
-    {
+    private static void loadSomaticData(final DatabaseAccess dbAccess, final String sampleId, @NotNull String isolationBarcode,
+            final String linxDir) throws IOException {
         LOGGER.info("sample({}) loading Linx somatic data", sampleId);
 
         final String svAnnotationFile = LinxSvAnnotation.generateFilename(linxDir, sampleId, false);
@@ -85,48 +86,52 @@ public class LoadLinxData {
         final String svDriverFile = LinxDriver.generateFilename(linxDir, sampleId);
         final String driverCatalogFile = LinxDriver.generateCatalogFilename(linxDir, sampleId, true);
 
-        List<String> requiredFiles = Lists.newArrayList(
-                svAnnotationFile, svClusterFile, svLinkFile, svBreakendFile, svFusionFile, svDriverFile, driverCatalogFile);
+        List<String> requiredFiles = Lists.newArrayList(svAnnotationFile,
+                svClusterFile,
+                svLinkFile,
+                svBreakendFile,
+                svFusionFile,
+                svDriverFile,
+                driverCatalogFile);
 
-        if(requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x))))
-        {
+        if (requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x)))) {
             LOGGER.info("skipping somatic data - no files present");
             return;
         }
 
-        if(hasMissingFiles(requiredFiles, "somatic"))
+        if (hasMissingFiles(requiredFiles, "somatic")) {
             System.exit(1);
+        }
 
         List<LinxSvAnnotation> svAnnotations = LinxSvAnnotation.read(svAnnotationFile);
         LOGGER.info("sample({}) loading {} SV annotation records", sampleId, svAnnotations.size());
-        dbAccess.writeSvLinxData(sampleId, svAnnotations);
+        dbAccess.writeSvLinxData(sampleId, isolationBarcode, svAnnotations);
 
         List<LinxCluster> clusters = LinxCluster.read(svClusterFile);
         LOGGER.info("sample({}) loading {} SV cluster records", sampleId, clusters.size());
-        dbAccess.writeSvClusters(sampleId, clusters);
+        dbAccess.writeSvClusters(sampleId, isolationBarcode, clusters);
 
         List<LinxLink> links = LinxLink.read(svLinkFile);
         LOGGER.info("sample({}) loading {} SV links records", sampleId, links.size());
-        dbAccess.writeSvLinks(sampleId, links);
+        dbAccess.writeSvLinks(sampleId, isolationBarcode, links);
 
         List<LinxBreakend> breakends = LinxBreakend.read(svBreakendFile);
         List<LinxFusion> fusions = LinxFusion.read(svFusionFile);
         LOGGER.info("sample({}) loading {} breakends and {} fusion records", sampleId, breakends.size(), fusions.size());
         StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
-        annotationDAO.writeBreakendsAndFusions(sampleId, breakends, fusions);
+        annotationDAO.writeBreakendsAndFusions(sampleId, isolationBarcode, breakends, fusions);
 
         List<LinxDriver> drivers = LinxDriver.read(svDriverFile);
         LOGGER.info("sample({}) loading {} SV driver records", sampleId, drivers.size());
-        dbAccess.writeSvDrivers(sampleId, drivers);
+        dbAccess.writeSvDrivers(sampleId, isolationBarcode, drivers);
 
         List<DriverCatalog> driverCatalog = DriverCatalogFile.read(driverCatalogFile);
         LOGGER.info("sample({}) loading {} somatic driver catalog records", sampleId, driverCatalog.size());
-        dbAccess.writeLinxDriverCatalog(sampleId, driverCatalog, DRIVERS_LINX_SOMATIC);
+        dbAccess.writeLinxDriverCatalog(sampleId, isolationBarcode, driverCatalog, DRIVERS_LINX_SOMATIC);
     }
 
-    private static void loadGermlineData(final DatabaseAccess dbAccess, final String sampleId, final String linxDir)
-            throws IOException
-    {
+    private static void loadGermlineData(final DatabaseAccess dbAccess, final String sampleId, @NotNull String isolationBarcode,
+            final String linxDir) throws IOException {
         LOGGER.info("sample({}) loading Linx germline data", sampleId);
 
         final String germlineSvFile = LinxGermlineSv.generateFilename(linxDir, sampleId);
@@ -134,30 +139,30 @@ public class LoadLinxData {
 
         List<String> requiredFiles = Lists.newArrayList(germlineSvFile, driverCatalogFile);
 
-        if(requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x))))
-        {
+        if (requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x)))) {
             LOGGER.info("skipping germline data - no files present");
             return;
         }
 
-        if(hasMissingFiles(requiredFiles, "germline"))
+        if (hasMissingFiles(requiredFiles, "germline")) {
             System.exit(1);
+        }
 
         List<DriverCatalog> driverCatalog = DriverCatalogFile.read(driverCatalogFile);
         LOGGER.info("sample({}) loading {} germline driver catalog records", sampleId, driverCatalog.size());
-        dbAccess.writeLinxDriverCatalog(sampleId, driverCatalog, DRIVERS_LINX_GERMLINE);
+        dbAccess.writeLinxDriverCatalog(sampleId, isolationBarcode, driverCatalog, DRIVERS_LINX_GERMLINE);
 
         List<LinxGermlineSv> germlineSVs = LinxGermlineSv.read(germlineSvFile);
         LOGGER.info("sample({}) loading {} germline SV records", sampleId, germlineSVs.size());
-        dbAccess.writeGermlineSVs(sampleId, germlineSVs);
+        dbAccess.writeGermlineSVs(sampleId, isolationBarcode, germlineSVs);
     }
 
     @NotNull
-    private static Options createOptions()
-    {
+    private static Options createOptions() {
         Options options = new Options();
         addDatabaseCmdLineArgs(options);
         options.addOption(SAMPLE, true, "Name of the tumor sample");
+        options.addOption(ISOLATION_BARCODE, true, "Isolation barcode of the tumor sample");
         options.addOption(LINX_DIR, true, "Directory to read LINX data from");
         options.addOption(SOMATIC_ONLY, false, "Only load somatic data");
         options.addOption(GERMLINE_ONLY, false, "Only load germline data");

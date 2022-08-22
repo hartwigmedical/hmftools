@@ -14,44 +14,41 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep5;
+import org.jooq.InsertValuesStep6;
 import org.jooq.Record;
 import org.jooq.Result;
 
-class SignatureDAO
-{
+class SignatureDAO {
     @NotNull
     private final DSLContext context;
 
-    SignatureDAO(@NotNull final DSLContext context)
-    {
+    SignatureDAO(@NotNull final DSLContext context) {
         this.context = context;
     }
 
-    public void write(@NotNull String sample, @NotNull List<SignatureAllocation> sigAllocations)
-    {
+    public void write(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<SignatureAllocation> sigAllocations) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         context.delete(SIGNATURE).where(SIGNATURE.SAMPLEID.eq(sample)).execute();
 
-        for (List<SignatureAllocation> batch : Iterables.partition(sigAllocations, DB_BATCH_INSERT_SIZE))
-        {
-            InsertValuesStep5 inserter = context.insertInto(SIGNATURE,
+        for (List<SignatureAllocation> batch : Iterables.partition(sigAllocations, DB_BATCH_INSERT_SIZE)) {
+            InsertValuesStep6 inserter = context.insertInto(SIGNATURE,
                     SIGNATURE.SAMPLEID,
+                    SIGNATURE.ISOLATIONBARCODE,
                     SIGNATURE.MODIFIED,
                     SIGNATURE.SIGNATURE_,
                     SIGNATURE.ALLOCATION,
                     SIGNATURE.PERCENT);
 
-            batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
+            batch.forEach(entry -> addRecord(timestamp, inserter, sample, isolationBarcode, entry));
             inserter.execute();
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep5 inserter, @NotNull String sample,
-            @NotNull SignatureAllocation sigAllocation)
-    {
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep6 inserter, @NotNull String sample,
+            @NotNull String isolationBarcode, @NotNull SignatureAllocation sigAllocation) {
         inserter.values(sample,
+                isolationBarcode,
                 timestamp,
                 sigAllocation.signature(),
                 DatabaseUtil.decimal(sigAllocation.allocation()),
@@ -59,14 +56,12 @@ class SignatureDAO
     }
 
     @NotNull
-    public List<SignatureAllocation> readAllocations(@NotNull String sample)
-    {
+    public List<SignatureAllocation> readAllocations(@NotNull String sample) {
         List<SignatureAllocation> sigAllocationList = Lists.newArrayList();
 
         Result<Record> result = context.select().from(SIGNATURE).where(SIGNATURE.SAMPLEID.eq(sample)).fetch();
 
-        for (Record record : result)
-        {
+        for (Record record : result) {
             SignatureAllocation sigAllocation = ImmutableSignatureAllocation.builder()
                     .signature(record.getValue(SIGNATURE.SIGNATURE_))
                     .allocation(record.getValue(SIGNATURE.ALLOCATION))
@@ -79,8 +74,7 @@ class SignatureDAO
         return sigAllocationList;
     }
 
-    void deleteSignatureDataForSample(@NotNull String sample)
-    {
+    void deleteSignatureDataForSample(@NotNull String sample) {
         context.delete(SIGNATURE).where(SIGNATURE.SAMPLEID.eq(sample)).execute();
     }
 }

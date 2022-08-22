@@ -22,25 +22,22 @@ import com.hartwig.hmftools.common.purple.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep18;
 import org.jooq.InsertValuesStep19;
+import org.jooq.InsertValuesStep20;
 import org.jooq.Record;
 import org.jooq.Record15;
 import org.jooq.Result;
 
-public class GeneCopyNumberDAO
-{
+public class GeneCopyNumberDAO {
     @NotNull
     private final DSLContext context;
 
-    GeneCopyNumberDAO(@NotNull final DSLContext context)
-    {
+    GeneCopyNumberDAO(@NotNull final DSLContext context) {
         this.context = context;
     }
 
     @NotNull
-    public List<GeneCopyNumber> readCopyNumbers(@NotNull String sample, @NotNull List<String> genes)
-    {
+    public List<GeneCopyNumber> readCopyNumbers(@NotNull String sample, @NotNull List<String> genes) {
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
         Result<Record> result = genes.isEmpty()
@@ -51,8 +48,7 @@ public class GeneCopyNumberDAO
                         .and(GENECOPYNUMBER.GENE.in(genes))
                         .fetch();
 
-        for(Record record : result)
-        {
+        for (Record record : result) {
             geneCopyNumbers.add(ImmutableGeneCopyNumber.builder()
                     .chromosome(String.valueOf(record.getValue(GENECOPYNUMBER.CHROMOSOME)))
                     .start(record.getValue(GENECOPYNUMBER.START))
@@ -77,24 +73,31 @@ public class GeneCopyNumberDAO
     }
 
     @NotNull
-    public List<GermlineDeletion> readGermlineDeletions(final String sample)
-    {
+    public List<GermlineDeletion> readGermlineDeletions(final String sample) {
         List<GermlineDeletion> germlineDeletions = Lists.newArrayList();
 
-        Result<Record15<String,String,Integer,Integer,Integer,Integer,Integer,String,String,String,Double,Double,String,Integer,Byte>> result = context.select(
-                GERMLINEDELETION.GENE, GERMLINEDELETION.CHROMOSOME, GERMLINEDELETION.REGIONSTART, GERMLINEDELETION.REGIONEND,
-                GERMLINEDELETION.DEPTHWINDOWCOUNT, GERMLINEDELETION.EXONSTART, GERMLINEDELETION.EXONEND,
-                GERMLINEDELETION.DETECTIONMETHOD, GERMLINEDELETION.GERMLINESTATUS, GERMLINEDELETION.TUMORSTATUS,
-                GERMLINEDELETION.GERMLINECOPYNUMBER, GERMLINEDELETION.TUMORCOPYNUMBER, GERMLINEDELETION.FILTER,
-                GERMLINEDELETION.COHORTFREQUENCY, GERMLINEDELETION.REPORTED)
-                .from(GERMLINEDELETION).where(GERMLINEDELETION.SAMPLEID.eq(sample)).fetch();
+        Result<Record15<String, String, Integer, Integer, Integer, Integer, Integer, String, String, String, Double, Double, String, Integer, Byte>>
+                result = context.select(GERMLINEDELETION.GENE,
+                GERMLINEDELETION.CHROMOSOME,
+                GERMLINEDELETION.REGIONSTART,
+                GERMLINEDELETION.REGIONEND,
+                GERMLINEDELETION.DEPTHWINDOWCOUNT,
+                GERMLINEDELETION.EXONSTART,
+                GERMLINEDELETION.EXONEND,
+                GERMLINEDELETION.DETECTIONMETHOD,
+                GERMLINEDELETION.GERMLINESTATUS,
+                GERMLINEDELETION.TUMORSTATUS,
+                GERMLINEDELETION.GERMLINECOPYNUMBER,
+                GERMLINEDELETION.TUMORCOPYNUMBER,
+                GERMLINEDELETION.FILTER,
+                GERMLINEDELETION.COHORTFREQUENCY,
+                GERMLINEDELETION.REPORTED).from(GERMLINEDELETION).where(GERMLINEDELETION.SAMPLEID.eq(sample)).fetch();
 
-        for(Record record : result)
-        {
-            germlineDeletions.add(new GermlineDeletion(
-                    record.getValue(GERMLINEDELETION.GENE),
+        for (Record record : result) {
+            germlineDeletions.add(new GermlineDeletion(record.getValue(GERMLINEDELETION.GENE),
                     record.getValue(GERMLINEDELETION.CHROMOSOME),
-                    "", // record.getValue(GERMLINEDELETION.CHROMOSOMEBAND), // until 5.29 DB changes are applied to prod
+                    "",
+                    // record.getValue(GERMLINEDELETION.CHROMOSOMEBAND), // until 5.29 DB changes are applied to prod
                     record.getValue(GERMLINEDELETION.REGIONSTART),
                     record.getValue(GERMLINEDELETION.REGIONEND),
                     record.getValue(GERMLINEDELETION.DEPTHWINDOWCOUNT),
@@ -112,15 +115,14 @@ public class GeneCopyNumberDAO
         return germlineDeletions;
     }
 
-    public void writeCopyNumber(final String sample, final List<GeneCopyNumber> copyNumbers)
-    {
+    public void writeCopyNumber(final String sample, final String isolationBarcode, final List<GeneCopyNumber> copyNumbers) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         deleteGeneCopyNumberForSample(sample);
 
-        for(List<GeneCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE))
-        {
-            InsertValuesStep19 inserter = context.insertInto(GENECOPYNUMBER,
+        for (List<GeneCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
+            InsertValuesStep20 inserter = context.insertInto(GENECOPYNUMBER,
                     GENECOPYNUMBER.SAMPLEID,
+                    GENECOPYNUMBER.ISOLATIONBARCODE,
                     GENECOPYNUMBER.CHROMOSOME,
                     GENECOPYNUMBER.START,
                     GENECOPYNUMBER.END,
@@ -139,15 +141,15 @@ public class GeneCopyNumberDAO
                     GENECOPYNUMBER.MINREGIONMETHOD,
                     GENECOPYNUMBER.MINMINORALLELECOPYNUMBER,
                     COPYNUMBER.MODIFIED);
-            splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
+            splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, isolationBarcode, x));
             inserter.execute();
         }
     }
 
-    private static void addCopynumberRecord(
-            final Timestamp timestamp, final InsertValuesStep19 inserter, final String sample, final GeneCopyNumber gene)
-    {
+    private static void addCopynumberRecord(final Timestamp timestamp, final InsertValuesStep20 inserter, final String sample,
+            final String isolationBarcode, final GeneCopyNumber gene) {
         inserter.values(sample,
+                isolationBarcode,
                 gene.chromosome(),
                 gene.start(),
                 gene.end(),
@@ -168,18 +170,17 @@ public class GeneCopyNumberDAO
                 timestamp);
     }
 
-    void deleteGeneCopyNumberForSample(final String sample)
-    {
+    void deleteGeneCopyNumberForSample(final String sample) {
         context.delete(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).execute();
     }
 
-    public void writeGermlineDeletions(final String sample, final List<GermlineDeletion> deletions)
-    {
+    public void writeGermlineDeletions(final String sample, final String isolationBarcode, final List<GermlineDeletion> deletions) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         deleteGermlineDeletionsForSample(sample);
 
-        InsertValuesStep18 inserter = context.insertInto(GERMLINEDELETION,
+        InsertValuesStep19 inserter = context.insertInto(GERMLINEDELETION,
                 GERMLINEDELETION.SAMPLEID,
+                GERMLINEDELETION.ISOLATIONBARCODE,
                 GERMLINEDELETION.GENE,
                 GERMLINEDELETION.CHROMOSOME,
                 GERMLINEDELETION.CHROMOSOMEBAND,
@@ -198,19 +199,17 @@ public class GeneCopyNumberDAO
                 GERMLINEDELETION.REPORTED,
                 COPYNUMBER.MODIFIED);
 
-        for(GermlineDeletion deletion : deletions)
-        {
-            addDeletionRecord(timestamp, inserter, sample, deletion);
+        for (GermlineDeletion deletion : deletions) {
+            addDeletionRecord(timestamp, inserter, sample, isolationBarcode, deletion);
         }
 
         inserter.execute();
     }
 
-    private static void addDeletionRecord(
-            final Timestamp timestamp, final InsertValuesStep18 inserter, final String sample, final GermlineDeletion deletion)
-    {
-        inserter.values(
-                sample,
+    private static void addDeletionRecord(final Timestamp timestamp, final InsertValuesStep19 inserter, final String sample,
+            final String isolationBarcode, final GermlineDeletion deletion) {
+        inserter.values(sample,
+                isolationBarcode,
                 DatabaseUtil.checkStringLength(deletion.GeneName, GERMLINEDELETION.GENE),
                 deletion.Chromosome,
                 deletion.ChromosomeBand,
@@ -230,8 +229,7 @@ public class GeneCopyNumberDAO
                 timestamp);
     }
 
-    private void deleteGermlineDeletionsForSample(final String sample)
-    {
+    private void deleteGermlineDeletionsForSample(final String sample) {
         context.delete(GERMLINEDELETION).where(GERMLINEDELETION.SAMPLEID.eq(sample)).execute();
     }
 

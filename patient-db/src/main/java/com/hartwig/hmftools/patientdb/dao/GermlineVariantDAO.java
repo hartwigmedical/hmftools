@@ -35,61 +35,52 @@ import org.jooq.TableField;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class GermlineVariantDAO
-{
+public class GermlineVariantDAO {
     @NotNull
     private final DSLContext context;
 
-    public GermlineVariantDAO(@NotNull final DSLContext context)
-    {
+    public GermlineVariantDAO(@NotNull final DSLContext context) {
         this.context = context;
     }
 
     @NotNull
-    public BufferedWriter<VariantContext> writer(String tumorSample, String referenceSample, String rnaSample)
-    {
-        BufferedWriterConsumer<VariantContext> consumer = new BufferedWriterConsumer<VariantContext>()
-        {
+    public BufferedWriter<VariantContext> writer(String tumorSample, String isolationBarcode, String referenceSample, String rnaSample) {
+        BufferedWriterConsumer<VariantContext> consumer = new BufferedWriterConsumer<VariantContext>() {
             @Override
-            public void initialise()
-            {
+            public void initialise() {
                 deleteGermlineVariantsForSample(tumorSample);
             }
 
             @Override
-            public void accept(final Timestamp timestamp, final List<VariantContext> entries)
-            {
-                writeAll(timestamp, tumorSample, referenceSample, rnaSample, entries);
+            public void accept(final Timestamp timestamp, final List<VariantContext> entries) {
+                writeAll(timestamp, tumorSample, isolationBarcode, referenceSample, rnaSample, entries);
             }
         };
 
         return new BufferedWriter<>(consumer);
     }
 
-    private void writeAll(@NotNull final Timestamp timestamp, String tumorSample, String referenceSample, String rnaSample,
-            @NotNull List<VariantContext> variants)
-    {
+    private void writeAll(@NotNull final Timestamp timestamp, String tumorSample, String isolationBarcode, String referenceSample,
+            String rnaSample, @NotNull List<VariantContext> variants) {
         final InsertValuesStepN inserter = createInserter();
-        variants.forEach(variant -> addRecord(timestamp, inserter, tumorSample, referenceSample, rnaSample, variant));
+        variants.forEach(variant -> addRecord(timestamp, inserter, tumorSample, isolationBarcode, referenceSample, rnaSample, variant));
         inserter.execute();
     }
 
-    public void deleteGermlineVariantsForSample(@NotNull String sampleId)
-    {
+    public void deleteGermlineVariantsForSample(@NotNull String sampleId) {
         context.delete(GERMLINEVARIANT).where(GERMLINEVARIANT.SAMPLEID.eq(sampleId)).execute();
     }
 
-    public void deleteGermlineStructuralVariantsForSample(@NotNull String sampleId)
-    {
+    public void deleteGermlineStructuralVariantsForSample(@NotNull String sampleId) {
         context.delete(STRUCTURALVARIANTGERMLINE).where(STRUCTURALVARIANTGERMLINE.SAMPLEID.eq(sampleId)).execute();
     }
 
     @NotNull
-    private InsertValuesStepN createInserter()
-    {
+    private InsertValuesStepN createInserter() {
         return context.insertInto(GERMLINEVARIANT,
                 GERMLINEVARIANT.MODIFIED,
                 GERMLINEVARIANT.SAMPLEID,
+                GERMLINEVARIANT.ISOLATIONBARCODE,
                 GERMLINEVARIANT.CHROMOSOME,
                 GERMLINEVARIANT.POSITION,
                 GERMLINEVARIANT.FILTER,
@@ -132,10 +123,8 @@ public class GermlineVariantDAO
                 GERMLINEVARIANT.REPORTED);
     }
 
-    private static void addRecord(
-            Timestamp timestamp, InsertValuesStepN inserter, String tumorSample, String referenceSample,
-            String rnaSample, VariantContext variantContext)
-    {
+    private static void addRecord(Timestamp timestamp, InsertValuesStepN inserter, String tumorSample, String isolationBarcode,
+            String referenceSample, String rnaSample, VariantContext variantContext) {
         final VariantContextDecorator decorator = new VariantContextDecorator(variantContext);
         final AllelicDepth tumorDepth = decorator.allelicDepth(tumorSample);
         final AllelicDepth referenceDepth = decorator.allelicDepth(referenceSample);
@@ -145,6 +134,7 @@ public class GermlineVariantDAO
 
         inserter.values(timestamp,
                 tumorSample,
+                isolationBarcode,
                 decorator.chromosome(),
                 decorator.position(),
                 decorator.filter(),
@@ -184,29 +174,28 @@ public class GermlineVariantDAO
                 decorator.trinucleotideContext(),
                 decorator.hotspot().toString(),
                 decorator.mappability(),
-                decorator.reported()
-        );
+                decorator.reported());
     }
 
-    protected static String checkTrimHgsvString(final String hgvsStr, @NotNull TableField<?, String> field)
-    {
+    protected static String checkTrimHgsvString(final String hgvsStr, @NotNull TableField<?, String> field) {
         int maxLength = field.getDataType().length();
 
-        if(hgvsStr.length() < maxLength)
+        if (hgvsStr.length() < maxLength) {
             return hgvsStr;
+        }
 
         String trimmedStr = hgvsStr.substring(0, maxLength - 4);
         return trimmedStr + "...";
     }
 
-    public void writeGermlineSVs(final String sample, final List<LinxGermlineSv> germlineSVs)
-    {
+    public void writeGermlineSVs(final String sample, @NotNull String isolationBarcode, final List<LinxGermlineSv> germlineSVs) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         context.delete(STRUCTURALVARIANTGERMLINE).where(STRUCTURALVARIANTGERMLINE.SAMPLEID.eq(sample)).execute();
 
         InsertValuesStepN inserter = context.insertInto(STRUCTURALVARIANTGERMLINE,
                 STRUCTURALVARIANTGERMLINE.SAMPLEID,
+                STRUCTURALVARIANTGERMLINE.ISOLATIONBARCODE,
                 STRUCTURALVARIANTGERMLINE.MODIFIED,
                 STRUCTURALVARIANTGERMLINE.CHROMOSOMESTART,
                 STRUCTURALVARIANTGERMLINE.CHROMOSOMEEND,
@@ -237,18 +226,17 @@ public class GermlineVariantDAO
                 STRUCTURALVARIANTGERMLINE.COHORTFREQUENCY,
                 STRUCTURALVARIANTGERMLINE.REPORTED);
 
-        for(LinxGermlineSv germlineSV : germlineSVs)
-        {
-            addRecord(timestamp, inserter, sample, germlineSV);
+        for (LinxGermlineSv germlineSV : germlineSVs) {
+            addRecord(timestamp, inserter, sample, isolationBarcode, germlineSV);
         }
 
         inserter.execute();
     }
 
-    private static void addRecord(
-            final Timestamp timestamp, final InsertValuesStepN inserter, final String sample, final LinxGermlineSv germlineSV)
-    {
+    private static void addRecord(final Timestamp timestamp, final InsertValuesStepN inserter, final String sample,
+            @NotNull String isolationBarcode, final LinxGermlineSv germlineSV) {
         inserter.values(sample,
+                isolationBarcode,
                 timestamp,
                 germlineSV.ChromosomeStart,
                 germlineSV.Type != SGL ? germlineSV.ChromosomeEnd : null,
@@ -281,22 +269,19 @@ public class GermlineVariantDAO
     }
 
     @NotNull
-    public List<GermlineVariant> read(@NotNull String sample)
-    {
+    public List<GermlineVariant> read(@NotNull String sample) {
         List<GermlineVariant> variants = Lists.newArrayList();
 
         Result<Record> result = context.select().from(GERMLINEVARIANT).where(GERMLINEVARIANT.SAMPLEID.eq(sample)).fetch();
 
-        for(Record record : result)
-        {
+        for (Record record : result) {
             variants.add(buildFromRecord(record));
         }
 
         return variants;
     }
 
-    public static GermlineVariant buildFromRecord(final Record record)
-    {
+    public static GermlineVariant buildFromRecord(final Record record) {
         Integer rnaAlleleReadCount = record.getValue(GERMLINEVARIANT.RNAALLELEREADCOUNT);
         Integer rnaTotalCount = record.getValue(GERMLINEVARIANT.RNATOTALREADCOUNT);
         AllelicDepth rnaAllelicDepth = rnaAlleleReadCount != null && rnaTotalCount != null ? ImmutableAllelicDepthImpl.builder()

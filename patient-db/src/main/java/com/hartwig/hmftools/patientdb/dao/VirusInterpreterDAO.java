@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep12;
+import org.jooq.InsertValuesStep13;
 
 public class VirusInterpreterDAO {
 
@@ -23,14 +23,15 @@ public class VirusInterpreterDAO {
         this.context = context;
     }
 
-    void writeVirusInterpreter(@NotNull String sample, @NotNull List<AnnotatedVirus> virusAnnotations) {
+    void writeVirusInterpreter(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<AnnotatedVirus> virusAnnotations) {
         deleteVirusAnnotationForSample(sample);
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         for (List<AnnotatedVirus> virusAnnotation : Iterables.partition(virusAnnotations, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep12 inserter = context.insertInto(VIRUSANNOTATION,
+            InsertValuesStep13 inserter = context.insertInto(VIRUSANNOTATION,
                     VIRUSANNOTATION.MODIFIED,
                     VIRUSANNOTATION.SAMPLEID,
+                    VIRUSANNOTATION.ISOLATIONBARCODE,
                     VIRUSANNOTATION.TAXID,
                     VIRUSANNOTATION.VIRUSNAME,
                     VIRUSANNOTATION.QCSTATUS,
@@ -41,15 +42,16 @@ public class VirusInterpreterDAO {
                     VIRUSANNOTATION.EXPECTEDCLONALCOVERAGE,
                     VIRUSANNOTATION.REPORTED,
                     VIRUSANNOTATION.LIKELIHOOD);
-            virusAnnotation.forEach(x -> addVirusAnnotation(timestamp, inserter, sample, x));
+            virusAnnotation.forEach(x -> addVirusAnnotation(timestamp, inserter, sample, isolationBarcode, x));
             inserter.execute();
         }
     }
 
-    private static void addVirusAnnotation(@NotNull Timestamp timestamp, @NotNull InsertValuesStep12 inserter, @NotNull String sample,
-            @NotNull AnnotatedVirus annotatedVirus) {
+    private static void addVirusAnnotation(@NotNull Timestamp timestamp, @NotNull InsertValuesStep13 inserter, @NotNull String sample,
+            @NotNull String isolationBarcode, @NotNull AnnotatedVirus annotatedVirus) {
         inserter.values(timestamp,
                 sample,
+                isolationBarcode,
                 annotatedVirus.taxid(),
                 annotatedVirus.name(),
                 annotatedVirus.qcStatus(),

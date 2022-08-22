@@ -24,6 +24,7 @@ public class LoadFlagstatData {
     private static final Logger LOGGER = LogManager.getLogger(LoadFlagstatData.class);
 
     private static final String SAMPLE = "sample";
+    private static final String ISOLATION_BARCODE = "isolation_barcode";
 
     private static final String REF_FLAGSTAT_FILE = "ref_flagstat_file";
     private static final String TUMOR_FLAGSTAT_FILE = "tumor_flagstat_file";
@@ -33,10 +34,11 @@ public class LoadFlagstatData {
         CommandLine cmd = new DefaultParser().parse(options, args);
 
         String sample = cmd.getOptionValue(SAMPLE);
+        String isolationBarcode = cmd.getOptionValue(ISOLATION_BARCODE);
         String refFlagstatFile = cmd.getOptionValue(REF_FLAGSTAT_FILE);
         String tumorFlagstatFile = cmd.getOptionValue(TUMOR_FLAGSTAT_FILE);
 
-        if (Utils.anyNull(sample, refFlagstatFile, tumorFlagstatFile)) {
+        if (Utils.anyNull(sample, isolationBarcode, refFlagstatFile, tumorFlagstatFile)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-DB - Load Flagstat Data", options);
             System.exit(1);
@@ -51,7 +53,7 @@ public class LoadFlagstatData {
         Flagstat tumorFlagstat = FlagstatFile.read(tumorFlagstatFile);
         LOGGER.info(" Read tumor sample flagstats from {}", tumorFlagstatFile);
 
-        dbWriter.writeFlagstats(sample, refFlagstat, tumorFlagstat);
+        dbWriter.writeFlagstats(sample, isolationBarcode, refFlagstat, tumorFlagstat);
 
         LOGGER.info("Complete");
     }
@@ -60,6 +62,7 @@ public class LoadFlagstatData {
     private static Options createOptions() {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Sample for which we are going to load the flagstats");
+        options.addOption(ISOLATION_BARCODE, true, "Isolation barcode for which we are going to load the flagstats");
         options.addOption(REF_FLAGSTAT_FILE, true, "Path towards the flagstat file holding the ref sample flagstats");
         options.addOption(TUMOR_FLAGSTAT_FILE, true, "Path towards the flagstat file holding the tumor sample flagstats");
 

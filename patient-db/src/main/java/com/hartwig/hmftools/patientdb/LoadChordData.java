@@ -25,6 +25,7 @@ public class LoadChordData {
     private static final Logger LOGGER = LogManager.getLogger(LoadChordData.class);
 
     private static final String SAMPLE = "sample";
+    private static final String ISOLATION_BARCODE = "isolation_barcode";
     private static final String PREDICTION_FILE = "prediction_file";
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
@@ -32,9 +33,10 @@ public class LoadChordData {
         CommandLine cmd = new DefaultParser().parse(options, args);
 
         String sample = cmd.getOptionValue(SAMPLE);
+        String isolationBarcode = cmd.getOptionValue(ISOLATION_BARCODE);
         String predictionFile = cmd.getOptionValue(PREDICTION_FILE);
 
-        if (Utils.anyNull(predictionFile, sample)) {
+        if (Utils.anyNull(predictionFile, sample, isolationBarcode)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-DB - Load Chord Data", options);
             System.exit(1);
@@ -46,7 +48,7 @@ public class LoadChordData {
 
             LOGGER.info("Extracting and writing chord for {}", predictionFile);
             ChordData chordData = ChordDataFile.read(predictionFile);
-            dbWriter.writeChord(sample, chordData);
+            dbWriter.writeChord(sample, isolationBarcode, chordData);
 
             LOGGER.info("Complete");
         } else {
@@ -62,6 +64,7 @@ public class LoadChordData {
     private static Options createOptions() {
         Options options = new Options();
         options.addOption(SAMPLE, true, "The tumor sample.");
+        options.addOption(ISOLATION_BARCODE, true, "The isolation barcode of the tumor sample.");
         options.addOption(PREDICTION_FILE, true, "Path towards the chord prediction file.");
         addDatabaseCmdLineArgs(options);
         return options;

@@ -55,6 +55,8 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
+import org.apache.logging.log4j.util.Strings;
+
 public class GermlineDisruptions
 {
     private final EnsemblDataCache mGeneTransCache;
@@ -367,9 +369,9 @@ public class GermlineDisruptions
         if(dbAccess != null)
         {
             LNX_LOGGER.info("uploading {} germline SVs to database", germlineSVs.size());
-            dbAccess.writeGermlineSVs(sampleId, germlineSVs);
+            dbAccess.writeGermlineSVs(sampleId, Strings.EMPTY, germlineSVs);
 
-            dbAccess.writeLinxDriverCatalog(sampleId, drivers, DRIVERS_LINX_GERMLINE);
+            dbAccess.writeLinxDriverCatalog(sampleId, Strings.EMPTY, drivers, DRIVERS_LINX_GERMLINE);
         }
     }
 

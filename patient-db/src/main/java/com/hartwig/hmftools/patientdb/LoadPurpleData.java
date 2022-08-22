@@ -54,6 +54,7 @@ public class LoadPurpleData
     private static final Logger LOGGER = LogManager.getLogger(LoadPurpleData.class);
 
     private static final String SAMPLE = "sample";
+    private static final String ISOLATION_BARCODE = "isolation_barcode";
     private static final String REFERENCE = "reference";
     private static final String RNA_SAMPLE = "rna";
 
@@ -72,10 +73,11 @@ public class LoadPurpleData
             DatabaseAccess dbAccess = databaseAccess(cmd);
 
             String sampleId = cmd.getOptionValue(SAMPLE);
+            String isolationBarcode = cmd.getOptionValue(ISOLATION_BARCODE);
             String referenceId = cmd.getOptionValue(REFERENCE);
             String rnaId = cmd.getOptionValue(RNA_SAMPLE);
 
-            if(sampleId == null && referenceId == null)
+            if(sampleId == null && isolationBarcode == null && referenceId == null)
             {
                 LOGGER.error("missing sample or reference ID config");
                 System.exit(1);
@@ -104,13 +106,13 @@ public class LoadPurpleData
 
             dbAccess.context().transaction(tr ->
             {
-                loadCommonData(sample, dbAccess, purpleDir);
+                loadCommonData(sample, isolationBarcode, dbAccess, purpleDir);
 
                 if(loadSomatic)
-                    loadSomaticData(sample, referenceId, rnaId, dbAccess, purpleDir);
+                    loadSomaticData(sample, isolationBarcode, referenceId, rnaId, dbAccess, purpleDir);
 
                 if(loadGermline)
-                    loadGermlineData(sample, referenceId, rnaId, dbAccess, purpleDir);
+                    loadGermlineData(sample, isolationBarcode, referenceId, rnaId, dbAccess, purpleDir);
             });
 
             LOGGER.info("Purple data loading complete");
@@ -124,16 +126,16 @@ public class LoadPurpleData
     }
 
     private static void loadCommonData(
-            final String sampleId, final DatabaseAccess dbAccess, final String purpleDir) throws Exception
+            final String sampleId,final String isolationBarcode,  final DatabaseAccess dbAccess, final String purpleDir) throws Exception
     {
         LOGGER.info("loading common data");
         PurityContext purityContext = PurityContextFile.read(purpleDir, sampleId);
 
-        dbAccess.writePurity(sampleId, purityContext, purityContext.qc());
+        dbAccess.writePurity(sampleId, isolationBarcode, purityContext, purityContext.qc());
     }
 
     private static void loadSomaticData(
-            final String sampleId, final String referenceId, final String rnaId,
+            final String sampleId, final String isolationBarcode, final String referenceId, final String rnaId,
             final DatabaseAccess dbAccess, final String purpleDir) throws Exception
     {
         // check all somatic files exist before attempting to load
@@ -162,10 +164,10 @@ public class LoadPurpleData
         List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.readBestFitPerPurity(purpleDir, sampleId);
         List<DriverCatalog> somaticDriverCatalog = DriverCatalogFile.read(somaticDriversFile);
 
-        dbAccess.writeBestFitPerPurity(sampleId, bestFitPerPurity);
-        dbAccess.writeCopynumbers(sampleId, copyNumbers);
-        dbAccess.writeGeneCopyNumbers(sampleId, geneCopyNumbers);
-        dbAccess.writePurpleDriverCatalog(sampleId, somaticDriverCatalog, null);
+        dbAccess.writeBestFitPerPurity(sampleId, isolationBarcode, bestFitPerPurity);
+        dbAccess.writeCopynumbers(sampleId, isolationBarcode, copyNumbers);
+        dbAccess.writeGeneCopyNumbers(sampleId, isolationBarcode, geneCopyNumbers);
+        dbAccess.writePurpleDriverCatalog(sampleId, isolationBarcode, somaticDriverCatalog, null);
 
         LOGGER.info("loading geneCopyNumber({}) copyNumber({}) purityFits({}) somaticDrivers({})",
                 geneCopyNumbers.size(), copyNumbers.size(), bestFitPerPurity.size(), somaticDriverCatalog.size());
@@ -183,9 +185,9 @@ public class LoadPurpleData
         }
 
         LOGGER.info("loading {} SVs", structuralVariants.size());
-        dbAccess.writeStructuralVariants(sampleId, structuralVariants);
+        dbAccess.writeStructuralVariants(sampleId, isolationBarcode, structuralVariants);
 
-        BufferedWriter<SomaticVariant> somaticWriter = dbAccess.somaticVariantWriter(sampleId);
+        BufferedWriter<SomaticVariant> somaticWriter = dbAccess.somaticVariantWriter(sampleId, isolationBarcode);
 
         SomaticVariantFactory somaticVariantFactory = new SomaticVariantFactory();
 
@@ -197,7 +199,7 @@ public class LoadPurpleData
     }
 
     private static void loadGermlineData(
-            final String sampleId, final String referenceId, final String rnaId,
+            final String sampleId, final String isolationBarcode, final String referenceId, final String rnaId,
             final DatabaseAccess dbAccess, final String purpleDir) throws Exception
     {
         final String germlineVcf = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
@@ -223,14 +225,14 @@ public class LoadPurpleData
 
         LOGGER.info("loading germlime drivers({}) deletions({})", germlineDriverCatalog.size(), germlineDeletions.size());
 
-        dbAccess.writeGermlineDeletions(sampleId, germlineDeletions);
-        dbAccess.writePurpleDriverCatalog(sampleId, null, germlineDriverCatalog);
+        dbAccess.writeGermlineDeletions(sampleId, isolationBarcode, germlineDeletions);
+        dbAccess.writePurpleDriverCatalog(sampleId, isolationBarcode, null, germlineDriverCatalog);
 
         int variantCount = 0;
 
         try(AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(germlineVcf, new VCFCodec(), false);
 
-        BufferedWriter<VariantContext> dbWriter = dbAccess.germlineVariantWriter(sampleId, referenceId, rnaId))
+        BufferedWriter<VariantContext> dbWriter = dbAccess.germlineVariantWriter(sampleId, isolationBarcode, referenceId, rnaId))
         {
             dbWriter.initialise();
 
@@ -267,6 +269,7 @@ public class LoadPurpleData
     {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample ID");
+        options.addOption(ISOLATION_BARCODE, true, "Isolation barcode ID");
         options.addOption(REFERENCE, true, "Reference ID");
         options.addOption(RNA_SAMPLE, true, "RNA sample ID");
         options.addOption(PURPLE_DIR, true, "Path to the Purple directory");

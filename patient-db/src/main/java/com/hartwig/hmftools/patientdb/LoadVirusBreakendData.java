@@ -25,6 +25,7 @@ public class LoadVirusBreakendData {
     private static final Logger LOGGER = LogManager.getLogger(LoadVirusBreakendData.class);
 
     private static final String SAMPLE = "sample";
+    private static final String ISOLATION_BARCODE = "isolation_barcode";
     private static final String VIRUS_BREAKEND_TSV = "virus_breakend_tsv";
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
@@ -32,9 +33,10 @@ public class LoadVirusBreakendData {
         CommandLine cmd = new DefaultParser().parse(options, args);
 
         String sample = cmd.getOptionValue(SAMPLE);
+        String isolationBarcode = cmd.getOptionValue(ISOLATION_BARCODE);
         String virusBreakendTsv = cmd.getOptionValue(VIRUS_BREAKEND_TSV);
 
-        if (Utils.anyNull(sample, virusBreakendTsv)) {
+        if (Utils.anyNull(sample, isolationBarcode, virusBreakendTsv)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-DB - Load VIRUSBreakend Data", options);
             System.exit(1);
@@ -47,7 +49,7 @@ public class LoadVirusBreakendData {
         LOGGER.info(" Read {} virus breakends", virusBreakends.size());
 
         LOGGER.info("Writing virus breakends into database for {}", sample);
-        dbWriter.writeVirusBreakend(sample, virusBreakends);
+        dbWriter.writeVirusBreakend(sample, isolationBarcode, virusBreakends);
 
         LOGGER.info("Complete");
     }
@@ -57,6 +59,7 @@ public class LoadVirusBreakendData {
         Options options = new Options();
 
         options.addOption(SAMPLE, true, "Sample for which we are going to load the virus breakends");
+        options.addOption(ISOLATION_BARCODE, true, "Isolation barcode for which we are going to load the virus breakends");
         options.addOption(VIRUS_BREAKEND_TSV, true, "Path towards the virus breakend TSV file");
 
         addDatabaseCmdLineArgs(options);

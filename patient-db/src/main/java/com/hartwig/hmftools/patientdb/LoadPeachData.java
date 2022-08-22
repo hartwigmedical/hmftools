@@ -27,6 +27,7 @@ public class LoadPeachData {
     private static final Logger LOGGER = LogManager.getLogger(LoadPeachData.class);
 
     private static final String SAMPLE = "sample";
+    private static final String ISOLATION_BARCODE = "isolation_barcode";
     private static final String PEACH_GENOTYPE_TXT = "peach_genotype_txt";
     private static final String PEACH_CALLS_TXT = "peach_calls_txt";
 
@@ -35,11 +36,11 @@ public class LoadPeachData {
         CommandLine cmd = new DefaultParser().parse(options, args);
 
         String sample = cmd.getOptionValue(SAMPLE);
-
+        String isolationBarcode = cmd.getOptionValue(ISOLATION_BARCODE);
         String peachGenotypeTxt = cmd.getOptionValue(PEACH_GENOTYPE_TXT);
         String peachCallsTxt = cmd.getOptionValue(PEACH_CALLS_TXT);
 
-        if (Utils.anyNull(sample, peachCallsTxt, peachGenotypeTxt)) {
+        if (Utils.anyNull(sample, isolationBarcode, peachCallsTxt, peachGenotypeTxt)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-DB - Load PEACH Data", options);
             System.exit(1);
@@ -56,7 +57,7 @@ public class LoadPeachData {
         LOGGER.info(" Read {} PEACH calls", peachCalls.size());
 
         LOGGER.info("Writing PEACH into database for {}", sample);
-        dbWriter.writePeach(sample, peachGenotype, peachCalls);
+        dbWriter.writePeach(sample, isolationBarcode, peachGenotype, peachCalls);
 
         LOGGER.info("Complete");
     }
@@ -66,7 +67,7 @@ public class LoadPeachData {
         Options options = new Options();
 
         options.addOption(SAMPLE, true, "Sample for which we are going to load the PEACH data");
-
+        options.addOption(ISOLATION_BARCODE, true, "Isolation barcode for which we are going to load the PEACH data");
         options.addOption(PEACH_GENOTYPE_TXT, true, "Path towards the PEACH genotype txt file");
         options.addOption(PEACH_CALLS_TXT, true, "Path towards the PEACH calls txt file");
 

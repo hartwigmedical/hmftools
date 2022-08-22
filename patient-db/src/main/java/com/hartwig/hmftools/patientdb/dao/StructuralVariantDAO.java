@@ -25,33 +25,28 @@ import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.Result;
 
-class StructuralVariantDAO
-{
+class StructuralVariantDAO {
     private static final int MAX_LINKED_BY = 1024;
 
     @NotNull
     private final DSLContext context;
 
-    StructuralVariantDAO(@NotNull final DSLContext context)
-    {
+    StructuralVariantDAO(@NotNull final DSLContext context) {
         this.context = context;
     }
 
     @NotNull
-    public List<StructuralVariantData> read(@NotNull String sample)
-    {
+    public List<StructuralVariantData> read(@NotNull String sample) {
         List<StructuralVariantData> structuralVariants = Lists.newArrayList();
 
         Result<Record> result = context.select().from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).fetch();
 
-        for(Record record : result)
-        {
+        for (Record record : result) {
             StructuralVariantType type = StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE));
 
             String filterStr = record.getValue(STRUCTURALVARIANT.FILTER);
 
-            if(type == SGL && filterStr.equals(INFERRED))
-            {
+            if (type == SGL && filterStr.equals(INFERRED)) {
                 type = INF;
             }
 
@@ -59,8 +54,7 @@ class StructuralVariantDAO
 
             // ploidy correction for NONE segment SVs
             Double ploidy = record.getValue(STRUCTURALVARIANT.JUNCTIONCOPYNUMBER);
-            if(type == INF && ploidy == null)
-            {
+            if (type == INF && ploidy == null) {
                 ploidy = DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART));
             }
 
@@ -125,8 +119,7 @@ class StructuralVariantDAO
     }
 
     @NotNull
-    List<String> getSamplesList(@NotNull String sampleSearch)
-    {
+    List<String> getSamplesList(@NotNull String sampleSearch) {
         Result<Record1<String>> result = sampleSearch.equals("")
                 ? context.select(STRUCTURALVARIANT.SAMPLEID)
                 .from(STRUCTURALVARIANT)
@@ -140,24 +133,22 @@ class StructuralVariantDAO
 
         List<String> samplesList = Lists.newArrayList();
 
-        for(Record record : result)
-        {
+        for (Record record : result) {
             samplesList.add(record.getValue(STRUCTURALVARIANT.SAMPLEID));
         }
 
         return samplesList;
     }
 
-    void write(@NotNull String sample, @NotNull List<StructuralVariantData> variants)
-    {
+    void write(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<StructuralVariantData> variants) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         deleteStructuralVariantsForSample(sample);
 
-        for(List<StructuralVariantData> batch : Iterables.partition(variants, DB_BATCH_INSERT_SIZE))
-        {
+        for (List<StructuralVariantData> batch : Iterables.partition(variants, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStepN inserter = context.insertInto(STRUCTURALVARIANT,
                     STRUCTURALVARIANT.SAMPLEID,
+                    STRUCTURALVARIANT.ISOLATIONBARCODE,
                     STRUCTURALVARIANT.SVID,
                     STRUCTURALVARIANT.STARTCHROMOSOME,
                     STRUCTURALVARIANT.ENDCHROMOSOME,
@@ -212,17 +203,17 @@ class StructuralVariantDAO
                     STRUCTURALVARIANT.STARTANCHORINGSUPPORTDISTANCE,
                     STRUCTURALVARIANT.ENDANCHORINGSUPPORTDISTANCE,
                     STRUCTURALVARIANT.MODIFIED);
-            batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
+            batch.forEach(entry -> addRecord(timestamp, inserter, sample, isolationBarcode, entry));
             inserter.execute();
         }
     }
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
-            @NotNull StructuralVariantData variant)
-    {
+            @NotNull String isolationBarcode, @NotNull StructuralVariantData variant) {
         boolean isSingle = variant.type() == SGL;
 
         inserter.values(sample,
+                isolationBarcode,
                 variant.id(),
                 variant.startChromosome(),
                 isSingle ? null : variant.endChromosome(),
@@ -279,38 +270,29 @@ class StructuralVariantDAO
                 timestamp);
     }
 
-    void deleteStructuralVariantsForSample(@NotNull String sample)
-    {
+    void deleteStructuralVariantsForSample(@NotNull String sample) {
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
     }
 
-    private static boolean byteToBoolean(@NotNull Byte b)
-    {
+    private static boolean byteToBoolean(@NotNull Byte b) {
         return b != 0;
     }
 
-    static String limitSizeOfCSV(int maxSize, String linkedBy)
-    {
-        if(linkedBy.length() <= maxSize)
-        {
+    static String limitSizeOfCSV(int maxSize, String linkedBy) {
+        if (linkedBy.length() <= maxSize) {
             return linkedBy;
         }
 
-        if(!linkedBy.contains(","))
-        {
+        if (!linkedBy.contains(",")) {
             return linkedBy.substring(0, maxSize);
         }
 
         StringJoiner joiner = new StringJoiner(",");
         String[] csv = linkedBy.split(",");
-        for(String s : csv)
-        {
-            int sizeWithNewString = joiner.length() == 0
-                    ? s.length()
-                    : joiner.length() + 1 + s.length();
+        for (String s : csv) {
+            int sizeWithNewString = joiner.length() == 0 ? s.length() : joiner.length() + 1 + s.length();
 
-            if(sizeWithNewString > maxSize)
-            {
+            if (sizeWithNewString > maxSize) {
                 return joiner.toString();
             }
             joiner.add(s);

@@ -23,7 +23,7 @@ class VirusBreakendDAO {
         this.context = context;
     }
 
-    void writeVirusBreakend(@NotNull String sample, @NotNull List<VirusBreakend> virusBreakends) {
+    void writeVirusBreakend(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<VirusBreakend> virusBreakends) {
         deleteVirusBreakendForSample(sample);
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
@@ -32,6 +32,7 @@ class VirusBreakendDAO {
             InsertValuesStepN inserter = context.insertInto(VIRUSBREAKEND,
                     VIRUSBREAKEND.MODIFIED,
                     VIRUSBREAKEND.SAMPLEID,
+                    VIRUSBREAKEND.ISOLATIONBARCODE,
                     VIRUSBREAKEND.TAXIDGENUS,
                     VIRUSBREAKEND.NAMEGENUS,
                     VIRUSBREAKEND.READSGENUSTREE,
@@ -57,15 +58,16 @@ class VirusBreakendDAO {
                     VIRUSBREAKEND.MEANMAPQ,
                     VIRUSBREAKEND.INTEGRATIONS,
                     VIRUSBREAKEND.QCSTATUS);
-            virusBreakend.forEach(x -> addVirusBreakend(timestamp, inserter, sample, x));
+            virusBreakend.forEach(x -> addVirusBreakend(timestamp, inserter, sample, isolationBarcode, x));
             inserter.execute();
         }
     }
 
     private static void addVirusBreakend(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
-            @NotNull VirusBreakend virusBreakend) {
+            @NotNull String isolationBarcode, @NotNull VirusBreakend virusBreakend) {
         inserter.values(timestamp,
                 sample,
+                isolationBarcode,
                 virusBreakend.taxidGenus(),
                 virusBreakend.nameAssigned(),
                 virusBreakend.readsGenusTree(),

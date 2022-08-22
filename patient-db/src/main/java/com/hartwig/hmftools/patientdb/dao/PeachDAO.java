@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep17;
-import org.jooq.InsertValuesStep9;
+import org.jooq.InsertValuesStep10;
+import org.jooq.InsertValuesStep18;
 
 class PeachDAO {
 
@@ -26,15 +26,17 @@ class PeachDAO {
         this.context = context;
     }
 
-    void writePeach(@NotNull String sample, @NotNull List<PeachGenotype> peachGenotypes, @NotNull List<PeachCalls> peachCalls) {
+    void writePeach(@NotNull String sample, @NotNull String isolationBarcode, @NotNull List<PeachGenotype> peachGenotypes,
+            @NotNull List<PeachCalls> peachCalls) {
         deletePeachForSample(sample);
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         for (List<PeachGenotype> genotypes : Iterables.partition(peachGenotypes, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep9 inserter = context.insertInto(PEACHGENOTYPE,
+            InsertValuesStep10 inserter = context.insertInto(PEACHGENOTYPE,
                     PEACHGENOTYPE.MODIFIED,
                     PEACHGENOTYPE.SAMPLEID,
+                    PEACHGENOTYPE.ISOLATIONBARCODE,
                     PEACHGENOTYPE.GENE,
                     PEACHGENOTYPE.HAPLOTYPE,
                     PEACHGENOTYPE.FUNCTION,
@@ -42,14 +44,15 @@ class PeachDAO {
                     PEACHGENOTYPE.URLPRESCRIPTIONINFO,
                     PEACHGENOTYPE.PANELVERSION,
                     PEACHGENOTYPE.REPOVERSION);
-            genotypes.forEach(x -> addGenotype(timestamp, inserter, sample, x));
+            genotypes.forEach(x -> addGenotype(timestamp, inserter, sample, isolationBarcode, x));
             inserter.execute();
         }
 
         for (List<PeachCalls> calls : Iterables.partition(peachCalls, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep17 inserter = context.insertInto(PEACHCALLS,
+            InsertValuesStep18 inserter = context.insertInto(PEACHCALLS,
                     PEACHCALLS.MODIFIED,
                     PEACHCALLS.SAMPLEID,
+                    PEACHCALLS.ISOLATIONBARCODE,
                     PEACHCALLS.GENE,
                     PEACHCALLS.CHROMOSOME,
                     PEACHCALLS.POSITIONV37,
@@ -65,15 +68,16 @@ class PeachDAO {
                     PEACHCALLS.FILTERV38,
                     PEACHCALLS.PANELVERSION,
                     PEACHCALLS.REPOVERSION);
-            calls.forEach(x -> addCalls(timestamp, inserter, sample, x));
+            calls.forEach(x -> addCalls(timestamp, inserter, sample, isolationBarcode, x));
             inserter.execute();
         }
     }
 
-    private static void addGenotype(@NotNull Timestamp timestamp, @NotNull InsertValuesStep9 inserter, @NotNull String sample,
-            @NotNull PeachGenotype genotype) {
+    private static void addGenotype(@NotNull Timestamp timestamp, @NotNull InsertValuesStep10 inserter, @NotNull String sample,
+            @NotNull String isolationBarcode, @NotNull PeachGenotype genotype) {
         inserter.values(timestamp,
                 sample,
+                isolationBarcode,
                 genotype.gene(),
                 genotype.haplotype(),
                 genotype.function(),
@@ -83,10 +87,11 @@ class PeachDAO {
                 genotype.repoVersion());
     }
 
-    private static void addCalls(@NotNull Timestamp timestamp, @NotNull InsertValuesStep17 inserter, @NotNull String sample,
-            @NotNull PeachCalls calls) {
+    private static void addCalls(@NotNull Timestamp timestamp, @NotNull InsertValuesStep18 inserter, @NotNull String sample,
+            @NotNull String isolationBarcode, @NotNull PeachCalls calls) {
         inserter.values(timestamp,
                 sample,
+                isolationBarcode,
                 calls.gene(),
                 calls.chromosome(),
                 calls.positionV37(),

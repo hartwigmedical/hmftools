@@ -35,6 +35,7 @@ public class LoadPurpleSomaticVariants
     private static final Logger LOGGER = LogManager.getLogger(LoadPurpleSomaticVariants.class);
 
     private static final String SAMPLE = "sample";
+    private static final String ISOLATION_BARCODE = "isolation_barcode";
     private static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String REFERENCE = "reference";
     private static final String RNA = "rna";
@@ -56,6 +57,7 @@ public class LoadPurpleSomaticVariants
             }
 
             String sampleId = cmd.getOptionValue(SAMPLE);
+            String isolationBarcode = cmd.getOptionValue(ISOLATION_BARCODE);
             List<String> sampleIds = cmd.hasOption(SAMPLE_ID_FILE) ? ConfigUtils.loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE)) : null;
             String referenceId = cmd.getOptionValue(REFERENCE);
             String rnaId = cmd.getOptionValue(RNA);
@@ -63,7 +65,7 @@ public class LoadPurpleSomaticVariants
 
             boolean dryRunOnly = cmd.hasOption(DRY_RUN);
 
-            if(sampleIds == null && sampleId == null && referenceId == null)
+            if(sampleIds == null && sampleId == null && isolationBarcode == null && referenceId == null)
             {
                 LOGGER.error("missing sample or reference ID config");
                 System.exit(1);
@@ -81,7 +83,7 @@ public class LoadPurpleSomaticVariants
 
                     try
                     {
-                        loadSomaticData(sample, ref, null, dbAccess, sampleDir, dryRunOnly);
+                        loadSomaticData(sample, isolationBarcode, ref, null, dbAccess, sampleDir, dryRunOnly);
                     }
                     catch(Exception e)
                     {
@@ -106,7 +108,7 @@ public class LoadPurpleSomaticVariants
                 if(sampleId == null)
                     sampleId = referenceId;
 
-                loadSomaticData(sampleId, referenceId, rnaId, dbAccess, purpleDir, dryRunOnly);
+                loadSomaticData(sampleId, isolationBarcode, referenceId, rnaId, dbAccess, purpleDir, dryRunOnly);
             }
 
             LOGGER.info("Purple data loading complete");
@@ -120,7 +122,7 @@ public class LoadPurpleSomaticVariants
     }
 
     private static void loadSomaticData(
-            final String sampleId, final String referenceId, final String rnaId,
+            final String sampleId, final String isolationBarcode, final String referenceId, final String rnaId,
             final DatabaseAccess dbAccess, final String purpleDir, boolean dryRunOnly) throws Exception
     {
         final String somaticVcf = PurpleCommon.purpleSomaticVcfFile(purpleDir, sampleId);
@@ -147,7 +149,7 @@ public class LoadPurpleSomaticVariants
         if(dryRunOnly)
             return;
 
-        BufferedWriter<SomaticVariant> somaticWriter = dbAccess.somaticVariantWriter(sampleId);
+        BufferedWriter<SomaticVariant> somaticWriter = dbAccess.somaticVariantWriter(sampleId, isolationBarcode);
         somaticVariants.forEach(x -> somaticWriter.accept(x));
         somaticWriter.close();
 
@@ -176,6 +178,7 @@ public class LoadPurpleSomaticVariants
     {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample ID");
+        options.addOption(ISOLATION_BARCODE, true, "Isolation barcode ID");
         options.addOption(SAMPLE_ID_FILE, true, "CSV with SampleId");
         options.addOption(REFERENCE, true, "Reference ID");
         options.addOption(RNA, true, "RNA sample ID");

@@ -19,8 +19,7 @@ class ChordDAO {
         this.context = context;
     }
 
-    public ChordData readChord(final String sampleId)
-    {
+    public ChordData readChord(final String sampleId) {
         Record result = context.select().from(CHORD).where(CHORD.SAMPLEID.eq(sampleId)).fetchOne();
         if (result == null) {
             return null;
@@ -37,19 +36,21 @@ class ChordDAO {
                 .build();
     }
 
-    void writeChord(@NotNull String sample, @NotNull ChordData chordData) {
+    void writeChord(@NotNull String sample, @NotNull String isolationBarcode, @NotNull ChordData chordData) {
         deleteChordForSample(sample);
 
         context.insertInto(CHORD,
-                CHORD.SAMPLEID,
-                CHORD.BRCA1,
-                CHORD.BRCA2,
-                CHORD.HRD,
-                CHORD.HRSTATUS,
-                CHORD.HRDTYPE,
-                CHORD.REMARKSHRSTATUS,
-                CHORD.REMARKSHRDTYPE)
+                        CHORD.SAMPLEID,
+                        CHORD.ISOLATIONBARCODE,
+                        CHORD.BRCA1,
+                        CHORD.BRCA2,
+                        CHORD.HRD,
+                        CHORD.HRSTATUS,
+                        CHORD.HRDTYPE,
+                        CHORD.REMARKSHRSTATUS,
+                        CHORD.REMARKSHRDTYPE)
                 .values(sample,
+                        isolationBarcode,
                         DatabaseUtil.decimal(chordData.BRCA1Value()),
                         DatabaseUtil.decimal(chordData.BRCA2Value()),
                         DatabaseUtil.decimal(chordData.hrdValue()),

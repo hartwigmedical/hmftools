@@ -95,6 +95,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -439,17 +440,17 @@ public class PurpleApplication
         {
             PPL_LOGGER.info("writing purple data to database: {}", mCmdLineArgs.getOptionValue(DB_URL));
 
-            mDbAccess.writePurity(tumorSample, purityContext, qcChecks);
+            mDbAccess.writePurity(tumorSample, Strings.EMPTY, purityContext, qcChecks);
 
             if(mConfig.runTumor())
             {
-                mDbAccess.writeBestFitPerPurity(tumorSample, bestFit.bestFitPerPurity());
-                mDbAccess.writeCopynumbers(tumorSample, copyNumbers);
-                mDbAccess.writeGeneCopyNumbers(tumorSample, geneCopyNumbers);
+                mDbAccess.writeBestFitPerPurity(tumorSample, Strings.EMPTY, bestFit.bestFitPerPurity());
+                mDbAccess.writeCopynumbers(tumorSample, Strings.EMPTY, copyNumbers);
+                mDbAccess.writeGeneCopyNumbers(tumorSample, Strings.EMPTY,  geneCopyNumbers);
             }
 
             if(mConfig.runGermline())
-                mDbAccess.writeGermlineDeletions(tumorSample, germlineDeletions);
+                mDbAccess.writeGermlineDeletions(tumorSample, Strings.EMPTY, germlineDeletions);
         }
 
         if(!mConfig.germlineMode() && (mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent()))
@@ -554,7 +555,7 @@ public class PurpleApplication
         }
 
         if(mDbAccess != null)
-            mDbAccess.writePurpleDriverCatalog(tumorSample, somaticDriverCatalog, germlineDriverCatalog);
+            mDbAccess.writePurpleDriverCatalog(tumorSample, Strings.EMPTY, somaticDriverCatalog, germlineDriverCatalog);
     }
 
     private int recoverStructuralVariants(final SampleData sampleData, final SampleDataFiles sampleDataFiles,

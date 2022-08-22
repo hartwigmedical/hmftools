@@ -24,6 +24,8 @@ public class LoadCuppa {
     private static final Logger LOGGER = LogManager.getLogger(LoadCuppa.class);
 
     private static final String SAMPLE = "sample";
+    private static final String ISOLATION_BARCODE = "isolation_barcode";
+
     private static final String CUPPA_CONCLUSION_TXT = "cuppa_conclusion_txt";
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
@@ -31,9 +33,10 @@ public class LoadCuppa {
         CommandLine cmd = new DefaultParser().parse(options, args);
 
         String sample = cmd.getOptionValue(SAMPLE);
+        String isolationBarcode = cmd.getOptionValue(ISOLATION_BARCODE);
         String cuppaConclusionTxt = cmd.getOptionValue(CUPPA_CONCLUSION_TXT);
 
-        if (Utils.anyNull(sample, cuppaConclusionTxt)) {
+        if (Utils.anyNull(sample, isolationBarcode, cuppaConclusionTxt)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-DB - Load CUPPA Data", options);
             System.exit(1);
@@ -46,7 +49,7 @@ public class LoadCuppa {
         LOGGER.info(" Read '{}' as CUPPA conclusion result", molecularTissueOrigins.conclusion());
 
         LOGGER.info("Writing CUPPA into database for {}", sample);
-        dbWriter.writeCuppa(sample, molecularTissueOrigins);
+        dbWriter.writeCuppa(sample, isolationBarcode, molecularTissueOrigins);
 
         LOGGER.info("Complete");
     }
@@ -56,6 +59,7 @@ public class LoadCuppa {
         Options options = new Options();
 
         options.addOption(SAMPLE, true, "Sample for which we are going to load the CUPPA results");
+        options.addOption(ISOLATION_BARCODE, true, "Sample for which we are going to load the CUPPA results");
         options.addOption(CUPPA_CONCLUSION_TXT, true, "Path towards the CUPPA conclusion txt file");
 
         addDatabaseCmdLineArgs(options);
