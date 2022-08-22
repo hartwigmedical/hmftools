@@ -32,6 +32,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.rose.RoseData;
 import com.hartwig.hmftools.rose.actionability.ActionabilityEntry;
 import com.hartwig.hmftools.rose.actionability.ActionabilityKey;
@@ -335,6 +336,11 @@ public class ConclusionAlgo {
             if (entry != null && entry.condition() == Condition.ALWAYS) {
                 conclusion.add("- " + annotatedVirus.interpretation() + " " + entry.conclusion());
                 actionable.add("virus");
+            } else if (entry == null) {
+                if (annotatedVirus.virusDriverLikelihoodType() == VirusLikelihoodType.LOW
+                        || annotatedVirus.virusDriverLikelihoodType() == VirusLikelihoodType.HIGH) {
+                    conclusion.add("- " + annotatedVirus.interpretation() + " positive");
+                }
             }
         }
     }

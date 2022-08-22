@@ -44,6 +44,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.rose.actionability.ActionabilityEntry;
 import com.hartwig.hmftools.rose.actionability.ActionabilityKey;
@@ -71,7 +72,8 @@ public class ConclusionAlgoTest {
                 .snomedConceptIds(Sets.newHashSet())
                 .isOverridden(false)
                 .build();
-        assertEquals("Bone/Soft tissue (Alveolar soft part sarcoma)", ConclusionAlgo.resolveTumorLocation(patientPrimaryTumorWithLocationAndType));
+        assertEquals("Bone/Soft tissue (Alveolar soft part sarcoma)",
+                ConclusionAlgo.resolveTumorLocation(patientPrimaryTumorWithLocationAndType));
 
         PatientPrimaryTumor patientPrimaryTumorWithLocationAndSubLocation = ImmutablePatientPrimaryTumor.builder()
                 .patientIdentifier("patient ID")
@@ -246,9 +248,10 @@ public class ConclusionAlgoTest {
         actionabilityMap = testActionabilityMap(actionabilityMap, "HPV", TypeAlteration.POSITIVE, "HPV", Condition.ALWAYS, "HPV");
 
         ConclusionAlgo.generateVirusConclusion(conclusion, annotatedVirus, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
-        assertEquals(2, conclusion.size());
+        assertEquals(3, conclusion.size());
         assertEquals(conclusion.get(0), "- EBV EBV");
         assertEquals(conclusion.get(1), "- HPV HPV");
+        assertEquals(conclusion.get(2), "- MCV positive");
     }
 
     @Test
@@ -576,8 +579,13 @@ public class ConclusionAlgoTest {
         List<AnnotatedVirus> annotatedVirus = Lists.newArrayList();
         AnnotatedVirus virus1 = VirusTestFactory.testAnnotatedVirusBuilder().interpretation("EBV").build();
         AnnotatedVirus virus2 = VirusTestFactory.testAnnotatedVirusBuilder().interpretation("HPV").build();
+        AnnotatedVirus virus3 = VirusTestFactory.testAnnotatedVirusBuilder()
+                .interpretation("MCV")
+                .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
+                .build();
         annotatedVirus.add(virus1);
         annotatedVirus.add(virus2);
+        annotatedVirus.add(virus3);
         return annotatedVirus;
     }
 
