@@ -181,7 +181,7 @@ public class SomaticStream
 
                 if(isValidChromosome && variant.isPass())
                 {
-                    mTumorMutationalLoad.processVariant(variant);
+                    mTumorMutationalLoad.processVariant(variant, purityAdjuster.purity());
                     mMicrosatelliteIndels.processVariant(variant);
                     checkDrivers(variant, true); // sets reportable flag if applicable
 
@@ -193,6 +193,8 @@ public class SomaticStream
                 if(!tumorOnly || variant.isPass())
                     mVcfWriter.add(variant.context());
             }
+
+            mTumorMutationalLoad.calculateUnclearVariants();
 
             mVcfWriter.close();
             mRChartData.write();

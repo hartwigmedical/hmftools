@@ -4,12 +4,15 @@ import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_BIALLELI
 import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_VARIANT_CN_INFO;
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
+import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.toVcfData;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -20,6 +23,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.variant.VariantVcfTags;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.test.VariantContextFromString;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -221,23 +225,41 @@ public class GermlineReportedEnrichmentTest
             String clinSig, CodingEffect codingEffect, double variantCopyNumber)
     {
         final String hotspotFlag = isHotspot ? HOTSPOT_FLAG : NEAR_HOTSPOT_FLAG;
-        final String line =
+
+        VariantImpact impact = new VariantImpact(
+                gene, "ENST00000393562", "UTR_variant", codingEffect,
+                "c.-275T>G", "", false, "", codingEffect, 1);
+
+        final String line2 =
                 "11\t1000\tCOSM123;COSM456\tG\tA\t100\t" + filter + "\t" + PURPLE_BIALLELIC_FLAG + "=" + biallelic + ";" + hotspotFlag
-                        + ";SEC=" + gene + ",ENST00000393562,UTR_variant," + codingEffect.toString() + ",c.-275T>G,;CLNSIG=" + clinSig + ";"
+                        + ";" + VAR_IMPACT + "=" + impactToString(impact) + ";CLNSIG=" + clinSig + ";"
                         + PURPLE_VARIANT_CN_INFO + "=" + variantCopyNumber + ";\"\tGT:AD:DP\t0/1:73,17:91";
-        return new GermlineVariant(VariantContextFromString.decode(line));
+
+        return new GermlineVariant(VariantContextFromString.decode(line2));
     }
 
     private static GermlineVariant createGermline(String filter, String gene, boolean biallelic, boolean isHotspot,
             String clinSig, CodingEffect codingEffect, double variantCopyNumber, int localPhaseSet)
     {
         final String hotspotFlag = isHotspot ? HOTSPOT_FLAG : NEAR_HOTSPOT_FLAG;
-        final String line =
+        VariantImpact impact = new VariantImpact(
+                gene, "ENST00000393562", "UTR_variant", codingEffect,
+                "c.-275T>G", "", false, "", codingEffect, 1);
+
+        String line2 =
                 "11\t1000\tCOSM123;COSM456\tG\tA\t100\t" + filter + "\t" + PURPLE_BIALLELIC_FLAG + "=" + biallelic + ";" + hotspotFlag
-                        + ";SEC=" + gene + ",ENST00000393562,UTR_variant," + codingEffect.toString() + ",c.-275T>G,;CLNSIG=" + clinSig + ";"
+                        + ";" + VAR_IMPACT + "=" + impactToString(impact) + ";CLNSIG=" + clinSig + ";"
                         + PURPLE_VARIANT_CN_INFO + "=" + variantCopyNumber + ";" + VariantVcfTags.LOCAL_PHASE_SET + "=" + localPhaseSet
                         + "\tGT:AD:DP\t0/1:73,17:91";
-        return new GermlineVariant(VariantContextFromString.decode(line));
+
+        return new GermlineVariant(VariantContextFromString.decode(line2));
+    }
+
+    private static String impactToString(final VariantImpact impact)
+    {
+        StringJoiner sj = new StringJoiner(",");
+        toVcfData(impact).forEach(x -> sj.add(x));
+        return sj.toString();
     }
 
     @NotNull

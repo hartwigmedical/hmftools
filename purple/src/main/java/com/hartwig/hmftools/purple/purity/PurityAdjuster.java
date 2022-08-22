@@ -7,24 +7,8 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class PurityAdjuster
 {
-    public static double impliedPloidy(double averageRatio, double purity, double normFactor)
-    {
-        // Don't delete per request of Mr Jon Baber!!!
-        return (averageRatio - normFactor) / purity / normFactor * 2 + 2;
-    }
-
-    public static double impliedNormFactor(double averageRatio, double purity, double tumorPloidy)
-    {
-        return 2 * averageRatio / (2 - 2 * purity + tumorPloidy * purity);
-    }
-
-    public static double impliedAverageRatio(double purity, double normFactor, double tumorPloidy)
-    {
-        return normFactor * (1 - purity + tumorPloidy / 2d * purity);
-    }
-
-    private final double purity;
-    private final double normFactor;
+    private final double mPurity;
+    private final double mNormFactor;
 
     public PurityAdjuster(@NotNull final FittedPurity fittedPurity)
     {
@@ -33,18 +17,18 @@ public abstract class PurityAdjuster
 
     public PurityAdjuster(final double purity, final double normFactor)
     {
-        this.purity = purity;
-        this.normFactor = normFactor;
+        mPurity = purity;
+        mNormFactor = normFactor;
     }
 
     public double purity()
     {
-        return purity;
+        return mPurity;
     }
 
     public double normFactor()
     {
-        return normFactor;
+        return mNormFactor;
     }
 
     public double germlineCopyNumber(@NotNull String contig)
@@ -62,7 +46,7 @@ public abstract class PurityAdjuster
 
     public double purityAdjustedCopyNumber(final double tumorRatio, final double normalRatio)
     {
-        return Doubles.isZero(tumorRatio) ? 0 : 2 * normalRatio + 2 * (tumorRatio - normalRatio * normFactor) / purity / normFactor;
+        return Doubles.isZero(tumorRatio) ? 0 : 2 * normalRatio + 2 * (tumorRatio - normalRatio * mNormFactor) / mPurity / mNormFactor;
     }
 
     public double purityAdjustedVAF(@NotNull final String chromosome, final double copyNumber, final double observedFrequency)
@@ -90,9 +74,9 @@ public abstract class PurityAdjuster
     public double purityAdjustedPloidy(final double normalCopyNumber, final double normalPloidy, final double tumorCopyNumber,
             final double observedFrequency)
     {
-        double totalObservations = purity * tumorCopyNumber + normalCopyNumber * (1 - purity);
-        double normalObservations = normalPloidy * (1 - purity);
-        return (observedFrequency * totalObservations - normalObservations) / purity;
+        double totalObservations = mPurity * tumorCopyNumber + normalCopyNumber * (1 - mPurity);
+        double normalObservations = normalPloidy * (1 - mPurity);
+        return (observedFrequency * totalObservations - normalObservations) / mPurity;
     }
 
     public double expectedFrequency(final double normalCopyNumber, final int normalPloidy, final double tumorCopyNumber,
@@ -103,9 +87,9 @@ public abstract class PurityAdjuster
             return 0;
         }
 
-        double totalObservations = purity * tumorCopyNumber + normalCopyNumber * (1 - purity);
-        double normalObservations = normalPloidy * (1 - purity);
-        double tumorObservations = tumorPloidy * purity;
+        double totalObservations = mPurity * tumorCopyNumber + normalCopyNumber * (1 - mPurity);
+        double normalObservations = normalPloidy * (1 - mPurity);
+        double tumorObservations = tumorPloidy * mPurity;
 
         return (normalObservations + tumorObservations) / totalObservations;
     }
@@ -123,4 +107,20 @@ public abstract class PurityAdjuster
         double typicalCopyNumber = germlineCopyNumber(chromosome);
         return purityAdjustedFrequency(typicalCopyNumber, typicalCopyNumber, copyNumber, observedFrequency);
     }
+
+    public static double impliedPloidy(double averageRatio, double purity, double normFactor)
+    {
+        return (averageRatio - normFactor) / purity / normFactor * 2 + 2;
+    }
+
+    public static double impliedNormFactor(double averageRatio, double purity, double tumorPloidy)
+    {
+        return 2 * averageRatio / (2 - 2 * purity + tumorPloidy * purity);
+    }
+
+    public static double impliedAverageRatio(double purity, double normFactor, double tumorPloidy)
+    {
+        return normFactor * (1 - purity + tumorPloidy / 2d * purity);
+    }
+
 }
