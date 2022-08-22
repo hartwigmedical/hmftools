@@ -42,6 +42,4 @@ public final class LineElements
 
         return true;
     }
-
-
 }

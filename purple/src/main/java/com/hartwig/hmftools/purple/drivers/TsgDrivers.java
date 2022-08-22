@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.drivers;
 
+import static com.hartwig.hmftools.purple.drivers.OncoDrivers.NO_GENE_DNDS_LIKELIHOOD;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.groupByImpact;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.isReportable;
 
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.Nullable;
 
 public class TsgDrivers
 {
@@ -60,7 +62,8 @@ public class TsgDrivers
 
         for(String gene : codingVariants.keySet())
         {
-            final DndsDriverGeneLikelihood likelihood = mLikelihoodsByGene.get(gene);
+            final DndsDriverGeneLikelihood dndsLikelihood = mLikelihoodsByGene.containsKey(gene) ?
+                    mLikelihoodsByGene.get(gene) : NO_GENE_DNDS_LIKELIHOOD;
 
             final List<SomaticVariant> geneVariants = codingVariants.get(gene);
 
@@ -71,16 +74,16 @@ public class TsgDrivers
 
             for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
             {
-                driverCatalog.add(geneDriver(likelihood, geneVariants, variantTypeCounts, variantTypeCountsBiallelic, geneCopyNumber));
+                driverCatalog.add(createTsgDriver(geneVariants, variantTypeCounts, variantTypeCountsBiallelic, geneCopyNumber, dndsLikelihood));
             }
         }
 
         return driverCatalog;
     }
 
-    public static DriverCatalog geneDriver(
-            final DndsDriverGeneLikelihood likelihood, final List<SomaticVariant> geneVariants, final Map<VariantType, Integer> standardCounts,
-            final Map<VariantType,Integer> biallelicCounts, final GeneCopyNumber geneCopyNumber)
+    public static DriverCatalog createTsgDriver(
+            final List<SomaticVariant> geneVariants, final Map<VariantType,Integer> standardCounts,
+            final Map<VariantType,Integer> biallelicCounts, final GeneCopyNumber geneCopyNumber, final DndsDriverGeneLikelihood likelihood)
     {
         geneVariants.sort(new TsgImpactComparator());
 
@@ -95,10 +98,10 @@ public class TsgDrivers
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .chromosome(topVariant.chromosome())
-                .chromosomeBand(geneCopyNumber == null ? Strings.EMPTY : geneCopyNumber.chromosomeBand())
-                .gene(likelihood.gene())
-                .transcript(geneCopyNumber != null ? geneCopyNumber.transName() : "")
-                .isCanonical(geneCopyNumber != null ? geneCopyNumber.isCanonical() : true)
+                .chromosomeBand(geneCopyNumber.chromosomeBand())
+                .gene(geneCopyNumber.geneName())
+                .transcript(geneCopyNumber.transName())
+                .isCanonical(geneCopyNumber.isCanonical())
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.TSG)
                 .driverLikelihood(1)
@@ -108,8 +111,8 @@ public class TsgDrivers
                 .inframe(inframeVariants)
                 .frameshift(frameshiftVariants)
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
-                .minCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.minCopyNumber())
-                .maxCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.maxCopyNumber())
+                .minCopyNumber(geneCopyNumber.minCopyNumber())
+                .maxCopyNumber(geneCopyNumber.maxCopyNumber())
                 .likelihoodMethod(LikelihoodMethod.DNDS);
 
         if(geneVariants.stream().anyMatch(SomaticVariant::isHotspot))

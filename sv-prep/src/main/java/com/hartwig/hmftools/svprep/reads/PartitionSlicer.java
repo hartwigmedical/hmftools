@@ -57,11 +57,6 @@ public class PartitionSlicer
         Total;
     }
 
-    private static final int PC_SLICE = 0;
-    private static final int PC_JUNCTIONS = 1;
-    private static final int PC_FILTERS = 2;
-    private static final int PC_TOTAL = 3;
-
     public PartitionSlicer(
             final int id, final ChrBaseRegion region, final SvConfig config, final SamReader samReader, final BamSlicer bamSlicer,
             final SpanningReadCache spanningReadCache, final ExistingJunctionCache existingJunctionCache, final ResultsWriter writer,

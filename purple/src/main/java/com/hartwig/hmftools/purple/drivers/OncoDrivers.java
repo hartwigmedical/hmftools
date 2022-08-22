@@ -17,6 +17,8 @@ import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverGeneLikelihood;
+import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
@@ -25,6 +27,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.Nullable;
 
 public class OncoDrivers
 {
@@ -33,6 +36,14 @@ public class OncoDrivers
     private final ReportablePredicate mReportablePredicate;
     private final Map<String, DndsDriverGeneLikelihood> mLikelihoodsByGene;
     private final List<SomaticVariant> mReportableVariants;
+
+    public static final DndsDriverGeneLikelihood NO_GENE_DNDS_LIKELIHOOD = ImmutableDndsDriverGeneLikelihood.builder()
+        .gene("")
+        .indel(ImmutableDndsDriverImpactLikelihood.builder().driversPerSample(0).passengersPerMutation(0).build())
+        .missense(ImmutableDndsDriverImpactLikelihood.builder().driversPerSample(0).passengersPerMutation(0).build())
+        .splice(ImmutableDndsDriverImpactLikelihood.builder().driversPerSample(0).passengersPerMutation(0).build())
+        .nonsense(ImmutableDndsDriverImpactLikelihood.builder().driversPerSample(0).passengersPerMutation(0).build())
+        .build();
 
     public OncoDrivers(final DriverGenePanel genePanel)
     {
@@ -65,7 +76,8 @@ public class OncoDrivers
 
         for(String gene : codingVariants.keySet())
         {
-            final DndsDriverGeneLikelihood geneMissenseLikelihood = mLikelihoodsByGene.get(gene);
+            final DndsDriverGeneLikelihood dndsLikelihood = mLikelihoodsByGene.containsKey(gene) ?
+                    mLikelihoodsByGene.get(gene) : NO_GENE_DNDS_LIKELIHOOD;
 
             final List<SomaticVariant> geneVariants = codingVariants.get(gene);
 
@@ -76,15 +88,15 @@ public class OncoDrivers
 
             for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
             {
-                driverCatalog.add(geneDriver(
-                        sampleSNVCount, sampleINDELCount, geneMissenseLikelihood, geneVariants, geneCopyNumber));
+                driverCatalog.add(createOncoDriver(
+                        sampleSNVCount, sampleINDELCount, dndsLikelihood, geneVariants, geneCopyNumber));
             }
         }
 
         return driverCatalog;
     }
 
-    public static DriverCatalog geneDriver(
+    public static DriverCatalog createOncoDriver(
             int sampleSNVCount, int sampleIndelCount, final DndsDriverGeneLikelihood geneLikelihood,
             final List<SomaticVariant> geneVariants, final GeneCopyNumber geneCopyNumber)
     {
@@ -97,10 +109,10 @@ public class OncoDrivers
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .chromosome(geneVariants.get(0).chromosome())
-                .chromosomeBand(geneCopyNumber == null ? Strings.EMPTY : geneCopyNumber.chromosomeBand())
-                .gene(geneLikelihood.gene())
-                .transcript(geneCopyNumber != null ? geneCopyNumber.transName() : "")
-                .isCanonical(geneCopyNumber != null ? geneCopyNumber.isCanonical() : true)
+                .chromosomeBand(geneCopyNumber.chromosomeBand())
+                .gene(geneCopyNumber.geneName())
+                .transcript(geneCopyNumber.transName())
+                .isCanonical(geneCopyNumber.isCanonical())
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.ONCO)
                 .driverLikelihood(1)
@@ -110,8 +122,8 @@ public class OncoDrivers
                 .inframe(inframeVariants)
                 .frameshift(frameshiftVariants)
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
-                .minCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.minCopyNumber())
-                .maxCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.maxCopyNumber())
+                .minCopyNumber(geneCopyNumber.minCopyNumber())
+                .maxCopyNumber(geneCopyNumber.maxCopyNumber())
                 .likelihoodMethod(LikelihoodMethod.DNDS);
 
         if(geneVariants.stream().anyMatch(SomaticVariant::isHotspot))

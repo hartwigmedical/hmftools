@@ -19,8 +19,6 @@ public class SomaticVariantDrivers
 {
     private final DriverGenePanel mGenePanel;
 
-    private final List<SomaticVariant> mTsgVariants;
-    private final List<SomaticVariant> mOncoVariants;
     private final Map<VariantType,Integer> mVariantTypeCounts;
     private final Map<VariantType,Integer> mVariantTypeCountsBiallelic;
 
@@ -31,8 +29,6 @@ public class SomaticVariantDrivers
     {
         mGenePanel = panel;
 
-        mTsgVariants = Lists.newArrayList();
-        mOncoVariants = Lists.newArrayList();
         mVariantTypeCounts = Maps.newHashMap();
         mVariantTypeCountsBiallelic = Maps.newHashMap();
 
