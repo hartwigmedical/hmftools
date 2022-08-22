@@ -169,18 +169,27 @@ public class ConclusionAlgoTest {
                 Condition.OTHER,
                 "not biallelic");
 
+        ChordData analysis = ImmutableChordData.builder()
+                .from(ChordTestFactory.createMinimalTestChordAnalysis())
+                .hrdValue(0.8)
+                .hrStatus(ChordStatus.HR_DEFICIENT)
+                .build();
+
         ConclusionAlgo.generateVariantConclusion(conclusion,
                 reportableVariants,
                 actionabilityMap,
                 driverGenesMap,
                 Sets.newHashSet(),
                 Sets.newHashSet(),
-                Sets.newHashSet());
-        assertEquals(3, conclusion.size());
+                Sets.newHashSet(),
+                analysis);
+        assertEquals(4, conclusion.size());
         assertEquals(conclusion.get(0), "- CHEK2 (c.123A>C splice) CHEK2 not biallelic");
         assertEquals(conclusion.get(1), "- APC (p.Val600Arg) APC");
 
         assertEquals(conclusion.get(2), "- BRCA2 (c.123A>C splice) BRCA2");
+        assertEquals(conclusion.get(3), "- BRCA1 (p.Val600Arg) BRCA1");
+
     }
 
     @Test

@@ -79,7 +79,14 @@ public class ConclusionAlgo {
         genertateTumorLocationConclusion(conclusion, roseData.patientPrimaryTumors(), roseData.patientId());
         generatePurityConclusion(conclusion, roseData.purple().purity(), roseData.purple().hasReliablePurity(), actionabilityMap);
         generateCUPPAConclusion(conclusion, roseData.molecularTissueOrigin(), actionabilityMap);
-        generateVariantConclusion(conclusion, reportableVariants, actionabilityMap, driverGenesMap, oncogenic, actionable, HRD);
+        generateVariantConclusion(conclusion,
+                reportableVariants,
+                actionabilityMap,
+                driverGenesMap,
+                oncogenic,
+                actionable,
+                HRD,
+                roseData.chord());
         generateCNVConclusion(conclusion, reportableGainLosses, actionabilityMap, oncogenic, actionable);
         generateFusionConclusion(conclusion, reportableFusions, actionabilityMap, oncogenic, actionable);
         generateHomozygousDisruptionConclusion(conclusion, homozygousDisruptions, actionabilityMap, oncogenic, actionable);
@@ -181,13 +188,16 @@ public class ConclusionAlgo {
 
     public static void generateVariantConclusion(@NotNull List<String> conclusion, @NotNull List<ReportableVariant> reportableVariants,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Map<String, DriverGene> driverGenesMap,
-            @NotNull Set<String> oncogenic, @NotNull Set<String> actionable, @NotNull Set<String> HRD) {
+            @NotNull Set<String> oncogenic, @NotNull Set<String> actionable, @NotNull Set<String> HRD, @NotNull ChordData chordAnalysis) {
 
         for (ReportableVariant reportableVariant : reportableVariants) {
+            boolean HRDgene = false;
+
             String variant = EventGenerator.variantEvent(reportableVariant);
 
             if (HRD_GENES.contains(reportableVariant.gene())) {
                 HRD.add(reportableVariant.gene());
+                HRDgene = true;
             }
             oncogenic.add(reportableVariant.source() == ReportableVariantSource.SOMATIC ? "somaticVariant" : "germlineVariant");
             ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder()
@@ -217,6 +227,10 @@ public class ConclusionAlgo {
                     } else {
                         conclusion.add("- " + reportableVariant.gene() + " (" + variant + ") " + entry.conclusion());
                     }
+                } else if (HRDgene && chordAnalysis.hrStatus() == ChordStatus.HR_DEFICIENT) {
+                    conclusion.add("- " + reportableVariant.gene() + " (" + variant + ") " + entry.conclusion());
+                    actionable.add(
+                            reportableVariant.source() == ReportableVariantSource.SOMATIC ? "somaticVariant" : "germlineVariant");
                 }
             }
         }
