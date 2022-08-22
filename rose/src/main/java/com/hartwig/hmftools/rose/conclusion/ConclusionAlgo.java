@@ -2,10 +2,12 @@ package com.hartwig.hmftools.rose.conclusion;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.Format;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
@@ -33,6 +35,7 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.rose.RoseApplication;
 import com.hartwig.hmftools.rose.RoseData;
 import com.hartwig.hmftools.rose.actionability.ActionabilityEntry;
 import com.hartwig.hmftools.rose.actionability.ActionabilityKey;
@@ -41,11 +44,14 @@ import com.hartwig.hmftools.rose.actionability.ImmutableActionabilityKey;
 import com.hartwig.hmftools.rose.actionability.TypeAlteration;
 
 import org.apache.commons.compress.utils.Lists;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ConclusionAlgo {
+    private static final Logger LOGGER = LogManager.getLogger(ConclusionAlgo.class);
 
     private static final Set<String> FUSION_TYPES = Sets.newHashSet(KnownFusionType.PROMISCUOUS_3.toString(),
             KnownFusionType.PROMISCUOUS_5.toString(),
@@ -190,47 +196,97 @@ public class ConclusionAlgo {
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Map<String, DriverGene> driverGenesMap,
             @NotNull Set<String> oncogenic, @NotNull Set<String> actionable, @NotNull Set<String> HRD, @NotNull ChordData chordAnalysis) {
 
+        Map<String, List<VariantKey>> variantKeyList = Maps.newHashMap();
+        Map<String, VariantKey> mergedVariantKeyList = Maps.newHashMap();
+
         for (ReportableVariant reportableVariant : reportableVariants) {
+            Set<String> variantAnnotation = Sets.newHashSet();
+            if (variantKeyList.get(reportableVariant.gene()) == null) {
+
+                variantAnnotation.add(EventGenerator.variantEvent(reportableVariant));
+                String variant = String.join(",", variantAnnotation);
+
+                variantKeyList.put(reportableVariant.gene(),
+                        List.of(ImmutableVariantKey.builder()
+                                .gene(reportableVariant.gene())
+                                .variantAnnotation(variant)
+                                .driverInterpretation(reportableVariant.driverLikelihoodInterpretation())
+                                .bialleic(reportableVariant.biallelic())
+                                .build()));
+            } else {
+                List<VariantKey> variantsMerged = Lists.newArrayList();
+                List<VariantKey> variants = variantKeyList.get(reportableVariant.gene());
+                variantsMerged.addAll(variants);
+
+                variantAnnotation.add(EventGenerator.variantEvent(reportableVariant));
+                String variant = String.join(",", variantAnnotation);
+
+                variantKeyList.put(reportableVariant.gene(),
+                        List.of(ImmutableVariantKey.builder()
+                                .gene(reportableVariant.gene())
+                                .variantAnnotation(variant)
+                                .driverInterpretation(reportableVariant.driverLikelihoodInterpretation())
+                                .bialleic(false)
+                                .build()));
+
+                variantsMerged.addAll(variantKeyList.get(reportableVariant.gene()));
+                variantKeyList.put(reportableVariant.gene(), variantsMerged);
+            }
+        }
+
+        for (Map.Entry<String, List<VariantKey>> entry : variantKeyList.entrySet()) {
+            if (entry.getValue().size() == 1) {
+                mergedVariantKeyList.put(entry.getKey(), entry.getValue().get(0));
+
+            } else {
+                StringBuilder sb = new StringBuilder();
+                for (VariantKey key : entry.getValue()) {
+                    sb.append(key.variantAnnotation()).append(",");
+                }
+                mergedVariantKeyList.put(entry.getKey(),
+                        ImmutableVariantKey.builder()
+                                .from(entry.getValue().get(0))
+                                .variantAnnotation(sb.toString().substring(0, sb.toString().length()-1))
+                                .build());
+            }
+        }
+
+        for (Map.Entry<String, VariantKey> key : mergedVariantKeyList.entrySet()) {
             boolean HRDgene = false;
 
-            String variant = EventGenerator.variantEvent(reportableVariant);
-
-            if (HRD_GENES.contains(reportableVariant.gene())) {
-                HRD.add(reportableVariant.gene());
+            if (HRD_GENES.contains(key.getValue().gene())) {
+                HRD.add(key.getValue().gene());
                 HRDgene = true;
             }
-            oncogenic.add(reportableVariant.source() == ReportableVariantSource.SOMATIC ? "somaticVariant" : "germlineVariant");
+            oncogenic.add("variant");
             ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder()
-                    .match(reportableVariant.gene())
-                    .type(driverGenesMap.get(reportableVariant.gene()).likelihoodType().equals(DriverCategory.ONCO)
+                    .match(key.getValue().gene())
+                    .type(driverGenesMap.get(key.getValue().gene()).likelihoodType().equals(DriverCategory.ONCO)
                             ? TypeAlteration.ACTIVATING_MUTATION
                             : TypeAlteration.INACTIVATION)
                     .build();
             ActionabilityEntry entry = actionabilityMap.get(keySomaticVariant);
             if (entry != null) {
-                if ((reportableVariant.driverLikelihoodInterpretation() == DriverInterpretation.HIGH
-                        && entry.condition() == Condition.ONLY_HIGH) || entry.condition() == Condition.ALWAYS_NO_ACTIONABLE) {
+                if ((key.getValue().driverInterpretation() == DriverInterpretation.HIGH && entry.condition() == Condition.ONLY_HIGH)
+                        || entry.condition() == Condition.ALWAYS_NO_ACTIONABLE) {
                     if (entry.condition() == Condition.ONLY_HIGH) {
-                        actionable.add(
-                                reportableVariant.source() == ReportableVariantSource.SOMATIC ? "somaticVariant" : "germlineVariant");
+                        actionable.add("variant");
                     }
                     //TODO: Add sentence about germline findings probably in future
-                    if (driverGenesMap.get(reportableVariant.gene()).likelihoodType().equals(DriverCategory.TSG)
-                            && !reportableVariant.biallelic()) {
+                    if (driverGenesMap.get(key.getValue().gene()).likelihoodType().equals(DriverCategory.TSG) && !key.getValue().bialleic()) {
                         ActionabilityKey keyBiallelic =
                                 ImmutableActionabilityKey.builder().match("NOT_BIALLELIC").type(TypeAlteration.NOT_BIALLELIC).build();
                         ActionabilityEntry entryBiallelic = actionabilityMap.get(keyBiallelic);
                         if (entryBiallelic.condition() == Condition.OTHER) {
-                            conclusion.add("- " + reportableVariant.gene() + " (" + variant + ") " + entry.conclusion() + " "
+                            conclusion.add("- " + key.getValue().gene() + " (" + key.getValue().variantAnnotation() + ") " + entry.conclusion() + " "
                                     + entryBiallelic.conclusion());
                         }
                     } else {
-                        conclusion.add("- " + reportableVariant.gene() + " (" + variant + ") " + entry.conclusion());
+                        conclusion.add("- " + key.getValue().gene() + " (" + key.getValue().variantAnnotation() + ") " + entry.conclusion());
                     }
                 } else if (HRDgene && chordAnalysis.hrStatus() == ChordStatus.HR_DEFICIENT) {
-                    conclusion.add("- " + reportableVariant.gene() + " (" + variant + ") " + entry.conclusion());
-                    actionable.add(
-                            reportableVariant.source() == ReportableVariantSource.SOMATIC ? "somaticVariant" : "germlineVariant");
+                    conclusion.add("- " + key.getValue().gene() + " (" + key.getValue().variantAnnotation() + ") " + entry.conclusion());
+                    actionable.add("variant");
                 }
             }
         }

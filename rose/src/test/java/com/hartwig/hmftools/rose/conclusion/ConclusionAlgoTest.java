@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.purple.loader.GainLossTestFactory;
@@ -184,12 +185,22 @@ public class ConclusionAlgoTest {
                 Sets.newHashSet(),
                 analysis);
         assertEquals(4, conclusion.size());
-        assertEquals(conclusion.get(0), "- CHEK2 (c.123A>C splice) CHEK2 not biallelic");
-        assertEquals(conclusion.get(1), "- APC (p.Val600Arg) APC");
+        assertEquals(conclusion.get(0), "- APC (p.Val600Arg) APC");
+        assertEquals(conclusion.get(1), "- CHEK2 (c.123A>C splice) CHEK2 not biallelic");
+        assertEquals(conclusion.get(2), "- BRCA1 (p.Val600Arg,p.Val602Arg) BRCA1");
+        assertEquals(conclusion.get(3), "- BRCA2 (c.1235A>C splice) BRCA2");
 
-        assertEquals(conclusion.get(2), "- BRCA2 (c.123A>C splice) BRCA2");
-        assertEquals(conclusion.get(3), "- BRCA1 (p.Val600Arg) BRCA1");
+    }
 
+    @NotNull
+    private static String findByVariant(@NotNull List<String> variants, @NotNull String variant) {
+        for (String variantMatch : variants) {
+            if (variantMatch.contains(variant)) {
+                return variant;
+            }
+        }
+
+        throw new IllegalStateException("Could not find variant in list: " + variant);
     }
 
     @Test
@@ -509,7 +520,7 @@ public class ConclusionAlgoTest {
                 .gene("BRCA2")
                 .canonicalTranscript("transcript1")
                 .canonicalHgvsProteinImpact("p.?")
-                .canonicalHgvsCodingImpact("c.123A>C")
+                .canonicalHgvsCodingImpact("c.1235A>C")
                 .canonicalCodingEffect(CodingEffect.SPLICE)
                 .biallelic(true)
                 .build();
@@ -524,8 +535,18 @@ public class ConclusionAlgoTest {
                 .biallelic(true)
                 .build();
 
+        SomaticVariant variant4 = SomaticVariantTestFactory.builder()
+                .reported(true)
+                .gene("BRCA1")
+                .canonicalTranscript("transcript1")
+                .canonicalHgvsProteinImpact("p.Val602Arg")
+                .canonicalHgvsCodingImpact("c.124A>C")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .biallelic(true)
+                .build();
+
         List<ReportableVariant> reportableSomatic =
-                ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant1, variant2, variant3),
+                ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant1, variant2, variant3, variant4),
                         Lists.newArrayList(DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("APC",
                                         0.4,
                                         "transcript1",
@@ -533,7 +554,7 @@ public class ConclusionAlgoTest {
                                 DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("BRCA2", 0.9, "transcript1", TSG),
                                 DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("BRCA1", 0.7, "transcript1", TSG)));
 
-        SomaticVariant variant4 = SomaticVariantTestFactory.builder()
+        SomaticVariant variant5 = SomaticVariantTestFactory.builder()
                 .reported(true)
                 .gene("CHEK2")
                 .canonicalTranscript("transcript1")
@@ -543,7 +564,7 @@ public class ConclusionAlgoTest {
                 .biallelic(false)
                 .build();
 
-        List<ReportableVariant> reportableGermline = ReportableVariantFactory.toReportableGermlineVariants(Lists.newArrayList(variant4),
+        List<ReportableVariant> reportableGermline = ReportableVariantFactory.toReportableGermlineVariants(Lists.newArrayList(variant5),
                 Lists.newArrayList(DriverCatalogTestFactory.createCanonicalGermlineMutationEntryForGene("CHEK2",
                         0.85,
                         "transcript1",
