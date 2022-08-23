@@ -152,7 +152,6 @@ Field  | Description | Example
 conclusion | The clinical conclusion of the sample | BRCA2 inactivation, potential benefit from PARP inhibitors <enter> BRCA1 inactivation, potential benefit from PARP inhibitors <enter>
 
 ## Known issues 
-- When we called two or more actionable variants, this shows 2 entries in the conclusion rather than merge this to one single sentence 
 - We don't interpret the type alteration for NO_MSI_HRD_PROFILE, EXTRACELLULAR_DOMAIN_MUTATION and RESISTANCE_MUTATION
 
 ## Version History and Download Links
