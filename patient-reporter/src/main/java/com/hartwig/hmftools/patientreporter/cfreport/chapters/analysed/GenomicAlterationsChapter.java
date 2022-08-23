@@ -3,17 +3,21 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Tables;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
@@ -30,6 +34,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HLAAllele;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
+import com.hartwig.hmftools.patientreporter.cfreport.data.LohGenes;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
@@ -92,6 +97,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 genomicAnalysis.cnPerChromosome()));
         reportDocument.add(createFusionsTable(genomicAnalysis.geneFusions(), hasReliablePurity));
         reportDocument.add(createHomozygousDisruptionsTable(genomicAnalysis.homozygousDisruptions()));
+        reportDocument.add(createLOHTable(genomicAnalysis.suspectGeneCopyNumbersHRDWithLOH(), "HRD"));
+        reportDocument.add(createLOHTable(genomicAnalysis.suspectGeneCopyNumbersMSIWithLOH(), "MSI"));
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
         reportDocument.add(createVirusTable(genomicAnalysis.reportableViruses(), sampleReport.reportViralPresence()));
         reportDocument.add(createImmunoTable(genomicAnalysis.lilac(), hasReliablePurity));
@@ -276,6 +283,35 @@ public class GenomicAlterationsChapter implements ReportChapter {
         }
 
         return TableUtil.createWrappingReportTable(title, subtitle, contentTable);
+    }
+
+    @NotNull
+    private static Table createLOHTable(@NotNull List<GeneCopyNumber> lohGenes, @NotNull String signature) {
+        String title = Strings.EMPTY;
+        if (signature.equals("HRD")) {
+            title = "Interesting LOH events in case of HRD";
+        } else if (signature.equals("MSI")) {
+            title = "Interesting LOH events in case of MSI";
+        }
+
+        if (lohGenes.isEmpty() || title.equals(Strings.EMPTY)) {
+            return TableUtil.createNoneReportTable(title, null);
+        }
+
+        Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1, 3 },
+                new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
+                        TableUtil.createHeaderCell("Tumor MACN"), TableUtil.createHeaderCell("Tumor CN"),
+                        TableUtil.createHeaderCell(Strings.EMPTY) });
+
+        for (GeneCopyNumber lohGene : LohGenes.sort(lohGenes)) {
+            table.addCell(TableUtil.createContentCell(lohGene.chromosome() + lohGene.chromosomeBand()));
+            table.addCell(TableUtil.createContentCell(lohGene.geneName()));
+            table.addCell(TableUtil.createContentCell(String.valueOf(LohGenes.round(lohGene.minMinorAlleleCopyNumber()))));
+            table.addCell(TableUtil.createContentCell(String.valueOf(LohGenes.round(lohGene.minCopyNumber()))));
+            table.addCell(TableUtil.createContentCell(Strings.EMPTY));
+        }
+
+        return TableUtil.createWrappingReportTable(title, null, table);
     }
 
     @NotNull

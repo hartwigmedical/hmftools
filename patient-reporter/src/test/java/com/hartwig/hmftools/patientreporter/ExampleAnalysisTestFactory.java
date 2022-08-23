@@ -38,6 +38,9 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.EvidenceType;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
+import com.hartwig.hmftools.common.purple.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
@@ -189,6 +192,8 @@ public final class ExampleAnalysisTestFactory {
                 .homozygousDisruptions(homozygousDisruptions)
                 .reportableViruses(viruses)
                 .lilac(lilac)
+                .suspectGeneCopyNumbersMSIWithLOH(MSILOHGenes())
+                .suspectGeneCopyNumbersHRDWithLOH(HRDLOHGenes())
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
@@ -216,6 +221,27 @@ public final class ExampleAnalysisTestFactory {
                 .reportDate(reportDate)
                 .isWGSreport(true)
                 .build();
+    }
+
+    @NotNull
+    private static List<GeneCopyNumber> HRDLOHGenes() {
+        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
+        geneCopyNumbers.add(createTestCopyNumberBuilder("BRCA2").minCopyNumber(0.1).maxCopyNumber(7).build());
+        geneCopyNumbers.add(createTestCopyNumberBuilder("BRCA1").minCopyNumber(0.1).maxCopyNumber(7).build());
+        return geneCopyNumbers;
+
+    }
+    @NotNull
+    private static List<GeneCopyNumber> MSILOHGenes() {
+        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
+        geneCopyNumbers.add(createTestCopyNumberBuilder("MLH1").minCopyNumber(0.1).maxCopyNumber(7).build());
+        geneCopyNumbers.add(createTestCopyNumberBuilder("MLH2").minCopyNumber(0.1).maxCopyNumber(7).build());
+        return geneCopyNumbers;
+    }
+
+    @NotNull
+    private static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(@NotNull String gene) {
+        return GeneCopyNumberTestFactory.builder().geneName(gene);
     }
 
     @NotNull

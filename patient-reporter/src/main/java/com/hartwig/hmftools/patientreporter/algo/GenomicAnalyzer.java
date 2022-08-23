@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.loader.PurpleData;
 import com.hartwig.hmftools.common.purple.loader.PurpleDataLoader;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -31,6 +32,7 @@ import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.algo.orange.BreakendSelector;
+import com.hartwig.hmftools.patientreporter.algo.orange.LossOfHeterozygositySelector;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 
 import org.apache.logging.log4j.LogManager;
@@ -73,14 +75,25 @@ public class GenomicAnalyzer {
                 null,
                 null);
 
-        List<GeneDisruption> additionalSuspectBreakends = GeneDisruptionFactory.convert(BreakendSelector.selectInterestingUnreportedBreakends(
-                linxData.allBreakends(),
-                linxData.reportableFusions(),
-                knownFusionCache), linxData.allStructuralVariants());
+        List<GeneDisruption> additionalSuspectBreakends =
+                GeneDisruptionFactory.convert(BreakendSelector.selectInterestingUnreportedBreakends(linxData.allBreakends(),
+                        linxData.reportableFusions(),
+                        knownFusionCache), linxData.allStructuralVariants());
 
         List<GeneDisruption> reportableGeneDisruptions = Lists.newArrayList();
         reportableGeneDisruptions.addAll(linxData.reportableGeneDisruptions());
         reportableGeneDisruptions.addAll(additionalSuspectBreakends);
+
+        ChordData chordAnalysis = ChordDataFile.read(config.chordPredictionTxt(), true);
+
+        List<GeneCopyNumber> suspectGeneCopyNumbersHRDWithLOH =
+                LossOfHeterozygositySelector.selectHRDGenesWithLOH(purpleData.allSomaticGeneCopyNumbers(), chordAnalysis.hrStatus());
+        LOGGER.info(" Found an additional {} suspect gene copy numbers HRD with LOH", suspectGeneCopyNumbersHRDWithLOH.size());
+
+        List<GeneCopyNumber> suspectGeneCopyNumbersMSIWithLOH =
+                LossOfHeterozygositySelector.selectMSIGenesWithLOH(purpleData.allSomaticGeneCopyNumbers(),
+                        purpleData.microsatelliteStatus());
+        LOGGER.info(" Found an additional {} suspect gene copy numbers HRD with LOH", suspectGeneCopyNumbersMSIWithLOH.size());
 
         VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(config.annotatedVirusTsv());
 
@@ -89,8 +102,6 @@ public class GenomicAnalyzer {
 
         Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant =
                 determineNotify(reportableVariants, germlineReportingModel, germlineReportingLevel);
-
-        ChordData chordAnalysis = ChordDataFile.read(config.chordPredictionTxt(), true);
 
         LilacSummaryData lilacSummaryData = LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
 
@@ -124,6 +135,8 @@ public class GenomicAnalyzer {
                 .homozygousDisruptions(linxData.homozygousDisruptions())
                 .reportableViruses(virusInterpreterData.reportableViruses())
                 .lilac(lilacSummaryData)
+                .suspectGeneCopyNumbersHRDWithLOH(suspectGeneCopyNumbersHRDWithLOH)
+                .suspectGeneCopyNumbersMSIWithLOH(suspectGeneCopyNumbersMSIWithLOH)
                 .build();
     }
 
