@@ -285,16 +285,19 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title, null);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 80, 40, 40, 40, 65, 70, 40 },
-                new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("5' Transcript"),
-                        TableUtil.createHeaderCell("3' Transcript"), TableUtil.createHeaderCell("5' End"),
-                        TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER),
-                        TableUtil.createHeaderCell("Phasing").setTextAlignment(TextAlignment.CENTER),
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 70, 80, 80, 40, 40, 40, 65, 40 },
+                new Cell[] { TableUtil.createHeaderCell("Fusion"),
                         TableUtil.createHeaderCell("Type").setTextAlignment(TextAlignment.CENTER),
+                        TableUtil.createHeaderCell("5' Transcript"), TableUtil.createHeaderCell("3' Transcript"),
+                        TableUtil.createHeaderCell("5' End"), TableUtil.createHeaderCell("3' Start"),
+                        TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER),
+                        TableUtil.createHeaderCell("Phasing").setTextAlignment(TextAlignment.CENTER),
                         TableUtil.createHeaderCell("Driver").setTextAlignment(TextAlignment.CENTER), });
 
         for (LinxFusion fusion : GeneFusions.sort(fusions)) {
             contentTable.addCell(TableUtil.createContentCell(GeneFusions.name(fusion)));
+            contentTable.addCell(TableUtil.createContentCell(GeneFusions.displayStr(fusion.reportedType()))
+                    .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(fusion.geneTranscriptStart()))
                     .addStyle(ReportResources.dataHighlightLinksStyle())
                     .setAction(PdfAction.createURI(GeneFusions.transcriptUrl(fusion.geneTranscriptStart()))));
@@ -305,8 +308,6 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.copyNumberToString(fusion.junctionCopyNumber(), hasReliablePurity))
                     .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(fusion.phased().displayStr()).setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(GeneFusions.displayStr(fusion.reportedType()))
-                    .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(fusion.likelihood().displayStr()).setTextAlignment(TextAlignment.CENTER));
         }
 
