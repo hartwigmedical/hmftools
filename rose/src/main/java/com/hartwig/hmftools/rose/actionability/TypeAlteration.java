@@ -4,6 +4,10 @@ import org.jetbrains.annotations.NotNull;
 
 public enum TypeAlteration {
     ACTIVATING_MUTATION,
+    ACTIVATING_MUTATION_BRAF_CLASS_I,
+    ACTIVATING_MUTATION_BRAF_CLASS_II,
+    ACTIVATING_MUTATION_BRAF_CLASS_III,
+    ACTIVATING_MUTATION_KRAS_G12C,
     AMPLIFICATION,
     EXTRACELLULAR_DOMAIN_MUTATION,
     FUSION,
@@ -13,6 +17,7 @@ public enum TypeAlteration {
     LOSS,
     POSITIVE,
     RESISTANCE_MUTATION,
+    PROMOTER_MUTATION,
     PURITY,
     PURITY_UNRELIABLE,
     NO_ONCOGENIC,
@@ -23,7 +28,9 @@ public enum TypeAlteration {
     CUPPA_INCONCLUSIVE,
     NO_HRD_CAUSE,
     NO_MSI_HRD_PROFILE,
-    NOT_BIALLELIC;
+    NOT_BIALLELIC,
+    VUS_REMARK,
+    UNKNOWN;
 
     @NotNull
     static TypeAlteration toType(@NotNull String typeInput) {

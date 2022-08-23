@@ -255,11 +255,20 @@ public class ConclusionAlgo {
                 HRDgene = true;
             }
             oncogenic.add("variant");
+
+            TypeAlteration alteration = TypeAlteration.UNKNOWN;
+            if (key.getValue().gene().equals("KRAS") && key.getValue().variantAnnotation().equals("p.Gly12Cys")) {
+                alteration = TypeAlteration.ACTIVATING_MUTATION_KRAS_G12C;
+            } else if (driverGenesMap.get(key.getValue().gene()).likelihoodType().equals(DriverCategory.ONCO)) {
+                alteration = TypeAlteration.ACTIVATING_MUTATION;
+            } else if (driverGenesMap.get(key.getValue().gene()).likelihoodType().equals(DriverCategory.TSG)) {
+                alteration = TypeAlteration.INACTIVATION;
+            } else if (key.getValue().gene().equals("TERT") && key.getValue().variantAnnotation().equals("upstream")){
+                alteration = TypeAlteration.PROMOTER_MUTATION;
+            }
             ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder()
                     .match(key.getValue().gene())
-                    .type(driverGenesMap.get(key.getValue().gene()).likelihoodType().equals(DriverCategory.ONCO)
-                            ? TypeAlteration.ACTIVATING_MUTATION
-                            : TypeAlteration.INACTIVATION)
+                    .type(alteration)
                     .build();
             ActionabilityEntry entry = actionabilityMap.get(keySomaticVariant);
             if (entry != null) {
