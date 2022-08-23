@@ -396,18 +396,6 @@ public class LineTest
     }
 
     @Test
-    public void testSglCigarLength()
-    {
-        assertEquals(100, calcCigarLength("100M"));
-        assertEquals(100, calcCigarLength("10M10D80M"));
-        assertEquals(100, calcCigarLength("10M1I1000N10D2I80M"));
-
-        // error handling
-        assertEquals(0, calcCigarLength("12345"));
-        assertEquals(0, calcCigarLength("G10Z2QR100"));
-    }
-
-    @Test
     public void testLineSglChaining()
     {
         LinxTester tester = new LinxTester();

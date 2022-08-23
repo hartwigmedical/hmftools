@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.samtools;
 
-import java.util.List;
-
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
@@ -13,88 +12,90 @@ public final class CigarUtils
 {
     public static Cigar cigarFromStr(final String cigarStr)
     {
-        List<CigarElement> cigarElements = org.apache.commons.compress.utils.Lists.newArrayList();
+        Cigar cigar = new Cigar();
 
-        int index = 0;
-        String basesStr = "";
-        while(index < cigarStr.length())
+        int length = 0;
+        for (int i = 0; i < cigarStr.length(); ++i)
         {
-            char c = cigarStr.charAt(index);
+            char c = cigarStr.charAt(i);
+            int digit = c - '0';
 
-            try
+            if (digit >= 0 && digit <= 9)
             {
-                CigarOperator operator = CigarOperator.valueOf(String.valueOf(c));
-                cigarElements.add(new CigarElement(Integer.parseInt(basesStr), operator));
-                basesStr = "";
+                length = length * 10 + digit;
             }
-            catch (Exception e)
+            else
             {
-                basesStr += c;
+                CigarOperator operator = CigarOperator.characterToEnum(c);
+                cigar.add(new CigarElement(length, operator));
+                length = 0;
             }
-            ++index;
         }
 
-        return new Cigar(cigarElements);
+        return cigar;
     }
 
     public static int calcCigarLength(final String cigarStr)
     {
-        int index = 0;
         int baseLength = 0;
-        String basesStr = "";
-        while(index < cigarStr.length())
+        int currentElementLength = 0;
+        for (int i = 0; i < cigarStr.length(); ++i)
         {
-            char c = cigarStr.charAt(index);
+            char c = cigarStr.charAt(i);
             boolean isAddItem = (c == 'D' || c == 'M');
-            boolean isIgnoreItem = (c == 'I' || c == 'N' || c == 'S' || c == 'H' || c == 'P' || c == '=' || c == 'X');
 
             if(isAddItem)
             {
-                try { baseLength += Integer.parseInt(basesStr); } catch (Exception e) {}
-                basesStr = "";
+                baseLength += currentElementLength;
+                currentElementLength = 0;
+                continue;
             }
-            else if(isIgnoreItem)
+            int digit = c - '0';
+            if (digit >= 0 && digit <= 9)
             {
-                basesStr = "";
+                currentElementLength = currentElementLength * 10 + digit;
             }
             else
             {
-                basesStr += c;
+                // we are in one of the ignored items such as S, H, N etc
+                currentElementLength = 0;
             }
-
-            ++index;
         }
 
         return baseLength;
     }
 
-    public static int leftSoftClip(final SAMRecord record)
+    public static int leftSoftClip(@NotNull final SAMRecord record)
     {
-        return record.getCigar().isLeftClipped() ? record.getCigar().getFirstCigarElement().getLength() : 0;
+        CigarElement firstElement = record.getCigar().getFirstCigarElement();
+        return (firstElement != null && firstElement.getOperator() == CigarOperator.S) ? firstElement.getLength() : 0;
     }
 
-    public static int rightSoftClip(final SAMRecord record)
+    public static int rightSoftClip(@NotNull final SAMRecord record)
     {
-        return record.getCigar().isRightClipped() ? record.getCigar().getLastCigarElement().getLength() : 0;
+        CigarElement lastElement = record.getCigar().getLastCigarElement();
+        return (lastElement != null && lastElement.getOperator() == CigarOperator.S) ? lastElement.getLength() : 0;
     }
 
     @Nullable
-    public static String leftSoftClipBases(final SAMRecord record)
+    public static String leftSoftClipBases(@NotNull final SAMRecord record)
     {
         int leftClip = leftSoftClip(record);
         if (leftClip == 0)
+        {
             return null;
-
+        }
         return record.getReadString().substring(0, leftClip);
     }
 
     @Nullable
-    public static String rightSoftClipBases(final SAMRecord record)
+    public static String rightSoftClipBases(@NotNull final SAMRecord record)
     {
         int rightClip = rightSoftClip(record);
         if (rightClip == 0)
+        {
             return null;
-
+        }
         return record.getReadString().substring(record.getReadString().length() - rightClip);
     }
 }
