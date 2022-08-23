@@ -405,7 +405,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         Div div = new Div().setKeepTogether(true).setWidth(witdth);
 
         String title = "Germline results";
-        String text = "Data concerning cancer predisposition genes may be requested by a clinical geneticist and after a written informed"
+        String text = "Data concerning cancer predisposition genes may be requested by a clinical geneticist and after a informed"
                 + " consent of the patient. ";
 
         div.add(new Paragraph(title).addStyle(ReportResources.sectionTitleStyle()));
