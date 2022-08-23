@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
@@ -235,14 +236,14 @@ public class ConclusionAlgo {
                 mergedVariantKeyList.put(entry.getKey(), entry.getValue().get(0));
 
             } else {
-                StringBuilder stringBuilder = new StringBuilder();
+                StringJoiner joiner = new StringJoiner(",");
                 for (VariantKey key : entry.getValue()) {
-                    stringBuilder.append(key.variantAnnotation()).append(",");
+                    joiner.add(key.variantAnnotation());
                 }
                 mergedVariantKeyList.put(entry.getKey(),
                         ImmutableVariantKey.builder()
                                 .from(entry.getValue().get(0))
-                                .variantAnnotation(stringBuilder.substring(0, stringBuilder.toString().length()-1))
+                                .variantAnnotation(joiner.toString())
                                 .build());
             }
         }
