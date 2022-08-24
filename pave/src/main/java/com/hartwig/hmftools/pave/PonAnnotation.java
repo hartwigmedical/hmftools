@@ -134,6 +134,28 @@ public class PonAnnotation
         return posList.stream().filter(x -> x.matches(variant.Ref, variant.Alt)).findFirst().orElse(null);
     }
 
+    public boolean hasEntry(final String chromosome, final int position, final String ref, final String alt)
+    {
+        if(mLoadOnDemand && !chromosome.equals(mCurrentChromosome))
+        {
+            mPonEntries.remove(mCurrentChromosome);
+            mCurrentChromosome = chromosome;
+            loadPonEntries();
+        }
+
+        Map<Integer,List<PonVariantData>> posMap = mPonEntries.get(chromosome);
+
+        if(posMap == null)
+            return false;
+
+        List<PonVariantData> posList = posMap.get(position);
+
+        if(posList == null)
+            return false;
+
+        return posList.stream().anyMatch(x -> x.matches(ref, alt));
+    }
+
     private void loadPonFile(final String filename)
     {
         if(filename == null)

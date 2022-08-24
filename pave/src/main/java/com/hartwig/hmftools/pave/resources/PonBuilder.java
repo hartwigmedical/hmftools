@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
+import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PonAnnotation.PON_DELIM;
 
@@ -24,6 +25,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.pave.PonAnnotation;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -49,6 +51,11 @@ public class PonBuilder
     private final RefGenomeVersion mRefGenomeVersion;
     private final Map<String,List<VariantData>> mChrVariantsMap;
 
+    private final PonAnnotation mExistingPon;
+
+    private int mLastIndex;
+    private String mLastChromosome;
+
     private static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String VCF_PATH = "vcf_path";
     private static final String QUAL_CUTOFF = "qual_cutoff";
@@ -66,7 +73,12 @@ public class PonBuilder
 
         mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
 
+        mExistingPon = new PonAnnotation(cmd.getOptionValue(PON_FILE), true);
+
         mChrVariantsMap = Maps.newHashMap();
+
+        mLastChromosome = "";
+        mLastIndex = 0;
 
         if(cmd.hasOption(MANUAL_ENTRIES))
         {
@@ -141,6 +153,11 @@ public class PonBuilder
                 lastPosition = position;
                 lastRef = ref;
                 lastAlt = alt;
+
+                if((varCount % 100000) == 0)
+                {
+                    PV_LOGGER.debug("sample({}) loaded {} variants", sampleId, varCount);
+                }
             }
 
             PV_LOGGER.info("sample({}) read {} variants from vcf({})", sampleId, varCount, vcfFilename);
@@ -184,6 +201,9 @@ public class PonBuilder
                     if(variant.SampleCount < mMinSamples)
                         continue;
 
+                    if(mExistingPon.hasEntry(variant.Chromosome, variant.Position, variant.Ref, variant.Alt))
+                        continue;
+
                     sj = new StringJoiner(PON_DELIM);
                     sj.add(variant.Chromosome);
                     sj.add(String.valueOf(variant.Position));
@@ -214,7 +234,14 @@ public class PonBuilder
             mChrVariantsMap.put(chromosome, variants);
         }
 
-        int index = 0;
+        if(!mLastChromosome.equals(chromosome))
+        {
+            mLastChromosome = chromosome;
+            mLastIndex = 0;
+        }
+
+        // start from the last inserted index since each VCF is ordered
+        int index = mLastIndex;
         while(index < variants.size())
         {
             VariantData variant = variants.get(index);
@@ -240,6 +267,7 @@ public class PonBuilder
         VariantData newVariant = new VariantData(chromosome, position, ref, alt);
         newVariant.SampleCount = sampleCount;
         variants.add(index, newVariant);
+        mLastIndex = index;
     }
 
     private class VariantData
@@ -271,6 +299,7 @@ public class PonBuilder
         options.addOption(QUAL_CUTOFF, true, "Qual cut-off for variant inclusion");
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         options.addOption(MANUAL_ENTRIES, true, "Manual PON entries in form Chr:Pos:Ref:Alt separated by ';'");
+        options.addOption(PON_FILE, true, "PON entries");
 
         addOutputOptions(options);
         addLoggingOptions(options);
