@@ -8,6 +8,9 @@ import static com.hartwig.hmftools.svprep.WriteType.CACHE_BAM;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -127,6 +130,22 @@ public class CandidateBamWriter
         TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         SV_LOGGER.info("candidate reads assignment complete");
+
+        // clean-up cache files
+        if(!mConfig.NoCleanUp)
+        {
+            try
+            {
+                for(String cacheFile : mCandidatesWriterBamFiles.values())
+                {
+                    Files.delete(Paths.get(cacheFile));
+                }
+            }
+            catch(IOException e)
+            {
+                SV_LOGGER.error("failed to delete candidate BAM: {}", e.toString());
+            }
+        }
     }
 
     private class CandidateReadMatchTask implements Callable

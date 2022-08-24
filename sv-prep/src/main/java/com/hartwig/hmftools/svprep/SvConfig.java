@@ -82,6 +82,7 @@ public class SvConfig
     public final int MaxPartitionReads;
     public final boolean ApplyDownsampling;
     public final boolean CaptureDepth;
+    public final boolean NoCleanUp;
 
     private boolean mIsValid;
 
@@ -106,6 +107,7 @@ public class SvConfig
     private static final String CAPTURE_DEPTH = "capture_depth";
     private static final String TRACK_REMOTES = "track_remotes";
     private static final String USE_CACHE_BAM = "use_cache_bam";
+    private static final String NO_CLEAN_UP = "no_clean_up";
     private static final String TRIM_READ_ID = "trim_read_id";
     private static final String PERF_DEBUG = "perf_debug";
     private static final String JUNCTION_FRAGS_CAP = "junction_frags_cap";
@@ -181,6 +183,7 @@ public class SvConfig
         CaptureDepth = cmd.hasOption(CAPTURE_DEPTH);
         ApplyDownsampling = cmd.hasOption(APPLY_DOWNSAMPLING);
         TrackRemotes = cmd.hasOption(TRACK_REMOTES);
+        NoCleanUp = cmd.hasOption(NO_CLEAN_UP);
         PerfDebug = cmd.hasOption(PERF_DEBUG);
         RetrieveBlacklistMates = false;
     }
@@ -282,6 +285,7 @@ public class SvConfig
         UseCacheBam = false;
         PerfDebug = false;
         TrimReadId = false;
+        NoCleanUp = false;
         JunctionFragmentCap = 0;
     }
 
@@ -311,6 +315,7 @@ public class SvConfig
         options.addOption(USE_CACHE_BAM, false, "Write a BAM to cache candidate reads");
         options.addOption(TRACK_REMOTES, false, "Track support for remote junctions");
         options.addOption(TRIM_READ_ID, false, "Use a shortened readId internally");
+        options.addOption(NO_CLEAN_UP, false, "Keep candidate cache files");
         options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
         options.addOption(JUNCTION_FRAGS_CAP, true, "Limit to supporting reads added to a junction");
         options.addOption(THREADS, true, "Thread count");

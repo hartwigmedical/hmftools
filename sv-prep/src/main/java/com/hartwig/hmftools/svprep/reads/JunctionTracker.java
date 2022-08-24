@@ -277,10 +277,12 @@ public class JunctionTracker
             for(ReadRecord read : readGroup.reads())
             {
                 // supporting reads cannot fall in blacklist regions
-                if(readInBlacklist(read))
+                boolean readInBlacklist = readInBlacklist(read);
+
+                if(readInBlacklist)
                 {
                     hasBlacklistedRead = true;
-                    continue;
+                    // continue;
                 }
                 else if(readMateInBlacklist(read))
                 {
@@ -289,7 +291,7 @@ public class JunctionTracker
 
                 // allow reads that match a junction to be considered for support (eg exact) for other junctions
                 if(read.readType() == CANDIDATE_SUPPORT || read.readType() == JUNCTION)
-                    checkJunctionSupport(readGroup, read, supportedJunctions);
+                    checkJunctionSupport(readGroup, read, readInBlacklist, supportedJunctions);
             }
 
             if(!supportedJunctions.isEmpty())
@@ -576,10 +578,13 @@ public class JunctionTracker
         mJunctions.add(index, newJunction);
     }
 
-    private void checkJunctionSupport(final ReadGroup readGroup, final ReadRecord read, final Map<JunctionData,ReadType> supportedJunctions)
+    private void checkJunctionSupport(
+            final ReadGroup readGroup, final ReadRecord read, boolean readInBlacklist, final Map<JunctionData,ReadType> supportedJunctions)
     {
         // first check indel support
         checkIndelSupport(read, supportedJunctions);
+
+        int maxSupportDistance = readInBlacklist ? mFilterConfig.MinSupportingReadDistance : mFilterConfig.maxSupportingFragmentDistance();
 
         // first check the last index since the next read is likely to be close by
         int closeJunctionIndex = -1;
@@ -587,18 +592,18 @@ public class JunctionTracker
         if(mLastJunctionIndex >= 0)
         {
             JunctionData junctionData = mJunctions.get(mLastJunctionIndex);
-            if(readWithinJunctionRange(read, junctionData))
+            if(readWithinJunctionRange(read, junctionData, maxSupportDistance))
                 closeJunctionIndex = mLastJunctionIndex;
         }
 
         if(closeJunctionIndex == -1)
-            closeJunctionIndex = findJunctionIndex(read);
+            closeJunctionIndex = findJunctionIndex(read, maxSupportDistance);
 
         if(closeJunctionIndex < 0)
             return;
 
         setLastJunctionIndex(closeJunctionIndex);
-        checkReadSupportsJunction(readGroup, read, mJunctions.get(closeJunctionIndex), supportedJunctions);
+        checkReadSupportsJunction(readGroup, read, readInBlacklist, mJunctions.get(closeJunctionIndex), supportedJunctions);
 
         // check up and down from this location
         for(int i = 0; i <= 1; ++i)
@@ -611,10 +616,10 @@ public class JunctionTracker
             {
                 JunctionData junctionData = mJunctions.get(index);
 
-                if(!readWithinJunctionRange(read, junctionData))
+                if(!readWithinJunctionRange(read, junctionData, maxSupportDistance))
                     break;
 
-                checkReadSupportsJunction(readGroup, read, junctionData, supportedJunctions);
+                checkReadSupportsJunction(readGroup, read, readInBlacklist, junctionData, supportedJunctions);
 
                 if(searchUp)
                     ++index;
@@ -625,7 +630,7 @@ public class JunctionTracker
     }
 
     private void checkReadSupportsJunction(
-            final ReadGroup readGroup, final ReadRecord read, final JunctionData junctionData,
+            final ReadGroup readGroup, final ReadRecord read, boolean readInBlacklist, final JunctionData junctionData,
             final Map<JunctionData,ReadType> supportedJunctions)
     {
         if(reachedFragmentCap(junctionData.supportingFragmentCount())) // to limit processing
@@ -644,7 +649,7 @@ public class JunctionTracker
             return;
         }
 
-        if(readType != SUPPORT && hasDiscordantJunctionSupport(read, junctionData, mFilterConfig))
+        if(readType != SUPPORT && !readInBlacklist && hasDiscordantJunctionSupport(read, junctionData, mFilterConfig))
         {
             junctionData.addReadType(read, SUPPORT);
             read.setReadType(SUPPORT, true);
@@ -662,13 +667,13 @@ public class JunctionTracker
         mLastJunctionIndex = index;
     }
 
-    private int findJunctionIndex(final ReadRecord read)
+    private int findJunctionIndex(final ReadRecord read, int maxSupportDistance)
     {
         if(mJunctions.size() <= 5)
         {
             for(int index = 0; index < mJunctions.size(); ++index)
             {
-                if(readWithinJunctionRange(read, mJunctions.get(index)))
+                if(readWithinJunctionRange(read, mJunctions.get(index), maxSupportDistance))
                     return index;
             }
 
@@ -686,7 +691,7 @@ public class JunctionTracker
         {
             JunctionData junctionData = mJunctions.get(currentIndex);
 
-            if(readWithinJunctionRange(read, junctionData))
+            if(readWithinJunctionRange(read, junctionData, maxSupportDistance))
                 return currentIndex;
 
             if(read.end() < junctionData.Position)
@@ -725,12 +730,12 @@ public class JunctionTracker
         return -1;
     }
 
-    private boolean readWithinJunctionRange(final ReadRecord read, final JunctionData junctionData)
+    private boolean readWithinJunctionRange(final ReadRecord read, final JunctionData junctionData, int maxDistance)
     {
-        if(abs(read.end() - junctionData.Position) <= mFilterConfig.maxSupportingFragmentDistance())
+        if(abs(read.end() - junctionData.Position) <= maxDistance)
             return true;
 
-        if(abs(read.start() - junctionData.Position) <= mFilterConfig.maxSupportingFragmentDistance())
+        if(abs(read.start() - junctionData.Position) <= maxDistance)
             return true;
 
         return false;
