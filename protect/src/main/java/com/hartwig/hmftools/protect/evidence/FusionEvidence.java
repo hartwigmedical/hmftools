@@ -28,8 +28,10 @@ public class FusionEvidence {
     public FusionEvidence(@NotNull final PersonalizedEvidenceFactory personalizedEvidenceFactory,
             @NotNull final List<ActionableGene> actionableGenes, @NotNull final List<ActionableFusion> actionableFusions) {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
-        this.actionablePromiscuous =
-                actionableGenes.stream().filter(x -> x.event().equals(GeneLevelEvent.FUSION)).collect(Collectors.toList());
+        this.actionablePromiscuous = actionableGenes.stream()
+                .filter(x -> x.event().equals(GeneLevelEvent.FUSION) || x.event() == GeneLevelEvent.ACTIVATION
+                        || x.event() == GeneLevelEvent.ANY_MUTATION)
+                .collect(Collectors.toList());
         this.actionableFusions = actionableFusions;
     }
 
@@ -55,6 +57,13 @@ public class FusionEvidence {
             if (promiscuous.event().equals(GeneLevelEvent.FUSION) && match(fusion, promiscuous)) {
                 evidences.add(evidence(fusion, promiscuous));
             }
+            if (promiscuous.event().equals(GeneLevelEvent.ACTIVATION) && match(fusion, promiscuous)) {
+                evidences.add(unreportableEvidence(fusion, promiscuous));
+            }
+
+            if (promiscuous.event().equals(GeneLevelEvent.ANY_MUTATION) && match(fusion, promiscuous)) {
+                evidences.add(unreportableEvidence(fusion, promiscuous));
+            }
         }
 
         for (ActionableFusion actionableFusion : actionableFusions) {
@@ -63,6 +72,16 @@ public class FusionEvidence {
             }
         }
         return evidences;
+    }
+
+    @NotNull
+    private ProtectEvidence unreportableEvidence(@NotNull LinxFusion fusion, @NotNull ActionableEvent actionable) {
+        return personalizedEvidenceFactory.somaticEvidence(actionable)
+                .reported(false)
+                .gene(geneFromActionable(actionable))
+                .event(EventGenerator.fusionEvent(fusion))
+                .eventIsHighDriver(EvidenceDriverLikelihood.interpretFusion(fusion.likelihood()))
+                .build();
     }
 
     @NotNull

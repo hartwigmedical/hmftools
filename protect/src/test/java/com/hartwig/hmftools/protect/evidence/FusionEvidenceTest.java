@@ -139,8 +139,41 @@ public class FusionEvidenceTest {
                         .build())
                 .build();
 
+        ActionableGene activation = ImmutableActionableGene.builder()
+                .from(ServeTestFactory.createTestActionableGene())
+                .gene("EGFR")
+                .event(GeneLevelEvent.ACTIVATION)
+                .source(Knowledgebase.CKB)
+                .treatment(ImmutableTreatment.builder()
+                        .treament("treatment12")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
+                        .relevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
+                        .build())
+                .build();
+
+        ActionableGene any_mutation = ImmutableActionableGene.builder()
+                .from(ServeTestFactory.createTestActionableGene())
+                .gene("EGFR")
+                .event(GeneLevelEvent.ANY_MUTATION)
+                .source(Knowledgebase.CKB)
+                .treatment(ImmutableTreatment.builder()
+                        .treament("treatment13")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
+                        .relevantTreatmentApproaches(Sets.newHashSet("drugClasses"))
+                        .build())
+                .build();
+
+
         FusionEvidence fusionEvidence = new FusionEvidence(EvidenceTestFactory.create(),
-                Lists.newArrayList(promiscuous3_1, promiscuous3_2, promiscuous3_3, promiscuous5, amp, other, ig_fusion),
+                Lists.newArrayList(activation,
+                        any_mutation,
+                        promiscuous3_1,
+                        promiscuous3_2,
+                        promiscuous3_3,
+                        promiscuous5,
+                        amp,
+                        other,
+                        ig_fusion),
                 Lists.newArrayList(fusion, ig_pair));
 
         LinxFusion reportedFusionMatch = create("EML4", "ALK", true, KNOWN_PAIR.toString());
@@ -165,11 +198,10 @@ public class FusionEvidenceTest {
                 reportedOtherMatch,
                 reportedIgPromiscuous,
                 reportedIgKnown);
-        List<LinxFusion> allFusions = Lists.newArrayList(
-                unreportedPromiscuousMatch);
+        List<LinxFusion> allFusions = Lists.newArrayList(unreportedPromiscuousMatch);
         List<ProtectEvidence> evidences = fusionEvidence.evidence(reportableFusions, allFusions);
 
-        assertEquals(8, evidences.size());
+        assertEquals(10, evidences.size());
 
         ProtectEvidence evidence1 = findByFusion(evidences, reportedFusionMatch, "treatment6");
         assertTrue(evidence1.reported());
@@ -218,10 +250,23 @@ public class FusionEvidenceTest {
         assertEquals(evidence8.sources().size(), 1);
         assertEquals(EvidenceType.FUSION_PAIR,
                 findByKnowledgebase(evidence8, "IGH - BCL2 fusion", Knowledgebase.CKB, "treatment10").evidenceType());
+
+        ProtectEvidence evidence9 = findByFusion(evidences, reportedPromiscuousMatch3, "treatment12");
+        assertFalse(evidence9.reported());
+        assertEquals(evidence9.sources().size(), 1);
+        assertEquals(EvidenceType.ACTIVATION,
+                findByKnowledgebase(evidence9, "other gene - EGFR fusion", Knowledgebase.CKB, "treatment12").evidenceType());
+
+        ProtectEvidence evidence10 = findByFusion(evidences, reportedPromiscuousMatch3, "treatment13");
+        assertFalse(evidence10.reported());
+        assertEquals(evidence10.sources().size(), 1);
+        assertEquals(EvidenceType.ANY_MUTATION,
+                findByKnowledgebase(evidence10, "other gene - EGFR fusion", Knowledgebase.CKB, "treatment13").evidenceType());
     }
 
     @NotNull
-    private static ProtectEvidence findByFusion(@NotNull List<ProtectEvidence> evidences, @NotNull LinxFusion fusion, @NotNull String treatment) {
+    private static ProtectEvidence findByFusion(@NotNull List<ProtectEvidence> evidences, @NotNull LinxFusion fusion,
+            @NotNull String treatment) {
         String event = EventGenerator.fusionEvent(fusion);
         for (ProtectEvidence evidence : evidences) {
             if (evidence.event().equals(event) && evidence.treatment().treament().equals(treatment)) {
