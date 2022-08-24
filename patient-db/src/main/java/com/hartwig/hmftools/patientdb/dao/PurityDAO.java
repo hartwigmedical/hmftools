@@ -189,7 +189,7 @@ class PurityDAO {
                         DatabaseUtil.decimal(bestFit.purity()),
                         purity.gender().toString(),
                         purity.method().toString(),
-                        checks.toString(),
+                        DatabaseUtil.checkStringLength(checks.toString(), PURITY.QCSTATUS),
                         purity.runMode().toString(),
                         DatabaseUtil.decimal(bestFit.normFactor()),
                         DatabaseUtil.decimal(bestFit.score()),
