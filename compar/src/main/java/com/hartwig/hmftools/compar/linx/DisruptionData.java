@@ -75,6 +75,9 @@ public class DisruptionData implements ComparableItem
         if(otherSv.SvData.startOrientation() != SvData.startOrientation() || otherSv.SvData.endOrientation() != SvData.endOrientation())
             return false;
 
+        if(!otherSv.Breakend.transcriptId().equals(Breakend.transcriptId()))
+            return false;
+
         return true;
     }
 
