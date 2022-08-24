@@ -16,8 +16,13 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.chord.ChordData;
+import com.hartwig.hmftools.common.chord.ChordDataFile;
+import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.chord.ImmutableChordData;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -31,6 +36,7 @@ public class HrdDetectionAnalyser
 {
     private final List<String> mSampleIds;
     private final String mPurpleDataDir;
+    private final String mChordDir;
     private final int mThreads;
 
     private final HrdDetection mHrdDetection;
@@ -39,13 +45,15 @@ public class HrdDetectionAnalyser
     private final BufferedWriter mWriter;
 
     private static final String SAMPLE_ID_FILE = "sample_id_file";
-    private static final String PURPLE_DATA_DIR = "purple_data_dir";
+    private static final String PURPLE_DATA_DIR = "purple_dir";
+    private static final String CHORD_DIR = "chord_dir";
     private static final String THREADS = "threads";
 
     public HrdDetectionAnalyser(final CommandLine cmd)
     {
         mSampleIds = loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE));
         mPurpleDataDir = cmd.getOptionValue(PURPLE_DATA_DIR);
+        mChordDir = cmd.getOptionValue(CHORD_DIR);
         mThreads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
 
         mDbAccess = DatabaseAccess.createDatabaseAccess(cmd);
@@ -59,6 +67,12 @@ public class HrdDetectionAnalyser
         if(mSampleIds.isEmpty())
         {
             PPL_LOGGER.error("missing sampleIds, exiting");
+            System.exit(1);
+        }
+
+        if(mDbAccess == null && mPurpleDataDir == null)
+        {
+            PPL_LOGGER.error("missing DB or purple & chord data paths");
             System.exit(1);
         }
 
@@ -78,14 +92,52 @@ public class HrdDetectionAnalyser
 
         closeBufferedWriter(mWriter);
 
-        PPL_LOGGER.info("Purple HRD analysis cnmplete");
+        PPL_LOGGER.info("Purple HRD analysis complete");
     }
 
     private void processSample(final String sampleId)
     {
-        final List<PurpleCopyNumber> copyNumbers = mDbAccess.readCopynumbers(sampleId);
-        final PurityContext purityContext = mDbAccess.readPurityContext(sampleId);
-        final ChordData chordData = mDbAccess.readChord(sampleId);
+        List<PurpleCopyNumber> copyNumbers = null;
+        PurityContext purityContext = null;
+        ChordData chordData = null;
+
+        if(mDbAccess != null)
+        {
+            copyNumbers = mDbAccess.readCopynumbers(sampleId);
+            purityContext = mDbAccess.readPurityContext(sampleId);
+            chordData = mDbAccess.readChord(sampleId);
+        }
+        else
+        {
+            try
+            {
+                if(mChordDir != null)
+                {
+                    String sampleChordDirectory = mChordDir.replaceAll("\\*", sampleId);
+                    chordData = ChordDataFile.read(ChordDataFile.generateFilename(sampleChordDirectory, sampleId));
+                }
+                else
+                {
+                    chordData = ImmutableChordData.builder()
+                            .BRCA1Value(0)
+                            .BRCA2Value(0)
+                            .hrdType("N/A")
+                            .hrdValue(0)
+                            .hrStatus(ChordStatus.UNKNOWN)
+                            .remarksHrdType("")
+                            .remarksHrStatus("").build();
+                }
+
+                String samplePurpleDirectory = mPurpleDataDir.replaceAll("\\*", sampleId);
+                copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(samplePurpleDirectory, sampleId));
+                purityContext = PurityContextFile.read(samplePurpleDirectory, sampleId);
+            }
+            catch(IOException e)
+            {
+                PPL_LOGGER.error("failed to load file data {}", e.toString());
+                return;
+            }
+        }
 
         if(chordData == null || purityContext == null)
         {
