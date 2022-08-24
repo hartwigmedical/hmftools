@@ -3,10 +3,13 @@ package com.hartwig.hmftools.patientreporter.cfreport;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Set;
+
+import javax.xml.stream.XMLStreamException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.GsonBuilder;
@@ -121,6 +124,21 @@ public class CFReportWriter implements ReportWriter {
             writer.write(convertToJson(report));
             writer.close();
             LOGGER.info(" Created report data json file at {} ", outputFileData);
+        }
+    }
+
+    public void writeXMLAnalysedFile(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException, XMLStreamException {
+        writeReportDataToXML(report, outputFilePath);
+    }
+
+    public void writeReportDataToXML(@NotNull PatientReport report, @NotNull String outputDirData)
+            throws IOException, XMLStreamException {
+        if (writeToFile) {
+            String outputFileData = outputDirData + File.separator + OutputFileUtil.generateOutputFileNameForXML(report);
+            FileOutputStream out = new FileOutputStream(outputFileData);
+
+            LOGGER.info(" Created report data xml file at {} ", outputFileData);
+
         }
     }
 

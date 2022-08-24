@@ -7,6 +7,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
+import javax.xml.stream.XMLStreamException;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
@@ -64,7 +66,7 @@ public class CFReportWriterTest {
     private static final String UDI_DI = "(01) 8720299486010(8012)v5.25";
 
     @Test
-    public void canGeneratePatientReportForCOLO829() throws IOException {
+    public void canGeneratePatientReportForCOLO829() throws IOException, XMLStreamException {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T")
                 .comments(COLO_COMMENT_STRING)
                 .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
@@ -73,7 +75,9 @@ public class CFReportWriterTest {
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
-        writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
+     //   writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
+        writer.writeXMLAnalysedFile(colo829Report, REPORT_BASE_DIR);
+
     }
 
     @Test

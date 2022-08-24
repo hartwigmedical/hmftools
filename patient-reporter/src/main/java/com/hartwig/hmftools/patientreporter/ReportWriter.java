@@ -2,6 +2,8 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.io.IOException;
 
+import javax.xml.stream.XMLStreamException;
+
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.panel.PanelFailReport;
 import com.hartwig.hmftools.patientreporter.panel.PanelReport;
@@ -18,6 +20,8 @@ public interface ReportWriter {
     void writeJsonFailedFile(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException;
 
     void writeJsonAnalysedFile(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException;
+
+    void writeXMLAnalysedFile(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException, XMLStreamException;
 
     void writePanelAnalysedReport(@NotNull PanelReport report, @NotNull String outputFilePath) throws IOException;
 

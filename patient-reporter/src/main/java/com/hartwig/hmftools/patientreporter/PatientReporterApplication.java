@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
+import javax.xml.stream.XMLStreamException;
+
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -38,7 +40,7 @@ public class PatientReporterApplication {
     // Uncomment this line when generating an example report using CFReportWriterTest
     //                public static final String VERSION = "7.25.1";
 
-    public static void main(@NotNull String[] args) throws IOException {
+    public static void main(@NotNull String[] args) throws IOException, XMLStreamException {
         LOGGER.info("Running patient reporter v{}", VERSION);
 
         Options options = PatientReporterConfig.createOptions();
@@ -65,7 +67,7 @@ public class PatientReporterApplication {
         this.reportDate = reportDate;
     }
 
-    private void run() throws IOException {
+    private void run() throws IOException, XMLStreamException {
         SampleMetadata sampleMetadata = buildSampleMetadata(config);
 
         if (config.qcFail()) {
@@ -77,7 +79,7 @@ public class PatientReporterApplication {
         }
     }
 
-    private void generateAnalysedReport(@NotNull SampleMetadata sampleMetadata) throws IOException {
+    private void generateAnalysedReport(@NotNull SampleMetadata sampleMetadata) throws IOException, XMLStreamException {
         AnalysedReportData reportData = buildAnalysedReportData(config);
         AnalysedPatientReporter reporter = new AnalysedPatientReporter(reportData, reportDate);
 
@@ -92,6 +94,7 @@ public class PatientReporterApplication {
             LOGGER.debug("Updating reporting db and writing report data");
 
             reportWriter.writeJsonAnalysedFile(report, config.outputDirData());
+            reportWriter.writeXMLAnalysedFile(report, config.outputDirData());
 
             new ReportingDb().appendAnalysedReport(report, config.outputDirData());
         }
