@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.utils.version;
 
+import static java.time.ZoneOffset.UTC;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -8,9 +10,14 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.DateTimeException;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 import org.apache.logging.log4j.core.util.IOUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class VersionInfo {
 
@@ -24,6 +31,20 @@ public class VersionInfo {
     @NotNull
     public String version() {
         return value("version=", "UNKNOWN");
+    }
+
+    @Nullable
+    public ZonedDateTime buildTime() {
+        String timeStr = value("build.date=", "UNKNOWN");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        try {
+            LocalDateTime localDateTime = LocalDateTime.from(formatter.parse(timeStr));
+            return ZonedDateTime.of(localDateTime, UTC);
+        }
+        catch (DateTimeException ignored) {
+            return null;
+        }
     }
 
     @NotNull
