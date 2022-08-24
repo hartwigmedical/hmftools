@@ -5,8 +5,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.svprep.SpanningReadCache.chrFromChrPartition;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.WriteType.CACHE_BAM;
-import static com.hartwig.hmftools.svprep.reads.ReadRecord.findReadIdTrimIndex;
-import static com.hartwig.hmftools.svprep.reads.ReadRecord.trimReadId;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 
 import java.io.File;
@@ -22,6 +20,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadGroupStatus;
+import com.hartwig.hmftools.svprep.reads.ReadIdTrimmer;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -39,7 +38,7 @@ public class CandidateBamWriter
     private final Map<String,String> mCandidatesWriterBamFiles;
 
     private final Map<String,Set<String>> mChrJunctionReadIds;
-    private int mReadIdTrimIndex;
+    private ReadIdTrimmer mReadIdTrimmer;
 
     public CandidateBamWriter(final SvConfig config)
     {
@@ -47,7 +46,7 @@ public class CandidateBamWriter
         mCandidatesWriters = Maps.newHashMap();
         mCandidatesWriterBamFiles = Maps.newHashMap();
         mChrJunctionReadIds = Maps.newHashMap();
-        mReadIdTrimIndex = -1;
+        mReadIdTrimmer = new ReadIdTrimmer(mConfig.TrimReadId);
     }
 
     public void addJunctionReadId(final Set<String> remotePartitions, final String readId)
@@ -202,18 +201,7 @@ public class CandidateBamWriter
 
     private boolean checkJunctionRead(final String chromosome, final String readName)
     {
-        String readId;
-        if(mConfig.TrimReadId)
-        {
-            if(mReadIdTrimIndex < 0)
-                mReadIdTrimIndex = findReadIdTrimIndex(readName);
-
-            readId = trimReadId(readName, mReadIdTrimIndex);
-        }
-        else
-        {
-            readId = readName;
-        }
+        String readId = mReadIdTrimmer.trim(readName);
 
         Set<String> readIds = mChrJunctionReadIds.get(chromosome);
         if(readIds == null)

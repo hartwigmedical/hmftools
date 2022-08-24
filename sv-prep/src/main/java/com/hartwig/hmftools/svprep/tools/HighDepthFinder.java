@@ -50,10 +50,12 @@ public class HighDepthFinder
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
-            if(!mConfig.SpecificRegions.isEmpty() && mConfig.SpecificRegions.stream().noneMatch(x -> x.Chromosome.equals(chromosome.toString())))
+            String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
+
+            if(!mConfig.SpecificRegions.isEmpty() && mConfig.SpecificRegions.stream().noneMatch(x -> x.Chromosome.equals(chrStr)))
                 continue;
 
-            HighDepthTask depthTask = new HighDepthTask(chromosome.toString(), mConfig, mWriter);
+            HighDepthTask depthTask = new HighDepthTask(chrStr, mConfig, mWriter);
             depthTasks.add(depthTask);
         }
 
@@ -63,8 +65,6 @@ public class HighDepthFinder
         closeBufferedWriter(mWriter);
 
         SV_LOGGER.info("high depth discovery complete");
-
-        // write output VCF
     }
 
     private BufferedWriter initialiseWriter(final String filename)

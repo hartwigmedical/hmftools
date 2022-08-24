@@ -25,8 +25,6 @@ import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.reads.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.svprep.reads.ReadGroup.addUniqueReadGroups;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.findIndelCoords;
-import static com.hartwig.hmftools.svprep.reads.ReadRecord.findReadIdTrimIndex;
-import static com.hartwig.hmftools.svprep.reads.ReadRecord.trimReadId;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXACT_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXPECTED;
@@ -69,7 +67,7 @@ public class JunctionTracker
     private final List<JunctionData> mJunctions; // ordered by position
     private int mLastJunctionIndex;
 
-    private int mReadIdTrimIndex;
+    private ReadIdTrimmer mReadIdTrimmer;
     private int mInitialSupportingFrags;
     private final int[] mBaseDepth;
 
@@ -112,7 +110,7 @@ public class JunctionTracker
         mJunctions = Lists.newArrayList();
         mLastJunctionIndex = -1;
         mInitialSupportingFrags = 0;
-        mReadIdTrimIndex = -1;
+        mReadIdTrimmer = new ReadIdTrimmer(mConfig.TrimReadId);
 
         mBaseDepth = config.CaptureDepth ? new int[mRegion.baseLength()] : null;
 
@@ -165,18 +163,7 @@ public class JunctionTracker
 
     public void processRead(final ReadRecord read)
     {
-        String readId;
-        if(mConfig.TrimReadId)
-        {
-            if(mReadIdTrimIndex < 0)
-                mReadIdTrimIndex = findReadIdTrimIndex(read.id());
-
-            readId = trimReadId(read.id(), mReadIdTrimIndex);
-        }
-        else
-        {
-            readId = read.id();
-        }
+        String readId = mReadIdTrimmer.trim(read.id());
 
         ReadGroup readGroup = mReadGroupMap.get(readId);
 

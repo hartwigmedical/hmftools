@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_LENGTH;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_LINE_SOFT_CLIP_LENGTH;
@@ -27,6 +28,7 @@ import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.getSoftClippedBases;
 
+import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.M;
 
 import htsjdk.samtools.Cigar;
@@ -47,7 +49,6 @@ public class ReadFilters
     {
         // check each filter type that would prevent a read being used to establish a junction
         // NOTE: must check all filters (ie no early) exits since the state of some are subsequently used (eg map-qual & poly-G)
-
         int filters = 0;
 
         final Cigar cigar = record.getCigar();
