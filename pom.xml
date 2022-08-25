@@ -115,6 +115,7 @@
         <itext.version>7.1.5</itext.version>
         <tablesaw.version>0.42.0</tablesaw.version>
         <jcommander.version>1.81</jcommander.version>
+        <jackson-dataformat-xml.version>2.11.1</jackson-dataformat-xml.version>
 
         <kotest.version>4.6.4</kotest.version>
         <junit.version>4.13.1</junit.version>
@@ -168,6 +169,11 @@
                     <artifactId>jooq-codegen-maven</artifactId>
                     <version>${jooq.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>com.fasterxml.jackson.dataformat</groupId>
+                    <artifactId>jackson-dataformat-xml</artifactId>
+                    <version>${jackson-dataformat-xml.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
@@ -191,7 +197,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
                 <artifactId>jackson-dataformat-xml</artifactId>
-                <version>2.11.1</version>
+                <version>${jackson-dataformat-xml.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
