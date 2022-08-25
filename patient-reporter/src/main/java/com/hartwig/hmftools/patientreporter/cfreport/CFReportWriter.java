@@ -9,7 +9,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.GsonBuilder;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
@@ -17,6 +21,8 @@ import com.hartwig.hmftools.patientreporter.OutputFileUtil;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReporter;
+import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.CircosChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.ClinicalEvidenceOffLabelChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.ClinicalEvidenceOnLabelChapter;
@@ -130,12 +136,15 @@ public class CFReportWriter implements ReportWriter {
         writeReportDataToXML(report, outputFilePath);
     }
 
-    public void writeReportDataToXML(@NotNull AnalysedPatientReport report, @NotNull String outputDirData)
-            throws IOException {
+    public void writeReportDataToXML(@NotNull PatientReport report, @NotNull String outputDirData) throws IOException {
         if (writeToFile) {
-            String outputFileData = outputDirData + File.separator + OutputFileUtil.generateOutputFileNameForXML(report);
             XmlMapper xmlMapper = new XmlMapper();
-            xmlMapper.writeValue(new FileOutputStream(outputFileData), report);
+            xmlMapper.enable(SerializationFeature.WRITE_DATE_KEYS_AS_TIMESTAMPS);
+            xmlMapper.enable(SerializationFeature.WRITE_DATES_WITH_ZONE_ID);
+
+            String outputFileData = outputDirData + File.separator + OutputFileUtil.generateOutputFileNameForXML(report);
+            xmlMapper.writerWithDefaultPrettyPrinter().writeValue(new File(outputFileData), report);
+
             LOGGER.info(" Created report data xml file at {} ", outputFileData);
 
         }
