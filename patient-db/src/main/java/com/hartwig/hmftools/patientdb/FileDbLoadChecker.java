@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSepar
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.patientdb.LoadPurpleData.hasMissingFiles;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
@@ -67,7 +69,6 @@ public class FileDbLoadChecker
     private static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String PURPLE_DIR = "purple_dir";
     private static final String LINX_DIR = "linx_dir";
-    private static final String THREADS = "threads";
 
     private static final Logger LOGGER = LogManager.getLogger(LoadPurpleSomaticVariants.class);
 
@@ -92,7 +93,7 @@ public class FileDbLoadChecker
 
         mPurpleDir = cmd.hasOption(PURPLE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR)) : null;
         mLinxDir = cmd.hasOption(LINX_DIR) ? checkAddDirSeparator(cmd.getOptionValue(LINX_DIR)) : null;
-        mThreads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
+        mThreads = parseThreads(cmd);
     }
 
     public void run()
@@ -389,7 +390,7 @@ public class FileDbLoadChecker
         options.addOption(SAMPLE_ID_FILE, true, "CSV with SampleId");
         options.addOption(PURPLE_DIR, true, "Sample Purple directory");
         options.addOption(LINX_DIR, true, "Sample Linx directory");
-        options.addOption(THREADS, true, "Thread count");
+        addThreadOptions(options);
         addDatabaseCmdLineArgs(options);
         ConfigUtils.addLoggingOptions(options);
         FileWriterUtils.addOutputOptions(options);

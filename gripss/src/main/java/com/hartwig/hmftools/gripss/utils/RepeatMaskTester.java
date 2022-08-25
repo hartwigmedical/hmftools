@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsInde
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations.REPEAT_MASK_FILE;
 
@@ -42,7 +44,6 @@ public class RepeatMaskTester
 
     private static final String SV_DATA_FILE = "sv_data_file";
     private static final String OUTPUT_FILE = "output_file";
-    private static final String THREADS = "threads";
 
     public RepeatMaskTester(final CommandLine cmd)
     {
@@ -53,7 +54,7 @@ public class RepeatMaskTester
             System.exit(1);
 
         mWriter = initialiseOutput(cmd.getOptionValue(OUTPUT_FILE));
-        mThreads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
+        mThreads = parseThreads(cmd);
     }
 
     public void run()
@@ -265,7 +266,7 @@ public class RepeatMaskTester
         final Options options = new Options();
         options.addOption(SV_DATA_FILE, true, "File with SV data");
         options.addOption(OUTPUT_FILE, true, "Output matching file");
-        options.addOption(THREADS, true, "Thread count");
+        addThreadOptions(options);
         RepeatMaskAnnotations.addCmdLineArgs(options);
 
         // addOutputOptions(options);

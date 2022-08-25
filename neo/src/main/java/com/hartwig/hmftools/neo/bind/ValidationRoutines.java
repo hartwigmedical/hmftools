@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
@@ -68,7 +68,7 @@ public class ValidationRoutines
         mHlaSequences = new HlaSequences();
         mHlaSequences.load(cmd.getOptionValue(HLA_DEFINITIONS_FILE));
         mPosWeightModel = new PosWeightModel(mConfig.Constants, mHlaSequences);
-        mThreads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
+        mThreads = parseThreads(cmd);
 
         mSummaryWriter = initialiseSummaryWriter();
         mPeptideWriter = initialisePeptideWriter();

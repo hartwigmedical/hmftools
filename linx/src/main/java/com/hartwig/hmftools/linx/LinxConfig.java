@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 
@@ -98,8 +100,6 @@ public class LinxConfig
     private static final String LINE_ELEMENT_FILE = "line_element_file";
     public static final String GENE_ID_FILE = "gene_id_file";
 
-    private static final String THREADS = "threads";
-
     // logging options
     public static final String LOG_VERBOSE = "log_verbose";
 
@@ -172,7 +172,7 @@ public class LinxConfig
         HomDisAllGenes = cmd.hasOption(HOM_DIS_ALL_GENES);
 
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
+        Threads = parseThreads(cmd);
 
         ChainingSvLimit = cmd.hasOption(CHAINING_SV_LIMIT) ? Integer.parseInt(cmd.getOptionValue(CHAINING_SV_LIMIT)) : 0;
 
@@ -348,9 +348,9 @@ public class LinxConfig
         options.addOption(ANNOTATION_EXTENSIONS, true, "Optional: string list of annotations");
         options.addOption(INDEL_ANNOTATIONS, false, "Optional: annotate clusters and TIs with INDELs");
         options.addOption(INDEL_FILE, true, "Optional: cached set of INDELs");
-        options.addOption(THREADS, true, "Cohort mode: number of threads");
 
         ConfigUtils.addLoggingOptions(options);
+        addThreadOptions(options);
         options.addOption(LOG_VERBOSE, false, "Log extra detail");
 
         LinxOutput.addCmdLineArgs(options);

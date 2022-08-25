@@ -5,12 +5,13 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELES;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PATIENT_ID;
@@ -332,9 +333,8 @@ public class GartnerDataPrep
         options.addOption(PATIENT_ALLELES_FILE, true, "MCF predictions file");
         options.addOption(MUTATIONS_FILE, true, "Binding validation file");
         options.addOption(REQUIRED_PEPTIDE_LENGTHS, true, "Peptide lengths");
-        options.addOption(OUTPUT_ID, true, "Output file identifier");
         addLoggingOptions(options);
-        addOutputDir(options);
+        addOutputOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 

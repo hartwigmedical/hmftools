@@ -15,6 +15,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
 import static com.hartwig.hmftools.pave.compare.ImpactDiffType.ANY;
@@ -52,7 +54,6 @@ public class ComparisonConfig
     private static final String WRITE_TRANS_DATA = "write_trans_data";
     private static final String WRITE_MATCHES = "write_matches";
     private static final String DIFF_TYPES = "diff_types";
-    private static final String THREADS = "threads";
 
     public ComparisonConfig(final CommandLine cmd)
     {
@@ -83,7 +84,7 @@ public class ComparisonConfig
         OutputId = cmd.getOptionValue(OUTPUT_ID);
         WriteTransData = cmd.hasOption(WRITE_TRANS_DATA);
         WriteMatches = cmd.hasOption(WRITE_MATCHES);
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
+        Threads = parseThreads(cmd);
     }
 
     public boolean checkDiffType(ImpactDiffType type) { return ImpactDiffTypes.contains(type) || ImpactDiffTypes.contains(ANY); }
@@ -96,7 +97,7 @@ public class ComparisonConfig
         options.addOption(REF_VARIANTS_FILE, true, "File with variants to test against");
         options.addOption(ONLY_DRIVER_GENES, false, "Only compare variants in driver genes");
         options.addOption(ONLY_CANONCIAL, false, "Only compare variants by canonical transcripts");
-        options.addOption(THREADS, true, "Thread count, default = 0 (disabled)");
+        addThreadOptions(options);
 
         options.addOption(
                 DIFF_TYPES, true, "Types of diffs to write to file: CODING_EFFECT, EFFECTS, HGVS_CODING, HGVS_PROTEIN, ANY");

@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.svprep.SvCommon.ITEM_DELIM;
@@ -95,7 +97,6 @@ public class SvConfig
 
     private static final String WRITE_TYPES = "write_types";
 
-    private static final String THREADS = "threads";
     private static final String READ_LENGTH = "read_length";
     private static final String CALC_FRAG_LENGTH = "calc_fragment_length";
     private static final String PARTITION_SIZE = "partition_size";
@@ -174,7 +175,7 @@ public class SvConfig
         LogReadIds = cmd.hasOption(LOG_READ_IDS) ?
                 Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
 
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
+        Threads = parseThreads(cmd);
         FindDiscordantGroups = cmd.hasOption(FIND_DISCORDANT_GROUPS);
         UseCacheBam = cmd.hasOption(USE_CACHE_BAM);
 
@@ -318,8 +319,8 @@ public class SvConfig
         options.addOption(NO_CLEAN_UP, false, "Keep candidate cache files");
         options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
         options.addOption(JUNCTION_FRAGS_CAP, true, "Limit to supporting reads added to a junction");
-        options.addOption(THREADS, true, "Thread count");
         ReadFilterConfig.addCmdLineArgs(options);
+        addThreadOptions(options);
 
         return options;
     }

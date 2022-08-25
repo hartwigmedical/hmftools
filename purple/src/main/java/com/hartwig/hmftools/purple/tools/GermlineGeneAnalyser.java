@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.BufferedWriter;
@@ -46,7 +48,6 @@ public class GermlineGeneAnalyser
 
     private static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String PURPLE_DATA_DIR = "purple_data_dir";
-    private static final String THREADS = "threads";
 
     public GermlineGeneAnalyser(final CommandLine cmd)
     {
@@ -57,7 +58,7 @@ public class GermlineGeneAnalyser
 
         mSampleIds = loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE));
         mPurpleDataDir = cmd.getOptionValue(PURPLE_DATA_DIR);
-        mThreads = Integer.parseInt(cmd.getOptionValue(THREADS));
+        mThreads = parseThreads(cmd);
 
         mWriter = initialiseWriter(cmd.getOptionValue(OUTPUT_DIR));
     }
@@ -170,7 +171,7 @@ public class GermlineGeneAnalyser
     {
         final Options options = new Options();
         options.addOption(SAMPLE_ID_FILE, true, "Sample ID file");
-        options.addOption(THREADS, true, "Thread count, default = 0 (disabled)");
+        addThreadOptions(options);
 
         options.addOption(PURPLE_DATA_DIR, true, "Directory pattern for sample purple directory");
         addEnsemblDir(options);

@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.isofox.loader;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
@@ -43,7 +46,6 @@ public class DataLoaderConfig
     public static final String FLD_CANCER_TYPE = "CancerType";
 
     public static final String LOAD_TYPES = "load_types";
-    public static final String THREADS = "threads";
 
     public final String SampleDataDir;
     public final String GeneDataDir;
@@ -120,7 +122,7 @@ public class DataLoaderConfig
 
         RestrictedGeneIds = Lists.newArrayList();
 
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
+        Threads = parseThreads(cmd);
 
         if(cmd.hasOption(GENE_ID_FILE))
         {
@@ -207,9 +209,9 @@ public class DataLoaderConfig
         options.addOption(GENE_DIST_FILE, true, "Gene distribution for medians and percentile data");
         options.addOption(ALT_SJ_COHORT_FILE, true, "Alternate splice junction cohort file");
         options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
-        options.addOption(THREADS, true, "Optional multi-threading when loading multiple samples");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
 
+        addLoggingOptions(options);
+        addThreadOptions(options);
         addDatabaseCmdLineArgs(options);
 
         return options;

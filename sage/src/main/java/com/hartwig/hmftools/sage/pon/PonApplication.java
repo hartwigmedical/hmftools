@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage.pon;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
@@ -33,7 +35,6 @@ import htsjdk.variant.vcf.VCFFileReader;
 
 public class PonApplication implements AutoCloseable
 {
-    private static final String THREADS = "threads";
     private static final String IN_VCF = "in";
     private static final String OUT_VCF = "out";
     private static final String GLOB = "*.sage.somatic.vcf.gz";
@@ -44,7 +45,7 @@ public class PonApplication implements AutoCloseable
         final CommandLine cmd = createCommandLine(args, options);
         final String inputFilePath = cmd.getOptionValue(IN_VCF);
         final String outputFilePath = cmd.getOptionValue(OUT_VCF);
-        final int threads = getConfigValue(cmd, THREADS, 5);
+        final int threads = parseThreads(cmd, 5);
 
         if(outputFilePath == null || inputFilePath == null)
         {
@@ -140,9 +141,9 @@ public class PonApplication implements AutoCloseable
     private static Options createOptions()
     {
         final Options options = new Options();
-        options.addOption(IN_VCF, true, "Input file.");
-        options.addOption(OUT_VCF, true, "Output file.");
-        options.addOption(THREADS, true, "Number of threads [1]");
+        options.addOption(IN_VCF, true, "Input file");
+        options.addOption(OUT_VCF, true, "Output file");
+        addThreadOptions(options);
         return options;
     }
 

@@ -35,7 +35,7 @@ public class ConfigUtils
 
     public static void setLogLevel(final CommandLine cmd)
     {
-        if (cmd.hasOption(LOG_DEBUG))
+        if(cmd.hasOption(LOG_DEBUG))
         {
             Configurator.setRootLevel(Level.DEBUG);
         }

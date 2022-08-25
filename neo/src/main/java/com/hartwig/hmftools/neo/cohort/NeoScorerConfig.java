@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.neo.cohort;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
-import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleIdsFile;
 
 import java.util.Arrays;
@@ -61,7 +62,7 @@ public class NeoScorerConfig
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
+        Threads = parseThreads(cmd);
 
         WriteTypes = Lists.newArrayList();
 
@@ -93,10 +94,9 @@ public class NeoScorerConfig
         ConfigUtils.addLoggingOptions(options);
         options.addOption(LIKELIHOOD_THRESHOLD, true, "Rank threshold to write full peptide data");
         options.addOption(SIMILARITY_THRESHOLD, true, "Immunogenic similarity threshold to write full peptide data");
-        options.addOption(THREADS, true, "Thread count");
 
         options.addOption(WRITE_TYPES, true, "Valid types: ALLELE_PEPTIDE, PEPTIDE, NEOEPITOPE, SAMPLE_SUMMARY sep by ';'");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(OUTPUT_ID, true, "Output file ID");
+        addOutputOptions(options);
+        addThreadOptions(options);
     }
 }

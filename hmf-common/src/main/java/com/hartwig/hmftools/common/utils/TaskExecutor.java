@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.utils;
 
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -20,14 +22,30 @@ public class TaskExecutor
     private static final Logger LOGGER = LogManager.getLogger(TaskExecutor.class);
 
     public static final String THREADS = "threads";
-    public static final String THREADS_DESC = "Number of threads";
+    private static final int DEFAULT_THREAD_COUNT = 1;
 
     public static void addThreadOptions(final Options options)
     {
-        options.addOption(THREADS, true, THREADS_DESC);
+        addThreadOptions(options, DEFAULT_THREAD_COUNT);
     }
 
-    public static int parseThreads(final CommandLine cmd) { return Integer.parseInt(cmd.getOptionValue(THREADS, "1")); }
+    public static void addThreadOptions(final Options options, final int defaultCount)
+    {
+        if(defaultCount <= 0)
+            options.addOption(THREADS, true, format("Number of threads, default %d = not multi-threaded", defaultCount));
+        else
+            options.addOption(THREADS, true, format("Number of threads, default %d", defaultCount));
+    }
+
+    public static int parseThreads(final CommandLine cmd)
+    {
+        return parseThreads(cmd, DEFAULT_THREAD_COUNT);
+    }
+
+    public static int parseThreads(final CommandLine cmd, final int defaultCount)
+    {
+        return Integer.parseInt(cmd.getOptionValue(THREADS, String.valueOf(defaultCount)));
+    }
 
     public static boolean executeTasks(final List<Callable> tasks, int threadCount)
     {

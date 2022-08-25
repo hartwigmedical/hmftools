@@ -2,17 +2,17 @@ package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.ExpressionLikelihood.EXP_LIKELIHOOD_FILE;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
-import static com.hartwig.hmftools.neo.bind.ScoreConfig.scoreFileConfig;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -194,8 +194,7 @@ public class TrainConfig
         options.addOption(LOG_CALC_ALLELES, true, "Log verbose calcs for alleles separated by ';'");
 
         options.addOption(RUN_VALIDATION, false, "Run validation routines");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(OUTPUT_ID, true, "Output file id");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        addLoggingOptions(options);
+        addOutputOptions(options);
     }
 }

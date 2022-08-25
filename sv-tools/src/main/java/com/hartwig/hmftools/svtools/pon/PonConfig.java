@@ -3,6 +3,8 @@ package com.hartwig.hmftools.svtools.pon;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.svtools.pon.PonBuilder.PON_LOGGER;
 
 import java.io.File;
@@ -34,14 +36,13 @@ public class PonConfig
     private static final String SAMPLE_VCFS_FILE = "sample_vcfs_file";
     private static final String VCF_FILE_PATTERNS = "vcf_file_patterns";
     private static final String MIN_PON_WRITE_COUNT = "min_pon_write_count";
-    private static final String THREADS = "threads";
 
     public PonConfig(final CommandLine cmd)
     {
         SampleIds = Lists.newArrayList();
         OutputDir = parseOutputDir(cmd);
         MinPonWriteCount = Integer.parseInt(cmd.getOptionValue(MIN_PON_WRITE_COUNT, "2"));
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
+        Threads = parseThreads(cmd);
 
         SampleVcfFiles = Maps.newHashMap();
 
@@ -94,7 +95,7 @@ public class PonConfig
         options.addOption(SAMPLE_VCFS_FILE, true, "CSV file with 'SampleId,VcfFile' locations");
         options.addOption(VCF_FILE_PATTERNS, true, "VCF file IDs, eg 'gridss.vcf' separated by ';'");
         options.addOption(MIN_PON_WRITE_COUNT, true, "Min observations of SV or SGL to include in PON");
-        options.addOption(THREADS, true, "Thread count (default: 0, none)");
+        addThreadOptions(options);
         ConfigUtils.addLoggingOptions(options);
         addOutputDir(options);
     }

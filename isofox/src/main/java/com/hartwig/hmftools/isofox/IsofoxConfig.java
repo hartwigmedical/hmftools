@@ -16,7 +16,10 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_SINGLE_MAP_QUALITY;
@@ -93,7 +96,6 @@ public class IsofoxConfig
     private static final String GENE_READ_LIMIT = "gene_read_limit";
     private static final String RUN_VALIDATIONS = "validate";
     private static final String PERF_CHECKS = "run_perf_checks";
-    private static final String THREADS = "threads";
     private static final String FILTER_READS_FILE = "filter_reads_file";
 
     public final String SampleId;
@@ -196,7 +198,7 @@ public class IsofoxConfig
         WriteTransComboData = cmd.hasOption(WRITE_TRANS_COMBO_DATA);
         WriteGcData = cmd.hasOption(WRITE_GC_DATA);
 
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
+        Threads = parseThreads(cmd);
 
         if(Functions.contains(TRANSCRIPT_COUNTS))
         {
@@ -412,7 +414,7 @@ public class IsofoxConfig
         final Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample ID");
         addEnsemblDir(options);
-        addOutputDir(options);
+        addOutputOptions(options);
         addLoggingOptions(options);
 
         options.addOption(FUNCTIONS, true, "Optional: list of functional routines to run (see documentation)");
@@ -446,14 +448,13 @@ public class IsofoxConfig
 
         options.addOption(WRITE_EXPECTED_RATES, false, "Write sample expected expression rates to file");
 
-        options.addOption(OUTPUT_ID, true, "Optionally add identifier to output files");
-        options.addOption(THREADS, true, "Number of threads to use (default=0, single-threaded)");
         options.addOption(RUN_VALIDATIONS, false, "Run auto-validations");
         options.addOption(PERF_CHECKS, false, "Run performance logging routines");
         options.addOption(FILTER_READS_FILE, true, "Only process reads in this file");
 
         GeneRegionFilters.addCommandLineOptions(options);
         FusionConfig.addCommandLineOptions(options);
+        addThreadOptions(options);
 
         return options;
     }

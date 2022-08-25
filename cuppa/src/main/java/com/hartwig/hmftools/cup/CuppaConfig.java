@@ -2,9 +2,13 @@ package com.hartwig.hmftools.cup;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FEATURE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_SIG_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_SV_DATA_FILE;
@@ -169,10 +173,6 @@ public class CuppaConfig
     public static final String WRITE_DETAILED_SCORES = "write_detailed_scores";
     public static final String WRITE_CONDENSED = "write_condensed";
 
-    public static final String OUTPUT_FILE_ID = "output_id";
-    public static final String LOG_DEBUG = "log_debug";
-    public static final String THREADS = "threads";
-
     public static final Logger CUP_LOGGER = LogManager.getLogger(CuppaConfig.class);
 
     // file fields
@@ -282,8 +282,8 @@ public class CuppaConfig
         NoSubtypeCollapse = cmd.hasOption(NO_SUBTYPE_COLLAPSE);
 
         OutputDir = parseOutputDir(cmd);
-        OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
+        OutputFileId = cmd.getOptionValue(OUTPUT_ID, "");
+        Threads = parseThreads(cmd);
 
         WriteSimilarities = cmd.hasOption(WRITE_SIMS);
         WriteCondensed = cmd.hasOption(WRITE_CONDENSED);
@@ -441,10 +441,9 @@ public class CuppaConfig
         FeatureClassifier.addCmdLineArgs(options);
         SampleTraitClassifier.addCmdLineArgs(options);
 
-        options.addOption(OUTPUT_DIR, true, "Path to output files");
-        options.addOption(OUTPUT_FILE_ID, true, "Output file ID");
-        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
-        options.addOption(THREADS, true, "Number of threads");
+        addOutputOptions(options);
+        addLoggingOptions(options);
+        addThreadOptions(options);
     }
 
     public CuppaConfig()

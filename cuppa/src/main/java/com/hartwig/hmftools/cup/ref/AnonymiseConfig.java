@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.cup.ref;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_DATA_DIR;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_RNA_ALT_SJ_SAMPLE_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_RNA_GENE_EXP_SAMPLE_FILE;
@@ -60,8 +61,8 @@ public class AnonymiseConfig
         options.addOption(REF_RNA_GENE_EXP_SAMPLE_FILE, true, "Ref sample RNA gene expression cohort data file");
         options.addOption(REF_RNA_ALT_SJ_SAMPLE_FILE, true, "Ref sample RNA alternative SJ cohort data file");
 
-        options.addOption(OUTPUT_DIR, true, "Path to output files");
-        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+        addLoggingOptions(options);
+        addOutputOptions(options);
     }
 
 }

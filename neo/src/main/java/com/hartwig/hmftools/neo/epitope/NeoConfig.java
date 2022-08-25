@@ -5,14 +5,17 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleDataFile;
 
 import java.io.File;
@@ -143,7 +146,7 @@ public class NeoConfig
         WriteTransData = cmd.hasOption(WRITE_TRANS_DATA);
         WritePeptides = cmd.hasOption(WRITE_PEPTIDES);
 
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
+        Threads = parseThreads(cmd);
 
         RestrictedGeneIds = Lists.newArrayList();
         if(cmd.hasOption(GENE_ID_FILE))
@@ -169,9 +172,9 @@ public class NeoConfig
         options.addOption(WRITE_TRANS_DATA, false, "Write transcript data for each neo-epitope");
         options.addOption(WRITE_PEPTIDES, false, "Write all allele + peptide combinations for each neoepitope");
         options.addOption(REQ_AMINO_ACIDS, true, "Number of amino acids in neo-epitopes (default: 18)");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(THREADS, true, "Thread count");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        addLoggingOptions(options);
+        addOutputOptions(options);
+        addThreadOptions(options);
         DatabaseAccess.addDatabaseCmdLineArgs(options);
     }
 

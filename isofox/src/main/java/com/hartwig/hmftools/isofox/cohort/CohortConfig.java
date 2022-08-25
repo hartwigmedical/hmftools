@@ -13,6 +13,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.EXPRESSION_DISTRIBUTION;
@@ -62,7 +64,6 @@ public class CohortConfig
     public static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
 
     public static final String SAMPLE_MUT_FILE = "sample_mut_file";
-    private static final String THREADS = "threads";
 
     public final String RootDataDir;
     public final String OutputDir;
@@ -144,7 +145,7 @@ public class CohortConfig
 
         DbAccess = createDatabaseAccess(cmd);
 
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
+        Threads = parseThreads(cmd);
     }
 
     private static boolean requiresExpressionConfig(final List<AnalysisType> analysisTypes)
@@ -249,7 +250,7 @@ public class CohortConfig
 
         addOutputDir(options);
         addLoggingOptions(options);
-        options.addOption(THREADS, true, "Number of threads for task execution, default is 0 (off)");
+        addThreadOptions(options);
 
         return options;
     }

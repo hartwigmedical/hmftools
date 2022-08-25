@@ -13,6 +13,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_PER_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_REMOVE_SGL;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
@@ -105,7 +107,6 @@ public class LilacConfig
     // debug and technical config
     private static final String ACTUAL_ALLELES = "actual_alleles";
     private static final String RESTRICTED_ALLELES = "restricted_alleles";
-    private static final String THREADS = "threads";
     private static final String DEBUG_PHASING = "debug_phasing";
     public static final String LOG_DEBUG = "log_debug";
     public static final String RUN_VALIDATION = "run_validation";
@@ -184,7 +185,7 @@ public class LilacConfig
         RestrictedAlleles = parseAlleleList(cmd.getOptionValue(RESTRICTED_ALLELES));
         MaxEliminationCandidates = Integer.parseInt(cmd.getOptionValue(MAX_ELIM_CANDIDATES, "0"));
 
-        Threads = getConfigValue(cmd, THREADS, 1);
+        Threads = parseThreads(cmd);
 
         DebugPhasing = cmd.hasOption(DEBUG_PHASING); //  || cmd.hasOption(LOG_);
         RunValidation = cmd.hasOption(RUN_VALIDATION);
@@ -320,12 +321,12 @@ public class LilacConfig
         options.addOption(SOMATIC_VCF, true,"Path to somatic VCF");
         options.addOption(DEBUG_PHASING, false, "More detailed logging of phasing");
         options.addOption(RUN_VALIDATION, false, "Run validation checks");
-        options.addOption(THREADS, true,"Number of threads");
         options.addOption(WRITE_ALL_FILES, false,"Write more detailed output files");
 
         addRefGenomeConfig(options);
         addOutputDir(options);
         addLoggingOptions(options);
+        addThreadOptions(options);
         return options;
     }
 

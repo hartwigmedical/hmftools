@@ -6,9 +6,12 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.containsFlag;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -93,7 +96,6 @@ public class SageConfig
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
     private static final String RESOURCE_DIR = "resource_dir";
     
-    private static final String THREADS = "threads";
     private static final String REFERENCE = "reference";
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String TUMOR = "tumor";
@@ -208,7 +210,7 @@ public class SageConfig
 
         PerfWarnTime = Double.parseDouble(cmd.getOptionValue(PERF_WARN_TIME, "0"));
 
-        Threads = getConfigValue(cmd, THREADS, 1);
+        Threads = parseThreads(cmd);
     }
 
     private String getReferenceFile(final CommandLine cmd, final String config)
@@ -335,7 +337,7 @@ public class SageConfig
     public static Options commonOptions()
     {
         final Options options = new Options();
-        options.addOption(THREADS, true, "Number of threads [" + 1 + "]");
+        addThreadOptions(options);
         options.addOption(REFERENCE, true, "Reference sample, or collection separated by ',");
         options.addOption(RESOURCE_DIR, true, "Resource files");
         options.addOption(SAMPLE_DATA_DIR, true, "Path to sample data files");
@@ -356,8 +358,7 @@ public class SageConfig
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
         QualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);
 
-        options.addOption(LOG_DEBUG, false, "Log verbose");
-        options.addOption(LOG_LEVEL, true, "Log level");
+        addLoggingOptions(options);
         return options;
     }
 

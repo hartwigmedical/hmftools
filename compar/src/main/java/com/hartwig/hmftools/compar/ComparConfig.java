@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.compar.Category.ALL_CATEGORIES;
 import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.Category.FUSION;
@@ -73,7 +75,6 @@ public class ComparConfig
     public static final String SAMPLE = "sample";
     public static final String SOURCE_SAMPLE_MAPPINGS = "source_sample_mappings";
     public static final String SAMPLE_ID_FILE = "sample_id_file";
-    public static final String THREADS = "threads";
     public static final String WRITE_DETAILED_FILES = "write_detailed";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
@@ -123,7 +124,7 @@ public class ComparConfig
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
         WriteDetailed = cmd.hasOption(WRITE_DETAILED_FILES);
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
+        Threads = parseThreads(cmd);
 
         DbConnections = Maps.newHashMap();
         FileSources = Maps.newHashMap();
@@ -307,7 +308,7 @@ public class ComparConfig
         options.addOption(DB_SOURCES, true, "Database configurations keyed by soure name");
         options.addOption(FILE_SOURCES, true, "File locations keyed by source name");
         options.addOption(WRITE_DETAILED_FILES, false, "Write per-type details files");
-        options.addOption(THREADS, true, "Thread count (default 0, not multi-threaded)");
+        addThreadOptions(options);
 
         addDatabaseCmdLineArgs(options);
         addOutputOptions(options);

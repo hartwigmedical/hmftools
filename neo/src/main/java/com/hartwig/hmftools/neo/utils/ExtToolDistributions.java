@@ -3,10 +3,10 @@ package com.hartwig.hmftools.neo.utils;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRED_AFFINITY;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRES_SCORE;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
@@ -228,8 +228,7 @@ public class ExtToolDistributions
         options.addOption(VALIDATION_FILE, true, "Binding validation file");
         options.addOption(USE_PRESENTATION, false, "Rank and score using presentation instead of affinity");
         addLoggingOptions(options);
-        addOutputDir(options);
-        options.addOption(OUTPUT_ID, true, "Output file id");
+        addOutputOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 

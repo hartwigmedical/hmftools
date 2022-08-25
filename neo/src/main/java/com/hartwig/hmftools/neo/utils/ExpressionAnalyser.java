@@ -5,13 +5,14 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsem
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_LIKE_RANK;
@@ -315,10 +316,9 @@ public class ExpressionAnalyser
         options.addOption(PROTEOME_PEPTIDES_FILE, true, "Proteome binders file");
         options.addOption(VALIDATION_PEPTIDES_FILE, true, "Immunogenic peptide data file");
         options.addOption(PEPTIDE_SEARCH_FILE, true, "Peptide location in proteome");
-        options.addOption(OUTPUT_ID, true, "Output file identifier");
         addEnsemblDir(options);
         addLoggingOptions(options);
-        addOutputDir(options);
+        addOutputOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 

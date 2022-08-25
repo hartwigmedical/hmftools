@@ -8,13 +8,15 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
-import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.neo.bind.TranscriptExpression.IMMUNE_EXPRESSION_FILE;
@@ -72,7 +74,7 @@ public class PeptideProteomeLocator
         mTranscriptExpression = new TranscriptExpression(cmd.getOptionValue(IMMUNE_EXPRESSION_FILE));
 
         mFlankLength = Integer.parseInt(cmd.getOptionValue(FLANK_LENGTH));
-        mThreads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
+        mThreads = parseThreads(cmd);
         mFindRepeats = cmd.hasOption(FIND_REPEATS);
 
         mWriter = initialiseWriter(parseOutputDir(cmd), cmd.getOptionValue(OUTPUT_ID));
@@ -313,11 +315,10 @@ public class PeptideProteomeLocator
         options.addOption(FLANK_LENGTH, true, "Number of amino acid flanks to retrieve");
         options.addOption(FIND_REPEATS, false, "Look for repeated matches, default false");
         options.addOption(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
-        options.addOption(THREADS, true, "Threads (default none)");
-        options.addOption(OUTPUT_ID, true, "Output file identifier");
         addEnsemblDir(options);
         addLoggingOptions(options);
-        addOutputDir(options);
+        addOutputOptions(options);
+        addThreadOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 

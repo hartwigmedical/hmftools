@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS_DESC;
 
@@ -75,7 +77,6 @@ public class VisualiserConfig
     public static final String RESTRICT_CLUSTERS_BY_GENE = "restrict_cluster_by_gene";
     public static final String PLOT_CLUSTER_GENES = "plot_cluster_genes";
 
-    private static final String THREADS = "threads";
     private static final String INCLUDE_LINE_ELEMENTS = "include_line_elements";
 
     private static final String DELIM = ",";
@@ -129,8 +130,7 @@ public class VisualiserConfig
         RefGenomeVersion refGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
         RefGenomeCoords = refGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
-
+        Threads = parseThreads(cmd);
         Debug = cmd.hasOption(DEBUG);
 
         IncludeLineElements = cmd.hasOption(INCLUDE_LINE_ELEMENTS);
@@ -187,7 +187,7 @@ public class VisualiserConfig
         EnsemblDataCache.addEnsemblDir(options);
 
         options.addOption(DEBUG, false, "Enabled debug mode");
-        options.addOption(THREADS, true, "Number of threads to use");
+        addThreadOptions(options);
 
         // filters
         options.addOption(GENE, true, "Show canonical transcript for genes (separated by ','");

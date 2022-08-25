@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.cup.ref;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.cup.CuppaConfig.ALL_CATEGORIES;
 import static com.hartwig.hmftools.cup.CuppaConfig.CATEGORIES;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.CuppaConfig.NOISE_ALLOCATIONS;
 import static com.hartwig.hmftools.cup.CuppaConfig.NOISE_ALLOCATIONS_DESC;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
@@ -152,8 +153,8 @@ public class RefDataConfig
 
         addDatabaseCmdLineArgs(options);
 
-        options.addOption(OUTPUT_DIR, true, "Path to output files");
-        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+        addLoggingOptions(options);
+        addOutputOptions(options);
 
         RefGeneExpression.addCmdLineArgs(options);
         RefSomatics.addCmdLineArgs(options);

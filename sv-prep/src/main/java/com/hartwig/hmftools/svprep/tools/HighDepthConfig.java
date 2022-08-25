@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
@@ -33,7 +35,6 @@ public class HighDepthConfig
 
     private static final String BAM_FILE = "bam_file";
     private static final String OUTPUT_FILE = "output_file";
-    private static final String THREADS = "threads";
     private static final String PARTITION_SIZE = "partition_size";
     private static final String HIGH_DEPTH_THRESHOLD = "high_depth_threshold";
 
@@ -46,7 +47,7 @@ public class HighDepthConfig
         OutputFile = cmd.getOptionValue(OUTPUT_FILE);
         RefGenome = cmd.getOptionValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
+        Threads = parseThreads(cmd);
         PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_CHR_PARTITION_SIZE)));
         HighDepthThreshold = Integer.parseInt(cmd.getOptionValue(HIGH_DEPTH_THRESHOLD, String.valueOf(DEFAULT_HIGH_DEPTH_THRESHOLD)));
 
@@ -70,7 +71,7 @@ public class HighDepthConfig
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         options.addOption(HIGH_DEPTH_THRESHOLD, true, "Level for indicating high-depth");
         options.addOption(PARTITION_SIZE, true, "Partition size, default = " + DEFAULT_CHR_PARTITION_SIZE);
-        options.addOption(THREADS, true, "Multi-thread count");
+        addThreadOptions(options);
         addSpecificChromosomesRegionsConfig(options);
     }
 }

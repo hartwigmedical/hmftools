@@ -9,13 +9,15 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
-import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
 import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
@@ -74,7 +76,7 @@ public class RankProteomePeptides
         mRankCuttoff = Double.parseDouble(cmd.getOptionValue(RANK_CUTOFF, "0.01"));
         mScorer = new BindScorer(new ScoreConfig(cmd));
 
-        mThreads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
+        mThreads = parseThreads(cmd);
 
         mWriter = initialiseWriter(parseOutputDir(cmd), cmd.getOptionValue(OUTPUT_ID));
     }
@@ -320,12 +322,11 @@ public class RankProteomePeptides
         final Options options = new Options();
         options.addOption(ALLELE_FILE, true, "Peptides to search for");
         options.addOption(RANK_CUTOFF, true, "Number of amino acid flanks to retrieve");
-        options.addOption(THREADS, true, "Threads (default none)");
-        options.addOption(OUTPUT_ID, true, "Output file identifier");
         ScoreConfig.addCmdLineArgs(options);
         addEnsemblDir(options);
         addLoggingOptions(options);
-        addOutputDir(options);
+        addOutputOptions(options);
+        addThreadOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 

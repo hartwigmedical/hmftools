@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
 import static com.hartwig.hmftools.svprep.SvCommon.DELIM;
@@ -39,7 +41,6 @@ public class DepthConfig
     private static final String OUTPUT_VCF = "output_vcf";
     private static final String SAMPLES = "samples";
     private static final String BAM_FILES = "bam_files";
-    private static final String THREADS = "threads";
     private static final String VAF_CAP = "vaf_cap";
 
     protected static final int MAX_GAP = 500;
@@ -56,7 +57,7 @@ public class DepthConfig
         RefGenome = cmd.getOptionValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));;
         VafCap = Double.parseDouble(cmd.getOptionValue(VAF_CAP, String.valueOf(DEFAULT_VAF_CAP)));
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
+        Threads = parseThreads(cmd);
 
         SpecificRegions = Lists.newArrayList();
 
@@ -78,7 +79,7 @@ public class DepthConfig
         options.addOption(OUTPUT_VCF, true, "Output VCF File");
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        options.addOption(THREADS, true, "Multi-thread count");
         addSpecificChromosomesRegionsConfig(options);
+        addThreadOptions(options);
     }
 }

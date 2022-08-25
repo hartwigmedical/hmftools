@@ -10,12 +10,14 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
-import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
 import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
@@ -97,8 +99,7 @@ public class PeptideProteomeSimilarity
 
         mOutputDir = parseOutputDir(cmd);
         mOutputId = cmd.getOptionValue(OUTPUT_ID);
-
-        mThreads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
+        mThreads = parseThreads(cmd);
     }
 
     public void run()
@@ -505,12 +506,10 @@ public class PeptideProteomeSimilarity
         addEnsemblDir(options);
         options.addOption(PEPTIDES_FILE, true, "Peptides file");
         options.addOption(PROTEOME_RANKS_FILE, true, "Proteome ranks file");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(OUTPUT_ID, true, "Output file id");
-        options.addOption(THREADS, true, "Threads (default none)");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
         ScoreConfig.addCmdLineArgs(options);
         addLoggingOptions(options);
+        addThreadOptions(options);
+        addOutputOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 

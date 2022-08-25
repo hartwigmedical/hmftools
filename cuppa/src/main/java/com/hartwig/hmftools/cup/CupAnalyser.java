@@ -2,7 +2,7 @@ package com.hartwig.hmftools.cup;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.SPECIFIC_SAMPLE_DATA;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.ALT_SJ;
@@ -35,8 +35,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class CupAnalyser
@@ -176,10 +174,7 @@ public class CupAnalyser
         {
             final CommandLine cmd = createCommandLine(args, options);
 
-            if(cmd.hasOption(LOG_DEBUG))
-            {
-                Configurator.setRootLevel(Level.DEBUG);
-            }
+            setLogLevel(cmd);
 
             CupAnalyser cupAnalyser = new CupAnalyser(cmd);
             cupAnalyser.run();

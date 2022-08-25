@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.BufferedWriter;
@@ -47,14 +49,13 @@ public class HrdDetectionAnalyser
     private static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String PURPLE_DATA_DIR = "purple_dir";
     private static final String CHORD_DIR = "chord_dir";
-    private static final String THREADS = "threads";
 
     public HrdDetectionAnalyser(final CommandLine cmd)
     {
         mSampleIds = loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE));
         mPurpleDataDir = cmd.getOptionValue(PURPLE_DATA_DIR);
         mChordDir = cmd.getOptionValue(CHORD_DIR);
-        mThreads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
+        mThreads = parseThreads(cmd);
 
         mDbAccess = DatabaseAccess.createDatabaseAccess(cmd);
         mHrdDetection = new HrdDetection();
@@ -197,12 +198,12 @@ public class HrdDetectionAnalyser
     {
         final Options options = new Options();
         options.addOption(SAMPLE_ID_FILE, true, "Sample ID file");
-        options.addOption(THREADS, true, "Thread count, default = 0 (disabled)");
 
         DatabaseAccess.addDatabaseCmdLineArgs(options);
         options.addOption(PURPLE_DATA_DIR, true, "Directory pattern for sample purple directory");
         addLoggingOptions(options);
         addOutputOptions(options);
+        addThreadOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 

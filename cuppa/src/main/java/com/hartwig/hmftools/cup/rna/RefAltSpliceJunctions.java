@@ -38,8 +38,7 @@ public class RefAltSpliceJunctions implements RefClassifier
     public static final String FLD_POS_START = "PosStart";
     public static final String FLD_POS_END = "PosEnd";
 
-    public RefAltSpliceJunctions(
-            final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RefAltSpliceJunctions(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;

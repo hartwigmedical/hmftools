@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.neo.bind;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
-import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.neo.bind.ScoreConfig.SCORE_FILE_DIR;
 import static com.hartwig.hmftools.neo.bind.ScoreConfig.SCORE_FILE_ID;
 import static com.hartwig.hmftools.neo.bind.ScoreConfig.getScoringFilename;
@@ -52,7 +53,7 @@ public class RandomPeptideConfig
 
         RequiredOutputAlleles = loadRequiredOutputAlleles(cmd.getOptionValue(REQUIRED_OUTPUT_ALLELES));
 
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
+        Threads = parseThreads(cmd);
     }
 
     public static void addCmdLineArgs(Options options)
@@ -66,6 +67,6 @@ public class RandomPeptideConfig
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
         options.addOption(REQUIRED_OUTPUT_ALLELES, true, "Restricted set of alleles to write to file");
         options.addOption(WRITE_RAND_DIST, false, "Write random peptide score distribution");
-        options.addOption(THREADS, true, "Thread count");
+        addThreadOptions(options);
     }
 }

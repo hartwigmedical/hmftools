@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
@@ -115,7 +117,6 @@ public class PurpleApplication
     private final DatabaseAccess mDbAccess;
 
     private static final int THREADS_DEFAULT = 2;
-    private static final String THREADS = "threads";
     private static final String VERSION = "version";
 
     private PurpleApplication(final Options options, final String... args) throws ParseException, IOException
@@ -152,7 +153,7 @@ public class PurpleApplication
             System.exit(1);
         }
 
-        final int threads = mCmdLineArgs.hasOption(THREADS) ? Integer.parseInt(mCmdLineArgs.getOptionValue(THREADS)) : THREADS_DEFAULT;
+        int threads = parseThreads(mCmdLineArgs, THREADS_DEFAULT);
         mExecutorService = Executors.newFixedThreadPool(threads);
 
         mGermlineVariants = new GermlineVariants(mConfig, mReferenceData, mPurpleVersion.version());
@@ -670,7 +671,7 @@ public class PurpleApplication
         PurpleConfig.addOptions(options);
 
         options.addOption(LOG_DEBUG, false, "Log verbose");
-        options.addOption(THREADS, true, "Number of threads (default 2)");
+        addThreadOptions(options);
         options.addOption(VERSION, false, "Exit after displaying version info.");
 
         return options;

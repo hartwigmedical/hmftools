@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.ExpressionLikelihood.EXP_LIKELIHOOD_FILE;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_FLANK_POS_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_LIKELIHOOD;
@@ -107,8 +109,7 @@ public class ScoreConfig
         options.addOption(WRITE_SUMMARY_DATA, false, "Write summary results per allele");
         options.addOption(WRITE_PEPTIDE_SCORES, false, "Write score and rank data per peptide");
         options.addOption(CHECK_SELF_RECOGNITION, false, "Don't allow recognition with same peptide");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(OUTPUT_ID, true, "Output file id");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        addLoggingOptions(options);
+        addOutputOptions(options);
     }
 }
