@@ -296,6 +296,7 @@ public class ClinicalEvidenceFunctions {
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add(new Text(" Glossary Of Terms").addStyle(ReportResources.urlStyle())
                         .setAction(PdfAction.createURI("https://ckbhome.jax.org/about/glossaryOfTerms")))
+                .add(".")
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 
@@ -320,9 +321,8 @@ public class ClinicalEvidenceFunctions {
         return new Paragraph().setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add("If evidence matching based on a mutation is not in a hotspot, evidence should be interpreted with extra caution.\n")
                 .addStyle(ReportResources.subTextStyle())
-                .add("If evidence matching based on over expression, the real genomic event is amplification.\n")
-                .addStyle(ReportResources.subTextStyle())
-                .add("If evidence matching based on under expression, the real genomic event is deletion.")
+                .add("If a genomic event that results in an amplification is found, evidence that corresponds with ‘overexpression’"
+                        + " of the gene is also matched. The same rule applies for deletions and underexpression.\n")
                 .addStyle(ReportResources.subTextStyle());
     }
 

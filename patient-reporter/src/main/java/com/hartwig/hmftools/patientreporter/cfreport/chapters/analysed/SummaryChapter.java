@@ -136,7 +136,7 @@ public class SummaryChapter implements ReportChapter {
 
             div.add(new Paragraph(text).setWidth(contentWidth()).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
             div.add(new Paragraph("\nThis summary is generated based on DNA analysis only. No patient details or clinical"
-                    + " history had been considered.").addStyle(ReportResources.subTextStyle()));
+                    + " history has been considered.").addStyle(ReportResources.subTextStyle()));
 
             reportDocument.add(div);
         }
