@@ -90,7 +90,7 @@ public class SvConfig
     public static final String SAMPLE = "sample";
     private static final String BAM_FILE = "bam_file";
     private static final String KNOWN_FUSION_BED = "known_fusion_bed";
-    private static final String BLACKLIST_BED = "blacklist_bed";
+    public static final String BLACKLIST_BED = "blacklist_bed";
     private static final String EXISTING_JUNCTION_FILE = "existing_junction_file";
 
     private static final String WRITE_TYPES = "write_types";

@@ -10,12 +10,24 @@ import java.util.concurrent.ThreadFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class TaskExecutor
 {
     private static final Logger LOGGER = LogManager.getLogger(TaskExecutor.class);
+
+    public static final String THREADS = "threads";
+    public static final String THREADS_DESC = "Number of threads";
+
+    public static void addThreadOptions(final Options options)
+    {
+        options.addOption(THREADS, true, THREADS_DESC);
+    }
+
+    public static int parseThreads(final CommandLine cmd) { return Integer.parseInt(cmd.getOptionValue(THREADS, "1")); }
 
     public static boolean executeTasks(final List<Callable> tasks, int threadCount)
     {

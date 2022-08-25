@@ -136,6 +136,8 @@ public class CandidateBamWriter
         {
             try
             {
+                SV_LOGGER.debug("deleting {} candidate BAMs", mCandidatesWriterBamFiles.size());
+
                 for(String cacheFile : mCandidatesWriterBamFiles.values())
                 {
                     Files.delete(Paths.get(cacheFile));

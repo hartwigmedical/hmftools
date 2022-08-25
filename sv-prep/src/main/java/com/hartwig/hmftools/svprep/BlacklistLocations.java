@@ -34,6 +34,12 @@ public class BlacklistLocations
         return regions != null ? regions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), posStart, posEnd)) : false;
     }
 
+    public BaseRegion findBlacklistLocation(final String chromosome, final int position)
+    {
+        List<BaseRegion> regions = mChrLocationsMap.get(chromosome);
+        return regions != null ? regions.stream().filter(x -> x.containsPosition(position)).findFirst().orElse(null) : null;
+    }
+
     public void addRegion(final String chromosome, final BaseRegion region)
     {
         List<BaseRegion> regions = mChrLocationsMap.get(chromosome);
