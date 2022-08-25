@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 
 public class TargetRegionsData
 {
-    private final boolean mTumorOnly;
     private final Map<String,List<NamedBed>> mTargetRegions;
     private final Map<String,List<Integer>> mTargetRegionsMsiIndels;
 
@@ -35,12 +34,12 @@ public class TargetRegionsData
     private boolean mIsValid;
 
     private static final String CODING_REGION_ID = "CODING";
+    private static final String FILE_DELIM = "\t";
 
     public static final List<String> TMB_GENE_EXCLUSIONS = Lists.newArrayList("HLA-A","HLA-B","HLA-C","PIM1","BCL2");
 
-    public TargetRegionsData(boolean tumorOnly, final String bedFile, final String ratiosFile, final String msiIndelsFile)
+    public TargetRegionsData(final String bedFile, final String ratiosFile, final String msiIndelsFile)
     {
-        mTumorOnly = tumorOnly;
         mTotalBases = 0;
         mCodingBases = 0;
         mTmlRatio = 1;
@@ -78,30 +77,11 @@ public class TargetRegionsData
         return chrRegions.stream().anyMatch(x -> position == x);
     }
 
-    public int calcTml(double rawTml)
-    {
-        double adjusted = rawTml * CODING_BASES_PER_GENOME / mCodingBases * mTmlRatio;
-        return (int)round(adjusted);
-    }
-
-    public double calcTmb(int adjustedTml, double adjustedMsiIndels)
-    {
-        return adjustedMsiIndels + adjustedTml * mTmbRatio;
-    }
-
-    public double calcMsiIndels(int rawCount)
-    {
-        if(mTargetRegionsMsiIndels.isEmpty())
-            return (double)rawCount / MB_PER_GENOME;
-
-        double adjusted = rawCount;
-
-        // # of MSI indels in MSI-marked target regions  * Constant
-        if(!mTargetRegionsMsiIndels.isEmpty())
-            adjusted *= mMsiIndelRatio;
-
-        return adjusted;
-    }
+    public int codingBases() { return mCodingBases; }
+    public int msiIndelSiteCount() { return mTargetRegionsMsiIndels.values().stream().mapToInt(x -> x.size()).sum(); }
+    public double tmlRatio() { return mTmlRatio; }
+    public double tmbRatio() { return mTmbRatio; }
+    public double msiIndelRatio() { return mMsiIndelRatio; }
 
     private void loadTargetRegionsBed(final String bedFile)
     {
@@ -149,13 +129,13 @@ public class TargetRegionsData
 
                 String header = lines.get(0);
                 lines.remove(0);
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, "\t");
+                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, FILE_DELIM);
                 int chrIndex = fieldsIndexMap.get("Chromosome");
                 int posIndex = fieldsIndexMap.get("Position");
 
                 for(String line : lines)
                 {
-                    String[] values = line.split("\t", -1);
+                    String[] values = line.split(FILE_DELIM, -1);
 
                     String chromosome = values[chrIndex];
                     int position = Integer.parseInt(values[posIndex]);
@@ -191,16 +171,12 @@ public class TargetRegionsData
                 List<String> lines = Files.readAllLines(Paths.get(filename));
 
                 String header = lines.get(0);
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
-                String[] values = lines.get(1).split(",", -1);
+                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, FILE_DELIM);
+                String[] values = lines.get(1).split(FILE_DELIM, -1);
 
                 mTmbRatio = Double.parseDouble(values[fieldsIndexMap.get("TmbRatio")]);
-
                 mTmlRatio = Double.parseDouble(values[fieldsIndexMap.get("TmlRatio")]);
-                // mTmlDeduction = Double.parseDouble(values[fieldsIndexMap.get("TmlDeduction")]);
-
                 mMsiIndelRatio = Double.parseDouble(values[fieldsIndexMap.get("MsiIndelRatio")]);
-                // mMsiIndelDeduction = Double.parseDouble(values[fieldsIndexMap.get("MsiIndelDeduction")]);
 
                 PPL_LOGGER.info("tumor load factors: tml({}) tmb({}) msiIndels({})",
                         mTmlRatio, mTmbRatio, mMsiIndelRatio);

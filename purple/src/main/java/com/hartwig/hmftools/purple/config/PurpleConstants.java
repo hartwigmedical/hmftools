@@ -10,12 +10,15 @@ public class PurpleConstants
     // TMB calcs
     public static final double MB_PER_GENOME = 2859;
     public static final double CODING_BASES_PER_GENOME = 3.188e7; // calculated from GRCh38 canonical transcripts (overlaps ignored)
+
+    // target-region TML, TMB and MSI-Indels
     public static final double TARGET_REGIONS_CN_DIFF = 0.5;
     public static final double TARGET_REGIONS_CN_PERC_DIFF = 0.2;
     public static final double TARGET_REGIONS_MAX_AF = 0.9;
     public static final double TARGET_REGIONS_MAX_AF_DIFF = 0.08;
     public static final double TARGET_REGIONS_MSI_2_3_BASE_AF = 0.15;
     public static final double TARGET_REGIONS_MSI_4_BASE_AF = 0.08;
+    public static final double TARGET_REGIONS_CODING_BASE_FACTOR = 172000;
 
     // no-tumor
     public static final int NO_TUMOR_BAF_TOTAL = 3000;

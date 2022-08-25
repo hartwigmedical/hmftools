@@ -4,7 +4,8 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum MicrosatelliteStatus {
+public enum MicrosatelliteStatus
+{
     MSI("Instable"),
     MSS("Stable"),
     UNKNOWN("Unknown");
@@ -13,17 +14,20 @@ public enum MicrosatelliteStatus {
 
     private final String display;
 
-    MicrosatelliteStatus(final String display) {
+    MicrosatelliteStatus(final String display)
+    {
         this.display = display;
     }
 
     @NotNull
-    public static MicrosatelliteStatus fromIndelsPerMb(double microsatelliteIndelsPerMb) {
+    public static MicrosatelliteStatus fromIndelsPerMb(double microsatelliteIndelsPerMb)
+    {
         return Doubles.greaterOrEqual(microsatelliteIndelsPerMb, MSI_THRESHOLD) ? MSI : MSS;
     }
 
     @NotNull
-    public String display() {
+    public String display()
+    {
         return display;
     }
 }

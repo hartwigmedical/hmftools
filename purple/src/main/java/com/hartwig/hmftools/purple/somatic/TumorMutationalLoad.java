@@ -12,9 +12,10 @@ import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.common.variant.VariantVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.CODING_BASES_PER_GENOME;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_CN_DIFF;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_CN_PERC_DIFF;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_CODING_BASE_FACTOR;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MAX_AF;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MAX_AF_DIFF;
 import static com.hartwig.hmftools.purple.config.TargetRegionsData.TMB_GENE_EXCLUSIONS;
@@ -30,30 +31,36 @@ public class TumorMutationalLoad
     private final TargetRegionsData mTargetRegions;
     private double mLoad;
     private double mBurden;
-    private int mUnclearBurdenVariants;
-    private int mUnclearLoadVariants;
+    private int mUnclearVariants;
 
     public TumorMutationalLoad(final TargetRegionsData targetRegions)
     {
         mTargetRegions = targetRegions;
         mLoad = 0;
         mBurden = 0;
-        mUnclearBurdenVariants = 0;
-        mUnclearLoadVariants = 0;
+        mUnclearVariants = 0;
     }
 
     public double load() { return mLoad; }
     public double burden() { return mBurden; }
 
-    public int tml()
+    public double calcTml()
     {
         if(!mTargetRegions.hasTargetRegions())
-            return (int)round(mLoad);
-        else
-            return mTargetRegions.calcTml(mBurden);
-    }
+            return mLoad;
 
-    public double burdenPerMb() { return mBurden / MB_PER_GENOME; }
+        double adjustedLoad = mBurden;
+
+        if(mUnclearVariants > 0)
+        {
+            double unclearFactor = mTargetRegions.codingBases() / TARGET_REGIONS_CODING_BASE_FACTOR;
+            double unclearVariants = pow(mUnclearVariants,2) / (mUnclearVariants + unclearFactor);
+            adjustedLoad += unclearVariants;
+        }
+
+        double calcTml = adjustedLoad * mTargetRegions.tmlRatio() * CODING_BASES_PER_GENOME / mTargetRegions.codingBases();
+        return calcTml;
+    }
 
     public void processVariant(final SomaticVariant variant, double purity)
     {
@@ -110,30 +117,11 @@ public class TumorMutationalLoad
         }
 
         if(isUnclearGermline)
-            ++mUnclearBurdenVariants;
+            ++mUnclearVariants;
         else
             mBurden++;
 
         if(variantImpact.WorstCodingEffect.equals(CodingEffect.MISSENSE))
-        {
-            if(isUnclearGermline)
-                ++mUnclearLoadVariants;
-            else
-                mLoad++;
-        }
-    }
-
-    public void calculateUnclearVariants()
-    {
-        if(!mTargetRegions.hasTargetRegions())
-            return;
-
-        mBurden += calcVariantsFromUnclear(mUnclearBurdenVariants);
-        mLoad += calcVariantsFromUnclear(mUnclearLoadVariants);
-    }
-
-    private static int calcVariantsFromUnclear(int unclearCount)
-    {
-        return unclearCount > 0 ? (int)round(pow(unclearCount,2) / (double)(unclearCount + 8)) : 0;
+            mLoad++;
     }
 }

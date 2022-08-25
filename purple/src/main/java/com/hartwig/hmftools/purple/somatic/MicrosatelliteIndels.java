@@ -2,18 +2,15 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MSI_2_3_BASE_AF;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MSI_4_BASE_AF;
 
-import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.config.TargetRegionsData;
@@ -23,13 +20,11 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFConstants;
 
 public class MicrosatelliteIndels
 {
     private final TargetRegionsData mTargetRegions;
     private int mIndelCount;
-    private final Set<String> mIndelPositions; // cached to determine uniqu
 
     private static final int MIN_SEQUENCE_LENGTH_FOR_LONG_REPEATS = 2;
     private static final int MAX_SEQUENCE_LENGTH_FOR_LONG_REPEATS = 4;
@@ -42,17 +37,21 @@ public class MicrosatelliteIndels
     {
         mTargetRegions = referenceData;
         mIndelCount = 0;
-        mIndelPositions = Sets.newHashSet();
     }
 
-    public int msiIndelCount()
-    {
-        return mIndelCount;
-    }
+    public int msiIndelCount() { return mIndelCount; }
 
-    public double msiIndelsPerMb()
+    public double calcMsiIndelsPerMb()
     {
-        return mTargetRegions.calcMsiIndels(mIndelCount);
+        if(mTargetRegions.hasTargetRegions())
+        {
+            double msiSites = mTargetRegions.msiIndelSiteCount();
+            return msiSites > 0 ? mIndelCount / msiSites * mTargetRegions.msiIndelRatio() : mIndelCount;
+        }
+        else
+        {
+            return mIndelCount / MB_PER_GENOME;
+        }
     }
 
     public void processVariant(final SomaticVariant variant)
@@ -102,17 +101,8 @@ public class MicrosatelliteIndels
 
         if(mTargetRegions.hasTargetRegions())
         {
-            // only count once per position
-            String chrPosition = format("%s_%d", variant.chromosome(), variant.position());
-            if(mIndelPositions.contains(chrPosition))
-                return;
-
-            mIndelPositions.add(chrPosition);
-
-            double rawAf = getGenotypeAttributeAsDouble(variant.context().getGenotype(0), VCFConstants.ALLELE_FREQUENCY_KEY, 0);
-
-            PPL_LOGGER.debug(format("indel(%s) af(%.2f p=%.2f) included in target-regions TMB",
-                    variant.toString(), rawAf, variant.alleleFrequency()));
+            PPL_LOGGER.debug(format("indel(%s) af(%.2f) included in target-regions TMB",
+                    variant.toString(), variant.alleleFrequency()));
         }
 
         mIndelCount++;

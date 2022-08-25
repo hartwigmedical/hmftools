@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static java.lang.Math.round;
+
 import static com.hartwig.hmftools.common.variant.VariantVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
 
 import java.io.IOException;
 import java.util.List;
@@ -55,6 +58,11 @@ public class SomaticStream
     private int mSnpCount;
     private int mIndelCount;
 
+    // computed values
+    private double mTml;
+    private double mTmb;
+    private double mMsiIndelPerMb;
+
     private VariantContextWriter mVcfWriter;
 
     private static final int CHART_DOWNSAMPLE_FACTOR = 25000; // eg for 50K variants, only every second will be kept for plotting
@@ -81,40 +89,30 @@ public class SomaticStream
         mSnpMod = somaticVariants.snpCount() <= CHART_DOWNSAMPLE_FACTOR ? 1 : somaticVariants.snpCount() / CHART_DOWNSAMPLE_FACTOR;
         mIndelMod = somaticVariants.indelCount() <= CHART_DOWNSAMPLE_FACTOR ? 1 : somaticVariants.indelCount() / CHART_DOWNSAMPLE_FACTOR;
 
+        mTmb = 0;
+        mTml = 0;
+        mMsiIndelPerMb = 0;
+
         mVcfWriter = null;
     }
 
-    public double msiIndelsPerMb()
-    {
-        return mMicrosatelliteIndels.msiIndelsPerMb();
-    }
+    public double msiIndelsPerMb() { return mMsiIndelPerMb; }
+    public double tumorMutationalBurdenPerMb() { return mTmb; }
+    public int tumorMutationalLoad() { return (int)round(mTml); }
 
     public MicrosatelliteStatus microsatelliteStatus()
     {
-        return mEnabled ? MicrosatelliteStatus.fromIndelsPerMb(msiIndelsPerMb()) : MicrosatelliteStatus.UNKNOWN;
-    }
-
-    public double tumorMutationalBurdenPerMb()
-    {
-        if(!mReferenceData.TargetRegions.hasTargetRegions())
-            return mTumorMutationalLoad.burdenPerMb();
-
-        return mReferenceData.TargetRegions.calcTmb(tumorMutationalLoad(), msiIndelsPerMb());
-    }
-
-    public int tumorMutationalLoad()
-    {
-        return mTumorMutationalLoad.tml();
+        return mEnabled ? MicrosatelliteStatus.fromIndelsPerMb(mMsiIndelPerMb) : MicrosatelliteStatus.UNKNOWN;
     }
 
     public TumorMutationalStatus tumorMutationalBurdenPerMbStatus()
     {
-        return mEnabled ? TumorMutationalStatus.fromBurdenPerMb(tumorMutationalBurdenPerMb()) : TumorMutationalStatus.UNKNOWN;
+        return mEnabled ? TumorMutationalStatus.fromBurdenPerMb(mTmb) : TumorMutationalStatus.UNKNOWN;
     }
 
     public TumorMutationalStatus tumorMutationalLoadStatus()
     {
-        return mEnabled ? TumorMutationalStatus.fromLoad(tumorMutationalLoad()) : TumorMutationalStatus.UNKNOWN;
+        return mEnabled ? TumorMutationalStatus.fromLoad(mTml) : TumorMutationalStatus.UNKNOWN;
     }
 
     public List<DriverCatalog> buildDrivers(final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
@@ -122,10 +120,7 @@ public class SomaticStream
         return mDrivers.buildCatalog(geneCopyNumberMap);
     }
 
-    public Set<String> reportedGenes()
-    {
-        return mReportedGenes;
-    }
+    public Set<String> reportedGenes() { return mReportedGenes; }
 
     public List<VariantContextDecorator> downsampledVariants() { return mDownsampledVariants; }
 
@@ -194,20 +189,34 @@ public class SomaticStream
                     mVcfWriter.add(variant.context());
             }
 
-            mTumorMutationalLoad.calculateUnclearVariants();
-
             mVcfWriter.close();
             mRChartData.write();
 
-            PPL_LOGGER.info(String.format("load(%.1f tml=%d) burden(%.1f perMb=%.4f) msiIndels(%d perMb=%.4f)",
-                    mTumorMutationalLoad.load(), mTumorMutationalLoad.tml(),
-                    mTumorMutationalLoad.burden(), tumorMutationalBurdenPerMb(),
-                    mMicrosatelliteIndels.msiIndelCount(), mMicrosatelliteIndels.msiIndelsPerMb()));
+            calculateVariantLoadValues();
         }
         catch(IOException e)
         {
             PPL_LOGGER.error("failed to enrich somatic variants: {}", e.toString());
         }
+    }
+
+    private void calculateVariantLoadValues()
+    {
+        mTml = mTumorMutationalLoad.calcTml();
+        mMsiIndelPerMb = mMicrosatelliteIndels.calcMsiIndelsPerMb();
+
+        if(mReferenceData.TargetRegions.hasTargetRegions())
+        {
+            mTmb = mMsiIndelPerMb + mTml * mReferenceData.TargetRegions.tmbRatio();
+        }
+        else
+        {
+            mTmb = mTumorMutationalLoad.burden() / MB_PER_GENOME;
+        }
+
+        PPL_LOGGER.info(String.format("load(%.1f tml=%.4f) msiIndels(%d perMb=%.4f) burden(%.1f perMb=%.4f)",
+                mTumorMutationalLoad.load(), mTml, mMicrosatelliteIndels.msiIndelCount(), mMsiIndelPerMb,
+                mTumorMutationalLoad.burden(), mTmb));
     }
 
     private void checkDrivers(final SomaticVariant variant, boolean updateVcf)

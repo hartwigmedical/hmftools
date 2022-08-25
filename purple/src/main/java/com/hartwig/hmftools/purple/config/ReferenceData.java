@@ -219,7 +219,6 @@ public class ReferenceData
         CohortGermlineDeletions = new GermlineDeletionFrequency(cmd.getOptionValue(COHORT_DEL_FREQ_FILE));
 
         TargetRegions = new TargetRegionsData(
-                config.tumorOnlyMode(),
                 cmd.getOptionValue(TARGET_REGION_BED),
                 cmd.getOptionValue(TARGET_REGIONS_RATIOS),
                 cmd.getOptionValue(TARGET_REGION_MSI_INDELS));
