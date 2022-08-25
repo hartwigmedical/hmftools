@@ -9,8 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Set;
 
-import javax.xml.stream.XMLStreamException;
-
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.GsonBuilder;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
@@ -127,16 +126,16 @@ public class CFReportWriter implements ReportWriter {
         }
     }
 
-    public void writeXMLAnalysedFile(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException, XMLStreamException {
+    public void writeXMLAnalysedFile(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
         writeReportDataToXML(report, outputFilePath);
     }
 
-    public void writeReportDataToXML(@NotNull PatientReport report, @NotNull String outputDirData)
-            throws IOException, XMLStreamException {
+    public void writeReportDataToXML(@NotNull AnalysedPatientReport report, @NotNull String outputDirData)
+            throws IOException {
         if (writeToFile) {
             String outputFileData = outputDirData + File.separator + OutputFileUtil.generateOutputFileNameForXML(report);
-            FileOutputStream out = new FileOutputStream(outputFileData);
-
+            XmlMapper xmlMapper = new XmlMapper();
+            xmlMapper.writeValue(new FileOutputStream(outputFileData), report);
             LOGGER.info(" Created report data xml file at {} ", outputFileData);
 
         }

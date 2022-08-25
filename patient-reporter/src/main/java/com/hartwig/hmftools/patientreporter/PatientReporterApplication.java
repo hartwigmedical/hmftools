@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
-import javax.xml.stream.XMLStreamException;
-
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -40,7 +38,7 @@ public class PatientReporterApplication {
     // Uncomment this line when generating an example report using CFReportWriterTest
     //                public static final String VERSION = "7.25.1";
 
-    public static void main(@NotNull String[] args) throws IOException, XMLStreamException {
+    public static void main(@NotNull String[] args) throws IOException {
         LOGGER.info("Running patient reporter v{}", VERSION);
 
         Options options = PatientReporterConfig.createOptions();
@@ -67,7 +65,7 @@ public class PatientReporterApplication {
         this.reportDate = reportDate;
     }
 
-    private void run() throws IOException, XMLStreamException {
+    private void run() throws IOException {
         SampleMetadata sampleMetadata = buildSampleMetadata(config);
 
         if (config.qcFail()) {
@@ -79,7 +77,7 @@ public class PatientReporterApplication {
         }
     }
 
-    private void generateAnalysedReport(@NotNull SampleMetadata sampleMetadata) throws IOException, XMLStreamException {
+    private void generateAnalysedReport(@NotNull SampleMetadata sampleMetadata) throws IOException {
         AnalysedReportData reportData = buildAnalysedReportData(config);
         AnalysedPatientReporter reporter = new AnalysedPatientReporter(reportData, reportDate);
 
