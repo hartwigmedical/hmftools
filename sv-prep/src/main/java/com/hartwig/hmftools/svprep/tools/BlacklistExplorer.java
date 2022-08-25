@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -58,13 +59,12 @@ public class BlacklistExplorer
     private final int mThreads;
     private final BufferedWriter mWriter;
 
-    private static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String VCF_FILE = "vcf_file";
     private static final String OUTPUT_FILE = "output_file";
 
     public BlacklistExplorer(final CommandLine cmd)
     {
-        mSampleIds = loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE));
+        mSampleIds = loadSampleIdsFile(cmd);
         mVcfFilename = cmd.getOptionValue(VCF_FILE);
         mBlacklistLocations = new BlacklistLocations(cmd.getOptionValue(BLACKLIST_BED));
         mOutputFile = cmd.getOptionValue(OUTPUT_FILE);
@@ -254,7 +254,7 @@ public class BlacklistExplorer
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(SAMPLE_ID_FILE, true, "Sample IDs file");
+        addSampleIdFile(options);
         options.addOption(VCF_FILE, true, "VCF file, can use '*' in place of sampleIds");
         options.addOption(BLACKLIST_BED, true, "Blacklist BED file");
         options.addOption(OUTPUT_FILE, true, "Output filename");

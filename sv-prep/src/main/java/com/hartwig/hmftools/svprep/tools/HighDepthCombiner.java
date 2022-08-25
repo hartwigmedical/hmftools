@@ -6,11 +6,12 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
@@ -22,10 +23,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -52,7 +51,7 @@ public class HighDepthCombiner
     private final List<ChrBaseRegion> mSpecificRegions;
     private final BufferedWriter mWriter;
 
-    private static final String INPUT_FILES = "input_files";
+    private static final String HIGH_DEPTH_FILES = "high_depth_files";
     private static final String OUTPUT_FILE = "output_file";
     private static final String REF_BLACKLIST_FILE = "ref_blacklist_file";
     private static final String MIN_SAMPLE_COUNT = "min_sample_count";
@@ -62,7 +61,16 @@ public class HighDepthCombiner
 
     public HighDepthCombiner(final CommandLine cmd)
     {
-        mInputFiles = Arrays.stream(cmd.getOptionValue(INPUT_FILES).split(",")).collect(Collectors.toList());
+        List<String> sampleIds = loadSampleIdsFile(cmd);
+        String highDepthFiles = cmd.getOptionValue(HIGH_DEPTH_FILES);
+
+        mInputFiles = Lists.newArrayList();
+
+        for(String sampleId : sampleIds)
+        {
+            mInputFiles.add(highDepthFiles.replaceAll("\\*", sampleId));
+        }
+
         mWriter = initialiseWriter(cmd.getOptionValue(OUTPUT_FILE));
         mMinSampleCount = Integer.parseInt(cmd.getOptionValue(MIN_SAMPLE_COUNT, String.valueOf(DEFAULT_MIN_SAMPLE_COUNT)));
 
@@ -511,7 +519,8 @@ public class HighDepthCombiner
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(INPUT_FILES, true, "Input files");
+        addSampleIdFile(options);
+        options.addOption(HIGH_DEPTH_FILES, true, "High depth sample file(s), use '*' in for sampleId");
         options.addOption(OUTPUT_FILE, true, "Output file");
         options.addOption(REF_BLACKLIST_FILE, true, "Reference blacklist file to include");
         options.addOption(MIN_SAMPLE_COUNT, true, "Min sample count to produce region");
