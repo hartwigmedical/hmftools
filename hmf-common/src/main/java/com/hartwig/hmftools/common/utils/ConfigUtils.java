@@ -25,6 +25,8 @@ public class ConfigUtils
     public static final String LOG_LEVEL = "log_level";
     public static final String CSV_DELIM = ",";
 
+    public static final String SAMPLE_ID_FILE = "sample_id_file";
+
     private static final Logger LOGGER = LogManager.getLogger(ConfigUtils.class);
 
     public static void addLoggingOptions(final Options options)
@@ -45,6 +47,11 @@ public class ConfigUtils
         }
     }
 
+    public static void addSampleIdFile(final Options options)
+    {
+        options.addOption(SAMPLE_ID_FILE, true, "Sample ID CSV file with 'SampleId' column");
+    }
+
     public static double getConfigValue(@NotNull final CommandLine cmd, final String configName, double defaultValue)
     {
         return cmd.hasOption(configName) ? Double.parseDouble(cmd.getOptionValue(configName)) : defaultValue;
@@ -59,6 +66,8 @@ public class ConfigUtils
     {
         return cmd.hasOption(configName) ? Boolean.parseBoolean(cmd.getOptionValue(configName)) : defaultValue;
     }
+
+    public static List<String> loadSampleIdsFile(final CommandLine cmd) { return loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE)); }
 
     public static List<String> loadSampleIdsFile(final String filename)
     {
