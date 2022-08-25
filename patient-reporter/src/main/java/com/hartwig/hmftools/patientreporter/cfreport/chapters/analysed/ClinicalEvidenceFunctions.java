@@ -229,8 +229,7 @@ public class ClinicalEvidenceFunctions {
 
         String evidenceRank = Strings.EMPTY;
         String evidenceSource = source.evidenceType().display();
-        if (source.evidenceType().equals(EvidenceType.CODON_MUTATION) || source.evidenceType()
-                .equals(EvidenceType.EXON_MUTATION)) {
+        if (source.evidenceType().equals(EvidenceType.CODON_MUTATION) || source.evidenceType().equals(EvidenceType.EXON_MUTATION)) {
             evidenceRank = String.valueOf(source.rangeRank());
         }
 
@@ -297,6 +296,7 @@ public class ClinicalEvidenceFunctions {
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add(new Text(" Glossary Of Terms").addStyle(ReportResources.urlStyle())
                         .setAction(PdfAction.createURI("https://ckbhome.jax.org/about/glossaryOfTerms")))
+                .add(".")
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 
@@ -319,7 +319,10 @@ public class ClinicalEvidenceFunctions {
     @NotNull
     public static Paragraph noteEvidenceMatching() {
         return new Paragraph().setFixedLeading(ReportResources.BODY_TEXT_LEADING)
-                .add("If evidence matching based on a mutation is not in a hotspot, evidence should be interpreted with extra caution.")
+                .add("If evidence matching based on a mutation is not in a hotspot, evidence should be interpreted with extra caution.\n")
+                .addStyle(ReportResources.subTextStyle())
+                .add("If a genomic event that results in an amplification is found, evidence that corresponds with ‘overexpression’"
+                        + " of the gene is also matched. The same rule applies for deletions and underexpression.\n")
                 .addStyle(ReportResources.subTextStyle());
     }
 

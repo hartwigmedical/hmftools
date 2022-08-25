@@ -92,6 +92,7 @@ public class PatientReporterApplication {
             LOGGER.debug("Updating reporting db and writing report data");
 
             reportWriter.writeJsonAnalysedFile(report, config.outputDirData());
+            reportWriter.writeXMLAnalysedFile(report, config.outputDirData());
 
             new ReportingDb().appendAnalysedReport(report, config.outputDirData());
         }

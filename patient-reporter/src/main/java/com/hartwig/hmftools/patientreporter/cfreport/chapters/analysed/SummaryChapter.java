@@ -132,9 +132,11 @@ public class SummaryChapter implements ReportChapter {
 
         if (!clinicalConclusion.isEmpty()) {
             Div div = createSectionStartDiv(contentWidth());
-            div.add(new Paragraph("Clinical Conclusion").addStyle(ReportResources.sectionTitleStyle()));
+            div.add(new Paragraph("Summary of clinical relevance").addStyle(ReportResources.sectionTitleStyle()));
 
             div.add(new Paragraph(text).setWidth(contentWidth()).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
+            div.add(new Paragraph("\nThis summary is generated based on DNA analysis only. No patient details or clinical"
+                    + " history has been considered.").addStyle(ReportResources.subTextStyle()));
 
             reportDocument.add(div);
         }

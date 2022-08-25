@@ -63,6 +63,24 @@ public final class OutputFileUtil {
     }
 
     @NotNull
+    public static String generateOutputFileNameForXML(@NotNull PatientReport report) {
+        String filePrefix =
+                report.sampleReport().sampleNameForReport() + "_" + report.sampleReport().tumorSampleBarcode() + "_oncoact";
+        String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
+        String fileSuffix;
+        if (report.isCorrectedReport()) {
+            if (report.isCorrectedReportExtern()) {
+                fileSuffix = "_corrected_external.xml";
+            } else {
+                fileSuffix = "_corrected_internal.xml";
+            }
+        } else {
+            fileSuffix = ".xml";
+        }
+        return filePrefix + failPrefix + fileSuffix;
+    }
+
+    @NotNull
     public static String generateOutputFileNameForJsonPanel(@NotNull com.hartwig.hmftools.patientreporter.PanelReport report) {
         String filePrefix =
                 report.sampleReport().sampleNameForReport() + "_" + report.sampleReport().tumorSampleBarcode() + "_oncopanel";

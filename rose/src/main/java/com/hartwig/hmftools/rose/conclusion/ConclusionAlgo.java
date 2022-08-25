@@ -241,10 +241,7 @@ public class ConclusionAlgo {
                     joiner.add(key.variantAnnotation());
                 }
                 mergedVariantKeyList.put(entry.getKey(),
-                        ImmutableVariantKey.builder()
-                                .from(entry.getValue().get(0))
-                                .variantAnnotation(joiner.toString())
-                                .build());
+                        ImmutableVariantKey.builder().from(entry.getValue().get(0)).variantAnnotation(joiner.toString()).build());
             }
         }
 
@@ -264,13 +261,9 @@ public class ConclusionAlgo {
                 alteration = TypeAlteration.ACTIVATING_MUTATION;
             } else if (driverGenesMap.get(key.getValue().gene()).likelihoodType().equals(DriverCategory.TSG)) {
                 alteration = TypeAlteration.INACTIVATION;
-            } else if (key.getValue().gene().equals("TERT") && key.getValue().variantAnnotation().equals("upstream")){
-                alteration = TypeAlteration.PROMOTER_MUTATION;
             }
-            ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder()
-                    .match(key.getValue().gene())
-                    .type(alteration)
-                    .build();
+
+            ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder().match(key.getValue().gene()).type(alteration).build();
             ActionabilityEntry entry = actionabilityMap.get(keySomaticVariant);
             if (entry != null) {
                 if ((key.getValue().driverInterpretation() == DriverInterpretation.HIGH && entry.condition() == Condition.ONLY_HIGH)
@@ -278,17 +271,19 @@ public class ConclusionAlgo {
                     if (entry.condition() == Condition.ONLY_HIGH) {
                         actionable.add("variant");
                     }
-                    //TODO: Add sentence about germline findings probably in future
-                    if (driverGenesMap.get(key.getValue().gene()).likelihoodType().equals(DriverCategory.TSG) && !key.getValue().bialleic()) {
+                    if (driverGenesMap.get(key.getValue().gene()).likelihoodType().equals(DriverCategory.TSG) && !key.getValue()
+                            .bialleic()) {
                         ActionabilityKey keyBiallelic =
                                 ImmutableActionabilityKey.builder().match("NOT_BIALLELIC").type(TypeAlteration.NOT_BIALLELIC).build();
                         ActionabilityEntry entryBiallelic = actionabilityMap.get(keyBiallelic);
                         if (entryBiallelic.condition() == Condition.OTHER) {
-                            conclusion.add("- " + key.getValue().gene() + " (" + key.getValue().variantAnnotation() + ") " + entry.conclusion() + " "
-                                    + entryBiallelic.conclusion());
+                            conclusion.add(
+                                    "- " + key.getValue().gene() + " (" + key.getValue().variantAnnotation() + ") " + entry.conclusion()
+                                            + " " + entryBiallelic.conclusion());
                         }
                     } else {
-                        conclusion.add("- " + key.getValue().gene() + " (" + key.getValue().variantAnnotation() + ") " + entry.conclusion());
+                        conclusion.add(
+                                "- " + key.getValue().gene() + " (" + key.getValue().variantAnnotation() + ") " + entry.conclusion());
                     }
                 } else if (HRDgene && chordAnalysis.hrStatus() == ChordStatus.HR_DEFICIENT) {
                     conclusion.add("- " + key.getValue().gene() + " (" + key.getValue().variantAnnotation() + ") " + entry.conclusion());

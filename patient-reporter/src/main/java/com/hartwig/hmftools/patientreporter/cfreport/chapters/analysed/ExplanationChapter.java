@@ -135,7 +135,7 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported pharmacogenetics")));
         table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
+        table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported HLA Alleles")));
 
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] { "Virusses will be reported if they are present in our reporting database as "
@@ -158,7 +158,7 @@ public class ExplanationChapter implements ReportChapter {
                                 + "observed variants, then 'Unresolved Haplotype' is called.",
                         "Wild type is assumed when no variants are observed." })));
         table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "" })));
+        table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "The HLA Alleles" })));
 
         reportDocument.add(table);
     }

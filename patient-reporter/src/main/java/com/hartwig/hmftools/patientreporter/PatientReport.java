@@ -3,17 +3,19 @@ package com.hartwig.hmftools.patientreporter;
 import java.util.List;
 import java.util.Optional;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlCData;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public interface PatientReport {
 
     @NotNull
     SampleReport sampleReport();
 
+    @JacksonXmlProperty(isAttribute = true, localName = "user")
     @NotNull
     default String user() {
         String systemUser = System.getProperty("user.name");
@@ -49,33 +51,45 @@ public interface PatientReport {
 
     }
 
+    @JacksonXmlProperty(isAttribute = true, localName = "qsFormNumber")
     @NotNull
     String qsFormNumber();
 
+    @JacksonXmlProperty(isAttribute = true, localName = "comments")
     @NotNull
     Optional<String> comments();
 
+    @JacksonXmlProperty(isAttribute = true, localName = "isCorrectedReport")
     boolean isCorrectedReport();
 
+    @JacksonXmlProperty(isAttribute = true, localName = "isCorrectedReportExtern")
     boolean isCorrectedReportExtern();
 
+    @JacksonXmlProperty(isAttribute = true, localName = "signaturePath")
     @NotNull
     String signaturePath();
 
+    @JacksonXmlProperty(isAttribute = true, localName = "logoRVAPath")
     @NotNull
     String logoRVAPath();
 
+    @JacksonXmlProperty(isAttribute = true, localName = "logoCompanyPath")
     @NotNull
     String logoCompanyPath();
 
+    @JacksonXmlProperty(isAttribute = true, localName = "udiDi")
     @NotNull
     String udiDi();
 
+    @JacksonXmlProperty(localName = "peachGenotypes")
+    @JacksonXmlCData
     @NotNull
     List<PeachGenotype> peachGenotypes();
 
+    @JacksonXmlProperty(isAttribute = true, localName = "reportDate")
     @NotNull
     String reportDate();
 
+    @JacksonXmlProperty(isAttribute = true, localName = "isWGSreport")
     boolean isWGSreport();
 }
