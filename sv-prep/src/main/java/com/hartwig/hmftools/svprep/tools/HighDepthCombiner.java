@@ -4,6 +4,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
@@ -29,6 +31,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.sv.ExcludedRegions;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -49,6 +52,7 @@ public class HighDepthCombiner
     private final BlacklistLocations mRefefenceBlacklist;
     private final int mMinSampleCount;
     private final List<ChrBaseRegion> mSpecificRegions;
+    private final RefGenomeVersion mRefGenVersion;
     private final BufferedWriter mWriter;
 
     private static final String HIGH_DEPTH_FILES = "high_depth_files";
@@ -78,6 +82,7 @@ public class HighDepthCombiner
         mChrCombinedRegions = Maps.newHashMap();
 
         mRefefenceBlacklist = new BlacklistLocations(cmd.getOptionValue(REF_BLACKLIST_FILE));
+        mRefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
 
         mSpecificRegions = Lists.newArrayList();
 
@@ -225,7 +230,7 @@ public class HighDepthCombiner
         List<BaseRegion> referenceRegions = mRefefenceBlacklist.getRegions(chromosome);
 
         // include the excluded region
-        ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(V37);
+        ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(mRefGenVersion);
 
         if(excludedRegion.Chromosome.equals(chromosome))
         {
@@ -400,7 +405,8 @@ public class HighDepthCombiner
     {
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
-            List<HighDepthRegion> highDepthRegions = mergeChromosomeRegions(chromosome.toString());
+            String chrStr = mRefGenVersion.versionedChromosome(chromosome.toString());
+            List<HighDepthRegion> highDepthRegions = mergeChromosomeRegions(chrStr);
 
             if(!highDepthRegions.isEmpty())
             {
@@ -524,6 +530,7 @@ public class HighDepthCombiner
         options.addOption(OUTPUT_FILE, true, "Output file");
         options.addOption(REF_BLACKLIST_FILE, true, "Reference blacklist file to include");
         options.addOption(MIN_SAMPLE_COUNT, true, "Min sample count to produce region");
+        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         addOutputOptions(options);
         addLoggingOptions(options);
         addSpecificChromosomesRegionsConfig(options);
