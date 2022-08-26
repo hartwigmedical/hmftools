@@ -99,9 +99,13 @@ public class TumorMutationalLoad
             double segmentCn = variant.decorator().adjustedCopyNumber(); // of the segment it's on
             double minorAlleleCn = variant.decorator().minorAlleleCopyNumber();
             double majorAlleleCn = segmentCn - minorAlleleCn;
+
+            /*
             double diffThreshold = min(TARGET_REGIONS_CN_DIFF, majorAlleleCn * TARGET_REGIONS_CN_PERC_DIFF);
+
             if(variantCn > majorAlleleCn + diffThreshold)
-                return;
+               return;
+            */
 
             double refPurity = 1 - purity;
 
