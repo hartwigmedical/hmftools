@@ -319,7 +319,8 @@ public class ClinicalEvidenceFunctions {
     @NotNull
     public static Paragraph noteEvidenceMatching() {
         return new Paragraph().setFixedLeading(ReportResources.BODY_TEXT_LEADING)
-                .add("If evidence matching based on a mutation is not in a hotspot, evidence should be interpreted with extra caution.\n")
+                .add("If the evidence matched is based on a mutation, but this is not a hotspot, evidence should be interpreted with "
+                        + "extra caution. \n")
                 .addStyle(ReportResources.subTextStyle())
                 .add("If a genomic event that results in an amplification is found, evidence that corresponds with ‘overexpression’"
                         + " of the gene is also matched. The same rule applies for deletions and underexpression.\n")
