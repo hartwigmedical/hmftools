@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
@@ -47,7 +48,6 @@ public class ComparisonConfig
     public final String OutputId;
     public final int Threads;
 
-    private static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String REF_VARIANTS_FILE = "ref_variants_file";
     private static final String ONLY_DRIVER_GENES = "only_driver_genes";
     private static final String ONLY_CANONCIAL = "only_canonical";
@@ -57,10 +57,7 @@ public class ComparisonConfig
 
     public ComparisonConfig(final CommandLine cmd)
     {
-        SampleIds = Lists.newArrayList();
-
-        if(cmd.hasOption(SAMPLE_ID_FILE))
-            SampleIds.addAll(loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE)));
+        SampleIds = loadSampleIdsFile(cmd);
 
         RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
 
@@ -93,7 +90,7 @@ public class ComparisonConfig
     public static Options createOptions()
     {
         Options options = new Options();
-        options.addOption(SAMPLE_ID_FILE, true, "Sample ID file");
+        addSampleIdFile(options);
         options.addOption(REF_VARIANTS_FILE, true, "File with variants to test against");
         options.addOption(ONLY_DRIVER_GENES, false, "Only compare variants in driver genes");
         options.addOption(ONLY_CANONCIAL, false, "Only compare variants by canonical transcripts");

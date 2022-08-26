@@ -2,7 +2,9 @@ package com.hartwig.hmftools.compar;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -74,7 +76,6 @@ public class ComparConfig
 
     public static final String SAMPLE = "sample";
     public static final String SOURCE_SAMPLE_MAPPINGS = "source_sample_mappings";
-    public static final String SAMPLE_ID_FILE = "sample_id_file";
     public static final String WRITE_DETAILED_FILES = "write_detailed";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
@@ -300,7 +301,7 @@ public class ComparConfig
 
         options.addOption(MATCH_LEVEL, true, "Match level from REPORTABLE (default) or DETAILED");
         options.addOption(SAMPLE, true, "Sample data file");
-        options.addOption(SAMPLE_ID_FILE, true, "Sample data file");
+        addSampleIdFile(options);
         options.addOption(SOURCE_SAMPLE_MAPPINGS, true, "Optional specific source suffixes");
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
         options.addOption(THRESHOLDS, true, "In form: Field,AbsoluteDiff,PercentDiff, separated by ';'");

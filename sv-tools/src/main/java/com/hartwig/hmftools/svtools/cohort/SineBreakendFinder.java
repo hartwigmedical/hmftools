@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.svtools.cohort;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -54,7 +56,6 @@ public class SineBreakendFinder
 
     private final List<String> mRmTypes;
 
-    private static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String REPEAT_MASKER_FILE = "repeat_masker_file";
     private static final String RM_TYPES = "rm_types";
 
@@ -321,7 +322,7 @@ public class SineBreakendFinder
     {
         final Options options = new Options();
 
-        options.addOption(SAMPLE_ID_FILE, true, "Path to the Linx cohort SVs file");
+        addSampleIdFile(options);
         options.addOption(RM_TYPES, true, "External LINE data sample counts");
         options.addOption(REPEAT_MASKER_FILE, true, "Polymorphic LINE data file");
         addLoggingOptions(options);

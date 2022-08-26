@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
@@ -59,7 +60,6 @@ public class FusionCompare
 
     private static final String FUSION_FILE_ORIG = "fusions_orig";
     private static final String FUSION_FILE_NEW = "fusions_new";
-    private static final String SAMPLE_IDS_FILE = "sample_id_file";
     private static final String MIN_SPLIT_FRAGS = "min_split_frags";
 
     public FusionCompare(final CommandLine cmd)
@@ -83,12 +83,7 @@ public class FusionCompare
         mUnmatchOrig = 0;
         mUnmatchNew = 0;
 
-        mSampleIds = Lists.newArrayList();
-
-        if(cmd.hasOption(SAMPLE_IDS_FILE))
-        {
-            mSampleIds.addAll(loadSampleIdsFile(cmd.getOptionValue(SAMPLE_IDS_FILE)));
-        }
+        mSampleIds = loadSampleIdsFile(cmd);
 
         String outputDir = parseOutputDir(cmd);
         mWriter = initialiseWriter(outputDir, cmd.getOptionValue(OUTPUT_ID));
@@ -434,7 +429,7 @@ public class FusionCompare
 
         options.addOption(FUSION_FILE_ORIG, true, "Original fusions file");
         options.addOption(FUSION_FILE_NEW, true, "New fusions file");
-        options.addOption(SAMPLE_IDS_FILE, true, "Sample IDs file");
+        addSampleIdFile(options);
         options.addOption(MIN_SPLIT_FRAGS, true, "Min split frags for comparisons");
         options.addOption(KNOWN_FUSIONS_FILE, true, KNOWN_FUSIONS_FILE_DESC);
         addLoggingOptions(options);

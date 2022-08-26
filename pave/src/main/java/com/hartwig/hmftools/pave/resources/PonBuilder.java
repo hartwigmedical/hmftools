@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.variant.VariantVcfTags.TIER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
@@ -56,7 +57,6 @@ public class PonBuilder
     private int mLastIndex;
     private String mLastChromosome;
 
-    private static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String VCF_PATH = "vcf_path";
     private static final String QUAL_CUTOFF = "qual_cutoff";
     private static final String MIN_SAMPLES = "min_samples";
@@ -64,7 +64,7 @@ public class PonBuilder
 
     public PonBuilder(final CommandLine cmd)
     {
-        mSampleIds = loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE));
+        mSampleIds = loadSampleIdsFile(cmd);
         mVcfPath = cmd.getOptionValue(VCF_PATH);
         mOutputDir = parseOutputDir(cmd);
 
@@ -293,7 +293,7 @@ public class PonBuilder
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(SAMPLE_ID_FILE, true, "Sample IDs file");
+        addSampleIdFile(options);
         options.addOption(VCF_PATH, true, "VCF path for samples");
         options.addOption(MIN_SAMPLES, true, "Min samples for variant to be included in PON");
         options.addOption(QUAL_CUTOFF, true, "Qual cut-off for variant inclusion");

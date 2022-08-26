@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
@@ -46,7 +47,6 @@ public class GermlineGeneAnalyser
 
     private final BufferedWriter mWriter;
 
-    private static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String PURPLE_DATA_DIR = "purple_data_dir";
 
     public GermlineGeneAnalyser(final CommandLine cmd)
@@ -56,7 +56,7 @@ public class GermlineGeneAnalyser
         mGeneDataCache.setRequiredData(true, false, false, true);
         mGeneDataCache.load(false);
 
-        mSampleIds = loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE));
+        mSampleIds = loadSampleIdsFile(cmd);
         mPurpleDataDir = cmd.getOptionValue(PURPLE_DATA_DIR);
         mThreads = parseThreads(cmd);
 
@@ -170,7 +170,7 @@ public class GermlineGeneAnalyser
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(SAMPLE_ID_FILE, true, "Sample ID file");
+        addSampleIdFile(options);
         addThreadOptions(options);
 
         options.addOption(PURPLE_DATA_DIR, true, "Directory pattern for sample purple directory");

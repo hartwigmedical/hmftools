@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -66,7 +67,6 @@ public class FileDbLoadChecker
     private final int mThreads;
 
     private static final String SAMPLE = "sample";
-    private static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String PURPLE_DIR = "purple_dir";
     private static final String LINX_DIR = "linx_dir";
 
@@ -88,7 +88,7 @@ public class FileDbLoadChecker
         }
         else
         {
-            mSampleIds.addAll(ConfigUtils.loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE)));
+            mSampleIds.addAll(ConfigUtils.loadSampleIdsFile(cmd));
         }
 
         mPurpleDir = cmd.hasOption(PURPLE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR)) : null;
@@ -387,7 +387,7 @@ public class FileDbLoadChecker
     {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample ID");
-        options.addOption(SAMPLE_ID_FILE, true, "CSV with SampleId");
+        addSampleIdFile(options);
         options.addOption(PURPLE_DIR, true, "Sample Purple directory");
         options.addOption(LINX_DIR, true, "Sample Linx directory");
         addThreadOptions(options);

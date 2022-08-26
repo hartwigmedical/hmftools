@@ -67,7 +67,13 @@ public class ConfigUtils
         return cmd.hasOption(configName) ? Boolean.parseBoolean(cmd.getOptionValue(configName)) : defaultValue;
     }
 
-    public static List<String> loadSampleIdsFile(final CommandLine cmd) { return loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE)); }
+    public static List<String> loadSampleIdsFile(final CommandLine cmd)
+    {
+        if(!cmd.hasOption(SAMPLE_ID_FILE))
+            return Lists.newArrayList();
+
+        return loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE));
+    }
 
     public static List<String> loadSampleIdsFile(final String filename)
     {

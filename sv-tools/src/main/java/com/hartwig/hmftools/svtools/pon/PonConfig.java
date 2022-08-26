@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svtools.pon;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -32,7 +33,6 @@ public class PonConfig
 
     final Map<String,String> SampleVcfFiles;
 
-    private static final String SAMPLES_FILE = "samples_file";
     private static final String SAMPLE_VCFS_FILE = "sample_vcfs_file";
     private static final String VCF_FILE_PATTERNS = "vcf_file_patterns";
     private static final String MIN_PON_WRITE_COUNT = "min_pon_write_count";
@@ -54,7 +54,7 @@ public class PonConfig
         }
         else
         {
-            SampleIds.addAll(ConfigUtils.loadSampleIdsFile(cmd.getOptionValue(SAMPLES_FILE)));
+            SampleIds.addAll(ConfigUtils.loadSampleIdsFile(cmd));
             VcfFilePatterns = Arrays.stream(cmd.getOptionValue(VCF_FILE_PATTERNS).split(";")).collect(Collectors.toList());
         }
     }
@@ -91,7 +91,7 @@ public class PonConfig
 
     public static void addOptions(final Options options)
     {
-        options.addOption(SAMPLES_FILE, true, "SampleIds file");
+        addSampleIdFile(options);
         options.addOption(SAMPLE_VCFS_FILE, true, "CSV file with 'SampleId,VcfFile' locations");
         options.addOption(VCF_FILE_PATTERNS, true, "VCF file IDs, eg 'gridss.vcf' separated by ';'");
         options.addOption(MIN_PON_WRITE_COUNT, true, "Min observations of SV or SGL to include in PON");

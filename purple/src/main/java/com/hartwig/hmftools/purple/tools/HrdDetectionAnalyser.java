@@ -3,6 +3,7 @@ package com.hartwig.hmftools.purple.tools;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
@@ -46,13 +47,12 @@ public class HrdDetectionAnalyser
 
     private final BufferedWriter mWriter;
 
-    private static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String PURPLE_DATA_DIR = "purple_dir";
     private static final String CHORD_DIR = "chord_dir";
 
     public HrdDetectionAnalyser(final CommandLine cmd)
     {
-        mSampleIds = loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE));
+        mSampleIds = loadSampleIdsFile(cmd);
         mPurpleDataDir = cmd.getOptionValue(PURPLE_DATA_DIR);
         mChordDir = cmd.getOptionValue(CHORD_DIR);
         mThreads = parseThreads(cmd);
@@ -197,7 +197,7 @@ public class HrdDetectionAnalyser
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(SAMPLE_ID_FILE, true, "Sample ID file");
+        addSampleIdFile(options);
 
         DatabaseAccess.addDatabaseCmdLineArgs(options);
         options.addOption(PURPLE_DATA_DIR, true, "Directory pattern for sample purple directory");

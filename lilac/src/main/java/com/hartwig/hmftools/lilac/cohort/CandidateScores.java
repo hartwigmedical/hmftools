@@ -4,7 +4,8 @@ import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -14,8 +15,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.cohort.CohortCommon.SAMPLE_FILES_DIR;
-import static com.hartwig.hmftools.lilac.cohort.CohortCommon.SAMPLE_IDS_FILE;
-import static com.hartwig.hmftools.lilac.cohort.CohortCommon.loadSampleIds;
 import static com.hartwig.hmftools.lilac.cohort.CohortFrequency.ALLELE_FREQUENCY_FILE;
 import static com.hartwig.hmftools.lilac.coverage.HlaComplexFile.parseCandidateCoverageData;
 
@@ -54,7 +53,7 @@ public class CandidateScores
         mOutputDir = parseOutputDir(cmd);
         mCandidateFilesDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_FILES_DIR));
 
-        mSampleIds = loadSampleIds(cmd.getOptionValue(SAMPLE_IDS_FILE));
+        mSampleIds = loadSampleIdsFile(cmd);
     }
 
     public void run()
@@ -211,7 +210,7 @@ public class CandidateScores
         LL_LOGGER.info("processing cohort sample candidate files");
 
         Options options = new Options();
-        options.addOption(SAMPLE_IDS_FILE, true, "Sample IDs");
+        addSampleIdFile(options);
         options.addOption(SAMPLE_FILES_DIR, true, "Path to candidate-coverage files");
         addOutputDir(options);
         SampleTruthSet.addCmdLineOptions(options);

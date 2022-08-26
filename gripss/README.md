@@ -75,7 +75,7 @@ Three hard filters are applied upfront before other processing occurs:
 
 Type | Config | Default 
 ---|---|---
-NO_MATE | hard_min_tumor_qual | N/A  
+NO_MATE | N/A | N/A  
 MINIMUM_TUMOR_QUAL | hard_min_tumor_qual | 100  
 MAX_NORMAL_SUPPORT | hard_max_normal_absolute_support | 3
 MAX_NORMAL_SUPPORT | hard_max_normal_relative_support | 0.08
@@ -154,9 +154,13 @@ Double stranded break sites can lead to 2 proximate breakends in very close prox
 
 ### D. Rescue
 
-Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is NOT filtered as DEDUP is rescued from soft filtering and marked as PASS. Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued for all soft filters except maxPolyAHomLength.
+Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is NOT filtered as DEDUP is rescued from soft filtering and marked as PASS. 
+Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued for all soft filters except maxPolyAHomLength.
 
-To improve detection of mobile element insertions, we also rescue pairs of breakends or breakjunctions which are linked by ‘DSB’ and NOT PON filtered, with combined qual > 500 and with at least one of the breakends having the characteristic poly-A insert sequence tail of a mobile element insertion. We define a poly-A tail as 16 of the last 18 bases of the insert sequence are A. At the insertion site, negative oriented breakends must have poly-A tails at the end of the insert sequence and positive oriented breakends must have poly-T at the start of the insert sequence (if inserted on the reverse strand).
+To improve detection of mobile element insertions, we also rescue pairs of breakends or breakjunctions which are linked by ‘DSB’ and NOT PON filtered, 
+with combined qual > 500 and with at least one of the breakends having the characteristic poly-A insert sequence tail of a mobile element insertion. 
+We define a poly-A tail as 16 of the last 18 bases of the insert sequence are A. At the insertion site, negative oriented breakends must have poly-A tails 
+at the end of the insert sequence and positive oriented breakends must have poly-T at the start of the insert sequence (if inserted on the reverse strand).
 
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 

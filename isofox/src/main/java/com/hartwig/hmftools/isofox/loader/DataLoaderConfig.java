@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.loader;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
@@ -30,7 +31,6 @@ import org.apache.commons.cli.Options;
 public class DataLoaderConfig
 {
     public static final String SAMPLE = "sample";
-    public static final String SAMPLE_ID_FILE = "sample_id_file";
 
     public static final String SAMPLE_DATA_DIRECTORY = "sample_data_dir";
     public static final String GENE_DATA_DIRECTORY = "gene_data_dir";

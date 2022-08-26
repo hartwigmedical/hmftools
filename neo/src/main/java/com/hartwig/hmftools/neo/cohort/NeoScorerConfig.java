@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.neo.cohort;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.neo.NeoCommon.loadSampleIdsFile;
 
 import java.util.Arrays;
 import java.util.List;
@@ -34,7 +35,6 @@ public class NeoScorerConfig
     public final double SimilarityThreshold;
     public final int Threads;
 
-    public static final String SAMPLE_ID_FILE = "sample_id_file";
     public static final String NEO_DATA_DIR = "neo_data_dir";
     public static final String LILAC_DATA_DIR = "lilac_data_dir";
     public static final String PREDICTION_DATA_DIR = "mcf_prediction_dir";
@@ -48,8 +48,7 @@ public class NeoScorerConfig
 
     public NeoScorerConfig(final CommandLine cmd)
     {
-        SampleIds = Lists.newArrayList();
-        loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE), SampleIds);
+        SampleIds = loadSampleIdsFile(cmd);
 
         NeoDataDir = cmd.getOptionValue(NEO_DATA_DIR);
         LilacDataDir = cmd.getOptionValue(LILAC_DATA_DIR);
@@ -83,7 +82,7 @@ public class NeoScorerConfig
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(SAMPLE_ID_FILE, true, "SampleId file");
+        addSampleIdFile(options);
         options.addOption(NEO_DATA_DIR, true, "Directory for sample neo-epitope files");
         options.addOption(PREDICTION_DATA_DIR, true, "Directory for sample prediction result files");
         options.addOption(LILAC_DATA_DIR, true, "Directory for Lilac coverage files");

@@ -20,17 +20,6 @@ public class NeoCommon
 
     public static final Logger NE_LOGGER = LogManager.getLogger(NeoCommon.class);
 
-    public static void loadSampleIdsFile(final String filename, final List<String> sampleIds)
-    {
-        if (!Files.exists(Paths.get(filename)))
-        {
-            NE_LOGGER.warn("invalid sampleId file({})", filename);
-            return;
-        }
-
-        sampleIds.addAll(ConfigUtils.loadSampleIdsFile(filename));
-    }
-
     public static void loadSampleDataFile(final String filename, final List<SampleData> samples)
     {
         if (!Files.exists(Paths.get(filename)))
