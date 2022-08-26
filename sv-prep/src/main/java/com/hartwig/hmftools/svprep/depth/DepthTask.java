@@ -184,7 +184,7 @@ public class DepthTask implements Callable
 
         if(mPerfCounter.getLastTime() > 2)
         {
-            SV_LOGGER.warn("chr({}) span({}-{}) variants({}) high depth retrieval time({}) totalFrags({})",
+            SV_LOGGER.debug("chr({}) span({}-{}) variants({}) high depth retrieval time({}) totalFrags({})",
                     mChromosome, posStart, posEnd, variants.size(), format("%.3f", mPerfCounter.getLastTime()), readGroupTotal);
         }
     }
