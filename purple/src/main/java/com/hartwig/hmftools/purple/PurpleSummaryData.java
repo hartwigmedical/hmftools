@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory.polycl
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
+import com.hartwig.hmftools.common.drivercatalog.DeletionDrivers;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
@@ -35,7 +35,7 @@ public final class PurpleSummaryData
                 .filter(x -> x.segmentStartSupport() == NONE && x.segmentEndSupport() == NONE)
                 .count() : 0;
 
-        int deletedGenes = CNADrivers.deletedGenes(geneCopyNumbers);
+        int deletedGenes = DeletionDrivers.deletedGenes(geneCopyNumbers);
 
         Set<PurpleQCStatus> statusSet = PurpleQCStatus.calcStatus(
                 PurpleQCStatus.genderPass(amberGender, cobaltGender, aberrations),

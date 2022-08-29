@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -15,9 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class DriverCatalogFactory
 {
-    private DriverCatalogFactory()
-    {
-    }
+    private DriverCatalogFactory() {}
 
     @NotNull
     public static <T extends SomaticVariant> Map<DriverImpact,Integer> driverImpactCount(@NotNull final List<T> variants)
@@ -80,4 +79,30 @@ public final class DriverCatalogFactory
 
         return pDriver / (pDriver + pVariantNonDriver * (1 - pDriver));
     }
+
+    public static DriverCatalog createCopyNumberDriver(
+            DriverCategory category, DriverType driver, final LikelihoodMethod likelihoodMethod, final boolean biallelic,
+            final GeneCopyNumber geneCopyNumber)
+    {
+        return ImmutableDriverCatalog.builder()
+                .chromosome(geneCopyNumber.chromosome())
+                .chromosomeBand(geneCopyNumber.chromosomeBand())
+                .gene(geneCopyNumber.geneName())
+                .transcript(geneCopyNumber.transName())
+                .isCanonical(geneCopyNumber.isCanonical())
+                .missense(0)
+                .nonsense(0)
+                .inframe(0)
+                .frameshift(0)
+                .splice(0)
+                .driverLikelihood(1)
+                .driver(driver)
+                .likelihoodMethod(likelihoodMethod)
+                .category(category)
+                .biallelic(biallelic)
+                .minCopyNumber(geneCopyNumber.minCopyNumber())
+                .maxCopyNumber(geneCopyNumber.maxCopyNumber())
+                .build();
+    }
+
 }

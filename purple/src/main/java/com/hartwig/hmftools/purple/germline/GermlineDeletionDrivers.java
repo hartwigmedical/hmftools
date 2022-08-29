@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.germline;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.drivercatalog.CNADrivers.MAX_COPY_NUMBER_DEL;
+import static com.hartwig.hmftools.common.drivercatalog.AmplificationDrivers.MAX_COPY_NUMBER_DEL;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;

@@ -37,7 +37,8 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
+import com.hartwig.hmftools.common.drivercatalog.AmplificationDrivers;
+import com.hartwig.hmftools.common.drivercatalog.DeletionDrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -528,12 +529,13 @@ public class PurpleApplication
         {
             somaticDriverCatalog.addAll(somaticStream.buildDrivers(geneCopyNumberMap));
 
-            final CNADrivers cnaDrivers = new CNADrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
+            final AmplificationDrivers amplificationDrivers = new AmplificationDrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
+            final DeletionDrivers delDrivers = new DeletionDrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
 
-            somaticDriverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
+            somaticDriverCatalog.addAll(delDrivers.deletions(geneCopyNumbers, mConfig.TargetRegionsMode));
 
             // partial AMPs are only allowed for WGS
-            somaticDriverCatalog.addAll(cnaDrivers.amplifications(
+            somaticDriverCatalog.addAll(amplificationDrivers.amplifications(
                     purityContext.bestFit().ploidy(), geneCopyNumbers, mConfig.TargetRegionsMode));
 
             DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilename(mConfig.OutputDir, tumorSample), somaticDriverCatalog);

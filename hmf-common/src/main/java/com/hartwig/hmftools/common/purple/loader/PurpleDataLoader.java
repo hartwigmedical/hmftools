@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.AmplificationDrivers;
+import com.hartwig.hmftools.common.drivercatalog.DeletionDrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
@@ -19,6 +21,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -36,7 +39,6 @@ import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -91,8 +93,9 @@ public final class PurpleDataLoader
             allSomaticGeneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberTsv);
             LOGGER.debug(" Loaded {} gene copy numbers entries from {}", allSomaticGeneCopyNumbers.size(), geneCopyNumberTsv);
 
-            allSomaticGainsLosses =
-                    extractAllGainsLosses(purityContext.qc().status(), purityContext.bestFit().ploidy(), allSomaticGeneCopyNumbers);
+            allSomaticGainsLosses = extractAllGainsLosses(
+                    purityContext.qc().status(), purityContext.bestFit().ploidy(), purityContext.targeted(), allSomaticGeneCopyNumbers);
+
             LOGGER.info("  Extracted {} somatic gains and losses from gene copy numbers", allSomaticGainsLosses.size());
         }
 
@@ -220,9 +223,8 @@ public final class PurpleDataLoader
         return gainsLosses;
     }
 
-    @NotNull
-    private static List<GainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, double ploidy,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers)
+    private static List<GainLoss> extractAllGainsLosses(final Set<PurpleQCStatus> qcStatus, double ploidy, boolean isTargetRegions,
+            final List<GeneCopyNumber> geneCopyNumbers)
     {
         List<DriverGene> allGenes = Lists.newArrayList();
         for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
@@ -243,11 +245,14 @@ public final class PurpleDataLoader
                     .reportPGX(false)
                     .build());
         }
-        CNADrivers drivers = new CNADrivers(qcStatus, ImmutableDriverGenePanel.builder().driverGenes(allGenes).build());
+
+        final DriverGenePanel allGenesPanel = ImmutableDriverGenePanel.builder().driverGenes(allGenes).build();
+        AmplificationDrivers ampDrivers = new AmplificationDrivers(qcStatus, allGenesPanel);
+        DeletionDrivers delDrivers = new DeletionDrivers(qcStatus, allGenesPanel);
 
         List<DriverCatalog> allGainLosses = Lists.newArrayList();
-        allGainLosses.addAll(drivers.amplifications(ploidy, geneCopyNumbers));
-        allGainLosses.addAll(drivers.deletions(geneCopyNumbers));
+        allGainLosses.addAll(ampDrivers.amplifications(ploidy, geneCopyNumbers, isTargetRegions));
+        allGainLosses.addAll(delDrivers.deletions(geneCopyNumbers, isTargetRegions));
 
         return somaticGainsLossesFromDrivers(allGainLosses);
     }

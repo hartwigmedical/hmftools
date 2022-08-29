@@ -22,9 +22,7 @@ public final class GeneCopyNumberFile
 
     private static final String EXTENSION = ".purple.cnv.gene.tsv";
 
-    private GeneCopyNumberFile()
-    {
-    }
+    private GeneCopyNumberFile() {}
 
     @NotNull
     public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample)
@@ -49,7 +47,6 @@ public final class GeneCopyNumberFile
         Files.write(new File(fileName).toPath(), toLines(geneCopyNumbers));
     }
 
-    @NotNull
     @VisibleForTesting
     static List<String> toLines(final List<GeneCopyNumber> ratio)
     {
@@ -79,6 +76,7 @@ public final class GeneCopyNumberFile
                 .add("minRegionEndSupport")
                 .add("minRegionMethod")
                 .add("minMinorAlleleCopyNumber")
+                .add("bafWindows")
                 .toString();
     }
 
@@ -101,6 +99,7 @@ public final class GeneCopyNumberFile
                 .add(String.valueOf(geneCopyNumber.minRegionEndSupport()))
                 .add(String.valueOf(geneCopyNumber.minRegionMethod()))
                 .add(FORMAT.format(geneCopyNumber.minMinorAlleleCopyNumber()))
+                .add(String.valueOf(geneCopyNumber.bafWindows()))
                 .toString();
     }
 
@@ -127,6 +126,7 @@ public final class GeneCopyNumberFile
         int minRegionEndSupIndex = fieldsIndexMap.get("minRegionEndSupport");
         int minRegionMethodIndex = fieldsIndexMap.get("minRegionMethod");
         int mmACnIndex = fieldsIndexMap.get("minMinorAlleleCopyNumber");
+        Integer bafWindowsIndex = fieldsIndexMap.get("bafWindows");
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
@@ -146,12 +146,13 @@ public final class GeneCopyNumberFile
                     .isCanonical(canonicalIndex != null ? Boolean.parseBoolean(values[canonicalIndex]) : true)
                     .chromosomeBand(values[chrBandIndex])
                     .minRegions(minRegionIndex)
-                    .minRegionStart(Long.parseLong(values[minRegionStartIndex]))
-                    .minRegionEnd(Long.parseLong(values[minRegionEndIndex]))
+                    .minRegionStart(Integer.parseInt(values[minRegionStartIndex]))
+                    .minRegionEnd(Integer.parseInt(values[minRegionEndIndex]))
                     .minRegionMethod(CopyNumberMethod.valueOf(values[minRegionMethodIndex]))
                     .minRegionStartSupport(SegmentSupport.valueOf(values[minRegionStartSupIndex]))
                     .minRegionEndSupport(SegmentSupport.valueOf(values[minRegionEndSupIndex]))
-                    .minMinorAlleleCopyNumber(Double.parseDouble(values[mmACnIndex]));
+                    .minMinorAlleleCopyNumber(Double.parseDouble(values[mmACnIndex]))
+                    .bafWindows(bafWindowsIndex != null ? Integer.parseInt(values[bafWindowsIndex]) : 0);
 
             geneCopyNumbers.add(builder.build());
         }

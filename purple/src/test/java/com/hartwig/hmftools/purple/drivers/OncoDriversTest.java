@@ -168,6 +168,7 @@ public class OncoDriversTest
                 .transName(Strings.EMPTY)
                 .isCanonical(true)
                 .minMinorAlleleCopyNumber(0)
+                .bafWindows(0)
                 .build();
     }
 }

@@ -16,18 +16,16 @@ import org.jetbrains.annotations.Nullable;
 public interface GeneCopyNumber extends TranscriptRegion {
 
     double maxCopyNumber();
-
     double minCopyNumber();
 
     int somaticRegions();
-
     int minRegions();
 
-    long minRegionStart();
+    int minRegionStart();
+    int minRegionEnd();
+    int bafWindows();
 
-    long minRegionEnd();
-
-    default long minRegionBases() {
+    default int minRegionBases() {
         return minRegionEnd() - minRegionStart() + 1;
     }
 
@@ -62,5 +60,4 @@ public interface GeneCopyNumber extends TranscriptRegion {
 
         return geneCopyNumberMap;
     }
-
 }

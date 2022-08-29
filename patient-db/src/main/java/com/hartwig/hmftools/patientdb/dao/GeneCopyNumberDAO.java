@@ -71,6 +71,7 @@ public class GeneCopyNumberDAO
                     .minRegionEndSupport(SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONENDSUPPORT)))
                     .minRegionMethod(CopyNumberMethod.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONMETHOD)))
                     .minMinorAlleleCopyNumber(record.getValue(GENECOPYNUMBER.MINMINORALLELECOPYNUMBER))
+                    .bafWindows(0)
                     .build());
         }
         return geneCopyNumbers;
