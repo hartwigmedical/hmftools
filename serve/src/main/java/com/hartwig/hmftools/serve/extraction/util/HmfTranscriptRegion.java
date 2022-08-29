@@ -1,8 +1,10 @@
-package com.hartwig.hmftools.common.genome.region;
+package com.hartwig.hmftools.serve.extraction.util;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.Strand;
+import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

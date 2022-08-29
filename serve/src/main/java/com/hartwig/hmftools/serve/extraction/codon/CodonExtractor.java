@@ -1,16 +1,15 @@
 package com.hartwig.hmftools.serve.extraction.codon;
 
-import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.codonRangeByRank;
+import static com.hartwig.hmftools.serve.extraction.util.HmfTranscriptRegionUtils.codonRangeByRank;
 
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.serve.extraction.util.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.util.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.EnsemblFunctions;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.genome.region;
+package com.hartwig.hmftools.serve.extraction.util;
 
 import java.util.Collections;
 import java.util.List;
@@ -7,6 +7,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.ImmutableGenomeRegionImpl;
+import com.hartwig.hmftools.common.genome.region.Strand;
 
 import org.jetbrains.annotations.Nullable;
 
