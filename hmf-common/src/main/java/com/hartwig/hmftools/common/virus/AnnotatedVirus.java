@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.virus;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,6 +13,7 @@ public abstract class AnnotatedVirus {
 
     public abstract int taxid();
 
+    @JacksonXmlProperty(isAttribute = true, localName = "name")
     @NotNull
     public abstract String name();
 
@@ -33,5 +36,4 @@ public abstract class AnnotatedVirus {
 
     @NotNull
     public abstract VirusLikelihoodType virusDriverLikelihoodType();
-
 }
