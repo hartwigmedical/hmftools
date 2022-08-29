@@ -393,7 +393,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 return TableUtil.createWrappingReportTable(title, null, contentTable);
             }
         } else {
-            String noConsent = "This patient did not give his/her permission for reporting of pharmacogenomics results.";
+            String noConsent = "Temporarily not provided";
             return TableUtil.createNoConsentReportTable(title, noConsent);
         }
     }

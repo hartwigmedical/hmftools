@@ -91,7 +91,8 @@ public class QCFailPGXChapter implements ReportChapter {
                 return TableUtil.createWrappingReportTable(title, null, contentTable);
             }
         } else {
-            return TableUtil.createNAReportTable(title);
+            String noConsent = "Temporarily not provided";
+            return TableUtil.createNoConsentReportTable(title, noConsent);
         }
     }
 
