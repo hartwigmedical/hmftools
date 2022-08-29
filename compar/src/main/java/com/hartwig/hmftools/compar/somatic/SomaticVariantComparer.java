@@ -2,13 +2,13 @@ package com.hartwig.hmftools.compar.somatic;
 
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
+import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
 import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.FLD_LPS;
 import static com.hartwig.hmftools.compar.somatic.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_QUAL;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;

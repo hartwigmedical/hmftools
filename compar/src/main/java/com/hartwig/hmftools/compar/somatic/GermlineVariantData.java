@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.compar.somatic;
 
 import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
+import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkFilterDiffs;
@@ -13,7 +14,6 @@ import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_HGVS_CODING;
 import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_HGVS_PROTEIN;
 import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_HOTSPOT;
 import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_OTHER_REPORTED;
-import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_QUAL;
 import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_TIER;
 
 import java.util.Arrays;

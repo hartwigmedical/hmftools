@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.somatic;
 
+import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 
@@ -20,7 +21,6 @@ public final class VariantCommon
     protected static final String FLD_HGVS_CODING = "CanonicalHgvsCoding";
     protected static final String FLD_HGVS_PROTEIN = "CanonicalHgvsProtein";
     protected static final String FLD_OTHER_REPORTED = "OtherReportedEffects";
-    protected static final String FLD_QUAL = "Qual";
 
     protected static List<String> comparedFieldNames()
     {

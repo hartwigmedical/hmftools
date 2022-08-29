@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.compar.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.Category.FUSION;
 import static com.hartwig.hmftools.compar.Category.GERMLINE_DELETION;
+import static com.hartwig.hmftools.compar.Category.GERMLINE_SV;
 import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.Category.LILAC;
 import static com.hartwig.hmftools.compar.Category.PURITY;
@@ -23,6 +24,7 @@ import com.hartwig.hmftools.compar.driver.DriverComparer;
 import com.hartwig.hmftools.compar.lilac.LilacComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
+import com.hartwig.hmftools.compar.linx.GermlineSvComparer;
 import com.hartwig.hmftools.compar.purple.GermlineDeletionComparer;
 import com.hartwig.hmftools.compar.purple.PurityComparer;
 import com.hartwig.hmftools.compar.somatic.GermlineVariantComparer;
@@ -35,6 +37,7 @@ public class CommonUtils
     public static final String SUB_ITEM_DELIM = "=";
 
     public static final String FLD_REPORTED = "Reported";
+    public static final String FLD_QUAL = "Qual";
 
     public static List<ItemComparer> buildComparers(final ComparConfig config)
     {
@@ -69,6 +72,9 @@ public class CommonUtils
 
         if(config.Categories.containsKey(LILAC))
             comparators.add(new LilacComparer(config));
+
+        if(config.Categories.containsKey(GERMLINE_SV))
+            comparators.add(new GermlineSvComparer(config));
 
         comparators.forEach(x -> x.registerThresholds(config.Thresholds));
 

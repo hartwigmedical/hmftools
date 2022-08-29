@@ -9,6 +9,7 @@ public class FileSources
 {
     public final String Source;
     public final String Linx;
+    public final String LinxGermline;
     public final String Purple;
     public final String SomaticVcf;
     public final String GermlineVcf;
@@ -18,6 +19,7 @@ public class FileSources
 
     public static final String SAMPLE_DIR = "sample_dir";
     public static final String LINX_DIR = "linx_dir";
+    public static final String LINX_GERMLINE_DIR = "linx_germline_dir";
     public static final String PURPLE_DIR = "purple_dir";
     public static final String CUPPA_DIR = "cuppa_dir";
     public static final String LILAC_DIR = "lilac_dir";
@@ -28,10 +30,11 @@ public class FileSources
     public static final String GERMLINE_VCF = "germline_vcf";
 
     public FileSources(final String source, final String linx, final String purple, final String somaticVcf, final String germlineVcf,
-            final String cuppa, final String lilac, final String chord)
+            final String linxGermline, final String cuppa, final String lilac, final String chord)
     {
         Source = source;
         Linx = linx;
+        LinxGermline = linxGermline;
         Purple = purple;
         SomaticVcf = somaticVcf;
         GermlineVcf = germlineVcf;
@@ -54,6 +57,7 @@ public class FileSources
                 fileSources.Purple.replaceAll("\\*", sampleId),
                 fileSources.SomaticVcf.replaceAll("\\*", sampleId),
                 fileSources.GermlineVcf.replaceAll("\\*", sampleId),
+                fileSources.LinxGermline.replaceAll("\\*", sampleId),
                 fileSources.Cuppa.replaceAll("\\*", sampleId),
                 fileSources.Lilac.replaceAll("\\*", sampleId),
                 fileSources.Chord.replaceAll("\\*", sampleId));
@@ -72,6 +76,7 @@ public class FileSources
         String source = values[0];
         String sampleDir = "";
         String linxDir = "";
+        String linxGermlineDir = "";
         String purpleDir = "";
         String somaticVcf = "";
         String germlineVcf = "";
@@ -100,6 +105,10 @@ public class FileSources
             if(type.equals(LINX_DIR))
             {
                 linxDir = getDirectory(sampleDir, value);
+            }
+            else if(type.equals(LINX_GERMLINE_DIR))
+            {
+                linxGermlineDir = getDirectory(sampleDir, value);
             }
             else if(type.equals(PURPLE_DIR))
             {
@@ -130,6 +139,9 @@ public class FileSources
         if(linxDir.isEmpty())
             linxDir = sampleDir;
 
+        if(linxGermlineDir.isEmpty())
+            linxGermlineDir = sampleDir;
+
         if(purpleDir.isEmpty())
             purpleDir = sampleDir;
 
@@ -142,7 +154,7 @@ public class FileSources
         if(lilacDir.isEmpty())
             lilacDir = sampleDir;
 
-        return new FileSources(source, linxDir, purpleDir, somaticVcf, germlineVcf, cuppaDir, lilacDir, chordDir);
+        return new FileSources(source, linxDir, purpleDir, somaticVcf, germlineVcf, linxGermlineDir, cuppaDir, lilacDir, chordDir);
     }
 
     private static String getDirectory(final String sampleDir, final String typeDir)

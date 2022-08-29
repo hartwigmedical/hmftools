@@ -9,6 +9,7 @@ public enum Category
     GERMLINE_DELETION,
     FUSION,
     DISRUPTION,
+    GERMLINE_SV,
     CUPPA,
     LILAC,
     CHORD;
