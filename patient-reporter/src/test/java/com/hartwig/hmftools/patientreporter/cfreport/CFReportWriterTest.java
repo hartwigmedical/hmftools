@@ -7,6 +7,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
+import javax.xml.stream.XMLStreamException;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
@@ -48,7 +50,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -63,20 +65,20 @@ public class CFReportWriterTest {
 
     private static final String UDI_DI = "(01) 8720299486010(8012)v5.25";
 
-    @Test
-    public void canGeneratePatientReportForCOLO829() throws IOException {
-        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T")
-                .comments(COLO_COMMENT_STRING)
-                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
-                .build();
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.FAIL_CONTAMINATION);
-
-        CFReportWriter writer = testCFReportWriter();
-        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
-     //   writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
-        writer.writeXMLAnalysedFile(colo829Report, REPORT_BASE_DIR);
-
-    }
+//    @Test
+//    public void canGeneratePatientReportForCOLO829() throws IOException {
+//        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T")
+//                .comments(COLO_COMMENT_STRING)
+//                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
+//                .build();
+//        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.FAIL_CONTAMINATION);
+//
+//        CFReportWriter writer = testCFReportWriter();
+//        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
+//     //   writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
+//        writer.writeXMLAnalysedFile(colo829Report, REPORT_BASE_DIR);
+//
+//    }
 
 //    @Test
 //    public void canGeneratePatientReportForCOLO829DisabledConfig() throws IOException {
@@ -165,18 +167,19 @@ public class CFReportWriterTest {
 //        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
 //    }
 //
-//    @Test
-//    public void canGeneratePatientReportForACTINSample() throws IOException {
-//        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("ACTN_FULL")
-//                .limsCohortConfig(LimsCohortTestFactory.createACTINCohortConfig())
-//                .build();
-//        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
-//        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
-//    }
-//
+    @Test
+    public void canGeneratePatientReportForACTINSample() throws IOException, XMLStreamException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("ACTN_FULL")
+                .limsCohortConfig(LimsCohortTestFactory.createACTINCohortConfig())
+                .build();
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
+      //  writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
+            writer.writeXMLAnalysedFile(patientReport, REPORT_BASE_DIR);
+        }
+
 //    @Test
 //    public void canGeneratePatientReportForCORESample() throws IOException {
 //        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CORE01_FULL")
