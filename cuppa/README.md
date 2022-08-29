@@ -189,29 +189,29 @@ Cohorts for training the algorithm were constructed from the HMF database by sel
 CUPPA Category | primaryTumorLocation:subLocation (primaryTumorType:primaryTumorSubType)
 ---|---
 Acute myeloid leukemia | 
-Anogenital | Penis, Vulva, Vagina, Anus ({excl. melanoma}), Uterus:Cervix
+Anogenital | Penis, Vulva, Vagina, Anus ({excl. melanoma}), Uterus:Cervix, Cervix-AdenoCA, Cervix-SCC 
 Bile duct /Gallbladder | Bile duct; Hepatobiliary system; Gallbladder
-Bone/Soft tissue: Other | Bone/Soft tissue ({other or unspecified})
+Bone/Soft tissue: Other | Bone/Soft tissue ({other or unspecified}), Bone-Epith, Bone-Osteoblast
 Breast | Breast
 Cartilaginous neoplasm | 
-Chronic lymphocytic leukemia |
-Colorectum/Appendix/Small intestine | Colorectum ({other or unspecified}); Appendix; Small intestine({other})
+Colorectum/Appendix/Small intestine | Colorectum ({other or unspecified}); Appendix; Small intestine({other}), ColoRect-AdenoCA
 Esophagus/Stomach | Esophagus ({excl. Nueroendocrine tumor}); Stomach ({excl. Nueroendocrine tumor}); Gastroesophageal
 GIST | Bone/Soft tissue (Gastrointestinal stromal tumor)
-Glioma | Nervous system (Glioma)
+Glioma | Nervous system (Glioma),CNS-GBM, CNS-Oligo
 Head and neck: other | Head and neck({other})
 Kidney | Kidney
-Leiomyosarcoma | Bone/Soft tissue (Leiomyosarcoma)
-Liposarcoma | Bone/Soft tissue (Liposarcoma)
+Kidney-ChRCC | Kidney-ChRCC
+Leiomyosarcoma | Bone/Soft tissue (Leiomyosarcoma), SoftTissue-Leiomyo
+Liposarcoma | Bone/Soft tissue (Liposarcoma), SoftTissue-Liposarc
 Liver | Liver ({excluding Nueroendocrine tumor})
 Lung: NET | Lung(Neuroendocrine tumor)
-Lung: Non-small Cell | Lung(Carcinoma:Non-small cell carcinoma); Lung(Carcinoma:Adenocarcinoma); Lung({other})
+Lung: Non-small Cell | Lung(Carcinoma:Non-small cell carcinoma); Lung(Carcinoma:Adenocarcinoma); Lung({other}), Lung-AdenoCA, Lung-SCC
 Lung: Small Cell | Lung(Carcinoma:Small cell carcinoma); Lung(Carcinoma:Small cell carcinoma combined type)
-Lymphoid tissue | Lymphoid tissue
+Lymphoid tissue | Lymphoid tissue, Chronic lymphocytic leukemia 
 Medulloblastoma | Medulloblastoma
 Mesothelium | Mesothelium
 Osteosarcoma | Bone/Soft tissue (Osteosarcoma)
-Other | Gastrointestinal tract, Eye, Bone marrow, Nervous system({other}), Adrenal Gland, Thymus, Testis, Esophagus (Nueroendocrine tumor),Stomach (Neuroendocrine tumor)
+Other | Gastrointestinal tract, Eye, Bone marrow, Nervous system({other}), Adrenal Gland, Thymus, Testis, Esophagus (Nueroendocrine tumor),Stomach (Neuroendocrine tumor), Myeloid-MDS
 Ovary/Fallopian tube | Ovary; Fallopian tube
 Pancreas | Pancreas ({other>)
 Pancreas: NET | Pancreas (Neuroendocrine Tumor)
@@ -221,12 +221,16 @@ Salivary gland/Adenoid cystic | Head and Neck:Salivary gland, Head and Neck:Paro
 Melanoma | <Any, excluding Eye> (Melanoma)
 Skin:Other | Skin ({other})
 Small intestine/Colorectum: NET | Small intestine(Neuroendocrine tumor); Colorectum(Neuroendocrine tumor)
-Thyroid gland | Thyroid gland
-Urothelial tract | Urothelial tract
-Uterus:Endometrium | Uterus:Endometrium
+Thyroid gland | Thyroid gland, Thy-AdenoCA	
+Urothelial tract | Urothelial tract, Bladder-TCC
+Uterus:Endometrium | Uterus:Endometrium, Uterus-AdenoCA
 Myeloproliferative neoplasm |
 
 Certain cancers such as Esophagus and Stomach were combined for the categorisation as we found empirically that the CUPPA classifiers had little ability to distinguish between them. For other cancers including Lung, Bone/Soft tissue, Skin, Uterus & Pancreatic cancers we have broken into subtypes where histological information allows. All cancers not in one of these 36 cohorts was deemed as “Other” and was excluded from the reference cohorts for analysis.   Samples with ‘unknown’ tumor type are also excluded. Finally, 45 samples were also explicitly excluded from the reference cohort where our analysis strongly suggested the clinical configured cancer type may be incorrect for these samples
+
+# Sub cohorts
+
+The concept of sub-cohorts are also supported in CUPPA.    Classifiers are assessed at sub-cohort level, but the values are added together and results presented at cohort level.  For now the only cancer type split into sub-cohorts is Breast, which is split into Tripple Negative vs other.   This was separated due to the ALT_SJ junction classifier having poor performance for tripple negative breast cancers, since the typical alt_sj profile is very distinct for tripple negative samples and not similar to other breast samples.  
 
 ## DNA Classifier logic
 
@@ -238,12 +242,20 @@ The algorithm for each of the classifiers is described below:
 
 This classifier solely relies on the mutational distribution of tumors of genomic position, which has been shown previously to have strong predictive power for tissue of origin (eg. https://www.nature.com/articles/s41467-019-13825-8). 
 
-CUPPA calculates a consensus mutation distribution for each cohort by counting SNV TMB by bucketed genomic position across each cohort. High TMB samples are downsampled to 20k mutations in this consensus so that individual samples cannot dominate a cohort. CUPPA counts mutations using a window size of 500kb bases (chosen after testing various sizes from 100kb to 10Mb). 
+CUPPA calculates a consensus mutation distribution for each cohort by counting SNV TMB by bucketed genomic position across each cohort. Chr Y is excluded to avoid gender effects.   We also exclude the highly characteristic mutations of AID-APOBEC hyper mutation (TCN>T and TCN>G) from our cohorts for the purpose of genomic position similarity, as wwe observe them to have a a distinct genomic position profile which does not generally match the cancer specific profile (predominantly effecting Lung, Breast and Urothelial cancers).  High TMB samples are downsampled to 20k mutations in this consensus so that individual samples cannot dominate a cohort. CUPPA counts mutations using a window size of 500kb bases (chosen after testing various sizes from 100kb to 10Mb).   
+
+Since some cohorts are relatively small and may have significant noise in their distribution, we blend each cohort with the median cohort wide proportional bucket weights to smooth the distribution. Specifically the following  adjustments to the final cohort bucket weights
+```
+AdjCohortBucketWeight = CohortBucketWeight + 100k * median[ProportionalBucketWeight]
+```
+For our smaller cohorts which have around 100k total TMB the effect is a blending of 50%.  For larger cohorts the effect is negliggable
 
 The genomic position similarity likelihood for a given sample is determined by first calculating the cosine similarity (CSS) of a sample to each cohort consensus distribution and then weighing using the following algorithm:
 ```
-Score(sample=s,cancerType=i) = 10^[100*(CSS(i,s)-BestCSS(s))] 
+Score(sample=s,cancerType=i) = 30^[100*min[(CSS(i,s)-BestCSS(s)),0.012]]*3^[100*max[(CSS(i,s)-BestCSS(s))-0.012,0]] 
 ```
+The 2 exponents used (30 and 3) are set empirically to match the confidence empirically observed accuracy based on relative CSS similarity
+
 CUPPA sums the scores across each tumor type to estimate a likelihood for each cancer type:
 ```
 Likelihood(tumorType=i) = Score(i) / SUM(all tumors) [Score]
@@ -253,11 +265,11 @@ Likelihood(tumorType=i) = Score(i) / SUM(all tumors) [Score]
 
 This classifier relies solely on relative SNV counts via the 96 trinucleotide buckets frequently used for cosmic signatures. The cosmic signatures are not used directly, but the classifier is designed to capture the obvious similarities that can also be observed via signatures capturing known cancer specific mutagenic effects such as UV & Smoking and also background signatures per cancer type. 
 
-Unlike the genomic position similarity which determines a consensus view of mutational distribution, the SNV_96_PAIRWISE classifier does not create a consensus view per tumor type as tumor types may have a diverse range of mutational profiles. Instead the classifier calculates a pairwise cosine similarity between the sample in question and every other sample in the Hartwig cohort.
+Unlike the genomic position similarity which determines a consensus view of mutational distribution, the SNV_96_PAIRWISE classifier does not create a consensus view per tumor type as tumor types may have a diverse range of mutational profiles. Instead the classifier calculates a pairwise cosine similarity between the sample in question and every other sample in the Hartwig cohort.   To help smooth the noise in low tumor mutational burden samples, a fixed 100 mutations are added to each sample matching the median cohort SNV96 distribution pan-cancer prior to the calculation of pair-wise similarity
 
 Once a pairwise CSS has been determined, a score is calculated for each pair using the following formula:
 ```
-Score(i,j) = 50^[-100*(1-CSS)] ^[ maxCSS^8] * mutationCountWeightFactor * cohortSizeWeightFactor
+Score(i,j) = 50^[-100*(1-CSS)] ^[ maxCSS^10] * mutationCountWeightFactor * cohortSizeWeightFactor
 ```
 Where:
 * MaxCSS is the maximum pairwise CSS for any sample in the cohort. This factor reduces confidences in general for samples that have no close pairwise match.
@@ -279,7 +291,7 @@ Likelihood(tumorType=i) = SUM(tumorType=i)[ Score] / SUM(all tumors) [Score]
 The FEATURE classifier uses observed prevalence of both cancer type specific drivers as well as certain passenger mutational features that may be significantly enriched or depleted in certain types to predict the cancer type of a sample. 
 
 #### Driver Prevalence
-Driver (or driver like) features used include all driver point mutation, high amplification, homozygous deletion and homozygous disruptions in the driver catalog as well as viral insertions & fusions. For fusions, known pathogenic fusion pairs, IG rearrangement pairs and exon deletions/duplications configured in the HMF fusion knowledge base are all considered as features as are fusions with highly promiscuous exons such as ALK exon 20-21. For Sarcomas specifically, we override the prevalence for a list of 56 pathognomic fusions which are highly diagnostic but may not be prevalent enough to be present in our database to the appropriate cancer type with the maximal allowed feature weight.
+Driver (or driver like) features used include all driver point mutation, high amplification, homozygous deletion and homozygous disruptions in the driver catalog as well as viral insertions & fusions.  Homozygous deletions, disruptions and mutations drivers are considered together, but amplifications are treated as a separate feature as some oncogenes tend to be amplified in specific cancer types and mutated in others (notable examples are KRAS,EGFR,SPOP & FOXA1).   For fusions, known pathogenic fusion pairs, IG rearrangement pairs and exon deletions/duplications configured in the HMF fusion knowledge base are all considered as features as are fusions with highly promiscuous exons such as ALK exon 20-21. For Sarcomas specifically, we override the prevalence for a list of 56 pathognomic fusions which are highly diagnostic but may not be prevalent enough to be present in our database to the appropriate cancer type with the maximal allowed feature weight.
 
 Indels in repeat contexts of 6 or less bases in 3 lineage defining genes: ALB (highly specific to Liver cancer) and SFTPB & SLC34A2 (highly specific to Lung cancer) are also treated as additional features (note though that they are ignored for MSI samples). A set of Lung cancer specific EGFR hotspots (including T790M, L858R and exon 19 and 20 inframe deletions) are also treated as a single feature.
 
@@ -327,7 +339,7 @@ And finally CUPPA sums the scores across each tumor type to estimate the likelih
 ```
 Likelihood(tumorType=i) = Score(i)^correlationDampenFactor / SUM(all tumors) [Score^correlationDampenFactor]
 ```
-The correlationDampenFactor is introduced to reduce the confidence of the classifier and set at 0.8 to empirically match the observed accuracy. This is required as some of the driver or passenger features may be correlated with each other - for example same arm amplifications are highly correlated and TMB might be positively correlated with more drivers in general
+The correlationDampenFactor is introduced to reduce the confidence of the classifier and set at 0.75 to empirically match the observed accuracy. This is required as some of the driver or passenger features may be correlated with each other - for example same arm amplifications are highly correlated and TMB might be positively correlated with more drivers in general
 
 ### DNA_COMBINED CLASSIFIER
 
@@ -361,7 +373,7 @@ Likelihood(tumorType=i) = SUM(tumorType=i)[Score] / SUM(all tumors)[Score]
 
 ### Novel Splice Junction (ALT_SJ_COHORT) classifier
 
-A novel splice junction is defined in this context as any splice junction that is not annotated in ensembl.  A set of recurring novel splice junctions sites were identified within each cancer cohort - ie. those with 3 or more fragments supporting a novel site in 2 or more samples. A reference file was then formed by calculating the average fragment count per cancer cohort at each of these novel sites.
+A novel splice junction is defined in this context as any splice junction that is not annotated in ensembl.  A set of recurring novel splice junctions sites were identified within each cancer cohort - ie. those with 3 or more fragments supporting a novel site in 2 or more samples.  Intronic splice sites were excluded from the analysis. A reference file was then formed by calculating the average fragment count per cancer cohort at each of these novel sites.  To reduce noise in smaller cancer cohorts, a fixed number of 500k altSJ fragments was blended into each cohort matching the median cohort average observed fragments for each site.  This has a significant impact on small cohorts but negligable on large cohorts.  
 
 The novel splice junction classifier tests a sample’s fragment counts against each cancer cohort’s average fragment count per novel splice junction site. This is done by calculating a cosine similarity of log(fragmentCount + 1).
 ```
@@ -398,8 +410,7 @@ Note that all samples are used for this analysis including rare cancer types tha
 
 Bias | % of samples | Classifier | Description
 ---|---|---|---
-AID_APOBEC | >2% | SNV_96 / GENOMIC_ POSITION  | Signature shared across 5-6 cohorts, but strongest in Urothelial / Breast. The genomic position signature for AID_APOBEC seems to be very different.  Lung and Eso/Stomach samples in particular get low GEN_POSITION. Other cancer types such as Anogenital & Head & neck perform ok on GEN_POS, but poorly on other classifiers.  
-Small cohort size | 2% | All | Rounding issues and noise dominate all classifiers where cohort size is small (<25 samples), prevents us from small cohorts such as Testis, and diminishes performance even > 25 samples. Also true for pairwise classifiers even though we adjust for it.
+Small cohort size | 2% | All | Rounding issues and noise dominate all classifiers where cohort size is small (<25 samples), prevents us from small cohorts such as Testis, and diminishes performance even > 25 samples. Also true for pairwise classifiers even though we adjust for it.  This has been partially improved now by blending small cohorts with the cancer wide medians.
 TMBPerMb < .7 | 0.5% | ALL DNA | Generally low confidence.   Often mismatch to Pancreas:NET, likely due to ‘Low TMBPerMB’ feature
 High driver load | 1% | FEATURE | Samples with a high number of drivers tend to match Urothelial Tract cancers (these have the highest rate of drivers)
 MSI | 0.3% | GENOMIC_ POSITION | Samples with MSI typically have very low GENOMIC_POSITION scores to the correct cancer type.  Similar to AID_APOBEC effect 
@@ -414,6 +425,7 @@ Esophagus / Stomach vs Colorectal | 0.5% | ALL RNA | Esophagus frequently presen
 Anogenital vs Head & Neck: Other | 0.4% | All | Can often be mistaken for each other.
 Sarcoma | 1.5% | ALL | Frequent mismatches between Leiomyosarcoma, Liposarcoma, Osteosarcoma and ‘other’.  Multiple causes.  Larger cohorts would help make clearer cohorts and could allow distinct groups for Rhabdomyosarcoma and others.  Some samples are marked as ‘Sarcoma’ and matched to Leiomyosarcoma are reported as match=F, but may be TP. Spindle cell sarcoma appear to group better with Leioymyosarcoma but are marked as ‘other’
 Liposarcoma | ? | GENOMIC_ POSITION | MDM2+CDK4 coamplified liposarcomas (well-differentiated/dedifferentiated liposarcoma) resolve better to the Liposarcoma cohort compared to liposarcomas with diagnostic fusions (e.g. myxoid liposarcoma)
+Hodgkins Lympohoma | ? | DNA | Poorly match the lymphoid cohort which is dominated by NHL
 
 
 
