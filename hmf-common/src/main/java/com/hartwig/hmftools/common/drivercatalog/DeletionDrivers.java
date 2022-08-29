@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory.cre
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -22,7 +21,7 @@ public class DeletionDrivers
 {
     public static final double MAX_COPY_NUMBER_DEL = 0.5;
     public static final int SHORT_DEL_LENGTH = 10_000_000;
-    public static final int TARGET_REGIONS_MIN_BAF_COUNT = 2;
+    public static final int TARGET_REGIONS_MIN_DEPTH_COUNT = 2;
 
     private static final Set<SegmentSupport> MERE = Sets.newHashSet(SegmentSupport.CENTROMERE, SegmentSupport.TELOMERE);
 
@@ -72,7 +71,7 @@ public class DeletionDrivers
                 if(!isShort)
                     continue;
 
-                if(!hasFullSvSupport && geneCopyNumber.bafWindows() < TARGET_REGIONS_MIN_BAF_COUNT)
+                if(!hasFullSvSupport && geneCopyNumber.depthWindowCount() < TARGET_REGIONS_MIN_DEPTH_COUNT)
                     continue;
             }
 

@@ -28,6 +28,6 @@ public final class GeneCopyNumberTestFactory {
                 .transName(Strings.EMPTY)
                 .isCanonical(true)
                 .minMinorAlleleCopyNumber(0)
-                .bafWindows(0);
+                .depthWindowCount(0);
     }
 }

@@ -23,7 +23,7 @@ public interface GeneCopyNumber extends TranscriptRegion {
 
     int minRegionStart();
     int minRegionEnd();
-    int bafWindows();
+    int depthWindowCount();
 
     default int minRegionBases() {
         return minRegionEnd() - minRegionStart() + 1;

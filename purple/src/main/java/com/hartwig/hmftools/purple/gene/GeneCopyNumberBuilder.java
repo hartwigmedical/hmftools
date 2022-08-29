@@ -42,7 +42,7 @@ public class GeneCopyNumberBuilder
     private SegmentSupport mMinRegionStartSupport;
     private SegmentSupport mMinRegionEndSupport;
     private CopyNumberMethod mMinRegionMethod;
-    private int mBafWindowCount;
+    private int mDepthWindowCount;
 
     public static List<GeneCopyNumber> createGeneCopyNumbers(
             final RefGenomeVersion refGenomeVersion, final EnsemblDataCache geneTransCache, final List<PurpleCopyNumber> copyNumbers)
@@ -98,7 +98,7 @@ public class GeneCopyNumberBuilder
         mMinRegionStartSupport = SegmentSupport.NONE;
         mMinRegionEndSupport = SegmentSupport.NONE;
         mMinRegionMethod = CopyNumberMethod.UNKNOWN;
-        mBafWindowCount = 0;
+        mDepthWindowCount = 0;
 
         mBuilder = ImmutableGeneCopyNumber.builder()
                 .geneName(geneData.GeneName)
@@ -147,7 +147,7 @@ public class GeneCopyNumberBuilder
                 .somaticRegions(mSomaticCount)
                 .minRegions(mMinRegions)
                 .minMinorAlleleCopyNumber(mMinMinorAllelePloidy)
-                .bafWindows(mBafWindowCount)
+                .depthWindowCount(mDepthWindowCount)
                 .build();
     }
 
@@ -205,7 +205,7 @@ public class GeneCopyNumberBuilder
                     mMinRegionEnd = copyNumber.end();
                     mMinRegionEndSupport = copyNumber.segmentEndSupport();
                     mMinRegionMethod = copyNumber.method();
-                    mBafWindowCount = copyNumber.bafCount();
+                    mDepthWindowCount = copyNumber.depthWindowCount();
 
                 }
                 else if(Doubles.equal(currentCopyNumber, mMinCopyNumber))
@@ -219,7 +219,7 @@ public class GeneCopyNumberBuilder
                         mMinRegions++;
                     }
 
-                    mBafWindowCount += copyNumber.bafCount();
+                    mDepthWindowCount += copyNumber.depthWindowCount();
                 }
             }
 

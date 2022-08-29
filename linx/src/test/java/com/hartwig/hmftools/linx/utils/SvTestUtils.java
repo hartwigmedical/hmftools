@@ -208,7 +208,7 @@ public class SvTestUtils
                 .minMinorAlleleCopyNumber(0)
                 .transName("")
                 .isCanonical(true)
-                .bafWindows(0)
+                .depthWindowCount(0)
                 .build();
     }
 
