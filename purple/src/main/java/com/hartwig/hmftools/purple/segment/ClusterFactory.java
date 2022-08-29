@@ -37,8 +37,9 @@ public class ClusterFactory
         return cluster(positions, pcfPositions, ratios);
     }
 
-    private ListMultimap<Chromosome, Cluster> cluster(final Multimap<Chromosome, SVSegment> variantPositions,
-            final Multimap<Chromosome, PCFPosition> pcfPositions, final Map<Chromosome,List<CobaltRatio>> ratios)
+    private ListMultimap<Chromosome, Cluster> cluster(
+            final Multimap<Chromosome, SVSegment> variantPositions, final Multimap<Chromosome, PCFPosition> pcfPositions,
+            final Map<Chromosome,List<CobaltRatio>> ratios)
     {
         ListMultimap<Chromosome, Cluster> clusters = ArrayListMultimap.create();
         for(Chromosome chromosome : pcfPositions.keySet())
@@ -112,7 +113,6 @@ public class ClusterFactory
     @VisibleForTesting
     int earliestDetectableCopyNumberChangePosition(int position, int index, final List<CobaltRatio> ratios)
     {
-        assert (index <= ratios.size());
         final int min = mWindow.start(position) - mWindowSize + 1;
         if(!ratios.isEmpty())
         {

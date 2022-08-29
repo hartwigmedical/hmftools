@@ -70,7 +70,8 @@ public class PurpleSegmentFactory
     @VisibleForTesting
     static List<PurpleSegment> create(final GenomePosition centromere, final GenomePosition length, final Collection<Cluster> clusters)
     {
-        return addCentromere(centromere, create(length, clusters));
+        final List<PurpleSegment> segments = create(length, clusters);
+        return addCentromere(centromere, segments);
     }
 
     private static List<PurpleSegment> create(final GenomePosition length, final Collection<Cluster> clusters)
@@ -149,7 +150,7 @@ public class PurpleSegmentFactory
                 true, variant.Position, variant.Position);
     }
 
-    private static List<PurpleSegment> addCentromere(@Nullable final GenomePosition centromere, final List<PurpleSegment> segments)
+    private static List<PurpleSegment> addCentromere(final GenomePosition centromere, final List<PurpleSegment> segments)
     {
         final List<PurpleSegment> result = Lists.newArrayList();
 
