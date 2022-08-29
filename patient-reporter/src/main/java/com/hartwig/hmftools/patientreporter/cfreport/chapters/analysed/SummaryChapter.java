@@ -300,23 +300,6 @@ public class SummaryChapter implements ReportChapter {
                 .add(new Paragraph("Genes with driver mutation").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(driverVariantGenes)));
 
-        MicrosatelliteStatus microSatelliteStabilityString =
-                analysis().hasReliablePurity() ? analysis().microsatelliteStatus() : MicrosatelliteStatus.UNKNOWN;
-        if (microSatelliteStabilityString == MicrosatelliteStatus.MSI) {
-            Set<String> genesDisplay = SomaticVariants.determineMSIgenes(analysis().reportableVariants());
-            table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                    .add(new Paragraph("Mismatch repair genes").addStyle(ReportResources.bodyTextStyle())));
-            table.addCell(createGeneListCell(sortGenes(genesDisplay)));
-        }
-
-        ChordStatus chordStatus = analysis().hasReliablePurity() ? analysis().chordHrdStatus() : ChordStatus.UNKNOWN;
-        if (chordStatus == ChordStatus.HR_DEFICIENT) {
-            Set<String> genesDisplay = SomaticVariants.determineHRDgenes(analysis().reportableVariants());
-            table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                    .add(new Paragraph("Homologous recombination deficiency genes").addStyle(ReportResources.bodyTextStyle())));
-            table.addCell(createGeneListCell(sortGenes(genesDisplay)));
-        }
-
         int reportedVariants = SomaticVariants.countReportableVariants(analysis().reportableVariants());
         Style reportedVariantsStyle =
                 (reportedVariants > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
@@ -343,6 +326,27 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Gene fusions").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(fusionGenes)));
+
+        MicrosatelliteStatus microSatelliteStabilityString =
+                analysis().hasReliablePurity() ? analysis().microsatelliteStatus() : MicrosatelliteStatus.UNKNOWN;
+        if (microSatelliteStabilityString == MicrosatelliteStatus.MSI) {
+            Set<String> genesDisplay = SomaticVariants.determineMSIgenes(analysis().reportableVariants(),
+                    analysis().gainsAndLosses(),
+                    analysis().homozygousDisruptions());
+            table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                    .add(new Paragraph("Potential MMR genes").addStyle(ReportResources.bodyTextStyle())));
+            table.addCell(createGeneListCell(sortGenes(genesDisplay)));
+        }
+
+        ChordStatus chordStatus = analysis().hasReliablePurity() ? analysis().chordHrdStatus() : ChordStatus.UNKNOWN;
+        if (chordStatus == ChordStatus.HR_DEFICIENT) {
+            Set<String> genesDisplay = SomaticVariants.determineHRDgenes(analysis().reportableVariants(),
+                    analysis().gainsAndLosses(),
+                    analysis().homozygousDisruptions());
+            table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                    .add(new Paragraph("Potential HRD genes").addStyle(ReportResources.bodyTextStyle())));
+            table.addCell(createGeneListCell(sortGenes(genesDisplay)));
+        }
 
         div.add(table);
 

@@ -7,6 +7,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
+import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -27,6 +30,7 @@ public final class SomaticVariants {
     }
 
     private static final String UPSTREAM_GENE_VARIANT = "upstream_gene_variant";
+
     @NotNull
     public static List<ReportableVariant> sort(@NotNull List<ReportableVariant> variants) {
         return variants.stream().sorted((variant1, variant2) -> {
@@ -214,7 +218,8 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static Set<String> determineMSIgenes(@NotNull List<ReportableVariant> reportableVariants) {
+    public static Set<String> determineMSIgenes(@NotNull List<ReportableVariant> reportableVariants, @NotNull List<GainLoss> gainsAndLosses,
+            @NotNull List<HomozygousDisruption> homozygousDisruptions) {
         Set<String> MSI_genes = Sets.newHashSet("MLH1", "MSH2", "MSH6", "PMS2", "EPCAM");
         Set<String> genesDisplay = Sets.newHashSet();
 
@@ -223,11 +228,25 @@ public final class SomaticVariants {
                 genesDisplay.add(variant.gene());
             }
         }
+
+        for (GainLoss gainLoss : gainsAndLosses) {
+            if (MSI_genes.contains(gainLoss.gene()) && (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
+                    || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)) {
+                genesDisplay.add(gainLoss.gene());
+            }
+        }
+
+        for (HomozygousDisruption homozygousDisruption : homozygousDisruptions) {
+            if (MSI_genes.contains(homozygousDisruption.gene())) {
+                genesDisplay.add(homozygousDisruption.gene());
+            }
+        }
         return genesDisplay;
     }
 
     @NotNull
-    public static Set<String> determineHRDgenes(@NotNull List<ReportableVariant> reportableVariants) {
+    public static Set<String> determineHRDgenes(@NotNull List<ReportableVariant> reportableVariants,
+            @NotNull List<GainLoss> gainsAndLosses, @NotNull List<HomozygousDisruption> homozygousDisruptions) {
         Set<String> HRD_genes = Sets.newHashSet("BRCA1", "BRCA2", "PALB2", "RAD51B", "RAD51C");
         Set<String> genesDisplay = Sets.newHashSet();
 
@@ -236,6 +255,20 @@ public final class SomaticVariants {
                 genesDisplay.add(variant.gene());
             }
         }
+
+        for (GainLoss gainLoss : gainsAndLosses) {
+            if (HRD_genes.contains(gainLoss.gene()) && (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
+                    || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)) {
+                genesDisplay.add(gainLoss.gene());
+            }
+        }
+
+        for (HomozygousDisruption homozygousDisruption : homozygousDisruptions) {
+            if (HRD_genes.contains(homozygousDisruption.gene())) {
+                genesDisplay.add(homozygousDisruption.gene());
+            }
+        }
+
         return genesDisplay;
     }
 }

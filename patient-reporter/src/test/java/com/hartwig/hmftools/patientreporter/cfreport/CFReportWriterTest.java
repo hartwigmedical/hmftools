@@ -7,6 +7,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
+import javax.xml.stream.XMLStreamException;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
@@ -48,7 +50,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -73,358 +75,358 @@ public class CFReportWriterTest {
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
-     //   writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
-        writer.writeXMLAnalysedFile(colo829Report, REPORT_BASE_DIR);
+        writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
 
     }
 
-//    @Test
-//    public void canGeneratePatientReportForCOLO829DisabledConfig() throws IOException {
-//        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T_disabled_config")
-//                .comments(COLO_COMMENT_STRING)
-//                .limsCohortConfig(LimsCohortTestFactory.createAllDisabledCohortConfig("COLO"))
-//                .build();
-//        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
-//        writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
-//    }
-//
-//    @Test
-//    public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
-//        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T")
-//                .isCorrectionReport(true)
-//                .comments(COLO_COMMENT_STRING_CORRECTED)
-//                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
-//                .build();
-//        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
-//        writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
-//    }
-//
-//    @Test
-//    public void canGeneratePatientReportForCOLO829WithGermline() throws IOException {
-//        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T_GERMLINE")
-//                .comments(COLO_COMMENT_STRING)
-//                .reportGermline(true)
-//                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
-//                .build();
-//        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
-//        writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
-//    }
-//
-//    @Test
-//    public void canGeneratePatientReportForCOLO829BelowDetectionThreshold() throws IOException {
-//        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T_NO_TUMOR")
-//                .comments(COLO_COMMENT_STRING)
-//                .qcForNumber(QsFormNumber.FOR_209)
-//                .hasReliablePurity(false)
-//                .includeSummary(false)
-//                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
-//                .build();
-//        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
-//        writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
-//    }
-//
-//    @Test
-//    public void canGeneratePatientReportForCOLO829InsufficientTCP() throws IOException {
-//        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T_INSUFFICIENT_TUMOR")
-//                .comments(COLO_COMMENT_STRING)
-//                .qcForNumber(QsFormNumber.FOR_209)
-//                .impliedTumorPurity(0.19)
-//                .includeSummary(false)
-//                .hasReliablePurity(true)
-//                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
-//                .build();
-//        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
-//        writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
-//    }
-//
-//    @Test
-//    public void canGeneratePatientReportForCPCTSample() throws IOException {
-//        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CPCT01_FULL")
-//                .comments(FULL_TABLES_COMMENT_STRING)
-//                .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
-//                .build();
-//        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
-//        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
-//    }
-//
-//    @Test
-//    public void canGeneratePatientReportForACTINSample() throws IOException {
-//        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("ACTN_FULL")
-//                .limsCohortConfig(LimsCohortTestFactory.createACTINCohortConfig())
-//                .build();
-//        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
-//        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
-//    }
-//
-//    @Test
-//    public void canGeneratePatientReportForCORESample() throws IOException {
-//        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CORE01_FULL")
-//                .limsCohortConfig(LimsCohortTestFactory.createCORECohortConfig())
-//                .build();
-//        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
-//        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
-//    }
-//
-//    @Test
-//    public void canGeneratePatientReportForWIDESample() throws IOException {
-//        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("WIDE01_FULL")
-//                .comments(FULL_TABLES_COMMENT_STRING)
-//                .limsCohortConfig(LimsCohortTestFactory.createWIDECohortConfig())
-//                .build();
-//        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
-//        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
-//    }
-//
-//    @Test
-//    public void canGeneratePatientReportForCOREDBSample() throws IOException {
-//        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("COREDB01_FULL")
-//                .comments(FULL_TABLES_COMMENT_STRING)
-//                .limsCohortConfig(LimsCohortTestFactory.createCOREDBCohortConfig())
-//                .build();
-//        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
-//        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
-//    }
-//
-//    @Test
-//    public void canGeneratePatientReportForBelowDetectionSample() throws IOException {
-//        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CPCT01_NO_TUMOR_FOR-209")
-//                .comments(FULL_TABLES_COMMENT_STRING)
-//                .hasReliablePurity(false)
-//                .qcForNumber(QsFormNumber.FOR_209)
-//                .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
-//                .build();
-//        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
-//        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
-//    }
-//
-//    @Test
-//    public void canGeneratePatientReportForInsufficientTCPSample() throws IOException {
-//        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CPCT01_INSUFFICIENT_TUMOR-FOR-209")
-//                .comments(FULL_TABLES_COMMENT_STRING)
-//                .impliedTumorPurity(0.19)
-//                .qcForNumber(QsFormNumber.FOR_209)
-//                .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
-//                .build();
-//        AnalysedPatientReport patientReport =
-//                ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.WARN_LOW_PURITY);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
-//        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
-//    }
-//
-//    @Test
-//    public void canGenerateInsufficientDNAReport() throws IOException {
-//        generateQCFailReport("CPCT01_insufficient_dna-FOR-082",
-//                Lims.NOT_PERFORMED_STRING,
-//                null,
-//                QCFailReason.INSUFFICIENT_DNA,
-//                false,
-//                false,
-//                COMMENT_STRING_QC_FAIL,
-//                LimsCohortTestFactory.createCPCTCohortConfig(),
-//                PurpleQCStatus.PASS);
-//    }
-//
-//    @Test
-//    public void canGenerateCorrectedInsufficientDNAReport() throws IOException {
-//        generateQCFailReport("CPCT01",
-//                Lims.NOT_PERFORMED_STRING,
-//                null,
-//                QCFailReason.INSUFFICIENT_DNA,
-//                true,
-//                true,
-//                COMMENT_STRING_QC_FAIL_CORRECTED,
-//                LimsCohortTestFactory.createCPCTCohortConfig(),
-//                PurpleQCStatus.PASS);
-//    }
-//
-//    @Test
-//    public void canGenerateCorrectedInsufficientDNAReportCOREDB() throws IOException {
-//        generateQCFailReport("COREDB",
-//                Lims.NOT_PERFORMED_STRING,
-//                null,
-//                QCFailReason.INSUFFICIENT_DNA,
-//                true,
-//                false,
-//                COMMENT_STRING_QC_FAIL_CORRECTED,
-//                LimsCohortTestFactory.createCOREDBCohortConfig(),
-//                PurpleQCStatus.PASS);
-//    }
-//
-//    @Test
-//    public void canGenerateTechnicalFailureReport() throws IOException {
-//        generateQCFailReport("CPCT02-technical_failure-FOR-102",
-//                "60%",
-//                null,
-//                QCFailReason.TECHNICAL_FAILURE,
-//                false,
-//                false,
-//                COMMENT_STRING_QC_FAIL,
-//                LimsCohortTestFactory.createCPCTCohortConfig(),
-//                PurpleQCStatus.PASS);
-//    }
-//
-//    @Test
-//    public void canGenerateSufficientTCPQCFailReport() throws IOException {
-//        generateQCFailReport("CPCT03-sufficient_tcp_qc_failure-FOR-083_Fail",
-//                "60%",
-//                "70%",
-//                QCFailReason.SUFFICIENT_TCP_QC_FAILURE,
-//                false,
-//                false,
-//                COMMENT_STRING_QC_FAIL,
-//                LimsCohortTestFactory.createCPCTCohortConfig(),
-//                PurpleQCStatus.FAIL_CONTAMINATION);
-//    }
-//
-//    @Test
-//    public void canGenerateSufficientTCPQCFailReportPASS() throws IOException {
-//        generateQCFailReport("CPCT03-sufficient_tcp_qc_failure-FOR-083_Pass",
-//                "60%",
-//                "70%",
-//                QCFailReason.SUFFICIENT_TCP_QC_FAILURE,
-//                false,
-//                false,
-//                COMMENT_STRING_QC_FAIL,
-//                LimsCohortTestFactory.createCPCTCohortConfig(),
-//                PurpleQCStatus.PASS);
-//    }
-//
-//    @Test
-//    public void canGenerateInsufficientTCPAfterDeepWGSReport() throws IOException {
-//        generateQCFailReport("CPCT04-insufficient_tcp_deep_wgs-FOR-100",
-//                "22%",
-//                "18%",
-//                QCFailReason.INSUFFICIENT_TCP_DEEP_WGS,
-//                false,
-//                false,
-//                COMMENT_STRING_QC_FAIL,
-//                LimsCohortTestFactory.createCPCTCohortConfig(),
-//                PurpleQCStatus.PASS);
-//    }
-//
-//    @Test
-//    public void canGenerateInsufficientTCPAfterShallowReport() throws IOException {
-//        generateQCFailReport("CPCT05-insufficient_tcp_shallow_wgs-FOR-100",
-//                "15%",
-//                null,
-//                QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
-//                false,
-//                false,
-//                COMMENT_STRING_QC_FAIL,
-//                LimsCohortTestFactory.createCPCTCohortConfig(),
-//                PurpleQCStatus.PASS);
-//    }
-//
-//    @Test
-//    public void canGenerateInsufficientTCPAfterShallowReportCORE() throws IOException {
-//        generateQCFailReport("CORE01",
-//                "15%",
-//                null,
-//                QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
-//                false,
-//                false,
-//                COMMENT_STRING_QC_FAIL,
-//                LimsCohortTestFactory.createCORECohortConfig(),
-//                PurpleQCStatus.PASS);
-//    }
-//
-//    @Test
-//    public void canGenerateInsufficientTCPAfterShallowReportWIDE() throws IOException {
-//        generateQCFailReport("WIDE01",
-//                "15%",
-//                null,
-//                QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
-//                false,
-//                false,
-//                COMMENT_STRING_QC_FAIL,
-//                LimsCohortTestFactory.createWIDECohortConfig(),
-//                PurpleQCStatus.PASS);
-//    }
-//
-//    @Test
-//    public void generatePanelReport() throws IOException {
-//        SampleMetadata sampleMetadata = generateSampleMetadata("Sample_panel");
-//        ReportData testReportData = PatientReporterTestFactory.loadTestReportData();
-//        SampleReport sampleReport = generateSampleReport(sampleMetadata);
-//
-//        PanelReport patientReport = ImmutablePanelReport.builder()
-//                .sampleReport(sampleReport)
-//                .qsFormNumber("form")
-//                .VCFFilename("test.vcf")
-//                .isCorrectedReport(false)
-//                .isCorrectedReportExtern(false)
-//                .signaturePath(testReportData.signaturePath())
-//                .logoCompanyPath(testReportData.logoCompanyPath())
-//                .reportDate(DataUtil.formatDate(LocalDate.now()))
-//                .isWGSreport(false)
-//                .comments("This is a test report")
-//                .build();
-//
-//        String filename = testReportFilePathPanel(patientReport);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writePanelAnalysedReport(patientReport, filename);
-//    }
-//
-//    @Test
-//    public void generateFailPanelReport() throws IOException {
-//        SampleMetadata sampleMetadata = generateSampleMetadata("sample_panel_failed");
-//        ReportData testReportData = PatientReporterTestFactory.loadTestReportData();
-//
-//        SampleReport sampleReport = generateSampleReport(sampleMetadata);
-//        PanelFailReport patientReport = ImmutablePanelFailReport.builder()
-//                .sampleReport(sampleReport)
-//                .qsFormNumber("form")
-//                .panelFailReason(PanelFailReason.PANEL_FAILURE)
-//                .isCorrectedReport(false)
-//                .isCorrectedReportExtern(false)
-//                .signaturePath(testReportData.signaturePath())
-//                .logoCompanyPath(testReportData.logoCompanyPath())
-//                .reportDate(DataUtil.formatDate(LocalDate.now()))
-//                .isWGSreport(false)
-//                .comments("This is a test report")
-//                .build();
-//
-//        String filename = testReportFilePathPanel(patientReport);
-//
-//        CFReportWriter writer = testCFReportWriter();
-//        writer.writePanelQCFailReport(patientReport, filename);
-//    }
+    @Test
+    public void canGeneratePatientReportForCOLO829DisabledConfig() throws IOException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T_disabled_config")
+                .comments(COLO_COMMENT_STRING)
+                .limsCohortConfig(LimsCohortTestFactory.createAllDisabledCohortConfig("COLO"))
+                .build();
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
+        writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
+    }
+
+    @Test
+    public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T")
+                .isCorrectionReport(true)
+                .comments(COLO_COMMENT_STRING_CORRECTED)
+                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
+                .build();
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
+        writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
+    }
+
+    @Test
+    public void canGeneratePatientReportForCOLO829WithGermline() throws IOException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T_GERMLINE")
+                .comments(COLO_COMMENT_STRING)
+                .reportGermline(true)
+                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
+                .build();
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
+        writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
+    }
+
+    @Test
+    public void canGeneratePatientReportForCOLO829BelowDetectionThreshold() throws IOException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T_NO_TUMOR")
+                .comments(COLO_COMMENT_STRING)
+                .qcForNumber(QsFormNumber.FOR_209)
+                .hasReliablePurity(false)
+                .includeSummary(false)
+                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
+                .build();
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
+        writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
+    }
+
+    @Test
+    public void canGeneratePatientReportForCOLO829InsufficientTCP() throws IOException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T_INSUFFICIENT_TUMOR")
+                .comments(COLO_COMMENT_STRING)
+                .qcForNumber(QsFormNumber.FOR_209)
+                .impliedTumorPurity(0.19)
+                .includeSummary(false)
+                .hasReliablePurity(true)
+                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
+                .build();
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
+        writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
+    }
+
+    @Test
+    public void canGeneratePatientReportForCPCTSample() throws IOException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CPCT01_FULL")
+                .comments(FULL_TABLES_COMMENT_STRING)
+                .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
+                .build();
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
+        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
+    }
+
+    @Test
+    public void canGeneratePatientReportForACTINSample() throws IOException, XMLStreamException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("ACTN_FULL")
+                .limsCohortConfig(LimsCohortTestFactory.createACTINCohortConfig())
+                .build();
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
+      //  writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
+            writer.writeXMLAnalysedFile(patientReport, REPORT_BASE_DIR);
+        }
+
+    @Test
+    public void canGeneratePatientReportForCORESample() throws IOException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CORE01_FULL")
+                .limsCohortConfig(LimsCohortTestFactory.createCORECohortConfig())
+                .build();
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
+        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
+    }
+
+    @Test
+    public void canGeneratePatientReportForWIDESample() throws IOException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("WIDE01_FULL")
+                .comments(FULL_TABLES_COMMENT_STRING)
+                .limsCohortConfig(LimsCohortTestFactory.createWIDECohortConfig())
+                .build();
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
+        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
+    }
+
+    @Test
+    public void canGeneratePatientReportForCOREDBSample() throws IOException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("COREDB01_FULL")
+                .comments(FULL_TABLES_COMMENT_STRING)
+                .limsCohortConfig(LimsCohortTestFactory.createCOREDBCohortConfig())
+                .build();
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
+        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
+    }
+
+    @Test
+    public void canGeneratePatientReportForBelowDetectionSample() throws IOException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CPCT01_NO_TUMOR_FOR-209")
+                .comments(FULL_TABLES_COMMENT_STRING)
+                .hasReliablePurity(false)
+                .qcForNumber(QsFormNumber.FOR_209)
+                .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
+                .build();
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
+        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
+    }
+
+    @Test
+    public void canGeneratePatientReportForInsufficientTCPSample() throws IOException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CPCT01_INSUFFICIENT_TUMOR-FOR-209")
+                .comments(FULL_TABLES_COMMENT_STRING)
+                .impliedTumorPurity(0.19)
+                .qcForNumber(QsFormNumber.FOR_209)
+                .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
+                .build();
+        AnalysedPatientReport patientReport =
+                ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.WARN_LOW_PURITY);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
+        writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
+    }
+
+    @Test
+    public void canGenerateInsufficientDNAReport() throws IOException {
+        generateQCFailReport("CPCT01_insufficient_dna-FOR-082",
+                Lims.NOT_PERFORMED_STRING,
+                null,
+                QCFailReason.INSUFFICIENT_DNA,
+                false,
+                false,
+                COMMENT_STRING_QC_FAIL,
+                LimsCohortTestFactory.createCPCTCohortConfig(),
+                PurpleQCStatus.PASS);
+    }
+
+    @Test
+    public void canGenerateCorrectedInsufficientDNAReport() throws IOException {
+        generateQCFailReport("CPCT01",
+                Lims.NOT_PERFORMED_STRING,
+                null,
+                QCFailReason.INSUFFICIENT_DNA,
+                true,
+                true,
+                COMMENT_STRING_QC_FAIL_CORRECTED,
+                LimsCohortTestFactory.createCPCTCohortConfig(),
+                PurpleQCStatus.PASS);
+    }
+
+    @Test
+    public void canGenerateCorrectedInsufficientDNAReportCOREDB() throws IOException {
+        generateQCFailReport("COREDB",
+                Lims.NOT_PERFORMED_STRING,
+                null,
+                QCFailReason.INSUFFICIENT_DNA,
+                true,
+                false,
+                COMMENT_STRING_QC_FAIL_CORRECTED,
+                LimsCohortTestFactory.createCOREDBCohortConfig(),
+                PurpleQCStatus.PASS);
+    }
+
+    @Test
+    public void canGenerateTechnicalFailureReport() throws IOException {
+        generateQCFailReport("CPCT02-technical_failure-FOR-102",
+                "60%",
+                null,
+                QCFailReason.TECHNICAL_FAILURE,
+                false,
+                false,
+                COMMENT_STRING_QC_FAIL,
+                LimsCohortTestFactory.createCPCTCohortConfig(),
+                PurpleQCStatus.PASS);
+    }
+
+    @Test
+    public void canGenerateSufficientTCPQCFailReport() throws IOException {
+        generateQCFailReport("CPCT03-sufficient_tcp_qc_failure-FOR-083_Fail",
+                "60%",
+                "70%",
+                QCFailReason.SUFFICIENT_TCP_QC_FAILURE,
+                false,
+                false,
+                COMMENT_STRING_QC_FAIL,
+                LimsCohortTestFactory.createCPCTCohortConfig(),
+                PurpleQCStatus.FAIL_CONTAMINATION);
+    }
+
+    @Test
+    public void canGenerateSufficientTCPQCFailReportPASS() throws IOException {
+        generateQCFailReport("CPCT03-sufficient_tcp_qc_failure-FOR-083_Pass",
+                "60%",
+                "70%",
+                QCFailReason.SUFFICIENT_TCP_QC_FAILURE,
+                false,
+                false,
+                COMMENT_STRING_QC_FAIL,
+                LimsCohortTestFactory.createCPCTCohortConfig(),
+                PurpleQCStatus.PASS);
+    }
+
+    @Test
+    public void canGenerateInsufficientTCPAfterDeepWGSReport() throws IOException {
+        generateQCFailReport("CPCT04-insufficient_tcp_deep_wgs-FOR-100",
+                "22%",
+                "18%",
+                QCFailReason.INSUFFICIENT_TCP_DEEP_WGS,
+                false,
+                false,
+                COMMENT_STRING_QC_FAIL,
+                LimsCohortTestFactory.createCPCTCohortConfig(),
+                PurpleQCStatus.PASS);
+    }
+
+    @Test
+    public void canGenerateInsufficientTCPAfterShallowReport() throws IOException {
+        generateQCFailReport("CPCT05-insufficient_tcp_shallow_wgs-FOR-100",
+                "15%",
+                null,
+                QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
+                false,
+                false,
+                COMMENT_STRING_QC_FAIL,
+                LimsCohortTestFactory.createCPCTCohortConfig(),
+                PurpleQCStatus.PASS);
+    }
+
+    @Test
+    public void canGenerateInsufficientTCPAfterShallowReportCORE() throws IOException {
+        generateQCFailReport("CORE01",
+                "15%",
+                null,
+                QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
+                false,
+                false,
+                COMMENT_STRING_QC_FAIL,
+                LimsCohortTestFactory.createCORECohortConfig(),
+                PurpleQCStatus.PASS);
+    }
+
+    @Test
+    public void canGenerateInsufficientTCPAfterShallowReportWIDE() throws IOException {
+        generateQCFailReport("WIDE01",
+                "15%",
+                null,
+                QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
+                false,
+                false,
+                COMMENT_STRING_QC_FAIL,
+                LimsCohortTestFactory.createWIDECohortConfig(),
+                PurpleQCStatus.PASS);
+    }
+
+    @Test
+    public void generatePanelReport() throws IOException {
+        SampleMetadata sampleMetadata = generateSampleMetadata("Sample_panel");
+        ReportData testReportData = PatientReporterTestFactory.loadTestReportData();
+        SampleReport sampleReport = generateSampleReport(sampleMetadata);
+
+        PanelReport patientReport = ImmutablePanelReport.builder()
+                .sampleReport(sampleReport)
+                .qsFormNumber("form")
+                .VCFFilename("test.vcf")
+                .isCorrectedReport(false)
+                .isCorrectedReportExtern(false)
+                .signaturePath(testReportData.signaturePath())
+                .logoCompanyPath(testReportData.logoCompanyPath())
+                .reportDate(DataUtil.formatDate(LocalDate.now()))
+                .isWGSreport(false)
+                .comments("This is a test report")
+                .build();
+
+        String filename = testReportFilePathPanel(patientReport);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writePanelAnalysedReport(patientReport, filename);
+    }
+
+    @Test
+    public void generateFailPanelReport() throws IOException {
+        SampleMetadata sampleMetadata = generateSampleMetadata("sample_panel_failed");
+        ReportData testReportData = PatientReporterTestFactory.loadTestReportData();
+
+        SampleReport sampleReport = generateSampleReport(sampleMetadata);
+        PanelFailReport patientReport = ImmutablePanelFailReport.builder()
+                .sampleReport(sampleReport)
+                .qsFormNumber("form")
+                .panelFailReason(PanelFailReason.PANEL_FAILURE)
+                .isCorrectedReport(false)
+                .isCorrectedReportExtern(false)
+                .signaturePath(testReportData.signaturePath())
+                .logoCompanyPath(testReportData.logoCompanyPath())
+                .reportDate(DataUtil.formatDate(LocalDate.now()))
+                .isWGSreport(false)
+                .comments("This is a test report")
+                .build();
+
+        String filename = testReportFilePathPanel(patientReport);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writePanelQCFailReport(patientReport, filename);
+    }
 
     private static SampleMetadata generateSampleMetadata(@NotNull String sampleId) {
         return ImmutableSampleMetadata.builder()

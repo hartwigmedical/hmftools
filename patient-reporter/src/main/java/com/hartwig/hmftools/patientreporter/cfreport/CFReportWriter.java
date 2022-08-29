@@ -6,8 +6,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.util.Set;
+
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -43,6 +48,9 @@ import com.hartwig.hmftools.patientreporter.cfreport.chapters.panel.SampleAndDis
 import com.hartwig.hmftools.patientreporter.panel.PanelFailReport;
 import com.hartwig.hmftools.patientreporter.panel.PanelReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
+import com.hartwig.hmftools.patientreporter.xml.ImmutableImportWGS;
+import com.hartwig.hmftools.patientreporter.xml.ImmutableSignature;
+import com.hartwig.hmftools.patientreporter.xml.ImportWGS;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -53,6 +61,7 @@ import com.itextpdf.layout.property.AreaBreakType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class CFReportWriter implements ReportWriter {
@@ -132,18 +141,58 @@ public class CFReportWriter implements ReportWriter {
         }
     }
 
-    public void writeXMLAnalysedFile(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
-        writeReportDataToXML(report, outputFilePath);
+    public void writeXMLAnalysedFile(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException, XMLStreamException {
+        ImportWGS importWGS = ImmutableImportWGS.builder()
+                .refNummerWgs(Strings.EMPTY)
+                .wgsRedenAanvraag(Strings.EMPTY)
+                .wgsGevrOndzTher(Strings.EMPTY)
+                .wgsGevrOndzTherAnd(Strings.EMPTY)
+                .wgsGevrOndzDiffDiag(Strings.EMPTY)
+                .wgsGevrOndzDiffDiagAnd(Strings.EMPTY)
+                .wgsRefNummer(Strings.EMPTY)
+                .wgsPercNeoCellenEx(Strings.EMPTY)
+                .wgsPercNeoCellenBeoord(Strings.EMPTY)
+                .wgsPercNeoCellen(Strings.EMPTY)
+                .wgsDatasheetSeqAnaPanel(Strings.EMPTY)
+                .wgsPlatform(Strings.EMPTY)
+                .wgsPlatformAnd(Strings.EMPTY)
+                .wgsTumorPurity(report.genomicAnalysis().impliedPurity())
+                .wgsGemTuPloid(report.genomicAnalysis().averageTumorPloidy())
+                .reportableVariants(report.genomicAnalysis().reportableVariants())
+                .gainsAndLosses(report.genomicAnalysis().gainsAndLosses())
+                .geneFusions(report.genomicAnalysis().geneFusions())
+                .signature(ImmutableSignature.builder()
+                        .msscore(report.genomicAnalysis().microsatelliteIndelsPerMb())
+                        .msstatus(report.genomicAnalysis().microsatelliteStatus())
+                        .tumuload(report.genomicAnalysis().tumorMutationalLoad())
+                        .tumulosta(report.genomicAnalysis().tumorMutationalLoadStatus())
+                        .tutmb(report.genomicAnalysis().tumorMutationalBurden())
+                        .horesco(report.genomicAnalysis().chordHrdValue())
+                        .horestu(report.genomicAnalysis().chordHrdStatus())
+                        .geenpv(Strings.EMPTY)
+                        .build())
+                .homozygousDisruptions(report.genomicAnalysis().homozygousDisruptions())
+                .reportableViruses(report.genomicAnalysis().reportableViruses())
+                .wgsCupAnalyse(Strings.EMPTY)
+                .wgsDisclaimerTonen(Strings.EMPTY)
+                .wgsMolecInter(Strings.EMPTY)
+                .wgsKlinInter(Strings.EMPTY)
+                .wgsAutoKMBP(Strings.EMPTY)
+                .build();
+        writeReportDataToXML(importWGS, outputFilePath, report);
     }
 
-    public void writeReportDataToXML(@NotNull PatientReport report, @NotNull String outputDirData) throws IOException {
+    public void writeReportDataToXML(@NotNull ImportWGS importWGS, @NotNull String outputDirData, @NotNull PatientReport report) throws IOException,
+            XMLStreamException {
         if (writeToFile) {
+
             XmlMapper xmlMapper = new XmlMapper();
             xmlMapper.enable(SerializationFeature.WRITE_DATE_KEYS_AS_TIMESTAMPS);
             xmlMapper.enable(SerializationFeature.WRITE_DATES_WITH_ZONE_ID);
 
             String outputFileData = outputDirData + File.separator + OutputFileUtil.generateOutputFileNameForXML(report);
-            xmlMapper.writerWithDefaultPrettyPrinter().writeValue(new File(outputFileData), report);
+            xmlMapper.writerWithDefaultPrettyPrinter().writeValue(new File(outputFileData), importWGS);
+
 
             LOGGER.info(" Created report data xml file at {} ", outputFileData);
 
