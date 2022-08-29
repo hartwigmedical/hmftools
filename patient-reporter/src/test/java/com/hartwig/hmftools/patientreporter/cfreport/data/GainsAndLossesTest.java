@@ -87,7 +87,7 @@ public class GainsAndLossesTest {
     }
 
     @NotNull
-    private static GainLoss testGainLoss(@NotNull String chromosome, @NotNull String chromosomeBand) {
+    public static GainLoss testGainLoss(@NotNull String chromosome, @NotNull String chromosomeBand) {
         return ImmutableGainLoss.builder()
                 .chromosome(chromosome)
                 .chromosomeBand(chromosomeBand)
