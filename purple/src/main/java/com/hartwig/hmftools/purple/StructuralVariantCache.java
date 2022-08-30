@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SVTYPE;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,8 +30,6 @@ import com.hartwig.hmftools.common.sv.StructuralVariantHeader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.sv.VariantContextCollection;
-import com.hartwig.hmftools.purple.sv.VariantContextCollectionDummy;
-import com.hartwig.hmftools.purple.sv.VariantContextCollectionImpl;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -55,7 +54,7 @@ public class StructuralVariantCache
 
     private final String mOutputVcfFilename;
     private final Optional<VCFHeader> mVcfHeader;
-    private final VariantContextCollection mVariants;
+    private final VariantContextCollection mVariantCollection;
     private final IndexedFastaSequenceFile mRefGenomeFile;
 
     private int mNextVarId = 0;
@@ -64,7 +63,7 @@ public class StructuralVariantCache
     {
         mVcfHeader = Optional.empty();
         mOutputVcfFilename = Strings.EMPTY;
-        mVariants = new VariantContextCollectionDummy();
+        mVariantCollection = new VariantContextCollection(null);
         mRefGenomeFile = null;
     }
 
@@ -74,26 +73,26 @@ public class StructuralVariantCache
         final VCFFileReader vcfReader = new VCFFileReader(new File(templateVCF), false);
         mOutputVcfFilename = outputVCF;
         mVcfHeader = Optional.of(generateOutputHeader(version, vcfReader.getFileHeader()));
-        mVariants = new VariantContextCollectionImpl(mVcfHeader.get());
+        mVariantCollection = new VariantContextCollection(mVcfHeader.get());
         mRefGenomeFile = referenceData.RefGenome;
 
         for(VariantContext context : vcfReader)
         {
-            mVariants.add(context);
+            mVariantCollection.add(context);
         }
 
         vcfReader.close();
     }
 
-    void addVariant(final VariantContext variantContext)
+    protected void addVariant(final VariantContext variantContext)
     {
         if(enabled())
         {
-            mVariants.add(variantContext);
+            mVariantCollection.add(variantContext);
         }
     }
 
-    void inferMissingVariant(final List<PurpleCopyNumber> copyNumbers)
+    protected void inferMissingVariant(final List<PurpleCopyNumber> copyNumbers)
     {
         if(enabled())
         {
@@ -103,7 +102,7 @@ public class StructuralVariantCache
                 if(copyNumber.segmentStartSupport() == SegmentSupport.NONE)
                 {
                     final PurpleCopyNumber prev = copyNumbers.get(i - 1);
-                    mVariants.add(infer(copyNumber, prev));
+                    mVariantCollection.add(infer(copyNumber, prev));
                 }
             }
         }
@@ -157,10 +156,15 @@ public class StructuralVariantCache
 
                 writer.writeHeader(refEnricher.enrichHeader(mVcfHeader.get()));
 
-                Iterable<VariantContext> enrichedVariants = enriched(purityAdjuster, copyNumbers);
+                VariantContextCollection enrichedCollection = getEnrichedCollection(purityAdjuster, copyNumbers);
 
-                for(VariantContext variant : enrichedVariants)
+                Iterator<VariantContext> variantIter = enrichedCollection.iterator();
+                // Iterable<VariantContext> enrichedVariants = enrichedCollection.iterator();
+
+                while(variantIter.hasNext())
                 {
+                    VariantContext variant = variantIter.next();
+
                     if(passOnly && variant.isFiltered())
                         continue;
 
@@ -172,15 +176,22 @@ public class StructuralVariantCache
         }
     }
 
-    private Iterable<VariantContext> enriched(final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers)
+    private VariantContextCollection getEnrichedCollection(final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers)
     {
         final StructuralVariantFactory svFactory = new StructuralVariantFactory(x -> true);
-        mVariants.forEach(svFactory::addVariantContext);
+
+        Iterator<VariantContext> variantIter = mVariantCollection.iterator();
+
+        while(variantIter.hasNext())
+        {
+            VariantContext variant = variantIter.next();
+            svFactory.addVariantContext(variant);
+        }
 
         final CopyNumberEnrichedStructuralVariantFactory svEnricher =
                 new CopyNumberEnrichedStructuralVariantFactory(purityAdjuster, Multimaps.fromRegions(copyNumbers));
 
-        final VariantContextCollectionImpl enrichedCollection = new VariantContextCollectionImpl(mVcfHeader.get());
+        VariantContextCollection enrichedCollection = new VariantContextCollection(mVcfHeader.get());
         for(EnrichedStructuralVariant enrichedSV : svEnricher.enrich(svFactory.results()))
         {
             final VariantContext startContext = enrichedSV.startContext();
@@ -248,11 +259,11 @@ public class StructuralVariantCache
     }
 
     @NotNull
-    public List<StructuralVariant> variants() { return mVariants.segmentationVariants(); }
+    public List<StructuralVariant> variants() { return mVariantCollection.segmentationVariants(); }
 
     int passingBnd()
     {
-        return (int) mVariants.segmentationVariants()
+        return (int) mVariantCollection.segmentationVariants()
                 .stream()
                 .filter(x -> x.filter() == null || Objects.equals(x.filter(), PASS))
                 .filter(x -> !x.type().equals(StructuralVariantType.INF))
@@ -260,7 +271,6 @@ public class StructuralVariantCache
                 .count();
     }
 
-    @NotNull
     @VisibleForTesting
     static VCFHeader generateOutputHeader(final String purpleVersion, final VCFHeader template)
     {

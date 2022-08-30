@@ -21,13 +21,13 @@ public class StructuralRefContextEnrichment implements VariantContextEnrichment
 
     private static final String REF_CONTEXT_DESCRIPTION = "Reference genome surrounding break";
 
-    private final IndexedFastaSequenceFile reference;
-    private final Consumer<VariantContext> consumer;
+    private final IndexedFastaSequenceFile mRefGenome;
+    private final Consumer<VariantContext> mConsumer;
 
     public StructuralRefContextEnrichment(final IndexedFastaSequenceFile reference, final Consumer<VariantContext> consumer)
     {
-        this.reference = reference;
-        this.consumer = consumer;
+        mRefGenome = reference;
+        mConsumer = consumer;
     }
 
     @Override
@@ -41,12 +41,12 @@ public class StructuralRefContextEnrichment implements VariantContextEnrichment
     @Override
     public void accept(final VariantContext context)
     {
-        final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(reference, context);
+        final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(mRefGenome, context);
         if(relativePositionAndRef.getFirst() > -1)
         {
             addRefContext(context, relativePositionAndRef);
         }
-        consumer.accept(context);
+        mConsumer.accept(context);
     }
 
     @Override

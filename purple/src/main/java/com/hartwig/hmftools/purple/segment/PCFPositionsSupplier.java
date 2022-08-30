@@ -13,9 +13,9 @@ public final class PCFPositionsSupplier
 {
     public static Multimap<Chromosome, PCFPosition> createPositions(final AmberData amberData, final CobaltData cobaltData)
     {
-        final Multimap<Chromosome, PCFPosition> referenceBreakPoint = cobaltData.ReferenceSegments;
-        final Multimap<Chromosome, PCFPosition> tumorBreakPoints = cobaltData.TumorSegments;
-        final Multimap<Chromosome, PCFPosition> tumorBAF = amberData.TumorSegments;
+        final Multimap<Chromosome,PCFPosition> referenceBreakPoint = cobaltData.ReferenceSegments;
+        final Multimap<Chromosome,PCFPosition> tumorBreakPoints = cobaltData.TumorSegments;
+        final Multimap<Chromosome,PCFPosition> tumorBAF = amberData.TumorSegments;
 
         PPL_LOGGER.info("merging reference and tumor ratio break points");
 

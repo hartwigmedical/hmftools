@@ -1,56 +1,57 @@
 package com.hartwig.hmftools.purple.sv;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class VariantContextCollectionImpl implements VariantContextCollection
+public class VariantContextCollection
 {
-    private final TreeSet<VariantContext> variantContexts;
-    private final List<StructuralVariant> variants = Lists.newArrayList();
+    private final TreeSet<VariantContext> mVariantContexts;
+    private final List<StructuralVariant> mVariants;
 
-    private boolean modified;
+    private boolean mModified;
 
-    public VariantContextCollectionImpl(@NotNull final VCFHeader header)
+    public VariantContextCollection(final VCFHeader header)
     {
-        variantContexts = new TreeSet<>(new VCComparator(header.getSequenceDictionary()));
+        if(header != null)
+            mVariantContexts = new TreeSet<>(new VCComparator(header.getSequenceDictionary()));
+        else
+            mVariantContexts = null;
+
+        mVariants = Lists.newArrayList();
     }
 
-    @VisibleForTesting
-    VariantContextCollectionImpl(@NotNull final List<String> contigs)
+    public void add(final VariantContext variantContext)
     {
-        variantContexts = new TreeSet<>(new VCComparator(contigs));
-    }
+        if(mVariantContexts == null)
+            return;
 
-    @Override
-    public void add(@NotNull final VariantContext variantContext)
-    {
-        modified = true;
+        mModified = true;
         if(variantContext.contains(variantContext))
         {
-            variantContexts.remove(variantContext);
-            variantContexts.add(variantContext);
+            mVariantContexts.remove(variantContext);
+            mVariantContexts.add(variantContext);
         }
     }
 
-    @Override
-    public int remove(@NotNull final Predicate<VariantContext> removePredicate)
+    public int remove(final Predicate<VariantContext> removePredicate)
     {
+        if(mVariantContexts == null)
+            return 0;
+
         int removed = 0;
-        final Iterator<VariantContext> iterator = variantContexts.iterator();
+        final Iterator<VariantContext> iterator = mVariantContexts.iterator();
         while(iterator.hasNext())
         {
             final VariantContext variantContext = iterator.next();
@@ -58,39 +59,37 @@ public class VariantContextCollectionImpl implements VariantContextCollection
             {
                 iterator.remove();
                 removed++;
-                modified = true;
+                mModified = true;
             }
         }
         return removed;
     }
 
-    @NotNull
-    @Override
     public List<StructuralVariant> segmentationVariants()
     {
-        if(modified)
-        {
-            modified = false;
-            final StructuralVariantFactory factory = new StructuralVariantFactory(new SegmentationVariantsFilter());
-            variantContexts.forEach(factory::addVariantContext);
+        if(mVariantContexts == null)
+            return Collections.emptyList();
 
-            variants.clear();
-            variants.addAll(factory.results());
+        if(mModified)
+        {
+            mModified = false;
+            final StructuralVariantFactory factory = new StructuralVariantFactory(new SegmentationVariantsFilter());
+            mVariantContexts.forEach(factory::addVariantContext);
+
+            mVariants.clear();
+            mVariants.addAll(factory.results());
         }
 
-        return variants;
+        return mVariants;
     }
 
-    @NotNull
-    @Override
     public Iterator<VariantContext> iterator()
     {
-        return variantContexts.iterator();
+        return mVariantContexts != null ? mVariantContexts.iterator() : Collections.emptyIterator();
     }
 
     private static class VCComparator extends VariantContextComparator
     {
-
         VCComparator(final List<String> contigs)
         {
             super(contigs);

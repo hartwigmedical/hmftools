@@ -32,7 +32,6 @@ public class AmberData
     private static int DEFAULT_READ_DEPTH = 100;
 
     public final Multimap<Chromosome,AmberBAF> ChromosomeBafs;
-
     public final Multimap<Chromosome,PCFPosition> TumorSegments;
 
     public final int AverageTumorDepth;

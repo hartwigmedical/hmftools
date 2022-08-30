@@ -295,8 +295,8 @@ public class PurpleApplication
         Set<String> reportedGenes = Sets.newHashSet();
         SomaticStream somaticStream = null;
 
-        final FittedRegionFactory fittedRegionFactory =
-                createFittedRegionFactory(amberData.AverageTumorDepth, cobaltChromosomes, mConfig.Fitting);
+        final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(
+                amberData.AverageTumorDepth, cobaltChromosomes, mConfig.Fitting);
 
         if(mConfig.runTumor())
         {

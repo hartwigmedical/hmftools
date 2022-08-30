@@ -272,7 +272,7 @@ public class ReferenceData
         DriverGenePanelConfig.addGenePanelOption(false, options);
     }
 
-    private static Map<Chromosome, GenomePosition> toPosition(final Map<Chromosome,Integer> longs, final Map<Chromosome, String> contigMap)
+    private static Map<Chromosome,GenomePosition> toPosition(final Map<Chromosome,Integer> longs, final Map<Chromosome, String> contigMap)
     {
         final Map<Chromosome, GenomePosition> result = Maps.newHashMap();
 
@@ -289,7 +289,7 @@ public class ReferenceData
         return result;
     }
 
-    private static Map<Chromosome, GenomePosition> fromLengths(final Collection<ChromosomeLength> lengths)
+    private static Map<Chromosome,GenomePosition> fromLengths(final Collection<ChromosomeLength> lengths)
     {
         return lengths.stream()
                 .filter(x -> HumanChromosome.contains(x.chromosome()))
