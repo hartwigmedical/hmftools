@@ -194,7 +194,8 @@ public class GenerateBedRegions
                 int regionMin = max(exon.Start, startPosition);
                 int regionMax = min(exon.End, endPosition);
 
-                RegionData regionData = new RegionData(geneData.GeneName, new ChrBaseRegion(geneData.Chromosome, regionMin, regionMax), CODING);
+                RegionData regionData = new RegionData(
+                        geneData.GeneName, new ChrBaseRegion(geneData.Chromosome, regionMin, regionMax), exon.Rank, CODING);
                 addRegion(regionData);
             }
         }
@@ -283,8 +284,6 @@ public class GenerateBedRegions
 
                 for(RegionData region : regions)
                 {
-                    region.setId(regionId++);
-
                     // BED file positions require a +1 offset
                     writer.write(String.format("%s\t%d\t%d\t%s",
                             chrStr, region.Region.start() - 1, region.Region.end(), region.idName()));

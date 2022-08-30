@@ -2,6 +2,7 @@ package com.hartwig.hmftools.geneutils.drivers;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
@@ -34,6 +35,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -95,7 +97,7 @@ public class GenerateDriverGeneFiles
     private static String formVersionFile(
             final String outputDir, final String filename, final RefGenomeVersion refGenomeVersion)
     {
-        return String.format("%s/%s", outputDir, refGenomeVersion.addVersionToFilePath(filename));
+        return format("%s/%s", outputDir, refGenomeVersion.addVersionToFilePath(filename));
     }
 
     public void process(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes) throws IOException
@@ -138,8 +140,8 @@ public class GenerateDriverGeneFiles
 
         final Map<String,List<GeneData>> chrGeneDataMap = ensemblDataCache.getChrGeneDataMap();
 
-        List<NamedBed> panelRegionsWithUtr = Lists.newArrayList();
-        List<NamedBed> panelRegionsWithoutUtr = Lists.newArrayList();
+        List<CodingRegion> panelRegionsWithUtr = Lists.newArrayList();
+        List<CodingRegion> panelRegionsWithoutUtr = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
@@ -160,50 +162,58 @@ public class GenerateDriverGeneFiles
 
                 TranscriptData transData = ensemblDataCache.getTranscriptData(geneData.GeneId, "");
 
-                List<GenomeRegion> regionsWithUtr = getTranscriptRegions(geneData, transData, true);
-                List<GenomeRegion> regionsWithoutUtr = getTranscriptRegions(geneData, transData, false);
+                List<CodingRegion> regionsWithUtr = getTranscriptRegions(geneData, transData, true);
+                List<CodingRegion> regionsWithoutUtr = getTranscriptRegions(geneData, transData, false);
 
                 // merge any overlap with the previous gene region
                 for(int i = 0; i <= 1; ++i)
                 {
-                    List<GenomeRegion> newRegions = i == 0 ? regionsWithUtr : regionsWithoutUtr;
+                    List<CodingRegion> newRegions = i == 0 ? regionsWithUtr : regionsWithoutUtr;
 
                     if(newRegions.isEmpty())
                         continue;
 
-                    List<NamedBed> allRegions = i == 0 ? panelRegionsWithUtr : panelRegionsWithoutUtr;
+                    List<CodingRegion> allRegions = i == 0 ? panelRegionsWithUtr : panelRegionsWithoutUtr;
 
                     if(allRegions.isEmpty())
                         continue;
 
-                    NamedBed lastRegion = allRegions.get(allRegions.size() - 1);
-                    if(!lastRegion.chromosome().equals(chromosome.toString()))
+                    CodingRegion lastRegion = allRegions.get(allRegions.size() - 1);
+                    if(!lastRegion.Region.Chromosome.equals(chromosome.toString()))
                         continue;
 
                     int newLastRegionEnd = 0;
                     int regionsRemoved = 0;
                     while(!newRegions.isEmpty())
                     {
-                        GenomeRegion newRegion = newRegions.get(0);
-                        if(newRegion.start() > lastRegion.end() + 1)
+                        CodingRegion newRegion = newRegions.get(0);
+                        if(newRegion.Region.start() > lastRegion.Region.end() + 1)
                             break;
 
                         // otherwise remove the new region and merge
-                        newLastRegionEnd = max(newRegion.end(), lastRegion.end());
+                        newLastRegionEnd = max(newRegion.Region.end(), lastRegion.Region.end());
                         newRegions.remove(0);
                         ++regionsRemoved;
                     }
 
                     if(newLastRegionEnd > 0)
                     {
-                        NamedBed newLastRegion = ImmutableNamedBed.builder().from(lastRegion).end(newLastRegionEnd).build();
+                        CodingRegion newLastRegion = new CodingRegion(
+                                lastRegion.Region.Chromosome, lastRegion.Region.start(), newLastRegionEnd,
+                                lastRegion.GeneName, lastRegion.ExonRank);
+
+                        // NamedBed newLastRegion = ImmutableNamedBed.builder().from(lastRegion).end(newLastRegionEnd).build();
                         allRegions.set(allRegions.size() - 1, newLastRegion);
 
                         GU_LOGGER.debug("gene({}) removed {} regions from overlap with previous region(gene={} range={}->{})",
-                                geneData.GeneName, regionsRemoved, lastRegion.name(), lastRegion.start(), lastRegion.end());
+                                geneData.GeneName, regionsRemoved, lastRegion.GeneName, lastRegion.Region.start(), lastRegion.Region.end());
                     }
                 }
 
+                panelRegionsWithUtr.addAll(regionsWithUtr);
+                panelRegionsWithoutUtr.addAll(regionsWithoutUtr);
+
+                /*
                 regionsWithUtr.stream()
                         .map(x -> ImmutableNamedBed.builder().from(x).name(geneData.GeneName).build())
                         .forEach(x -> panelRegionsWithUtr.add(x));
@@ -211,6 +221,7 @@ public class GenerateDriverGeneFiles
                 regionsWithoutUtr.stream()
                         .map(x -> ImmutableNamedBed.builder().from(x).name(geneData.GeneName).build())
                         .forEach(x -> panelRegionsWithoutUtr.add(x));
+                */
             }
         }
 
@@ -222,8 +233,11 @@ public class GenerateDriverGeneFiles
 
         try
         {
-            NamedBedFile.writeBedFile(codingWithUtr, panelRegionsWithUtr);
-            NamedBedFile.writeBedFile(coverageWithoutUtr, panelRegionsWithoutUtr);
+            List<NamedBed> bedWithUtr = panelRegionsWithUtr.stream().map(x -> x.asBed()).collect(Collectors.toList());
+            List<NamedBed> bedWithoutUtr = panelRegionsWithoutUtr.stream().map(x -> x.asBed()).collect(Collectors.toList());
+
+            NamedBedFile.writeBedFile(codingWithUtr, bedWithUtr);
+            NamedBedFile.writeBedFile(coverageWithoutUtr, bedWithoutUtr);
         }
         catch(IOException e)
         {
@@ -231,14 +245,38 @@ public class GenerateDriverGeneFiles
         }
     }
 
+    private class CodingRegion
+    {
+        public final ChrBaseRegion Region;
+        public final String GeneName;
+        public final int ExonRank;
+
+        public CodingRegion(final String chromosome, final int posStart, final int posEnd, final String geneName, final int exonRank)
+        {
+            Region = new ChrBaseRegion(chromosome, posStart, posEnd);
+            GeneName = geneName;
+            ExonRank = exonRank;
+        }
+
+        public NamedBed asBed()
+        {
+            return ImmutableNamedBed.builder()
+                    .chromosome(Region.Chromosome)
+                    .start(Region.start())
+                    .end(Region.end())
+                    .name(format("%s_%d", GeneName, ExonRank))
+                    .build();
+        }
+    }
+
     private static final int SPLICE_SIZE = 10;
 
-    private List<GenomeRegion> getTranscriptRegions(final GeneData geneData, final TranscriptData transData, boolean includeUTR)
+    private List<CodingRegion> getTranscriptRegions(final GeneData geneData, final TranscriptData transData, boolean includeUTR)
     {
         int startPosition = includeUTR || transData.nonCoding() ? transData.TransStart : transData.CodingStart;
         int endPosition = includeUTR || transData.nonCoding() ? transData.TransEnd : transData.CodingEnd;
 
-        final List<GenomeRegion> regions = Lists.newArrayList();
+        final List<CodingRegion> regions = Lists.newArrayList();
 
         for(int i = 0; i < transData.exons().size(); i++)
         {
@@ -248,7 +286,8 @@ public class GenerateDriverGeneFiles
 
             if(positionsOverlap(startPosition, endPosition, exonStart, exonEnd))
             {
-                regions.add(GenomeRegions.create(geneData.Chromosome, max(startPosition, exonStart), min(endPosition, exonEnd)));
+                regions.add(new CodingRegion(
+                        geneData.Chromosome, max(startPosition, exonStart), min(endPosition, exonEnd), geneData.GeneName, exon.Rank));
             }
         }
 

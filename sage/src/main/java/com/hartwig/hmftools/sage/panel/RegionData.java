@@ -12,29 +12,26 @@ public class RegionData
     public final String GeneName;
     public final ChrBaseRegion Region;
     public final RegionType Type;
+    public final int ExonRank;
 
     private String mExtraInfo;
-    private int mId;
 
-    public RegionData(final String geneName, final ChrBaseRegion region, final RegionType type)
+    public RegionData(final String geneName, final ChrBaseRegion region, final int exonRank, final RegionType type)
     {
         GeneName = geneName;
         Region = region;
         Type = type;
+        ExonRank = exonRank;
         mExtraInfo = "";
-        mId = 0;
     }
 
     public void setExtraInfo(final String extraInfo) { mExtraInfo = extraInfo; }
     public String getExtraInfo() { return mExtraInfo; }
 
-    public void setId(int id) { mId = id; }
-    public int id() { return mId; }
-
     public String name()
     {
         if(Type == RegionType.CODING)
-            return String.format("%s_%s", GeneName, Type);
+            return String.format("%s_%d_%s", GeneName, ExonRank, Type);
 
         if(Type == RegionType.INTRONIC)
             return String.format("%s_%s_%s", GeneName, Type, mExtraInfo);
@@ -43,7 +40,7 @@ public class RegionData
         return String.format("%s_%s_%d", GeneName, Region.Chromosome, posMidpoint);
     }
 
-    public String idName() { return String.format("%d_%s", mId, name()); }
+    public String idName() { return name(); }
 
     public String toString()
     {
@@ -56,7 +53,7 @@ public class RegionData
 
         // Chromosome,PosStart,PosEnd,GeneName,Type,Info
         ChrBaseRegion region = new ChrBaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
-        RegionData regionData = new RegionData(items[3], region, RegionType.valueOf(items[4]));
+        RegionData regionData = new RegionData(items[3], region, 0, RegionType.valueOf(items[4]));
         regionData.setExtraInfo(items[5]);
         return regionData;
     }
@@ -136,7 +133,7 @@ public class RegionData
                 RegionData preRegion = new RegionData(
                         newRegion.GeneName,
                         new ChrBaseRegion(newRegion.Region.Chromosome, newRegion.Region.start(), region.Region.start() - 1),
-                        newRegion.Type);
+                        newRegion.ExonRank, newRegion.Type);
 
                 preRegion.setExtraInfo(newRegion.getExtraInfo());
 

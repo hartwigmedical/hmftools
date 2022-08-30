@@ -103,7 +103,7 @@ public class Coverage
     private static String extractGeneName(final String name)
     {
         if(name.contains(GENE_EXON_DELIM))
-            return name.split(GENE_EXON_DELIM, 2)[0];
+            return name.split(GENE_EXON_DELIM, -1)[0];
 
         return name;
     }
@@ -111,7 +111,7 @@ public class Coverage
     private static int extractExonRank(final String name, final int index)
     {
         if(name.contains(GENE_EXON_DELIM))
-            return Integer.parseInt(name.split(GENE_EXON_DELIM, 2)[1]);
+            return Integer.parseInt(name.split(GENE_EXON_DELIM, -1)[1]);
 
         return index;
     }
