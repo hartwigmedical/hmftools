@@ -13,7 +13,7 @@ public abstract class AnnotatedVirus {
 
     public abstract int taxid();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "name")
+    @JacksonXmlProperty(localName = "name")
     @NotNull
     public abstract String name();
 

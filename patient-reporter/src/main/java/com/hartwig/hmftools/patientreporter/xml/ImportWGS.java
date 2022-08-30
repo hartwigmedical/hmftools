@@ -24,105 +24,105 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ImportWGS {
 
-    @JacksonXmlProperty(isAttribute = true, localName = "refNummerWgs")
+    @JacksonXmlProperty(localName = "refNummerWgs")
     @NotNull
     public abstract String refNummerWgs();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsRedenAanvraag")
+    @JacksonXmlProperty(localName = "wgsRedenAanvraag")
     @NotNull
     public abstract String wgsRedenAanvraag();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsGevrOndzTher")
+    @JacksonXmlProperty(localName = "wgsGevrOndzTher")
     @NotNull
     public abstract String wgsGevrOndzTher();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsGevrOndzTherAnd")
+    @JacksonXmlProperty(localName = "wgsGevrOndzTherAnd")
     @NotNull
     public abstract String wgsGevrOndzTherAnd();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsGevrOndzDiffDiag")
+    @JacksonXmlProperty(localName = "wgsGevrOndzDiffDiag")
     @NotNull
     public abstract String wgsGevrOndzDiffDiag();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsGevrOndzDiffDiagAnd")
+    @JacksonXmlProperty(localName = "wgsGevrOndzDiffDiagAnd")
     @NotNull
     public abstract String wgsGevrOndzDiffDiagAnd();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsRefNummer")
+    @JacksonXmlProperty(localName = "wgsRefNummer")
     @NotNull
     public abstract String wgsRefNummer();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsPercNeoCellenEx")
+    @JacksonXmlProperty(localName = "wgsPercNeoCellenEx")
     @NotNull
     public abstract String wgsPercNeoCellenEx();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsPercNeoCellenBeoord")
+    @JacksonXmlProperty(localName = "wgsPercNeoCellenBeoord")
     @NotNull
     public abstract String wgsPercNeoCellenBeoord();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsPercNeoCellen")
+    @JacksonXmlProperty(localName = "wgsPercNeoCellen")
     @NotNull
     public abstract String wgsPercNeoCellen();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsDatasheetSeqAnaPanel")
+    @JacksonXmlProperty(localName = "wgsDatasheetSeqAnaPanel")
     @NotNull
     public abstract String wgsDatasheetSeqAnaPanel();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsPlatform")
+    @JacksonXmlProperty(localName = "wgsPlatform")
     @NotNull
     public abstract String wgsPlatform();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsPlatformAnd")
+    @JacksonXmlProperty(localName = "wgsPlatformAnd")
     @NotNull
     public abstract String wgsPlatformAnd();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsTumorPurity")
+    @JacksonXmlProperty(localName = "wgsTumorPurity")
     public abstract double wgsTumorPurity();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsGemTuPloid")
+    @JacksonXmlProperty(localName = "wgsGemTuPloid")
     public abstract double wgsGemTuPloid();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "reportableVariants")
+    @JacksonXmlProperty(localName = "reportableVariants")
     @NotNull
     public abstract List<ReportableVariant> reportableVariants();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "gainsAndLosses")
+    @JacksonXmlProperty(localName = "gainsAndLosses")
     @NotNull
     public abstract List<GainLoss> gainsAndLosses();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "geneFusions")
+    @JacksonXmlProperty(localName = "geneFusions")
     @NotNull
     public abstract List<LinxFusion> geneFusions();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "signature")
+    @JacksonXmlProperty( localName = "signature")
     @NotNull
     public abstract Signature signature();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "homozygousDisruptions")
+    @JacksonXmlProperty(localName = "homozygousDisruptions")
     @NotNull
     public abstract List<HomozygousDisruption> homozygousDisruptions();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "reportableViruses")
+    @JacksonXmlProperty(localName = "reportableViruses")
     @NotNull
     public abstract List<AnnotatedVirus> reportableViruses();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsCupAnalyse")
+    @JacksonXmlProperty(localName = "wgsCupAnalyse")
     @NotNull
     public abstract String wgsCupAnalyse();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsDisclaimerTonen")
+    @JacksonXmlProperty(localName = "wgsDisclaimerTonen")
     @NotNull
     public abstract String wgsDisclaimerTonen();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsMolecInter")
+    @JacksonXmlProperty(localName = "wgsMolecInter")
     @NotNull
     public abstract String wgsMolecInter();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsKlinInter")
+    @JacksonXmlProperty(localName = "wgsKlinInter")
     @NotNull
     public abstract String wgsKlinInter();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "wgsAutoKMBP")
+    @JacksonXmlProperty(localName = "wgsAutoKMBP")
     @NotNull
     public abstract String wgsAutoKMBP();
 

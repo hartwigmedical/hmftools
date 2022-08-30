@@ -15,31 +15,31 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Signature {
 
-    @JacksonXmlProperty(isAttribute = true, localName = "msscore")
+    @JacksonXmlProperty(localName = "msscore")
     public abstract double msscore();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "msstatus")
+    @JacksonXmlProperty(localName = "msstatus")
     @NotNull
     public abstract MicrosatelliteStatus msstatus();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "tumuload")
+    @JacksonXmlProperty(localName = "tumuload")
     public abstract int tumuload();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "tumulosta")
+    @JacksonXmlProperty(localName = "tumulosta")
     @NotNull
     public abstract TumorMutationalStatus tumulosta();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "tutmb")
+    @JacksonXmlProperty( localName = "tutmb")
     public abstract double tutmb();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "horesco")
+    @JacksonXmlProperty(localName = "horesco")
     public abstract double horesco();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "horestu")
+    @JacksonXmlProperty(localName = "horestu")
     @NotNull
     public abstract ChordStatus horestu();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "geenpv")
+    @JacksonXmlProperty(localName = "geenpv")
     @NotNull
     public abstract String geenpv();
 

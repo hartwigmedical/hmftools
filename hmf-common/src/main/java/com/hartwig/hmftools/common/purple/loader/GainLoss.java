@@ -11,19 +11,19 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GainLoss {
 
-    @JacksonXmlProperty(isAttribute = true, localName = "type")
+    @JacksonXmlProperty(localName = "type")
     @NotNull
     public abstract CopyNumberInterpretation interpretation();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "chr")
+    @JacksonXmlProperty(localName = "chr")
     @NotNull
     public abstract String chromosome();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "region")
+    @JacksonXmlProperty(localName = "region")
     @NotNull
     public abstract String chromosomeBand();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "gene")
+    @JacksonXmlProperty(localName = "gene")
     @NotNull
     public abstract String gene();
 
@@ -32,9 +32,9 @@ public abstract class GainLoss {
 
     public abstract boolean isCanonical();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "minCopies")
+    @JacksonXmlProperty(localName = "minCopies")
     public abstract long minCopies();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "maxCopies")
+    @JacksonXmlProperty( localName = "maxCopies")
     public abstract long maxCopies();
 }
