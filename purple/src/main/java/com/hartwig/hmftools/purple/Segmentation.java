@@ -48,6 +48,30 @@ public class Segmentation
 
         final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(mWindowSize, cobaltData.CobaltChromosomes);
 
-        return observedRegionFactory.combine(segments, amberData.ChromosomeBafs, cobaltData.Ratios, mGcProfiles);
+        List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, amberData.ChromosomeBafs, cobaltData.Ratios, mGcProfiles);
+
+        // correct the start position to the mid-point of the min and max start
+        for(int i = 0; i < observedRegions.size(); ++i)
+        {
+            ObservedRegion observedRegion = observedRegions.get(i);
+
+            if(observedRegion.minStart() < observedRegion.maxStart())
+            {
+                int midpoint = (observedRegion.minStart() + observedRegion.maxStart()) / 2;
+                observedRegion.setStart(midpoint);
+
+                if(i > 0)
+                {
+                    ObservedRegion prevRegion = observedRegions.get(i - 1);
+
+                    if(prevRegion.chromosome().equals(observedRegion.chromosome()))
+                    {
+                        prevRegion.setEnd(midpoint - 1);
+                    }
+                }
+            }
+        }
+
+        return observedRegions;
     }
 }

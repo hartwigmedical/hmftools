@@ -37,7 +37,6 @@ public class PurpleConfig
     public final ChartConfig Charting;
     public final boolean TargetRegionsMode;
     public final Map<VariantTier,Integer> TierQualFilters;
-    public final List<String> SpecificChromosomes;
 
     private boolean mIsValid;
 
@@ -103,8 +102,6 @@ public class PurpleConfig
         Fitting = new FittingConfig(cmd);
         SomaticFitting = new SomaticFitConfig(cmd);
         TargetRegionsMode = cmd.hasOption(TARGET_REGION_BED);
-
-        SpecificChromosomes = loadSpecificChromsomes(cmd);
 
         RunDrivers = cmd.hasOption(RUN_DRIVERS);
         DriversOnly = cmd.hasOption(DRIVERS_ONLY);
@@ -180,7 +177,6 @@ public class PurpleConfig
         ReferenceData.addOptions(options);
         ChartConfig.addOptions(options);
         SampleDataFiles.addOptions(options);
-        addSpecificChromosomesRegionsConfig(options);
     }
 
     private static String parameter(final CommandLine cmd, final String parameter, final StringJoiner missing)
