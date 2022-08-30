@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.sage.coverage;
 
 import static com.hartwig.hmftools.sage.SageCommon.DELIM;
-import static com.hartwig.hmftools.sage.coverage.GeneCoverage.DEPTH_BUCKETS;
-import static com.hartwig.hmftools.sage.coverage.GeneCoverage.MAX_DEPTH_BUCKET;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.coverage.GeneDepth.MAX_DEPTH_BUCKET;
+import static com.hartwig.hmftools.sage.coverage.GeneDepth.DEPTH_BUCKETS;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
@@ -18,9 +18,16 @@ import org.jetbrains.annotations.NotNull;
 
 public final class GeneDepthFile
 {
-    public static void write(@NotNull final String filename, @NotNull final List<GeneDepth> depths) throws IOException
+    public static void write(final String filename, final List<GeneDepth> depths)
     {
-        Files.write(new File(filename).toPath(), toLines(depths));
+        try
+        {
+            Files.write(new File(filename).toPath(), toLines(depths));
+        }
+        catch(IOException e)
+        {
+            SG_LOGGER.error("failed to write gene coverage file: {}", e.toString());
+        }
     }
 
     @NotNull
@@ -41,7 +48,11 @@ public final class GeneDepthFile
     {
         StringJoiner joiner = new StringJoiner(DELIM);
 
-        joiner.add("gene").add("missedVariantLikelihood");
+        joiner.add("gene");
+        joiner.add("chromosome");
+        joiner.add("posStart");
+        joiner.add("posEnd");
+        joiner.add("missedVariantLikelihood");
 
         for(int bucket = 0; bucket < DEPTH_BUCKETS.size() - 1; ++bucket)
         {
@@ -63,11 +74,13 @@ public final class GeneDepthFile
         return joiner.toString();
     }
 
-    @NotNull
-    static String toString(@NotNull final GeneDepth depth)
+    private static String toString(final GeneDepth depth)
     {
         StringJoiner joiner = new StringJoiner(DELIM);
         joiner.add(depth.Gene);
+        joiner.add(depth.Chromosome);
+        joiner.add(String.valueOf(depth.PosStart));
+        joiner.add(String.valueOf(depth.PosEnd));
         joiner.add(String.format("%.4f", depth.MissedVariantLikelihood));
 
         for(int i : depth.DepthCounts)
@@ -77,5 +90,4 @@ public final class GeneDepthFile
 
         return joiner.toString();
     }
-
 }

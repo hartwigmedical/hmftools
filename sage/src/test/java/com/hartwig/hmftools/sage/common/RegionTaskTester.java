@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -51,7 +50,7 @@ public class RegionTaskTester
         HighConfidenceRegions = Lists.newArrayList();
         QualityRecalibrationMap = Maps.newHashMap();
         PhaseSetCounter = new PhaseSetCounter();
-        Coverage = new Coverage(Sets.newHashSet(), Collections.EMPTY_LIST);
+        Coverage = new Coverage(Lists.newArrayList(), Collections.EMPTY_LIST);
 
         SamSlicerFactory = new SamSlicerFactory();
 

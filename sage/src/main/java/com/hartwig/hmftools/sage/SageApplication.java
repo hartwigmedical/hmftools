@@ -6,17 +6,14 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageCommon.calcMemoryUsage;
 import static com.hartwig.hmftools.sage.SageCommon.logMemoryUsage;
-import static com.hartwig.hmftools.sage.coverage.GeneCoverage.populateCoverageBuckets;
+import static com.hartwig.hmftools.sage.coverage.GeneDepth.populateCoverageBuckets;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Set;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.coverage.Coverage;
-import com.hartwig.hmftools.sage.coverage.GeneDepthFile;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
 import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
@@ -107,11 +104,7 @@ public class SageApplication implements AutoCloseable
             System.gc();
         }
 
-        for(String sample : coverage.samples())
-        {
-            String filename = mConfig.geneCoverageFile(sample);
-            GeneDepthFile.write(filename, coverage.depth(sample));
-        }
+        coverage.writeFiles(mConfig.OutputFile);
 
         long endTime = System.currentTimeMillis();
         double runTime = (endTime - startTime) / 1000.0;
@@ -139,14 +132,7 @@ public class SageApplication implements AutoCloseable
     private Coverage createCoverage()
     {
         populateCoverageBuckets();
-
-        Set<String> samples = Sets.newHashSet();
-        if(!mConfig.CoverageBed.isEmpty())
-        {
-            samples.addAll(mConfig.TumorIds);
-        }
-
-        return new Coverage(samples, mRefData.CoveragePanel.values());
+        return new Coverage(mConfig.TumorIds, mRefData.CoveragePanel.values());
     }
 
     @Override

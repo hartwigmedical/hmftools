@@ -362,13 +362,6 @@ public class SageConfig
         return options;
     }
 
-    public String geneCoverageFile(final String sample)
-    {
-        String filename = sample + ".sage.gene.coverage.tsv";
-        String parent = new File(OutputFile).getParent();
-        return parent == null ? filename : parent + File.separator + filename;
-    }
-
     public SageConfig()
     {
         SampleDataDir = "";

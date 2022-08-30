@@ -1,44 +1,41 @@
 package com.hartwig.hmftools.sage.coverage;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 
-import java.util.function.Consumer;
+import java.util.List;
 
-import com.hartwig.hmftools.common.genome.bed.NamedBed;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.VectorUtils;
+
+import org.apache.commons.compress.utils.Lists;
 
 public class ExonCoverage
 {
-    private final NamedBed mExon;
+    private final GenomeRegion mRegion;
+    private final int mExonRank;
     private final int[] mBaseCoverage;
 
-    ExonCoverage(final NamedBed exon)
+    public ExonCoverage(final GenomeRegion region, final int exonRank)
     {
-        mExon = exon;
-        mBaseCoverage = new int[exon.bases()];
+        mRegion = region;
+        mExonRank = exonRank;
+        mBaseCoverage = new int[region.bases()];
     }
 
-    public int[] coverage()
-    {
-        return mBaseCoverage;
-    }
-    public String gene()
-    {
-        return mExon.name();
-    }
+    public final GenomeRegion region() { return mRegion; }
+    public int exonRank() { return mExonRank; }
 
-    public String chromosome()
-    {
-        return mExon.chromosome();
-    }
+    public int[] coverage() { return mBaseCoverage;}
 
-    public int start() { return mExon.start(); }
-
-    public int end() { return mExon.end(); }
+    public String chromosome() { return mRegion.chromosome(); }
+    public int start() { return mRegion.start(); }
+    public int end() { return mRegion.end(); }
 
     public void processRead(int readStartPos, int readEndPos)
     {
-        if(!positionsOverlap(readStartPos, readEndPos, mExon.start(), mExon.end()))
+        if(!positionsOverlap(readStartPos, readEndPos, mRegion.start(), mRegion.end()))
             return;
 
         int startPosition = Math.max(start(), readStartPos);
@@ -56,6 +53,20 @@ public class ExonCoverage
         }
     }
 
+    public double medianDepth()
+    {
+        List<Double> depths = Lists.newArrayList();
+
+        for(int i = 0; i < mBaseCoverage.length; ++i)
+        {
+            VectorUtils.optimisedAdd(depths, mBaseCoverage[i], true);
+        }
+
+        int medianIndex = mBaseCoverage.length / 2;
+        return depths.get(medianIndex);
+    }
 
     private int index(int position) { return position - start(); }
+
+    public String toString() { return format("rank(%d) region(%s)", mExonRank, mRegion.toString()); }
 }

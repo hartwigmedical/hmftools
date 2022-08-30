@@ -11,7 +11,6 @@ import org.junit.Test;
 
 public class ExonCoverageTest
 {
-
     @Test
     public void testAlignmentBefore()
     {
@@ -84,17 +83,14 @@ public class ExonCoverageTest
         }
     }
 
-    @NotNull
     private ChrBaseRegion alignment(int start, int end)
     {
         return new ChrBaseRegion("1", start, end);
     }
 
-    @NotNull
     private ExonCoverage exon(String gene, int start, int end)
     {
         NamedBed bed = ImmutableNamedBed.builder().chromosome("1").name(gene).start(start).end(end).build();
-        return new ExonCoverage(bed);
+        return new ExonCoverage(bed, 1);
     }
-
 }
