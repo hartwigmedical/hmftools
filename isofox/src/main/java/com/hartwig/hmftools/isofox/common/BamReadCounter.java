@@ -114,7 +114,7 @@ public class BamReadCounter implements Callable
             if(currentGeneIndex >= nextLogCount)
             {
                 nextLogCount += 100;
-                ISF_LOGGER.info("chromosome({}) processed {} genes, totalReads({})",
+                ISF_LOGGER.debug("chromosome({}) processed {} genes, totalReads({})",
                         mChromosome, currentGeneIndex, mTotalReadCount);
             }
 

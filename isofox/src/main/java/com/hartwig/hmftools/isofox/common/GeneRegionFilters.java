@@ -65,7 +65,6 @@ public class GeneRegionFilters
         options.addOption(RESTRICTED_GENE_IDS, true, "Optional list of Ensmebl GeneIds separated by ';'");
         options.addOption(ENRICHED_GENE_IDS, true, "Optional list of geneIds to treat as enriched");
         addSpecificChromosomesRegionsConfig(options);
-        options.addOption(SPECIFIC_REGIONS, true, SPECIFIC_REGIONS_DESC);
     }
 
     public void loadConfig(final CommandLine cmd) throws Exception

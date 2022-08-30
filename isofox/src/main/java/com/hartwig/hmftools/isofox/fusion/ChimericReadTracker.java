@@ -32,6 +32,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.samtools.SoftClipSide;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
@@ -130,25 +131,32 @@ public class ChimericReadTracker
 
     public void registerKnownFusionPairs(final EnsemblDataCache geneTransCache)
     {
-        for(final KnownFusionData knownPair : mConfig.Fusions.KnownFusions.getDataByType(KNOWN_PAIR))
+        List<KnownFusionType> knownTypes = Lists.newArrayList(KNOWN_PAIR, PROMISCUOUS_5, PROMISCUOUS_3);
+
+        for(KnownFusionType type : knownTypes)
         {
-            final GeneData upGene = geneTransCache.getGeneDataByName(knownPair.FiveGene);
-            final GeneData downGene = geneTransCache.getGeneDataByName(knownPair.ThreeGene);
+            List<KnownFusionData> typeData = mConfig.Fusions.KnownFusions.getDataByType(type);
 
-            if(upGene != null && downGene != null)
+            if(typeData == null)
+                continue;
+
+            for(final KnownFusionData knownData : typeData)
             {
-                mKnownPairGeneIds.add(new String[] { upGene.GeneId, downGene.GeneId });
+                final GeneData upGene = !knownData.FiveGene.isEmpty() ? geneTransCache.getGeneDataByName(knownData.FiveGene) : null;
+                final GeneData downGene = !knownData.ThreeGene.isEmpty() ? geneTransCache.getGeneDataByName(knownData.ThreeGene) : null;
 
-                mReferenceKnownGeneIds.add(upGene.GeneId);
-                mReferenceKnownGeneIds.add(downGene.GeneId);
+                if(type == KNOWN_PAIR && upGene != null && downGene != null)
+                {
+                    mKnownPairGeneIds.add(new String[] { upGene.GeneId, downGene.GeneId });
+                }
+
+                if(upGene != null)
+                    mReferenceKnownGeneIds.add(upGene.GeneId);
+
+                if(downGene != null)
+                    mReferenceKnownGeneIds.add(downGene.GeneId);
             }
         }
-
-        mConfig.Fusions.KnownFusions.getDataByType(PROMISCUOUS_5)
-                .forEach(x -> mReferenceKnownGeneIds.add(geneTransCache.getGeneDataByName(x.FiveGene).GeneId));
-
-        mConfig.Fusions.KnownFusions.getDataByType(PROMISCUOUS_3)
-                .forEach(x -> mReferenceKnownGeneIds.add(geneTransCache.getGeneDataByName(x.ThreeGene).GeneId));
     }
 
     public void initialise(final GeneCollection geneCollection)
