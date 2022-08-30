@@ -41,6 +41,7 @@ public class GermlineSvData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
+        values.add(String.format("%s", SvData.Reported));
         values.add(String.format("%d", SvData.GermlineFragments));
         return values;
     }
