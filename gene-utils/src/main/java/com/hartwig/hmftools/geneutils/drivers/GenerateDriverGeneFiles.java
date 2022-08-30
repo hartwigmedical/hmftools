@@ -179,7 +179,7 @@ public class GenerateDriverGeneFiles
                         continue;
 
                     CodingRegion lastRegion = allRegions.get(allRegions.size() - 1);
-                    if(!lastRegion.Region.Chromosome.equals(chromosome.toString()))
+                    if(!lastRegion.Chromosome.equals(chromosome.toString()))
                         continue;
 
                     int newLastRegionEnd = 0;
@@ -187,11 +187,11 @@ public class GenerateDriverGeneFiles
                     while(!newRegions.isEmpty())
                     {
                         CodingRegion newRegion = newRegions.get(0);
-                        if(newRegion.Region.start() > lastRegion.Region.end() + 1)
+                        if(newRegion.start() > lastRegion.end() + 1)
                             break;
 
                         // otherwise remove the new region and merge
-                        newLastRegionEnd = max(newRegion.Region.end(), lastRegion.Region.end());
+                        newLastRegionEnd = max(newRegion.end(), lastRegion.end());
                         newRegions.remove(0);
                         ++regionsRemoved;
                     }
@@ -199,29 +199,19 @@ public class GenerateDriverGeneFiles
                     if(newLastRegionEnd > 0)
                     {
                         CodingRegion newLastRegion = new CodingRegion(
-                                lastRegion.Region.Chromosome, lastRegion.Region.start(), newLastRegionEnd,
+                                lastRegion.Chromosome, lastRegion.start(), newLastRegionEnd,
                                 lastRegion.GeneName, lastRegion.ExonRank);
 
                         // NamedBed newLastRegion = ImmutableNamedBed.builder().from(lastRegion).end(newLastRegionEnd).build();
                         allRegions.set(allRegions.size() - 1, newLastRegion);
 
                         GU_LOGGER.debug("gene({}) removed {} regions from overlap with previous region(gene={} range={}->{})",
-                                geneData.GeneName, regionsRemoved, lastRegion.GeneName, lastRegion.Region.start(), lastRegion.Region.end());
+                                geneData.GeneName, regionsRemoved, lastRegion.GeneName, lastRegion.start(), lastRegion.end());
                     }
                 }
 
                 panelRegionsWithUtr.addAll(regionsWithUtr);
                 panelRegionsWithoutUtr.addAll(regionsWithoutUtr);
-
-                /*
-                regionsWithUtr.stream()
-                        .map(x -> ImmutableNamedBed.builder().from(x).name(geneData.GeneName).build())
-                        .forEach(x -> panelRegionsWithUtr.add(x));
-
-                regionsWithoutUtr.stream()
-                        .map(x -> ImmutableNamedBed.builder().from(x).name(geneData.GeneName).build())
-                        .forEach(x -> panelRegionsWithoutUtr.add(x));
-                */
             }
         }
 
@@ -245,15 +235,14 @@ public class GenerateDriverGeneFiles
         }
     }
 
-    private class CodingRegion
+    private class CodingRegion extends ChrBaseRegion
     {
-        public final ChrBaseRegion Region;
         public final String GeneName;
         public final int ExonRank;
 
         public CodingRegion(final String chromosome, final int posStart, final int posEnd, final String geneName, final int exonRank)
         {
-            Region = new ChrBaseRegion(chromosome, posStart, posEnd);
+            super(chromosome, posStart, posEnd);
             GeneName = geneName;
             ExonRank = exonRank;
         }
@@ -261,9 +250,9 @@ public class GenerateDriverGeneFiles
         public NamedBed asBed()
         {
             return ImmutableNamedBed.builder()
-                    .chromosome(Region.Chromosome)
-                    .start(Region.start())
-                    .end(Region.end())
+                    .chromosome(Chromosome)
+                    .start(start())
+                    .end(end())
                     .name(format("%s_%d", GeneName, ExonRank))
                     .build();
         }
