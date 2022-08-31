@@ -160,7 +160,7 @@ public class HighDepthTask implements Callable
                 else
                 {
                     // extend the region
-                    currentRegion.Region.setEnd(position);
+                    currentRegion.setEnd(position);
                     currentRegion.DepthMax = max(currentRegion.DepthMax, baseDepth);
                 }
             }
@@ -169,7 +169,7 @@ public class HighDepthTask implements Callable
                 if(currentRegion == null)
                     continue;
 
-                if(position - currentRegion.Region.end() < HIGH_DEPTH_REGION_MAX_GAP) // continue checking but don't extend the region
+                if(position - currentRegion.end() < HIGH_DEPTH_REGION_MAX_GAP) // continue checking but don't extend the region
                     continue;
 
                 // end this region

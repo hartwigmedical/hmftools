@@ -98,7 +98,7 @@ public class HighDepthFinder
             for(HighDepthRegion region : regions)
             {
                 writer.write(format("%s,%d,%d,%d,%d",
-                        region.Region.Chromosome, region.Region.start(), region.Region.end(), region.DepthMin, region.DepthMax));
+                        region.Chromosome, region.start(), region.end(), region.DepthMin, region.DepthMax));
                 writer.newLine();
             }
         }
