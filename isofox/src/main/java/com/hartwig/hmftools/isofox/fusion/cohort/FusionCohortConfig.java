@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
-import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
 import static com.hartwig.hmftools.isofox.fusion.FusionConfig.FUSION_COHORT_FILE;
 
 import org.apache.commons.cli.CommandLine;
@@ -64,7 +64,6 @@ public class FusionCohortConfig
         options.addOption(WRITE_COMBINED_FUSIONS, false, "Write a combined file with passing fusion");
         options.addOption(FIND_UNKNOWN_SPLICE, false, "Find known splice to unknown mappings");
         options.addOption(LINE_ELEMENTS_FILE, true, "Line elements file");
-
-        options.addOption(KNOWN_FUSIONS_FILE, true, "Known fusion file");
+        addKnownFusionFileOption(options);
     }
 }

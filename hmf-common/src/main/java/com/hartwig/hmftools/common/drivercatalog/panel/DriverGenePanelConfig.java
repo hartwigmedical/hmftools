@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.drivercatalog.panel;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 
@@ -16,9 +17,7 @@ public final class DriverGenePanelConfig
     public static final String DRIVER_GENE_PANEL_OPTION = "driver_gene_panel";
     public static final String DRIVER_GENE_PANEL_OPTION_DESC = "Path to driver gene panel";
 
-    private DriverGenePanelConfig()
-    {
-    }
+    private DriverGenePanelConfig() {}
 
     public static void addGenePanelOption(boolean isRequired, final Options options)
     {
@@ -36,5 +35,20 @@ public final class DriverGenePanelConfig
     public static List<DriverGene> driverGenes(@NotNull final CommandLine cmd) throws IOException
     {
         return DriverGeneFile.read(cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION));
+    }
+
+    public static List<DriverGene> loadDriverGenes(final CommandLine cmd)
+    {
+        if(!isConfigured(cmd))
+            return Lists.newArrayList();
+
+        try
+        {
+            return DriverGeneFile.read(cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION));
+        }
+        catch(IOException e)
+        {
+            return Lists.newArrayList();
+        }
     }
 }

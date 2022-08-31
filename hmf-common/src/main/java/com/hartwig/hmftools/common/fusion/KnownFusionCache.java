@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -56,6 +57,11 @@ public class KnownFusionCache
 
         // initialise to avoid having to check for null
         Arrays.stream(KnownFusionType.values()).filter(x -> x != NONE).forEach(x -> mDataByType.put(x, Lists.newArrayList()));
+    }
+
+    public static void addKnownFusionFileOption(final Options options)
+    {
+        options.addOption(KNOWN_FUSIONS_FILE, true, KNOWN_FUSIONS_FILE_DESC);
     }
 
     public boolean hasValidData() { return mHasValidData; }

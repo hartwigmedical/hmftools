@@ -6,7 +6,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
-import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE_DESC;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
@@ -431,7 +431,7 @@ public class FusionCompare
         options.addOption(FUSION_FILE_NEW, true, "New fusions file");
         addSampleIdFile(options);
         options.addOption(MIN_SPLIT_FRAGS, true, "Min split frags for comparisons");
-        options.addOption(KNOWN_FUSIONS_FILE, true, KNOWN_FUSIONS_FILE_DESC);
+        addKnownFusionFileOption(options);
         addLoggingOptions(options);
         addOutputOptions(options);
 

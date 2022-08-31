@@ -3,6 +3,8 @@ package com.hartwig.hmftools.linx;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -289,12 +291,12 @@ public class LinxApplication
     {
         final Options options = new Options();
         addDatabaseCmdLineArgs(options);
-        options.addOption(ENSEMBL_DATA_DIR, true, "Optional: Ensembl data cache directory");
+        addEnsemblDir(options);
         options.addOption(FILTER_QC_PASS, false, "Optional: If present will filter out QC-fail sample");
 
         // allow sub-components to add their specific config
         LinxConfig.addCmdLineArgs(options);
-        FusionFinder.addCmdLineArgs(options);
+        addKnownFusionFileOption(options);
         FusionDisruptionAnalyser.addCmdLineArgs(options);
 
         return options;

@@ -54,14 +54,12 @@ public class EnsemblDataCache
     private final List<GeneData> mAlternativeGeneData;
     private final List<String> mRestrictedGeneIdList = Lists.newArrayList();
 
-    public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir"; // eventually deprecated
     public static final String ENSEMBL_DATA_DIR = "ensembl_data_dir";
     public static final String ENSEMBL_DATA_DIR_CFG = "Ensembl data file directory";
 
     public EnsemblDataCache(final CommandLine cmd, final RefGenomeVersion refGenomeVersion)
     {
-        this(cmd.hasOption(ENSEMBL_DATA_DIR) ?
-                cmd.getOptionValue(ENSEMBL_DATA_DIR) : cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), refGenomeVersion);
+        this(cmd.getOptionValue(ENSEMBL_DATA_DIR), refGenomeVersion);
     }
 
     public EnsemblDataCache(final String dataPath, final RefGenomeVersion refGenomeVersion)
@@ -89,7 +87,6 @@ public class EnsemblDataCache
     public static void addEnsemblDir(final Options options)
     {
         options.addOption(ENSEMBL_DATA_DIR, true, ENSEMBL_DATA_DIR_CFG);
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, ENSEMBL_DATA_DIR_CFG);
     }
 
     public void setRestrictedGeneIdList(final List<String> geneIds)

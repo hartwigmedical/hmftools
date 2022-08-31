@@ -21,9 +21,7 @@ public final class DriverGeneFile
     private static final String DELIMITER = "\t";
     private static final String OTHER_TRANS_DELIM = ";";
 
-    private DriverGeneFile()
-    {
-    }
+    private DriverGeneFile() {}
 
     public static void write(@NotNull final String filename, @NotNull final List<DriverGene> driverGenes) throws IOException
     {

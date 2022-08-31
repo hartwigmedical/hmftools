@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 
-import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
@@ -66,11 +65,6 @@ public class FusionFinder
 
     public boolean hasValidConfigData() { return mKnownFusionCache.hasValidData(); }
     public void setLogInvalidReasons(boolean toggle) { mLogInvalidReasons = toggle; }
-
-    public static void addCmdLineArgs(Options options)
-    {
-        options.addOption(KNOWN_FUSIONS_FILE, true, "Known fusion file");
-    }
 
     public final KnownFusionCache getKnownFusionCache() { return mKnownFusionCache; }
 
