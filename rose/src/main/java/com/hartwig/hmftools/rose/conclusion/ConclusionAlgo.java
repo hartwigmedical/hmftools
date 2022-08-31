@@ -80,7 +80,6 @@ public class ConclusionAlgo {
         List<AnnotatedVirus> reportableViruses = roseData.virusInterpreter().reportableViruses();
 
         genertateTumorLocationConclusion(conclusion, roseData.patientPrimaryTumors(), roseData.patientId());
-        generatePurityConclusion(conclusion, roseData.purple().purity(), roseData.purple().hasReliablePurity(), actionabilityMap);
         generateCUPPAConclusion(conclusion, roseData.molecularTissueOrigin(), actionabilityMap);
         generateVariantConclusion(conclusion,
                 reportableVariants,
@@ -110,6 +109,7 @@ public class ConclusionAlgo {
         generateTMBConclusion(conclusion, roseData.purple().tumorMutationalBurdenPerMb(), actionabilityMap, oncogenic, actionable);
 
         generateTotalResults(conclusion, actionabilityMap, oncogenic, actionable);
+        generatePurityConclusion(conclusion, roseData.purple().purity(), roseData.purple().hasReliablePurity(), actionabilityMap);
         generateFindings(conclusion, actionabilityMap);
 
         return ImmutableActionabilityConclusion.builder().conclusion(conclusion).build();
@@ -344,7 +344,8 @@ public class ConclusionAlgo {
                         .build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
-                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " " + entry.conclusion());
+                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " (" + fusion.geneContextStart() + " - "
+                            + fusion.geneContextEnd() + ") " + entry.conclusion());
                     actionable.add("fusion");
                 }
             } else if (fusion.reportedType().equals(KnownFusionType.EXON_DEL_DUP.toString())) {
@@ -352,7 +353,8 @@ public class ConclusionAlgo {
                         ImmutableActionabilityKey.builder().match(fusion.geneStart()).type(TypeAlteration.INTERNAL_DELETION).build();
                 ActionabilityEntry entry = actionabilityMap.get(keyFusion);
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
-                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " " + entry.conclusion());
+                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " (" + fusion.geneContextStart() + " - "
+                            + fusion.geneContextEnd() + ") " + entry.conclusion());
                     actionable.add("fusion");
                 }
             } else if (FUSION_TYPES.contains(fusion.reportedType())) {
@@ -365,10 +367,12 @@ public class ConclusionAlgo {
                 ActionabilityEntry entryEnd = actionabilityMap.get(keyFusionEnd);
 
                 if (entryStart != null && entryStart.condition() == Condition.ALWAYS) {
-                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " " + entryStart.conclusion());
+                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " (" + fusion.geneContextStart() + " - "
+                            + fusion.geneContextEnd() + ") " + entryStart.conclusion());
                     actionable.add("fusion");
                 } else if (entryEnd != null && entryEnd.condition() == Condition.ALWAYS) {
-                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " " + entryEnd.conclusion());
+                    conclusion.add("- " + fusion.geneStart() + " - " + fusion.geneEnd() + " (" + fusion.geneContextStart() + " - "
+                            + fusion.geneContextEnd() + ") " + entryEnd.conclusion());
                     actionable.add("fusion");
                 }
             }
