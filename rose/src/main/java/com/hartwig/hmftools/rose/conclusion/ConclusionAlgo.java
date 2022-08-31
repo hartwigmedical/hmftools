@@ -194,99 +194,81 @@ public class ConclusionAlgo {
             @NotNull Set<String> oncogenic, @NotNull Set<String> actionable, @NotNull Set<String> HRD, @NotNull ChordData chordAnalysis) {
 
         Map<String, List<VariantKey>> variantKeyList = Maps.newHashMap();
-        Map<String, VariantKey> mergedVariantKeyList = Maps.newHashMap();
 
         for (ReportableVariant reportableVariant : reportableVariants) {
-            Set<String> variantAnnotation = Sets.newHashSet();
-            if (variantKeyList.get(reportableVariant.gene()) == null) {
+            List<VariantKey> variantKeys = Lists.newArrayList();
+            VariantKey variantKey = ImmutableVariantKey.builder()
+                    .gene(reportableVariant.gene())
+                    .variantAnnotation(EventGenerator.variantEvent(reportableVariant))
+                    .driverInterpretation(reportableVariant.driverLikelihoodInterpretation())
+                    .bialleic(reportableVariant.biallelic())
+                    .build();
 
-                variantAnnotation.add(EventGenerator.variantEvent(reportableVariant));
-                String variant = String.join(",", variantAnnotation);
-
+            if (variantKeyList.containsKey(reportableVariant.gene())){
+                variantKeys.addAll(variantKeyList.get(reportableVariant.gene()));
+                variantKeys.add(variantKey);
                 variantKeyList.put(reportableVariant.gene(),
-                        List.of(ImmutableVariantKey.builder()
-                                .gene(reportableVariant.gene())
-                                .variantAnnotation(variant)
-                                .driverInterpretation(reportableVariant.driverLikelihoodInterpretation())
-                                .bialleic(reportableVariant.biallelic())
-                                .build()));
+                        variantKeys);
             } else {
-                List<VariantKey> variantsMerged = Lists.newArrayList();
-                List<VariantKey> variants = variantKeyList.get(reportableVariant.gene());
-                variantsMerged.addAll(variants);
-
-                variantAnnotation.add(EventGenerator.variantEvent(reportableVariant));
-                String variant = String.join(",", variantAnnotation);
-
+                variantKeys.add(variantKey);
                 variantKeyList.put(reportableVariant.gene(),
-                        List.of(ImmutableVariantKey.builder()
-                                .gene(reportableVariant.gene())
-                                .variantAnnotation(variant)
-                                .driverInterpretation(reportableVariant.driverLikelihoodInterpretation())
-                                .bialleic(false)
-                                .build()));
-
-                variantsMerged.addAll(variantKeyList.get(reportableVariant.gene()));
-                variantKeyList.put(reportableVariant.gene(), variantsMerged);
+                        variantKeys);
             }
         }
 
-        for (Map.Entry<String, List<VariantKey>> entry : variantKeyList.entrySet()) {
-            if (entry.getValue().size() == 1) {
-                mergedVariantKeyList.put(entry.getKey(), entry.getValue().get(0));
-
-            } else {
-                StringJoiner joiner = new StringJoiner(",");
-                for (VariantKey key : entry.getValue()) {
-                    joiner.add(key.variantAnnotation());
-                }
-                mergedVariantKeyList.put(entry.getKey(),
-                        ImmutableVariantKey.builder().from(entry.getValue().get(0)).variantAnnotation(joiner.toString()).build());
-            }
-        }
-
-        for (Map.Entry<String, VariantKey> key : mergedVariantKeyList.entrySet()) {
+        for (Map.Entry<String, List<VariantKey>> keyMap : variantKeyList.entrySet()) {
             boolean HRDgene = false;
-
-            if (HRD_GENES.contains(key.getValue().gene())) {
-                HRD.add(key.getValue().gene());
-                HRDgene = true;
-            }
-            oncogenic.add("variant");
-
             TypeAlteration alteration = TypeAlteration.UNKNOWN;
-            if (key.getValue().gene().equals("KRAS") && key.getValue().variantAnnotation().equals("p.Gly12Cys")) {
-                alteration = TypeAlteration.ACTIVATING_MUTATION_KRAS_G12C;
-            } else if (driverGenesMap.get(key.getValue().gene()).likelihoodType().equals(DriverCategory.ONCO)) {
-                alteration = TypeAlteration.ACTIVATING_MUTATION;
-            } else if (driverGenesMap.get(key.getValue().gene()).likelihoodType().equals(DriverCategory.TSG)) {
-                alteration = TypeAlteration.INACTIVATION;
+
+            Set<Boolean> biallelic = Sets.newHashSet();
+            StringJoiner variantMerging = new StringJoiner(",");
+            for (VariantKey key : keyMap.getValue()) {
+                if (HRD_GENES.contains(keyMap.getKey())) {
+                    HRD.add(keyMap.getKey());
+                    HRDgene = true;
+                }
+                oncogenic.add("variant");
+
+                if (keyMap.getKey().equals("KRAS") && key.variantAnnotation().equals("p.Gly12Cys")) {
+                    alteration = TypeAlteration.ACTIVATING_MUTATION_KRAS_G12C;
+                } else if (driverGenesMap.get(key.gene()).likelihoodType().equals(DriverCategory.ONCO)) {
+                    alteration = TypeAlteration.ACTIVATING_MUTATION;
+                } else if (driverGenesMap.get(key.gene()).likelihoodType().equals(DriverCategory.TSG)) {
+                    alteration = TypeAlteration.INACTIVATION;
+                }
+
+                variantMerging.add(key.variantAnnotation());
+                biallelic.add(key.bialleic());
             }
 
-            ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder().match(key.getValue().gene()).type(alteration).build();
+            ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder().match(keyMap.getKey()).type(alteration).build();
             ActionabilityEntry entry = actionabilityMap.get(keySomaticVariant);
             if (entry != null) {
-                if ((key.getValue().driverInterpretation() == DriverInterpretation.HIGH && entry.condition() == Condition.ONLY_HIGH)
-                        || entry.condition() == Condition.ALWAYS_NO_ACTIONABLE) {
+                if ((keyMap.getValue().get(0).driverInterpretation() == DriverInterpretation.HIGH
+                        && entry.condition() == Condition.ONLY_HIGH) || entry.condition() == Condition.ALWAYS_NO_ACTIONABLE) {
                     if (entry.condition() == Condition.ONLY_HIGH) {
                         actionable.add("variant");
                     }
-                    if (driverGenesMap.get(key.getValue().gene()).likelihoodType().equals(DriverCategory.TSG) && !key.getValue()
-                            .bialleic()) {
+                    Boolean biallelicBoolean = false;
+                    if (biallelic.size() > 1) {
+                        biallelicBoolean = false;
+                    } else if (biallelic.size()==1) {
+                        biallelicBoolean = biallelic.stream().findFirst().get();
+                    }
+
+                    if (driverGenesMap.get(keyMap.getKey()).likelihoodType().equals(DriverCategory.TSG) && !biallelicBoolean) {
                         ActionabilityKey keyBiallelic =
                                 ImmutableActionabilityKey.builder().match("NOT_BIALLELIC").type(TypeAlteration.NOT_BIALLELIC).build();
                         ActionabilityEntry entryBiallelic = actionabilityMap.get(keyBiallelic);
                         if (entryBiallelic.condition() == Condition.OTHER) {
-                            conclusion.add(
-                                    "- " + key.getValue().gene() + " (" + key.getValue().variantAnnotation() + ") " + entry.conclusion()
-                                            + " " + entryBiallelic.conclusion());
+                            conclusion.add("- " + keyMap.getKey() + " (" + variantMerging + ") " + entry.conclusion() + " "
+                                    + entryBiallelic.conclusion());
                         }
                     } else {
-                        conclusion.add(
-                                "- " + key.getValue().gene() + " (" + key.getValue().variantAnnotation() + ") " + entry.conclusion());
+                        conclusion.add("- " + keyMap.getKey() + " (" + variantMerging + ") " + entry.conclusion());
                     }
                 } else if (HRDgene && chordAnalysis.hrStatus() == ChordStatus.HR_DEFICIENT) {
-                    conclusion.add("- " + key.getValue().gene() + " (" + key.getValue().variantAnnotation() + ") " + entry.conclusion());
+                    conclusion.add("- " + keyMap.getKey() + " (" + variantMerging + ") " + entry.conclusion());
                     actionable.add("variant");
                 }
             }
