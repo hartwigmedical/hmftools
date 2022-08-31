@@ -60,7 +60,7 @@ public class AnalysedPatientReporter {
                 patientPrimaryTumor,
                 config.allowDefaultCohortConfig());
 
-        String clinicalSummary = config.addRose() || config.roseTsv() != null ? RoseConclusionFile.read(config.roseTsv()) : null;
+        String clinicalSummary = config.addRose() || config.roseTsv() != null ? RoseConclusionFile.read(config.roseTsv()) : Strings.EMPTY;
         String specialRemark = reportData.specialRemarkModel().findSpecialRemarkForSample(sampleMetadata.tumorSampleId());
 
         String pipelineVersion = null;
@@ -159,7 +159,7 @@ public class AnalysedPatientReporter {
                         : Strings.EMPTY);
         LOGGER.info(" Shallow seq purity: {}", report.sampleReport().shallowSeqPurityString());
         LOGGER.info(" Lab SOPs used: {}", report.sampleReport().labProcedures());
-        LOGGER.info(" Clinical summary present: {}", (!report.clinicalSummary().isEmpty() ? "yes" : "no"));
+        LOGGER.info(" Clinical summary present: {}", (report.clinicalSummary() != null ? "yes" : "no"));
         LOGGER.info(" Special remark present: {}", (!report.specialRemark().isEmpty() ? "yes" : "no"));
 
         LOGGER.info(" Cohort: {}", report.sampleReport().cohort().cohortId());
