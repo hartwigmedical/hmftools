@@ -22,7 +22,7 @@ public final class SampleReportFactory {
     }
 
     @Nullable
-    public static String interpretRefBarcode(@Nullable String refSampleBarcode){
+    public static String interpretRefBarcode(@Nullable String refSampleBarcode) {
         String interpretRefSampleBarcode = Strings.EMPTY;
         if (refSampleBarcode != null) {
             if (refSampleBarcode.contains("-")) {
@@ -45,11 +45,14 @@ public final class SampleReportFactory {
         String refSampleId = sampleMetadata.refSampleId();
         String tumorSampleBarcode = sampleMetadata.tumorSampleBarcode();
         String tumorSampleId = sampleMetadata.tumorSampleId();
+        String tumorReceivedSampleId = lims.tumorReceicedSampleId(tumorSampleBarcode);
+        String referenceReceivedSampleId =
+                interpretRefSampleBarcode != null ? lims.referenceTumorSampleId(interpretRefSampleBarcode) : null;
 
         LocalDate arrivalDateRefSample = null;
 
         if (interpretRefSampleBarcode != null && refSampleId != null) {
-            if (!interpretRefSampleBarcode.equals(refSampleId) || !tumorSampleBarcode.equals(tumorSampleId)){
+            if (!interpretRefSampleBarcode.equals(refSampleId) || !tumorSampleBarcode.equals(tumorSampleId)) {
                 // Don't need to check for anonymised runs
                 lims.validateSampleBarcodeCombination(interpretRefSampleBarcode, refSampleId, tumorSampleBarcode, tumorSampleId);
             }
@@ -85,6 +88,8 @@ public final class SampleReportFactory {
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
+                .tumorReceivedSampleId(tumorReceivedSampleId)
+                .referenceReceivedSampleId(referenceReceivedSampleId)
                 .patientPrimaryTumor(patientPrimaryTumor)
                 .biopsyLocation(curatedBiopsyLocation)
                 .germlineReportingLevel(lims.germlineReportingChoice(tumorSampleBarcode, allowDefaultCohortConfig))
@@ -112,14 +117,14 @@ public final class SampleReportFactory {
             String[] curatedBiopsyLocation = biopsyLocation.split("_");
             if (curatedBiopsyLocation.length == 2) {
                 curated = curatedBiopsyLocation[1];
-                curated = curated.substring(0,1).toUpperCase() + curated.substring(1);
+                curated = curated.substring(0, 1).toUpperCase() + curated.substring(1);
             } else if (curatedBiopsyLocation.length == 1) {
                 curated = "Other";
             }
         } else {
             if (biopsyLocation != null && !biopsyLocation.equals(Strings.EMPTY)) {
                 curated = biopsyLocation;
-                curated = curated.substring(0,1).toUpperCase() + curated.substring(1);
+                curated = curated.substring(0, 1).toUpperCase() + curated.substring(1);
             }
         }
         return curated;

@@ -145,16 +145,16 @@ public class QCFailDisclaimerChapter implements ReportChapter {
     private Paragraph reportIsBasedOnTumorSampleArrivedAt() {
         return createContentParagraphTwice("This experiment is performed on the tumor sample which arrived on ",
                 DataUtil.formatDate(failReport.sampleReport().tumorArrivalDate()),
-                " with internal tumor barcode ",
-                failReport.sampleReport().tumorSampleBarcode());
+                " with barcode ",
+                failReport.sampleReport().tumorReceivedSampleId());
     }
 
     @NotNull
     private Paragraph reportIsBasedOnBloodSampleArrivedAt() {
         return createContentParagraphTwice("This experiment is performed on the blood sample which arrived on ",
                 DataUtil.formatDate(failReport.sampleReport().refArrivalDate()),
-                " with internal blood barcode ",
-                DataUtil.formatNullableString(failReport.sampleReport().refSampleBarcode()));
+                " with barcode ",
+                DataUtil.formatNullableString(failReport.sampleReport().referenceReceivedSampleId()));
     }
 
     @NotNull

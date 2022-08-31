@@ -28,8 +28,16 @@ abstract class LimsJsonSampleData {
     public abstract String refBarcode();
 
     @NotNull
+    @SerializedName("received_sample_id_tumor")
+    public abstract String tumorRecievedSampleId();
+
+    @NotNull
     @SerializedName("sample_id")
     public abstract String tumorBarcode();
+
+    @NotNull
+    @SerializedName("received_sample_id_barcode")
+    public abstract String referenceReceivedSampleId();
 
     @NotNull
     @SerializedName("arrival_date")

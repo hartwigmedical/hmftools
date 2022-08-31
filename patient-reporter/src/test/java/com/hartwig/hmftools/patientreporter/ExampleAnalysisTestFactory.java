@@ -354,6 +354,8 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
+                .tumorReceivedSampleId("FB123")
+                .referenceReceivedSampleId("FB123")
                 .patientPrimaryTumor(ImmutablePatientPrimaryTumor.builder()
                         .patientIdentifier(sample)
                         .location("Skin")

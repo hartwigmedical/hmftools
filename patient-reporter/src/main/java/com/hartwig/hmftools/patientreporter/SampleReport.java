@@ -22,6 +22,12 @@ public abstract class SampleReport {
     @NotNull
     public abstract SampleMetadata sampleMetadata();
 
+    @NotNull
+    public abstract String tumorReceivedSampleId();
+
+    @Nullable
+    public abstract String referenceReceivedSampleId();
+
     @Nullable
     public abstract PatientPrimaryTumor patientPrimaryTumor();
 
