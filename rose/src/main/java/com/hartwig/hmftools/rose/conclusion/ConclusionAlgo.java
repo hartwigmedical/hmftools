@@ -247,10 +247,8 @@ public class ConclusionAlgo {
                     if (entry.condition() == Condition.ONLY_HIGH) {
                         actionable.add("variant");
                     }
-                    Boolean biallelicBoolean = false;
-                    if (biallelic.size() > 1) {
-                        biallelicBoolean = false;
-                    } else if (biallelic.size() == 1) {
+                    boolean biallelicBoolean = false;
+                    if (biallelic.size() == 1) {
                         biallelicBoolean = biallelic.stream().findFirst().get();
                     }
 
