@@ -19,33 +19,6 @@ data class GeneLocation(val chromosome: String, val posStart: Int, val posEnd: I
     }
 }
 
-enum class VJ
-{
-    V, J
-}
-
-// make this a inner type of VJGene
-// create a new type called IgLocus to house IGH, TRA, TRB etc
-// note: IGH, TRA etc are locus, IGHV, TRAJ etc are gene segments
-//
-enum class VJGeneType(val vj: VJ)
-{
-    IGHV(VJ.V),
-    IGHJ(VJ.J),
-    IGKV(VJ.V),
-    IGKJ(VJ.J),
-    IGLV(VJ.V),
-    IGLJ(VJ.J),
-    TRAV(VJ.V),
-    TRAJ(VJ.J),
-    TRBV(VJ.V),
-    TRBJ(VJ.J),
-    TRDV(VJ.V),
-    TRDJ(VJ.J),
-    TRGV(VJ.V),
-    TRGJ(VJ.J);
-}
-
 data class VJAnchorTemplate
     (
     val id: String,
@@ -57,12 +30,7 @@ data class VJAnchorTemplate
     val anchorLocation: GeneLocation?
 )
 {
-    val type: VJGeneType
-
-    init
-    {
-        type = VJGeneType.valueOf(name.take(4))
-    }
+    val type: VJGeneType = VJGeneType.valueOf(name.take(4))
 
     val vj: VJ get() { return type.vj }
     val anchorAminoAcidSequence: String = Codons.aminoAcidFromBases(anchorSequence)

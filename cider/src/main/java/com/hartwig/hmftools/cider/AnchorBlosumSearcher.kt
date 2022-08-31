@@ -2,6 +2,8 @@ package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.common.codon.Codons
 import org.apache.logging.log4j.LogManager
+import org.eclipse.collections.api.collection.ImmutableCollection
+import org.eclipse.collections.api.set.SetIterable
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -19,7 +21,7 @@ data class AnchorBlosumMatch(
     val anchorStart: Int,
     val anchorEnd: Int,
     val templateAnchorSeq: String,
-    val templateGenes: Collection<VJAnchorTemplate>,
+    val templateGenes: ImmutableCollection<VJAnchorTemplate>,
     val similarityScore: Int)
 
 // create a very simple interface so we can mock the data
@@ -32,7 +34,7 @@ interface IAnchorBlosumSearcher
 // we want to return a score of whether a sequence
 // looks like an anchor
 class AnchorBlosumSearcher(
-    val vjGeneStore: VJGeneStore,
+    val ciderGeneDatastore: CiderGeneDatastore,
     minPartialAnchorAminoAcidLength: Int,
     val allowNegativeSimilarity: Boolean) : IAnchorBlosumSearcher
 {
@@ -43,7 +45,7 @@ class AnchorBlosumSearcher(
     {
         sLogger.trace("finding anchor for {}, seq: {}, offset: {}-{}", targetAnchorGeneType, dnaSeq, startOffset, endOffset)
 
-        val templateAnchorSequences : Set<String> = vjGeneStore.getAnchorSequenceSet(targetAnchorGeneType)
+        val templateAnchorSequences : SetIterable<String> = ciderGeneDatastore.getAnchorSequenceSet(targetAnchorGeneType)
         val anchorBlosumMatches = ArrayList<AnchorBlosumMatch>()
 
         if (targetAnchorGeneType.vj == VJ.J)
@@ -161,7 +163,7 @@ class AnchorBlosumSearcher(
                     dnaSeq, geneType, potentialAnchor
                 )*/
 
-                val templateGenes: Collection<VJAnchorTemplate> = vjGeneStore.getByAnchorSequence(geneType, templateAnchorSeq)
+                val templateGenes: ImmutableCollection<VJAnchorTemplate> = ciderGeneDatastore.getByAnchorSequence(geneType, templateAnchorSeq)
                 val anchorBlosumMatch = AnchorBlosumMatch(anchorStart = anchorStart, anchorEnd = anchorEnd,
                     templateAnchorSeq = templateAnchorSeq,
                     templateGenes = templateGenes, similarityScore = score)

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
+import org.eclipse.collections.api.collection.ImmutableCollection
 
 interface VJAnchor
 {
@@ -17,7 +18,7 @@ data class VJAnchorByBlosum(
     override val geneType: VJGeneType,
     override val anchorBoundary: Int,
     override val templateAnchorSeq: String,
-    val templateGenes: Collection<VJAnchorTemplate>,
+    val templateGenes: ImmutableCollection<VJAnchorTemplate>,
     val similarityScore: Int
 ) : VJAnchor
 {

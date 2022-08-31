@@ -1,98 +1,134 @@
-package com.hartwig.hmftools.cider
+package com.hartwig.hmftools.cider.generator
 
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.ParameterException
 import com.beust.jcommander.UnixStyleUsageFormatter
+import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.common.codon.Codons
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache
+import com.hartwig.hmftools.common.gene.GeneData
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
-import com.hartwig.hmftools.common.sequence.SequenceAligner
 import com.hartwig.hmftools.common.utils.FileWriterUtils
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
+import com.hartwig.hmftools.common.utils.config.RefGenomeVersionConverter
 import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.samtools.util.SequenceUtil.reverseComplement
 import org.apache.commons.csv.CSVFormat
-import org.apache.commons.csv.CSVRecord
 import org.apache.logging.log4j.LogManager
-import java.io.*
+import java.io.File
+import java.io.IOException
 import kotlin.system.exitProcess
 
+// should rename to VjAnchorTemplateGenerator
 // simple utility to find the anchor sequence for each gene
 // example usage:
-// -imgt human_IMGT+C.fa
-// -gene_loc hg19_bcrtcr.fa
+// java -cp VjTemplateGeneWriter
+// -imgt IMGT_genes.fasta
+// -ref_genome_version 37
 // -ref_genome /data/resources/bucket/reference_genome/37/Homo_sapiens.GRCh37.GATK.illumina.fasta
-// -output jv_anchor.tsv
+// -ensembl_data_dir /data/resources/public/ensembl_data_cache/37
+// -output igtcr_anchor.37.tsv
 class VjTemplateGeneWriter
 {
     @Parameter(names = ["-imgt"], required = true, description = "Input IMGT fasta file")
-    var inputImgtFasta: String = ""
+    lateinit var inputImgtFasta: String
 
-    @Parameter(names = ["-gene_loc"], required = true, description = "Input gene location fasta file")
-    var inputGeneLocFasta: String = ""
+    @Parameter(
+        names = ["-" + RefGenomeVersion.REF_GENOME_VERSION],
+        required = true,
+        description = RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC,
+        converter = RefGenomeVersionConverter::class)
+    lateinit var refGenomeVersion: RefGenomeVersion
 
     @Parameter(names = ["-ref_genome"], required = true, description = "Reference genome fasta file")
-    var refGenome: String = ""
+    lateinit var refGenome: String
+
+    @Parameter(names = ["-" + EnsemblDataCache.ENSEMBL_DATA_DIR], required = true, description = EnsemblDataCache.ENSEMBL_DATA_DIR_CFG)
+    lateinit var ensemblDataDir: String
 
     @Parameter(names = ["-output"], required = true, description = "Output TSV file")
-    var outputTsv: String = ""
+    lateinit var outputTsv: String
 
     fun run(): Int
     {
         val refGenomeFile = IndexedFastaSequenceFile(File(refGenome))
 
-        val imgtFaFile = FastaSequenceFile(File(inputImgtFasta), false)
+        val imgtFastaFile = FastaSequenceFile(File(inputImgtFasta), false)
 
-        val geneLocMap: Map<String, Pair<GeneLocation, String>> = geneLocationMap()
+        val ensemblDataCache = EnsemblDataCache(ensemblDataDir, refGenomeVersion)
+        val ensemblLoadOk = ensemblDataCache.load(true)
+
+        if (!ensemblLoadOk)
+        {
+            sLogger.error("Ensembl data cache load failed")
+            throw RuntimeException("Ensembl data cache load failed")
+        }
 
         val VJAnchorTemplateList: MutableList<VJAnchorTemplate> = ArrayList()
 
         while (true)
         {
-            val sequence = imgtFaFile.nextSequence()
+            val sequence = imgtFastaFile.nextSequence()
 
             if (sequence == null)
                 break
 
-            //sLogger.info(sequence.name)
-
-            val toks = sequence.name.split('*')
+            val geneAllele = sequence.name.split('|')[1]
+            val toks = geneAllele.split('*')
 
             if (toks.size < 2)
             {
-                sLogger.info("skipping gene: ${sequence.name}")
+                sLogger.info("skipping gene: ${geneAllele}")
                 continue
             }
 
             val geneName = toks[0]
             val allele = toks[1]
 
-            // find gene location
-            var (geneLoc: GeneLocation?, geneLocSeq: String?) = geneLocMap.getOrDefault(geneName, Pair(null, null))
-
-            // sLogger.info("gene: ${geneName}, allele: ${allele}, geneLoc: ${geneLoc}")
-
-            val seqStringWithGaps = sequence.baseString!!
+            val seqStringWithGaps = sequence.baseString!!.uppercase()
             val seqString = seqStringWithGaps.replace(".", "")
 
-            // we want to fix up the gene location if there is mismatch
-            if (geneLoc != null && geneLocSeq != null)
+            // we only need to worry about V and J genes, so we query the IGHV
+            val vjGeneType: VJGeneType
+
+            try
             {
-                geneLoc = correctGeneLocation(seqString, geneLocSeq, geneLoc, 20, 30)
+                vjGeneType = VJGeneType.valueOf(geneName.take(4))
+            }
+            catch (e: IllegalArgumentException)
+            {
+                // don't worry about it if it is not a valid type
+                continue
+            }
+
+            sLogger.info("processing gene: {}", geneAllele)
+
+            // find gene location
+            val geneEnsemblData: GeneData? = ensemblDataCache.getGeneDataByName(geneName)
+            var geneLoc: GeneLocation? = null
+
+            if (geneEnsemblData != null)
+            {
+                geneLoc = GeneLocation(
+                    geneEnsemblData.Chromosome, geneEnsemblData.GeneStart, geneEnsemblData.GeneEnd,
+                    if (geneEnsemblData.forwardStrand()) Strand.FORWARD else Strand.REVERSE
+                )
+
+                // sLogger.info("gene: ${geneName}, allele: ${allele}, geneLoc: ${geneLoc}")
+
+                // we want to fix up the gene location if there is mismatch
+                val refSeq = queryRefSequence(refGenomeFile, geneLoc)
+                geneLoc = correctGeneLocation(seqString, refSeq, geneLoc, 20, 30)
             }
 
             var VJAnchorTemplate: VJAnchorTemplate? = null
 
             // if (geneLoc != null)
 
-            if (geneName.startsWith("IGHV") ||
-                geneName.startsWith("IGKV") ||
-                geneName.startsWith("IGLV") ||
-                geneName.startsWith("TRAV") ||
-                geneName.startsWith("TRBV") ||
-                geneName.startsWith("TRDV") ||
-                geneName.startsWith("TRGV"))
+            if (vjGeneType.vj == VJ.V)
             {
                 // for V gene it should be
 
@@ -149,16 +185,10 @@ class VjTemplateGeneWriter
                 // v gene
                 sLogger.info("IGHV gene: {}, anchor: {}, offset from end: {}, anchor AA: {}", geneName, anchor, anchorOffsetFromEnd, aaSeq)
 
-                VJAnchorTemplate = VJAnchorTemplate(sequence.name, geneName, allele, geneLoc, seqString, anchor, anchorLocation)
+                VJAnchorTemplate = VJAnchorTemplate(geneAllele, geneName, allele, geneLoc, seqString, anchor, anchorLocation)
             }
 
-            if (geneName.startsWith("IGHJ") ||
-                geneName.startsWith("IGKJ") ||
-                geneName.startsWith("IGLJ") ||
-                geneName.startsWith("TRAJ") ||
-                geneName.startsWith("TRBJ") ||
-                geneName.startsWith("TRDJ") ||
-                geneName.startsWith("TRGJ"))
+            if (vjGeneType.vj == VJ.J)
             {
                 // J gene rules
                 // 30 base sequence starting with TGGGG (J-TRP)
@@ -207,7 +237,7 @@ class VjTemplateGeneWriter
                     }
                 }
 
-                VJAnchorTemplate = VJAnchorTemplate(sequence.name, geneName, allele, geneLoc, seqString, anchor, anchorLocation)
+                VJAnchorTemplate = VJAnchorTemplate(geneAllele, geneName, allele, geneLoc, seqString, anchor, anchorLocation)
             }
 
             if (VJAnchorTemplate != null)
@@ -224,35 +254,6 @@ class VjTemplateGeneWriter
         writeOutput(outputTsv, VJAnchorTemplateList)
 
         return 0
-    }
-
-    // return a map of gene name to their location and the sequence as indicated in the location file
-    fun geneLocationMap() : Map<String, Pair<GeneLocation, String>>
-    {
-        FastaSequenceFile(File(inputGeneLocFasta), false).use { geneLocFaFile ->
-            val geneLocMap: MutableMap<String, Pair<GeneLocation, String>> = HashMap()
-
-            while (true)
-            {
-                val sequence = geneLocFaFile.nextSequence()
-
-                if (sequence == null)
-                    break
-
-                // sLogger.info(sequence.name)
-
-                val toks = sequence.name.split(' ')
-                val geneName = toks[0]
-                val chromosome = toks[1]
-                val startPos = toks[2].toInt()
-                val endPos = toks[3].toInt()
-                val strand = if (toks[4] == "+") Strand.FORWARD else Strand.REVERSE
-
-                geneLocMap[geneName] = Pair(GeneLocation(chromosome, startPos, endPos, strand), sequence.baseString)
-            }
-
-            return geneLocMap
-        }
     }
 
     companion object
@@ -334,7 +335,9 @@ class VjTemplateGeneWriter
             }
         }
 
-        fun correctGeneLocation(seq: String, refSeq: String, refGeneLocation: GeneLocation, minBasesToCompare: Int, maxBasesToCompare: Int) : GeneLocation
+        fun correctGeneLocation(seq: String, refSeq: String,
+                                refGeneLocation: GeneLocation, minBasesToCompare: Int, maxBasesToCompare: Int)
+            : GeneLocation
         {
             // the sequence from the two files are not exact matches, so we need to correct for it
             // note that we only try to find the first section of the sequence in ref seq
@@ -345,7 +348,9 @@ class VjTemplateGeneWriter
 
             if (numStartMismatch >= 10 || numEndMismatch >= 10)
             {
-                sLogger.warn("non matching sequence: seq({}) refSeq({}) mismatch count({})", seq, refSeq, numStartMismatch)
+                // the sequences between ref and the location we got from IMGT is not a full match. This would be ok as long as
+                // the anchor location is a good match
+                sLogger.warn("mismatch count({}) non matching sequence: seq({}) refSeq({})", numStartMismatch, seq, refSeq)
             }
 
             if (startShift == 0 && seq.length == refSeq.length)
@@ -366,6 +371,8 @@ class VjTemplateGeneWriter
 
         fun calcPositionMismatch(seq: String, refSeq: String, minBasesToCompare: Int, maxBasesToCompare: Int): Pair<Int, Int>
         {
+            val minBasesToCompare = minOf(seq.length, refSeq.length, minBasesToCompare)
+
             var bestShift = 0
             var lowestNumMismatch = Int.MAX_VALUE
 
@@ -401,7 +408,7 @@ class VjTemplateGeneWriter
         // validate sequence against the ref genome file to make sure we got it right
         fun validateAgainstRefGenome(seq: String, geneLocation: GeneLocation, refGenome: IndexedFastaSequenceFile) : Boolean
         {
-            val refGenomeSeq = refSequence(refGenome, geneLocation)
+            val refGenomeSeq = queryRefSequence(refGenome, geneLocation)
 
             if (refGenomeSeq.length != seq.length)
             {
@@ -417,15 +424,15 @@ class VjTemplateGeneWriter
                     ++numDiff
             }
 
-            if (numDiff >= 5)
+            if (numDiff > 6)
             {
-                sLogger.error("validation failed: seq({}) and ref genome seq({} of {}) sequence mismatch({}) >= 5", seq, refGenomeSeq, geneLocation, numDiff)
+                sLogger.error("validation failed: seq({}) and ref genome seq({} of {}) sequence mismatch({}) > 6", seq, refGenomeSeq, geneLocation, numDiff)
                 return false
             }
             return true
         }
 
-        fun refSequence(refGenome: IndexedFastaSequenceFile, geneLocation: GeneLocation): String
+        fun queryRefSequence(refGenome: IndexedFastaSequenceFile, geneLocation: GeneLocation): String
         {
             var chromosome = geneLocation.chromosome
 
@@ -441,72 +448,6 @@ class VjTemplateGeneWriter
                 return forwardSeq
             else
                 return reverseComplement(forwardSeq)
-        }
-
-        fun findAnchorPos(row: CSVRecord, refGenome: IndexedFastaSequenceFile): Pair<Long, Long>
-        {
-            if (row["Chr"].isEmpty())
-                return Pair(-1, -1)
-
-            // add error correction term to pos start / pos end just in case
-            val ERROR_CORRECT: Long = 200
-            val chr: String = row["Chr"].substring(3)
-            val posStart: Long = row["Pos Start"].toLong() - ERROR_CORRECT
-            val posEnd: Long = row["Pos End"].toLong() + ERROR_CORRECT
-            val strand: String = row["Strand"]
-
-            val refSeq = refSequence(refGenome, chr, posStart, posEnd, strand)
-            val anchorSeq = row["AnchorSequence (30 bases ending with conserved C)"]
-
-            if (anchorSeq.isEmpty())
-                return Pair(-1, -1)
-
-            // now try to use aligner to find it in side
-            val alignment: SequenceAligner.Alignment = SequenceAligner.alignSubsequence(anchorSeq, refSeq)
-
-            val alignStart = alignment.alignOps.indexOfFirst({ op -> op == SequenceAligner.AlignOp.MATCH || op == SequenceAligner.AlignOp.SUBSTITUTION})
-            val alignEnd = alignment.alignOps.indexOfFirst({ op -> op == SequenceAligner.AlignOp.MATCH || op == SequenceAligner.AlignOp.SUBSTITUTION})
-
-            if (alignStart == -1 || alignEnd == -1)
-            {
-                sLogger.warn("cannot align: ${row}")
-                return Pair(-1, -1)
-            }
-
-            if (alignEnd - alignStart + 1 > anchorSeq.length + 4)
-            {
-                sLogger.warn("cannot align: ${row}, too many insertions")
-                return Pair(-1, -1)
-            }
-
-            val anchorStart =
-            if (row["Strand"] == "-")
-                posEnd - alignStart - anchorSeq.length + 1
-            else
-                posStart + alignStart
-
-            // since we are one based
-            val anchorEnd = anchorStart + anchorSeq.length - 1
-
-            sLogger.info("pos = ${alignStart}, anchorStart = ${anchorStart}, anchorEnd = ${anchorEnd}")
-
-            if (row["Gene"] == "IGHV3-32")
-            {
-                val checkSeq = refGenome.getSubsequenceAt(row["Chr"].substring(3), anchorStart, anchorEnd).baseString
-                sLogger.info("here: ${anchorSeq} vs ${checkSeq}, ref seq: ${refSeq}")
-            }
-
-            return Pair(anchorStart, anchorEnd)
-        }
-
-        fun refSequence(refGenome: IndexedFastaSequenceFile, chr: String, start: Long, end: Long, strand: String): String
-        {
-            val forwardSeq = refGenome.getSubsequenceAt(chr,
-                start, end).baseString
-            if (strand == "-")
-                return reverseComplement(forwardSeq)
-            else
-                return forwardSeq
         }
     }
 }

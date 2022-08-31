@@ -10,10 +10,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.codon.Codons;
 
 public class BlosumMapping
 {
     public static final int INVALID_AMINO_ACID = -1;
+    private static final int DEFAULT_STOP_CODON_PENALTY = -10;
 
     public static final char[] AMINO_ACIDS = {
             'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y', 'X'};
@@ -44,11 +46,16 @@ public class BlosumMapping
         return AMINO_ACID_INDEX[charInt];
     }
 
-    public BlosumMapping()
+    public BlosumMapping(int stopCodonPenalty)
     {
         int aminoAcidCount = AMINO_ACIDS.length;
         mMappings = new int[aminoAcidCount][aminoAcidCount];
-        load();
+        load(stopCodonPenalty);
+    }
+
+    public BlosumMapping()
+    {
+        this(DEFAULT_STOP_CODON_PENALTY);
     }
 
     public int selfMapping(final char aa)
@@ -151,7 +158,7 @@ public class BlosumMapping
         return similarity;
     }
 
-    private void load()
+    private void load(int stopCodonPenalty)
     {
         final List<String> lines = new BufferedReader(new InputStreamReader(
                 BlosumMapping.class.getClassLoader().getResourceAsStream("blosum62.csv")))
@@ -160,9 +167,9 @@ public class BlosumMapping
         String[] columns = lines.get(0).split(",");
         lines.remove(0);
 
-        if(columns.length != AMINO_ACIDS.length + 1)
+        if(columns.length != AMINO_ACIDS.length)
         {
-            throw new RuntimeException("invalid blosum62 input file, number of column != 22");
+            throw new RuntimeException("invalid blosum62 input file, number of column != 21");
         }
 
         Map<Integer,Integer> columnAaMap = Maps.newHashMap();
@@ -182,7 +189,7 @@ public class BlosumMapping
         {
             String[] items = line.split(",");
 
-            if(items.length != AMINO_ACIDS.length + 1)
+            if(items.length != AMINO_ACIDS.length)
                 return;
 
             char aa1 = items[0].charAt(0);
@@ -202,5 +209,17 @@ public class BlosumMapping
                 mMappings[aa1index][aa2index] = correlation;
             }
         }
+
+        // fill in the stop codon rows
+        int stopIndex = aminoAcidIndex(Codons.STOP_AMINO_ACID);
+        for (char aa : AMINO_ACIDS)
+        {
+            int aaIndex = aminoAcidIndex(aa);
+            mMappings[aaIndex][stopIndex] = stopCodonPenalty;
+            mMappings[stopIndex][aaIndex] = stopCodonPenalty;
+        }
+
+        // no penalty for self mapping
+        mMappings[stopIndex][stopIndex] = 0;
     }
 }

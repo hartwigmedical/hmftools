@@ -58,7 +58,7 @@ public class CiderApplication
         mLoggingOptions.setLogLevel();
 
         VersionInfo versionInfo = new VersionInfo("cider.version");
-        sLogger.info("Cider version: {}, build time: {}", versionInfo.version(), versionInfo.buildTime());
+        sLogger.info("Cider version: {}, build time: {}", versionInfo.version(), versionInfo.buildTime().toLocalTime());
 
         if(!mParams.isValid())
         {
@@ -70,22 +70,20 @@ public class CiderApplication
 
         Instant start = Instant.now();
 
-        VJGeneStore vjGeneStore = new Cdr3GeneLoader(mParams.refGenomeVersion, mParams.ensemblDataDir);
-        var candidateBlosumSearcher = new AnchorBlosumSearcher(
-                vjGeneStore,
+        CiderGeneDatastore ciderGeneDatastore = new CiderGeneDataLoader(mParams.refGenomeVersion, mParams.ensemblDataDir);
+        var candidateBlosumSearcher = new AnchorBlosumSearcher(ciderGeneDatastore,
                 CiderConstants.CANDIDATE_MIN_PARTIAL_ANCHOR_AA_LENGTH,
                 false);
 
-        Cdr3ReadScreener readProcessor = new Cdr3ReadScreener(vjGeneStore, candidateBlosumSearcher,
+        Cdr3ReadScreener readProcessor = new Cdr3ReadScreener(ciderGeneDatastore, candidateBlosumSearcher,
                 mParams.MaxAnchorAlignDistance, CiderConstants.MIN_CANDIDATE_READ_ANCHOR_OVERLAP);
-        readBamFile(readProcessor, vjGeneStore);
+        readBamFile(readProcessor, ciderGeneDatastore);
 
         var vjReadLayoutAdaptor = new VJReadLayoutAdaptor(mParams.numBasesToTrim);
 
         Map<VJGeneType, List<ReadLayout>> layoutMap = buildLayouts(vjReadLayoutAdaptor, readProcessor.getVJReadCandidates().values());
 
-        var vdjBuilderBlosumSearcher = new AnchorBlosumSearcher(
-                vjGeneStore,
+        var vdjBuilderBlosumSearcher = new AnchorBlosumSearcher(ciderGeneDatastore,
                 CiderConstants.VDJ_MIN_PARTIAL_ANCHOR_AA_LENGTH,
                 true);
 
@@ -99,12 +97,12 @@ public class CiderApplication
 
         Instant finish = Instant.now();
         long seconds = Duration.between(start, finish).getSeconds();
-        sLogger.info("CDR3 run complete, time taken: {}m {}s", seconds / 60, seconds % 60);
+        sLogger.info("CIDER run complete, time taken: {}m {}s", seconds / 60, seconds % 60);
 
         return 0;
     }
 
-    public void readBamFile(Cdr3ReadScreener readProcessor, VJGeneStore vjGeneStore) throws InterruptedException, IOException
+    public void readBamFile(Cdr3ReadScreener readProcessor, CiderGeneDatastore ciderGeneDatastore) throws InterruptedException, IOException
     {
         final SamReaderFactory readerFactory = readerFactory(mParams);
 
@@ -139,11 +137,11 @@ public class CiderApplication
             samRecordQueue.add(samRecord);
         };
 
-        Collection<GenomeRegion> genomeRegions = vjGeneStore.getVJAnchorReferenceLocations().stream()
-                .map(o -> GenomeRegions.create(o.getChromosome(), o.getStart() - mParams.MaxAnchorAlignDistance, o.getEnd() + mParams.MaxAnchorAlignDistance))
-                .collect(Collectors.toList());
+        Collection<GenomeRegion> genomeRegions = ciderGeneDatastore.getVJAnchorReferenceLocations()
+                .collect(o -> GenomeRegions.create(o.getChromosome(), o.getStart() - mParams.MaxAnchorAlignDistance, o.getEnd() + mParams.MaxAnchorAlignDistance))
+                .toList();
 
-        genomeRegions.addAll(vjGeneStore.getIgConstantRegions().stream()
+        genomeRegions.addAll(ciderGeneDatastore.getIgConstantRegions().stream()
                         .map(IgTcrConstantRegion::getGeneLocation)
                         .map(o -> GenomeRegions.create(o.getChromosome(), o.getPosStart(), o.getPosEnd()))
                         .collect(Collectors.toList()));

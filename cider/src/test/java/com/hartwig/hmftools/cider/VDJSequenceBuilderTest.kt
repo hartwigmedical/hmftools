@@ -4,6 +4,7 @@ import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.cider.layout.ReadLayoutBuilderTest
 import htsjdk.samtools.SAMUtils
 import org.apache.logging.log4j.Level
+import org.eclipse.collections.api.factory.Lists
 import org.junit.Before
 import java.util.IdentityHashMap
 import kotlin.test.*
@@ -63,7 +64,7 @@ class VDJSequenceBuilderTest
 
         // create a blosum match of type IGHJ, which will match with IGHV
         mockAnchorBlosumSearcher.anchorBlosumMatch = AnchorBlosumMatch(20, 25, "CCCCC",
-            listOf(TestUtils.ighJ1), 10)
+            Lists.immutable.of(TestUtils.ighJ1), 10)
 
         // now we should be able to build a VDJ sequence
         val vdjSeq = vdjSeqBuilder.tryCompleteLayoutWithBlosum(VJGeneType.IGHV, layout, 0)
@@ -102,7 +103,7 @@ class VDJSequenceBuilderTest
 
         // create a blosum match of type IGHV, which will match with IGHJ
         mockAnchorBlosumSearcher.anchorBlosumMatch = AnchorBlosumMatch(3, 10, "CCCCC",
-            listOf(TestUtils.ighV1_18), 10)
+            Lists.immutable.of(TestUtils.ighV1_18), 10)
 
         // now we should be able to build a VDJ sequence
         val vdjSeq = vdjSeqBuilder.tryCompleteLayoutWithBlosum(VJGeneType.IGHJ, layout, 0)

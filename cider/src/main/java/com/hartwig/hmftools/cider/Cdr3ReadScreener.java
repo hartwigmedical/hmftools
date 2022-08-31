@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.cider;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.eclipse.collections.api.collection.ImmutableCollection;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -30,7 +30,7 @@ public class Cdr3ReadScreener
     private static final Logger sLogger = LogManager.getLogger(Cdr3ReadScreener.class);
 
     // collect the reads and sort by types
-    private VJGeneStore mVJGeneStore;
+    private CiderGeneDatastore mCiderGeneDatastore;
 
     private IAnchorBlosumSearcher mAnchorBlosumSearcher;
     int mMaxAnchorAlignDistance;
@@ -43,10 +43,10 @@ public class Cdr3ReadScreener
 
     private final List<SAMRecord> mAllMatchedReads = new ArrayList<>();
 
-    public Cdr3ReadScreener(VJGeneStore vjGeneStore, IAnchorBlosumSearcher anchorBlosumSearcher,
+    public Cdr3ReadScreener(CiderGeneDatastore ciderGeneDatastore, IAnchorBlosumSearcher anchorBlosumSearcher,
             int maxAnchorAlignDistance, int minAnchorOverlap)
     {
-        mVJGeneStore = vjGeneStore;
+        mCiderGeneDatastore = ciderGeneDatastore;
         mAnchorBlosumSearcher = anchorBlosumSearcher;
         mMaxAnchorAlignDistance = maxAnchorAlignDistance;
         mMinAnchorOverlap = minAnchorOverlap;
@@ -108,7 +108,7 @@ public class Cdr3ReadScreener
     {
         boolean anchorFound = false;
 
-        for (VJAnchorReferenceLocation anchorLocation : mVJGeneStore.getVJAnchorReferenceLocations())
+        for (VJAnchorReferenceLocation anchorLocation : mCiderGeneDatastore.getVJAnchorReferenceLocations())
         {
             @Nullable VJReadCandidate readCandidate = matchesAnchorLocation(samRecord, mapped, matchedGenes, anchorLocation);
 
@@ -125,7 +125,7 @@ public class Cdr3ReadScreener
 
             if (leftSoftClip != 0 || rightSoftClip != 0)
             {
-                for (IgTcrConstantRegion igTcrConstantRegion : mVJGeneStore.getIgConstantRegions())
+                for (IgTcrConstantRegion igTcrConstantRegion : mCiderGeneDatastore.getIgConstantRegions())
                 {
                     // now try to match around location of constant regions
                     @Nullable VJReadCandidate readCandidate = tryMatchFromConstantRegion(samRecord, mapped, igTcrConstantRegion);
@@ -179,10 +179,10 @@ public class Cdr3ReadScreener
                 readAnchorStart = revStart;
             }
 
-            // we want to make sure same gene is not included twice
-            List<VJAnchorTemplate> genes = mVJGeneStore.getByAnchorGeneLocation(anchorLocation).stream()
-                    .filter(o -> !matchedGenes.contains(o))
-                    .collect(Collectors.toList());
+            // want to make sure same gene is not included twice
+            ImmutableCollection<VJAnchorTemplate> genes = mCiderGeneDatastore.getByAnchorGeneLocation(anchorLocation)
+                    .select(o -> !matchedGenes.contains(o.getType()))
+                    .toImmutableList();
 
             if (!genes.isEmpty())
             {
@@ -237,6 +237,7 @@ public class Cdr3ReadScreener
         return false;
     }
 
+    /*
     public boolean tryMatchByExact(SAMRecord samRecord, Set<VJGeneType> matchedGenes)
     {
         String seq = samRecord.getReadString();
@@ -245,7 +246,7 @@ public class Cdr3ReadScreener
         boolean matchFound = false;
 
         // for each record we need to find the anchor sequence and see if it matches
-        for (String anchorSeq : mVJGeneStore.getAnchorSequenceSet())
+        for (String anchorSeq : mCiderGeneDatastore.getAnchorSequenceSet())
         {
             int anchorIndex = seq.indexOf(anchorSeq);
 
@@ -261,9 +262,9 @@ public class Cdr3ReadScreener
             if (anchorIndex != -1)
             {
                 // want to make sure same gene is not included twice
-                List<VJAnchorTemplate> genes = mVJGeneStore.getByAnchorSequence(anchorSeq).stream()
-                        .filter(o -> !matchedGenes.contains(o.getType()))
-                        .collect(Collectors.toList());
+                ImmutableCollection<VJAnchorTemplate> genes = mCiderGeneDatastore.getByAnchorSequence(anchorSeq)
+                        .select(o -> !matchedGenes.contains(o.getType()))
+                        .toImmutableList();
 
                 if (!genes.isEmpty())
                 {
@@ -281,8 +282,7 @@ public class Cdr3ReadScreener
         }
 
         return matchFound;
-    }
-
+    }*/
 
     @Nullable
     public VJReadCandidate tryMatchFromConstantRegion(
@@ -346,7 +346,7 @@ public class Cdr3ReadScreener
     }
 
     @Nullable
-    public VJReadCandidate createCdr3ReadMatch(SAMRecord samRecord, Collection<VJAnchorTemplate> vjAnchorTemplates,
+    public VJReadCandidate createCdr3ReadMatch(SAMRecord samRecord, ImmutableCollection<VJAnchorTemplate> vjAnchorTemplates,
             VJReadCandidate.AnchorMatchMethod templateMatchMethod, boolean useRevComp,
             int readAnchorStart, int readAnchorEnd, @Nullable GeneLocation templateLocation)
     {

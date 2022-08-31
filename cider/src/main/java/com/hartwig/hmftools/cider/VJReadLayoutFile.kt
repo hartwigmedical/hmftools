@@ -2,14 +2,14 @@ package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
-import com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter
+import com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedWriter
 import htsjdk.samtools.SAMUtils
 import java.io.BufferedWriter
 import java.io.File
 
 object VJReadLayoutFile
 {
-    private const val FILE_EXTENSION = ".cider.layout"
+    private const val FILE_EXTENSION = ".cider.layout.gz"
 
     private fun generateFilename(basePath: String, sample: String): String
     {
@@ -21,7 +21,7 @@ object VJReadLayoutFile
     {
         val filePath = generateFilename(outputDir, sampleId)
 
-        createBufferedWriter(filePath).use { writer ->
+        createGzipBufferedWriter(filePath).use { writer ->
             for ((geneType, overlayList) in overlayMap)
             {
                 writeLayouts(writer, geneType, overlayList)

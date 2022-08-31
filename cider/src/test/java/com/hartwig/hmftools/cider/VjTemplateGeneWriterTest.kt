@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.generator.VjTemplateGeneWriter
 import com.hartwig.hmftools.common.genome.region.Strand
 import kotlin.test.*
 

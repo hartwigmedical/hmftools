@@ -260,7 +260,7 @@ public class Cdr3ReadScreenerTest
                 "GCTGAATACTTCCAGCACTGGGGCCAGGGCACCCTGGTCACCGTCTCCTCAG",
                 "TGGGGCCAGGGCACCCTGGTCACCGTCTCC",
                 new GeneLocation("14", 106330801, 106330830, Strand.REVERSE));
-        var vjGeneStore = new TestVJGeneStore(List.of(ighJ1));
+        var vjGeneStore = new TestCiderGeneDatastore(List.of(ighJ1));
         var mockAnchorBlosumSearcher = new MockAnchorBlosumSearcher();
 
         Cdr3ReadScreener cdr3ReadScreener = new Cdr3ReadScreener(vjGeneStore, mockAnchorBlosumSearcher,

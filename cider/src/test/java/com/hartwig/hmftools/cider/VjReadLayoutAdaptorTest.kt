@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider
 
 import htsjdk.samtools.SAMRecord
+import org.eclipse.collections.api.factory.Lists
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -148,7 +149,7 @@ class VjReadLayoutAdaptorTest
         record.baseQualityString = "F".repeat(seq.length)
         val vjGeneType = if (vj == VJ.V) VJGeneType.TRAV else VJGeneType.TRAJ
 
-        return VJReadCandidate(record, emptyList(), vjGeneType,
+        return VJReadCandidate(record, Lists.immutable.empty(), vjGeneType,
             "CACGTG", VJReadCandidate.AnchorMatchMethod.ALIGN,
                                 useReverseComplement, anchorOffsetStart, anchorOffsetEnd,
                                 null, 0, 0)

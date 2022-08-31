@@ -32,7 +32,7 @@ object BlosumSimilarityCalc
                 CiderConstants.BLOSUM_SIMILARITY_SCORE_CONSTANT -
                 calcBlosumDistance(refAA, seqAA)
 
-        sLogger.trace("{} vs {} similiarity={}", refAA, seqAA, similarity)
+        //sLogger.trace("{} vs {} similiarity={}", refAA, seqAA, similarity)
 
         return similarity
     }

@@ -37,7 +37,7 @@ class AnchorBlosumSearcherTest
         "AGAGCCGAGGACACGGCTGTGTATTACTGT",
         null)
 
-    val vjGeneStore = TestVJGeneStore(listOf(ighJ1, ighJ6, ighV1_18, ighV3_7))
+    val vjGeneStore = TestCiderGeneDatastore(listOf(ighJ1, ighJ6, ighV1_18, ighV3_7))
 
     @Test
     fun testFindJAnchor()

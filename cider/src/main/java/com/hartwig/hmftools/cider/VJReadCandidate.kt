@@ -4,6 +4,7 @@ import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.util.SequenceUtil
+import org.eclipse.collections.api.collection.ImmutableCollection
 
 // this one includes supplementary etc
 data class VJReadRecordKey(
@@ -16,7 +17,7 @@ data class VJReadRecordKey(
 // match perfectly. We just match by anchor
 data class VJReadCandidate(
     val read: SAMRecord,
-    val vjAnchorTemplates: Collection<VJAnchorTemplate>,
+    val vjAnchorTemplates: ImmutableCollection<VJAnchorTemplate>,
     val vjGeneType: VJGeneType,
     val templateAnchorSequence: String,
     val anchorMatchMethod: AnchorMatchMethod,
@@ -76,44 +77,5 @@ data class VJReadCandidate(
     val anchorAA: String get()
     {
         return Codons.aminoAcidFromBases(anchorSequence)
-    }
-}
-
-// this stores the combined V and J match
-data class Cdr3ReadVJMatch(
-    val vMatch: VJReadCandidate?,
-    val jMatch: VJReadCandidate?,
-    val sequence: String,
-    val vSequenceOffset: Int = -1,
-    val jSequenceOffset: Int = -1
-)
-{
-    // return the non null match, if both are not null then return the
-    // non supplementary one
-    val mainMatch: VJReadCandidate get()
-    {
-        if (vMatch != null && jMatch != null)
-            return if (vMatch.read.isSecondaryOrSupplementary) jMatch else vMatch
-        return vMatch ?: jMatch!!
-    }
-
-    val vAnchorOffsetStart: Int get()
-    {
-        return if (vMatch != null) vMatch.anchorOffsetStart + vSequenceOffset else -1
-    }
-
-    val vAnchorOffsetEnd: Int get()
-    {
-        return if (vMatch != null) vMatch.anchorOffsetEnd + vSequenceOffset else -1
-    }
-
-    val jAnchorOffsetStart: Int get()
-    {
-        return if (jMatch != null) jMatch.anchorOffsetStart + jSequenceOffset else -1
-    }
-
-    val jAnchorOffsetEnd: Int get()
-    {
-        return if (jMatch != null) jMatch.anchorOffsetEnd + jSequenceOffset else -1
     }
 }

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.cider
 
 import kotlin.test.*
 
-class Cdr3GeneLoaderTest
+class IgTcrGeneDataLoaderTest
 {
     @Test
     fun testLoader()

@@ -2,9 +2,10 @@ package com.hartwig.hmftools.cider;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 
-import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.Parameter;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.RefGenomeVersionConverter;
 
 import htsjdk.samtools.ValidationStringency;
 
@@ -13,7 +14,7 @@ public class CiderParams
     public static final int DEFAULT_THREADS = 1;
     public static final int DEFAULT_MAX_ANCHOR_ALIGN_DISTANCE = 150;
 
-    @Parameter(names = "-id", description = "Name of sample")
+    @Parameter(names = "-sample", description = "Name of sample")
     public String SampleId;
 
     @Parameter(names = "-bam", description = "Path to indexed bam/cram file")
@@ -47,18 +48,14 @@ public class CiderParams
                converter = RefGenomeVersionConverter.class)
     public RefGenomeVersion refGenomeVersion;
 
-    @Parameter(names = "-ensembl_data_dir",
+    @Parameter(names = "-" + EnsemblDataCache.ENSEMBL_DATA_DIR,
                required = true,
-               description = "Ensembl data file directory")
+               description = EnsemblDataCache.ENSEMBL_DATA_DIR_CFG)
     public String ensemblDataDir;
 
     @Parameter(names = "-min_base_quality",
                description = "Minimum quality for a base to be considered")
     public int MinBaseQuality = 25;
-
-    @Parameter(names = "-assume_read_pair_overlap",
-               description = "Assume that reads of the same fragment overlap. This can be used for pairing")
-    public boolean assumeReadPairOverlap = false;
 
     @Parameter(names = "-specific_chr",
                description = "Limit to a specific chromosome")
@@ -75,15 +72,5 @@ public class CiderParams
     public boolean isValid()
     {
         return true;
-    }
-
-    // we need to define a converter for ref genome version
-    static class RefGenomeVersionConverter implements IStringConverter<RefGenomeVersion>
-    {
-        @Override
-        public RefGenomeVersion convert(String value)
-        {
-            return RefGenomeVersion.from(value);
-        }
     }
 }
