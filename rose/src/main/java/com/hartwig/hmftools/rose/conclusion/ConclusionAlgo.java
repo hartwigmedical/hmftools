@@ -204,15 +204,13 @@ public class ConclusionAlgo {
                     .bialleic(reportableVariant.biallelic())
                     .build();
 
-            if (variantKeyList.containsKey(reportableVariant.gene())){
+            if (variantKeyList.containsKey(reportableVariant.gene())) {
                 variantKeys.addAll(variantKeyList.get(reportableVariant.gene()));
                 variantKeys.add(variantKey);
-                variantKeyList.put(reportableVariant.gene(),
-                        variantKeys);
+                variantKeyList.put(reportableVariant.gene(), variantKeys);
             } else {
                 variantKeys.add(variantKey);
-                variantKeyList.put(reportableVariant.gene(),
-                        variantKeys);
+                variantKeyList.put(reportableVariant.gene(), variantKeys);
             }
         }
 
@@ -252,7 +250,7 @@ public class ConclusionAlgo {
                     Boolean biallelicBoolean = false;
                     if (biallelic.size() > 1) {
                         biallelicBoolean = false;
-                    } else if (biallelic.size()==1) {
+                    } else if (biallelic.size() == 1) {
                         biallelicBoolean = biallelic.stream().findFirst().get();
                     }
 
