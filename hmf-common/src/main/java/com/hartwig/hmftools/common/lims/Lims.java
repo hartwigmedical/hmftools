@@ -109,13 +109,13 @@ public class Lims {
     @NotNull
     public String tumorReceicedSampleId(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
-        return sampleData != null ? sampleData.tumorRecievedSampleId() : NOT_AVAILABLE_STRING;
+        return sampleData != null ? sampleData.receivedSampleId() : NOT_AVAILABLE_STRING;
     }
 
     @NotNull
-    public String referenceTumorSampleId(@NotNull String sampleBarcode) {
-        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
-        return sampleData != null ? sampleData.referenceReceivedSampleId() : NOT_AVAILABLE_STRING;
+    public String referenceTumorSampleId(@NotNull String referenceSampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(referenceSampleBarcode);
+        return sampleData != null ? sampleData.receivedSampleId() : NOT_AVAILABLE_STRING;
     }
 
     @Nullable
