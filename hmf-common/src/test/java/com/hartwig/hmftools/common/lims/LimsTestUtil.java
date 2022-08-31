@@ -19,6 +19,8 @@ public final class LimsTestUtil {
     public static ImmutableLimsJsonSampleData.Builder createLimsSampleDataBuilder() {
         return ImmutableLimsJsonSampleData.builder()
                 .sampleId(Strings.EMPTY)
+                .tumorRecievedSampleId(Strings.EMPTY)
+                .referenceReceivedSampleId(Strings.EMPTY)
                 .patientId(Strings.EMPTY)
                 .tumorBarcode(Strings.EMPTY)
                 .refBarcode(Strings.EMPTY)

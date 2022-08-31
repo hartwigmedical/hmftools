@@ -164,6 +164,8 @@ public final class LimsFactory {
     private static LimsJsonSampleData createLimsSampleDataForCOLO() {
         return ImmutableLimsJsonSampleData.builder()
                 .sampleId("COLO829v003T")
+                .referenceReceivedSampleId("FB")
+                .tumorRecievedSampleId("ST")
                 .patientId("COLO829")
                 .tumorBarcode("COLO829V003TVAL")
                 .refBarcode("COLO829V003RVAL")
