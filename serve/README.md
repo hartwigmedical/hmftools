@@ -199,7 +199,7 @@ When no cut-off values is present but is expected for the characteristics, Hartw
 
 Genome wide event  | Description
 ---|---
-MICROSATELLITE_INSTABLE  | Evidence is applicable when the genome has a MSI status
+MICROSATELLITE_UNSTABLE  | Evidence is applicable when the genome has a MSI status
 MICROSATELLITE_STABLE  | Evidence is applicable when the genome does not have a MSI status
 HIGH_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome has a high tumor mutational load status
 LOW_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome does not have a high tumor mutational load status

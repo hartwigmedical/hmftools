@@ -37,12 +37,12 @@ public class PurpleSignatureEvidenceTest {
     public void canDetermineMSI() {
         ActionableCharacteristic signatureDefault = ImmutableActionableCharacteristic.builder()
                 .from(ServeTestFactory.createTestActionableCharacteristic())
-                .name(TumorCharacteristicAnnotation.MICROSATELLITE_INSTABLE)
+                .name(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE)
                 .build();
 
         ActionableCharacteristic signatureWithCutoff = ImmutableActionableCharacteristic.builder()
                 .from(ServeTestFactory.createTestActionableCharacteristic())
-                .name(TumorCharacteristicAnnotation.MICROSATELLITE_INSTABLE)
+                .name(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE)
                 .comparator(TumorCharacteristicsComparator.EQUAL_OR_GREATER)
                 .cutoff(4D)
                 .build();
@@ -198,7 +198,7 @@ public class PurpleSignatureEvidenceTest {
 
     @Test
     public void canConvertCharacteristicToEvent() {
-        assertEquals("Microsatellite instable", PurpleSignatureEvidence.toEvent(TumorCharacteristicAnnotation.MICROSATELLITE_INSTABLE));
+        assertEquals("Microsatellite unstable", PurpleSignatureEvidence.toEvent(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE));
     }
 
     @NotNull

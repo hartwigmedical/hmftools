@@ -84,7 +84,7 @@ public abstract class EventClassifierConfig {
     public abstract Set<String> microsatelliteStableKeyPhrases();
 
     @NotNull
-    public abstract Set<String> microsatelliteInstableKeyPhrases();
+    public abstract Set<String> microsatelliteUnstableKeyPhrases();
 
     @NotNull
     public abstract Set<String> highTumorMutationalLoadKeyPhrases();
