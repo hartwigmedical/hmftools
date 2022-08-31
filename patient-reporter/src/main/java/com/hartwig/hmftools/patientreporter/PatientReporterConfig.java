@@ -392,7 +392,7 @@ public interface PatientReporterConfig {
 
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSpecialRemarkTsv = nonOptionalFile(cmd, SAMPLE_SPECIAL_REMARK_TSV);
-            knownFusionFile = nonOptionalDir(cmd, KNOWN_FUSION_FILE);
+            knownFusionFile = nonOptionalFile(cmd, KNOWN_FUSION_FILE);
 
         }
 
