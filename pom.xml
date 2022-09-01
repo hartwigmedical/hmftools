@@ -9,39 +9,39 @@
     <name>HMF Genomics Tools</name>
 
     <modules>
-        <module>hmf-common</module>
-        <module>patient-db</module>
-        <module>gene-utils</module>
-        <module>stat-calcs</module>
-        <module>hmf-id-generator</module>
-        <module>fastq-stats</module>
-        <module>health-checker</module>
-        <module>paddle</module>
-        <module>compar</module>
         <module>amber</module>
+        <module>ckb-importer</module>
         <module>cobalt</module>
-        <module>sage</module>
+        <module>compar</module>
+        <module>cuppa</module>
+        <module>fastq-stats</module>
+        <module>gene-utils</module>
         <module>gripss</module>
-        <module>purple</module>
+        <module>health-checker</module>
+        <module>hmf-common</module>
+        <module>hmf-id-generator</module>
+        <module>iclusion-importer</module>
+        <module>isofox</module>
+        <module>lilac</module>
         <module>linx</module>
+        <module>neo</module>
+        <module>orange</module>
+        <module>paddle</module>
+        <module>patient-db</module>
+        <module>patient-reporter</module>
+        <module>purple</module>
+        <module>rose</module>
+        <module>pave</module>
+        <module>protect</module>
+        <module>sage</module>
+        <module>serve</module>
+        <module>sigs</module>
+        <module>stat-calcs</module>
         <module>sv-prep</module>
         <module>sv-tools</module>
-        <module>virus-interpreter</module>
-        <module>lilac</module>
-        <module>neo</module>
-        <module>sigs</module>
         <module>teal</module>
-        <module>cuppa</module>
-        <module>isofox</module>
-        <module>pave</module>
-        <module>ckb-importer</module>
-        <module>iclusion-importer</module>
         <module>vicc-importer</module>
-        <module>serve</module>
-        <module>protect</module>
-        <module>orange</module>
-        <module>rose</module>
-        <module>patient-reporter</module>
+        <module>virus-interpreter</module>
     </modules>
 
     <properties>
