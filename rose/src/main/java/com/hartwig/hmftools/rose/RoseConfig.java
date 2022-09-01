@@ -37,7 +37,6 @@ public interface RoseConfig {
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String DRIVER_GENE_TSV = "driver_gene_tsv";
-    String PRIMARY_TUMOR_TSV = "primary_tumor_tsv";
     String MOLECULAR_TISSUE_ORIGIN_TXT = "molecular_tissue_origin_txt";
     // Some additional optional params and flags
     String LOG_DEBUG = "log_debug";
@@ -73,8 +72,6 @@ public interface RoseConfig {
         options.addOption(MOLECULAR_TISSUE_ORIGIN_TXT, true, "Path towards the molecular tissue origin TXT.");
 
         options.addOption(DRIVER_GENE_TSV, true, "Path to driver gene TSV");
-
-        options.addOption(PRIMARY_TUMOR_TSV, true, "Path towards the (curated) primary tumor TSV.");
 
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         return options;
@@ -141,9 +138,6 @@ public interface RoseConfig {
     String driverGeneTsv();
 
     @NotNull
-    String primaryTumorTsv();
-
-    @NotNull
     static RoseConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
@@ -170,7 +164,6 @@ public interface RoseConfig {
                 .annotatedVirusTsv(nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
                 .molecularTissueOriginTxt(nonOptionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT))
                 .driverGeneTsv(nonOptionalFile(cmd, DRIVER_GENE_TSV))
-                .primaryTumorTsv(nonOptionalFile(cmd, PRIMARY_TUMOR_TSV))
                 .build();
     }
 

@@ -61,50 +61,6 @@ import org.junit.Test;
 public class ConclusionAlgoTest {
 
     @Test
-    public void canResolveTumorLocation() {
-        PatientPrimaryTumor patientPrimaryTumorWithLocationAndType = ImmutablePatientPrimaryTumor.builder()
-                .patientIdentifier("patient ID")
-                .location("Bone/Soft tissue")
-                .subLocation(Strings.EMPTY)
-                .type("Alveolar soft part sarcoma")
-                .subType(Strings.EMPTY)
-                .extraDetails(Strings.EMPTY)
-                .doids(Sets.newHashSet())
-                .snomedConceptIds(Sets.newHashSet())
-                .isOverridden(false)
-                .build();
-        assertEquals("Bone/Soft tissue (Alveolar soft part sarcoma)",
-                ConclusionAlgo.resolveTumorLocation(patientPrimaryTumorWithLocationAndType));
-
-        PatientPrimaryTumor patientPrimaryTumorWithLocationAndSubLocation = ImmutablePatientPrimaryTumor.builder()
-                .patientIdentifier("patient ID")
-                .location("Adrenal gland")
-                .subLocation("Adrenal cortex")
-                .type(Strings.EMPTY)
-                .subType(Strings.EMPTY)
-                .extraDetails(Strings.EMPTY)
-                .doids(Sets.newHashSet())
-                .snomedConceptIds(Sets.newHashSet())
-                .isOverridden(false)
-                .build();
-        assertEquals("Adrenal cortex", ConclusionAlgo.resolveTumorLocation(patientPrimaryTumorWithLocationAndSubLocation));
-
-        PatientPrimaryTumor patientPrimaryTumorAll = ImmutablePatientPrimaryTumor.builder()
-                .patientIdentifier("patient ID")
-                .location("Nervous system")
-                .subLocation("Olfactory nerve")
-                .type("Blastoma")
-                .subType("Olfactory neuroblastoma")
-                .extraDetails(Strings.EMPTY)
-                .doids(Sets.newHashSet())
-                .snomedConceptIds(Sets.newHashSet())
-                .isOverridden(false)
-                .build();
-        assertEquals("Olfactory nerve (Olfactory neuroblastoma)", ConclusionAlgo.resolveTumorLocation(patientPrimaryTumorAll));
-
-    }
-
-    @Test
     public void canGenerateCUPPAConclusion() {
         List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();

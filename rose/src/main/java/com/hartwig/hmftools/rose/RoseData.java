@@ -46,6 +46,4 @@ public abstract class RoseData {
 
     @NotNull
     public abstract List<DriverGene> driverGenes();
-    @NotNull
-    public abstract List<PatientPrimaryTumor> patientPrimaryTumors();
 }

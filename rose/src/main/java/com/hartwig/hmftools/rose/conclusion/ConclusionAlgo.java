@@ -79,7 +79,6 @@ public class ConclusionAlgo {
         List<HomozygousDisruption> homozygousDisruptions = roseData.linx().homozygousDisruptions();
         List<AnnotatedVirus> reportableViruses = roseData.virusInterpreter().reportableViruses();
 
-        genertateTumorLocationConclusion(conclusion, roseData.patientPrimaryTumors(), roseData.patientId());
         generateCUPPAConclusion(conclusion, roseData.molecularTissueOrigin(), actionabilityMap);
         generateVariantConclusion(conclusion,
                 reportableVariants,
@@ -132,40 +131,6 @@ public class ConclusionAlgo {
             driverGeneMap.put(entry.gene(), entry);
         }
         return driverGeneMap;
-    }
-
-    public static void genertateTumorLocationConclusion(@NotNull List<String> conclusion,
-            @NotNull List<PatientPrimaryTumor> patientPrimaryTumors, @NotNull String patientId) {
-        PatientPrimaryTumor patientPrimaryTumor = PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(patientPrimaryTumors, patientId);
-
-        conclusion.add(resolveTumorLocation(patientPrimaryTumor) + " sample showing: ");
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static String resolveTumorLocation(@Nullable PatientPrimaryTumor patientPrimaryTumor) {
-        String mergedLocation = Strings.EMPTY;
-        String mergedType = Strings.EMPTY;
-
-        if (patientPrimaryTumor != null) {
-            if (!patientPrimaryTumor.subLocation().isEmpty()) {
-                mergedLocation = patientPrimaryTumor.subLocation();
-            } else {
-                mergedLocation = patientPrimaryTumor.location();
-            }
-
-            if (!patientPrimaryTumor.subType().isEmpty()) {
-                mergedType = patientPrimaryTumor.subType();
-            } else {
-                mergedType = patientPrimaryTumor.type();
-            }
-        }
-
-        if (!mergedType.isEmpty()) {
-            return mergedLocation + " (" + mergedType + ")";
-        } else {
-            return mergedLocation;
-        }
     }
 
     public static void generateCUPPAConclusion(@NotNull List<String> conclusion, MolecularTissueOrigin molecularTissueOrigin,

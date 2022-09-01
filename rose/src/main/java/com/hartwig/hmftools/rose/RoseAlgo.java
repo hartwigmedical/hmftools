@@ -34,24 +34,19 @@ public class RoseAlgo {
     private final List<ActionabilityEntry> actionabilityEntry;
     @NotNull
     private final List<DriverGene> driverGenes;
-    @NotNull
-    private final List<PatientPrimaryTumor> patientPrimaryTumors;
 
     @NotNull
     public static RoseAlgo build(@NotNull String actionabilityDatabaseTsv, @NotNull String driverGeneTsv,
-            @NotNull RefGenomeVersion refGenomeVersion, @NotNull String primaryTumorTsv) throws IOException {
+            @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
         LOGGER.info("ROSE is running on ref genome version: {}", refGenomeVersion);
         List<ActionabilityEntry> actionabilityEntry = ActionabilityFileReader.read(actionabilityDatabaseTsv);
         List<DriverGene> driverGenes = readDriverGenesFromFile(driverGeneTsv);
-        List<PatientPrimaryTumor> patientPrimaryTumors = readPatientPrimaryTumors(primaryTumorTsv);
-        return new RoseAlgo(actionabilityEntry, driverGenes, patientPrimaryTumors);
+        return new RoseAlgo(actionabilityEntry, driverGenes);
     }
 
-    private RoseAlgo(final @NotNull List<ActionabilityEntry> actionabilityEntry, final @NotNull List<DriverGene> driverGenes,
-            final @NotNull List<PatientPrimaryTumor> patientPrimaryTumors) {
+    private RoseAlgo(final @NotNull List<ActionabilityEntry> actionabilityEntry, final @NotNull List<DriverGene> driverGenes) {
         this.actionabilityEntry = actionabilityEntry;
         this.driverGenes = driverGenes;
-        this.patientPrimaryTumors = patientPrimaryTumors;
     }
 
     @NotNull
@@ -83,7 +78,6 @@ public class RoseAlgo {
                 .molecularTissueOrigin(loadCuppaData(config))
                 .actionabilityEntries(actionabilityEntry)
                 .driverGenes(driverGenes)
-                .patientPrimaryTumors(patientPrimaryTumors)
                 .build();
     }
 
