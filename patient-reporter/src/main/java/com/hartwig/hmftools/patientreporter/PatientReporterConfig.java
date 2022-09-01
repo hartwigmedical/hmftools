@@ -65,8 +65,10 @@ public interface PatientReporterConfig {
     String LINX_SVS_TSV = "linx_svs_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
-    String MOLECULAR_TISSUE_ORIGIN_TXT = "molecular_tissue_origin_txt";
-    String MOLECULAR_TISSUE_ORIGIN_PLOT = "molecular_tissue_origin_plot";
+
+    String CUPPA_RESULT_CSV = "cuppa_result_csv";
+
+    String CUPPA_PLOT = "cuppa_plot";
     String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
     String LILAC_RESULT_CSV = "lilac_result_csv";
@@ -134,8 +136,8 @@ public interface PatientReporterConfig {
         options.addOption(LINX_SVS_TSV, true, "Path towards the linx svs TSV.");
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
-        options.addOption(MOLECULAR_TISSUE_ORIGIN_TXT, true, "Path towards the molecular tissue origin TXT.");
-        options.addOption(MOLECULAR_TISSUE_ORIGIN_PLOT, true, "Path towards the molecular tissue origin plot.");
+        options.addOption(CUPPA_RESULT_CSV, true, "Path towards the Cuppa result CSV.");
+        options.addOption(CUPPA_PLOT, true, "Path towards the molecular tissue origin plot.");
         options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
         options.addOption(LILAC_RESULT_CSV, true, "Path towards the LILAC result CSV.");
@@ -252,10 +254,10 @@ public interface PatientReporterConfig {
     String chordPredictionTxt();
 
     @NotNull
-    String molecularTissueOriginTxt();
+    String cuppaResultCsv();
 
     @NotNull
-    String molecularTissueOriginPlot();
+    String cuppaPlot();
 
     @NotNull
     String annotatedVirusTsv();
@@ -339,8 +341,8 @@ public interface PatientReporterConfig {
         String linxSvsTsv = Strings.EMPTY;
         String linxDriverCatalogTsv = Strings.EMPTY;
         String chordPredictionTxt = Strings.EMPTY;
-        String molecularTissueOriginTxt = Strings.EMPTY;
-        String molecularTissueOriginPlot = Strings.EMPTY;
+        String cuppaResultCsv = Strings.EMPTY;
+        String cuppaPlot = Strings.EMPTY;
         String annotatedVirusTsv = Strings.EMPTY;
         String peachGenotypeTsv = Strings.EMPTY;
         String protectEvidenceTsv = Strings.EMPTY;
@@ -378,8 +380,8 @@ public interface PatientReporterConfig {
             linxSvsTsv = nonOptionalFile(cmd, LINX_SVS_TSV);
             linxDriverCatalogTsv = nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV);
             chordPredictionTxt = nonOptionalFile(cmd, CHORD_PREDICTION_TXT);
-            molecularTissueOriginTxt = nonOptionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT);
-            molecularTissueOriginPlot = nonOptionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_PLOT);
+            cuppaResultCsv = nonOptionalFile(cmd, CUPPA_RESULT_CSV);
+            cuppaPlot = nonOptionalFile(cmd, CUPPA_PLOT);
             annotatedVirusTsv = nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV);
             peachGenotypeTsv = nonOptionalFile(cmd, PEACH_GENOTYPE_TSV);
             protectEvidenceTsv = nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV);
@@ -424,8 +426,8 @@ public interface PatientReporterConfig {
                 .linxSvsTsv(linxSvsTsv)
                 .linxDriverCatalogTsv(linxDriverCatalogTsv)
                 .chordPredictionTxt(chordPredictionTxt)
-                .molecularTissueOriginTxt(molecularTissueOriginTxt)
-                .molecularTissueOriginPlot(molecularTissueOriginPlot)
+                .cuppaResultCsv(cuppaResultCsv)
+                .cuppaPlot(cuppaPlot)
                 .annotatedVirusTsv(annotatedVirusTsv)
                 .peachGenotypeTsv(peachGenotypeTsv)
                 .protectEvidenceTsv(protectEvidenceTsv)

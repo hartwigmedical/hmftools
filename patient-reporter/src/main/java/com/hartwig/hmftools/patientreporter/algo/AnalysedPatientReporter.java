@@ -11,9 +11,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
+import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
@@ -27,6 +27,9 @@ import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
+import com.hartwig.hmftools.patientreporter.algo.orange.cuppa.CuppaData;
+import com.hartwig.hmftools.patientreporter.algo.orange.cuppa.CuppaDataFactory;
+import com.hartwig.hmftools.patientreporter.algo.orange.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.pipeline.PipelineVersion;
 
@@ -86,10 +89,17 @@ public class AnalysedPatientReporter {
         GenomicAnalysis overruledAnalysis = QualityOverruleFunctions.overrule(filteredAnalysis);
         GenomicAnalysis curateGeneName = CurationFunction.curation(overruledAnalysis);
 
-        LOGGER.info("Loading CUPPA result from {}", new File(config.molecularTissueOriginTxt()).getParent());
+        LOGGER.info("Loading CUPPA from {}", new File(config.cuppaResultCsv()).getParent());
+        List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
+        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
+
+        CuppaData cuppaData = CuppaDataFactory.create(cuppaEntries);
+        CuppaPrediction best = cuppaData.predictions().get(0);
+        LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
+
         MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
-                .conclusion(MolecularTissueOriginFile.read(config.molecularTissueOriginTxt()).conclusion())
-                .plotPath(config.molecularTissueOriginPlot())
+                .conclusion(best.cancerType() + " (" + best.likelihood() + ")")
+                .plotPath(config.cuppaPlot())
                 .build();
 
         LOGGER.info(" Molecular tissue origin conclusion: {}", molecularTissueOrigin.conclusion());
