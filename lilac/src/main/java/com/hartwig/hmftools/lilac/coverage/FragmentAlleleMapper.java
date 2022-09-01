@@ -480,7 +480,7 @@ public class FragmentAlleleMapper
 
                 ++supportCount;
 
-                LL_LOGGER.debug("wildcard allele({}) support from read({} {})",
+                LL_LOGGER.trace("wildcard allele({}) support from read({} {})",
                         allele, fragAllele.getFragment().id(), fragAllele.getFragment().readInfo());
             }
 

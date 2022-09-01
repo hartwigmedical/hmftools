@@ -191,7 +191,7 @@ public class LilacConfig
 
         Threads = parseThreads(cmd);
 
-        DebugPhasing = cmd.hasOption(DEBUG_PHASING); //  || cmd.hasOption(LOG_);
+        DebugPhasing = cmd.hasOption(DEBUG_PHASING);
         RunValidation = cmd.hasOption(RUN_VALIDATION);
         WriteAllFiles = cmd.hasOption(WRITE_ALL_FILES);
     }

@@ -116,6 +116,4 @@ public class LilacConstants
     public static String LILAC_FILE_SOMATIC_VCF = "lilac.somatic.vcf.gz";
     public static String LILAC_FILE_HLA_Y_COVERAGE = "hlay.coverage.csv";
     public static String LILAC_FILE_HLA_Y_FRAGMENTS = "hlay.fragments.csv";
-
-
 }

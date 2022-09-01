@@ -32,11 +32,14 @@ public class PhasedEvidenceFactory
 
     public List<PhasedEvidence> evidence(final HlaContext context, final List<Fragment> fragments)
     {
-        LL_LOGGER.debug("phasing {} records:", context.geneName());
+        if(mDebugPhasing)
+        {
+            LL_LOGGER.debug("phasing {} records:", context.geneName());
+        }
 
         List<PhasedEvidence> result = evidence(context.ExpectedAlleles, fragments);
 
-        if(LL_LOGGER.isDebugEnabled() || mDebugPhasing)
+        if(mDebugPhasing)
         {
             LL_LOGGER.debug("  consolidating evidence");
             for(PhasedEvidence phasedEvidence : result)

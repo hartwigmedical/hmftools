@@ -37,7 +37,7 @@ public final class ExtendEvidence
     {
         List<PhasedEvidence> results = Lists.newArrayList();
 
-        if (mConfig.DebugPhasing)
+        if(mConfig.DebugPhasing)
         {
             LL_LOGGER.info("  producing paired evidence");
         }
@@ -59,18 +59,18 @@ public final class ExtendEvidence
                 PhasedEvidence combinedEvidence = PhasedEvidence.evidence(mFragments, indices)
                         .removeSingles(mConfig.MinFragmentsToRemoveSingle);
 
-                if (combinedEvidence.totalEvidence() >= minTotalFragments && CombineEvidence.canCombine(left, combinedEvidence, right))
+                if(combinedEvidence.totalEvidence() >= minTotalFragments && CombineEvidence.canCombine(left, combinedEvidence, right))
                 {
                     results.add(combinedEvidence);
 
-                    if (mConfig.DebugPhasing)
+                    if(mConfig.DebugPhasing)
                     {
                         LL_LOGGER.info("  paired Evidence: {}", combinedEvidence);
                     }
                 }
                 else
                 {
-                    if (mConfig.DebugPhasing)
+                    if(mConfig.DebugPhasing)
                     {
                         LL_LOGGER.info("  failed paired Evidence: {}", combinedEvidence);
                     }
@@ -95,16 +95,16 @@ public final class ExtendEvidence
         List<PhasedEvidence> othersContainingMin = others.stream()
                 .filter(x -> x != current && x.getAminoAcidLoci().contains(minExisting)).collect(Collectors.toList());
 
-        if (!othersContainingMin.isEmpty() && !othersContainingMax.isEmpty())
+        if(!othersContainingMin.isEmpty() && !othersContainingMax.isEmpty())
         {
             PhasedEvidence left = othersContainingMin.get(0);
             PhasedEvidence right = othersContainingMax.get(0);
 
-            if (left.totalEvidence() > right.totalEvidence())
+            if(left.totalEvidence() > right.totalEvidence())
             {
                 Pair<PhasedEvidence, Set<PhasedEvidence>> result = merge(current, left, current);
 
-                if (result.getSecond().isEmpty())
+                if(result.getSecond().isEmpty())
                     return merge(current, current, right);
                 else
                     return result;
@@ -113,20 +113,20 @@ public final class ExtendEvidence
             {
                 Pair<PhasedEvidence, Set<PhasedEvidence>> result = merge(current, current, right);
 
-                if (result.getSecond().isEmpty())
+                if(result.getSecond().isEmpty())
                     return merge(current, left, current);
                 else
                     return result;
             }
         }
 
-        if (!othersContainingMin.isEmpty())
+        if(!othersContainingMin.isEmpty())
         {
             PhasedEvidence left = othersContainingMin.get(0);
             return merge(current, left, current);
         }
 
-        if (!othersContainingMax.isEmpty())
+        if(!othersContainingMax.isEmpty())
         {
             PhasedEvidence right = othersContainingMax.get(0);
             return merge(current, current, right);
@@ -152,17 +152,17 @@ public final class ExtendEvidence
         List<Fragment> filteredFragments = mFragments.stream()
                 .filter(x -> x.containsAminoAcids(mergeIndices)).collect(Collectors.toList());
 
-        if (!filteredFragments.isEmpty())
+        if(!filteredFragments.isEmpty())
         {
             int minTotalFragments = minTotalFragments(mergeIndices);
 
             PhasedEvidence mergeEvidence = PhasedEvidence.evidence(filteredFragments, mergeIndices).removeSingles(mConfig.MinFragmentsToRemoveSingle);
 
-            if (CombineEvidence.canCombine(left, mergeEvidence, right))
+            if(CombineEvidence.canCombine(left, mergeEvidence, right))
             {
                 PhasedEvidence combined = CombineEvidence.combine(left, mergeEvidence, right);
 
-                if (combined.totalEvidence() >= minTotalFragments)
+                if(combined.totalEvidence() >= minTotalFragments)
                 {
                     return Pair.create(combined, Sets.newHashSet(left, right));
                 }

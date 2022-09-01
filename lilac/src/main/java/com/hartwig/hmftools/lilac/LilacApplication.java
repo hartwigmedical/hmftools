@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.BASE_QUAL_PERCENTILE;
@@ -268,6 +269,8 @@ public class LilacApplication
         addPhasedCandidates(candidateAlleles, bCandidates, mConfig, mRefData);
         addPhasedCandidates(candidateAlleles, cCandidates, mConfig, mRefData);
 
+        LL_LOGGER.debug("post-candidates memory({}mb)", calcMemoryUsage());
+
         List<HlaAllele> recoveredAlleles = Lists.newArrayList();
 
         // make special note of the known stop-loss INDEL on HLA-C
@@ -378,10 +381,12 @@ public class LilacApplication
         mRefFragAlleles.clear();
         mRefFragAlleles.addAll(mFragAlleleMapper.createFragmentAlleles(refAminoAcidFrags, candidateSequences, candidateNucSequences));
 
+        LL_LOGGER.debug("frag-alleles memory({}mb)", calcMemoryUsage());
+
         List<HlaComplex> complexes = complexBuilder.buildComplexes(mRefFragAlleles, confirmedRecoveredAlleles);
         // allValid &= validateComplexes(complexes); // too expensive in current form even for validation, address in unit tests instead
 
-        LL_LOGGER.info("calculating coverage of {} complexes", complexes.size());
+        LL_LOGGER.info("calculating coverage for complexes({}) and ref alleles({})", complexes.size(), mRefFragAlleles.size());
         ComplexCoverageCalculator complexCalculator = new ComplexCoverageCalculator(mConfig.Threads, mConfig.TopScoreThreshold);
         List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(mRefFragAlleles, complexes);
 
@@ -393,6 +398,8 @@ public class LilacApplication
             LL_LOGGER.fatal("failed to calculate complex coverage");
             System.exit(1);
         }
+
+        LL_LOGGER.debug("post-calc memory({}mb)", calcMemoryUsage());
 
         ComplexCoverage winningRefCoverage = mRankedComplexes.get(0);
 

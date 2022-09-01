@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 public class CoverageCalcTask implements Callable<Long>
 {
@@ -21,8 +22,10 @@ public class CoverageCalcTask implements Callable<Long>
     private int mMaxFragments;
     private int mLowScoreCount;
 
-    private static final int CULL_COMPLEX_COUNT = 500000;
-    private static final int LOG_COMPLEX_COUNT = 250000;
+    private final PerformanceCounter mPerfCounter;
+
+    // private static final int CULL_COMPLEX_COUNT = 500000;
+    private static final int CULL_COMPLEX_COUNT = 100000;
     private static final int MIN_FRAG_DIFF = 40;
 
     public CoverageCalcTask(final int id, final List<HlaComplex> complexes, FragmentAlleleMatrix fragAlleleMatrix, double topScoreThreshold)
@@ -35,6 +38,7 @@ public class CoverageCalcTask implements Callable<Long>
         mTopScorePercDiff = min(topScoreThreshold * 5, 0.99);
         mMaxFragments = 0;
         mLowScoreCount = 0;
+        mPerfCounter = new PerformanceCounter("CalcCoverage");
     }
 
     public ComplexCoverage getCoverage() { return mCoverageResults.get(0); }
@@ -45,12 +49,18 @@ public class CoverageCalcTask implements Callable<Long>
     {
         boolean checkCull = mComplexes.size() >= CULL_COMPLEX_COUNT;
 
+        mPerfCounter.start();
+
         for(int i = 0; i < mComplexes.size(); ++i)
         {
-            if(checkCull && i > 0 && (i % LOG_COMPLEX_COUNT) == 0)
+            if(checkCull && i > 0 && (i % CULL_COMPLEX_COUNT) == 0)
             {
-                LL_LOGGER.debug(String.format("thread %d: complexes(%d) processed, discard(%d, %.0f%%)",
+                LL_LOGGER.debug(String.format("thread %d: complexes(%d) processed, discard(%d, %.2f%%)",
                         mId, i, mLowScoreCount, 100.0 * mLowScoreCount / i));
+
+                mPerfCounter.stop();
+                System.gc();
+                mPerfCounter.start();
             }
 
             ComplexCoverage result = calcCoverage(mComplexes.get(i));
@@ -60,6 +70,8 @@ public class CoverageCalcTask implements Callable<Long>
 
             mCoverageResults.add(result);
         }
+
+        mPerfCounter.stop();
 
         return (long)0;
     }
@@ -90,6 +102,8 @@ public class CoverageCalcTask implements Callable<Long>
 
     public void logPerfResults()
     {
+        mPerfCounter.logStats();
+
         /*
         LL_LOGGER.debug(String.format("filter perf: count(%d) avg(%.4f) max(%.4f)",
                 mPerfCounterFilter.getSampleCount(), mPerfCounterFilter.getAvgTime(), mPerfCounterFilter.getMaxTime()));

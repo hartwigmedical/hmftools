@@ -348,7 +348,7 @@ public class BamRecordReader implements BamReader
             {
                 if(codingRecord.getIndels().contains(STOP_LOSS_ON_C_INDEL))
                 {
-                    LL_LOGGER.debug("missing known indel fragment: {} {}", codingRecord.Id, codingRecord.readInfo());
+                    LL_LOGGER.trace("missing known indel fragment: {} {}", codingRecord.Id, codingRecord.readInfo());
                 }
 
                 // the other read belonging to this fragment won't be used
