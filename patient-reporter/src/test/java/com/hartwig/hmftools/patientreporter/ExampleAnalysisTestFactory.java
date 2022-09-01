@@ -1387,8 +1387,12 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static LilacSummaryData createTestLilacData() {
         List<LilacAllele> alleles = Lists.newArrayList();
-        alleles.add(LilacTestFactory.builder().allele("Allele 1").build());
-        alleles.add(LilacTestFactory.builder().allele("Allele 2").somaticInframeIndel(1D).build());
+        alleles.add(LilacTestFactory.builder().allele("A*123").build());
+        alleles.add(LilacTestFactory.builder().allele("A*345").build());
+        alleles.add(LilacTestFactory.builder().allele("B*456").somaticInframeIndel(1D).build());
+        alleles.add(LilacTestFactory.builder().allele("B*123").somaticInframeIndel(1D).build());
+        alleles.add(LilacTestFactory.builder().allele("C*789").somaticInframeIndel(0.8).build());
+        alleles.add(LilacTestFactory.builder().allele("C*657").somaticInframeIndel(0.8).build());
 
         return ImmutableLilacSummaryData.builder().qc("PASS").alleles(alleles).build();
     }

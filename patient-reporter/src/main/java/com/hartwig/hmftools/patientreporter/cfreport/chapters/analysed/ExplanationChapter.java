@@ -158,7 +158,14 @@ public class ExplanationChapter implements ReportChapter {
                                 + "observed variants, then 'Unresolved Haplotype' is called.",
                         "Wild type is assumed when no variants are observed." })));
         table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "The HLA Alleles" })));
+        table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "HLA Class I types (HLA-A, HLA-B and HLA-C) are "
+                + "reported based on blood analysis, and also includes the tumor status of each of those alleles (somatic mutations, "
+                + "complete loss, and/or allelic imbalance)\n"})
+
+                .add(createContentDivWithLinkThree("The IMGT/HLA database ", "https://www.ebi.ac.uk/ipd/imgt/hla/", " is used as a "
+                        + "reference set of Human MHC class I alleles. HLA typing is done to 4-digits, which means it uniquely "
+                        + "identifies a specific protein, but ignores synonymous variants (6 digits) and intronic differences "
+                        + "(8 digits).", "https://www.ebi.ac.uk/ipd/imgt/hla/"))));
 
         reportDocument.add(table);
     }

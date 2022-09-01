@@ -9,9 +9,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.hla.LilacAllele;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
@@ -26,6 +29,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
 import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
+import com.hartwig.hmftools.patientreporter.cfreport.data.HLAAllele;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
@@ -40,10 +44,13 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class SummaryChapter implements ReportChapter {
+    private static final Logger LOGGER = LogManager.getLogger(SummaryChapter.class);
 
     private static final float TABLE_SPACER_HEIGHT = 5;
     private static final DecimalFormat SINGLE_DECIMAL_FORMAT = ReportResources.decimalFormat("#.#");
@@ -106,6 +113,7 @@ public class SummaryChapter implements ReportChapter {
         renderTumorCharacteristics(reportDocument);
         renderGenomicAlterations(reportDocument);
         renderPeach(reportDocument);
+        renderHla(reportDocument);
     }
 
     private void renderClinicalConclusionText(@NotNull Document reportDocument) {
@@ -202,17 +210,15 @@ public class SummaryChapter implements ReportChapter {
                 TumorPurity.RANGE_MAX,
                 table);
 
-        String cuppaPrediction =
-                patientReport.cuppaPrediction() != null && patientReport.genomicAnalysis().hasReliablePurity()
-                        ? patientReport.cuppaPrediction().cancerType() + " (" + patientReport.cuppaPrediction().likelihood() + ")"
-                        : DataUtil.NA_STRING;
+        String cuppaPrediction = patientReport.cuppaPrediction() != null && patientReport.genomicAnalysis().hasReliablePurity()
+                ? patientReport.cuppaPrediction().cancerType() + " (" + patientReport.cuppaPrediction().likelihood() + ")"
+                : DataUtil.NA_STRING;
         Style dataStyleMolecularTissuePrediction =
                 hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Molecular tissue of origin prediction").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(cuppaPrediction).addStyle(
-                dataStyleMolecularTissuePrediction)));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(cuppaPrediction).addStyle(dataStyleMolecularTissuePrediction)));
 
         Style dataStyle = hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
@@ -389,6 +395,49 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Functions of the haplotypes").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(pgxFunctions)).addStyle(pgxStyle));
+
+        div.add(table);
+
+        report.add(div);
+    }
+
+    private void renderHla(@NotNull Document report) {
+        Div div = createSectionStartDiv(contentWidth());
+
+        Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
+        table.setWidth(contentWidth());
+        table.addCell(TableUtil.createLayoutCellSummary().add(new Paragraph("HLA Alleles").addStyle(ReportResources.sectionTitleStyle())));
+        table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
+
+        Set<String> HLAtypes = Sets.newHashSet();
+        Set<String> HLBtypes = Sets.newHashSet();
+        Set<String> HLCtypes = Sets.newHashSet();
+        Style hlaStyle = ReportResources.dataHighlightStyle();
+
+        for (LilacAllele lilacAllele : patientReport.genomicAnalysis().lilac().alleles()) {
+            String allele = lilacAllele.allele();
+            if (allele.startsWith("A*")) {
+                HLAtypes.add(allele.substring(1, allele.length()-1));
+            }
+            else if (allele.startsWith("B*")) {
+                HLBtypes.add(allele.substring(1, allele.length()-1));
+            }
+            else if (allele.startsWith("C*")) {
+                HLCtypes.add(allele.substring(1, allele.length()-1));
+            }
+        }
+
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                .add(new Paragraph("HLA Alleles").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createGeneListCell(HLAtypes).addStyle(hlaStyle));
+
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                .add(new Paragraph("HLB Alleles").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createGeneListCell(HLBtypes).addStyle(hlaStyle));
+
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                .add(new Paragraph("HLC Alleles").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createGeneListCell(HLCtypes).addStyle(hlaStyle));
 
         div.add(table);
 
