@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.rose;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -7,9 +8,10 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
-import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
+import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaData;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaDataFactory;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -24,7 +26,6 @@ import com.hartwig.hmftools.rose.actionability.ActionabilityFileReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class RoseAlgo {
@@ -75,7 +76,7 @@ public class RoseAlgo {
                 .linx(loadLinxData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
-                .molecularTissueOrigin(loadCuppaData(config))
+                .cuppaPrediction(loadCuppaData(config))
                 .actionabilityEntries(actionabilityEntry)
                 .driverGenes(driverGenes)
                 .build();
@@ -99,12 +100,15 @@ public class RoseAlgo {
     }
 
     @NotNull
-    private static MolecularTissueOrigin loadCuppaData(@NotNull RoseConfig config) throws IOException {
+    private static CuppaPrediction loadCuppaData(@NotNull RoseConfig config) throws IOException {
+        LOGGER.info("Loading CUPPA from {}", new File(config.cuppaResultCsv()).getParent());
+        List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
+        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
 
-        return ImmutableMolecularTissueOrigin.builder()
-                .conclusion(MolecularTissueOriginFile.read(config.molecularTissueOriginTxt()).conclusion())
-                .plotPath(Strings.EMPTY) //Plot isn't used in this tool
-                .build();
+        CuppaData cuppaData = CuppaDataFactory.create(cuppaEntries);
+        CuppaPrediction best = cuppaData.predictions().get(0);
+        LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
+        return best;
     }
 
     @NotNull

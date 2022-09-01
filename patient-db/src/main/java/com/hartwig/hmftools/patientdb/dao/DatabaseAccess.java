@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.amber.AmberMapping;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
 import com.hartwig.hmftools.common.chord.ChordData;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOrginData;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
@@ -343,8 +342,8 @@ public class DatabaseAccess implements AutoCloseable {
         return structuralVariantFusionDAO.readBreakends(sample);
     }
 
-    public void writeCanonicalTranscripts(
-            final String refGenomeVersion, final List<GeneData> geneDataList, final List<TranscriptData> transcripts) {
+    public void writeCanonicalTranscripts(final String refGenomeVersion, final List<GeneData> geneDataList,
+            final List<TranscriptData> transcripts) {
         canonicalTranscriptDAO.write(refGenomeVersion, geneDataList, transcripts);
     }
 
@@ -440,13 +439,13 @@ public class DatabaseAccess implements AutoCloseable {
         geneCopyNumberDAO.writeGermlineDeletions(sample, deletions);
     }
 
-    public void writeLinxDriverCatalog(
-            @NotNull String sample, @NotNull List<DriverCatalog> driverCatalog, final EnumSet<DriverType> driverTypes) {
+    public void writeLinxDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog,
+            final EnumSet<DriverType> driverTypes) {
         driverCatalogDAO.writeLinxDrivers(sample, driverCatalog, driverTypes);
     }
 
-    public void writePurpleDriverCatalog(
-            @NotNull String sample, @Nullable List<DriverCatalog> somaticCatalog, @Nullable List<DriverCatalog> germlineCatalog) {
+    public void writePurpleDriverCatalog(@NotNull String sample, @Nullable List<DriverCatalog> somaticCatalog,
+            @Nullable List<DriverCatalog> germlineCatalog) {
         driverCatalogDAO.writePurpleDrivers(sample, somaticCatalog, germlineCatalog);
     }
 
@@ -462,8 +461,8 @@ public class DatabaseAccess implements AutoCloseable {
         peachDAO.writePeach(sample, peachGenotypes, peachCalls);
     }
 
-    public void writeCuppa(@NotNull String sample, @NotNull MolecularTissueOrginData molecularTissueOrginData) {
-        cuppaDAO.writeCuppa(sample, molecularTissueOrginData);
+    public void writeCuppa(@NotNull String sample, @NotNull String cancerType, double likelihood) {
+        cuppaDAO.writeCuppa(sample, cancerType, likelihood);
     }
 
     public void writeVirusBreakend(@NotNull String sample, @NotNull List<VirusBreakend> virusBreakends) {
@@ -482,7 +481,9 @@ public class DatabaseAccess implements AutoCloseable {
         chordDAO.writeChord(sample, chordData);
     }
 
-    public ChordData readChord(final String sampleId) { return chordDAO.readChord(sampleId); }
+    public ChordData readChord(final String sampleId) {
+        return chordDAO.readChord(sampleId);
+    }
 
     public void writeSnpCheck(@NotNull String sample, boolean isPass) {
         snpCheckDAO.write(sample, isPass);

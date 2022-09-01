@@ -8,14 +8,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
-import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
@@ -41,14 +38,10 @@ import com.hartwig.hmftools.rose.actionability.ImmutableActionabilityKey;
 import com.hartwig.hmftools.rose.actionability.TypeAlteration;
 
 import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class ConclusionAlgo {
-    private static final Logger LOGGER = LogManager.getLogger(ConclusionAlgo.class);
 
     private static final Set<String> FUSION_TYPES = Sets.newHashSet(KnownFusionType.PROMISCUOUS_3.toString(),
             KnownFusionType.PROMISCUOUS_5.toString(),
@@ -79,7 +72,7 @@ public class ConclusionAlgo {
         List<HomozygousDisruption> homozygousDisruptions = roseData.linx().homozygousDisruptions();
         List<AnnotatedVirus> reportableViruses = roseData.virusInterpreter().reportableViruses();
 
-        generateCUPPAConclusion(conclusion, roseData.molecularTissueOrigin(), actionabilityMap);
+        generateCUPPAConclusion(conclusion, roseData.cuppaPrediction(), actionabilityMap);
         generateVariantConclusion(conclusion,
                 reportableVariants,
                 actionabilityMap,
@@ -133,10 +126,10 @@ public class ConclusionAlgo {
         return driverGeneMap;
     }
 
-    public static void generateCUPPAConclusion(@NotNull List<String> conclusion, MolecularTissueOrigin molecularTissueOrigin,
+    public static void generateCUPPAConclusion(@NotNull List<String> conclusion, CuppaPrediction cuppaPrediction,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
 
-        if (molecularTissueOrigin.conclusion().contains("results inconclusive")) {
+        if (cuppaPrediction.cancerType().contains("results inconclusive")) {
             ActionabilityKey keyCuppaInconclusice =
                     ImmutableActionabilityKey.builder().match("CUPPA_INCONCLUSIVE").type(TypeAlteration.CUPPA_INCONCLUSIVE).build();
 
@@ -149,7 +142,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppa);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.add("- " + entry.conclusion() + " " + molecularTissueOrigin.conclusion());
+                conclusion.add("- " + entry.conclusion() + " " + cuppaPrediction.cancerType());
             }
         }
     }

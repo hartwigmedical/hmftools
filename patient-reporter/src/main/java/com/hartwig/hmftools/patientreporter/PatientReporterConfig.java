@@ -5,7 +5,6 @@ import java.nio.file.Files;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.patientreporter.panel.PanelFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.apache.commons.cli.CommandLine;
@@ -65,9 +64,7 @@ public interface PatientReporterConfig {
     String LINX_SVS_TSV = "linx_svs_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
-
     String CUPPA_RESULT_CSV = "cuppa_result_csv";
-
     String CUPPA_PLOT = "cuppa_plot";
     String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";

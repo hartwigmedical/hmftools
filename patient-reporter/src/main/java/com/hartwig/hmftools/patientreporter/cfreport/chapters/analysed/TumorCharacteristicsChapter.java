@@ -201,9 +201,9 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         reportDocument.add(createCharacteristicDiv("Molecular tissue of origin prediction"));
         Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10 }));
         table.setWidth(contentWidth());
-        if (patientReport.molecularTissueOrigin() != null && patientReport.genomicAnalysis().hasReliablePurity()) {
+        if (patientReport.cuppaPlot() != null && patientReport.genomicAnalysis().hasReliablePurity()) {
 
-            String molecularTissueOriginPlot = patientReport.molecularTissueOrigin().plotPath();
+            String cuppaPlot = patientReport.cuppaPlot();
             if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_209.display()) || patientReport.qsFormNumber()
                     .equals(QsFormNumber.FOR_080.display())) {
                 if (patientReport.genomicAnalysis().impliedPurity() < ReportResources.PURITY_CUTOFF) {
@@ -213,13 +213,13 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
                 try {
                     reportDocument.add(createCharacteristicDiv("")); // For better display plot
-                    Image circosImage = new Image(ImageDataFactory.create(molecularTissueOriginPlot));
+                    Image circosImage = new Image(ImageDataFactory.create(cuppaPlot));
                     circosImage.setMaxHeight(250);
                     circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
                     circosImage.setMarginBottom(8);
                     reportDocument.add(circosImage);
                 } catch (MalformedURLException e) {
-                    throw new IOException("Failed to read molecular tissue origin plot image at " + molecularTissueOriginPlot);
+                    throw new IOException("Failed to read molecular tissue origin plot image at " + cuppaPlot);
                 }
             }
 

@@ -202,16 +202,16 @@ public class SummaryChapter implements ReportChapter {
                 TumorPurity.RANGE_MAX,
                 table);
 
-        String molecularTissuePrediction =
-                patientReport.molecularTissueOrigin() != null && patientReport.genomicAnalysis().hasReliablePurity()
-                        ? patientReport.molecularTissueOrigin().conclusion()
+        String cuppaPrediction =
+                patientReport.cuppaPrediction() != null && patientReport.genomicAnalysis().hasReliablePurity()
+                        ? patientReport.cuppaPrediction().cancerType() + " (" + patientReport.cuppaPrediction().likelihood() + ")"
                         : DataUtil.NA_STRING;
         Style dataStyleMolecularTissuePrediction =
                 hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Molecular tissue of origin prediction").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(molecularTissuePrediction).addStyle(
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(cuppaPrediction).addStyle(
                 dataStyleMolecularTissuePrediction)));
 
         Style dataStyle = hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();

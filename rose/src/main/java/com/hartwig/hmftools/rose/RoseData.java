@@ -3,8 +3,7 @@ package com.hartwig.hmftools.rose;
 import java.util.List;
 
 import com.hartwig.hmftools.common.chord.ChordData;
-import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.purple.loader.PurpleData;
@@ -39,7 +38,7 @@ public abstract class RoseData {
     public abstract ChordData chord();
 
     @NotNull
-    public abstract MolecularTissueOrigin molecularTissueOrigin();
+    public abstract CuppaPrediction cuppaPrediction();
 
     @NotNull
     public abstract List<ActionabilityEntry> actionabilityEntries();

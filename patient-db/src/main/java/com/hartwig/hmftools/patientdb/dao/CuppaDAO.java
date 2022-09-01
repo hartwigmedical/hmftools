@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CUPPA;
 
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOrginData;
-
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
@@ -18,12 +16,12 @@ public class CuppaDAO {
         this.context = context;
     }
 
-    void writeCuppa(@NotNull String sample, @NotNull MolecularTissueOrginData molecularTissueOrginData) {
+    void writeCuppa(@NotNull String sample, @NotNull String cancerType, double likelihood) {
         deleteCuppaForSample(sample);
         LocalDateTime timestamp = LocalDateTime.now();
 
         context.insertInto(CUPPA, CUPPA.MODIFIED, CUPPA.SAMPLEID, CUPPA.CUPPATUMORLOCATION, CUPPA.CUPPAPREDICTION)
-                .values(timestamp, sample, molecularTissueOrginData.predictedOrigin(), molecularTissueOrginData.predictionLikelihood())
+                .values(timestamp, sample, cancerType, Double.toString(likelihood))
                 .execute();
     }
 

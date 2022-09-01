@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.algo.orange.cuppa;
+package com.hartwig.hmftools.common.cuppa.interpretation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
