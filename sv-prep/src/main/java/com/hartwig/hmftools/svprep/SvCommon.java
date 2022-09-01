@@ -10,6 +10,7 @@ public class SvCommon
     public static final Logger SV_LOGGER = LogManager.getLogger(SvCommon.class);
 
     public static final String DELIM = ",";
+    public static final String BED_DELIM = "\t";
     public static final String ITEM_DELIM = ";";
     public static final String SUB_ITEM_DELIM = ":";
 

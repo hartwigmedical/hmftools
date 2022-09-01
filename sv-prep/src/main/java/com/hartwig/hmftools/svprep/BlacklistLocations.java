@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svprep;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.svprep.SvCommon.BED_DELIM;
+import static com.hartwig.hmftools.svprep.SvCommon.DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import java.io.BufferedReader;
@@ -96,7 +98,7 @@ public class BlacklistLocations
                 if(line.contains("Chromosome"))
                     continue;
 
-                final String[] values = line.split("\t", -1);
+                final String[] values = line.split(BED_DELIM, -1);
 
                 if(values.length < 3)
                 {
