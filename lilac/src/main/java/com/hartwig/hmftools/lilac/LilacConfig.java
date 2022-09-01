@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_TOP_SCORE_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 
 import com.google.common.collect.Lists;
@@ -74,6 +75,7 @@ public class LilacConfig
 
     public final boolean DebugPhasing;
     public final boolean RunValidation;
+    public final int FatalLowCoverage;
     public final int MaxEliminationCandidates;
 
     // optional: pre-determine sample alleles, forced to be the final solution so coverage can be reported
@@ -112,6 +114,7 @@ public class LilacConfig
     public static final String RUN_VALIDATION = "run_validation";
     public static final String MAX_ELIM_CANDIDATES = "max_elim_candidates";
     public static final String WRITE_ALL_FILES = "write_all_files";
+    public static final String FATAL_LOW_COVERAGE = "fatal_low_coverage";
 
     public static final Logger LL_LOGGER = LogManager.getLogger(LilacConfig.class);;
 
@@ -178,6 +181,7 @@ public class LilacConfig
 
         MinFragmentsPerAllele = getConfigValue(cmd, MIN_FRAGMENTS_PER_ALLELE, DEFAULT_FRAGS_PER_ALLELE);
         MinFragmentsToRemoveSingle = getConfigValue(cmd, MIN_FRAGMENTS_TO_REMOVE_SINGLE, DEFAULT_FRAGS_REMOVE_SGL);
+        FatalLowCoverage = getConfigValue(cmd, FATAL_LOW_COVERAGE, DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD);
 
         TopScoreThreshold = min(getConfigValue(cmd, TOP_SCORE_THRESHOLD, DEFAULT_TOP_SCORE_THRESHOLD), 0.5);
 
@@ -282,6 +286,7 @@ public class LilacConfig
         MinFragmentsPerAllele = DEFAULT_FRAGS_PER_ALLELE;
         MinFragmentsToRemoveSingle = DEFAULT_FRAGS_REMOVE_SGL;
         TopScoreThreshold = DEFAULT_TOP_SCORE_THRESHOLD;
+        FatalLowCoverage = DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD;
 
         CopyNumberFile = "";
         SomaticVariantsFile = "";
@@ -307,12 +312,27 @@ public class LilacConfig
         options.addOption(RNA_BAM, true,"Analyse tumor BAM only");
         options.addOption(RUN_ID, true,"Only search for HLA-Y fragments");
         options.addOption(RESOURCE_DIR, true,"Path to resource files");
-        options.addOption(MIN_BASE_QUAL, true,"Min base quality threshold");
-        options.addOption(MIN_EVIDENCE, true,"Min fragment evidence required");
-        options.addOption(MIN_HIGH_QUAL_EVIDENCE_FACTOR, true,"Min high-qual fragment evidence factor");
-        options.addOption(MIN_EVIDENCE_FACTOR, true,"Min fragment evidence factor");
-        options.addOption(MIN_FRAGMENTS_PER_ALLELE, true,"MIN_FRAGMENTS_PER_ALLELE");
-        options.addOption(MIN_FRAGMENTS_TO_REMOVE_SINGLE, true,"MIN_FRAGMENTS_TO_REMOVE_SINGLE");
+
+        options.addOption(MIN_BASE_QUAL, true,"Min base quality threshold, default: " + DEFAULT_MIN_BASE_QUAL);
+
+        options.addOption(MIN_EVIDENCE, true,"Min fragment evidence required, default: " + DEFAULT_MIN_EVIDENCE);
+
+        options.addOption(
+                MIN_HIGH_QUAL_EVIDENCE_FACTOR, true,
+                "Min high-qual fragment evidence factor, default: " + DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);
+
+        options.addOption(
+                MIN_EVIDENCE_FACTOR, true,"Min fragment evidence factor, default: " + DEFAULT_MIN_EVIDENCE_FACTOR);
+
+        options.addOption(
+                MIN_FRAGMENTS_PER_ALLELE, true,"Min fragments per allele, default: " + DEFAULT_FRAGS_PER_ALLELE);
+
+        options.addOption(
+                MIN_FRAGMENTS_TO_REMOVE_SINGLE, true,"Min fragments to remote single, default: " + DEFAULT_FRAGS_REMOVE_SGL);
+
+        options.addOption(
+                FATAL_LOW_COVERAGE, true,"Fatal low coverage, default: " + DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD);
+
         options.addOption(TOP_SCORE_THRESHOLD, true,"Max distance from top score");
         options.addOption(ACTUAL_ALLELES, true,"Comma separated known actual alleles for the sample");
         options.addOption(RESTRICTED_ALLELES, true,"Comma separated restricted analysis allele list");

@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.BASE_QUAL_PERCENTILE;
 import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.FATAL_LOW_COVERAGE_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
@@ -708,7 +708,7 @@ public class LilacApplication
         int bLowCoverage = (int)Arrays.stream(geneBaseDepth.get(HLA_B)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
         int cLowCoverage = (int)Arrays.stream(geneBaseDepth.get(HLA_C)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
 
-        if(!mConfig.ReferenceBam.isEmpty() && aLowCoverage + bLowCoverage + cLowCoverage >= FATAL_LOW_COVERAGE_THRESHOLD)
+        if(!mConfig.ReferenceBam.isEmpty() && aLowCoverage + bLowCoverage + cLowCoverage >= mConfig.FatalLowCoverage)
         {
             LL_LOGGER.warn("gene depth coverage(A={} B={} C={}) too low, exiting", aLowCoverage, bLowCoverage, cLowCoverage);
             return false;
