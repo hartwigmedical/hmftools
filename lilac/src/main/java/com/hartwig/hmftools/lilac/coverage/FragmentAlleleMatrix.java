@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.coverage;
 
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+
 import java.util.List;
 import java.util.Map;
 
@@ -17,11 +19,19 @@ public class FragmentAlleleMatrix
     private final int mAlleleCount;
     private final int mFragCount;
 
-    private final boolean[][][] mMatrix;
+    private final SupportType[][] mMatrix;
 
     private static int FULL = 0;
     private static int WILD = 1;
     private static int ITEMS = WILD + 1;
+
+    private enum SupportType
+    {
+        FULL,
+        WILD,
+        BOTH,
+        NONE;
+    }
 
     public FragmentAlleleMatrix(final List<FragmentAlleles> fragmentAlleles, final List<HlaAllele> alleles)
     {
@@ -33,7 +43,15 @@ public class FragmentAlleleMatrix
         mAlleleCount = alleles.size();
         mFragCount = fragmentAlleles.size();
 
-        mMatrix = new boolean[mFragCount][mAlleleCount][ITEMS];
+        mMatrix = new SupportType[mFragCount][mAlleleCount];
+
+        for(int f = 0; f < mFragCount; ++f)
+        {
+            for(int a = 0; a < mAlleleCount; ++a)
+            {
+                mMatrix[f][a] = SupportType.NONE;
+            }
+        }
 
         buildAlleleFragmentMatrix();
     }
@@ -50,19 +68,44 @@ public class FragmentAlleleMatrix
         {
             FragmentAlleles fragment = mFragmentAlleles.get(fragIndex);
 
-            for(int type = FULL; type <= WILD; ++type)
+            for(HlaAllele allele : fragment.getFull())
             {
-                List<HlaAllele> alleles = type == FULL ? fragment.getFull() : fragment.getWild();
-                for(HlaAllele allele : alleles)
-                {
-                    Integer alleleIndex = mAlleleIndexMap.get(allele);
+                Integer alleleIndex = mAlleleIndexMap.get(allele);
 
-                    if(alleleIndex == null)
-                        continue;
+                if(alleleIndex == null)
+                    continue;
 
-                    mMatrix[fragIndex][alleleIndex][type] = true;
-                }
+                mMatrix[fragIndex][alleleIndex] = SupportType.FULL;
             }
+
+            for(HlaAllele allele : fragment.getWild())
+            {
+                Integer alleleIndex = mAlleleIndexMap.get(allele);
+
+                if(alleleIndex == null)
+                    continue;
+
+                if(mMatrix[fragIndex][alleleIndex] == SupportType.FULL)
+                    mMatrix[fragIndex][alleleIndex] = SupportType.BOTH;
+                else
+                    mMatrix[fragIndex][alleleIndex] = SupportType.WILD;
+            }
+        }
+    }
+
+    private class AlleleCounts
+    {
+        public final int AlleleIndex;
+
+        public boolean Full = false;
+        public boolean Wild = false;
+        public int UniqueCoverage = 0;
+        public double CombinedCoverage = 0;
+        public double WildCoverage = 0;
+
+        public AlleleCounts(int alleleIndex)
+        {
+            AlleleIndex = alleleIndex;
         }
     }
 
@@ -71,10 +114,7 @@ public class FragmentAlleleMatrix
         List<HlaAllele> alleles = complex.Alleles;
         int alleleCount = alleles.size();
 
-        int[] alleleIndices = new int[alleleCount];
-        int[] uniqueCoverage = new int[alleleCount];
-        double[] combinedCoverage = new double[alleleCount];
-        double[] wildCoverage = new double[alleleCount];
+        AlleleCounts[] alleleCounts = new AlleleCounts[alleleCount];
 
         for(int i = 0; i < alleleCount; ++i)
         {
@@ -82,11 +122,8 @@ public class FragmentAlleleMatrix
             if(alleleIndex == null)
                 return Lists.newArrayList();
 
-            alleleIndices[i] = alleleIndex;
+            alleleCounts[i] = new AlleleCounts(alleleIndex);
         }
-
-        boolean[] full = new boolean[alleleCount];
-        boolean[] wild = new boolean[alleleCount];
 
         for(int fragIndex = 0; fragIndex < mFragCount; ++fragIndex)
         {
@@ -96,28 +133,30 @@ public class FragmentAlleleMatrix
 
             for(int i = 0; i < alleleCount; ++i)
             {
-                full[i] = false;
-                wild[i] = false;
+                alleleCounts[i].Full = false;
+                alleleCounts[i].Wild = false;
 
-                int alleleIndex = alleleIndices[i];
+                int alleleIndex = alleleCounts[i].AlleleIndex;
 
-                if(mMatrix[fragIndex][alleleIndex][FULL])
+                SupportType supportType = mMatrix[fragIndex][alleleIndex];
+
+                if(supportType == SupportType.FULL || supportType == SupportType.BOTH)
                 {
-                    full[i] = true;
+                    alleleCounts[i].Full = true;
                     ++fullCount;
                     fullAlleleIndex = i;
                 }
 
-                if(mMatrix[fragIndex][alleleIndex][WILD])
+                if(supportType == SupportType.WILD || supportType == SupportType.BOTH)
                 {
-                    wild[i] = true;
+                    alleleCounts[i].Wild = true;
                     ++wildCount;
                 }
             }
 
             if(fullCount == 1 && wildCount == 0)
             {
-                ++uniqueCoverage[fullAlleleIndex];
+                ++alleleCounts[fullAlleleIndex].UniqueCoverage;
             }
             else if(fullCount > 0 || wildCount > 0)
             {
@@ -125,11 +164,15 @@ public class FragmentAlleleMatrix
 
                 for(int i = 0; i < alleleCount; ++i)
                 {
-                    if(full[i])
-                        combinedCoverage[i] += contribution;
+                    if(alleleCounts[i].Full)
+                    {
+                        alleleCounts[i].CombinedCoverage += contribution;
+                    }
 
-                    if(wild[i])
-                        wildCoverage[i] += contribution;
+                    if(alleleCounts[i].Wild)
+                    {
+                        alleleCounts[i].WildCoverage += contribution;
+                    }
                 }
             }
         }
@@ -138,7 +181,8 @@ public class FragmentAlleleMatrix
 
         for(int i = 0; i < alleleCount; ++i)
         {
-            alleleCoverages.add(new AlleleCoverage(alleles.get(i), uniqueCoverage[i], combinedCoverage[i], wildCoverage[i]));
+            alleleCoverages.add(new AlleleCoverage(
+                    alleles.get(i), alleleCounts[i].UniqueCoverage, alleleCounts[i].CombinedCoverage, alleleCounts[i].WildCoverage));
         }
 
         return alleleCoverages;

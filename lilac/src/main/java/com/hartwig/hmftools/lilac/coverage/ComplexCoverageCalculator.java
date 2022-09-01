@@ -37,6 +37,9 @@ public class ComplexCoverageCalculator
             return calcTask.getCoverageResults();
         }
 
+        LL_LOGGER.debug("built fragment allele matrix: fragAlleles({}) complexes({}) alleles({})",
+                fragmentAlleles.size(), complexes.size(), alleles.size());
+
         return calcMultiThreadResults(complexes, fragAlleleMatrix);
     }
 

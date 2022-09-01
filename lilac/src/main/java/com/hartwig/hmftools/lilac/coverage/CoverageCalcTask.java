@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.coverage;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
@@ -63,10 +64,13 @@ public class CoverageCalcTask implements Callable<Long>
                 mPerfCounter.start();
             }
 
-            ComplexCoverage result = calcCoverage(mComplexes.get(i));
+            List<AlleleCoverage> alleleCoverage = mFragAlleleMatrix.create(mComplexes.get(i));
+            int totalFragments = calcTotalFragments(alleleCoverage);
 
-            if(checkCull && canCull(result))
+            if(checkCull && canCull(totalFragments)) // result.TotalCoverage
                 continue;
+
+            ComplexCoverage result = ComplexCoverage.create(alleleCoverage);
 
             mCoverageResults.add(result);
         }
@@ -76,18 +80,34 @@ public class CoverageCalcTask implements Callable<Long>
         return (long)0;
     }
 
-    private boolean canCull(final ComplexCoverage result)
+    private int calcTotalFragments(List<AlleleCoverage> alleleCoverage)
     {
-        if(result.TotalCoverage > mMaxFragments)
+        int unique = 0;
+        double shared = 0.0;
+        double wild = 0.0;
+
+        for(AlleleCoverage coverage : alleleCoverage)
         {
-            mMaxFragments = result.TotalCoverage;
+            unique += coverage.UniqueCoverage;
+            shared += coverage.SharedCoverage;
+            wild += coverage.WildCoverage;
+        }
+
+        return unique + (int)round(shared) + (int)round(wild);
+    }
+
+    private boolean canCull(final int totalCoverage)
+    {
+        if(totalCoverage > mMaxFragments)
+        {
+            mMaxFragments = totalCoverage;
             return false;
         }
 
-        if(mMaxFragments - result.TotalCoverage < MIN_FRAG_DIFF)
+        if(mMaxFragments - totalCoverage < MIN_FRAG_DIFF)
             return false;
 
-        if(result.TotalCoverage > mMaxFragments * (1 - mTopScorePercDiff))
+        if(totalCoverage > mMaxFragments * (1 - mTopScorePercDiff))
             return false;
 
         ++mLowScoreCount;

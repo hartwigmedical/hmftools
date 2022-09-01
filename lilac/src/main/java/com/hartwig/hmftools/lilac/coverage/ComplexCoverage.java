@@ -65,18 +65,6 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
     private int calcHomozygousCount()
     {
         return EXPECTED_ALLELE_COUNT - getAlleles().size();
-        /*  no repeats so just take the size relative to expected
-        int hgCount = 0;
-        final List<HlaAllele> alleles = getAlleles();
-
-        for(int i = 0; i < alleles.size() - 1; i = i + 2)
-        {
-            if(alleles.get(i).matches(alleles.get(i + 1)))
-                ++hgCount;
-        }
-
-        return hgCount;
-        */
     }
 
     public boolean isHomozygous(final HlaAllele allele)
