@@ -187,8 +187,7 @@ public class CFReportWriter implements ReportWriter {
         if (writeToFile) {
 
             XmlMapper xmlMapper = new XmlMapper();
-            xmlMapper.enable(SerializationFeature.WRITE_DATE_KEYS_AS_TIMESTAMPS);
-            xmlMapper.enable(SerializationFeature.WRITE_DATES_WITH_ZONE_ID);
+            xmlMapper.configure(ToXmlGenerator.Feature.WRITE_XML_DECLARATION, true);
 
             String outputFileData = outputDirData + File.separator + OutputFileUtil.generateOutputFileNameForXML(report);
             xmlMapper.writerWithDefaultPrettyPrinter().writeValue(new File(outputFileData), importWGS);

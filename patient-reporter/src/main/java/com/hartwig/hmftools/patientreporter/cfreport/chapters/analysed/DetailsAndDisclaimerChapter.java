@@ -81,12 +81,12 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
         div.add(createContentParagraphTwice("This experiment is performed on the tumor sample which arrived on ",
                 DataUtil.formatDate(sampleReport.tumorArrivalDate()),
-                " with internal tumor barcode ",
-                sampleReport.tumorSampleBarcode()));
+                " with barcode ",
+                sampleReport.tumorReceivedSampleId()));
         div.add(createContentParagraphTwice("This experiment is performed on the blood sample which arrived on ",
                 DataUtil.formatDate(sampleReport.refArrivalDate()),
-                " with internal blood barcode ",
-                DataUtil.formatNullableString(sampleReport.refSampleBarcode())));
+                " with barcode ",
+                DataUtil.formatNullableString(sampleReport.referenceReceivedSampleId())));
         div.add(createContentParagraph("The results stated in this report are based on the tested tumor and blood sample."));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
         String whoVerified = "This report was generated " + patientReport.user();

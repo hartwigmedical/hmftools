@@ -74,8 +74,8 @@ public class SampleAndDisclaimerChapterFail implements ReportChapter {
 
         div.add(createContentParagraphTwice("This experiment is performed on the tumor sample which arrived on ",
                 DataUtil.formatDate(sampleReport.tumorArrivalDate()),
-                " with internal tumor barcode ",
-                sampleReport.tumorSampleBarcode()));
+                " with barcode ",
+                sampleReport.tumorReceivedSampleId()));
         div.add(createContentParagraph("The results stated in this report are based on the tested tumor sample."));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
         String whoVerified = "This report was generated " + report.user();

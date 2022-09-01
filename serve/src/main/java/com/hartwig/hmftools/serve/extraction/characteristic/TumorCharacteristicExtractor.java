@@ -14,7 +14,7 @@ public class TumorCharacteristicExtractor {
     private static final Logger LOGGER = LogManager.getLogger(TumorCharacteristicExtractor.class);
 
     @NotNull
-    private final Set<String> microsatelliteInstableKeyPhrases;
+    private final Set<String> microsatelliteUnstableKeyPhrases;
     @NotNull
     private final Set<String> microsatelliteStableKeyPhrases;
     @NotNull
@@ -32,12 +32,12 @@ public class TumorCharacteristicExtractor {
     @NotNull
     private final Set<String> ebvPositiveEvents;
 
-    public TumorCharacteristicExtractor(@NotNull final Set<String> microsatelliteInstableKeyPhrases,
+    public TumorCharacteristicExtractor(@NotNull final Set<String> microsatelliteUnstableKeyPhrases,
             @NotNull final Set<String> microsatelliteStableKeyPhrases, @NotNull final Set<String> highTumorMutationalLoadKeyPhrases,
             @NotNull final Set<String> lowTumorMutationalLoadKeyPhrases, @NotNull final Set<String> highTumorMutationalBurdenKeyPhrases,
             @NotNull final Set<String> lowTumorMutationalBurdenKeyPhrases, @NotNull final Set<String> hrDeficiencyKeyPhrases,
             @NotNull final Set<String> hpvPositiveEvents, @NotNull final Set<String> ebvPositiveEvents) {
-        this.microsatelliteInstableKeyPhrases = microsatelliteInstableKeyPhrases;
+        this.microsatelliteUnstableKeyPhrases = microsatelliteUnstableKeyPhrases;
         this.microsatelliteStableKeyPhrases = microsatelliteStableKeyPhrases;
         this.highTumorMutationalLoadKeyPhrases = highTumorMutationalLoadKeyPhrases;
         this.lowTumorMutationalLoadKeyPhrases = lowTumorMutationalLoadKeyPhrases;
@@ -66,8 +66,8 @@ public class TumorCharacteristicExtractor {
 
     @Nullable
     private TumorCharacteristicAnnotation determineCharacteristic(@NotNull String event) {
-        if (hasKeyPhraseMatch(event, microsatelliteInstableKeyPhrases)) {
-            return TumorCharacteristicAnnotation.MICROSATELLITE_INSTABLE;
+        if (hasKeyPhraseMatch(event, microsatelliteUnstableKeyPhrases)) {
+            return TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE;
         } else if (hasKeyPhraseMatch(event, microsatelliteStableKeyPhrases)) {
             return TumorCharacteristicAnnotation.MICROSATELLITE_STABLE;
         } else if (hasKeyPhraseMatch(event, highTumorMutationalLoadKeyPhrases)) {

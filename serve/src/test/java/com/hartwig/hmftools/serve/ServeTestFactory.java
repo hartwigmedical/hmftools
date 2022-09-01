@@ -222,7 +222,7 @@ public final class ServeTestFactory {
     public static ActionableCharacteristic createTestActionableCharacteristic() {
         return ImmutableActionableCharacteristic.builder()
                 .from(createTestBaseEvent())
-                .name(TumorCharacteristicAnnotation.MICROSATELLITE_INSTABLE)
+                .name(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE)
                 .build();
     }
 

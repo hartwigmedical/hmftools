@@ -39,7 +39,7 @@ public final class ActinClassificationConfig {
     private static final Set<String> EXONIC_DEL_DUP_FUSION_EVENTS = exonicDelDupFusionEvents();
     private static final Set<String> FUSION_PAIR_EVENTS_TO_SKIP = fusionPairEventsToSkip();
     private static final Set<String> PROMISCUOUS_FUSION_KEY_PHRASES = promiscuousFusionKeyPhrases();
-    private static final Set<String> MICROSATELLITE_INSTABLE_KEY_PHRASES = microsatelliteInstableKeyPhrases();
+    private static final Set<String> MICROSATELLITE_UNSTABLE_KEY_PHRASES = microsatelliteUnstableKeyPhrases();
     private static final Set<String> MICROSATELLITE_STABLE_KEY_PHRASES = microsatelliteStableKeyPhrases();
     private static final Set<String> HIGH_TUMOR_MUTATIONAL_LOAD_KEY_PHRASES = highTumorMutationalLoadKeyPhrases();
     private static final Set<String> LOW_TUMOR_MUTATIONAL_LOAD_KEY_PHRASES = lowTumorMutationalLoadKeyPhrases();
@@ -82,7 +82,7 @@ public final class ActinClassificationConfig {
                 .exonicDelDupFusionEvents(EXONIC_DEL_DUP_FUSION_EVENTS)
                 .fusionPairEventsToSkip(FUSION_PAIR_EVENTS_TO_SKIP)
                 .promiscuousFusionKeyPhrases(PROMISCUOUS_FUSION_KEY_PHRASES)
-                .microsatelliteInstableKeyPhrases(MICROSATELLITE_INSTABLE_KEY_PHRASES)
+                .microsatelliteUnstableKeyPhrases(MICROSATELLITE_UNSTABLE_KEY_PHRASES)
                 .microsatelliteStableKeyPhrases(MICROSATELLITE_STABLE_KEY_PHRASES)
                 .highTumorMutationalLoadKeyPhrases(HIGH_TUMOR_MUTATIONAL_LOAD_KEY_PHRASES)
                 .lowTumorMutationalLoadKeyPhrases(LOW_TUMOR_MUTATIONAL_LOAD_KEY_PHRASES)
@@ -231,7 +231,7 @@ public final class ActinClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> microsatelliteInstableKeyPhrases() {
+    private static Set<String> microsatelliteUnstableKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add(ActinKeywords.MSI_SIGNATURE);
         return set;

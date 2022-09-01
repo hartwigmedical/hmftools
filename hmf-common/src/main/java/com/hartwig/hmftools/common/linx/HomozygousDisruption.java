@@ -11,15 +11,15 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class HomozygousDisruption
 {
-    @JacksonXmlProperty(isAttribute = true, localName = "chr")
+    @JacksonXmlProperty(localName = "chr")
     @NotNull
     public abstract String chromosome();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "chrbd")
+    @JacksonXmlProperty(localName = "chrbd")
     @NotNull
     public abstract String chromosomeBand();
 
-    @JacksonXmlProperty(isAttribute = true, localName = "gene")
+    @JacksonXmlProperty(localName = "gene")
     @NotNull
     public abstract String gene();
 

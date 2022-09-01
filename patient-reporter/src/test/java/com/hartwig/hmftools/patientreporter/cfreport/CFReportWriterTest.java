@@ -50,7 +50,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = true;
+    private static final boolean WRITE_TO_PDF = false;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -441,6 +441,8 @@ public class CFReportWriterTest {
     private static SampleReport generateSampleReport(@NotNull SampleMetadata sampleMetadata) {
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
+                .tumorReceivedSampleId("FB123")
+                .referenceReceivedSampleId("ST123")
                 .patientPrimaryTumor(ImmutablePatientPrimaryTumor.builder()
                         .patientIdentifier("test")
                         .location("Skin")
@@ -474,6 +476,8 @@ public class CFReportWriterTest {
 
         SampleReport sampleReport = ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
+                .referenceReceivedSampleId("FB123")
+                .tumorReceivedSampleId("ST001")
                 .patientPrimaryTumor(ImmutablePatientPrimaryTumor.builder()
                         .patientIdentifier(sampleId)
                         .location("Skin")
