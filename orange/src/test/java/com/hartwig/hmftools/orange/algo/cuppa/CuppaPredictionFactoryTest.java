@@ -20,7 +20,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class CuppaDataFactoryTest {
+public class CuppaPredictionFactoryTest {
 
     private static final String CUPPA_TEST_CSV = Resources.getResource("test_run/cuppa/tumor_sample.cup.data.csv").getPath();
 

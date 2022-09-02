@@ -9,9 +9,8 @@ import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaData;
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaDataFactory;
 import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPredictionFactory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -105,8 +104,8 @@ public class RoseAlgo {
         List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
         LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
 
-        CuppaData cuppaData = CuppaDataFactory.create(cuppaEntries);
-        CuppaPrediction best = cuppaData.predictions().get(0);
+        List<CuppaPrediction> predictions = CuppaPredictionFactory.create(cuppaEntries);
+        CuppaPrediction best = predictions.get(0);
         LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
         return best;
     }

@@ -9,9 +9,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaData;
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaDataFactory;
 import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPredictionFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -49,8 +48,8 @@ public class LoadCuppa {
         List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(cuppaResultsCsv);
         LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), cuppaResultsCsv);
 
-        CuppaData cuppaData = CuppaDataFactory.create(cuppaEntries);
-        CuppaPrediction best = cuppaData.predictions().get(0);
+        List<CuppaPrediction> predictions = CuppaPredictionFactory.create(cuppaEntries);
+        CuppaPrediction best = predictions.get(0);
         LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
 
         LOGGER.info("Writing CUPPA into database for {}", sample);

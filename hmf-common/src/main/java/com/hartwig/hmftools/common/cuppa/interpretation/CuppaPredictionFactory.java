@@ -7,33 +7,21 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.DataTypes;
-import com.hartwig.hmftools.common.cuppa.SvDataType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class CuppaDataFactory {
+public class CuppaPredictionFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(CuppaDataFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(CuppaPredictionFactory.class);
 
-    private CuppaDataFactory() {
+    private CuppaPredictionFactory() {
     }
 
     @NotNull
-    public static CuppaData create(@NotNull List<CuppaDataFile> entries) {
-        return ImmutableCuppaData.builder()
-                .predictions(extractPredictions(entries))
-                .simpleDups32To200B(safeInt(entries, SvDataType.SIMPLE_DUP_32B_200B))
-                .maxComplexSize(safeInt(entries, SvDataType.MAX_COMPLEX_SIZE))
-                .LINECount(safeInt(entries, SvDataType.LINE))
-                .telomericSGLs(safeInt(entries, SvDataType.TELOMERIC_SGL))
-                .build();
-    }
-
-    @NotNull
-    private static List<CuppaPrediction> extractPredictions(@NotNull List<CuppaDataFile> entries) {
+    public static List<CuppaPrediction> create(@NotNull List<CuppaDataFile> entries) {
         String bestCombinedType = determineBestCombinedDataType(entries);
         if (bestCombinedType == null) {
             LOGGER.warn("Could not find a valid combined data type amongst cuppa entries");
@@ -91,28 +79,6 @@ public class CuppaDataFactory {
             return DataTypes.DATA_TYPE_RNA_COMBINED;
         }
 
-        return null;
-    }
-
-    private static int safeInt(@NotNull List<CuppaDataFile> entries, @NotNull SvDataType svDataType) {
-        CuppaDataFile entry = findSvEntry(entries, svDataType);
-        if (entry != null) {
-            return (int) Math.round(Double.parseDouble(entry.Value));
-        } else {
-            // -1 is a magic value that can never exist in reality.
-            return -1;
-        }
-    }
-
-    @Nullable
-    private static CuppaDataFile findSvEntry(@NotNull List<CuppaDataFile> entries, @NotNull SvDataType dataType) {
-        for (CuppaDataFile entry : entries) {
-            if (entry.Category == CategoryType.SV && entry.DataType.equals(dataType.toString())) {
-                return entry;
-            }
-        }
-
-        LOGGER.warn("Could not find entry with data type '{}'", dataType);
         return null;
     }
 }
