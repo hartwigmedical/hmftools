@@ -11,9 +11,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
-import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
+import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
+import com.hartwig.hmftools.common.cuppa.interpretation.ImmutableCuppaPrediction;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
@@ -27,6 +26,9 @@ import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaData;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaDataFactory;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.pipeline.PipelineVersion;
 
@@ -86,13 +88,20 @@ public class AnalysedPatientReporter {
         GenomicAnalysis overruledAnalysis = QualityOverruleFunctions.overrule(filteredAnalysis);
         GenomicAnalysis curateGeneName = CurationFunction.curation(overruledAnalysis);
 
-        LOGGER.info("Loading CUPPA result from {}", new File(config.molecularTissueOriginTxt()).getParent());
-        MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
-                .conclusion(MolecularTissueOriginFile.read(config.molecularTissueOriginTxt()).conclusion())
-                .plotPath(config.molecularTissueOriginPlot())
-                .build();
+        LOGGER.info("Loading CUPPA from {}", new File(config.cuppaResultCsv()).getParent());
+        List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
+        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
 
-        LOGGER.info(" Molecular tissue origin conclusion: {}", molecularTissueOrigin.conclusion());
+        CuppaData cuppaData = CuppaDataFactory.create(cuppaEntries);
+        CuppaPrediction best = cuppaData.predictions().get(0);
+        if (best.likelihood() > 0.8) {
+            best = cuppaData.predictions().get(0);
+        } else {
+            // our cut off is 80% likelihood. When this is below 80% then the results is inconclusive
+            best = ImmutableCuppaPrediction.builder().cancerType("results inclonsive").likelihood(0).build();
+        }
+
+        LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
 
         List<PeachGenotype> peachGenotypes = curateGeneName.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION)
                 ? Lists.newArrayList()
@@ -107,10 +116,11 @@ public class AnalysedPatientReporter {
                 .specialRemark(specialRemark)
                 .pipelineVersion(pipelineVersion)
                 .genomicAnalysis(curateGeneName)
-                .molecularTissueOrigin(
+                .cuppaPrediction(
                         curateGeneName.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION) || !curateGeneName.hasReliablePurity()
                                 ? null
-                                : molecularTissueOrigin)
+                                : best)
+                .cuppaPlot(config.cuppaPlot())
                 .circosPath(config.purpleCircosPlot())
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectedReport())
@@ -168,8 +178,8 @@ public class AnalysedPatientReporter {
         GenomicAnalysis analysis = report.genomicAnalysis();
 
         LOGGER.info("Printing genomic analysis results for {}:", report.sampleReport().tumorSampleId());
-        if (report.molecularTissueOrigin() != null) {
-            LOGGER.info(" Molecular tissue origin conclusion: {}", report.molecularTissueOrigin().conclusion());
+        if (report.cuppaPrediction() != null) {
+            LOGGER.info(" Molecular tissue origin conclusion: {}", report.cuppaPrediction().cancerType());
         }
         LOGGER.info(" Somatic variants to report: {}", analysis.reportableVariants().size());
         if (report.sampleReport().germlineReportingLevel() != LimsGermlineReportingLevel.NO_REPORTING) {

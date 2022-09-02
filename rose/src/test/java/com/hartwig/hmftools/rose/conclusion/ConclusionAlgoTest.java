@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 import java.util.List;
 import java.util.Map;
@@ -17,10 +16,8 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.chord.ImmutableChordData;
-import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
-import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
-import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
+import com.hartwig.hmftools.common.cuppa.interpretation.ImmutableCuppaPrediction;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogTestFactory;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -30,7 +27,6 @@ import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.purple.loader.GainLossTestFactory;
@@ -61,58 +57,14 @@ import org.junit.Test;
 public class ConclusionAlgoTest {
 
     @Test
-    public void canResolveTumorLocation() {
-        PatientPrimaryTumor patientPrimaryTumorWithLocationAndType = ImmutablePatientPrimaryTumor.builder()
-                .patientIdentifier("patient ID")
-                .location("Bone/Soft tissue")
-                .subLocation(Strings.EMPTY)
-                .type("Alveolar soft part sarcoma")
-                .subType(Strings.EMPTY)
-                .extraDetails(Strings.EMPTY)
-                .doids(Sets.newHashSet())
-                .snomedConceptIds(Sets.newHashSet())
-                .isOverridden(false)
-                .build();
-        assertEquals("Bone/Soft tissue (Alveolar soft part sarcoma)",
-                ConclusionAlgo.resolveTumorLocation(patientPrimaryTumorWithLocationAndType));
-
-        PatientPrimaryTumor patientPrimaryTumorWithLocationAndSubLocation = ImmutablePatientPrimaryTumor.builder()
-                .patientIdentifier("patient ID")
-                .location("Adrenal gland")
-                .subLocation("Adrenal cortex")
-                .type(Strings.EMPTY)
-                .subType(Strings.EMPTY)
-                .extraDetails(Strings.EMPTY)
-                .doids(Sets.newHashSet())
-                .snomedConceptIds(Sets.newHashSet())
-                .isOverridden(false)
-                .build();
-        assertEquals("Adrenal cortex", ConclusionAlgo.resolveTumorLocation(patientPrimaryTumorWithLocationAndSubLocation));
-
-        PatientPrimaryTumor patientPrimaryTumorAll = ImmutablePatientPrimaryTumor.builder()
-                .patientIdentifier("patient ID")
-                .location("Nervous system")
-                .subLocation("Olfactory nerve")
-                .type("Blastoma")
-                .subType("Olfactory neuroblastoma")
-                .extraDetails(Strings.EMPTY)
-                .doids(Sets.newHashSet())
-                .snomedConceptIds(Sets.newHashSet())
-                .isOverridden(false)
-                .build();
-        assertEquals("Olfactory nerve (Olfactory neuroblastoma)", ConclusionAlgo.resolveTumorLocation(patientPrimaryTumorAll));
-
-    }
-
-    @Test
     public void canGenerateCUPPAConclusion() {
         List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
         actionabilityMap = testActionabilityMap(actionabilityMap, "CUPPA", TypeAlteration.CUPPA, "CUPPA", Condition.OTHER, "CUPPA");
 
-        MolecularTissueOrigin molecularTissueOrigin =
-                ImmutableMolecularTissueOrigin.builder().plotPath(Strings.EMPTY).conclusion("Melanoma").build();
-        ConclusionAlgo.generateCUPPAConclusion(conclusion, molecularTissueOrigin, actionabilityMap);
+        CuppaPrediction cuppaPrediction =
+                ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(99.6).build();
+        ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
         assertEquals(1, conclusion.size());
         assertEquals(conclusion.get(0), "- CUPPA Melanoma");
@@ -130,9 +82,10 @@ public class ConclusionAlgoTest {
                 Condition.OTHER,
                 "results inconclusive");
 
-        MolecularTissueOrigin molecularTissueOrigin =
-                ImmutableMolecularTissueOrigin.builder().plotPath(Strings.EMPTY).conclusion("results inconclusive").build();
-        ConclusionAlgo.generateCUPPAConclusion(conclusion, molecularTissueOrigin, actionabilityMap);
+        CuppaPrediction cuppaPrediction =
+                ImmutableCuppaPrediction.builder().cancerType("results inconclusive").likelihood(0).build();
+
+        ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
         assertEquals(1, conclusion.size());
         assertEquals(conclusion.get(0), "- results inconclusive");

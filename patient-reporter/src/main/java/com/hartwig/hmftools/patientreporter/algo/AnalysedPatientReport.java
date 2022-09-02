@@ -3,10 +3,10 @@ package com.hartwig.hmftools.patientreporter.algo;
 import java.util.List;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +38,10 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract GenomicAnalysis genomicAnalysis();
 
     @Nullable
-    public abstract MolecularTissueOrigin molecularTissueOrigin();
+    public abstract CuppaPrediction cuppaPrediction();
+
+    @Nullable
+    public abstract String cuppaPlot();
 
     @NotNull
     public abstract String circosPath();

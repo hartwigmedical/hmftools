@@ -38,8 +38,8 @@ public final class PatientReporterTestFactory {
     private static final String LINX_SVS_TSV = RUN_DIRECTORY + "/linx/sample.linx.svs.tsv";
     private static final String LINX_DRIVER_CATALOG_TSV = RUN_DIRECTORY + "/linx/sample.linx.driver.catalog.tsv";
     private static final String CHORD_PREDICTION_TXT = RUN_DIRECTORY + "/chord/sample_chord_prediction.txt";
-    private static final String MOLECULAR_TISSUE_ORIGIN_TXT = RUN_DIRECTORY + "/cuppa/sample.cuppa.conclusion.txt";
-    private static final String MOLECULAR_TISSUE_ORIGIN_PLOT = RUN_DIRECTORY + "/cuppa/sample.cuppa.chart.png";
+    private static final String CUPPA_RESULT_CSV = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.data.csv";
+    private static final String CUPPA_PLOT = RUN_DIRECTORY + "/cuppa/sample.cuppa.chart.png";
     private static final String ANNOTATED_VIRUS_TSV = RUN_DIRECTORY + "/virusbreakend/sample.virus.annotated.tsv";
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/sample.peach.genotype.tsv";
     private static final String PROTECT_EVIDENCE_TSV = RUN_DIRECTORY + "/protect/sample.protect.tsv";
@@ -88,8 +88,8 @@ public final class PatientReporterTestFactory {
                 .linxSvsTsv(LINX_SVS_TSV)
                 .linxDriverCatalogTsv(LINX_DRIVER_CATALOG_TSV)
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
-                .molecularTissueOriginTxt(MOLECULAR_TISSUE_ORIGIN_TXT)
-                .molecularTissueOriginPlot(MOLECULAR_TISSUE_ORIGIN_PLOT)
+                .cuppaResultCsv(CUPPA_RESULT_CSV)
+                .cuppaPlot(CUPPA_PLOT)
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
                 .protectEvidenceTsv(PROTECT_EVIDENCE_TSV)

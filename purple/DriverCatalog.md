@@ -25,7 +25,7 @@ reportGermlineDisruption | 'TRUE','FALSE'| Report germline gene deletions and st
 additionalReportedTranscript | <Ensembl Transcript Stable Id> | Ensembl transcripts to report on in addition to the ensembl canonical transcript (eg. CDKN2Ap14Arf). Any drivers on the additional transcript will be added to the driver catalog table as a separate record with canonicalTranscript=0. Copy number data for that transcript will also be added to the geneCopyNumber table and any somatic or germline point mutations will report the effect of the variant on the additional transcript in the otherTranscriptEffects column in somaticVariant and germlineVariant tables. Any breakend impacting the additional transcript will also be reported in the svBreakend table
 
 Up to 3 individual driver catalog records may be added per gene per sample if more than 1 type of event is present: 
-* Germline mutations (GERMLINE)
+* Germline mutations (GERMLINE_MUTATION,GERMLINE_DELETION,GERMLINE_DISRUPTION)
 * Copy number or disruption events (DEL,AMP,HOM_DISRUPTION) 
 * Somatic point mutations (MUTATION).
 

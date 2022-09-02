@@ -49,8 +49,7 @@ public class RoseApplication {
         LOGGER.info("Running ROSE algo on sample {})", config.tumorSampleId());
 
         RoseAlgo algo = RoseAlgo.build(config.actionabilityDatabaseTsv(),
-                config.driverGeneTsv(), config.refGenomeVersion(),
-                config.primaryTumorTsv());
+                config.driverGeneTsv(), config.refGenomeVersion());
         RoseData roseData = algo.run(config);
 
         ActionabilityConclusion actionabilityConclusion = ConclusionAlgo.generateConclusion(roseData);

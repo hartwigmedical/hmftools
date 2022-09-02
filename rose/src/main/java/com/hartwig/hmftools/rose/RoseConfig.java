@@ -37,8 +37,7 @@ public interface RoseConfig {
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String DRIVER_GENE_TSV = "driver_gene_tsv";
-    String PRIMARY_TUMOR_TSV = "primary_tumor_tsv";
-    String MOLECULAR_TISSUE_ORIGIN_TXT = "molecular_tissue_origin_txt";
+    String CUPPA_RESULT_CSV = "cuppa_result_csv";
     // Some additional optional params and flags
     String LOG_DEBUG = "log_debug";
 
@@ -70,11 +69,9 @@ public interface RoseConfig {
 
         options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
 
-        options.addOption(MOLECULAR_TISSUE_ORIGIN_TXT, true, "Path towards the molecular tissue origin TXT.");
+        options.addOption(CUPPA_RESULT_CSV, true, "Path towards the Cuppa result CSV.");
 
         options.addOption(DRIVER_GENE_TSV, true, "Path to driver gene TSV");
-
-        options.addOption(PRIMARY_TUMOR_TSV, true, "Path towards the (curated) primary tumor TSV.");
 
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         return options;
@@ -135,13 +132,10 @@ public interface RoseConfig {
     String annotatedVirusTsv();
 
     @NotNull
-    String molecularTissueOriginTxt();
+    String cuppaResultCsv();
 
     @NotNull
     String driverGeneTsv();
-
-    @NotNull
-    String primaryTumorTsv();
 
     @NotNull
     static RoseConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
@@ -168,9 +162,8 @@ public interface RoseConfig {
                 .linxDriverCatalogTsv(nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
                 .annotatedVirusTsv(nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
-                .molecularTissueOriginTxt(nonOptionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT))
+                .cuppaResultCsv(nonOptionalFile(cmd, CUPPA_RESULT_CSV))
                 .driverGeneTsv(nonOptionalFile(cmd, DRIVER_GENE_TSV))
-                .primaryTumorTsv(nonOptionalFile(cmd, PRIMARY_TUMOR_TSV))
                 .build();
     }
 
