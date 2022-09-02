@@ -105,12 +105,12 @@ public class HaplotypeQC
         int unusedCount = 0;
         int maxSupport = 0;
 
-        for (Haplotype unmatched : distinctHaplotypes)
+        for(Haplotype unmatched : distinctHaplotypes)
         {
             if(unmatched.matchingFragmentCount() < LOG_UNMATCHED_HAPLOTYPE_SUPPORT)
                 continue;
 
-            if (inPon(unmatched))
+            if(inPon(unmatched))
             {
                 pon++;
                 LL_LOGGER.info("  UNMATCHED_PON_HAPLTOYPE - {}", unmatched);
@@ -175,8 +175,8 @@ public class HaplotypeQC
                 if(!positionsOverlap(fragment.minAminoAcidLocus(), fragment.maxAminoAcidLocus(), haplotype.StartLocus, haplotype.EndLocus))
                     continue;
 
-                boolean matches = true;
                 int matchCount = 0;
+                int lowQualMatchCount = 0;
 
                 for(int locus = haplotype.StartLocus; locus <= haplotype.EndLocus; ++locus)
                 {
@@ -192,25 +192,28 @@ public class HaplotypeQC
                         // retrieve the low-qual acid instead
                         fragmentAA = fragment.getLowQualAminoAcid(locus);
 
-                        if(fragmentAA.isEmpty())
+                        if(fragmentAA.isEmpty()) // cannot form an AA at this locus
                             continue;
                     }
 
                     if(!fragmentAA.equals(haplotype.sequence(locus)))
-                    {
-                        matches = false;
                         break;
-                    }
 
-                    ++matchCount;
+                    if(index >= 0)
+                        ++matchCount;
+                    else
+                        ++lowQualMatchCount;
                 }
 
-                if(matches && matchCount > 0)
+                if(matchCount + lowQualMatchCount > 0)
                 {
-                    //LL_LOGGER.debug("haplotype({}) supported by fragment({} {}) matchedAAs({})",
-                    //        haplotype, fragment.id(), fragment.readInfo(), matchCount);
+                    boolean fullSupport = (matchCount + lowQualMatchCount) == haplotype.Haplotype.length();
 
-                    haplotype.addMatchingFragmentCount();
+                    //LL_LOGGER.debug("haplotype({}) support({} low-qual={} {}) from fragment({} {})",
+                    //        haplotype, matchCount, lowQualMatchCount, fullSupport ? "full" : "partial", fragment.id(), fragment.readInfo());
+
+                    if(fullSupport)
+                        haplotype.addMatchingFragmentCount();
                 }
             }
         }

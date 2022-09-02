@@ -108,8 +108,8 @@ public class Haplotype
 
     public String toString()
     {
-        return String.format("loci(%d - %d) frags(supporting=%d phased=%d) haplotype=%s",
-                StartLocus, EndLocus, mMatchingFragmentCount, PhasedFragmentCount, Haplotype);
+        return String.format("%s loci(%d - %d) frags(supporting=%d phased=%d)",
+                Haplotype, StartLocus, EndLocus, mMatchingFragmentCount, PhasedFragmentCount);
     }
 
     public static class HaplotypeFragmentSorter implements Comparator<Haplotype>
@@ -135,7 +135,5 @@ public class Haplotype
 
             return 0;
         }
-
     }
-
 }
