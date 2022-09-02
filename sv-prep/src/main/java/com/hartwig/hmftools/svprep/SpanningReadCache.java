@@ -201,15 +201,6 @@ public class SpanningReadCache
             return;
         }
 
-        /*
-        // don't store reads which fall in blacklist regions
-        if(!mConfig.RetrieveBlacklistMates && expectedRead != null && mConfig.Blacklist.inBlacklistLocation(
-                expectedRead.Chromosome, expectedRead.Position, expectedRead.Position + mConfig.ReadLength))
-        {
-            return;
-        }
-        */
-
         CachedReadGroup cachedReadGroup = null;
 
         // search all remote partitions for an existing group to add these reads to

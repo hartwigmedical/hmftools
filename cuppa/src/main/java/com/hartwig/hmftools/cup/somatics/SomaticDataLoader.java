@@ -211,7 +211,6 @@ public class SomaticDataLoader
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());
 
-            final String header = fileData.get(0);
             fileData.remove(0);
 
             for(final String line : fileData)
@@ -232,6 +231,8 @@ public class SomaticDataLoader
 
                 sigContribs.put(sigName, sigContrib);
             }
+
+            CUP_LOGGER.info("loaded {} sample sig-contributions records from file({})", sampleSigContributions.size(), filename);
         }
         catch (IOException e)
         {

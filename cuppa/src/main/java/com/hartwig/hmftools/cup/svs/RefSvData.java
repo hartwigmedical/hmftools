@@ -234,6 +234,8 @@ public class RefSvData implements RefClassifier
 
         loadSvDataFromCohortFile(filename, svDataMap);
 
+        CUP_LOGGER.info("loaded {} sample SV records from file({})", svDataMap.size(), filename);
+
         // restrict to the loaded ref samples
         for(SvData svData : svDataMap.values())
         {

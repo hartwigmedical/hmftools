@@ -372,6 +372,8 @@ public class RefSampleTraits implements RefClassifier
 
         loadTraitsFromCohortFile(filename, traitsDataMap);
 
+        CUP_LOGGER.info("loaded {} sample traits records from file({})", traitsDataMap.size(), filename);
+
         // restrict to the loaded ref samples
         for(SampleTraitsData traits : traitsDataMap.values())
         {

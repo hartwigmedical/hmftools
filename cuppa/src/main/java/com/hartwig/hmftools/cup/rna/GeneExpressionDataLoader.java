@@ -85,11 +85,13 @@ public class GeneExpressionDataLoader
                 ++geneIndex;
             }
 
+            CUP_LOGGER.info("loaded RNA expression data for {} samples from{}", sampleTpmIndex.size(), filename);
+
             return sampleGeneExpression;
         }
         catch (IOException e)
         {
-            CUP_LOGGER.debug("failed to load RNA expression ref data from {}: {}", filename, e.toString());
+            CUP_LOGGER.error("failed to load RNA expression ref data from {}: {}", filename, e.toString());
         }
 
         return null;
