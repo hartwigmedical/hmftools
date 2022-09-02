@@ -83,10 +83,12 @@ public class CuppaPredictionFactory
         if (hasOverallCombinedType)
         {
             return DataTypes.DATA_TYPE_COMBINED;
-        } else if (hasDnaCombinedType)
+        }
+        else if (hasDnaCombinedType)
         {
             return DataTypes.DATA_TYPE_DNA_COMBINED;
-        } else if (hasRnaCombinedType)
+        }
+        else if (hasRnaCombinedType)
         {
             return DataTypes.DATA_TYPE_RNA_COMBINED;
         }
