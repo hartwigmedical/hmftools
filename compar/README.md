@@ -14,26 +14,46 @@ java -jar compar.jar \
 ```
 
 ## Configuration
+The key configuration values to set are:
+- the sample(s) or to compare
+- the categories to compare - each of these will map to specific pipeline output files
+- the source of data - either the MySQL hmf_patients DB or pipeine output files 
  
-The following filters are applied to all variants
+### Required configuration
 
 Filter | Description
 ---|---
-sample | Tumor sample ID or
+sample | Tumor sample ID, OR
 sample_id_file | File with column header SampleId and then list of sample IDs
-categories | 'ALL', otherwise specify a comma-separated list from PURITY, COPY_NUMBER, DRIVER, SOMATIC_VARIANT, LINX_DATA, FUSION, DISRUPTION, CUPPA, CHORD, LILAC
+categories | 'ALL', otherwise specify a comma-separated list from PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_DELETION, GERMLINE_SV, FUSION, DISRUPTION, CUPPA, CHORD, LILAC
 match_level | REPORTABLE (default) or DETAILED
 file_sources | List of sources and their file locations - see format below
 db_sources |  List of sources and their DB locations - see format below
 output_dir | Path for output file
+
+### Optional configuration
+
+Filter | Description
+---|---
 output_id | Optional: outfile file suffix
 source_sample_mappings | Optional: suffix to add to each sampleId by source, eg "run_01=_01,run_02=_02"
 
 ### File Sourced Data
-Specify 'file_sources' config with a comma-separated list of the follow:
-- SourceName
-- optional sample directory - path to directory containing sample files
-- optional Linx, Purple and Somatic file directories, with relative path used if sample directory is specified
+Specify 'file_sources' config with a comma-separated list paths to each of directories containing pipeline output files.
+
+Set the path for each category of pipeline data being compared, or set 'sample_dir' as a default or some or all pipeline output files are in a single directory.
+
+Category | Config Path Id
+---|---
+PURITY, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_DELETION | purple_dir
+FUSION, DISRUPTION | linx_dir
+GERMLINE_SV | linx_germline_dir
+PURITY | purple_dir
+CUPPA | cuppa_dir
+CHORD | chord_dir
+LILAC | lilac_dir
+
+Wildcards '*' can be used in place of sampleIds, in which case Compar will replace the wildcard with the sampleId for each path.
 
 Example 1
 ```
@@ -44,17 +64,11 @@ will load run 01 data from /path_to_sample_data/run_01/ and run 02 data from /pa
 
 Example 2
 ```
-file_sources="RUN_01;sample_dir=/path_to_sample_data/run_01/;linx_dir=linx;purple_dir=purple,RUN_02 etc"
+file_sources="RUN_01;sample_dir=/path_to_sample_data/run_01/;linx_dir=/path_to_sample_data/*/linx/,RUN_02 etc"
 ```
 
-will load run 01 data Linx data from /path_to_sample_data/run_01/linx/ and Purple data from /path_to_sample_data/run_01/purple/ 
+will load run 01 data Linx data from /path_to_sample_data/SAMPLE_ID/linx/ and all other data from /path_to_sample_data/run_01/ 
 
-Example 3
-```
-file_sources="RUN_01;linx_dir=/path_to_sample_data/run_01/linx;purple_dir=/path_to_sample_data/run_01/purple/,RUN_02 etc"
-```
-
-will load run 01 data Linx data from /path_to_sample_data/run_01/linx/ and Purple data from /path_to_sample_data/run_01/purple/ 
 
 ### Database Sourced Data
 Specify 'db_sources' config with a comma-separated list of the follow:
@@ -90,12 +104,12 @@ tmlStatus | Exact
 purity | Threshold  [0.02]
 ploidy | Threshold  [0.1]
 contamination | Threshold  [0.005]
-tmbPerMb | Threshold  [1%]
-msIndelsPerMb | Threshold  [1%]
-tml | Threshold  [1%]
-copyNumberSegments | Threshold  [10%]
-unsupportedCopyNumberSegments | Threshold  [10%]
-svTmb | Threshold  [3%]
+tmbPerMb | Threshold  [0.1, 5%]
+msIndelsPerMb | Threshold  [0.1, 5%]
+tml | Threshold  [1, 5%]
+copyNumberSegments | Threshold  [5, 20%]
+unsupportedCopyNumberSegments | Threshold  [5, 20%]
+svTmb | Threshold  [2, 5%]
 
 ### Somatic Variant
 Data key: SampleId, Chromosome, Position, Ref and Alt
@@ -113,7 +127,7 @@ otherTranscriptEffects | Exact
 tier | Exact
 hotspot | Exact
 biallelic | Exact
-qual | max(20,20%)
+qual | Threshold [20, 20%]
 subclonalLikelihood | [0.6]
 has LPS | true / false
 
@@ -135,7 +149,7 @@ hotspot | Exact
 biallelic | Exact
 pathogenicity | Exact
 pathogenic | Exact
-qual | max(20,20%)
+qual | Threshold [20, 20%]
 
 ### Germline Deletion
 Data key: SampleId, Gene
@@ -145,8 +159,8 @@ Field | Match Type & Thresholds
 reported | Exact
 germlineStatus | Exact
 tumorStatus | Exact
-germlineCopyNumber | max(0.2, 10%)
-tumorCopyNumber | max(0.2, 10%)
+germlineCopyNumber | Threshold [0.2, 10%]
+tumorCopyNumber | Threshold [0.2, 10%]
 
 ### Drivers (Linx and Purple)
 Data key: SampleId, GeneId, TranscriptId, Driver-type
@@ -155,7 +169,7 @@ Field | Match Type & Thresholds
 ---|---
 likelihoodMethod | Exact
 driverLikelihood | [0.1]
-minCopyNumber | max(0.2, 10%) for AMPs and DELs
+minCopyNumber | max(0.2, 10%) for AMPs and DELs - not currently checked
 
 ### Fusions
 Data key: SampleId, Fusion name
@@ -183,7 +197,16 @@ geneOrientation | Exact
 regionType | Exact
 codingContext | Exact
 nextSpliceExonRank | Exact
-undisruptedCopyNumber | max(0.2, 10%)
+undisruptedCopyNumber | max(0.2, 10%) - not currently checked
+
+### Germline SV
+Data key: SampleId, SV coordinates (chromosome, position, orientation), Gene
+
+Field | Match Type & Thresholds 
+---|---
+reported | Exact
+qual | Threshold [20, 20%]
+germlineFragments | Threshold [5, 10%]
 
 ### Cuppa
 Data key: SampleId, ClassifierName
@@ -191,18 +214,18 @@ Data key: SampleId, ClassifierName
 Field | Match Type & Thresholds 
 ---|---
 topRefCancerType | Exact
-topRefValue | 0.1
+topRefValue | Threshold [10%]
 
 ### Chord
 Data key: SampleId
 
 Field | Match Type & Thresholds 
 ---|---
-BRCA1 | 0.1
-BRCA2 | 0.1
+BRCA1 | Threshold [0.1]
+BRCA2 | Threshold [0.1]
 status | Exact
 type | Exact
-hrdScore | 0.1
+hrdScore | Threshold [0.1]
 
 ### Lilac
 Data key: SampleId
@@ -214,5 +237,4 @@ alleles | Exact - checks all 6 alleles match
 somaticVariants | Exact - number of annotated somatic variants match
 
 ## Version History and Download Links
-- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.1)
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.0)
