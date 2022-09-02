@@ -5,5 +5,5 @@ public enum ResultType
     PERCENTILE,
     PREVALENCE,
     LIKELIHOOD,
-    CLASSIFIER;
+    CLASSIFIER
 }

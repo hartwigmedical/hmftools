@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.variant;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.utils.DataUtil;
 
@@ -16,7 +15,6 @@ public abstract class ReportableVariant implements Variant {
     @NotNull
     public abstract ReportableVariantSource source();
 
-    @JacksonXmlProperty(localName = "name")
     @NotNull
     @Override
     public abstract String gene();
@@ -33,7 +31,6 @@ public abstract class ReportableVariant implements Variant {
     @Override
     public abstract int position();
 
-    @JacksonXmlProperty(localName = "pos")
     @NotNull
     @Value.Derived
     public String gDNA() {
@@ -60,12 +57,10 @@ public abstract class ReportableVariant implements Variant {
     @Override
     public abstract CodingEffect canonicalCodingEffect();
 
-    @JacksonXmlProperty(localName = "var")
     @NotNull
     @Override
     public abstract String canonicalHgvsCodingImpact();
 
-    @JacksonXmlProperty(localName = "prot")
     @NotNull
     @Override
     public abstract String canonicalHgvsProteinImpact();
@@ -91,7 +86,6 @@ public abstract class ReportableVariant implements Variant {
 
     public abstract double minorAlleleCopyNumber();
 
-    @JacksonXmlProperty(localName = "tvaf")
     @NotNull
     @Value.Derived
     public String tVAF() {
@@ -99,7 +93,6 @@ public abstract class ReportableVariant implements Variant {
         return DataUtil.formatPercentage(100 * Math.max(0, Math.min(1, vaf)));
     }
 
-    @JacksonXmlProperty(localName = "hotsp")
     @NotNull
     public abstract Hotspot hotspot();
 
@@ -107,14 +100,12 @@ public abstract class ReportableVariant implements Variant {
 
     public abstract double driverLikelihood();
 
-    @JacksonXmlProperty(localName = "driver")
     @NotNull
     @Value.Derived
     public DriverInterpretation driverLikelihoodInterpretation() {
         return DriverInterpretation.interpret(driverLikelihood());
     }
 
-    @JacksonXmlProperty(localName = "biallic")
     @Nullable
     public abstract Boolean biallelic();
 

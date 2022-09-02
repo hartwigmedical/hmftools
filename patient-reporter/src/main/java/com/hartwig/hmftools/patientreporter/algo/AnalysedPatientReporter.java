@@ -12,6 +12,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPredictionFactory;
 import com.hartwig.hmftools.common.cuppa.interpretation.ImmutableCuppaPrediction;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
@@ -26,9 +28,6 @@ import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaData;
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaDataFactory;
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.pipeline.PipelineVersion;
 
@@ -92,13 +91,13 @@ public class AnalysedPatientReporter {
         List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
         LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
 
-        CuppaData cuppaData = CuppaDataFactory.create(cuppaEntries);
-        CuppaPrediction best = cuppaData.predictions().get(0);
+        List<CuppaPrediction> predictions = CuppaPredictionFactory.create(cuppaEntries);
+        CuppaPrediction best = predictions.get(0);
         if (best.likelihood() > 0.8) {
-            best = cuppaData.predictions().get(0);
+            best = predictions.get(0);
         } else {
-            // our cut off is 80% likelihood. When this is below 80% then the results is inconclusive
-            best = ImmutableCuppaPrediction.builder().cancerType("results inclonsive").likelihood(0).build();
+            // our cut-off is 80% likelihood. When this is below 80% then the results is inconclusive
+            best = ImmutableCuppaPrediction.builder().cancerType("results inconclusive").likelihood(0).build();
         }
 
         LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());

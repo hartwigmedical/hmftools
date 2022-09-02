@@ -10,10 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
-import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 
 import org.immutables.value.Value;
 
@@ -22,13 +20,10 @@ public abstract class LinxFusion
 {
     public abstract int fivePrimeBreakendId();
     public abstract int threePrimeBreakendId();
-    @JacksonXmlProperty(localName = "name")
     public abstract String name();
     public abstract boolean reported();
     public abstract String reportedType();
-    @JacksonXmlProperty(localName = "fufra")
     public abstract FusionPhasedType phased();
-    @JacksonXmlProperty(localName = "driver")
     public abstract FusionLikelihoodType likelihood();
     public abstract int chainLength();
     public abstract int chainLinks();
@@ -41,19 +36,12 @@ public abstract class LinxFusion
     public abstract int fusedExonDown();
 
     // for patient report
-    @JacksonXmlProperty(localName = "f5gen")
     public abstract String geneStart();
-    @JacksonXmlProperty(localName = "f5exon")
     public abstract String geneContextStart();
-    @JacksonXmlProperty(localName = "f5refId")
     public abstract String geneTranscriptStart();
-    @JacksonXmlProperty(localName = "f3gen")
     public abstract String geneEnd();
-    @JacksonXmlProperty(localName = "f3exon")
     public abstract String geneContextEnd();
-    @JacksonXmlProperty(localName = "f3refid")
     public abstract String geneTranscriptEnd();
-    @JacksonXmlProperty(localName = "tuco")
     public abstract Double junctionCopyNumber();
 
     private static final String FILE_EXTENSION = ".linx.fusion.tsv";
