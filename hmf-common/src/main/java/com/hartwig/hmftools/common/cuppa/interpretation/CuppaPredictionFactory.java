@@ -13,26 +13,32 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class CuppaPredictionFactory {
-
+public class CuppaPredictionFactory
+{
     private static final Logger LOGGER = LogManager.getLogger(CuppaPredictionFactory.class);
 
-    private CuppaPredictionFactory() {
+    private CuppaPredictionFactory()
+    {
     }
 
     @NotNull
-    public static List<CuppaPrediction> create(@NotNull List<CuppaDataFile> entries) {
+    public static List<CuppaPrediction> create(@NotNull List<CuppaDataFile> entries)
+    {
         String bestCombinedType = determineBestCombinedDataType(entries);
-        if (bestCombinedType == null) {
+        if (bestCombinedType == null)
+        {
             LOGGER.warn("Could not find a valid combined data type amongst cuppa entries");
             return Lists.newArrayList();
         }
 
         List<CuppaPrediction> predictions = Lists.newArrayList();
 
-        for (CuppaDataFile entry : entries) {
-            if (entry.DataType.equals(bestCombinedType)) {
-                for (Map.Entry<String, Double> cancerTypeEntry : entry.CancerTypeValues.entrySet()) {
+        for (CuppaDataFile entry : entries)
+        {
+            if (entry.DataType.equals(bestCombinedType))
+            {
+                for (Map.Entry<String, Double> cancerTypeEntry : entry.CancerTypeValues.entrySet())
+                {
                     predictions.add(ImmutableCuppaPrediction.builder()
                             .cancerType(cancerTypeEntry.getKey())
                             .likelihood(cancerTypeEntry.getValue())
@@ -52,9 +58,12 @@ public class CuppaPredictionFactory {
         boolean hasRnaCombinedType = false;
         boolean hasOverallCombinedType = false;
 
-        for (CuppaDataFile entry : entries) {
-            if (entry.Category == CategoryType.COMBINED) {
-                switch (entry.DataType) {
+        for (CuppaDataFile entry : entries)
+        {
+            if (entry.Category == CategoryType.COMBINED)
+            {
+                switch (entry.DataType)
+                {
                     case DataTypes.DATA_TYPE_COMBINED:
                         hasOverallCombinedType = true;
                         break;
@@ -71,11 +80,14 @@ public class CuppaPredictionFactory {
             }
         }
 
-        if (hasOverallCombinedType) {
+        if (hasOverallCombinedType)
+        {
             return DataTypes.DATA_TYPE_COMBINED;
-        } else if (hasDnaCombinedType) {
+        } else if (hasDnaCombinedType)
+        {
             return DataTypes.DATA_TYPE_DNA_COMBINED;
-        } else if (hasRnaCombinedType) {
+        } else if (hasRnaCombinedType)
+        {
             return DataTypes.DATA_TYPE_RNA_COMBINED;
         }
 
