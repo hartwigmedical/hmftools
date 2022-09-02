@@ -8,9 +8,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Set;
 
-import javax.xml.stream.XMLStreamException;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 import com.google.common.annotations.VisibleForTesting;
@@ -132,13 +129,13 @@ public class CFReportWriter implements ReportWriter {
     }
 
     public void writeXMLAnalysedFile(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath)
-            throws IOException, XMLStreamException {
+            throws IOException {
         ReportXML xmlReport = XMLFactory.generateXMLData(report);
         writeReportDataToXML(xmlReport, outputFilePath, report);
     }
 
     public void writeReportDataToXML(@NotNull ReportXML importWGS, @NotNull String outputDirData, @NotNull PatientReport report)
-            throws IOException, XMLStreamException {
+            throws IOException {
         if (writeToFile) {
 
             XmlMapper xmlMapper = new XmlMapper();
