@@ -8,7 +8,6 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.panel.PanelFailReport;
 import com.hartwig.hmftools.patientreporter.panel.PanelReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
-import com.hartwig.hmftools.patientreporter.xml.ImportWGS;
 
 import org.jetbrains.annotations.NotNull;
 

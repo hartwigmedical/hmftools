@@ -174,7 +174,7 @@ public class CFReportWriterTest {
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
 
         CFReportWriter writer = testCFReportWriter();
-        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
+       // writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
       //  writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
             writer.writeXMLAnalysedFile(patientReport, REPORT_BASE_DIR);
         }

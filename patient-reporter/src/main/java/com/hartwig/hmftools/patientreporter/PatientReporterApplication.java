@@ -22,9 +22,6 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
 import com.hartwig.hmftools.patientreporter.reportingdb.ReportingDb;
-import com.hartwig.hmftools.patientreporter.xml.ImmutableImportWGS;
-import com.hartwig.hmftools.patientreporter.xml.ImmutableSignature;
-import com.hartwig.hmftools.patientreporter.xml.ImportWGS;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -32,7 +29,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class PatientReporterApplication {
