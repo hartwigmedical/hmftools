@@ -152,6 +152,6 @@ class VjReadLayoutAdaptorTest
         return VJReadCandidate(record, Lists.immutable.empty(), vjGeneType,
             "CACGTG", VJReadCandidate.AnchorMatchMethod.ALIGN,
                                 useReverseComplement, anchorOffsetStart, anchorOffsetEnd,
-                                null, 0, 0)
+                                0, 0)
     }
 }

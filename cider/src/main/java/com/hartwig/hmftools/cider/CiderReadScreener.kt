@@ -1,300 +1,335 @@
-package com.hartwig.hmftools.cider;
+package com.hartwig.hmftools.cider
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.hartwig.hmftools.cider.VJReadCandidate.AnchorMatchMethod
+import com.hartwig.hmftools.common.genome.region.GenomeRegion
+import com.hartwig.hmftools.common.genome.region.GenomeRegions
+import com.hartwig.hmftools.common.genome.region.Strand
+import com.hartwig.hmftools.common.samtools.CigarUtils
+import com.hartwig.hmftools.common.utils.IntPair
+import htsjdk.samtools.SAMRecord
+import htsjdk.samtools.util.CoordMath
+import htsjdk.samtools.util.SequenceUtil
+import org.apache.logging.log4j.LogManager
+import org.eclipse.collections.api.collection.ImmutableCollection
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
-import org.eclipse.collections.api.collection.ImmutableCollection;
-import org.jetbrains.annotations.Nullable;
-
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.genome.region.Strand;
-import com.hartwig.hmftools.common.samtools.CigarUtils;
-import com.hartwig.hmftools.common.utils.IntPair;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import htsjdk.samtools.AlignmentBlock;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.util.CoordMath;
-import htsjdk.samtools.util.SequenceUtil;
-
-public class Cdr3ReadScreener
+class CiderReadScreener(// collect the reads and sort by types
+    private val mCiderGeneDatastore: ICiderGeneDatastore, private val mAnchorBlosumSearcher: IAnchorBlosumSearcher,
+    private val mMinAnchorOverlap: Int
+)
 {
-    private static final Logger sLogger = LogManager.getLogger(Cdr3ReadScreener.class);
-
-    // collect the reads and sort by types
-    private CiderGeneDatastore mCiderGeneDatastore;
-
-    private IAnchorBlosumSearcher mAnchorBlosumSearcher;
-    int mMaxAnchorAlignDistance;
-    int mMinAnchorOverlap;
-
-    private Multimap<ReadKey, VJReadCandidate> mCdr3ReadMatchMap = ArrayListMultimap.create();
+    // this read key would work for supplementary reads also
+    data class ReadRecordKey(
+        val readName: String,
+        val firstOfPair: Boolean,
+        val referenceIndex: Int,
+        val alignmentStart: Int
+    )
 
     // want a map to make sure we do not process same record twice
-    private final Set<VJReadRecordKey> mProcessedReadRecords = new HashSet<>();
+    private val mProcessedReadRecords = Collections.newSetFromMap(ConcurrentHashMap<ReadRecordKey, Boolean>())
 
-    private final List<SAMRecord> mAllMatchedReads = new ArrayList<>();
+    // following store the reads we found, must be thread safe
+    private val mVjReadCandidates = Collections.synchronizedList(ArrayList<VJReadCandidate>())
+    private val mAllMatchedReads = Collections.synchronizedList(ArrayList<SAMRecord>())
 
-    public Cdr3ReadScreener(CiderGeneDatastore ciderGeneDatastore, IAnchorBlosumSearcher anchorBlosumSearcher,
-            int maxAnchorAlignDistance, int minAnchorOverlap)
+    val vJReadCandidates: List<VJReadCandidate>
+        get() = mVjReadCandidates
+    val allMatchedReads: List<SAMRecord>
+        get() = mAllMatchedReads
+
+    // Note: this function is called from multiple threads
+    fun asyncProcessSamRecord(samRecord: SAMRecord)
     {
-        mCiderGeneDatastore = ciderGeneDatastore;
-        mAnchorBlosumSearcher = anchorBlosumSearcher;
-        mMaxAnchorAlignDistance = maxAnchorAlignDistance;
-        mMinAnchorOverlap = minAnchorOverlap;
-    }
+        if (samRecord.readName == "ST-E00289:125:HLK2HCCXY:6:2205:6512:35098" ||
+            samRecord.readName == "ST-E00289:125:HLK2HCCXY:6:2206:30076:31195" ||
+            samRecord.readName == "ST-E00289:125:HLK2HCCXY:4:2218:26636:11804" ||
+            samRecord.readName == "ST-E00289:125:HLK2HCCXY:7:2207:14539:63384" ||
+            samRecord.readName == "ST-E00289:125:HLK2HCCXY:8:2220:8694:54102" ||
+            samRecord.readName == "ST-E00289:125:HLK2HCCXY:6:2211:16305:10152" ||
+            samRecord.readName == "ST-E00289:125:HLK2HCCXY:6:1202:18243:9888" ||
+            samRecord.readName == "ST-E00289:125:HLK2HCCXY:6:1204:20831:45206" ||
+            samRecord.readName == "ST-E00289:125:HLK2HCCXY:7:1118:22333:62997" ||
+            samRecord.readName == "ST-E00289:125:HLK2HCCXY:7:2119:20892:72174" ||
+            samRecord.readName == "ST-E00289:125:HLK2HCCXY:8:1101:15879:59763" ||
+            samRecord.readName == "ST-E00289:125:HLK2HCCXY:8:1222:7963:47492" ||
+            samRecord.readName == "ST-E00289:125:HLK2HCCXY:3:2118:15818:16516" ||
+            samRecord.readName == "ST-E00282:99:HFFKMALXX:1:2211:30482:1309")
+        {
+            val mateInfo: String = if (samRecord.mateUnmappedFlag)
+                "unmapped"
+            else
+                "${samRecord.mateReferenceName}:${samRecord.mateAlignmentStart}"
 
-    public Multimap<ReadKey, VJReadCandidate> getVJReadCandidates()
-    {
-        return mCdr3ReadMatchMap;
-    }
+            sLogger.info("read record is what we are looking for: {}, mate: {}", samRecord, mateInfo)
+            sLogger.info("seq: {}", samRecord.readString)
+            sLogger.info("seq rev: {}", SequenceUtil.reverseComplement(samRecord.readString))
+            sLogger.info("cigar: {}", samRecord.cigarString)
+            mAllMatchedReads.add(samRecord)
+        }
 
-    public List<SAMRecord> getAllMatchedReads()
-    {
-        return mAllMatchedReads;
-    }
+        // see if we already processed this read. We must check using the referenceIndex. In the case of
+        // unmapped read, the read mate position will be the one used. However in the later steps we
+        // do not actually want to use this.
+        val mapped = if (samRecord.referenceIndex == -1) null else GenomeRegions.create(
+            samRecord.referenceName,
+            samRecord.alignmentStart, samRecord.alignmentEnd)
 
-    public void processSamRecord(SAMRecord samRecord)
-    {
-        // see if we already processed this read
-        // note that we cannot use unmapped flag, we must check the reference index against -1
-        // this is cause in many cases read record will use
-        GenomeRegion mapped = samRecord.getReferenceIndex() == -1 ? null : GenomeRegions.create(samRecord.getReferenceName(),
-                samRecord.getAlignmentStart(), samRecord.getAlignmentEnd());
-
-        VJReadRecordKey readRecordKey = new VJReadRecordKey(samRecord.getReadName(), samRecord.getFirstOfPairFlag(), mapped);
+        val readRecordKey = ReadRecordKey(samRecord.readName, samRecord.firstOfPairFlag,
+                                            samRecord.referenceIndex, samRecord.alignmentStart)
 
         if (!mProcessedReadRecords.add(readRecordKey))
         {
-            sLogger.trace("read record {} already processed", readRecordKey);
-            return;
+            //sLogger.trace("read record {} already processed", readRecordKey);
+            return
         }
 
-        Set<VJGeneType> matchedGeneTypes = new HashSet<>();
-
-        boolean matchFound = false;
+        var matchFound = false
 
         // first we try to match by genome region
         if (mapped != null)
         {
-            matchFound |= tryMatchByAlignment(samRecord, mapped, matchedGeneTypes);
+            if (!samRecord.readUnmappedFlag)
+            {
+                matchFound = matchFound or tryMatchByAlignment(samRecord, mapped)
+            }
+            else
+            {
+                // if read is not mapped then the mate is mapped to this region instead, we use the mate mapped
+                // region to decide which locus (IGH, TRA etc) we need to search for
+                // if we do not do this then we will very likely match to wrong type
+                matchFound = matchFound or tryMatchUnmappedReadByBlosum(samRecord)
+            }
         }
         else
         {
+            // if mate is mapped then ok
+            // a location that we are looking for
             // next match by direct compare, we always have to do both, reason is that if this is a
             // CDR3 gene then a read could match V, D, or J
-            matchFound |= tryMatchByBlosum(samRecord);
+            matchFound = matchFound or tryMatchByBlosum(samRecord)
         }
 
         if (matchFound)
         {
-            mAllMatchedReads.add(samRecord);
-        }
-        else
-        {
-            sLogger.trace("read record {} does not match any VJ", samRecord);
+            mAllMatchedReads.add(samRecord)
         }
     }
 
-    private boolean tryMatchByAlignment(final SAMRecord samRecord, final GenomeRegion mapped, Set<VJGeneType> matchedGenes)
+    private fun tryMatchByAlignment(samRecord: SAMRecord, mapped: GenomeRegion): Boolean
     {
-        boolean anchorFound = false;
-
-        for (VJAnchorReferenceLocation anchorLocation : mCiderGeneDatastore.getVJAnchorReferenceLocations())
+        var anchorFound = false
+        for (anchorLocation in mCiderGeneDatastore.getVjAnchorGeneLocations())
         {
-            @Nullable VJReadCandidate readCandidate = matchesAnchorLocation(samRecord, mapped, matchedGenes, anchorLocation);
-
+            val readCandidate = matchesAnchorLocation(samRecord, mapped, anchorLocation)
             if (readCandidate != null)
             {
-                anchorFound = true;
+                anchorFound = true
+                break
             }
         }
-
         if (!anchorFound)
         {
-            int leftSoftClip = CigarUtils.leftSoftClip(samRecord);
-            int rightSoftClip = CigarUtils.rightSoftClip(samRecord);
-
+            val leftSoftClip = CigarUtils.leftSoftClip(samRecord)
+            val rightSoftClip = CigarUtils.rightSoftClip(samRecord)
             if (leftSoftClip != 0 || rightSoftClip != 0)
             {
-                for (IgTcrConstantRegion igTcrConstantRegion : mCiderGeneDatastore.getIgConstantRegions())
+                for (igTcrConstantRegion in mCiderGeneDatastore.getIgConstantRegions())
                 {
                     // now try to match around location of constant regions
-                    @Nullable VJReadCandidate readCandidate = tryMatchFromConstantRegion(samRecord, mapped, igTcrConstantRegion);
-
+                    val readCandidate = tryMatchFromConstantRegion(samRecord, mapped, igTcrConstantRegion)
                     if (readCandidate != null)
                     {
-                        anchorFound = true;
+                        anchorFound = true
                     }
                 }
             }
         }
-
-        return anchorFound;
+        return anchorFound
     }
 
-    @Nullable
-    public VJReadCandidate matchesAnchorLocation(final SAMRecord samRecord, final GenomeRegion mapped, final Set<VJGeneType> matchedGenes,
-            final VJAnchorReferenceLocation anchorLocation)
+    // what this function does is to see if the anchor location is within this read
+    fun matchesAnchorLocation(
+        samRecord: SAMRecord, mapped: GenomeRegion, anchorLocation: VJAnchorGenomeLocation,
+    ): VJReadCandidate?
     {
-        int readLength = samRecord.getReadLength();
-
+        val readLength = samRecord.readLength
         if (!isRelevantToAnchorLocation(readLength, mapped, anchorLocation))
-            return null;
-
-        int anchorLength = anchorLocation.baseLength();
-
+        {
+            return null
+        }
+        val anchorLength: Int = anchorLocation.baseLength()
         if (anchorLength != 30)
         {
-            throw new RuntimeException("unexpected anchor length");
+            throw RuntimeException("unexpected anchor length")
         }
-
-        IntPair readAnchorRange = extrapolateAnchorReadRange(samRecord, anchorLocation);
-
-        if (readAnchorRange == null)
-        {
-            return null;
-        }
-
-        int readAnchorStart = readAnchorRange.left;
-        int readAnchorEnd = readAnchorRange.right;
+        val readAnchorRange = extrapolateAnchorReadRange(samRecord, anchorLocation) ?: return null
+        var readAnchorStart = readAnchorRange.left
+        var readAnchorEnd = readAnchorRange.right
 
         // as long as the record overlaps with the anchor location, we include it as candidate
-        if (readAnchorStart + mMinAnchorOverlap < samRecord.getReadLength() && readAnchorEnd > mMinAnchorOverlap)
+        if (readAnchorStart + mMinAnchorOverlap < samRecord.readLength && readAnchorEnd > mMinAnchorOverlap)
         {
-            if (anchorLocation.getStrand() == Strand.REVERSE)
+            if (anchorLocation.strand === Strand.REVERSE)
             {
                 // say if read length is 2, and read anchor start is 1, read anchor end is 2
                 // reverse it we want start = 1, end = 2
-                int revStart = samRecord.getReadLength() - readAnchorEnd;
-                readAnchorEnd = samRecord.getReadLength() - readAnchorStart;
-                readAnchorStart = revStart;
+                val revStart = samRecord.readLength - readAnchorEnd
+                readAnchorEnd = samRecord.readLength - readAnchorStart
+                readAnchorStart = revStart
             }
 
             // want to make sure same gene is not included twice
-            ImmutableCollection<VJAnchorTemplate> genes = mCiderGeneDatastore.getByAnchorGeneLocation(anchorLocation)
-                    .select(o -> !matchedGenes.contains(o.getType()))
-                    .toImmutableList();
+            val genes: ImmutableCollection<VJAnchorTemplate> = mCiderGeneDatastore.getByGeneLocation(anchorLocation.genomeLocation)
 
-            if (!genes.isEmpty())
+            if (!genes.isEmpty)
             {
-                matchedGenes.addAll(genes.stream().map(VJAnchorTemplate::getType).collect(Collectors.toList()));
-
-                return createCdr3ReadMatch(samRecord,
-                        genes,
-                        VJReadCandidate.AnchorMatchMethod.ALIGN,
-                        anchorLocation.getStrand() == Strand.REVERSE,
-                        readAnchorStart,
-                        readAnchorEnd, anchorLocation.getGeneLocation());
+                return addVjReadCandidate(samRecord, genes, AnchorMatchMethod.ALIGN,
+                    anchorLocation.strand === Strand.REVERSE,
+                    readAnchorStart, readAnchorEnd, anchorLocation.genomeLocation)
             }
         }
-        return null;
+        return null
     }
 
-    private boolean tryMatchByBlosum(final SAMRecord samRecord)
+    // This read is unmapped and mate is mapped. We use the mate mapping to find out
+    // which Ig/TCR locus this read is near. And only blosum search for anchor with
+    // this locus. This is needed to make sure we find the correct locus
+    private fun tryMatchUnmappedReadByBlosum(read: SAMRecord): Boolean
     {
-        AnchorBlosumMatch anchorBlosumMatch = null;
+        require(read.readUnmappedFlag)
+        require(!read.mateUnmappedFlag)
 
-        for (Strand strand : Strand.values())
+        var relevantAnchorLocation: VJAnchorGenomeLocation? = null
+        var relaventConstantRegion: IgTcrConstantRegion? = null
+
+        // look through anchor locations and find ones that we can use
+        for (anchorLocation: VJAnchorGenomeLocation in mCiderGeneDatastore.getVjAnchorGeneLocations())
         {
-            String readString = samRecord.getReadString();
-
-            if (strand == Strand.REVERSE)
-                readString = SequenceUtil.reverseComplement(readString);
-
-            for (VJGeneType vjGeneType : VJGeneType.values())
+            if (isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
             {
-                anchorBlosumMatch = mAnchorBlosumSearcher.searchForAnchor(readString,
-                        vjGeneType,
-                        0,
-                        samRecord.getReadLength());
+                relevantAnchorLocation = anchorLocation
+                break
+            }
+        }
 
-                if (anchorBlosumMatch != null && anchorBlosumMatch.getSimilarityScore() > 0)
+        if (relevantAnchorLocation == null)
+        {
+            // try the constant region
+            for (constantRegion: IgTcrConstantRegion in mCiderGeneDatastore.getIgConstantRegions())
+            {
+                if (isUnamppedReadRelevantToConstantRegion(read, constantRegion.genomeLocation))
                 {
-                    VJReadCandidate readCandidate = createCdr3ReadMatch(samRecord,
-                            anchorBlosumMatch.getTemplateGenes(),
-                            VJReadCandidate.AnchorMatchMethod.BLOSUM,
-                            strand == Strand.REVERSE,
-                            anchorBlosumMatch.getAnchorStart(),
-                            anchorBlosumMatch.getAnchorEnd(), null);
+                    relaventConstantRegion = constantRegion
+                    break
+                }
+            }
 
+            if (relaventConstantRegion == null)
+            {
+                return false
+            }
+        }
+
+        // get the VJ gene type we are interested in
+        val relaventVjGeneType = relevantAnchorLocation?.vjGeneType ?: relaventConstantRegion?.getCorrespondingJ() ?: return false
+
+        // we test both reverse and not reverse, it is simpler this way
+        for (reverseRead in arrayOf(true, false))
+        {
+            var readString = read.readString
+            if (reverseRead)
+            {
+                readString = SequenceUtil.reverseComplement(readString)
+            }
+            // we need to match both the V and J side after an anchor region match
+            // i.e. if we match a V gene type, we want to also check for the J gene type, and vice versa
+            for (vjGeneType in arrayOf(relaventVjGeneType, CiderUtils.getPairedVjGeneType(relaventVjGeneType)))
+            {
+                val anchorBlosumMatch: AnchorBlosumMatch? = mAnchorBlosumSearcher.searchForAnchor(
+                    readString,
+                    vjGeneType,
+                    0,
+                    read.readLength
+                )
+                if (anchorBlosumMatch != null && anchorBlosumMatch.similarityScore > 0)
+                {
+                    val readCandidate = addVjReadCandidate(
+                        read,
+                        anchorBlosumMatch.templateGenes,
+                        AnchorMatchMethod.BLOSUM,
+                        reverseRead,
+                        anchorBlosumMatch.anchorStart,
+                        anchorBlosumMatch.anchorEnd, null
+                    )
                     if (readCandidate != null)
                     {
-                        return true;
+                        if (relevantAnchorLocation != null)
+                        {
+                            sLogger.info(
+                                "read({}) matched from mate mapped({}:{}) near anchor location({})",
+                                read, read.mateReferenceName, read.mateAlignmentStart, relevantAnchorLocation
+                            )
+                        }
+                        else
+                        {
+                            sLogger.info(
+                                "read({}) matched from mate mapped({}:{}) near constant region({})",
+                                read, read.mateReferenceName, read.mateAlignmentStart, relaventConstantRegion
+                            )
+                        }
+                        return true
                     }
                 }
             }
         }
 
-        return false;
+        return false
     }
 
-    /*
-    public boolean tryMatchByExact(SAMRecord samRecord, Set<VJGeneType> matchedGenes)
+    private fun tryMatchByBlosum(samRecord: SAMRecord): Boolean
     {
-        String seq = samRecord.getReadString();
-        String seqRevComp = SequenceUtil.reverseComplement(seq);
-        boolean useRevComp = false;
-        boolean matchFound = false;
+        // in case someone changes this
+        assert(Strand.values().size == 2)
 
-        // for each record we need to find the anchor sequence and see if it matches
-        for (String anchorSeq : mCiderGeneDatastore.getAnchorSequenceSet())
+        for (strand in Strand.values())
         {
-            int anchorIndex = seq.indexOf(anchorSeq);
+            var readString = samRecord.readString
+            if (strand == Strand.REVERSE) readString = SequenceUtil.reverseComplement(readString)
 
-            if (anchorIndex != -1)
-            {
-                useRevComp = false;
-            }
-            else if ((anchorIndex = seqRevComp.indexOf(anchorSeq)) != -1)
-            {
-                useRevComp = true;
-            }
+            val anchorBlosumMatch: AnchorBlosumMatch? = mAnchorBlosumSearcher.searchForAnchor(readString)
 
-            if (anchorIndex != -1)
+            if (anchorBlosumMatch != null && anchorBlosumMatch.similarityScore > 0)
             {
-                // want to make sure same gene is not included twice
-                ImmutableCollection<VJAnchorTemplate> genes = mCiderGeneDatastore.getByAnchorSequence(anchorSeq)
-                        .select(o -> !matchedGenes.contains(o.getType()))
-                        .toImmutableList();
-
-                if (!genes.isEmpty())
+                val readCandidate = addVjReadCandidate(
+                    samRecord,
+                    anchorBlosumMatch.templateGenes,
+                    AnchorMatchMethod.BLOSUM,
+                    strand == Strand.REVERSE,
+                    anchorBlosumMatch.anchorStart,
+                    anchorBlosumMatch.anchorEnd, null
+                )
+                if (readCandidate != null)
                 {
-                    createCdr3ReadMatch(samRecord,
-                            genes,
-                            VJReadCandidate.AnchorMatchMethod.EXACT,
-                            useRevComp,
-                            anchorIndex,
-                            anchorIndex + anchorSeq.length(),
-                            null);
-
-                    matchFound = true;
+                    return true
                 }
             }
         }
+        return false
+    }
 
-        return matchFound;
-    }*/
-
-    @Nullable
-    public VJReadCandidate tryMatchFromConstantRegion(
-            final SAMRecord samRecord, final GenomeRegion mapped, IgTcrConstantRegion igTcrConstantRegion)
+    fun tryMatchFromConstantRegion(
+        samRecord: SAMRecord, mapped: GenomeRegion, igTcrConstantRegion: IgTcrConstantRegion
+    ): VJReadCandidate?
     {
-        int readLength = samRecord.getReadLength();
-        GeneLocation igcLocation = igTcrConstantRegion.getGeneLocation();
+        val readLength = samRecord.readLength
+        val (chromosome, posStart, posEnd, strand) = igTcrConstantRegion.genomeLocation
 
         // see if the anchor location is mapped around here
-        if ((igcLocation.getPosStart() - readLength < mapped.end() &&
-                igcLocation.getPosEnd() + readLength > mapped.start()) &&
-                igcLocation.getChromosome().equals(mapped.chromosome()))
+        if (posStart - readLength < mapped.end() &&
+            posEnd + readLength > mapped.start() && chromosome == mapped.chromosome()
+        )
         {
             // this is mapped to an IG constant region
             // we want to then see if there is any clipping going on
@@ -304,214 +339,311 @@ public class Cdr3ReadScreener
             // If the read is mapped to the constant CCCC region, then the left soft clip might
             // contain J
             // in negative strand, it would be right soft clip
+            val anchorBlosumMatch: AnchorBlosumMatch?
 
-            AnchorBlosumMatch anchorBlosumMatch = null;
-
-            if (igcLocation.getStrand() == Strand.FORWARD)
+            if (strand == Strand.FORWARD)
             {
-                int leftSoftClip = CigarUtils.leftSoftClip(samRecord);
-
-                if (leftSoftClip == 0)
-                    return null;
+                val leftSoftClip = CigarUtils.leftSoftClip(samRecord)
+                if (leftSoftClip == 0) return null
 
                 // now try to find an anchor here
-                anchorBlosumMatch = mAnchorBlosumSearcher.searchForAnchor(samRecord.getReadString(),
-                        igTcrConstantRegion.getCorrespondingJ(),
-                        0,
-                        leftSoftClip);
+                anchorBlosumMatch = mAnchorBlosumSearcher.searchForAnchor(
+                    samRecord.readString,
+                    igTcrConstantRegion.getCorrespondingJ(),
+                    0,
+                    leftSoftClip)
             }
             else
             {
-                int rightSoftClip = CigarUtils.rightSoftClip(samRecord);
+                // reverse strand
+                val rightSoftClip = CigarUtils.rightSoftClip(samRecord)
+                if (rightSoftClip == 0) return null
 
-                if (rightSoftClip == 0)
-                    return null;
+                val reverseCompSeq = SequenceUtil.reverseComplement(samRecord.readString)
 
-                String reverseCompSeq = SequenceUtil.reverseComplement(samRecord.getReadString());
-                anchorBlosumMatch = mAnchorBlosumSearcher.searchForAnchor(reverseCompSeq,
-                        igTcrConstantRegion.getCorrespondingJ(), 0, rightSoftClip);
+                anchorBlosumMatch =  mAnchorBlosumSearcher.searchForAnchor(
+                    reverseCompSeq,
+                    igTcrConstantRegion.getCorrespondingJ(), 0, rightSoftClip)
             }
-
-            if (anchorBlosumMatch != null && anchorBlosumMatch.getSimilarityScore() > 0)
+            if (anchorBlosumMatch != null && anchorBlosumMatch.similarityScore > 0)
             {
-                return createCdr3ReadMatch(samRecord,
-                        anchorBlosumMatch.getTemplateGenes(),
-                        VJReadCandidate.AnchorMatchMethod.BLOSUM,
-                        igcLocation.getStrand() == Strand.REVERSE,
-                        anchorBlosumMatch.getAnchorStart(),
-                        anchorBlosumMatch.getAnchorEnd(), null);
+                return addVjReadCandidate(
+                    samRecord,
+                    anchorBlosumMatch.templateGenes,
+                    AnchorMatchMethod.BLOSUM,
+                    strand == Strand.REVERSE,
+                    anchorBlosumMatch.anchorStart,
+                    anchorBlosumMatch.anchorEnd, null
+                )
             }
         }
-        return null;
+        return null
     }
 
-    @Nullable
-    public VJReadCandidate createCdr3ReadMatch(SAMRecord samRecord, ImmutableCollection<VJAnchorTemplate> vjAnchorTemplates,
-            VJReadCandidate.AnchorMatchMethod templateMatchMethod, boolean useRevComp,
-            int readAnchorStart, int readAnchorEnd, @Nullable GeneLocation templateLocation)
+    private fun addVjReadCandidate(
+        samRecord: SAMRecord, vjAnchorTemplates: ImmutableCollection<VJAnchorTemplate>,
+        templateMatchMethod: AnchorMatchMethod, useRevComp: Boolean,
+        readAnchorStart: Int, readAnchorEnd: Int, templateLocation: GenomeRegionStrand?)
+    : VJReadCandidate?
     {
-        if (vjAnchorTemplates.isEmpty())
-            return null;
-
-        VJAnchorTemplate vjAnchorTemplate = vjAnchorTemplates.stream().findFirst().get();
+        if (vjAnchorTemplates.isEmpty)
+        {
+            return null
+        }
+        val vjAnchorTemplate = vjAnchorTemplates.first()
 
         // find out the imgt gene type. They should be the same type
-        VJGeneType geneType = vjAnchorTemplate.getType();
+        val geneType = vjAnchorTemplate.type
 
         // check to make sure all the same
-        if (vjAnchorTemplates.stream().anyMatch(o -> o.getType() != geneType))
+        if (vjAnchorTemplates.stream().anyMatch { o: VJAnchorTemplate -> o.type !== geneType })
         {
-            sLogger.error("multiple gene types found in same match: {}", vjAnchorTemplates);
-            throw new RuntimeException("multiple gene types found in same match");
+            sLogger.error("multiple gene types found in same match: {}", vjAnchorTemplates)
+            throw RuntimeException("multiple gene types found in same match")
         }
-
-        String templateAnchorAA = vjAnchorTemplate.getAnchorAminoAcidSequence();
+        val templateAnchorAA = vjAnchorTemplate.anchorAminoAcidSequence
 
         // since we don't actually know whether the aligned part is the anchor sequence, we have to use
         // the soft clip that we think make sense
-        int leftSoftClip = CigarUtils.leftSoftClip(samRecord);
-        int rightSoftClip = CigarUtils.rightSoftClip(samRecord);
+        val leftSoftClip = CigarUtils.leftSoftClip(samRecord)
+        val rightSoftClip = CigarUtils.rightSoftClip(samRecord)
 
-        VJReadCandidate readMatch = new VJReadCandidate(
-                samRecord, vjAnchorTemplates, geneType,
-                vjAnchorTemplate.getAnchorSequence(),
-                templateMatchMethod, useRevComp,
-                readAnchorStart, readAnchorEnd, templateLocation, leftSoftClip, rightSoftClip);
+        val readMatch = VJReadCandidate(
+            samRecord, vjAnchorTemplates, geneType,
+            vjAnchorTemplate.anchorSequence,
+            templateMatchMethod, useRevComp,
+            readAnchorStart, readAnchorEnd, leftSoftClip, rightSoftClip)
 
         // set the similarity score
-        readMatch.setSimilarityScore(BlosumSimilarityCalc.calcSimilarityScore(geneType.getVj(),
-                        readMatch.getTemplateAnchorSequence(), readMatch.getAnchorSequence()));
+        readMatch.similarityScore = BlosumSimilarityCalc.calcSimilarityScore(
+            geneType.vj, readMatch.templateAnchorSequence, readMatch.anchorSequence)
 
-        List<String> geneNames = vjAnchorTemplates.stream().map(o -> o.getName()).distinct().collect(Collectors.toList());
+        val geneNames = vjAnchorTemplates.map({ o: VJAnchorTemplate -> o.name }).distinct().toList()
+        sLogger.debug(
+            "genes: {} read({}) match method({}) anchor range([{},{})) template loc({}) "
+                    + "anchor AA({}) template AA({}) similarity({})",
+            geneNames, samRecord, templateMatchMethod,
+            readMatch.anchorOffsetStart, readMatch.anchorOffsetEnd,
+            templateLocation,
+            readMatch.anchorAA, templateAnchorAA, readMatch.similarityScore
+        )
 
-        sLogger.info("genes: {} read({}) match method({}) anchor range([{},{})) template loc({}) "
-                        + "anchor AA({}) template AA({}) similarity({})",
-                geneNames, samRecord, templateMatchMethod,
-                readMatch.getAnchorOffsetStart(), readMatch.getAnchorOffsetEnd(),
-                templateLocation,
-                readMatch.getAnchorAA(), templateAnchorAA, readMatch.getSimilarityScore());
+        // add a check here to make sure we have not made a mistake somewhere
+        if (templateMatchMethod == AnchorMatchMethod.BLOSUM && readMatch.similarityScore <= 0)
+        {
+            sLogger.error("blosum match with -ve similarity score: {}", readMatch)
+            throw RuntimeException("blosum match with -ve similarity score: ${readMatch}")
+        }
 
         // add it to list
-        mCdr3ReadMatchMap.put(new ReadKey(samRecord.getReadName(), samRecord.getFirstOfPairFlag()), readMatch);
-
-        return readMatch;
+        mVjReadCandidates.add(readMatch)
+        return readMatch
     }
 
-    public static boolean isRelevantToAnchorLocation(int readLength, final GenomeRegion mapped,
-            final VJAnchorReferenceLocation anchorLocation)
+    companion object
     {
-        if (!anchorLocation.getChromosome().equals(mapped.chromosome()))
-            return false;
+        private val sLogger = LogManager.getLogger(CiderReadScreener::class.java)
 
-        // for V we only allow reads that are mapped upstream
-        // for J we only allow reads that are mapped downstream
-        // --------V-----------J--------
-        // *****                  ******
-        // reads mapped around the star sections are ok
-        // we translate it to the genome coord space.
-
-        int halfAnchorLength = anchorLocation.baseLength() / 2;
-        boolean isMappedAroundHere;
-
-        if (anchorLocation.getVj() == VJ.V && anchorLocation.getStrand() == Strand.FORWARD ||
-                (anchorLocation.getVj() == VJ.J && anchorLocation.getStrand() == Strand.REVERSE))
+        fun isRelevantToAnchorLocation(readLength: Int, mapped: GenomeRegion, anchorLocation: VJAnchorGenomeLocation): Boolean
         {
-            // here we want the anchor to be downstream
-            // we want anchor mapped to higher coord than or equal read
-            // we allow anchor to overshoot the mapped region by half the anchor length
-            //        |__read__|
-            //    |_______________________________|     allowed anchor range
-            // half anchor         read length
-            isMappedAroundHere = anchorLocation.getStart() > mapped.start() - halfAnchorLength &&
-                    anchorLocation.getEnd() < mapped.end() + readLength;
-        }
-        else
-        {
-            // here we want the anchor to be upstream
-            // we want anchor mapped to lower coord than or equal read
-            // we allow anchor to overshoot the mapped region by half the anchor length
-            //                    |__read__|
-            // |_______________________________|     allowed anchor range
-            //   read length             half anchor
-            isMappedAroundHere = anchorLocation.getEnd() < mapped.end() + halfAnchorLength &&
-                    anchorLocation.getStart() > mapped.start() - readLength;
-        }
+            if (anchorLocation.chromosome != mapped.chromosome()) return false
 
-        return isMappedAroundHere;
-    }
-
-    // 0 based read offset
-    // this is similar to SAMRecord getReadPositionAtReferencePosition
-    // Two major differences are:
-    // 1. this one returns 0 base offset
-    // 2. this function will extrapolate into other regions if reference pos is not with any
-    //    alignment block. For example, for cigar 20M1000N30M, if we query for a position
-    //    10 bases after the 20M block, we will get a read offset of 30 (20M + 10 bases)
-    static int extrapolateReadOffsetAtRefPosition(SAMRecord record, int referencePos)
-    {
-        // since it is almost impossible to have 3+ alignment blocks speed should not be an issue
-        int closesAlignmentBlockDistance = Integer.MAX_VALUE;
-        int readOffset = 0;
-
-        for (AlignmentBlock alignmentBlock : record.getAlignmentBlocks())
-        {
-            int blockReferenceEnd = CoordMath.getEnd(alignmentBlock.getReferenceStart(), alignmentBlock.getLength());
-            int blockReferenceStart = alignmentBlock.getReferenceStart();
-            int blockDistance;
-
-            if (referencePos < blockReferenceStart)
+            // for V we only allow reads that are mapped upstream
+            // for J we only allow reads that are mapped downstream
+            // --------V-----------J--------
+            // *****                  ******
+            // reads mapped around the star sections are ok
+            // we translate it to the genome coord space.
+            val halfAnchorLength: Int = anchorLocation.baseLength() / 2
+            val isMappedAroundHere: Boolean
+            if (anchorLocation.vj == VJ.V && anchorLocation.strand == Strand.FORWARD ||
+                anchorLocation.vj == VJ.J && anchorLocation.strand == Strand.REVERSE)
             {
-                blockDistance = blockReferenceStart - referencePos;
+                // here we want the anchor to be downstream
+                // we want anchor mapped to higher coord than or equal read
+                // we allow anchor to overshoot the mapped region by half the anchor length
+                //        |__read__|
+                //    |_______________________________|     allowed anchor range
+                // half anchor         read length
+                isMappedAroundHere = anchorLocation.start > mapped.start() - halfAnchorLength &&
+                        anchorLocation.end < mapped.end() + readLength
+            } else
+            {
+                // here we want the anchor to be upstream
+                // we want anchor mapped to lower coord than or equal read
+                // we allow anchor to overshoot the mapped region by half the anchor length
+                //                    |__read__|
+                // |_______________________________|     allowed anchor range
+                //   read length             half anchor
+                isMappedAroundHere = anchorLocation.end < mapped.end() + halfAnchorLength &&
+                        anchorLocation.start > mapped.start() - readLength
             }
-            else if (referencePos > blockReferenceEnd)
+            return isMappedAroundHere
+        }
+
+        // 0 based read offset
+        // this is similar to SAMRecord getReadPositionAtReferencePosition
+        // Two major differences are:
+        // 1. this one returns 0 base offset
+        // 2. this function will extrapolate into other regions if reference pos is not with any
+        //    alignment block. For example, for cigar 20M1000N30M, if we query for a position
+        //    10 bases after the 20M block, we will get a read offset of 30 (20M + 10 bases)
+        fun extrapolateReadOffsetAtRefPosition(record: SAMRecord, referencePos: Int): Int
+        {
+            // since it is almost impossible to have 3+ alignment blocks speed should not be an issue
+            var closesAlignmentBlockDistance = Int.MAX_VALUE
+            var readOffset = 0
+            for (alignmentBlock in record.alignmentBlocks)
             {
-                blockDistance = referencePos - blockReferenceStart;
+                val blockReferenceEnd = CoordMath.getEnd(alignmentBlock.referenceStart, alignmentBlock.length)
+                val blockReferenceStart = alignmentBlock.referenceStart
+                val blockDistance: Int
+
+                if (referencePos < blockReferenceStart)
+                {
+                    blockDistance = blockReferenceStart - referencePos
+                }
+                else if (referencePos > blockReferenceEnd)
+                {
+                    blockDistance = referencePos - blockReferenceStart
+                }
+                else
+                {
+                    // the anchor reference position is within this block
+                    blockDistance = 0
+                }
+                if (blockDistance < closesAlignmentBlockDistance)
+                {
+                    closesAlignmentBlockDistance = blockDistance
+                    readOffset = alignmentBlock.readStart + referencePos - blockReferenceStart - 1 // make it 0 based
+                }
+            }
+
+            // if not within read then return -1
+            return if (readOffset < 0 || readOffset >= record.readLength)
+            {
+                -1
+            } else readOffset
+        }
+
+        fun extrapolateAnchorReadRange(record: SAMRecord, anchorLocation: VJAnchorGenomeLocation): IntPair?
+        {
+            // we always use the reference position to find it
+            val anchorEndReferencePos: Int = anchorLocation.anchorBoundaryReferencePosition()
+            val anchorEndReadOffset = extrapolateReadOffsetAtRefPosition(record, anchorEndReferencePos)
+            if (anchorEndReadOffset == -1)
+            {
+                return null
+            }
+            else if (anchorEndReferencePos == anchorLocation.start)
+            {
+                return IntPair(anchorEndReadOffset, anchorEndReadOffset + anchorLocation.baseLength())
+            }
+            else if (anchorEndReferencePos == anchorLocation.end)
+            {
+                // make end exclusive
+                return IntPair(anchorEndReadOffset - anchorLocation.baseLength() + 1, anchorEndReadOffset + 1)
             }
             else
             {
-                // the anchor reference position is within this block
-                blockDistance = 0;
+                throw IllegalStateException("anchor end reference pos must be either anchor start or anchor end")
             }
+        }
 
-            if (blockDistance < closesAlignmentBlockDistance)
+        // use the mate mapped position to see if we are relevant
+        // this function is a little bit more complicated due to that
+        // Essentially, we want to find the following situation, where
+        // we have an unmapped read and we want the mate to be up stream for V, and downstream for J
+        //
+        // >------------V--------D----------J---------> positive strand
+        // ======>  <=====              ====>  <=====
+        //  mate     this               this    mate
+        //
+        // or
+        //
+        // <------------J--------D----------V---------< negative strand
+        // ======>  <=====              ====>  <=====
+        //  this     mate                mate    this
+        //
+        fun isUnamppedReadRelevantToAnchorLoc(read: SAMRecord,
+                                              anchorLocation: VJAnchorGenomeLocation): Boolean
+        {
+            if (!read.readPairedFlag || read.mateUnmappedFlag)
+                return false
+
+            if (anchorLocation.chromosome != read.mateReferenceName)
+                return false
+
+            val mateMappedStrand: Strand = if (read.mateNegativeStrandFlag) Strand.REVERSE else Strand.FORWARD
+            val mateMappedStart: Int = read.mateAlignmentStart
+
+            // we cannot easily get the mate alignment end, so we just infer it for now
+            val inferredMateMappedEnd: Int = mateMappedStart + read.readLength
+
+            if (anchorLocation.vj == VJ.V && anchorLocation.strand == Strand.FORWARD ||
+                anchorLocation.vj == VJ.J && anchorLocation.strand == Strand.REVERSE)
             {
-                closesAlignmentBlockDistance = blockDistance;
-                readOffset = alignmentBlock.getReadStart() + referencePos - blockReferenceStart - 1; // make it 0 based
+                // here we want the anchor to have higher coord than mate read, so the mate read must be on forward strand
+                if (mateMappedStrand != Strand.FORWARD)
+                    return false
+
+                if (mateMappedStart > anchorLocation.end)
+                    return false
+
+                // next check that we are not too far away
+                return (anchorLocation.start - inferredMateMappedEnd) < CiderConstants.APPROX_MAX_FRAGMENT_LENGTH
+            }
+            else
+            {
+                // here we want the anchor to have lower coord than mate read, so the read must be on reverse strand
+                if (mateMappedStrand != Strand.REVERSE)
+                    return false
+
+                if (inferredMateMappedEnd < anchorLocation.start)
+                    return false
+
+                // next check that we are not too far away
+                return (mateMappedStart - anchorLocation.end) < CiderConstants.APPROX_MAX_FRAGMENT_LENGTH
             }
         }
 
-        // if not within read then return -1
-        if (readOffset < 0 || readOffset >= record.getReadLength())
+        // use the mate mapped position to see if we are relevant to a constant region
+        // we have an unmapped read and we want the mate to be mapped to C and pointing up stream
+        //
+        // >-----V--------D----------J----------C------> positive strand
+        //                        ======>      <=====
+        //                         this         mate
+        //
+        // or
+        //
+        // <-----C-------J--------D----------V---------< negative strand
+        //   ======>    <=====
+        //    mate       this
+        //
+        fun isUnamppedReadRelevantToConstantRegion(read: SAMRecord, constantRegionLocation: GenomeRegionStrand): Boolean
         {
-            return -1;
-        }
+            if (!read.readPairedFlag || read.mateUnmappedFlag)
+                return false
 
-        return readOffset;
-    }
+            if (constantRegionLocation.chromosome != read.mateReferenceName)
+                return false
 
-    @Nullable
-    static IntPair extrapolateAnchorReadRange(SAMRecord record, final VJAnchorReferenceLocation anchorLocation)
-    {
-        // we always use the reference position to find it
-        int anchorEndReferencePos = anchorLocation.anchorBoundaryReferencePosition();
-        int anchorEndReadOffset = extrapolateReadOffsetAtRefPosition(record, anchorEndReferencePos);
+            val mateMappedStart: Int = read.mateAlignmentStart
 
-        if (anchorEndReadOffset == -1)
-        {
-            return null;
-        }
-        else if (anchorEndReferencePos == anchorLocation.getStart())
-        {
-            return new IntPair(anchorEndReadOffset, anchorEndReadOffset + anchorLocation.baseLength());
-        }
-        else if (anchorEndReferencePos == anchorLocation.getEnd())
-        {
-            // make end exclusive
-            return new IntPair(anchorEndReadOffset - anchorLocation.baseLength() + 1, anchorEndReadOffset + 1);
-        }
-        else
-        {
-            throw new IllegalStateException("anchor end reference pos must be either anchor start or anchor end");
+            // we cannot easily get the mate alignment end, so we just infer it for now
+            val inferredMateMappedEnd: Int = mateMappedStart + read.readLength
+
+            // too far away
+            if ((mateMappedStart - constantRegionLocation.posEnd) >= CiderConstants.APPROX_MAX_FRAGMENT_LENGTH ||
+                (constantRegionLocation.posStart - inferredMateMappedEnd) >= CiderConstants.APPROX_MAX_FRAGMENT_LENGTH)
+            {
+                return false
+            }
+
+            val mateMappedStrand: Strand = if (read.mateNegativeStrandFlag) Strand.REVERSE else Strand.FORWARD
+
+            // see picture above, the strand must not be equal
+            return constantRegionLocation.strand != mateMappedStrand
         }
     }
 }

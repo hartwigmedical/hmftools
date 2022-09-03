@@ -32,7 +32,7 @@ object BlosumSimilarityCalc
                 CiderConstants.BLOSUM_SIMILARITY_SCORE_CONSTANT -
                 calcBlosumDistance(refAA, seqAA)
 
-        //sLogger.trace("{} vs {} similiarity={}", refAA, seqAA, similarity)
+        // sLogger.trace("{} vs {} similiarity={}", refAA, seqAA, similarity)
 
         return similarity
     }
@@ -64,6 +64,7 @@ object BlosumSimilarityCalc
         }
 
         // try to fix up for cases where sequence contains N
+        var numUnknownBases: Int = 0
         if (templateDnaSeqFixed.contains('N') || dnaSeqFixed.contains('N'))
         {
             val templateDnaSeqBuilder = StringBuilder(templateDnaSeqFixed)
@@ -75,18 +76,21 @@ object BlosumSimilarityCalc
                 if (templateDnaSeqFixed[i] == 'N')
                 {
                     templateDnaSeqBuilder[i] = dnaSeqFixed[i]
+                    ++numUnknownBases
                 }
                 if (dnaSeqFixed[i] == 'N')
                 {
                     dnaSeqBuilder[i] = templateDnaSeqFixed[i]
+                    ++numUnknownBases
                 }
             }
 
             templateDnaSeqFixed = templateDnaSeqBuilder.toString()
-            dnaSeqFixed = templateDnaSeqBuilder.toString()
+            dnaSeqFixed = dnaSeqBuilder.toString()
 
             if (templateDnaSeqFixed.contains('N') || dnaSeqFixed.contains('N'))
             {
+                // should not happen as the template sequence should not contain N
                 throw IllegalArgumentException("calcSimilarityScore: both (${templateDnaSeq} and ${dnaSeq}) contain N at same location")
             }
         }
@@ -94,6 +98,13 @@ object BlosumSimilarityCalc
         val templateAaSeq = Codons.aminoAcidFromBases(templateDnaSeqFixed)
         val aaSeq = Codons.aminoAcidFromBases(dnaSeqFixed)
 
-        return calcAminoAcidSimilarityScore(templateAaSeq, aaSeq)
+        val similarity = calcAminoAcidSimilarityScore(templateAaSeq, aaSeq) - numUnknownBases * CiderConstants.BLOSUM_UNKNOWN_BASE_PENALTY
+
+        /* sLogger.trace("{} vs {}, AA: {} vs {}, similiarity={}",
+            templateDnaSeq, dnaSeq,
+            templateAaSeq, aaSeq,
+            similarity)*/
+
+        return similarity
     }
 }

@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.common.codon.Codons
+import com.hartwig.hmftools.common.genome.region.Strand
+import htsjdk.samtools.util.SequenceUtil
 import org.apache.logging.log4j.LogManager
 import org.eclipse.collections.api.collection.ImmutableCollection
 import org.eclipse.collections.api.set.SetIterable
@@ -27,6 +29,8 @@ data class AnchorBlosumMatch(
 // create a very simple interface so we can mock the data
 interface IAnchorBlosumSearcher
 {
+    fun searchForAnchor(readString: String) : AnchorBlosumMatch?
+
     fun searchForAnchor(dnaSeq: String, targetAnchorGeneType: VJGeneType, startOffset: Int = 0,
                         endOffset: Int = dnaSeq.length) : AnchorBlosumMatch?
 }
@@ -34,19 +38,41 @@ interface IAnchorBlosumSearcher
 // we want to return a score of whether a sequence
 // looks like an anchor
 class AnchorBlosumSearcher(
-    val ciderGeneDatastore: CiderGeneDatastore,
+    val ciderGeneDatastore: ICiderGeneDatastore,
     minPartialAnchorAminoAcidLength: Int,
     val allowNegativeSimilarity: Boolean) : IAnchorBlosumSearcher
 {
     val minPartialAnchorBaseLength = minPartialAnchorAminoAcidLength * 3
 
+    override fun searchForAnchor(readString: String) : AnchorBlosumMatch?
+    {
+        var bestMatch: AnchorBlosumMatch? = null
+
+        for (vjGeneType in VJGeneType.values())
+        {
+            val anchorBlosumMatch: AnchorBlosumMatch? = searchForAnchor(
+                readString,
+                vjGeneType,
+                0,
+                readString.length
+            )
+            if (anchorBlosumMatch != null &&
+                (bestMatch == null || anchorBlosumMatch.similarityScore > bestMatch.similarityScore))
+            {
+                bestMatch = anchorBlosumMatch
+            }
+        }
+
+        return bestMatch
+    }
+
     override fun searchForAnchor(dnaSeq: String, targetAnchorGeneType: VJGeneType, startOffset: Int, endOffset: Int)
     : AnchorBlosumMatch?
     {
-        sLogger.trace("finding anchor for {}, seq: {}, offset: {}-{}", targetAnchorGeneType, dnaSeq, startOffset, endOffset)
+        // sLogger.trace("finding anchor for {}, seq: {}, offset: {}-{}", targetAnchorGeneType, dnaSeq, startOffset, endOffset)
 
         val templateAnchorSequences : SetIterable<String> = ciderGeneDatastore.getAnchorSequenceSet(targetAnchorGeneType)
-        val anchorBlosumMatches = ArrayList<AnchorBlosumMatch>()
+        var bestMatch: AnchorBlosumMatch? = null
 
         if (targetAnchorGeneType.vj == VJ.J)
         {
@@ -63,8 +89,11 @@ class AnchorBlosumSearcher(
                         val end: Int = i + templateAnchorSeq.length
                         // make sure the anchor is long enough, for now we don't allow short anchors
                         val anchorHomolog = tryMatchWithBlosum(targetAnchorGeneType, dnaSeq, start, end, templateAnchorSeq)
-                        if (anchorHomolog != null && (allowNegativeSimilarity || anchorHomolog.similarityScore >= 0))
-                            anchorBlosumMatches.add(anchorHomolog)
+                        if (anchorHomolog != null &&
+                            (bestMatch == null || anchorHomolog.similarityScore > bestMatch.similarityScore))
+                        {
+                            bestMatch = anchorHomolog
+                        }
                     }
                 }
             }
@@ -72,6 +101,7 @@ class AnchorBlosumSearcher(
         else if (targetAnchorGeneType.vj == VJ.V)
         {
             // if we got the V anchor, we have to search in the reverse direction
+            // NOTE: this is probably unnecessary
             for (i in (endOffset - 1) downTo  startOffset + 3)
             {
                 val aa = Codons.codonToAminoAcid(dnaSeq, i - 3)
@@ -83,20 +113,17 @@ class AnchorBlosumSearcher(
                         val start: Int = i - templateAnchorSeq.length
                         val end: Int = i
                         val anchorHomolog = tryMatchWithBlosum(targetAnchorGeneType, dnaSeq, start, end, templateAnchorSeq)
-                        if (anchorHomolog != null && (allowNegativeSimilarity || anchorHomolog.similarityScore >= 0))
-                            anchorBlosumMatches.add(anchorHomolog)
+                        if (anchorHomolog != null &&
+                            (bestMatch == null || anchorHomolog.similarityScore > bestMatch.similarityScore))
+                        {
+                            bestMatch = anchorHomolog
+                        }
                     }
                 }
             }
         }
 
-        if (anchorBlosumMatches.isEmpty())
-            return null
-
-        // sort them by most similar to least
-        anchorBlosumMatches.sortByDescending({ o -> o.similarityScore })
-
-        return anchorBlosumMatches.maxByOrNull({ match -> match.similarityScore })
+        return bestMatch
     }
 
     private fun tryMatchWithBlosum(
@@ -156,19 +183,14 @@ class AnchorBlosumSearcher(
         {
             val score: Int = BlosumSimilarityCalc.calcSimilarityScore(geneType.vj, trimmedTemplateAnchorSeq, potentialAnchor)
 
-            //if (score >= 0)
-            //{
-                /*sLogger.debug(
-                    "anchor found seq: {}, anchor type: {}, anchor seq: {}",
-                    dnaSeq, geneType, potentialAnchor
-                )*/
-
+            if (score >= 0 || allowNegativeSimilarity)
+            {
                 val templateGenes: ImmutableCollection<VJAnchorTemplate> = ciderGeneDatastore.getByAnchorSequence(geneType, templateAnchorSeq)
                 val anchorBlosumMatch = AnchorBlosumMatch(anchorStart = anchorStart, anchorEnd = anchorEnd,
                     templateAnchorSeq = templateAnchorSeq,
                     templateGenes = templateGenes, similarityScore = score)
                 return anchorBlosumMatch
-            //}
+            }
         }
         return null
     }

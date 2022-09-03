@@ -108,11 +108,11 @@ class VjTemplateGeneWriter
 
             // find gene location
             val geneEnsemblData: GeneData? = ensemblDataCache.getGeneDataByName(geneName)
-            var geneLoc: GeneLocation? = null
+            var geneLoc: GenomeRegionStrand? = null
 
             if (geneEnsemblData != null)
             {
-                geneLoc = GeneLocation(
+                geneLoc = GenomeRegionStrand(
                     geneEnsemblData.Chromosome, geneEnsemblData.GeneStart, geneEnsemblData.GeneEnd,
                     if (geneEnsemblData.forwardStrand()) Strand.FORWARD else Strand.REVERSE
                 )
@@ -160,20 +160,20 @@ class VjTemplateGeneWriter
                 // for v gene the anchor is near the end, due to introns we much find the sequence from the end backwards
                 val anchorOffsetFromEnd = seqString.length - anchorIndex - anchor.length
 
-                var anchorLocation: GeneLocation? = null
+                var anchorLocation: GenomeRegionStrand? = null
 
                 if (geneLoc != null && anchorIndex != -1)
                 {
                     if (geneLoc.strand == Strand.FORWARD)
                     {
-                        anchorLocation = GeneLocation(
+                        anchorLocation = GenomeRegionStrand(
                             geneLoc.chromosome,
                             geneLoc.posEnd - anchorOffsetFromEnd - anchor.length + 1,
                             geneLoc.posEnd - anchorOffsetFromEnd, geneLoc.strand)
                     }
                     else
                     {
-                        anchorLocation = GeneLocation(
+                        anchorLocation = GenomeRegionStrand(
                             geneLoc.chromosome,
                             geneLoc.posStart + anchorOffsetFromEnd,
                             geneLoc.posStart + anchorOffsetFromEnd + anchor.length - 1, geneLoc.strand)
@@ -217,20 +217,20 @@ class VjTemplateGeneWriter
                     sLogger.info("IGHJ gene: {}, anchor: {}, anchor AA: {}", geneName, anchor, aaSeq)
                 }
 
-                var anchorLocation: GeneLocation? = null
+                var anchorLocation: GenomeRegionStrand? = null
 
                 if (geneLoc != null && anchorIndex != -1)
                 {
                     if (geneLoc.strand == Strand.FORWARD)
                     {
-                        anchorLocation = GeneLocation(
+                        anchorLocation = GenomeRegionStrand(
                             geneLoc.chromosome,
                             geneLoc.posStart + anchorIndex,
                             geneLoc.posStart + anchorIndex + anchor.length - 1, geneLoc.strand)
                     }
                     else
                     {
-                        anchorLocation = GeneLocation(
+                        anchorLocation = GenomeRegionStrand(
                             geneLoc.chromosome,
                             geneLoc.posEnd - anchorIndex - anchor.length + 1,
                             geneLoc.posEnd - anchorIndex, geneLoc.strand)
@@ -336,8 +336,8 @@ class VjTemplateGeneWriter
         }
 
         fun correctGeneLocation(seq: String, refSeq: String,
-                                refGeneLocation: GeneLocation, minBasesToCompare: Int, maxBasesToCompare: Int)
-            : GeneLocation
+                                refGenomeRegionStrand: GenomeRegionStrand, minBasesToCompare: Int, maxBasesToCompare: Int)
+            : GenomeRegionStrand
         {
             // the sequence from the two files are not exact matches, so we need to correct for it
             // note that we only try to find the first section of the sequence in ref seq
@@ -354,17 +354,17 @@ class VjTemplateGeneWriter
             }
 
             if (startShift == 0 && seq.length == refSeq.length)
-                return refGeneLocation
+                return refGenomeRegionStrand
 
-            val correctedGeneLoc = if (refGeneLocation.strand == Strand.FORWARD)
-                GeneLocation(refGeneLocation.chromosome, refGeneLocation.posStart + startShift,
-                    refGeneLocation.posEnd + endShift, refGeneLocation.strand)
+            val correctedGeneLoc = if (refGenomeRegionStrand.strand == Strand.FORWARD)
+                GenomeRegionStrand(refGenomeRegionStrand.chromosome, refGenomeRegionStrand.posStart + startShift,
+                    refGenomeRegionStrand.posEnd + endShift, refGenomeRegionStrand.strand)
             else
-                GeneLocation(refGeneLocation.chromosome, refGeneLocation.posStart - endShift,
-                    refGeneLocation.posEnd - startShift, refGeneLocation.strand)
+                GenomeRegionStrand(refGenomeRegionStrand.chromosome, refGenomeRegionStrand.posStart - endShift,
+                    refGenomeRegionStrand.posEnd - startShift, refGenomeRegionStrand.strand)
 
             sLogger.info("seq({}) refSeq({}) refLocation({}) shift({}, {}) corrected({})",
-                seq, refSeq, refGeneLocation, startShift, endShift, correctedGeneLoc)
+                seq, refSeq, refGenomeRegionStrand, startShift, endShift, correctedGeneLoc)
 
             return correctedGeneLoc
         }
@@ -406,13 +406,13 @@ class VjTemplateGeneWriter
         }
 
         // validate sequence against the ref genome file to make sure we got it right
-        fun validateAgainstRefGenome(seq: String, geneLocation: GeneLocation, refGenome: IndexedFastaSequenceFile) : Boolean
+        fun validateAgainstRefGenome(seq: String, genomeRegionStrand: GenomeRegionStrand, refGenome: IndexedFastaSequenceFile) : Boolean
         {
-            val refGenomeSeq = queryRefSequence(refGenome, geneLocation)
+            val refGenomeSeq = queryRefSequence(refGenome, genomeRegionStrand)
 
             if (refGenomeSeq.length != seq.length)
             {
-                sLogger.warn("validation failed: seq({}) and ref genome seq({} of {}) length mismatch", seq, refGenomeSeq, geneLocation)
+                sLogger.warn("validation failed: seq({}) and ref genome seq({} of {}) length mismatch", seq, refGenomeSeq, genomeRegionStrand)
                 return false
             }
 
@@ -426,15 +426,15 @@ class VjTemplateGeneWriter
 
             if (numDiff > 6)
             {
-                sLogger.error("validation failed: seq({}) and ref genome seq({} of {}) sequence mismatch({}) > 6", seq, refGenomeSeq, geneLocation, numDiff)
+                sLogger.error("validation failed: seq({}) and ref genome seq({} of {}) sequence mismatch({}) > 6", seq, refGenomeSeq, genomeRegionStrand, numDiff)
                 return false
             }
             return true
         }
 
-        fun queryRefSequence(refGenome: IndexedFastaSequenceFile, geneLocation: GeneLocation): String
+        fun queryRefSequence(refGenome: IndexedFastaSequenceFile, genomeRegionStrand: GenomeRegionStrand): String
         {
-            var chromosome = geneLocation.chromosome
+            var chromosome = genomeRegionStrand.chromosome
 
             if (!refGenome.index.hasIndexEntry(chromosome))
             {
@@ -443,8 +443,8 @@ class VjTemplateGeneWriter
             }
 
             val forwardSeq = refGenome.getSubsequenceAt(chromosome,
-                geneLocation.start().toLong(), geneLocation.end().toLong()).baseString
-            if (geneLocation.strand == Strand.FORWARD)
+                genomeRegionStrand.start().toLong(), genomeRegionStrand.end().toLong()).baseString
+            if (genomeRegionStrand.strand == Strand.FORWARD)
                 return forwardSeq
             else
                 return reverseComplement(forwardSeq)

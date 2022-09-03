@@ -1,163 +1,185 @@
-package com.hartwig.hmftools.cider;
+package com.hartwig.hmftools.cider
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.NoSuchElementException;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.BiConsumer;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion
+import htsjdk.samtools.SAMRecord
+import htsjdk.samtools.SAMRecordIterator
+import htsjdk.samtools.SamReader
+import htsjdk.samtools.SamReaderFactory
+import org.apache.logging.log4j.LogManager
+import java.io.File
+import java.io.IOException
+import java.util.*
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedBlockingDeque
 
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-
-public class AsyncBamReader
+object AsyncBamReader
 {
-    private static final Logger logger = LogManager.getLogger(AsyncBamReader.class);
+    private const val MAX_BAM_RECORD_Q_SIZE = 100000
+    private val logger = LogManager.getLogger(AsyncBamReader::class.java)
 
-    // use inheritance to save some memory, it is a bit dirty
-    // but Amber is running out of memory
-    static class Task<E extends GenomeRegion>
+    @JvmStatic
+    @Throws(InterruptedException::class)
+    fun processBam(
+        bamFile: String,
+        samReaderFactory: SamReaderFactory,
+        genomeRegions: Collection<GenomeRegion>,
+        asyncRecordHandler: (SAMRecord) -> Unit,
+        threadCount: Int
+    )
     {
-        E genomeRegion;
-    }
+        logger.debug("Processing {} potential sites in bam {}", genomeRegions.size, bamFile)
 
-    static class BamReaderThread<E extends GenomeRegion> extends Thread
-    {
-        final Queue<Task<E>> mTaskQ;
-        final SamReader mSamReader;
-        final int mMinMappingQuality;
-        BiConsumer<E, SAMRecord> mConsumer;
-
-        BamReaderThread(final String bamFile, final SamReaderFactory samReaderFactory, final Queue<Task<E>> inTaskQ,
-                int minMappingQuality, BiConsumer<E, SAMRecord> consumer)
-        {
-            mTaskQ = inTaskQ;
-            mSamReader = samReaderFactory.open(new File(bamFile));
-            mMinMappingQuality = minMappingQuality;
-            mConsumer = consumer;
-        }
-
-        @Override
-        public void run()
-        {
-            logger.debug("bam reader thread start");
-
-            while (true)
-            {
-                Task<E> task;
-                try
-                {
-                    task = mTaskQ.remove();
-                }
-                catch (NoSuchElementException e)
-                {
-                    // finished processing
-                    break;
-                }
-
-                try (final SAMRecordIterator iterator = task.genomeRegion == null ?
-                        mSamReader.queryUnmapped() :
-                        mSamReader.queryOverlapping(task.genomeRegion.chromosome(), task.genomeRegion.start(), task.genomeRegion.end()))
-                {
-                    while (iterator.hasNext())
-                    {
-                        final SAMRecord record = iterator.next();
-
-                        if (!passesFilters(record))
-                        {
-                            continue;
-                        }
-
-                        //if (task.genomeRegion.start() >= record.getAlignmentStart() && task.genomeRegion.end() <= alignmentEnd)
-                        if (task.genomeRegion.start() <= record.getAlignmentEnd() && task.genomeRegion.end() >= record.getAlignmentStart())
-                        {
-                            mConsumer.accept(task.genomeRegion, record);
-                        }
-                    }
-                }
-            }
-
-            try {
-                mSamReader.close();
-            }
-            catch (IOException e)
-            {
-                logger.error("IO exception in SamReader::close: {}", e.getMessage());
-            }
-
-            logger.debug("bam reader thread finish");
-        }
-
-        private boolean passesFilters(final SAMRecord record)
-        {
-            if(record.getMappingQuality() < mMinMappingQuality || record.getReadUnmappedFlag())
-                return false;
-
-            return !record.getDuplicateReadFlag();
-        }
-    }
-
-    public static <E extends GenomeRegion> void processBam(final String bamFile, final SamReaderFactory samReaderFactory,
-            final Collection<E> regions, BiConsumer<E, SAMRecord> asyncRecordHandler, int threadCount, int minMappingQuality)
-            throws InterruptedException
-    {
-        logger.debug("Processing {} potential sites in bam {}", regions.size(), bamFile);
-
-        final Queue<Task<E>> taskQ = new ConcurrentLinkedQueue<>();
-        
         // create genome regions from the loci
-        populateTaskQueue(regions, taskQ);
-        BamTaskCompletion taskCompletion = new BamTaskCompletion(taskQ.size());
+        // val taskCompletion = BamTaskCompletion(taskQ.size)
 
-        // we create the consumer and producer
-        var bamReaders = new ArrayList<BamReaderThread<E>>();
+        val bamRecordQ: BlockingQueue<Optional<SAMRecord>> = LinkedBlockingDeque()
 
-        for (int i = 0; i < Math.max(threadCount, 1); ++i)
+        // create the bam record consumers
+        val recordConsumers = ArrayList<BamRecordConsumerThread>()
+        for (i in 0 until Math.max(threadCount, 1))
         {
-            var t = new BamReaderThread<>(bamFile, samReaderFactory, taskQ, minMappingQuality, asyncRecordHandler);
-            t.setName(String.format("worker-%d", i));
-            t.start();
-            bamReaders.add(t);
+            val t = BamRecordConsumerThread(bamRecordQ, asyncRecordHandler)
+            t.name = String.format("worker-%d", i)
+            t.start()
+            recordConsumers.add(t)
         }
+        logger.info("{} bam record consumer threads started", recordConsumers.size)
 
-        logger.info("{} bam reader threads started", bamReaders.size());
+        val bamReader = BamReader(bamFile, samReaderFactory, genomeRegions, bamRecordQ)
+        bamReader.run()
+        bamRecordQ.put(Optional.empty()) // signals consumer to finish
 
-        for (BamReaderThread<E> t : bamReaders)
+        for (t in recordConsumers)
         {
-            while (t.isAlive())
+            while (t.isAlive)
             {
                 // check status every 30 seconds
-                t.join(30_000);
-
-                // check status
-                taskCompletion.progress(taskQ.size());
+                t.join(30000)
             }
         }
 
-        logger.info("{} bam reader threads finished", bamReaders.size());
+        logger.info("{} bam reader threads finished", recordConsumers.size)
     }
 
-    /**
-     * Group the genome regions
-     */
-    public static <E extends GenomeRegion> void populateTaskQueue(final Collection<E> genomeRegions, final Queue<Task<E>> taskQ)
+    internal class BamReader(
+        bamFile: String,
+        samReaderFactory: SamReaderFactory,
+        private val genomeRegionList: Collection<GenomeRegion>,
+        private val outputRecordQ: Queue<Optional<SAMRecord>>)
     {
-        for (E genomeRegion : genomeRegions)
+        private val mSamReader: SamReader = samReaderFactory.open(File(bamFile))
+
+        fun run()
         {
-            Task<E> task = new Task<>();
-            task.genomeRegion = genomeRegion;
-            taskQ.add(task);
+            logger.debug("bam reader start")
+            for (genomeRegion in genomeRegionList)
+            {
+                mSamReader.queryOverlapping(genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end())
+                    .use({ iterator -> processRecords(iterator) })
+            }
+
+            // process unmapped reads
+            mSamReader.queryUnmapped().use({ iterator -> processRecords(iterator) })
+
+            try
+            {
+                mSamReader.close()
+            }
+            catch (e: IOException)
+            {
+                logger.error("IO exception in SamReader::close: {}", e.message)
+            }
+            logger.debug("bam reader finish")
         }
-        // another one for unmapped reads
-        taskQ.add(new Task<>());
+
+        private fun processRecords(iterator: SAMRecordIterator)
+        {
+            while (iterator.hasNext())
+            {
+                val record = iterator.next()
+
+                /*if (    record.getReadName().equals("ST-E00289:125:HLK2HCCXY:6:2205:6512:35098") ||
+                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:6:2206:30076:31195") ||
+                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:4:2218:26636:11804") ||
+                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:7:2207:14539:63384") ||
+                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:8:2220:8694:54102") ||
+                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:6:2211:16305:10152") ||
+                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:6:1202:18243:9888") ||
+                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:6:1204:20831:45206") ||
+                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:7:1118:22333:62997") ||
+                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:7:2119:20892:72174") ||
+                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:8:1101:15879:59763") ||
+                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:8:1222:7963:47492") ||
+                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:3:2118:15818:16516"))
+                {
+                    logger.info("read record is what we are looking for: {}, genome region: {}", record, task.genomeRegion);
+                }*/
+
+                if (record.duplicateReadFlag)
+                {
+                    continue
+                }
+
+                // we don't want to check the alignment region
+                outputRecordQ.add(Optional.of(record))
+
+                // important: we want to take a break if we are going to flood the output queue
+                checkAndWaitForConsumer()
+            }
+        }
+
+        private fun checkAndWaitForConsumer()
+        {
+            if (outputRecordQ.size >= MAX_BAM_RECORD_Q_SIZE)
+            {
+                logger.info("bam record Q size: {}, max size reached, pausing bam reader", outputRecordQ.size)
+
+                // drain at least 80% of the queue before going back to work
+                while (outputRecordQ.size * 5 >= MAX_BAM_RECORD_Q_SIZE)
+                {
+                    try
+                    {
+                        Thread.sleep(1000)
+                    }
+                    catch (ex: InterruptedException)
+                    {
+                        Thread.currentThread().interrupt()
+                    }
+                }
+                logger.info("finished sleeping, bam record Q size: {}", outputRecordQ.size)
+            }
+        }
+    }
+
+    internal class BamRecordConsumerThread(
+        private val bamRecordQ: BlockingQueue<Optional<SAMRecord>>,
+        private val samRecordHandler: (SAMRecord) -> Unit
+    ) : Thread()
+    {
+        override fun run()
+        {
+            logger.debug("bam record consumer thread start")
+            while (true)
+            {
+                val record: Optional<SAMRecord> = try
+                {
+                    bamRecordQ.take()
+                }
+                catch (e: InterruptedException)
+                {
+                    break
+                }
+                if (record.isEmpty)
+                {
+                    // if record is empty, it signals consumer to stop
+                    // we want to put it back so other consumer threads
+                    // will also know to stop
+                    bamRecordQ.put(record)
+                    break
+                }
+                samRecordHandler(record.get())
+            }
+            logger.debug("bam record consumer thread finish")
+        }
     }
 }

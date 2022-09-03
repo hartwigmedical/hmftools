@@ -4,4 +4,3 @@ data class ReadKey(
     val readName: String,
     val firstOfPair: Boolean
 )
-

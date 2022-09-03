@@ -1,17 +1,9 @@
 package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.common.codon.Codons
-import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.util.SequenceUtil
 import org.eclipse.collections.api.collection.ImmutableCollection
-
-// this one includes supplementary etc
-data class VJReadRecordKey(
-    val readName: String,
-    val firstOfPair: Boolean,
-    val alignment: GenomeRegion?
-)
 
 // We match reads to the genes, but they might not
 // match perfectly. We just match by anchor
@@ -24,7 +16,6 @@ data class VJReadCandidate(
     val useReverseComplement: Boolean,
     val anchorOffsetStart: Int, // this is after reverse complement if needed, can be negative
     val anchorOffsetEnd: Int, // this is after reverse complement if needed, can be after sequence end
-    val anchorLocation: GeneLocation?, // could be null if not mapped
     val leftSoftClip: Int,
     val rightSoftClip: Int
 )

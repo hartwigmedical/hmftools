@@ -1,302 +1,239 @@
-package com.hartwig.hmftools.cider;
+package com.hartwig.hmftools.cider
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
+import com.beust.jcommander.JCommander
+import com.beust.jcommander.ParameterException
+import com.beust.jcommander.ParametersDelegate
+import com.beust.jcommander.UnixStyleUsageFormatter
+import com.hartwig.hmftools.cider.AsyncBamReader.processBam
+import com.hartwig.hmftools.cider.VDJSequenceTsvWriter.writeVDJSequences
+import com.hartwig.hmftools.cider.VJReadLayoutFile.writeLayouts
+import com.hartwig.hmftools.cider.layout.ReadLayout
+import com.hartwig.hmftools.common.genome.region.GenomeRegion
+import com.hartwig.hmftools.common.genome.region.GenomeRegions
+import com.hartwig.hmftools.common.utils.FileWriterUtils
+import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
+import com.hartwig.hmftools.common.utils.config.LoggingOptions
+import com.hartwig.hmftools.common.utils.version.VersionInfo
+import htsjdk.samtools.SAMFileHeader
+import htsjdk.samtools.SAMFileWriterFactory
+import htsjdk.samtools.SAMRecord
+import htsjdk.samtools.SamReaderFactory
+import htsjdk.samtools.cram.ref.ReferenceSource
+import org.apache.logging.log4j.LogManager
+import java.io.File
+import java.io.IOException
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDateTime
+import java.util.*
+import java.util.stream.Collectors
+import kotlin.collections.ArrayList
 
-import java.io.File;
-import java.io.IOException;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParametersDelegate;
-import com.beust.jcommander.UnixStyleUsageFormatter;
-import com.hartwig.hmftools.cider.layout.ReadLayout;
-import com.hartwig.hmftools.common.codon.Codons;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator;
-import com.hartwig.hmftools.common.utils.config.LoggingOptions;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.cram.ref.ReferenceSource;
-
-public class CiderApplication
+class CiderApplication
 {
-    public static final Logger sLogger = LogManager.getLogger(CiderApplication.class);
-    
     // add the options
     @ParametersDelegate
-    private final CiderParams mParams = new CiderParams();
+    private val mParams = CiderParams()
 
     // add to the logging options
     @ParametersDelegate
-    private final LoggingOptions mLoggingOptions = new LoggingOptions();
+    private val mLoggingOptions = LoggingOptions()
 
-    public int run() throws IOException, InterruptedException
+    @Throws(IOException::class, InterruptedException::class)
+    fun run(): Int
     {
-        mLoggingOptions.setLogLevel();
+        mLoggingOptions.setLogLevel()
+        val versionInfo = VersionInfo("cider.version")
+        sLogger.info("Cider version: {}, build timestamp: {}", versionInfo.version(), versionInfo.buildTime().toLocalTime())
 
-        VersionInfo versionInfo = new VersionInfo("cider.version");
-        sLogger.info("Cider version: {}, build time: {}", versionInfo.version(), versionInfo.buildTime().toLocalTime());
-
-        if(!mParams.isValid())
+        if (!mParams.isValid)
         {
-            sLogger.error(" invalid config, exiting");
-            return 1;
+            sLogger.error(" invalid config, exiting")
+            return 1
+        }
+        FileWriterUtils.checkCreateOutputDir(mParams.outputDir)
+        val start = Instant.now()
+
+        val ciderGeneDatastore: ICiderGeneDatastore = CiderGeneDatastore(
+            CiderGeneDataLoader.loadAnchorTemplateTsv(mParams.refGenomeVersion),
+            CiderGeneDataLoader.loadConstantRegionGenes(mParams.refGenomeVersion, mParams.ensemblDataDir))
+
+        val candidateBlosumSearcher = AnchorBlosumSearcher(
+            ciderGeneDatastore,
+            CiderConstants.CANDIDATE_MIN_PARTIAL_ANCHOR_AA_LENGTH,
+            false)
+
+        val readProcessor = CiderReadScreener(
+            ciderGeneDatastore,
+            candidateBlosumSearcher,
+            CiderConstants.MIN_CANDIDATE_READ_ANCHOR_OVERLAP)
+
+        readBamFile(readProcessor, ciderGeneDatastore)
+
+        val vjReadLayoutAdaptor = VJReadLayoutAdaptor(mParams.numBasesToTrim)
+        val layoutMap = buildLayouts(vjReadLayoutAdaptor, readProcessor.vJReadCandidates)
+
+        val vdjBuilderBlosumSearcher = AnchorBlosumSearcher(
+            ciderGeneDatastore,
+            CiderConstants.VDJ_MIN_PARTIAL_ANCHOR_AA_LENGTH,
+            true
+        )
+
+        val vdjSeqBuilder = VDJSequenceBuilder(
+            vjReadLayoutAdaptor, vdjBuilderBlosumSearcher, mParams.minBaseQuality.toByte(),
+            CiderConstants.MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES
+        )
+
+        val vdjSequences = vdjSeqBuilder.buildVDJSequences(layoutMap)
+        writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjSequences)
+        writeCdr3Bam(readProcessor.allMatchedReads)
+        val finish = Instant.now()
+        val seconds = Duration.between(start, finish).seconds
+        sLogger.info("CIDER run complete, time taken: {}m {}s", seconds / 60, seconds % 60)
+        return 0
+    }
+
+    @Throws(InterruptedException::class, IOException::class)
+    fun readBamFile(readProcessor: CiderReadScreener, ciderGeneDatastore: ICiderGeneDatastore)
+    {
+        val readerFactory = readerFactory(mParams)
+        val lociBamRecordHander: (SAMRecord) -> Unit = { samRecord: SAMRecord ->
+            readProcessor.asyncProcessSamRecord(samRecord)
         }
 
-        checkCreateOutputDir(mParams.OutputDir);
+        val genomeRegions = ArrayList<GenomeRegion>()
 
-        Instant start = Instant.now();
+        // first add all the VJ anchor locations
+        for (anchorGenomeLoc: VJAnchorGenomeLocation in ciderGeneDatastore.getVjAnchorGeneLocations())
+        {
+            genomeRegions.add(GenomeRegions.create(
+                anchorGenomeLoc.chromosome,
+                anchorGenomeLoc.start - CiderConstants.APPROX_MAX_FRAGMENT_LENGTH,
+                anchorGenomeLoc.end + CiderConstants.APPROX_MAX_FRAGMENT_LENGTH))
+        }
 
-        CiderGeneDatastore ciderGeneDatastore = new CiderGeneDataLoader(mParams.refGenomeVersion, mParams.ensemblDataDir);
-        var candidateBlosumSearcher = new AnchorBlosumSearcher(ciderGeneDatastore,
-                CiderConstants.CANDIDATE_MIN_PARTIAL_ANCHOR_AA_LENGTH,
-                false);
-
-        Cdr3ReadScreener readProcessor = new Cdr3ReadScreener(ciderGeneDatastore, candidateBlosumSearcher,
-                mParams.MaxAnchorAlignDistance, CiderConstants.MIN_CANDIDATE_READ_ANCHOR_OVERLAP);
-        readBamFile(readProcessor, ciderGeneDatastore);
-
-        var vjReadLayoutAdaptor = new VJReadLayoutAdaptor(mParams.numBasesToTrim);
-
-        Map<VJGeneType, List<ReadLayout>> layoutMap = buildLayouts(vjReadLayoutAdaptor, readProcessor.getVJReadCandidates().values());
-
-        var vdjBuilderBlosumSearcher = new AnchorBlosumSearcher(ciderGeneDatastore,
-                CiderConstants.VDJ_MIN_PARTIAL_ANCHOR_AA_LENGTH,
-                true);
-
-        var vdjSeqBuilder = new VDJSequenceBuilder(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher, (byte)mParams.MinBaseQuality,
-                CiderConstants.MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES);
-        List<VDJSequence> vdjSequences = vdjSeqBuilder.buildVDJSequences(layoutMap);
-
-        VDJSequenceTsvWriter.writeVDJSequences(mParams.OutputDir, mParams.SampleId, vdjSequences);
-
-        writeCdr3Bam(readProcessor.getAllMatchedReads());
-
-        Instant finish = Instant.now();
-        long seconds = Duration.between(start, finish).getSeconds();
-        sLogger.info("CIDER run complete, time taken: {}m {}s", seconds / 60, seconds % 60);
-
-        return 0;
+        // then add all the constant region genome locations
+        for (constantRegion: IgTcrConstantRegion in ciderGeneDatastore.getIgConstantRegions())
+        {
+            genomeRegions.add(GenomeRegions.create(
+                constantRegion.genomeLocation.chromosome,
+                constantRegion.genomeLocation.posStart - CiderConstants.APPROX_MAX_FRAGMENT_LENGTH,
+                constantRegion.genomeLocation.posEnd +  - CiderConstants.APPROX_MAX_FRAGMENT_LENGTH))
+        }
+        processBam(mParams.bamPath, readerFactory, genomeRegions, lociBamRecordHander, mParams.threadCount)
+        sLogger.info("found {} VJ read records", readProcessor.allMatchedReads.size)
     }
 
-    public void readBamFile(Cdr3ReadScreener readProcessor, CiderGeneDatastore ciderGeneDatastore) throws InterruptedException, IOException
-    {
-        final SamReaderFactory readerFactory = readerFactory(mParams);
-
-        // create a thread
-        final BlockingQueue<SAMRecord> samRecordQueue = new LinkedBlockingQueue<>();
-
-        final Thread readProcessorThread = new Thread(() ->
-        {
-            while (true)
-            {
-                try
-                {
-                    SAMRecord record = samRecordQueue.take();
-
-                    if (record.getHeader() == null)
-                        // indicates finish
-                        return;
-                    readProcessor.processSamRecord(record);
-                }
-                catch (InterruptedException e)
-                {
-                    sLogger.warn("bam record processing thread interrupted");
-                    break;
-                }
-            }
-        });
-
-        readProcessorThread.start();
-
-        BiConsumer<GenomeRegion, SAMRecord> lociBamRecordHander = (GenomeRegion genomeRegion, SAMRecord samRecord) ->
-        {
-            samRecordQueue.add(samRecord);
-        };
-
-        Collection<GenomeRegion> genomeRegions = ciderGeneDatastore.getVJAnchorReferenceLocations()
-                .collect(o -> GenomeRegions.create(o.getChromosome(), o.getStart() - mParams.MaxAnchorAlignDistance, o.getEnd() + mParams.MaxAnchorAlignDistance))
-                .toList();
-
-        genomeRegions.addAll(ciderGeneDatastore.getIgConstantRegions().stream()
-                        .map(IgTcrConstantRegion::getGeneLocation)
-                        .map(o -> GenomeRegions.create(o.getChromosome(), o.getPosStart(), o.getPosEnd()))
-                        .collect(Collectors.toList()));
-
-        AsyncBamReader.processBam(mParams.BamPath, readerFactory, genomeRegions, lociBamRecordHander, mParams.ThreadCount, 0);
-
-        // a bit hacky to tell consumer this is the end
-        samRecordQueue.add(new SAMRecord(null));
-
-        readProcessorThread.join();
-
-        sLogger.info("found {} VJ read records", readProcessor.getAllMatchedReads().size());
-    }
-
-    @NotNull
-    private Map<VJGeneType, List<ReadLayout>> buildLayouts(VJReadLayoutAdaptor vjReadLayoutAdaptor, Collection<VJReadCandidate> readCandidates)
+    private fun buildLayouts(
+        vjReadLayoutAdaptor: VJReadLayoutAdaptor,
+        readCandidates: Collection<VJReadCandidate>
+    ): Map<VJGeneType, List<ReadLayout>>
     {
         // now build the consensus overlay sequences
         //var geneTypes = new VJGeneType[] { VJGeneType.IGHV, VJGeneType.IGHJ };
-        var geneTypes = VJGeneType.values();
-        Map<VJGeneType, List<ReadLayout>> layoutMap = new HashMap<>();
-
-        for (VJGeneType geneType : geneTypes)
+        val geneTypes = VJGeneType.values()
+        val layoutMap: MutableMap<VJGeneType, List<ReadLayout>> = HashMap()
+        for (geneType in geneTypes)
         {
-            List<VJReadCandidate> readsOfGeneType = readCandidates.stream()
-                    .filter(o -> o.getVjGeneType() == geneType).collect(Collectors.toList());
+            val readsOfGeneType = readCandidates
+                .filter({ o: VJReadCandidate -> o.vjGeneType === geneType })
+                .toList()
 
-            for (var read : readsOfGeneType)
+            for (read in readsOfGeneType)
             {
-                if ((read.getAnchorOffsetEnd() - read.getAnchorOffsetStart()) > 30)
+                if (read.anchorOffsetEnd - read.anchorOffsetStart > 30)
                 {
-                    sLogger.info("anchor length > 30: read: {}, cigar: {}", read.getRead(), read.getRead().getCigarString());
+                    sLogger.info("anchor length > 30: read: {}, cigar: {}", read, read.read.cigarString)
                 }
             }
+            val readLayouts = vjReadLayoutAdaptor.buildLayouts(
+                geneType, readsOfGeneType,
+                mParams.minBaseQuality, 20, 1.0
+            )
 
-            List<ReadLayout> readLayouts = vjReadLayoutAdaptor.buildLayouts(geneType, readsOfGeneType,
-                    mParams.MinBaseQuality, 20, 1.0);
-
-            // now log the sequences
-            for (ReadLayout layout : readLayouts)
-            {
-                List<VJReadCandidate> overlayReads =
-                        layout.getReads().stream().map(vjReadLayoutAdaptor::toReadCandidate).collect(Collectors.toList());
-                int numSplitReads = (int) overlayReads.stream().filter(o -> Math.max(o.getLeftSoftClip(), o.getRightSoftClip()) > 5).count();
-                int anchorLength =
-                        overlayReads.stream().map(o -> o.getAnchorOffsetEnd() - o.getAnchorOffsetStart()).max(Integer::compareTo).orElse(0);
-                sLogger.info("Layout type: {}， read count: {}, split read count: {}, anchor length: {}",
-                        geneType, layout.getReads().size(), numSplitReads, anchorLength);
-
-                // get the sequence, remember aligned position is the anchor start
-                String anchor = vjReadLayoutAdaptor.getAnchorSequence(geneType, layout);
-                String cdr3 = vjReadLayoutAdaptor.getCdr3Sequence(geneType, layout);
-                String anchorSupport = vjReadLayoutAdaptor.getAnchorSupport(geneType, layout);
-                String cdr3Support = vjReadLayoutAdaptor.getCdr3Support(geneType, layout);
-
-                if (geneType.getVj() == VJ.V)
-                {
-                    sLogger.info("V sequence: {}-{}", anchor, cdr3);
-                    sLogger.info("V support:  {}-{}", anchorSupport, cdr3Support);
-                    sLogger.info("V AA seq:  {}-{}", Codons.aminoAcidFromBases(anchor), Codons.aminoAcidFromBases(cdr3));
-                } else if (geneType.getVj() == VJ.J)
-                {
-                    sLogger.info("J sequence: {}-{}", cdr3, anchor);
-                    sLogger.info("J support:  {}-{}", cdr3Support, anchorSupport);
-                    sLogger.info("J AA seq:  {}-{}", Codons.aminoAcidFromBases(cdr3), Codons.aminoAcidFromBases(anchor));
-                }
-            }
-
-            layoutMap.put(geneType, readLayouts);
+            layoutMap[geneType] = readLayouts
         }
 
         // use flatMap to turn many lists to one
-        List<ReadLayout> allLayouts = layoutMap.values().stream().flatMap(List::stream).collect(Collectors.toList());
+        val allLayouts = layoutMap.values.stream().flatMap { obj: List<ReadLayout> -> obj.stream() }.collect(Collectors.toList())
 
         // sort from most number of reads to lowest
-        allLayouts.sort(Collections.reverseOrder(Comparator.comparing(layout -> layout.getReads().size())));
+        allLayouts.sortWith(Collections.reverseOrder(Comparator.comparing { layout: ReadLayout -> layout.reads.size }))
 
         // give each an ID
-        int nextId = 1;
-        for (ReadLayout layout : allLayouts)
+        var nextId = 1
+        for (layout in allLayouts)
         {
-            layout.setId(Integer.toString(nextId++));
+            layout.id = Integer.toString(nextId++)
         }
-
-        VJReadLayoutFile.writeLayouts(mParams.OutputDir, mParams.SampleId, layoutMap, 5);
-        return layoutMap;
+        writeLayouts(mParams.outputDir, mParams.sampleId, layoutMap, 5)
+        return layoutMap
     }
 
-    public void writeCdr3Bam(Collection<SAMRecord> samRecords) throws IOException
+    @Throws(IOException::class)
+    fun writeCdr3Bam(samRecords: Collection<SAMRecord?>)
     {
-        if (!mParams.writeFilteredBam)
-            return;
-
-        String outBamPath = mParams.OutputDir + "/" + mParams.SampleId + ".cider.bam";
-
-        final SamReaderFactory readerFactory = readerFactory(mParams);
-        SAMFileHeader samFileHeader;
-        try (SamReader samReader = readerFactory.open(new File(mParams.BamPath)))
-        {
-            samFileHeader = samReader.getFileHeader();
-        }
-        try (SAMFileWriter bamFileWriter = (new SAMFileWriterFactory()).makeBAMWriter(
-                samFileHeader, false, new File(outBamPath)))
-        {
-            for (SAMRecord r : samRecords)
+        if (!mParams.writeFilteredBam) return
+        val outBamPath = mParams.outputDir + "/" + mParams.sampleId + ".cider.bam"
+        val readerFactory = readerFactory(mParams)
+        var samFileHeader: SAMFileHeader
+        readerFactory.open(File(mParams.bamPath)).use { samReader -> samFileHeader = samReader.fileHeader }
+        SAMFileWriterFactory().makeBAMWriter(
+            samFileHeader, false, File(outBamPath)
+        ).use { bamFileWriter ->
+            for (r in samRecords)
             {
-                bamFileWriter.addAlignment(r);
+                bamFileWriter.addAlignment(r)
             }
         }
     }
 
-    private static SamReaderFactory readerFactory(final CiderParams params)
+    companion object
     {
-        final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(params.Stringency);
-        if(params.RefGenomePath != null)
+        val sLogger = LogManager.getLogger(CiderApplication::class.java)
+        private fun readerFactory(params: CiderParams): SamReaderFactory
         {
-            return readerFactory.referenceSource(new ReferenceSource(new File(params.RefGenomePath)));
+            val readerFactory = SamReaderFactory.make().validationStringency(params.stringency)
+            return if (params.refGenomePath != null)
+            {
+                readerFactory.referenceSource(ReferenceSource(File(params.refGenomePath)))
+            } else readerFactory
         }
-        return readerFactory;
-    }
 
-    public static void main(final String... args) throws IOException, InterruptedException
-    {
-        sLogger.info("{}", LocalDateTime.now());
-        sLogger.info("args: {}", String.join(" ", args));
-
-        CiderApplication ciderApplication = new CiderApplication();
-        JCommander commander = JCommander.newBuilder()
+        @Throws(IOException::class, InterruptedException::class)
+        @JvmStatic
+        fun main(args: Array<String>)
+        {
+            sLogger.info("{}", LocalDateTime.now())
+            sLogger.info("args: {}", java.lang.String.join(" ", *args))
+            val ciderApplication = CiderApplication()
+            val commander = JCommander.newBuilder()
                 .addObject(ciderApplication)
-                .build();
+                .build()
 
-        // use unix style formatter
-        commander.setUsageFormatter(new UnixStyleUsageFormatter(commander));
-        // help message show in order parameters are declared
-        commander.setParameterDescriptionComparator(new DeclaredOrderParameterComparator(CiderApplication.class));
+            // use unix style formatter
+            commander.usageFormatter = UnixStyleUsageFormatter(commander)
+            // help message show in order parameters are declared
+            commander.parameterDescriptionComparator = DeclaredOrderParameterComparator(CiderApplication::class.java)
+            try
+            {
+                commander.parse(*args)
+            } catch (e: ParameterException)
+            {
+                println("Unable to parse args: " + e.message)
+                commander.usage()
+                System.exit(1)
+            }
 
-        try
-        {
-            commander.parse(args);
+            // set all thread exception handler
+            Thread.setDefaultUncaughtExceptionHandler(
+                { t: Thread, e: Throwable ->
+                    sLogger.error("[{}]: uncaught exception: {}", t, e)
+                    e.printStackTrace(System.err)
+                    System.exit(1)
+                })
+
+            System.exit(ciderApplication.run())
         }
-        catch (com.beust.jcommander.ParameterException e)
-        {
-            System.out.println("Unable to parse args: " + e.getMessage());
-            commander.usage();
-            System.exit(1);
-        }
-
-        // set all thread exception handler
-        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
-        {
-            sLogger.error(t + " throws exception: " + e);
-            e.printStackTrace(System.err);
-            System.exit(1);
-        });
-
-        System.exit(ciderApplication.run());
     }
 }

@@ -1,50 +1,7 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.common.genome.region.GenomeRegion
-import com.hartwig.hmftools.common.genome.region.GenomeRegions
-import htsjdk.samtools.SamReader
-import htsjdk.samtools.SamReaderFactory
-import java.io.File
-
 object CiderUtils
 {
-    const val DEFAULT_PARTITION_SIZE = 10000000
-
-    fun openSamReader(config: CiderParams): SamReader
-    {
-        var factory = SamReaderFactory.makeDefault()
-        if (config.RefGenomePath != null && !config.RefGenomePath!!.isEmpty())
-        {
-            factory = factory.referenceSequence(File(config.RefGenomePath!!))
-        }
-        return factory.open(File(config.BamPath))
-    }
-
-    @JvmStatic
-    fun createPartitions(config: CiderParams): List<GenomeRegion>
-    {
-        val samReader = openSamReader(config)
-        val samSequences = samReader.fileHeader.sequenceDictionary.sequences
-        val partitions: MutableList<GenomeRegion> = ArrayList()
-        val partitionSize = DEFAULT_PARTITION_SIZE
-        for (seq in samSequences)
-        {
-            val chrStr = seq.sequenceName
-            if (config.SpecificChr != null && config.SpecificChr != chrStr)
-                continue
-            val chromosomeLength = seq.sequenceLength
-            var startPos = 0
-            while (startPos < chromosomeLength)
-            {
-                var endPos = startPos + partitionSize - 1
-                if (endPos + partitionSize * 0.2 > chromosomeLength) endPos = chromosomeLength
-                partitions.add(GenomeRegions.create(chrStr, startPos, endPos))
-                startPos = endPos + 1
-            }
-        }
-        return partitions
-    }
-
     fun conservedAA(vjGeneType: VJGeneType): Char
     {
         if (vjGeneType.vj == VJ.V)

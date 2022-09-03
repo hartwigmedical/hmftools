@@ -42,7 +42,7 @@ class VjTemplateGeneWriterTest
         val seq = "ABCDE"
         val refSeq = "CDEFGH"
 
-        var refGeneLoc = GeneLocation("1", 100, 105, Strand.FORWARD)
+        var refGeneLoc = GenomeRegionStrand("1", 100, 105, Strand.FORWARD)
         var correctedGeneLoc = VjTemplateGeneWriter.correctGeneLocation(seq, refSeq, refGeneLoc, 3, 3)
 
         // 2 more bases at the start
@@ -51,7 +51,7 @@ class VjTemplateGeneWriterTest
         assertEquals(102, correctedGeneLoc.posEnd)
 
         // now test with reverse strand
-        refGeneLoc = GeneLocation("1", 100, 105, Strand.REVERSE)
+        refGeneLoc = GenomeRegionStrand("1", 100, 105, Strand.REVERSE)
         correctedGeneLoc = VjTemplateGeneWriter.correctGeneLocation(seq, refSeq, refGeneLoc, 3, 3)
 
         // 3 less bases at the start
@@ -66,7 +66,7 @@ class VjTemplateGeneWriterTest
         val seq = "GCTGAATACTTCCAGCACTGGGGCCAGGGCACCCTGGTCACCGTCTCCTCAG"
         val refSeq = "GCTGAATACTTCCAGCACTGGGGCCAGGGCACCCTGGTCACCGTCTCCTCAG"
 
-        var refGeneLoc = GeneLocation("1", 100, 151, Strand.FORWARD)
+        var refGeneLoc = GenomeRegionStrand("1", 100, 151, Strand.FORWARD)
         var correctedGeneLoc = VjTemplateGeneWriter.correctGeneLocation(seq, refSeq, refGeneLoc, 20, 30)
 
         assertEquals(refGeneLoc.posStart, correctedGeneLoc.posStart)
@@ -80,7 +80,7 @@ class VjTemplateGeneWriterTest
         val seq = "CAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCATCTGCGCTGTCTCTGGTGACTCCATCAGCAGTGGTAACTGGTGAATCTGGGTCCGCCAGCCCCCAGGGAAGGGGCTGGAGTGGATTGGGGAAATCCATCATAGTGGGAGCACCTACTACAACCCGTCCCTCAAGAGTCGAATCACCATGTCCGTAGACACGTCCAAGAACCAGTTCTACCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGATA"
         val refSeq = "ATGAAACACCTGTGGTTCTTCCTCCTGCTGGTGGCAGCTCCCAGATGGGTCCTGTCCCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCATCTGCGCTGTCTCTGGTGACTCCATCAGCAGTGGTAACTGGTGAATCTGGGTCCGCCAGCCCCCAGGGAAGGGGCTGGAGTGGATTGGGGAAATCCATCATAGTGGGAGCACCTACTACAACCCGTCCCTCAAGAGTCGAATCACCATGTCCGTAGACACGTCCAAGAACCAGTTCTACCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGATACACAGTGAGGGGAGG"
 
-        var refGeneLoc = GeneLocation("1", 1, 300, Strand.FORWARD)
+        var refGeneLoc = GenomeRegionStrand("1", 1, 300, Strand.FORWARD)
         var correctedGeneLoc = VjTemplateGeneWriter.correctGeneLocation(seq, refSeq, refGeneLoc, 20, 30)
 
         assertEquals(58, correctedGeneLoc.posStart)

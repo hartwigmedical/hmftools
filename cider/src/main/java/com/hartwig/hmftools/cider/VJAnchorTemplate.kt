@@ -4,10 +4,10 @@ import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.genome.region.Strand
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion
 
-data class GeneLocation(val chromosome: String, val posStart: Int, val posEnd: Int, val strand: Strand)
+data class GenomeRegionStrand(val chromosome: String, val posStart: Int, val posEnd: Int, val strand: Strand)
     : ChrBaseRegion(chromosome, posStart, posEnd)
 {
-    operator fun compareTo(other: GeneLocation): Int
+    operator fun compareTo(other: GenomeRegionStrand): Int
     {
         val baseRegionCompare = super.compareTo(other)
         return if (baseRegionCompare == 0) strand.compareTo(other.strand) else baseRegionCompare
@@ -24,10 +24,10 @@ data class VJAnchorTemplate
     val id: String,
     val name: String,
     val allele: String,
-    val geneLocation: GeneLocation?,
+    val geneLocation: GenomeRegionStrand?,
     val sequence: String,
     val anchorSequence: String,
-    val anchorLocation: GeneLocation?
+    val anchorLocation: GenomeRegionStrand?
 )
 {
     val type: VJGeneType = VJGeneType.valueOf(name.take(4))
@@ -40,32 +40,32 @@ data class VJAnchorTemplate
     val strand: Strand? get() { return geneLocation?.strand }
 }
 
-// store the anchor location also whether it is V or J
-data class VJAnchorReferenceLocation(val vj: VJ, val geneLocation: GeneLocation)
+// store the anchor location and also the type of the gene segment
+data class VJAnchorGenomeLocation(val vjGeneType: VJGeneType, val genomeLocation: GenomeRegionStrand)
 {
-    val chromosome: String get() = geneLocation.chromosome
-    val start: Int get() = geneLocation.posStart
-    val end: Int get() = geneLocation.posEnd
-    val strand: Strand get() = geneLocation.strand
+    val vj: VJ get() = vjGeneType.vj
+    val chromosome: String get() = genomeLocation.chromosome
+    val start: Int get() = genomeLocation.posStart
+    val end: Int get() = genomeLocation.posEnd
+    val strand: Strand get() = genomeLocation.strand
 
     fun baseLength() : Int
     {
-        return geneLocation.baseLength()
+        return genomeLocation.baseLength()
     }
 
     // get the reference position of the end of the anchor
     // this is the end of the C codon for V and the start of the W / F codon for J
     fun anchorBoundaryReferencePosition() : Int
     {
-        if (vj == VJ.V && geneLocation.strand == Strand.FORWARD ||
-            vj == VJ.J && geneLocation.strand == Strand.REVERSE)
-        {
-            return geneLocation.posEnd
-        }
-        else
-        {
-            return geneLocation.posStart
-        }
+        return if (vjGeneType.vj == VJ.V && genomeLocation.strand == Strand.FORWARD ||
+            vjGeneType.vj == VJ.J && genomeLocation.strand == Strand.REVERSE)
+            {
+                genomeLocation.posEnd
+            }
+            else
+            {
+                genomeLocation.posStart
+            }
     }
 }
-
