@@ -36,6 +36,7 @@ object AsyncBamReader
 
         // create the bam record consumers
         val recordConsumers = ArrayList<BamRecordConsumerThread>()
+
         for (i in 0 until Math.max(threadCount, 1))
         {
             val t = BamRecordConsumerThread(bamRecordQ, asyncRecordHandler)
@@ -51,11 +52,7 @@ object AsyncBamReader
 
         for (t in recordConsumers)
         {
-            while (t.isAlive)
-            {
-                // check status every 30 seconds
-                t.join(30000)
-            }
+            t.join()
         }
 
         logger.info("{} bam reader threads finished", recordConsumers.size)
@@ -72,14 +69,16 @@ object AsyncBamReader
         fun run()
         {
             logger.debug("bam reader start")
+
             for (genomeRegion in genomeRegionList)
             {
+                logger.debug("querying genome region: {}", genomeRegion)
                 mSamReader.queryOverlapping(genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end())
                     .use({ iterator -> processRecords(iterator) })
             }
 
-            // process unmapped reads
-            mSamReader.queryUnmapped().use({ iterator -> processRecords(iterator) })
+            // we do not process unmapped reads
+            // mSamReader.queryUnmapped().use({ iterator -> processRecords(iterator) })
 
             try
             {
@@ -98,29 +97,15 @@ object AsyncBamReader
             {
                 val record = iterator.next()
 
-                /*if (    record.getReadName().equals("ST-E00289:125:HLK2HCCXY:6:2205:6512:35098") ||
-                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:6:2206:30076:31195") ||
-                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:4:2218:26636:11804") ||
-                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:7:2207:14539:63384") ||
-                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:8:2220:8694:54102") ||
-                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:6:2211:16305:10152") ||
-                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:6:1202:18243:9888") ||
-                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:6:1204:20831:45206") ||
-                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:7:1118:22333:62997") ||
-                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:7:2119:20892:72174") ||
-                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:8:1101:15879:59763") ||
-                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:8:1222:7963:47492") ||
-                        record.getReadName().equals("ST-E00289:125:HLK2HCCXY:3:2118:15818:16516"))
-                {
-                    logger.info("read record is what we are looking for: {}, genome region: {}", record, task.genomeRegion);
-                }*/
-
                 if (record.duplicateReadFlag)
                 {
+                    // drop duplicate reads
                     continue
                 }
 
-                // we don't want to check the alignment region
+                // we don't want to check the alignment region, reason is that we intentionally
+                // want to process unmapped read where mate pairs are mapped to an interesting region
+                // the downstream processing will take care of it.
                 outputRecordQ.add(Optional.of(record))
 
                 // important: we want to take a break if we are going to flood the output queue

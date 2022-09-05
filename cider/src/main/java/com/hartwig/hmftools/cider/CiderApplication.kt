@@ -66,7 +66,8 @@ class CiderApplication
         val readProcessor = CiderReadScreener(
             ciderGeneDatastore,
             candidateBlosumSearcher,
-            CiderConstants.MIN_CANDIDATE_READ_ANCHOR_OVERLAP)
+            CiderConstants.MIN_CANDIDATE_READ_ANCHOR_OVERLAP,
+            mParams.approxMaxFragmentLength)
 
         readBamFile(readProcessor, ciderGeneDatastore)
 
@@ -108,8 +109,8 @@ class CiderApplication
         {
             genomeRegions.add(GenomeRegions.create(
                 anchorGenomeLoc.chromosome,
-                anchorGenomeLoc.start - CiderConstants.APPROX_MAX_FRAGMENT_LENGTH,
-                anchorGenomeLoc.end + CiderConstants.APPROX_MAX_FRAGMENT_LENGTH))
+                anchorGenomeLoc.start - mParams.approxMaxFragmentLength,
+                anchorGenomeLoc.end + mParams.approxMaxFragmentLength))
         }
 
         // then add all the constant region genome locations
@@ -117,8 +118,8 @@ class CiderApplication
         {
             genomeRegions.add(GenomeRegions.create(
                 constantRegion.genomeLocation.chromosome,
-                constantRegion.genomeLocation.posStart - CiderConstants.APPROX_MAX_FRAGMENT_LENGTH,
-                constantRegion.genomeLocation.posEnd +  - CiderConstants.APPROX_MAX_FRAGMENT_LENGTH))
+                constantRegion.genomeLocation.posStart - mParams.approxMaxFragmentLength,
+                constantRegion.genomeLocation.posEnd + mParams.approxMaxFragmentLength))
         }
         processBam(mParams.bamPath, readerFactory, genomeRegions, lociBamRecordHander, mParams.threadCount)
         sLogger.info("found {} VJ read records", readProcessor.allMatchedReads.size)

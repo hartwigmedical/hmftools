@@ -35,8 +35,8 @@ class CiderParams
     @Parameter(names = ["-threads"], description = "Number of threads")
     var threadCount = DEFAULT_THREADS
 
-    @Parameter(names = ["-anchor_align_distance"], description = "Anchor align distance in the gene location")
-    var maxAnchorAlignDistance = DEFAULT_MAX_ANCHOR_ALIGN_DISTANCE
+    @Parameter(names = ["-max_fragment_length"], description = "Approximate maximum fragment length")
+    var approxMaxFragmentLength = DEFAULT_MAX_FRAGMENT_LENGTH
 
     @Parameter(
         names = ["-" + RefGenomeVersion.REF_GENOME_VERSION],
@@ -65,6 +65,6 @@ class CiderParams
     companion object
     {
         const val DEFAULT_THREADS = 1
-        const val DEFAULT_MAX_ANCHOR_ALIGN_DISTANCE = 150
+        const val DEFAULT_MAX_FRAGMENT_LENGTH = 1000
     }
 }

@@ -2,41 +2,65 @@ package com.hartwig.hmftools.cider;
 
 import static java.lang.Math.pow;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Codons;
 
 public class BlosumMapping
 {
-    public static final int INVALID_AMINO_ACID = -1;
+    public static final byte INVALID_AMINO_ACID = -1;
     private static final int DEFAULT_STOP_CODON_PENALTY = -10;
 
     public static final char[] AMINO_ACIDS = {
             'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y', 'X'};
 
-    private static final int[] AMINO_ACID_INDEX = new int[charToInt('Y') + 1];
+    // an array that allows fast conversion from the ascii code of the amino acid to index in the above AMINO_ACIDS list
+    private static final byte[] AMINO_ACID_INDEX = new byte[charToInt('Y') + 1];
 
-    // mappings from one letter to another, indexed by the standard order so consistent with other data structures which reference AAs
-    private final int[][] mMappings;
+    // mappings from one letter to another, indexed by the standard order so consistent with other data structures which reference AAs.
+    // use byte to make this array small
+    private final byte[] mMappings = new byte[AMINO_ACIDS.length * AMINO_ACIDS.length];
+
+    private static final String BLOSUM62_MATRIX =
+              "AminoAcid,A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V\n"
+            + "A,4,-1,-2,-2,0,-1,-1,0,-2,-1,-1,-1,-1,-2,-1,1,0,-3,-2,0\n"
+            + "R,-1,5,0,-2,-3,1,0,-2,0,-3,-2,2,-1,-3,-2,-1,-1,-3,-2,-3\n"
+            + "N,-2,0,6,1,-3,0,0,0,1,-3,-3,0,-2,-3,-2,1,0,-4,-2,-3\n"
+            + "D,-2,-2,1,6,-3,0,2,-1,-1,-3,-4,-1,-3,-3,-1,0,-1,-4,-3,-3\n"
+            + "C,0,-3,-3,-3,9,-3,-4,-3,-3,-1,-1,-3,-1,-2,-3,-1,-1,-2,-2,-1\n"
+            + "Q,-1,1,0,0,-3,5,2,-2,0,-3,-2,1,0,-3,-1,0,-1,-2,-1,-2\n"
+            + "E,-1,0,0,2,-4,2,5,-2,0,-3,-3,1,-2,-3,-1,0,-1,-3,-2,-2\n"
+            + "G,0,-2,0,-1,-3,-2,-2,6,-2,-4,-4,-2,-3,-3,-2,0,-2,-2,-3,-3\n"
+            + "H,-2,0,1,-1,-3,0,0,-2,8,-3,-3,-1,-2,-1,-2,-1,-2,-2,2,-3\n"
+            + "I,-1,-3,-3,-3,-1,-3,-3,-4,-3,4,2,-3,1,0,-3,-2,-1,-3,-1,3\n"
+            + "L,-1,-2,-3,-4,-1,-2,-3,-4,-3,2,4,-2,2,0,-3,-2,-1,-2,-1,1\n"
+            + "K,-1,2,0,-1,-3,1,1,-2,-1,-3,-2,5,-1,-3,-1,0,-1,-3,-2,-2\n"
+            + "M,-1,-1,-2,-3,-1,0,-2,-3,-2,1,2,-1,5,0,-2,-1,-1,-1,-1,1\n"
+            + "F,-2,-3,-3,-3,-2,-3,-3,-3,-1,0,0,-3,0,6,-4,-2,-2,1,3,-1\n"
+            + "P,-1,-2,-2,-1,-3,-1,-1,-2,-2,-3,-3,-1,-2,-4,7,-1,-1,-4,-3,-2\n"
+            + "S,1,-1,1,0,-1,0,0,0,-1,-2,-2,0,-1,-2,-1,4,1,-3,-2,-2\n"
+            + "T,0,-1,0,-1,-1,-1,-1,-2,-2,-1,-1,-1,-1,-2,-1,1,5,-2,-2,0\n"
+            + "W,-3,-3,-4,-4,-2,-2,-3,-2,-2,-3,-2,-3,-1,1,-4,-3,-2,11,2,-3\n"
+            + "Y,-2,-2,-2,-3,-2,-1,-2,-3,2,-1,-1,-2,-1,3,-3,-2,-2,2,7,-1\n"
+            + "V,0,-3,-3,-3,-1,-2,-2,-3,-3,3,1,-2,1,-1,-2,-2,0,-3,-1,4";
 
     static
     {
-        Arrays.fill(AMINO_ACID_INDEX, -1);
+        Arrays.fill(AMINO_ACID_INDEX, INVALID_AMINO_ACID);
 
         // assign an index for each amino acid
-        for(int i = 0; i < AMINO_ACIDS.length; ++i)
+        for(byte i = 0; i < AMINO_ACIDS.length; ++i)
         {
             AMINO_ACID_INDEX[charToInt(AMINO_ACIDS[i])] = i;
         }
     }
 
-    public static int charToInt(char c) {   return Character.getNumericValue(Character.toUpperCase(c)) - Character.getNumericValue('A'); }
+    private static int charToInt(char c) { return Character.toUpperCase(c) - 'A'; }
 
     public static int aminoAcidIndex(final char aminoAcid)
     {
@@ -48,14 +72,24 @@ public class BlosumMapping
 
     public BlosumMapping(int stopCodonPenalty)
     {
-        int aminoAcidCount = AMINO_ACIDS.length;
-        mMappings = new int[aminoAcidCount][aminoAcidCount];
-        load(stopCodonPenalty);
+        Preconditions.checkArgument(stopCodonPenalty >= Byte.MIN_VALUE);
+        Preconditions.checkArgument(stopCodonPenalty <= 0);
+        load((byte)stopCodonPenalty);
     }
 
     public BlosumMapping()
     {
         this(DEFAULT_STOP_CODON_PENALTY);
+    }
+
+    private int getMapping(int aa1Index, int aa2Index)
+    {
+        return mMappings[aa1Index * AMINO_ACIDS.length + aa2Index];
+    }
+
+    private void setMapping(int aa1Index, int aa2Index, byte val)
+    {
+        mMappings[aa1Index * AMINO_ACIDS.length + aa2Index] = val;
     }
 
     public int selfMapping(final char aa)
@@ -65,12 +99,7 @@ public class BlosumMapping
         if (aaIndex == INVALID_AMINO_ACID)
             throw new IllegalArgumentException("invalid amino acid: " + aa);
 
-        return mMappings[aaIndex][aaIndex];
-    }
-
-    public int map(int aa1Index, int aa2Index)
-    {
-        return mMappings[aa1Index][aa2Index];
+        return getMapping(aaIndex, aaIndex);
     }
 
     public int map(final char aa1, final char aa2)
@@ -85,7 +114,7 @@ public class BlosumMapping
         if (aa2Index == INVALID_AMINO_ACID)
             throw new IllegalArgumentException("invalid amino acid: " + aa2);
 
-        return mMappings[aa1Index][aa2Index];
+        return getMapping(aa1Index, aa2Index);
     }
 
     public int calcSequenceSum(final String sequence)
@@ -158,11 +187,9 @@ public class BlosumMapping
         return similarity;
     }
 
-    private void load(int stopCodonPenalty)
+    private void load(byte stopCodonPenalty)
     {
-        final List<String> lines = new BufferedReader(new InputStreamReader(
-                BlosumMapping.class.getClassLoader().getResourceAsStream("blosum62.csv")))
-                .lines().collect(Collectors.toList());
+        final List<String> lines = new ArrayList<>(Arrays.asList(BLOSUM62_MATRIX.split("\n")));
 
         String[] columns = lines.get(0).split(",");
         lines.remove(0);
@@ -200,13 +227,13 @@ public class BlosumMapping
 
             for(int i = 1; i < items.length; ++i)
             {
-                int correlation = Integer.parseInt(items[i]);
+                byte correlation = Byte.parseByte(items[i]);
                 int aa2index = columnAaMap.get(i);
 
                 if(aa2index == INVALID_AMINO_ACID)
                     return;
 
-                mMappings[aa1index][aa2index] = correlation;
+                setMapping(aa1index, aa2index, correlation);
             }
         }
 
@@ -215,11 +242,11 @@ public class BlosumMapping
         for (char aa : AMINO_ACIDS)
         {
             int aaIndex = aminoAcidIndex(aa);
-            mMappings[aaIndex][stopIndex] = stopCodonPenalty;
-            mMappings[stopIndex][aaIndex] = stopCodonPenalty;
+            setMapping(aaIndex, stopIndex, stopCodonPenalty);
+            setMapping(stopIndex, aaIndex, stopCodonPenalty);
         }
 
-        // no penalty for self mapping
-        mMappings[stopIndex][stopIndex] = 0;
+        // no penalty for stop codon self mapping
+        setMapping(stopIndex, stopIndex, (byte)0);
     }
 }

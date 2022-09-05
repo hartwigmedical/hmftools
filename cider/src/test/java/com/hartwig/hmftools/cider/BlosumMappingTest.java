@@ -12,5 +12,7 @@ public class BlosumMappingTest
         BlosumMapping mapping = new BlosumMapping();
         assertEquals(-3, mapping.map('W', 'A'));
         assertEquals(-2, mapping.map('R', 'Y'));
+
+        assertEquals(50.5, mapping.calcSequenceSimilarity("VKGKLKTNHC", "EAEDAATYYC"), 1e-5);
     }
 }

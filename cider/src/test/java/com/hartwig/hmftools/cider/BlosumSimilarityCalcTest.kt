@@ -2,12 +2,11 @@ package com.hartwig.hmftools.cider
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
 
 class BlosumSimilarityCalcTest
 {
     @Test
-    fun testFindSimilarityCalcSimple()
+    fun testSimilarityCalcSimple()
     {
         val templateDnaSeq = "CAACCTGAAGATTTTGCAACTTACTACTGT"
         val testDnaSeq = "CAACCTGAAGATGTTGGATTTTACTTCTGT"
@@ -20,5 +19,15 @@ class BlosumSimilarityCalcTest
         assertEquals(2, score)
         score = BlosumSimilarityCalc.calcSimilarityScore(VJ.J, "${templateDnaSeq}TGTTGT", testDnaSeq)
         assertEquals(2, score)
+    }
+
+    @Test
+    fun testSimilarityCalc1()
+    {
+        "CAACCTGAAGATGTTGGATTTTACTTCTGT  GAGGCTGAGGATGTTGGGGTTTATTACTGC  QPEDVGFYFC      EAEDVGVYYC      7"
+        val templateDnaSeq = "GAGGCTGAGGATGTTGGGGTTTATTACTGC"
+        val testDnaSeq = "CAACCTGAAGATGTTGGATTTTACTTCTGT"
+        var score = BlosumSimilarityCalc.calcSimilarityScore(VJ.V, templateDnaSeq, testDnaSeq)
+        assertEquals(7, score)
     }
 }

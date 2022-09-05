@@ -8,6 +8,11 @@ import org.junit.Test
 
 class CiderReadScreenerTest
 {
+    companion object
+    {
+        const val MAX_FRAGMENT_LENGTH = 1000
+    }
+
     @Test
     fun testExtrapolateReadOffsetAtRefPosition()
     {
@@ -248,7 +253,7 @@ class CiderReadScreenerTest
         val vjGeneStore = TestCiderGeneDatastore(listOf(ighJ1))
         val mockAnchorBlosumSearcher = MockAnchorBlosumSearcher()
         val ciderReadScreener = CiderReadScreener(
-            vjGeneStore, mockAnchorBlosumSearcher, 6
+            vjGeneStore, mockAnchorBlosumSearcher, 6, MAX_FRAGMENT_LENGTH
         )
 
         // make sure we set it up correctly
@@ -264,7 +269,7 @@ class CiderReadScreenerTest
             VJGeneType.IGHJ,
             GenomeRegionStrand("14", 106330801, 106330830, Strand.REVERSE)
         )
-        val readCandidate = ciderReadScreener.matchesAnchorLocation(record, mapped!!, anchorLocation)
+        val readCandidate = ciderReadScreener.matchesAnchorLocation(record, mapped!!, anchorLocation, true)
         TestCase.assertNotNull(readCandidate)
         TestCase.assertEquals(68, readCandidate!!.anchorOffsetStart)
         TestCase.assertEquals(98, readCandidate.anchorOffsetEnd)
@@ -305,20 +310,20 @@ class CiderReadScreenerTest
 
         read.mateAlignmentStart = anchorRefStart - 500
         read.mateNegativeStrandFlag = false
-        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
 
         // too far away
-        read.mateAlignmentStart = anchorRefStart - CiderConstants.APPROX_MAX_FRAGMENT_LENGTH - read.readLength
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        read.mateAlignmentStart = anchorRefStart - MAX_FRAGMENT_LENGTH - read.readLength
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
 
         // if the mate is mapped to the other side of V, we do not accept
         read.mateAlignmentStart = anchorRefEnd + 500
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
 
         // if mate is negative strand, it is pointing at wrong direction so also do not take it
         read.mateAlignmentStart = anchorRefStart - 500
         read.mateNegativeStrandFlag = true
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
 
         // now test reverse strand
         // Here is what we want to test:
@@ -333,20 +338,20 @@ class CiderReadScreenerTest
 
         read.mateAlignmentStart = anchorRefEnd + 500
         read.mateNegativeStrandFlag = true
-        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
 
         // too far away
-        read.mateAlignmentStart = anchorRefEnd + CiderConstants.APPROX_MAX_FRAGMENT_LENGTH
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        read.mateAlignmentStart = anchorRefEnd + MAX_FRAGMENT_LENGTH
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
 
         // if the mate is mapped to the other side of V, we do not accept
         read.mateAlignmentStart = anchorRefStart - 500
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
 
         // if mate is negative strand, it is pointing at wrong direction so also do not take it
         read.mateAlignmentStart = anchorRefEnd + 500
         read.mateNegativeStrandFlag = false
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
     }
 
     // we test unmapped read where the mate is mapped to downstream of J
@@ -384,20 +389,20 @@ class CiderReadScreenerTest
 
         read.mateAlignmentStart = anchorRefEnd + 500
         read.mateNegativeStrandFlag = true
-        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
 
         // too far away
-        read.mateAlignmentStart = anchorRefEnd + CiderConstants.APPROX_MAX_FRAGMENT_LENGTH
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        read.mateAlignmentStart = anchorRefEnd + MAX_FRAGMENT_LENGTH
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
 
         // if the mate is mapped to the other side of J, we do not accept
         read.mateAlignmentStart = anchorRefStart - 500
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
 
         // if mate is positive strand, it is pointing at wrong direction so also do not take it
         read.mateAlignmentStart = anchorRefEnd + 500
         read.mateNegativeStrandFlag = false
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
 
         // now test reverse strand
         // Here is what we want to test:
@@ -412,20 +417,20 @@ class CiderReadScreenerTest
 
         read.mateAlignmentStart = anchorRefStart - 500
         read.mateNegativeStrandFlag = false
-        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
 
         // too far away
-        read.mateAlignmentStart = anchorRefStart + CiderConstants.APPROX_MAX_FRAGMENT_LENGTH - read.readLength
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        read.mateAlignmentStart = anchorRefStart + MAX_FRAGMENT_LENGTH - read.readLength
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
 
         // if the mate is mapped to the other side of J, we do not accept
         read.mateAlignmentStart = anchorRefEnd + 500
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
 
         // if mate is negative strand, it is pointing at wrong direction so also do not take it
         read.mateAlignmentStart = anchorRefStart - 500
         read.mateNegativeStrandFlag = true
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation))
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToAnchorLoc(read, anchorLocation, MAX_FRAGMENT_LENGTH))
     }
 
     // we test unmapped read where the mate is mapped around constant region
@@ -463,20 +468,20 @@ class CiderReadScreenerTest
 
         read.mateAlignmentStart = constantRegionRefEnd + 500
         read.mateNegativeStrandFlag = true
-        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion))
+        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion, MAX_FRAGMENT_LENGTH))
 
         // the other side is also fine, we do not impose any rules for now
         read.mateAlignmentStart = constantRegionRefStart - 500
-        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion))
+        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion, MAX_FRAGMENT_LENGTH))
 
         // too far away
-        read.mateAlignmentStart = constantRegionRefEnd + CiderConstants.APPROX_MAX_FRAGMENT_LENGTH
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion))
+        read.mateAlignmentStart = constantRegionRefEnd + MAX_FRAGMENT_LENGTH
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion, MAX_FRAGMENT_LENGTH))
 
         // if mate is positive strand, it is pointing at wrong direction so also do not take it
         read.mateAlignmentStart = constantRegionRefEnd + 500
         read.mateNegativeStrandFlag = false
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion))
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion, MAX_FRAGMENT_LENGTH))
 
         // now test reverse strand
 
@@ -492,19 +497,19 @@ class CiderReadScreenerTest
 
         read.mateAlignmentStart = constantRegionRefStart - 500
         read.mateNegativeStrandFlag = false
-        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion))
+        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion, MAX_FRAGMENT_LENGTH))
 
         // the other side is also fine, we do not impose any rule for now
         read.mateAlignmentStart = constantRegionRefEnd + 500
-        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion))
+        TestCase.assertTrue(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion, MAX_FRAGMENT_LENGTH))
 
         // too far away
-        read.mateAlignmentStart = constantRegionRefStart - CiderConstants.APPROX_MAX_FRAGMENT_LENGTH - read.readLength
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion))
+        read.mateAlignmentStart = constantRegionRefStart - MAX_FRAGMENT_LENGTH - read.readLength
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion, MAX_FRAGMENT_LENGTH))
 
         // if mate is negative strand, it is pointing at wrong direction so also do not take it
         read.mateAlignmentStart = constantRegionRefStart - 500
         read.mateNegativeStrandFlag = true
-        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion))
+        TestCase.assertFalse(CiderReadScreener.isUnamppedReadRelevantToConstantRegion(read, constantRegion, MAX_FRAGMENT_LENGTH))
     }
 }
