@@ -101,7 +101,7 @@ public class MicrosatelliteIndels
 
         if(mTargetRegions.hasTargetRegions())
         {
-            PPL_LOGGER.debug(format("indel(%s) af(%.2f) included in target-regions TMB",
+            PPL_LOGGER.trace(format("indel(%s) af(%.2f) included in target-regions TMB",
                     variant.toString(), variant.alleleFrequency()));
         }
 

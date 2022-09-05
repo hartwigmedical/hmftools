@@ -1,5 +1,12 @@
 package com.hartwig.hmftools.purple.copynumber;
 
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_DEVIATION_ADJUSTMENT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_ABSOLUTE_COPY_NUMBER_ADDITION;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_OBSERVED_BAF_CHANGE;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_RELATIVE_COPY_NUMBER_ADDITION;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_RELATIVE_COPY_NUMBER_TOLERANCE;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -9,11 +16,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class AlleleTolerance implements CopyNumberTolerance
 {
-    private static final double MIN_OBSERVED_BAF_CHANGE = 0.03;
-    private static final double MAX_DEVIATION_ADJUSTMENT = 0.20;
-    private static final double MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE = 0.3;
-    private static final double MIN_RELATIVE_COPY_NUMBER_TOLERANCE = 0.12;
-
     @NotNull
     private final PurityAdjuster mPurityAdjuster;
 
@@ -44,8 +46,8 @@ public class AlleleTolerance implements CopyNumberTolerance
         }
 
         int minWindowDepthCount = Math.min(first.depthWindowCount(), second.depthWindowCount());
-        double absTolerance = purityAdjustment * tolerance(MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE, 2, minWindowDepthCount);
-        double relTolerance = purityAdjustment * tolerance(MIN_RELATIVE_COPY_NUMBER_TOLERANCE, 0.8, minWindowDepthCount);
+        double absTolerance = purityAdjustment * tolerance(MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE, MIN_ABSOLUTE_COPY_NUMBER_ADDITION, minWindowDepthCount);
+        double relTolerance = purityAdjustment * tolerance(MIN_RELATIVE_COPY_NUMBER_TOLERANCE, MIN_RELATIVE_COPY_NUMBER_ADDITION, minWindowDepthCount);
 
         boolean copyNumberInTolerance =
                 inAbsoluteTolerance(absTolerance, first.tumorCopyNumber(), second.tumorCopyNumber()) || inRelativeTolerance(relTolerance,

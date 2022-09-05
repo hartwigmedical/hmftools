@@ -84,7 +84,6 @@ public class PurpleCopyNumberFactory
         }
     }
 
-    @NotNull
     private List<StructuralVariant> simpleVariants(HumanChromosome chromosome, final List<StructuralVariant> structuralVariants)
     {
         return structuralVariants.stream().filter(x ->
@@ -96,13 +95,11 @@ public class PurpleCopyNumberFactory
         }).collect(toList());
     }
 
-    @NotNull
     public List<PurpleCopyNumber> copyNumbers()
     {
         return mSomaticCopyNumbers;
     }
 
-    @NotNull
     private static List<PurpleCopyNumber> toCopyNumber(final List<CombinedRegion> regions)
     {
         final List<PurpleCopyNumber> result = Lists.newArrayList();
@@ -121,7 +118,6 @@ public class PurpleCopyNumberFactory
         return result;
     }
 
-    @NotNull
     private static PurpleCopyNumber toCopyNumber(final CombinedRegion region, final SegmentSupport trailingSupport)
     {
         return ImmutablePurpleCopyNumber.builder()

@@ -50,4 +50,13 @@ public class PurpleConstants
     public static final double GERMLINE_DEL_CN_CONSISTENCY_MACN_PERC = 0.2;
     public static final double GERMLINE_DEL_NORMAL_RATIO = 0.65;
     public static final int GERMLINE_DEL_COHORT_FREQ = 4;
+
+    // copy number smoothing
+    public static final double MIN_OBSERVED_BAF_CHANGE = 0.03;
+    public static final double MAX_DEVIATION_ADJUSTMENT = 0.20;
+    public static final double MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE = 0.3;
+    public static final double MIN_RELATIVE_COPY_NUMBER_TOLERANCE = 0.12;
+    public static final double MIN_ABSOLUTE_COPY_NUMBER_ADDITION = 2;
+    public static final double MIN_RELATIVE_COPY_NUMBER_ADDITION = 0.8;
+
 }
