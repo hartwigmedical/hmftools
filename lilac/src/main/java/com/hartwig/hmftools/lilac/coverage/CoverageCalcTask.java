@@ -122,15 +122,9 @@ public class CoverageCalcTask implements Callable<Long>
 
     public void logPerfResults()
     {
-        mPerfCounter.logStats();
-
-        /*
-        LL_LOGGER.debug(String.format("filter perf: count(%d) avg(%.4f) max(%.4f)",
-                mPerfCounterFilter.getSampleCount(), mPerfCounterFilter.getAvgTime(), mPerfCounterFilter.getMaxTime()));
-
-        LL_LOGGER.debug(String.format("coverage perf: count(%d) avg(%.6f) max(%.6f)",
-                mPerfCounterCoverage.getSampleCount(), mPerfCounterCoverage.getAvgTime(), mPerfCounterCoverage.getMaxTime()));
-        */
+        if(LL_LOGGER.isDebugEnabled())
+        {
+            mPerfCounter.logStats();
+        }
     }
-
 }

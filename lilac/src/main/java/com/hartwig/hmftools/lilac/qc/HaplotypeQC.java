@@ -177,6 +177,7 @@ public class HaplotypeQC
 
                 int matchCount = 0;
                 int lowQualMatchCount = 0;
+                boolean hasMismatch = false;
 
                 for(int locus = haplotype.StartLocus; locus <= haplotype.EndLocus; ++locus)
                 {
@@ -197,7 +198,10 @@ public class HaplotypeQC
                     }
 
                     if(!fragmentAA.equals(haplotype.sequence(locus)))
+                    {
+                        hasMismatch = true;
                         break;
+                    }
 
                     if(index >= 0)
                         ++matchCount;
@@ -205,15 +209,16 @@ public class HaplotypeQC
                         ++lowQualMatchCount;
                 }
 
+                if(hasMismatch)
+                    continue;
+
                 if(matchCount + lowQualMatchCount > 0)
                 {
-                    boolean fullSupport = (matchCount + lowQualMatchCount) == haplotype.Haplotype.length();
-
+                    // boolean fullSupport = (matchCount + lowQualMatchCount) == haplotype.Haplotype.length();
                     //LL_LOGGER.debug("haplotype({}) support({} low-qual={} {}) from fragment({} {})",
                     //        haplotype, matchCount, lowQualMatchCount, fullSupport ? "full" : "partial", fragment.id(), fragment.readInfo());
 
-                    if(fullSupport)
-                        haplotype.addMatchingFragmentCount();
+                    haplotype.addMatchingFragmentCount();
                 }
             }
         }
