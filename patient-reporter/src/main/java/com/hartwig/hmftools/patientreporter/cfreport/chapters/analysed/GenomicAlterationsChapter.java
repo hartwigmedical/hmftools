@@ -97,8 +97,12 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 genomicAnalysis.cnPerChromosome()));
         reportDocument.add(createFusionsTable(genomicAnalysis.geneFusions(), hasReliablePurity));
         reportDocument.add(createHomozygousDisruptionsTable(genomicAnalysis.homozygousDisruptions()));
-        reportDocument.add(createLOHTable(genomicAnalysis.suspectGeneCopyNumbersHRDWithLOH(), "HRD"));
-        reportDocument.add(createLOHTable(genomicAnalysis.suspectGeneCopyNumbersMSIWithLOH(), "MSI"));
+        if (genomicAnalysis.chordHrdStatus() == ChordStatus.HR_DEFICIENT) {
+            reportDocument.add(createLOHTable(genomicAnalysis.suspectGeneCopyNumbersHRDWithLOH(), "HRD"));
+        }
+        if (genomicAnalysis.microsatelliteStatus() == MicrosatelliteStatus.MSI) {
+            reportDocument.add(createLOHTable(genomicAnalysis.suspectGeneCopyNumbersMSIWithLOH(), "MSI"));
+        }
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
         reportDocument.add(createVirusTable(genomicAnalysis.reportableViruses(), sampleReport.reportViralPresence()));
         reportDocument.add(createImmunoTable(genomicAnalysis.lilac(), hasReliablePurity));
