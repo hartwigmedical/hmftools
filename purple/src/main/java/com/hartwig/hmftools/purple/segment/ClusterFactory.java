@@ -30,24 +30,26 @@ public class ClusterFactory
         mWindow = new Window(windowSize);
     }
 
-    public ListMultimap<Chromosome, Cluster> cluster(final List<StructuralVariant> variants,
-            final Multimap<Chromosome, PCFPosition> pcfPositions, final Map<Chromosome,List<CobaltRatio>> ratios)
+    public ListMultimap<Chromosome, Cluster> cluster(
+            final List<StructuralVariant> variants, Map<Chromosome,List<PCFPosition>> pcfPositions,
+            final Map<Chromosome,List<CobaltRatio>> ratios)
     {
-        final Multimap<Chromosome, SVSegment> positions = Multimaps.fromPositions(SVSegmentFactory.create(variants));
+        final Multimap<Chromosome,SVSegment> positions = Multimaps.fromPositions(SVSegmentFactory.create(variants));
         return cluster(positions, pcfPositions, ratios);
     }
 
     private ListMultimap<Chromosome, Cluster> cluster(
-            final Multimap<Chromosome, SVSegment> variantPositions, final Multimap<Chromosome, PCFPosition> pcfPositions,
+            final Multimap<Chromosome, SVSegment> variantPositions, final Map<Chromosome,List<PCFPosition>> pcfPositions,
             final Map<Chromosome,List<CobaltRatio>> ratios)
     {
         ListMultimap<Chromosome, Cluster> clusters = ArrayListMultimap.create();
         for(Chromosome chromosome : pcfPositions.keySet())
         {
-            final Collection<PCFPosition> chromosomePcfPositions = pcfPositions.get(chromosome);
+            final List<PCFPosition> chromosomePcfPositions = pcfPositions.get(chromosome);
             final List<CobaltRatio> chromosomeRatios = ratios.containsKey(chromosome) ? ratios.get(chromosome) : Lists.newArrayList();
             final Collection<SVSegment> chromosomeVariants =
                     variantPositions.containsKey(chromosome) ? variantPositions.get(chromosome) : Lists.newArrayList();
+
             clusters.putAll(chromosome, cluster(chromosomeVariants, chromosomePcfPositions, chromosomeRatios));
         }
 
@@ -56,7 +58,7 @@ public class ClusterFactory
 
     @VisibleForTesting
     List<Cluster> cluster(
-            final Collection<SVSegment> variantPositions, final Collection<PCFPosition> pcfPositions, final List<CobaltRatio> cobaltRatios)
+            final Collection<SVSegment> variantPositions, final List<PCFPosition> pcfPositions, final List<CobaltRatio> cobaltRatios)
     {
         final List<GenomePosition> allPositions = Lists.newArrayList();
         allPositions.addAll(variantPositions);

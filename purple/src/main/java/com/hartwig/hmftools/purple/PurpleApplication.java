@@ -306,8 +306,8 @@ public class PurpleApplication
 
             fittedPurity = bestFit.fit();
 
-            purityAdjuster =
-                    new PurityAdjusterAbnormalChromosome(fittedPurity.purity(), fittedPurity.normFactor(), cobaltChromosomes.chromosomes());
+            purityAdjuster = new PurityAdjusterAbnormalChromosome(
+                    fittedPurity.purity(), fittedPurity.normFactor(), cobaltChromosomes.chromosomes());
 
             final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(
                     mConfig.Fitting.MinDiploidTumorRatioCount,
@@ -620,8 +620,8 @@ public class PurpleApplication
         return bestFitFactory.bestFit();
     }
 
-    private FittedRegionFactory createFittedRegionFactory(final int averageTumorDepth, final CobaltChromosomes cobaltChromosomes,
-            final FittingConfig fitScoreConfig)
+    private FittedRegionFactory createFittedRegionFactory(
+            final int averageTumorDepth, final CobaltChromosomes cobaltChromosomes, final FittingConfig fitScoreConfig)
     {
         return new FittedRegionFactory(cobaltChromosomes,
                 averageTumorDepth,

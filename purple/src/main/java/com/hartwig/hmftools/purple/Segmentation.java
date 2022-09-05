@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -39,7 +40,7 @@ public class Segmentation
     public List<ObservedRegion> createSegments(
             final List<StructuralVariant> structuralVariants, final AmberData amberData, final CobaltData cobaltData)
     {
-        final Multimap<Chromosome, PCFPosition> pcfPositions = PCFPositionsSupplier.createPositions(amberData, cobaltData);
+        final Map<Chromosome,List<PCFPosition>> pcfPositions = PCFPositionsSupplier.createPositions(amberData, cobaltData);
 
         final PurpleSegmentFactory factory = new PurpleSegmentFactory(
                 mWindowSize, mReferenceData.Centromeres, mReferenceData.ChromosomeLengths);

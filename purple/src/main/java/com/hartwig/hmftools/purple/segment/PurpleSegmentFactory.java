@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.purple.segment;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +38,7 @@ public class PurpleSegmentFactory
     }
 
     public List<PurpleSegment> segment(
-            final List<StructuralVariant> variants, final Multimap<Chromosome, PCFPosition> pcfPositions,
+            final List<StructuralVariant> variants, final Map<Chromosome,List<PCFPosition>> pcfPositions,
             final Map<Chromosome,List<CobaltRatio>> ratios)
     {
         ClusterFactory clusterFactory = new ClusterFactory(mWindowSize);
@@ -52,7 +55,7 @@ public class PurpleSegmentFactory
         return results;
     }
 
-    private Multimap<Chromosome, PurpleSegment> segmentMap(final Multimap<Chromosome, Cluster> clusters)
+    private Multimap<Chromosome,PurpleSegment> segmentMap(final Multimap<Chromosome, Cluster> clusters)
     {
         final Multimap<Chromosome, PurpleSegment> segments = ArrayListMultimap.create();
         for(Chromosome chromosome : clusters.keySet())
@@ -71,6 +74,15 @@ public class PurpleSegmentFactory
     static List<PurpleSegment> create(final GenomePosition centromere, final GenomePosition length, final Collection<Cluster> clusters)
     {
         final List<PurpleSegment> segments = create(length, clusters);
+
+        for(int i = 1; i < segments.size(); ++i)
+        {
+            PurpleSegment prevSegment = segments.get(i - 1);
+            PurpleSegment segment = segments.get(i);
+
+            segment.MinStart = max(segment.MinStart, prevSegment.End + 1);
+        }
+
         return addCentromere(centromere, segments);
     }
 
@@ -168,6 +180,7 @@ public class PurpleSegmentFactory
                 {
                     final PurpleSegment start = PurpleSegment.from(segment);
                     start.End = centromere.position() - 1;
+                    start.MaxStart = min(start.MaxStart, start.End);
 
                     final PurpleSegment end = PurpleSegment.from(segment);
                     end.Support = SegmentSupport.CENTROMERE;
