@@ -428,15 +428,15 @@ public class SummaryChapter implements ReportChapter {
         }
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("HLA Alleles").addStyle(ReportResources.bodyTextStyle())));
+                .add(new Paragraph("HLA-A Alleles").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(HLAtypes).addStyle(hlaStyle));
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("HLB Alleles").addStyle(ReportResources.bodyTextStyle())));
+                .add(new Paragraph("HLB-B Alleles").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(HLBtypes).addStyle(hlaStyle));
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("HLC Alleles").addStyle(ReportResources.bodyTextStyle())));
+                .add(new Paragraph("HLC-C Alleles").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(HLCtypes).addStyle(hlaStyle));
 
         div.add(table);
