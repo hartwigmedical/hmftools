@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple;
 
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -18,14 +19,11 @@ import org.jetbrains.annotations.NotNull;
 public final class PurpleCopyNumberFile
 {
     private static final DecimalFormat FORMAT = PurpleCommon.decimalFormat("0.0000");
-    private static final String DELIMITER = "\t";
 
     private static final String SOMATIC_EXTENSION = ".purple.cnv.somatic.tsv";
     private static final String SOMATIC_EXTENSION_OLD = ".purple.cnv";
 
-    private PurpleCopyNumberFile()
-    {
-    }
+    private PurpleCopyNumberFile() {}
 
     @NotNull
     public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample)
@@ -46,14 +44,13 @@ public final class PurpleCopyNumberFile
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<PurpleCopyNumber> copyNumbers) throws IOException
+    public static void write(final String filename, List<PurpleCopyNumber> copyNumbers) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(copyNumbers));
     }
 
     @VisibleForTesting
-    @NotNull
-    public static List<String> toLines(@NotNull final List<PurpleCopyNumber> copyNumbers)
+    public static List<String> toLines(final List<PurpleCopyNumber> copyNumbers)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -62,7 +59,6 @@ public final class PurpleCopyNumberFile
     }
 
     @VisibleForTesting
-    @NotNull
     public static List<PurpleCopyNumber> fromLines(final List<String> lines)
     {
         final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
@@ -102,8 +98,8 @@ public final class PurpleCopyNumberFile
                     .method(CopyNumberMethod.valueOf(values[methodIndex]))
                     .gcContent(Double.parseDouble(values[gcContentIndex]))
                     .depthWindowCount(Integer.parseInt(values[depthWindowCountIndex]))
-                    .minStart(Long.parseLong(values[minStartIndex]))
-                    .maxStart(Long.parseLong(values[maxStartIndex]));
+                    .minStart(Integer.parseInt(values[minStartIndex]))
+                    .maxStart(Integer.parseInt(values[maxStartIndex]));
 
             copyNumbers.add(builder.build());
         }
@@ -133,7 +129,7 @@ public final class PurpleCopyNumberFile
                 .toString();
     }
 
-    private static String toString(@NotNull final PurpleCopyNumber copyNumber)
+    private static String toString(final PurpleCopyNumber copyNumber)
     {
         return new StringJoiner(DELIMITER).add(copyNumber.chromosome())
                 .add(String.valueOf(copyNumber.start()))
@@ -152,27 +148,5 @@ public final class PurpleCopyNumberFile
                 .add(FORMAT.format(copyNumber.minorAlleleCopyNumber()))
                 .add(FORMAT.format(copyNumber.majorAlleleCopyNumber()))
                 .toString();
-    }
-
-    private static PurpleCopyNumber fromString(@NotNull final String copyNumber)
-    {
-        String[] values = copyNumber.split(DELIMITER);
-        final ImmutablePurpleCopyNumber.Builder builder = ImmutablePurpleCopyNumber.builder()
-                .chromosome(values[0])
-                .start(Integer.parseInt(values[1]))
-                .end(Integer.parseInt(values[2]))
-                .averageTumorCopyNumber(Double.parseDouble(values[3]))
-                .bafCount(Integer.parseInt(values[4]))
-                .averageObservedBAF(Double.parseDouble(values[5]))
-                .averageActualBAF(Double.parseDouble(values[6]))
-                .segmentStartSupport(SegmentSupport.valueOf(values[7]))
-                .segmentEndSupport(SegmentSupport.valueOf(values[8]))
-                .method(CopyNumberMethod.valueOf(values[9]))
-                .depthWindowCount(Integer.parseInt(values[10]))
-                .gcContent(Double.parseDouble(values[11]))
-                .minStart(Long.parseLong(values[12]))
-                .maxStart(Long.parseLong(values[13]));
-
-        return builder.build();
     }
 }

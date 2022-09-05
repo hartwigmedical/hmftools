@@ -58,8 +58,8 @@ public class PurpleCopyNumberFileTest {
                 .method(CopyNumberMethod.values()[random.nextInt(CopyNumberMethod.values().length)])
                 .depthWindowCount(random.nextInt())
                 .gcContent(nextDouble(random))
-                .minStart(random.nextLong())
-                .maxStart(random.nextLong())
+                .minStart(random.nextInt())
+                .maxStart(random.nextInt())
                 .build();
     }
 

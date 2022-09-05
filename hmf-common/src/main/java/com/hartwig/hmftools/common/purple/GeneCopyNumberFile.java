@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple;
 
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -18,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 public final class GeneCopyNumberFile
 {
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
-    private static final String DELIMITER = "\t";
 
     private static final String EXTENSION = ".purple.cnv.gene.tsv";
 
