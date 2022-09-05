@@ -15,6 +15,9 @@ import static com.hartwig.hmftools.svprep.reads.ReadFilterType.MIN_MAP_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.hasPolyATSoftClip;
+import static com.hartwig.hmftools.svprep.reads.ReadType.EXACT_SUPPORT;
+import static com.hartwig.hmftools.svprep.reads.ReadType.EXPECTED;
+import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 
 import static htsjdk.samtools.SAMFlag.DUPLICATE_READ;
 import static htsjdk.samtools.SAMFlag.PROPER_PAIR;
@@ -212,7 +215,7 @@ public class ResultsWriter
                 boolean hasPloyAT = false;
                 boolean expectLeftClipped = junctionData.Orientation == NEG_ORIENT;
 
-                for(ReadRecord read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
+                for(ReadRecord read : junctionData.ReadTypeReads.get(JUNCTION))
                 {
                     // check the read supports this junction (it can only support another junction)
                     boolean supportsJunction =
@@ -246,7 +249,7 @@ public class ResultsWriter
                 int exactSupportFrags = junctionData.ExactSupportGroups.size();
                 int discordantFrags = junctionData.SupportingGroups.size();
 
-                for(ReadRecord read : junctionData.ReadTypeReads.get(ReadType.EXACT_SUPPORT))
+                for(ReadRecord read : junctionData.ReadTypeReads.get(EXACT_SUPPORT))
                 {
                     maxMapQual = max(maxMapQual, read.mapQuality());
 
@@ -324,7 +327,7 @@ public class ResultsWriter
 
         if(ReadFilterType.isSet(read.filters(), SOFT_CLIP_LOW_BASE_QUAL))
         {
-            if(read.readType() != ReadType.JUNCTION && read.readType() != ReadType.EXACT_SUPPORT)
+            if(!(read.readType() == JUNCTION || read.readType() == EXACT_SUPPORT || read.readType() == EXPECTED))
                 return true;
         }
 
