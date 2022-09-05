@@ -304,7 +304,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1, 3 },
                 new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
-                        TableUtil.createHeaderCell("Tumor MACN"), TableUtil.createHeaderCell("Tumor CN"),
+                        TableUtil.createHeaderCell("Tumor minor allele copies"), TableUtil.createHeaderCell("Tumor copies"),
                         TableUtil.createHeaderCell(Strings.EMPTY) });
 
         for (GeneCopyNumber lohGene : LohGenes.sort(lohGenes)) {
@@ -393,8 +393,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoConsentReportTable(title, noConsent);
         } else {
             Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1, 3 },
-                    new Cell[] { TableUtil.createHeaderCell("Allele"), TableUtil.createHeaderCell("Ref Frags"),
-                            TableUtil.createHeaderCell("Tumor Frags"), TableUtil.createHeaderCell("Tumor CN"),
+                    new Cell[] { TableUtil.createHeaderCell("Allele"), TableUtil.createHeaderCell("Reference Fragments"),
+                            TableUtil.createHeaderCell("Tumor Fragments"), TableUtil.createHeaderCell("Tumor copies"),
                             TableUtil.createHeaderCell("Somatic #mutations") });
 
             for (LilacAllele allele : HLAAllele.sort(lilac.alleles())) {
