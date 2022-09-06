@@ -10,11 +10,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.hla.LilacAllele;
-import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
@@ -29,7 +27,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
 import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
-import com.hartwig.hmftools.patientreporter.cfreport.data.HLAAllele;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
@@ -114,6 +111,7 @@ public class SummaryChapter implements ReportChapter {
         renderGenomicAlterations(reportDocument);
         renderPeach(reportDocument);
         renderHla(reportDocument);
+        renderGermlineText(reportDocument);
     }
 
     private void renderClinicalConclusionText(@NotNull Document reportDocument) {
@@ -304,7 +302,7 @@ public class SummaryChapter implements ReportChapter {
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with driver mutation").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(sortGenes(driverVariantGenes)));
+        table.addCell(createGeneSetCell(sortGenes(driverVariantGenes)));
 
         int reportedVariants = SomaticVariants.countReportableVariants(analysis().reportableVariants());
         Style reportedVariantsStyle =
@@ -316,22 +314,22 @@ public class SummaryChapter implements ReportChapter {
         Set<String> amplifiedGenes = GainsAndLosses.amplifiedGenes(analysis().gainsAndLosses());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Amplified gene(s)").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(sortGenes(amplifiedGenes)));
+        table.addCell(createGeneSetCell(sortGenes(amplifiedGenes)));
 
         Set<String> copyLossGenes = GainsAndLosses.lostGenes(analysis().gainsAndLosses());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Deleted gene(s)").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(sortGenes(copyLossGenes)));
+        table.addCell(createGeneSetCell(sortGenes(copyLossGenes)));
 
         Set<String> disruptedGenes = HomozygousDisruptions.disruptedGenes(analysis().homozygousDisruptions());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Homozygously disrupted genes").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(sortGenes(disruptedGenes)));
+        table.addCell(createGeneSetCell(sortGenes(disruptedGenes)));
 
         Set<String> fusionGenes = GeneFusions.uniqueGeneFusions(analysis().geneFusions());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Gene fusions").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(sortGenes(fusionGenes)));
+        table.addCell(createGeneSetCell(sortGenes(fusionGenes)));
 
         MicrosatelliteStatus microSatelliteStabilityString =
                 analysis().hasReliablePurity() ? analysis().microsatelliteStatus() : MicrosatelliteStatus.UNKNOWN;
@@ -341,7 +339,7 @@ public class SummaryChapter implements ReportChapter {
                     analysis().homozygousDisruptions());
             table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                     .add(new Paragraph("Potential MMR genes").addStyle(ReportResources.bodyTextStyle())));
-            table.addCell(createGeneListCell(sortGenes(genesDisplay)));
+            table.addCell(createGeneSetCell(sortGenes(genesDisplay)));
         }
 
         ChordStatus chordStatus = analysis().hasReliablePurity() ? analysis().chordHrdStatus() : ChordStatus.UNKNOWN;
@@ -351,7 +349,7 @@ public class SummaryChapter implements ReportChapter {
                     analysis().homozygousDisruptions());
             table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                     .add(new Paragraph("Potential HRD genes").addStyle(ReportResources.bodyTextStyle())));
-            table.addCell(createGeneListCell(sortGenes(genesDisplay)));
+            table.addCell(createGeneSetCell(sortGenes(genesDisplay)));
         }
 
         div.add(table);
@@ -387,14 +385,14 @@ public class SummaryChapter implements ReportChapter {
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with haplotypes").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(sortGenes(pgxGenes)).addStyle(pgxStyle));
+        table.addCell(createGeneSetCell(sortGenes(pgxGenes)).addStyle(pgxStyle));
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of reported haplotypes").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(reportedPhenotypes).addStyle(pgxStyle)));
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Functions of the haplotypes").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(sortGenes(pgxFunctions)).addStyle(pgxStyle));
+        table.addCell(createGeneSetCell(sortGenes(pgxFunctions)).addStyle(pgxStyle));
 
         div.add(table);
 
@@ -409,21 +407,21 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCellSummary().add(new Paragraph("HLA Alleles").addStyle(ReportResources.sectionTitleStyle())));
         table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
-        Set<String> HLAtypes = Sets.newHashSet();
-        Set<String> HLBtypes = Sets.newHashSet();
-        Set<String> HLCtypes = Sets.newHashSet();
+        List<String> HLAtypes = Lists.newArrayList();
+        List<String> HLBtypes = Lists.newArrayList();
+        List<String> HLCtypes = Lists.newArrayList();
         Style hlaStyle = ReportResources.dataHighlightStyle();
 
         for (LilacAllele lilacAllele : patientReport.genomicAnalysis().lilac().alleles()) {
             String allele = lilacAllele.allele();
             if (allele.startsWith("A*")) {
-                HLAtypes.add(allele.substring(1, allele.length()-1));
+                HLAtypes.add(allele);
             }
             else if (allele.startsWith("B*")) {
-                HLBtypes.add(allele.substring(1, allele.length()-1));
+                HLBtypes.add(allele);
             }
             else if (allele.startsWith("C*")) {
-                HLCtypes.add(allele.substring(1, allele.length()-1));
+                HLCtypes.add(allele);
             }
         }
 
@@ -432,17 +430,32 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createGeneListCell(HLAtypes).addStyle(hlaStyle));
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("HLB-B Alleles").addStyle(ReportResources.bodyTextStyle())));
+                .add(new Paragraph("HLA-B Alleles").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(HLBtypes).addStyle(hlaStyle));
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("HLC-C Alleles").addStyle(ReportResources.bodyTextStyle())));
+                .add(new Paragraph("HLA-C Alleles").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(HLCtypes).addStyle(hlaStyle));
 
         div.add(table);
 
         report.add(div);
     }
+
+    private void renderGermlineText(@NotNull Document reportDocument) {
+        String text = "Data concerning cancer predisposition genes may be requested by a clinical geneticist after the patient has "
+                + "given informed consent.";
+
+            Div div = createSectionStartDiv(contentWidth());
+            div.add(new Paragraph("Germline results").addStyle(ReportResources.sectionTitleStyle()));
+
+            div.add(new Paragraph(text).setWidth(contentWidth()).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
+
+            reportDocument.add(div);
+
+    }
+
+
 
     @NotNull
     @VisibleForTesting
@@ -468,7 +481,16 @@ public class SummaryChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Cell createGeneListCell(@NotNull Set<String> genes) {
+    private static Cell createGeneSetCell(@NotNull Set<String> genes) {
+        String geneString = (genes.size() > 0) ? String.join(", ", genes) : DataUtil.NONE_STRING;
+
+        Style style = (genes.size() > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
+
+        return createMiddleAlignedCell().add(createHighlightParagraph(geneString)).addStyle(style);
+    }
+
+    @NotNull
+    private static Cell createGeneListCell(@NotNull List<String> genes) {
         String geneString = (genes.size() > 0) ? String.join(", ", genes) : DataUtil.NONE_STRING;
 
         Style style = (genes.size() > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();

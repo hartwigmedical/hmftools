@@ -107,7 +107,6 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createVirusTable(genomicAnalysis.reportableViruses(), sampleReport.reportViralPresence()));
         reportDocument.add(createImmunoTable(genomicAnalysis.lilac(), hasReliablePurity));
         reportDocument.add(createPeachGenotypesTable(patientReport.peachGenotypes(), sampleReport.reportPharmogenetics()));
-        reportDocument.add(createGermlineTable(contentWidth()));
     }
 
     @NotNull
@@ -439,22 +438,6 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
             return TableUtil.createWrappingReportTable(title, null, contentTable);
         }
-    }
-
-    @NotNull
-    private static Div createGermlineTable(float witdth) {
-        Div div = new Div().setKeepTogether(true).setWidth(witdth);
-
-        String title = "Germline results";
-        String text = "Data concerning cancer predisposition genes may be requested by a clinical geneticist after the patient has "
-                + "given informed consent. ";
-
-        div.add(new Paragraph(title).addStyle(ReportResources.sectionTitleStyle()));
-
-        div.add(new Paragraph(text).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
-
-        div.add(LineDivider.createLineDivider(witdth));
-        return div;
     }
 
     @NotNull

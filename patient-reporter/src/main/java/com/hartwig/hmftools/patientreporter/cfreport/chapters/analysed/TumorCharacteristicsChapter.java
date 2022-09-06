@@ -149,13 +149,13 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         mutationalLoadChart.enableUndershoot(NO_DECIMAL_FORMAT.format(0));
         mutationalLoadChart.enableOvershoot(">" + NO_DECIMAL_FORMAT.format(mutationalLoadChart.max()));
         mutationalLoadChart.setIndicator(MutationalLoad.THRESHOLD,
-                "Eligible for \nDRUP (" + NO_DECIMAL_FORMAT.format(MutationalLoad.THRESHOLD) + ")");
+                "High (" + NO_DECIMAL_FORMAT.format(MutationalLoad.THRESHOLD) + ")");
 
         reportDocument.add(createCharacteristicDiv("Tumor mutational load",
                 mutationalLoadString,
                 "The tumor mutational load represents the total number of somatic missense variants across "
                         + "the whole genome of the tumor. Patients with a mutational load over 140 could be eligible for "
-                        + "immunotherapy within the DRUP study.",
+                        + "immunotherapy studies.",
                 mutationalLoadChart,
                 Strings.EMPTY,
                 false));
