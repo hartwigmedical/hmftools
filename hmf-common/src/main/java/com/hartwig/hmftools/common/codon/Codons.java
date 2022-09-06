@@ -17,6 +17,10 @@ public final class Codons
 
     public static final char UNKNOWN = '.';
 
+    private static final char[] sCodonLookup = {'K', 'N', 'N', 'K', 'I', 'I', 'I', 'M', 'T', 'T', 'T', 'T', 'R', 'S', 'S', 'R',
+            'X', 'Y', 'Y', 'X', 'L', 'F', 'F', 'L', 'S', 'S', 'S', 'S', 'X', 'C', 'C', 'W', 'Q', 'H', 'H', 'Q', 'L', 'L', 'L', 'L',
+            'P', 'P', 'P', 'P', 'R', 'R', 'R', 'R', 'E', 'D', 'D', 'E', 'V', 'V', 'V', 'V', 'A', 'A', 'A', 'A', 'G', 'G', 'G', 'G'};
+
     public static boolean isCodonMultiple(int bases) { return (bases % 3) == 0; }
 
     public static boolean isStopCodon(final String codon)
@@ -31,104 +35,20 @@ public final class Codons
 
     public static char codonToAminoAcid(final String codon)
     {
-        if(isStopCodon(codon))
-            return STOP_AMINO_ACID;
+        return codonToAminoAcid(codon, 0);
+    }
 
-        if(isStartCodon(codon))
-            return START_AMINO_ACID;
-
-        switch(codon)
-        {
-            // SECOND BASE T
-            case "TTT":
-            case "TTC":
-                return 'F';
-            case "TTA":
-            case "TTG":
-            case "CTT":
-            case "CTC":
-            case "CTA":
-            case "CTG":
-                return 'L';
-            case "ATT":
-            case "ATC":
-            case "ATA":
-                return 'I';
-            case "GTT":
-            case "GTC":
-            case "GTA":
-            case "GTG":
-                return 'V';
-
-            // SECOND BASE C
-            case "TCT":
-            case "TCC":
-            case "TCA":
-            case "TCG":
-                return 'S';
-            case "CCT":
-            case "CCC":
-            case "CCA":
-            case "CCG":
-                return 'P';
-            case "ACT":
-            case "ACC":
-            case "ACA":
-            case "ACG":
-                return 'T';
-            case "GCT":
-            case "GCC":
-            case "GCA":
-            case "GCG":
-                return 'A';
-
-            // SECOND BASE A
-            case "TAT":
-            case "TAC":
-                return 'Y';
-            case "CAT":
-            case "CAC":
-                return 'H';
-            case "CAA":
-            case "CAG":
-                return 'Q';
-            case "AAT":
-            case "AAC":
-                return 'N';
-            case "AAA":
-            case "AAG":
-                return 'K';
-            case "GAT":
-            case "GAC":
-                return 'D';
-            case "GAA":
-            case "GAG":
-                return 'E';
-
-            // SECOND BASE G
-            case "TGT":
-            case "TGC":
-                return 'C';
-            case "TGG":
-                return 'W';
-            case "CGT":
-            case "CGC":
-            case "CGA":
-            case "CGG":
-                return 'R';
-            case "AGT":
-            case "AGC":
-                return 'S';
-            case "AGA":
-            case "AGG":
-                return 'R';
-            case "GGT":
-            case "GGC":
-            case "GGA":
-            case "GGG":
-                return 'G';
+    public static char codonToAminoAcid(final String dna, int index)
+    {
+        try {
+            // convert the 3 bases into a look up index
+            int lookupIndex = baseToInt(dna.charAt(index)) * 16 +
+                    baseToInt(dna.charAt(index + 1)) * 4 +
+                    baseToInt(dna.charAt(index + 2));
+            if (lookupIndex < sCodonLookup.length)
+                return sCodonLookup[lookupIndex];
         }
-
+        catch (IllegalArgumentException ignored) {}
         return UNKNOWN;
     }
 
@@ -163,16 +83,33 @@ public final class Codons
         throw new IllegalArgumentException("Unknown amino acid " + aminoAcid);
     }
 
+    // note: this is used only for the lookup table. The ordering must be
+    // kept this way otherwise the lookup table needs to be recreated
+    private static int baseToInt(char base)
+    {
+        switch (base)
+        {
+            case 'A':
+                return 0;
+            case 'T':
+                return 1;
+            case 'C':
+                return 2;
+            case 'G':
+                return 3;
+        }
+        throw new IllegalArgumentException("unknown base: " + base);
+    }
+
     @NotNull
     public static String aminoAcidFromBases(@NotNull String dna)
     {
         StringBuilder builder = new StringBuilder();
         for(int i = 0; i < dna.length() - 2; i += 3)
         {
-            builder.append(codonToAminoAcid(dna.substring(i, i + 3)));
+            builder.append(codonToAminoAcid(dna, i));
         }
 
         return builder.toString();
     }
-
 }

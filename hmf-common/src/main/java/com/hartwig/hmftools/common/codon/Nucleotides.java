@@ -1,13 +1,8 @@
 package com.hartwig.hmftools.common.codon;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
-
 public class Nucleotides
 {
     public static final char[] DNA_BASES = {'G', 'A', 'T', 'C'};
-    public static final List<String> DNA_BASE_LIST = Lists.newArrayList("G", "A", "T", "C");
 
     public static char swapDnaBase(final char base)
     {
