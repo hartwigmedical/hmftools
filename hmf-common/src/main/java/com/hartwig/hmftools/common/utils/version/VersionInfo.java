@@ -38,13 +38,8 @@ public class VersionInfo {
         String timeStr = value("build.date=", "UNKNOWN");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-        try {
-            LocalDateTime localDateTime = LocalDateTime.from(formatter.parse(timeStr));
-            return ZonedDateTime.of(localDateTime, UTC);
-        }
-        catch (DateTimeException ignored) {
-            return null;
-        }
+        LocalDateTime localDateTime = LocalDateTime.from(formatter.parse(timeStr));
+        return ZonedDateTime.of(localDateTime, UTC);
     }
 
     @NotNull

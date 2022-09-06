@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
 import com.beust.jcommander.JCommander;
@@ -46,19 +47,20 @@ public class AmberApplication implements AutoCloseable
 
     private AmberPersistence mPersistence;
     private VersionInfo mVersionInfo;
-    private ListMultimap<Chromosome,AmberSite> mChromosomeSites;
+    private ImmutableListMultimap<Chromosome,AmberSite> mChromosomeSites;
 
     public int run() throws IOException, InterruptedException
     {
         mLoggingOptions.setLogLevel();
 
         mVersionInfo = new VersionInfo("amber.version");
-        AMB_LOGGER.info("AMBER version: {}", mVersionInfo.version());
+        AMB_LOGGER.info("AMBER version: {}, build timestamp: {}",
+                mVersionInfo.version(), mVersionInfo.buildTime().toLocalTime());
 
         mPersistence = new AmberPersistence(mConfig);
 
         AMB_LOGGER.info("Loading vcf file {}", mConfig.BafLociPath);
-        mChromosomeSites = AmberSiteFactory.sites(mConfig.BafLociPath);
+        mChromosomeSites = ImmutableListMultimap.copyOf(AmberSiteFactory.sites(mConfig.BafLociPath));
 
         if(!mConfig.isValid())
         {
@@ -233,6 +235,14 @@ public class AmberApplication implements AutoCloseable
             commander.usage();
             System.exit(1);
         }
+
+        // set all thread exception handler
+        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
+        {
+            AMB_LOGGER.error("[{}]: uncaught exception: {}", t, e);
+            e.printStackTrace(System.err);
+            System.exit(1);
+        });
 
         System.exit(amberApp.run());
     }

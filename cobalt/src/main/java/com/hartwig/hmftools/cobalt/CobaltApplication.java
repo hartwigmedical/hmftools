@@ -66,7 +66,6 @@ public class CobaltApplication implements AutoCloseable
         try
         {
             commander.parse(args);
-            System.exit(application.run());
         }
         catch (com.beust.jcommander.ParameterException e)
         {
@@ -74,6 +73,16 @@ public class CobaltApplication implements AutoCloseable
             commander.usage();
             System.exit(1);
         }
+
+        // set all thread exception handler
+        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
+        {
+            CB_LOGGER.error("[{}]: uncaught exception: {}", t, e);
+            e.printStackTrace(System.err);
+            System.exit(1);
+        });
+
+        System.exit(application.run());
     }
 
     private int run() throws IOException, ExecutionException, InterruptedException
@@ -82,7 +91,8 @@ public class CobaltApplication implements AutoCloseable
         mLoggingOptions.setLogLevel();
 
         VersionInfo mVersionInfo = new VersionInfo("cobalt.version");
-        CB_LOGGER.info("COBALT version: {}", mVersionInfo.version());
+        CB_LOGGER.info("COBALT version: {}, build timestamp: {}",
+                mVersionInfo.version(), mVersionInfo.buildTime().toLocalTime());
 
         CB_LOGGER.info("Reading GC Profile from {}", mConfig.GcProfilePath);
 
