@@ -127,7 +127,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 "The microsatellite stability score represents the number of somatic inserts and deletes in "
                         + "(short) repeat sections across the whole genome of the tumor per Mb. This metric can be "
                         + "considered as a good marker for instability in microsatellite repeat regions. Tumors with a "
-                        + "score greater than 4.0 are considered microsatellite unstablr (MSI).",
+                        + "score greater than 4.0 are considered microsatellite unstable (MSI).",
                 satelliteChart,
                 Strings.EMPTY,
                 false));
