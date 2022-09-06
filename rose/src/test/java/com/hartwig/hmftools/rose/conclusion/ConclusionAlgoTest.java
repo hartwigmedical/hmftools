@@ -60,14 +60,14 @@ public class ConclusionAlgoTest {
     public void canGenerateCUPPAConclusion() {
         List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        actionabilityMap = testActionabilityMap(actionabilityMap, "CUPPA", TypeAlteration.CUPPA, "CUPPA", Condition.OTHER, "CUPPA");
+        actionabilityMap = testActionabilityMap(actionabilityMap, "CUPPA", TypeAlteration.CUPPA, "CUPPA", Condition.OTHER, "Molecular Tissue of Origin classifier: XXXX.");
 
         CuppaPrediction cuppaPrediction =
                 ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(99.6).build();
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
         assertEquals(1, conclusion.size());
-        assertEquals(conclusion.get(0), "- CUPPA Melanoma");
+        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Melanoma.");
     }
 
     @Test
@@ -80,15 +80,36 @@ public class ConclusionAlgoTest {
                 TypeAlteration.CUPPA_INCONCLUSIVE,
                 "CUPPA_INCONCLUSIVE",
                 Condition.OTHER,
-                "results inconclusive");
+                "Molecular Tissue of Origin classifier: Inconclusive (highest likelihood: xxx - xx%).");
 
         CuppaPrediction cuppaPrediction =
-                ImmutableCuppaPrediction.builder().cancerType("results inconclusive").likelihood(0).build();
+                ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(0).build();
 
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
         assertEquals(1, conclusion.size());
-        assertEquals(conclusion.get(0), "- results inconclusive");
+        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Inconclusive.");
+    }
+
+    @Test
+    public void canGenerateCUPPAConclusionInconclusiveWithLocation() {
+        List<String> conclusion = Lists.newArrayList();
+        Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
+
+        actionabilityMap = testActionabilityMap(actionabilityMap,
+                "CUPPA_INCONCLUSIVE",
+                TypeAlteration.CUPPA_INCONCLUSIVE,
+                "CUPPA_INCONCLUSIVE",
+                Condition.OTHER,
+                "Molecular Tissue of Origin classifier: Inconclusive (highest likelihood: xxx - xx%).");
+
+        CuppaPrediction cuppaPrediction =
+                ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(0.60).build();
+
+        ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
+
+        assertEquals(1, conclusion.size());
+        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Inconclusive (highest likelihood: Melanoma-0.6).");
     }
 
     @Test

@@ -72,6 +72,7 @@ public class ConclusionAlgo {
         List<HomozygousDisruption> homozygousDisruptions = roseData.linx().homozygousDisruptions();
         List<AnnotatedVirus> reportableViruses = roseData.virusInterpreter().reportableViruses();
 
+        generateStartSentence(conclusion);
         generateCUPPAConclusion(conclusion, roseData.cuppaPrediction(), actionabilityMap);
         generateVariantConclusion(conclusion,
                 reportableVariants,
@@ -126,23 +127,32 @@ public class ConclusionAlgo {
         return driverGeneMap;
     }
 
+    public static void generateStartSentence(@NotNull List<String> conclusion){
+        conclusion.add("Sample showing: ");
+
+    }
     public static void generateCUPPAConclusion(@NotNull List<String> conclusion, CuppaPrediction cuppaPrediction,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
 
-        if (cuppaPrediction.cancerType().contains("results inconclusive")) {
+        if (cuppaPrediction.likelihood() < 0.8) {
             ActionabilityKey keyCuppaInconclusice =
                     ImmutableActionabilityKey.builder().match("CUPPA_INCONCLUSIVE").type(TypeAlteration.CUPPA_INCONCLUSIVE).build();
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppaInconclusice);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.add("- " + entry.conclusion());
+                if (cuppaPrediction.likelihood()>= 0.5) {
+                    conclusion.add("- " + entry.conclusion().replace("xxx - xx%", cuppaPrediction.cancerType() + "-" + cuppaPrediction.likelihood()));
+                } else {
+                    conclusion.add("- " + entry.conclusion().replace(" (highest likelihood: xxx - xx%)", ""));
+                }
+
             }
         } else {
             ActionabilityKey keyCuppa = ImmutableActionabilityKey.builder().match("CUPPA").type(TypeAlteration.CUPPA).build();
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppa);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.add("- " + entry.conclusion() + " " + cuppaPrediction.cancerType());
+                conclusion.add("- " + entry.conclusion() .replace("XXXX", cuppaPrediction.cancerType()));
             }
         }
     }
