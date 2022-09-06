@@ -56,7 +56,7 @@ public class PurpleConstants
     public static final double MAX_DEVIATION_ADJUSTMENT = 0.20;
     public static final double MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE = 0.3;
     public static final double MIN_RELATIVE_COPY_NUMBER_TOLERANCE = 0.12;
-    public static final double MIN_ABSOLUTE_COPY_NUMBER_ADDITION = 2;
+    public static final double MIN_ABSOLUTE_COPY_NUMBER_ADDITION = 1;
     public static final double MIN_RELATIVE_COPY_NUMBER_ADDITION = 0.8;
 
 }
