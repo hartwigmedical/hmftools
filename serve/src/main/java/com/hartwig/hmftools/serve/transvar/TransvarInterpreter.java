@@ -361,7 +361,7 @@ class TransvarInterpreter {
                     refSequence(record.chromosome(), posPriorToCodon + 1 + strandCorrection, posPriorToCodon + 1 + strandCorrection);
             String refBase2 =
                     refSequence(record.chromosome(), posPriorToCodon + 2 + strandCorrection, posPriorToCodon + 2 + strandCorrection);
-            for (String base : Nucleotides.DNA_BASE_LIST) {
+            for (char base : Nucleotides.DNA_BASES) {
                 String newRefCodon;
                 if (i == 0) {
                     newRefCodon = base + refBase1 + refBase2;
