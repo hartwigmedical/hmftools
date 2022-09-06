@@ -2,6 +2,9 @@ package com.hartwig.hmftools.purple.copynumber;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -12,6 +15,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
@@ -19,6 +23,7 @@ import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
+import com.hartwig.hmftools.purple.segment.PurpleSegment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -95,34 +100,57 @@ public class PurpleCopyNumberFactory
         }).collect(toList());
     }
 
-    public List<PurpleCopyNumber> copyNumbers()
-    {
-        return mSomaticCopyNumbers;
-    }
+    public List<PurpleCopyNumber> copyNumbers() { return mSomaticCopyNumbers; }
 
     private static List<PurpleCopyNumber> toCopyNumber(final List<CombinedRegion> regions)
     {
-        final List<PurpleCopyNumber> result = Lists.newArrayList();
-        for(int i = 0; i < regions.size() - 1; i++)
+        final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
+
+        for(int i = 0; i < regions.size(); i++)
         {
             final CombinedRegion region = regions.get(i);
-            final CombinedRegion next = regions.get(i + 1);
-            result.add(toCopyNumber(region, next.region().support()));
+
+            int copyNumberStartPos = region.start();
+
+            if(i > 0)
+            {
+                ObservedRegion firstRegion = region.regions().get(0);
+                PurpleCopyNumber prevCopyNumber = copyNumbers.get(copyNumbers.size() - 1);
+
+                if(firstRegion.germlineStatus() == GermlineStatus.DIPLOID && firstRegion.minStart() < firstRegion.maxStart()
+                && firstRegion.minStart() == prevCopyNumber.end() + 1)
+                {
+                    copyNumberStartPos = (firstRegion.minStart() + firstRegion.maxStart()) / 2;
+
+                    PurpleCopyNumber newPrevCopyNumber = ImmutablePurpleCopyNumber.builder().from(prevCopyNumber)
+                            .end(copyNumberStartPos - 1).build();
+
+                    copyNumbers.set(copyNumbers.size() - 1, newPrevCopyNumber);
+                }
+            }
+
+            final SegmentSupport trailingSupport = i < regions.size() - 1 ? regions.get(i + 1).region().support() : SegmentSupport.TELOMERE;
+
+            PurpleCopyNumber copyNumber = toCopyNumber(region, copyNumberStartPos, trailingSupport);
+            copyNumbers.add(copyNumber);
         }
 
+        /*
         if(!regions.isEmpty())
         {
-            result.add(toCopyNumber(regions.get(regions.size() - 1), SegmentSupport.TELOMERE));
+            CombinedRegion lastRegion = regions.get(regions.size() - 1);
+            copyNumbers.add(toCopyNumber(lastRegion, lastRegion.start(), SegmentSupport.TELOMERE));
         }
+        */
 
-        return result;
+        return copyNumbers;
     }
 
-    private static PurpleCopyNumber toCopyNumber(final CombinedRegion region, final SegmentSupport trailingSupport)
+    private static PurpleCopyNumber toCopyNumber(final CombinedRegion region, int copyNumberStartPos, final SegmentSupport trailingSupport)
     {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome(region.chromosome())
-                .start(region.start())
+                .start(copyNumberStartPos)
                 .end(region.end())
                 .bafCount(region.bafCount())
                 .averageObservedBAF(region.region().observedBAF())
@@ -138,9 +166,44 @@ public class PurpleCopyNumberFactory
                 .build();
     }
 
-    @NotNull
     private static <T extends GenomeRegion> Predicate<T> matchesChromosome(final Chromosome chromosome)
     {
         return t -> HumanChromosome.fromString(t.chromosome()).equals(chromosome);
     }
+
+    public static boolean validateCopyNumbers(final List<PurpleCopyNumber> copyNumbers)
+    {
+        boolean isValid = true;
+
+        for(int i = 1; i < copyNumbers.size(); ++i)
+        {
+            PurpleCopyNumber copyNumber = copyNumbers.get(i);
+
+            /*
+            if(!positionsWithin(copyNumber.minStart(), copyNumber.maxStart(), copyNumber.start(), copyNumber.end()))
+            {
+                PPL_LOGGER.error("purple copy-number({}:{}-{}) has invalid min/maxStart({}-{})",
+                        copyNumber.chromosome(), copyNumber.start(), copyNumber.end(),
+                        copyNumber.minStart(), copyNumber.maxStart());
+
+                isValid = false;
+            }
+            */
+
+            PurpleCopyNumber prevCopyNumber = copyNumbers.get(i - 1);
+
+            if(!copyNumber.chromosome().equals(prevCopyNumber.chromosome()))
+                continue;
+
+            if(copyNumber.start() <= prevCopyNumber.end())
+            {
+                PPL_LOGGER.error("purple copy-number({}:{}-{}) overlaps previous({}-{})",
+                        copyNumber.chromosome(), copyNumber.start(), copyNumber.end(), prevCopyNumber.start(), prevCopyNumber.end());
+                isValid = false;
+            }
+        }
+
+        return isValid;
+    }
+
 }

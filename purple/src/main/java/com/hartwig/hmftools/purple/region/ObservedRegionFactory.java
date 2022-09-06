@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.purple.region;
 
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,11 +44,11 @@ public class ObservedRegionFactory
         mStatusFactory = new GermlineStatusFactory(cobaltChromosomes);
     }
 
-    public List<ObservedRegion> combine(
+    public List<ObservedRegion> formObservedRegions(
             final List<PurpleSegment> regions, final Multimap<Chromosome, AmberBAF> bafs,
             final Map<Chromosome,List<CobaltRatio>> ratios, final Multimap<Chromosome, GCProfile> gcProfiles)
     {
-        final List<ObservedRegion> result = Lists.newArrayList();
+        final List<ObservedRegion> observedRegions = Lists.newArrayList();
 
         final GenomePositionSelector<CobaltRatio> cobaltSelector = GenomePositionSelectorFactory.create(ratios);
         final GenomePositionSelector<AmberBAF> bafSelector = GenomePositionSelectorFactory.create(bafs);
@@ -70,28 +75,35 @@ public class ObservedRegionFactory
                     depthWindowCount, tumorRatio, normalRatio, cobalt.unnormalisedReferenceMeanRatio(), germlineStatus,
                     region.SvCluster, gc.averageGCContent(), region.MinStart, region.MaxStart);
 
-            result.add(observedRegion);
+            if(observedRegion.start() > observedRegion.end()
+            || !positionsWithin(region.MinStart, region.MaxStart, observedRegion.start(), observedRegion.end()))
+            {
+                PPL_LOGGER.error("invalid observed region: {}", observedRegion);
+            }
+
+            observedRegions.add(observedRegion);
         }
 
-        return extendMinSupport(result);
+        extendMinSupport(observedRegions);
+        return observedRegions;
     }
 
-    public static List<ObservedRegion> extendMinSupport(final List<ObservedRegion> modifiables)
+    public static void extendMinSupport(final List<ObservedRegion> observedRegions)
     {
-        for(int i = 0; i < modifiables.size(); i++)
+        for(int i = 0; i < observedRegions.size(); i++)
         {
-            final ObservedRegion target = modifiables.get(i);
+            final ObservedRegion target = observedRegions.get(i);
             if(target.support() == SegmentSupport.NONE && target.germlineStatus() == GermlineStatus.DIPLOID)
             {
                 for(int j = i - 1; j >= 0; j--)
                 {
-                    final ObservedRegion prior = modifiables.get(j);
+                    final ObservedRegion prior = observedRegions.get(j);
                     if(prior.germlineStatus() == GermlineStatus.DIPLOID)
                     {
                         break;
                     }
 
-                    target.setMinStart(Math.min(target.minStart(), prior.start()));
+                    target.setMinStart(min(target.minStart(), prior.start()));
 
                     if(prior.support() != SegmentSupport.NONE)
                     {
@@ -100,7 +112,6 @@ public class ObservedRegionFactory
                 }
             }
         }
-        return new ArrayList<>(modifiables);
     }
 
     private class BAFAccumulator implements Consumer<AmberBAF>

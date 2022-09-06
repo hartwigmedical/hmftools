@@ -3,6 +3,9 @@ package com.hartwig.hmftools.purple.segment;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +22,7 @@ import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,7 +41,7 @@ public class PurpleSegmentFactory
         mLengths = lengths;
     }
 
-    public List<PurpleSegment> segment(
+    public List<PurpleSegment> createSegments(
             final List<StructuralVariant> variants, final Map<Chromosome,List<PCFPosition>> pcfPositions,
             final Map<Chromosome,List<CobaltRatio>> ratios)
     {
@@ -199,5 +203,38 @@ public class PurpleSegmentFactory
         }
 
         return result;
+    }
+
+    public static boolean validateSegments(final List<PurpleSegment> segments)
+    {
+        boolean isValid = true;
+
+        for(int i = 1; i < segments.size(); ++i)
+        {
+            PurpleSegment segment = segments.get(i);
+
+            if(!positionsWithin(segment.MinStart, segment.MaxStart, segment.start(), segment.end()))
+            {
+                PPL_LOGGER.error("purple segment({}:{}-{}) has invalid min/maxStart({}-{})",
+                        segment.chromosome(), segment.start(), segment.end(),
+                        segment.MinStart, segment.MaxStart);
+
+                isValid = false;
+            }
+
+            PurpleSegment prevSegment = segments.get(i - 1);
+
+            if(!segment.chromosome().equals(prevSegment.chromosome()))
+                continue;
+
+            if(segment.start() <= prevSegment.end())
+            {
+                PPL_LOGGER.error("purple segment({}:{}-{}) overlaps previous({}-{})",
+                        segment.chromosome(), segment.start(), segment.end(), prevSegment.start(), prevSegment.end());
+                isValid = false;
+            }
+        }
+
+        return isValid;
     }
 }

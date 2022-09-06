@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.purple.copynumber;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -84,10 +87,11 @@ public class CombinedRegion implements GenomeRegion
 
     public void extend(final ObservedRegion region)
     {
-        mCombined.setStart(Math.min(mCombined.start(), region.start()));
-        mCombined.setEnd(Math.max(mCombined.end(), region.end()));
-        mCombined.setMinStart(Math.min(region.minStart(), region().minStart()));
-        mCombined.setMaxStart(Math.min(region.maxStart(), region().maxStart()));
+        mCombined.setStart(min(mCombined.start(), region.start()));
+        mCombined.setEnd(max(mCombined.end(), region.end()));
+
+        mCombined.setMinStart(min(mCombined.minStart(), region.minStart()));
+        mCombined.setMaxStart(min(mCombined.maxStart(), region.maxStart()));
 
         if(region.start() <= mCombined.start())
         {
@@ -145,7 +149,6 @@ public class CombinedRegion implements GenomeRegion
 
     private void applyDepthWindowCountWeights(final ObservedRegion region, long currentWeight, long newWeight)
     {
-
         if(!Doubles.isZero(region.tumorCopyNumber()))
         {
             mCombined.setTumorCopyNumber(weightedAverage(currentWeight, mCombined.tumorCopyNumber(), newWeight, region.tumorCopyNumber()));
@@ -189,9 +192,7 @@ public class CombinedRegion implements GenomeRegion
     private double weightedAverage(long currentWeight, double currentValue, long newWeight, double newValue)
     {
         if(Doubles.isZero(currentValue))
-        {
             return newValue;
-        }
 
         long totalWeight = currentWeight + newWeight;
         return (currentWeight * currentValue + newWeight * newValue) / totalWeight;

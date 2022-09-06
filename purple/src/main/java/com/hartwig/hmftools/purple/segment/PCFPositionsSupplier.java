@@ -30,12 +30,13 @@ public final class PCFPositionsSupplier
 
         Map<Chromosome,List<PCFPosition>> chromosomePcfPositions = Maps.newHashMap();
 
-        // ensure min and max positions do not overlap
         for(Chromosome chromosome : combinedPositions.keySet())
         {
             List<PCFPosition> pcfPositions = combinedPositions.get(chromosome).stream().collect(Collectors.toList());
             chromosomePcfPositions.put(chromosome, pcfPositions);
 
+        /*
+        // ensure min and max positions do not overlap
             for(int i = 1; i < pcfPositions.size(); ++i)
             {
                 PCFPosition prevPcfPosition = pcfPositions.get(i - 1);
@@ -44,6 +45,7 @@ public final class PCFPositionsSupplier
                 int minPosition = max(pcfPosition.minPosition(), prevPcfPosition.position() + 1);
                 pcfPosition.setMinPosition(minPosition);
             }
+        */
         }
 
         return chromosomePcfPositions;

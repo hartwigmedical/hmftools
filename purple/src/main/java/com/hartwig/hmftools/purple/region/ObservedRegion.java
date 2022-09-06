@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.purple.region;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
@@ -110,6 +113,12 @@ public class ObservedRegion implements GenomeRegion
     public void setStart(int start) { mPosStart = start; }
     public void setEnd(int end) { mPosEnd = end; }
 
+    public int minStart() { return mMinStart; }
+    public int maxStart() { return mMaxStart; }
+
+    public void setMinStart(int start) { mMinStart = start; }
+    public void setMaxStart(int start) { mMaxStart = start; }
+
     public boolean ratioSupport() { return mRatioSupport; }
     public void setRatioSupport(boolean ratioSupport) { mRatioSupport = ratioSupport; }
 
@@ -143,12 +152,6 @@ public class ObservedRegion implements GenomeRegion
 
     public double gcContent() { return mGcContent; }
     public void setGcContent(double content) { mGcContent = content; }
-
-    public int minStart() { return mMinStart; }
-    public int maxStart() { return mMaxStart; }
-
-    public void setMinStart(int start) { mMinStart = start; }
-    public void setMaxStart(int start) { mMaxStart = start; }
 
     // fitted data and methods
     public double minorAlleleCopyNumberDeviation() { return mMinorAlleleCopyNumberDeviation; }
@@ -191,8 +194,9 @@ public class ObservedRegion implements GenomeRegion
 
     public String toString()
     {
-        return String.format("loc(%s: %d - %d) ratio(%s) seg(%s) status(%s) baf(%d obs=%.2f) cn(%.2f ref=%.2f baf=%.2f) fit(%.2f baf=%.2f)",
+        return String.format("loc(%s:%d-%d) ratio(%s) seg(%s) status(%s) baf(%d obs=%.2f) cn(%.2f ref=%.2f baf=%.2f) fit(%.2f baf=%.2f) start(min=%d max=%d)",
                 mChromosome, mPosStart, mPosEnd, mRatioSupport, mSupport, mGermlineStatus, mBafCount, mObservedBAF,
-                mTumorCopyNumber, mRefNormalisedCopyNumber, mTumorBAF, mFittedTumorCopyNumber, mFittedBAF);
+                mTumorCopyNumber, mRefNormalisedCopyNumber, mTumorBAF, mFittedTumorCopyNumber, mFittedBAF,
+                mMinStart, mMaxStart);
     }
 }

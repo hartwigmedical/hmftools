@@ -90,7 +90,7 @@ public class PeakModelFactory {
             double remainingWeight = positiveWeight(weightedPloidies);
             double unexplainedWeight = remainingWeight / initialWeight;
 
-            LOGGER.debug("Peak: {}, Offset: {}, PeakAvgWeight: {}, Unexplained: {}",
+            LOGGER.trace("Peak: {}, Offset: {}, PeakAvgWeight: {}, Unexplained: {}",
                     new Object[] { FORMAT.format(peak), FORMAT.format(offset), FORMAT.format(peakAverageWeight),
                             FORMAT.format(unexplainedWeight) });
 
@@ -102,7 +102,7 @@ public class PeakModelFactory {
         // Scale results
         double totalModelWeight = peakModel.stream().filter(PeakModel::isValid).mapToDouble(PeakModel::bucketWeight).sum();
         double weightScalingFactor = initialWeight / totalModelWeight;
-        LOGGER.debug("Weight scaling factor {}", String.format("%.4f", weightScalingFactor));
+        LOGGER.trace("weight scaling factor {}", String.format("%.4f", weightScalingFactor));
 
         final List<PeakModel> all = peakModel.stream().map(x -> x.setBucketWeight(x.bucketWeight() * 1)).collect(Collectors.toList());
         if (hasValidSubclonalPeaks) {

@@ -18,7 +18,9 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAc
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
+import static com.hartwig.hmftools.purple.Segmentation.validateObservedRegions;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;
+import static com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory.validateCopyNumbers;
 import static com.hartwig.hmftools.purple.gene.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
 import java.io.IOException;
@@ -274,11 +276,17 @@ public class PurpleApplication
         final SomaticVariantCache somaticCache = mConfig.runTumor() ? sampleData.SomaticCache : null;
 
         PPL_LOGGER.info("applying segmentation");
-        final List<ObservedRegion> observedRegions = mSegmentation.createSegments(sampleData.SvCache.variants(), amberData, cobaltData);
+        final List<ObservedRegion> observedRegions = mSegmentation.createObservedRegions(sampleData.SvCache.variants(), amberData, cobaltData);
 
         if(observedRegions.isEmpty())
         {
-            PPL_LOGGER.warn("no observed regions created");
+            PPL_LOGGER.warn("no observed regions created, exiting");
+            System.exit(0);
+        }
+
+        if(!validateObservedRegions(observedRegions))
+        {
+            PPL_LOGGER.warn("invalid observed regions, exiting");
             System.exit(0);
         }
 
@@ -329,7 +337,7 @@ public class PurpleApplication
             {
                 PPL_LOGGER.info("reapplying segmentation with {} recovered structural variants", recoveredSVCount);
                 final List<ObservedRegion> recoveredObservedRegions =
-                        mSegmentation.createSegments(sampleData.SvCache.variants(), amberData, cobaltData);
+                        mSegmentation.createObservedRegions(sampleData.SvCache.variants(), amberData, cobaltData);
 
                 PPL_LOGGER.info("recalculating copy number");
                 fittedRegions.clear();
@@ -340,6 +348,13 @@ public class PurpleApplication
             }
 
             copyNumbers.addAll(copyNumberFactory.copyNumbers());
+
+            if(!validateCopyNumbers(copyNumbers))
+            {
+                PPL_LOGGER.warn("invalid copy numbers, exiting");
+                System.exit(0);
+            }
+
             sampleData.SvCache.inferMissingVariant(copyNumbers);
 
             final List<ObservedRegion> enrichedObservedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);

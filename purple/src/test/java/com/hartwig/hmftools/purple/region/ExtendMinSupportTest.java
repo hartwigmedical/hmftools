@@ -2,6 +2,8 @@ package com.hartwig.hmftools.purple.region;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
@@ -18,7 +20,8 @@ public class ExtendMinSupportTest
         final ObservedRegion target = create(2000, GermlineStatus.DIPLOID, SegmentSupport.NONE);
 
         assertEquals(2000, target.minStart());
-        ObservedRegionFactory.extendMinSupport(Lists.newArrayList(prior, target));
+        List<ObservedRegion> regions = Lists.newArrayList(prior, target);
+        ObservedRegionFactory.extendMinSupport(regions);
         assertEquals(1000, target.minStart());
     }
 
