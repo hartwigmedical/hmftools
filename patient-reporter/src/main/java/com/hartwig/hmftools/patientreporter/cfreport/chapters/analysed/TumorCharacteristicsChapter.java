@@ -78,7 +78,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         String hrDeficiencyLabel =
                 hasReliablePurity ? hrdStatus.display() + " " + DOUBLE_DECIMAL_FORMAT.format(hrdValue) : DataUtil.NA_STRING;
 
-        String hrdUnreliableFootnote = "* HRD score can not be determined reliably when a tumor is microsatellite instability "
+        String hrdUnreliableFootnote = "* HRD score can not be determined reliably when a tumor is microsatellite unstable "
                 + "(MSI) or has insufficient number of mutations and is therefore not reported for this sample.";
         boolean displayFootNote = false;
         boolean isHrdReliable = genomicAnalysis.chordHrdStatus() == ChordStatus.HR_PROFICIENT
@@ -127,7 +127,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 "The microsatellite stability score represents the number of somatic inserts and deletes in "
                         + "(short) repeat sections across the whole genome of the tumor per Mb. This metric can be "
                         + "considered as a good marker for instability in microsatellite repeat regions. Tumors with a "
-                        + "score greater than 4.0 are considered microsatellite instability (MSI).",
+                        + "score greater than 4.0 are considered microsatellite unstablr (MSI).",
                 satelliteChart,
                 Strings.EMPTY,
                 false));
@@ -149,13 +149,13 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         mutationalLoadChart.enableUndershoot(NO_DECIMAL_FORMAT.format(0));
         mutationalLoadChart.enableOvershoot(">" + NO_DECIMAL_FORMAT.format(mutationalLoadChart.max()));
         mutationalLoadChart.setIndicator(MutationalLoad.THRESHOLD,
-                "Eligible for \nDRUP (" + NO_DECIMAL_FORMAT.format(MutationalLoad.THRESHOLD) + ")");
+                "High (" + NO_DECIMAL_FORMAT.format(MutationalLoad.THRESHOLD) + ")");
 
         reportDocument.add(createCharacteristicDiv("Tumor mutational load",
                 mutationalLoadString,
                 "The tumor mutational load represents the total number of somatic missense variants across "
                         + "the whole genome of the tumor. Patients with a mutational load over 140 could be eligible for "
-                        + "immunotherapy within the DRUP study.",
+                        + "immunotherapy studies.",
                 mutationalLoadChart,
                 Strings.EMPTY,
                 false));
