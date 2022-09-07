@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.copynumber;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.text.DecimalFormat;
@@ -37,7 +39,6 @@ public class ExtendDiploid
     }
 
     private static final int MIN_BAF_COUNT_TO_WEIGH_WITH_BAF = 50;
-    private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
 
     private final int mMinTumorCount;
     private final int mCentromereMinTumorCount;
@@ -50,10 +51,9 @@ public class ExtendDiploid
         mTolerance = tolerance;
     }
 
-    @NotNull
     public List<CombinedRegion> extendDiploid(final Collection<ObservedRegion> fittedRegions)
     {
-        final boolean bafWeighted = fittedRegions.stream().anyMatch(x -> x.bafCount() >= MIN_BAF_COUNT_TO_WEIGH_WITH_BAF);
+        boolean bafWeighted = fittedRegions.stream().anyMatch(x -> x.bafCount() >= MIN_BAF_COUNT_TO_WEIGH_WITH_BAF);
 
         final List<CombinedRegion> regions = Lists.newLinkedList();
 
@@ -68,11 +68,11 @@ public class ExtendDiploid
             final CombinedRegion highestConfidence = regions.get(highestConfidenceIndex);
             highestConfidence.setCopyNumberMethod(CopyNumberMethod.BAF_WEIGHTED);
 
-            PPL_LOGGER.trace("Selected region {}", toString(highestConfidence.region()));
+            PPL_LOGGER.trace("selected region {}", toString(highestConfidence.region()));
             extendRight(regions, highestConfidenceIndex);
             extendLeft(regions, highestConfidenceIndex);
 
-            PPL_LOGGER.trace("Completed region {}", toString(highestConfidence.region()));
+            PPL_LOGGER.trace("completed region {}", toString(highestConfidence.region()));
             highestConfidenceIndex = nextIndex(regions);
         }
 
@@ -120,7 +120,7 @@ public class ExtendDiploid
 
         int minTumorCount = nextBigBreakIsCentromereOrTelomere(regions, direction, targetIndex) ? mCentromereMinTumorCount : mMinTumorCount;
 
-        final boolean isNeighbourDubious = isDubious(minTumorCount, neighbour);
+        boolean isNeighbourDubious = isDubious(minTumorCount, neighbour);
         if(isNeighbourDubious)
         {
             if(inTolerance(target.region(), neighbour))
@@ -255,9 +255,9 @@ public class ExtendDiploid
         {
             final CombinedRegion combined = regions.get(i);
             final ObservedRegion region = combined.region();
+
             if(!combined.isProcessed() && region.germlineStatus().equals(GermlineStatus.DIPLOID))
             {
-
                 if(region.bafCount() > largestBAFCount)
                 {
                     largestBAFCount = region.bafCount();
@@ -284,7 +284,7 @@ public class ExtendDiploid
                 .add("end", region.end())
                 .add("status", region.germlineStatus())
                 .add("support", region.support())
-                .add("copyNumber", FORMAT.format(region.tumorCopyNumber()))
+                .add("copyNumber", format("%.2f",region.tumorCopyNumber()))
                 .toString();
     }
 }

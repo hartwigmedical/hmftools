@@ -40,7 +40,7 @@ public class PurpleCopyNumberFactory
 
     public PurpleCopyNumberFactory(
             int minTumorRatioCount, int minTumorRatioCountAtCentromere, int averageReadDepth, double ploidy,
-            @NotNull final PurityAdjuster purityAdjuster, @NotNull final CobaltChromosomes cobaltChromosomes)
+            final PurityAdjuster purityAdjuster, final CobaltChromosomes cobaltChromosomes)
     {
         mPurityAdjuster = purityAdjuster;
         mMinTumorRatioCount = minTumorRatioCount;
