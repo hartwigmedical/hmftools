@@ -13,6 +13,12 @@ import org.jetbrains.annotations.Nullable;
 @JacksonXmlRootElement(localName = "report")
 public abstract class ReportXML {
 
+    @JacksonXmlProperty(isAttribute = true, localName = "xmlns:xsi")
+    private final String xsi = "http://www.w3.org/2001/XMLSchema-instance";
+
+    @JacksonXmlProperty(isAttribute = true, localName = "xmlns:xsd")
+    private final String xsd = "http://www.w3.org/2001/XMLSchema";
+
     @JacksonXmlProperty(localName = "protocol")
     @NotNull
     public abstract XMLProtocol protocol();
