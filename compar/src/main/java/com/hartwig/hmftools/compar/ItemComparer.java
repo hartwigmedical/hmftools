@@ -19,4 +19,6 @@ public interface ItemComparer
 
     default void registerThresholds(final DiffThresholds thresholds) {}
 
+    default boolean hasReportable() { return true; }
+
 }

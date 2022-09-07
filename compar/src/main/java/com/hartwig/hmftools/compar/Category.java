@@ -4,6 +4,8 @@ public enum Category
 {
     PURITY,
     DRIVER,
+    COPY_NUMBER,
+    GENE_COPY_NUMBER,
     SOMATIC_VARIANT,
     GERMLINE_VARIANT,
     GERMLINE_DELETION,

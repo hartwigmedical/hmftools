@@ -1,21 +1,11 @@
 package com.hartwig.hmftools.compar;
 
-import static com.hartwig.hmftools.compar.Category.CHORD;
-import static com.hartwig.hmftools.compar.Category.CUPPA;
-import static com.hartwig.hmftools.compar.Category.DISRUPTION;
-import static com.hartwig.hmftools.compar.Category.DRIVER;
-import static com.hartwig.hmftools.compar.Category.FUSION;
-import static com.hartwig.hmftools.compar.Category.GERMLINE_DELETION;
-import static com.hartwig.hmftools.compar.Category.GERMLINE_SV;
-import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
-import static com.hartwig.hmftools.compar.Category.LILAC;
-import static com.hartwig.hmftools.compar.Category.PURITY;
-import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.compar.chord.ChordComparer;
@@ -25,6 +15,8 @@ import com.hartwig.hmftools.compar.lilac.LilacComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
 import com.hartwig.hmftools.compar.linx.GermlineSvComparer;
+import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
+import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GermlineDeletionComparer;
 import com.hartwig.hmftools.compar.purple.PurityComparer;
 import com.hartwig.hmftools.compar.somatic.GermlineVariantComparer;
@@ -41,44 +33,71 @@ public class CommonUtils
 
     public static List<ItemComparer> buildComparers(final ComparConfig config)
     {
-        List<ItemComparer> comparators = Lists.newArrayList();
+        List<ItemComparer> comparers = Lists.newArrayList();
 
-        if(config.Categories.containsKey(PURITY))
-            comparators.add(new PurityComparer(config));
+        for(Map.Entry<Category,MatchLevel> entry : config.Categories.entrySet())
+        {
+            Category category = entry.getKey();
+            MatchLevel matchLevel = entry.getValue();
 
-        if(config.Categories.containsKey(DRIVER))
-            comparators.add(new DriverComparer(config));
+            ItemComparer comparer = createComparer(category, config);
 
-        if(config.Categories.containsKey(GERMLINE_DELETION))
-            comparators.add(new GermlineDeletionComparer(config));
+            if(matchLevel == REPORTABLE && !comparer.hasReportable())
+                continue;
 
-        if(config.Categories.containsKey(FUSION))
-            comparators.add(new FusionComparer(config));
+            comparer.registerThresholds(config.Thresholds);
+            comparers.add(comparer);
+        }
 
-        if(config.Categories.containsKey(DISRUPTION))
-            comparators.add(new DisruptionComparer(config));
+        return comparers;
+    }
 
-        if(config.Categories.containsKey(SOMATIC_VARIANT))
-            comparators.add(new SomaticVariantComparer(config));
+    private static ItemComparer createComparer(final Category category, final ComparConfig config)
+    {
+        switch(category)
+        {
+            case PURITY:
+                return new PurityComparer(config);
 
-        if(config.Categories.containsKey(GERMLINE_VARIANT))
-            comparators.add(new GermlineVariantComparer(config));
+            case DRIVER:
+                return new DriverComparer(config);
 
-        if(config.Categories.containsKey(CUPPA))
-            comparators.add(new CuppaComparer(config));
+            case COPY_NUMBER:
+                return new CopyNumberComparer(config);
 
-        if(config.Categories.containsKey(CHORD))
-            comparators.add(new ChordComparer(config));
+            case GENE_COPY_NUMBER:
+                return new GeneCopyNumberComparer(config);
 
-        if(config.Categories.containsKey(LILAC))
-            comparators.add(new LilacComparer(config));
+            case GERMLINE_DELETION:
+                return new GermlineDeletionComparer(config);
 
-        if(config.Categories.containsKey(GERMLINE_SV))
-            comparators.add(new GermlineSvComparer(config));
+            case FUSION:
+                return new FusionComparer(config);
 
-        comparators.forEach(x -> x.registerThresholds(config.Thresholds));
+            case DISRUPTION:
+                return new DisruptionComparer(config);
 
-        return comparators;
+            case SOMATIC_VARIANT:
+                return new SomaticVariantComparer(config);
+
+            case GERMLINE_VARIANT:
+                return new GermlineVariantComparer(config);
+
+            case CUPPA:
+                return new CuppaComparer(config);
+
+            case CHORD:
+                return new ChordComparer(config);
+
+            case LILAC:
+                return new LilacComparer(config);
+
+            case GERMLINE_SV:
+                return new GermlineSvComparer(config);
+
+            default:
+                return null;
+        }
     }
 
     public static void processSample(

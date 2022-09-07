@@ -86,29 +86,9 @@ public class FusionComparer implements ItemComparer
             if(fusion.reportedType().equals(KnownFusionType.NONE.toString()))
                 continue;
 
-            String mappedFusionName = getGeneMappedName(fusion.name());
-
-            if(mappedFusionName == null)
-                continue;
-
-            comparableItems.add(new FusionData(fusion, mappedFusionName));
+            comparableItems.add(new FusionData(fusion, fusion.name()));
         }
 
         return comparableItems;
-    }
-
-    private String getGeneMappedName(final String fusionName)
-    {
-        String[] genes = fusionName.split("_");
-        if(genes.length != 2)
-            return fusionName;
-
-        String upGeneName = mConfig.getGeneMappedName(genes[0]);
-        String downGeneName = mConfig.getGeneMappedName(genes[1]);
-
-        if(upGeneName == null || downGeneName == null)
-            return null;
-
-        return upGeneName  + "_" + downGeneName;
     }
 }

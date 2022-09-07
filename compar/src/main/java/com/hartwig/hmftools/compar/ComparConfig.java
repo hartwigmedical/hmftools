@@ -54,7 +54,6 @@ public class ComparConfig
     public final Map<String,String> SourceSampleIds; // as required, mapping from sampleId to source sampleId
 
     public final Set<String> DriverGenes;
-    public final GeneNameMapping GeneMapping;
 
     public final DiffThresholds Thresholds;
 
@@ -161,16 +160,6 @@ public class ComparConfig
                 CMP_LOGGER.error("failed to load driver gene panel file: {}", e.toString());
             }
         }
-
-        if(Categories.containsKey(FUSION) || Categories.containsKey(DRIVER))
-        {
-            GeneMapping = new GeneNameMapping();
-        }
-        else
-        {
-            GeneMapping = null;
-        }
-
     }
 
     public String sourceSampleId(final String source, final String sampleId)
@@ -182,14 +171,6 @@ public class ComparConfig
     public boolean isValid() { return mIsValid; }
     public boolean singleSample() { return SampleIds.size() == 1; }
     public boolean multiSample() { return SampleIds.size() > 1; }
-
-    public String getGeneMappedName(final String geneName)
-    {
-        if(GeneMapping == null || GeneMapping.hasNewGene(geneName))
-            return geneName;
-
-        return GeneMapping.getNewName(geneName);
-    }
 
     private void loadSampleIds(final CommandLine cmd)
     {
@@ -334,6 +315,5 @@ public class ComparConfig
         Thresholds = new DiffThresholds();
         SourceSampleIds = Maps.newHashMap();
         DriverGenes = Sets.newHashSet();
-        GeneMapping = null;
     }
 }
