@@ -40,7 +40,8 @@ public final class Codons
 
     public static char codonToAminoAcid(final String dna, int index)
     {
-        try {
+        try
+        {
             // convert the 3 bases into a look up index
             int lookupIndex = baseToInt(dna.charAt(index)) * 16 +
                     baseToInt(dna.charAt(index + 1)) * 4 +

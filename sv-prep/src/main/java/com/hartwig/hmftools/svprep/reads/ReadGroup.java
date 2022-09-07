@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.svprep.SpanningReadCache.formChromosomePartition;
+import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
+import static com.hartwig.hmftools.svprep.reads.ReadType.SUPPORT;
 
 import java.util.Comparator;
 import java.util.List;
@@ -143,13 +145,14 @@ public class ReadGroup
 
     public boolean conditionalOnRemoteReads()
     {
-        // a candidate read needs to check that its remote mate read supports a junction
+        // a candidate or supporting SC low-qual read needs to check that its remote mate read supports a junction
         // and for supplementaries needs to check the the remote mate read(s) aren't duplicates
         // an exception is where a supplementary supporting a junction is paired with a non-supp candidate
         if(mReads.stream().allMatch(x -> x.isSupplementaryAlignment()))
             return true;
 
-        if(mReads.stream().allMatch(x -> x.readType() == CANDIDATE_SUPPORT))
+        if(mReads.stream().allMatch(x -> x.readType() == CANDIDATE_SUPPORT
+                || (x.readType() == SUPPORT && ReadFilterType.isSet(x.filters(), SOFT_CLIP_LOW_BASE_QUAL))))
             return true;
 
         return false;

@@ -13,10 +13,8 @@ import static com.hartwig.hmftools.svprep.WriteType.JUNCTIONS;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.MIN_MAP_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
-import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.hasPolyATSoftClip;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXACT_SUPPORT;
-import static com.hartwig.hmftools.svprep.reads.ReadType.EXPECTED;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 
 import static htsjdk.samtools.SAMFlag.DUPLICATE_READ;
@@ -307,7 +305,6 @@ public class ResultsWriter
         // - excessive low qual soft-clip bases
         // - above the poly-G(C) threshold
         // - cannot be a group of only supplementaries (in case the group is an unmarked duplicate)
-
         for(ReadRecord read : readGroup.reads())
         {
             if(filterBamRecord(read))
@@ -324,12 +321,6 @@ public class ResultsWriter
     {
         if(ReadFilterType.isSet(read.filters(), POLY_G_SC))
             return true;
-
-        if(ReadFilterType.isSet(read.filters(), SOFT_CLIP_LOW_BASE_QUAL))
-        {
-            if(!(read.readType() == JUNCTION || read.readType() == EXACT_SUPPORT || read.readType() == EXPECTED))
-                return true;
-        }
 
         return false;
     }
