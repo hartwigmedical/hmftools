@@ -2,8 +2,13 @@ package com.hartwig.hmftools.patientreporter.xml;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.hartwig.hmftools.common.xml.KeyItem;
 import com.hartwig.hmftools.common.xml.KeyXML;
 
 import org.immutables.value.Value;
@@ -15,13 +20,13 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ImportWGSXML {
 
-    @JacksonXmlProperty(localName = "itemRefNummerWgs")
+    @JacksonXmlProperty(isAttribute = true)
     @NotNull
-    public abstract KeyXML refNummerWgs();
+    public abstract KeyItem refNummerWgs();
 
-    @JacksonXmlProperty(localName = "itemWgsRedenAanvraag")
+    @JacksonXmlProperty(isAttribute = true)
     @NotNull
-    public abstract KeyXML wgsRedenAanvraag();
+    public abstract KeyItem wgsRedenAanvraag();
 
     @JacksonXmlProperty(localName = "itemWgsGevrOndzTher")
     @NotNull
