@@ -11,6 +11,9 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class RubriekXML {
 
+    @JacksonXmlProperty(isAttribute = true)
+    private final String naam = "moduleimport";
+
     @JacksonXmlProperty(localName = "session")
     @NotNull
     public abstract SessionXML jsonSession();
