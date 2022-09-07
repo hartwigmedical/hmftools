@@ -139,7 +139,7 @@ public interface PatientReporterConfig {
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
         options.addOption(LILAC_RESULT_CSV, true, "Path towards the LILAC result CSV.");
         options.addOption(LILAC_QC_CSV, true, "Path towards the LILAC QC CSV.");
-        options.addOption(ADD_ROSE, true, "If set, the ROSE TSV file will be used.");
+        options.addOption(ADD_ROSE, false, "If set, the ROSE TSV file will be used.");
         options.addOption(ROSE_TSV, true, "Path towards the ROSE TSV file.");
 
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
@@ -384,7 +384,7 @@ public interface PatientReporterConfig {
             protectEvidenceTsv = nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV);
             lilacQcCsv = nonOptionalFile(cmd, LILAC_QC_CSV);
             lilacResultCsv = nonOptionalFile(cmd, LILAC_RESULT_CSV);
-            addRose = cmd.hasOption(REQUIRE_PIPELINE_VERSION_FILE);
+            addRose = cmd.hasOption(ADD_ROSE);
             if (addRose) {
                 roseTsv = nonOptionalFile(cmd, ROSE_TSV);
             }

@@ -394,7 +394,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
             Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1, 3 },
                     new Cell[] { TableUtil.createHeaderCell("Allele"), TableUtil.createHeaderCell("Reference Fragments"),
                             TableUtil.createHeaderCell("Tumor Fragments"), TableUtil.createHeaderCell("Tumor copies"),
-                            TableUtil.createHeaderCell("Somatic #mutations") });
+                            TableUtil.createHeaderCell("# Somatic mutations") });
 
             for (LilacAllele allele : HLAAllele.sort(lilac.alleles())) {
                 table.addCell(TableUtil.createContentCell(allele.allele()));
