@@ -15,7 +15,6 @@ public class RoseConclusionFileTest  {
     @Test
     public void canReadRoseSummaryFile() throws IOException {
         String roseSummary = RoseConclusionFile.read(ROSE_TSV);
-        assertEquals("Melanoma sample <enter> - A <enter> - B <enter> C <enter> D <enter> ", roseSummary);
+        assertEquals("Melanoma sample \n - A \n - B \n C \n D \n ", roseSummary);
     }
-
 }

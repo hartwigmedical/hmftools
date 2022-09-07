@@ -1,24 +1,21 @@
 package com.hartwig.hmftools.common.rose;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class RoseConclusionFile {
+    private static final Logger LOGGER = LogManager.getLogger(RoseConclusionFile.class);
 
     private static final String EXTENSION = ".rose.tsv";
-    private static final String FIELD_DELIMITER = "\t";
 
     private RoseConclusionFile() {
     }
@@ -30,11 +27,12 @@ public class RoseConclusionFile {
 
     @NotNull
     public static String read(@NotNull String file) throws IOException {
+        LOGGER.info("Reading ROSE clinical conslusion {}", file);
         String conclusion = Strings.EMPTY;
         List<String> lines = Files.readAllLines(new File(file).toPath());
 
         for (String line : lines) {
-            conclusion = conclusion.concat(line + " <enter> ");
+            conclusion = conclusion.concat(line + " \n ");
         }
         return conclusion;
     }
