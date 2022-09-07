@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.codon;
 
-import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_LIST;
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASES;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -26,13 +26,13 @@ public class AminoAcidsTest
     {
         Map<String, List<String>> aminoAcidToTrinucleotideMap = AminoAcids.aminoAcidToTrinucleotidesMap();
 
-        for(String base1 : DNA_BASE_LIST)
+        for(char base1 : DNA_BASES)
         {
-            for(String base2 : DNA_BASE_LIST)
+            for(char base2 : DNA_BASES)
             {
-                for(String base3 : DNA_BASE_LIST)
+                for(char base3 : DNA_BASES)
                 {
-                    String trinucleotide = base1 + base2 + base3;
+                    String trinucleotide = Character.toString(base1) + base2 + base3;
                     assertTrue(aminoAcidExists(aminoAcidToTrinucleotideMap, trinucleotide));
                 }
             }

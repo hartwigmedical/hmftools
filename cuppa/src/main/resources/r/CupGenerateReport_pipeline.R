@@ -57,7 +57,7 @@ if ('RNA COMBINED' %in% cupClassData$DataType)
 
 ## Make sure data in SEX is not overwritten with GENDER CLASSIFIER data
 cupGender <- cupPlotData %>%
-  filter(DataType == 'GENDER' & Category == 'SAMPLE_TRAIT') %>%
+  filter(DataType == 'GENDER' & ResultType == 'PREVALENCE') %>%
   mutate(DataLabel = sprintf('SEX (%s)', Value),
          PrevColour = ifelse(RefValue == 0, 'high', ifelse(RefValue <= 0.02, 'low', 'norm')))
 

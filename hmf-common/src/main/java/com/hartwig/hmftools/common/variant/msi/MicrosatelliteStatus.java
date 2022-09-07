@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 public enum MicrosatelliteStatus
 {
-    MSI("Instable"),
+    MSI("Unstable"),
     MSS("Stable"),
     UNKNOWN("Unknown");
 
