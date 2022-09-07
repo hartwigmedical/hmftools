@@ -148,7 +148,7 @@ _ | 5’UTR Intronic | c.-147-1093delA
 Duplications | Coding | c.128dupA | Use duplications in case of INS with full homology match.
 _ | Intronic (post) | c.830+11459_830+11461dupGGA
 _ | Start codon overlap | c.-1_1delAA
-_ | Insertion | Coding | c.1033_1034insA
+Insertions | Coding | c.1033_1034insA
 _ | Intronic (post) | c.15+1619_15+1620insTTTGTT
 _ | Intronic (5’UTR) | c.-23-304_-23-303insA
 Substitutions (MNV) | Coding | c.1390_1391delCGinsTT
@@ -189,7 +189,7 @@ _ | Insertion (conservative stop) | p.Ser81_Val82ins* | Ie. a STOP codon is inse
 _ | Insertion (non conservative) | p.Cys28delinsTrpVal 
 MIXED | Inframe Deletion with stop lost (single AA) | p.104Terdelext*?
 _ | Inframe Deletion with stop lost (multiple AA non conservative) | p.Val98_Ter104delinsArgext*?
-_ Inframe insertion + stop gained | p.Leu339delinsHisPhe* | Ignore any AA inserted AFTER the stop codon
+_ | Inframe insertion + stop gained | p.Leu339delinsHisPhe* | Ignore any AA inserted AFTER the stop codon
 
 ### PON Annotation and Filtering
 Pave can annotate with PON values if the config 'pon_file' is used. The PON file must be a TSV with the following fields:
