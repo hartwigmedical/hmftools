@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientreporter.xml;
 
+import java.util.List;
+
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import org.immutables.value.Value;
@@ -12,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class SessionXML {
 
     @JacksonXmlProperty(localName = "data")
+    @JacksonXmlElementWrapper(useWrapping = false)
     @NotNull
-    public abstract ImportWGSXML importWGSNew();
+    public abstract List<ImportWGSXML> importWGSNew();
 }
