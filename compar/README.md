@@ -24,11 +24,11 @@ The key configuration values to set are:
 Filter | Description
 ---|---
 sample | Tumor sample ID, OR
-sample_id_file | File with column header SampleId and then list of sample IDs
+sample_id_file | File with column header SampleId and then list of sample IDs, optional Ref and New sample mappings (see example)
 categories | 'ALL', otherwise specify a comma-separated list from PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_DELETION, GERMLINE_SV, FUSION, DISRUPTION, CUPPA, CHORD, LILAC
 match_level | REPORTABLE (default) or DETAILED
-file_sources | List of sources and their file locations - see format below
-db_sources |  List of sources and their DB locations - see format below
+file_source_ref & file_source_new | File locations for ref and new sample data - see format below
+db_source_ref & db_source_new |  DB connection details for ref and new sample data - see format below
 output_dir | Path for output file
 
 ### Optional configuration
@@ -36,10 +36,17 @@ output_dir | Path for output file
 Filter | Description
 ---|---
 output_id | Optional: outfile file suffix
-source_sample_mappings | Optional: suffix to add to each sampleId by source, eg "run_01=_01,run_02=_02"
+
+### Sample ID Mappings
+If the same patient has different sample IDs for different runs and these are used for all filenames, then specify these mappings in the sample ID file, eg:
+```
+sample_id_mappings.csv
+SampleId,RefSampleId,NewSampleId
+COLO829T,COLO829_Ref,COLO829T_New
+```
 
 ### File Sourced Data
-Specify 'file_sources' config with a comma-separated list paths to each of directories containing pipeline output files.
+Specify 'file_source_ref' and 'file_source_new' config with a comma-separated list paths to each of directories containing pipeline output files.
 
 Set the path for each category of pipeline data being compared, or set 'sample_dir' as a default or some or all pipeline output files are in a single directory.
 
@@ -57,14 +64,16 @@ Wildcards '*' can be used in place of sampleIds, in which case Compar will repla
 
 Example 1
 ```
-file_sources="RUN_01;sample_dir=/path_to_sample_data/run_01/,RUN_02;sample_dir=/path_to_sample_data/run_02/"
+file_source_ref="sample_dir=/path_to_sample_data/run_01/"
+file_source_new="sample_dir=/path_to_sample_data/run_02/"
 ```
 
-will load run 01 data from /path_to_sample_data/run_01/ and run 02 data from /path_to_sample_data/run_02/
+will load reference run 01 data from /path_to_sample_data/run_01/ and new run 02 data from /path_to_sample_data/run_02/
 
 Example 2
 ```
-file_sources="RUN_01;sample_dir=/path_to_sample_data/run_01/;linx_dir=/path_to_sample_data/*/linx/,RUN_02 etc"
+file_source_ref="sample_dir=/path_to_ref_sample_data/run_01/;linx_dir=/path_to_ref_sample_data/*/linx/"
+file_source_new="sample_dir=/path_to_new_sample_data/run_01/;linx_dir=/path_to_new_linx_data/*/linx/"
 ```
 
 will load run 01 data Linx data from /path_to_sample_data/SAMPLE_ID/linx/ and all other data from /path_to_sample_data/run_01/ 
@@ -72,11 +81,12 @@ will load run 01 data Linx data from /path_to_sample_data/SAMPLE_ID/linx/ and al
 
 ### Database Sourced Data
 Specify 'db_sources' config with a comma-separated list of the follow:
-- SourceName;DbURL;DbUser;DbPassword
+- DbURL;DbUser;DbPassword
 
 Example:
 ```
-db_sources="PROD;mysql://localhost/prod;user1;pass1,TEST;mysql://localhost/test;user1;pass1"
+db_source_ref="mysql://localhost/prod;user1;pass1"
+db_source_new="mysql://localhost/test;user1;pass1"
 ```
 
 

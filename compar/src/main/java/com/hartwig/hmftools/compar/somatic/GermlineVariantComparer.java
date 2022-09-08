@@ -88,8 +88,7 @@ public class GermlineVariantComparer implements ItemComparer
         CompoundFilter filter = new CompoundFilter(true);
         filter.add(new PassingVariantFilter());
 
-        String vcfFile = !fileSources.GermlineVcf.isEmpty() ?
-                fileSources.GermlineVcf : PurpleCommon.purpleGermlineVcfFile(fileSources.Purple, sampleId);
+        String vcfFile = PurpleCommon.purpleGermlineVcfFile(fileSources.Purple, sampleId);
 
         try
         {

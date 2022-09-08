@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.compar;
 
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.LINX_SOMATIC_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.CommonUtils.SUB_ITEM_DELIM;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+
+import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
 
 public class FileSources
 {
@@ -11,8 +14,6 @@ public class FileSources
     public final String Linx;
     public final String LinxGermline;
     public final String Purple;
-    public final String SomaticVcf;
-    public final String GermlineVcf;
     public final String Cuppa;
     public final String Lilac;
     public final String Chord;
@@ -25,19 +26,13 @@ public class FileSources
     public static final String LILAC_DIR = "lilac_dir";
     public static final String CHORD_DIR = "chord_dir";
 
-    // specify Sage VCFs instead of the default Purple VCFs
-    public static final String SOMATIC_VCF = "somatic_vcf";
-    public static final String GERMLINE_VCF = "germline_vcf";
-
-    public FileSources(final String source, final String linx, final String purple, final String somaticVcf, final String germlineVcf,
-            final String linxGermline, final String cuppa, final String lilac, final String chord)
+    public FileSources(final String source, final String linx, final String purple, final String linxGermline, final String cuppa,
+            final String lilac, final String chord)
     {
         Source = source;
         Linx = linx;
         LinxGermline = linxGermline;
         Purple = purple;
-        SomaticVcf = somaticVcf;
-        GermlineVcf = germlineVcf;
         Cuppa = cuppa;
         Lilac = lilac;
         Chord = chord;
@@ -45,52 +40,37 @@ public class FileSources
 
     public static FileSources sampleInstance(final FileSources fileSources, final String sampleId)
     {
-        if(!fileSources.Linx.contains("*") && !fileSources.Purple.contains("*") && !fileSources.SomaticVcf.contains("*")
-        && !fileSources.GermlineVcf.contains("*"))
-        {
-            return fileSources;
-        }
-
         return new FileSources(
                 fileSources.Source,
                 fileSources.Linx.replaceAll("\\*", sampleId),
                 fileSources.Purple.replaceAll("\\*", sampleId),
-                fileSources.SomaticVcf.replaceAll("\\*", sampleId),
-                fileSources.GermlineVcf.replaceAll("\\*", sampleId),
                 fileSources.LinxGermline.replaceAll("\\*", sampleId),
                 fileSources.Cuppa.replaceAll("\\*", sampleId),
                 fileSources.Lilac.replaceAll("\\*", sampleId),
                 fileSources.Chord.replaceAll("\\*", sampleId));
     }
 
-    public static FileSources fromConfig(final String fileSourceStr)
+    public static FileSources fromConfig(final String sourceName, final String fileSourceStr)
     {
         String[] values = fileSourceStr.split(ITEM_DELIM, -1);
 
-        if(values.length < 2)
-        {
-            CMP_LOGGER.error("invalid file source config entry", fileSourceStr);
-            return null;
-        }
-
-        String source = values[0];
         String sampleDir = "";
-        String linxDir = "";
-        String linxGermlineDir = "";
-        String purpleDir = "";
-        String somaticVcf = "";
-        String germlineVcf = "";
-        String cuppaDir = "";
-        String lilacDir = "";
-        String chordDir = "";
 
-        int itemIndex = 1;
+        int itemIndex = 0;
 
         if(values[itemIndex].startsWith(SAMPLE_DIR))
         {
-            sampleDir = checkAddDirSeparator(values[1].split(SUB_ITEM_DELIM)[1]);
+            sampleDir = checkAddDirSeparator(values[itemIndex].split(SUB_ITEM_DELIM)[1]);
             ++itemIndex;
         }
+
+        // by default use the sample root directory and then default pipeline directory names per tool and mode
+        String linxDir = getDirectory(sampleDir, PipelineToolDirectories.LINX_SOMATIC_DIR);
+        String linxGermlineDir = getDirectory(sampleDir, PipelineToolDirectories.LINX_GERMLINE_DIR);
+        String purpleDir = getDirectory(sampleDir, PipelineToolDirectories.PURPLE_DIR);
+        String cuppaDir = getDirectory(sampleDir, PipelineToolDirectories.CUPPA_DIR);
+        String lilacDir = getDirectory(sampleDir, PipelineToolDirectories.LILAC_DIR);
+        String chordDir = getDirectory(sampleDir, PipelineToolDirectories.CHORD_DIR);
 
         for(int i = itemIndex; i < values.length; ++i)
         {
@@ -114,14 +94,6 @@ public class FileSources
             {
                 purpleDir = getDirectory(sampleDir, value);
             }
-            else if(type.equals(SOMATIC_VCF))
-            {
-                somaticVcf = value;
-            }
-            else if(type.equals(GERMLINE_VCF))
-            {
-                germlineVcf = value;
-            }
             else if(type.equals(LILAC_DIR))
             {
                 lilacDir = value;
@@ -136,25 +108,7 @@ public class FileSources
             }
         }
 
-        if(linxDir.isEmpty())
-            linxDir = sampleDir;
-
-        if(linxGermlineDir.isEmpty())
-            linxGermlineDir = sampleDir;
-
-        if(purpleDir.isEmpty())
-            purpleDir = sampleDir;
-
-        if(chordDir.isEmpty())
-            chordDir = sampleDir;
-
-        if(cuppaDir.isEmpty())
-            cuppaDir = sampleDir;
-
-        if(lilacDir.isEmpty())
-            lilacDir = sampleDir;
-
-        return new FileSources(source, linxDir, purpleDir, somaticVcf, germlineVcf, linxGermlineDir, cuppaDir, lilacDir, chordDir);
+        return new FileSources(sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir);
     }
 
     private static String getDirectory(final String sampleDir, final String typeDir)

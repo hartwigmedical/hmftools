@@ -118,17 +118,12 @@ public class CommonUtils
             else
             {
                 FileSources fileSources = config.FileSources.get(sourceName);
-                sourceItems.add(comparer.loadFromFile(sourceSampleId, FileSources.sampleInstance(fileSources, sampleId)));
+                sourceItems.add(comparer.loadFromFile(sourceSampleId, FileSources.sampleInstance(fileSources, sourceSampleId)));
             }
         }
 
-        for(int i = 0; i < config.SourceNames.size() - 1; ++i)
-        {
-            for(int j = i + 1; j < config.SourceNames.size(); ++j)
-            {
-                CommonUtils.compareItems(mismatches, matchLevel, config.Thresholds, sourceItems.get(i), sourceItems.get(j));
-            }
-        }
+        // previously support comparisons for N sources but now can only be 2 as controlled by config
+        CommonUtils.compareItems(mismatches, matchLevel, config.Thresholds, sourceItems.get(0), sourceItems.get(1));
     }
 
     public static void compareItems(

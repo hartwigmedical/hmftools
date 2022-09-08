@@ -1,27 +1,33 @@
 package com.hartwig.hmftools.compar;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.compar.Category.ALL_CATEGORIES;
-import static com.hartwig.hmftools.compar.Category.DRIVER;
-import static com.hartwig.hmftools.compar.Category.FUSION;
+import static com.hartwig.hmftools.compar.Category.LINX_CATEGORIES;
+import static com.hartwig.hmftools.compar.Category.PURPLE_CATEGORIES;
+import static com.hartwig.hmftools.compar.Category.purpleCategories;
+import static com.hartwig.hmftools.compar.Category.linxCategories;
 import static com.hartwig.hmftools.compar.CommonUtils.DATA_DELIM;
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
-import static com.hartwig.hmftools.compar.CommonUtils.SUB_ITEM_DELIM;
 import static com.hartwig.hmftools.compar.FileSources.fromConfig;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_DEFAULT_ARGS;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -32,8 +38,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
-import com.hartwig.hmftools.common.ensemblcache.GeneNameMapping;
-import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -51,7 +55,6 @@ public class ComparConfig
 
     public final Map<String,DatabaseAccess> DbConnections; // database access details keyed by source
     public final Map<String,FileSources> FileSources; // directories per type and keyed by source
-    public final Map<String,String> SourceSampleIds; // as required, mapping from sampleId to source sampleId
 
     public final Set<String> DriverGenes;
 
@@ -63,36 +66,51 @@ public class ComparConfig
     public final boolean WriteDetailed;
     public final int Threads;
 
+    private final Map<String,SampleIdMapping> mSampleIdMappings; // if required, mapping from original to new sampleId
     private boolean mIsValid;
 
     // config strings
     public static final String CATEGORIES = "categories";
     public static final String MATCH_LEVEL = "match_level";
 
-    public static final String DB_SOURCES = "db_sources";
-    public static final String FILE_SOURCES = "file_sources";
+    public static final String DB_SOURCE = "db_source";
+    public static final String FILE_SOURCE = "file_source";
     public static final String THRESHOLDS = "thresholds";
 
     public static final String SAMPLE = "sample";
-    public static final String SOURCE_SAMPLE_MAPPINGS = "source_sample_mappings";
     public static final String WRITE_DETAILED_FILES = "write_detailed";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
+
+    public static final String REF_SOURCE = "ref";
+    public static final String NEW_SOURCE = "new";
 
     public ComparConfig(final CommandLine cmd)
     {
         mIsValid = true;
 
         SampleIds = Lists.newArrayList();
-        loadSampleIds(cmd);
+        mSampleIdMappings = Maps.newHashMap();
 
         Categories = Maps.newHashMap();
 
         MatchLevel matchLevel = MatchLevel.valueOf(cmd.getOptionValue(MATCH_LEVEL, REPORTABLE.toString()));
 
-        if(!cmd.hasOption(CATEGORIES) || cmd.getOptionValue(CATEGORIES).equals(ALL_CATEGORIES))
+        String categoriesStr = cmd.getOptionValue(CATEGORIES, ALL_CATEGORIES);
+
+        CMP_LOGGER.info("default match level {}, categories: {}", matchLevel, categoriesStr);
+
+        if(categoriesStr.equals(ALL_CATEGORIES))
         {
             Arrays.stream(Category.values()).forEach(x -> Categories.put(x, matchLevel));
+        }
+        else if(categoriesStr.contains(PURPLE_CATEGORIES) || categoriesStr.contains(LINX_CATEGORIES))
+        {
+            if(categoriesStr.contains(PURPLE_CATEGORIES))
+                purpleCategories().forEach(x -> Categories.put(x, matchLevel));
+
+            if(categoriesStr.contains(LINX_CATEGORIES))
+                linxCategories(). forEach(x -> Categories.put(x, matchLevel));
         }
         else
         {
@@ -108,6 +126,8 @@ public class ComparConfig
                     String[] catItems = catData.split("=");
                     category = Category.valueOf(catItems[0]);
                     specificMatchLevel = MatchLevel.valueOf(catItems[1]);
+
+                    CMP_LOGGER.info("specific category({}) and matchLevel({})", category, specificMatchLevel);
                 }
                 else
                 {
@@ -119,33 +139,33 @@ public class ComparConfig
             }
         }
 
-        CMP_LOGGER.info("comparing categories: {}", Categories.isEmpty() ? ALL_CATEGORIES : Categories.toString());
-
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
         WriteDetailed = cmd.hasOption(WRITE_DETAILED_FILES);
         Threads = parseThreads(cmd);
 
+        SourceNames = Lists.newArrayList(REF_SOURCE, NEW_SOURCE);
+        loadSampleIds(cmd);
+
         DbConnections = Maps.newHashMap();
         FileSources = Maps.newHashMap();
-        SourceNames = Lists.newArrayList();
-        loadDatabaseSources(cmd);
-        loadFileSources(cmd);
+
+        if(cmd.hasOption(formConfigSourceStr(DB_SOURCE, REF_SOURCE)) && cmd.hasOption(formConfigSourceStr(DB_SOURCE, NEW_SOURCE)))
+        {
+            loadDatabaseSources(cmd);
+        }
+        else if(cmd.hasOption(formConfigSourceStr(FILE_SOURCE, REF_SOURCE)) && cmd.hasOption(formConfigSourceStr(FILE_SOURCE, NEW_SOURCE)))
+        {
+            loadFileSources(cmd);
+        }
+        else
+        {
+            CMP_LOGGER.error("missing DB or file source ref and new config");
+            mIsValid = false;
+        }
 
         Thresholds = new DiffThresholds();
         Thresholds.loadConfig(cmd.getOptionValue(THRESHOLDS, ""));
-
-        SourceSampleIds = Maps.newHashMap();
-        if(cmd.hasOption(SOURCE_SAMPLE_MAPPINGS))
-        {
-            String[] sampleMappings = cmd.getOptionValue(SOURCE_SAMPLE_MAPPINGS).split(DATA_DELIM);
-
-            for(String sampleMapping : sampleMappings)
-            {
-                String[] mappingItems = sampleMapping.split(SUB_ITEM_DELIM);
-                SourceSampleIds.put(mappingItems[0], mappingItems[1]);
-            }
-        }
 
         DriverGenes = Sets.newHashSet();
 
@@ -164,76 +184,124 @@ public class ComparConfig
 
     public String sourceSampleId(final String source, final String sampleId)
     {
-        String suffix = SourceSampleIds.get(source);
-        return suffix != null ? sampleId + suffix : sampleId;
+        SampleIdMapping mapping = mSampleIdMappings.get(sampleId);
+
+        if(mapping == null || !mapping.SourceMapping.containsKey(source))
+            return sampleId;
+
+        return mapping.SourceMapping.get(source);
     }
 
     public boolean isValid() { return mIsValid; }
     public boolean singleSample() { return SampleIds.size() == 1; }
     public boolean multiSample() { return SampleIds.size() > 1; }
 
-    private void loadSampleIds(final CommandLine cmd)
+    private class SampleIdMapping
     {
-        if(cmd.hasOption(SAMPLE_ID_FILE))
-        {
-            SampleIds.addAll(ConfigUtils.loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE)));
+        public final String SampleId;
+        public Map<String,String> SourceMapping;
 
-            if(SampleIds.isEmpty())
-            {
-                mIsValid = false;
-            }
-        }
-        else if(cmd.hasOption(SAMPLE))
+        public SampleIdMapping(final String sampleId)
         {
-            SampleIds.add(cmd.getOptionValue(SAMPLE));
+            SampleId = sampleId;
+            SourceMapping = Maps.newHashMap();
         }
     }
 
-    private void loadDatabaseSources(final CommandLine cmd)
+    private static final String COL_SAMPLE_ID = "SampleId";
+    private static final String COL_REF_SAMPLE_ID = "RefSampleId";
+    private static final String COL_NEW_SAMPLE_ID = "NewSampleId";
+
+    private void loadSampleIds(final CommandLine cmd)
     {
-        if(!cmd.hasOption(DB_SOURCES))
-            return;
-
-        // form DB1;db_url;db_user;db_pass DB2;db_url;db_user;db_pass etc
-        String dbSourcesStr = cmd.getOptionValue(DB_SOURCES, "");
-        String[] dbSources = dbSourcesStr.split(DATA_DELIM, -1);
-
-        if(dbSources.length != 2)
+        if(cmd.hasOption(SAMPLE))
         {
-            CMP_LOGGER.error("invalid DB source config({}) - must contain 2 entries", dbSourcesStr);
+            SampleIds.add(cmd.getOptionValue(SAMPLE));
+            return;
+        }
+
+        if(!cmd.hasOption(SAMPLE_ID_FILE))
+        {
+            CMP_LOGGER.error("missing sample_id_file or sample config");
             mIsValid = false;
             return;
         }
 
-        for(String dbSourceStr : dbSources)
+        try
         {
-            String[] dbItems = dbSourceStr.split(ITEM_DELIM, -1);
+            List<String> lines = Files.readAllLines(Paths.get(cmd.getOptionValue(SAMPLE_ID_FILE)));
+            String header = lines.get(0);
+            lines.remove(0);
 
-            if(dbItems.length != 4)
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
+
+            int sampleIndex = fieldsIndexMap.get(COL_SAMPLE_ID);
+            Integer refSampleIndex = fieldsIndexMap.get(COL_REF_SAMPLE_ID);
+            Integer newSampleIndex = fieldsIndexMap.get(COL_NEW_SAMPLE_ID);
+
+            for(String line : lines)
             {
-                CMP_LOGGER.error("invalid DB source config({})", dbSourceStr);
+                String[] values = line.split(DATA_DELIM, -1);
+
+                String sampleId = values[sampleIndex];
+                SampleIds.add(sampleId);
+
+                String refSampleId = refSampleIndex != null ? values[refSampleIndex] : null;
+                String newSampleId = newSampleIndex != null ? values[newSampleIndex] : null;
+
+                if(refSampleId != null || newSampleId != null)
+                {
+                    SampleIdMapping mapping = new SampleIdMapping(sampleId);
+                    mSampleIdMappings.put(sampleId, mapping);
+
+                    if(refSampleId != null && SourceNames.size() >= 1);
+                        mapping.SourceMapping.put(SourceNames.get(0), refSampleId);
+
+                    if(newSampleId != null && SourceNames.size() >= 2)
+                        mapping.SourceMapping.put(SourceNames.get(1), newSampleId);
+                }
+            }
+
+            CMP_LOGGER.info("loaded {} samples from file", SampleIds.size());
+        }
+        catch(IOException e)
+        {
+            CMP_LOGGER.error("failed to load sample IDs: {}", e.toString());
+        }
+    }
+
+    private static String formConfigSourceStr(final String sourceType, final String sourceName)
+    {
+        return format("%s_%s", sourceType, sourceName);
+    }
+
+    private void loadDatabaseSources(final CommandLine cmd)
+    {
+        if(!cmd.hasOption(formConfigSourceStr(DB_SOURCE, REF_SOURCE)) || !cmd.hasOption(formConfigSourceStr(DB_SOURCE, NEW_SOURCE)))
+            return;
+
+        // form DB1;db_url;db_user;db_pass DB2;db_url;db_user;db_pass etc
+
+        for(String sourceName : SourceNames)
+        {
+            String dbConfigValue = cmd.getOptionValue(formConfigSourceStr(DB_SOURCE, sourceName));
+            String[] dbItems = dbConfigValue.split(ITEM_DELIM, -1);
+
+            if(dbItems.length != 3)
+            {
+                CMP_LOGGER.error("invalid DB source config({})", dbConfigValue);
                 mIsValid = false;
                 return;
             }
 
-            String sourceName = dbItems[0];
-            String dbUrl = "jdbc:" + dbItems[1] + DB_DEFAULT_ARGS;
-            String dbUsername = dbItems[2];
-            String dbPass = dbItems[3];
+            String dbUrl = "jdbc:" + dbItems[0] + DB_DEFAULT_ARGS;
+            String dbUsername = dbItems[1];
+            String dbPass = dbItems[2];
 
             try
             {
                 final DatabaseAccess dbAccess = new DatabaseAccess(dbUsername, dbPass, dbUrl);
-
-                if(DbConnections.containsKey(sourceName))
-                {
-                    CMP_LOGGER.error("repeated DB source name({})", sourceName);
-                    mIsValid = false;
-                    return;
-                }
-
                 DbConnections.put(sourceName, dbAccess);
-                SourceNames.add(sourceName);
             }
             catch(SQLException e)
             {
@@ -244,24 +312,14 @@ public class ComparConfig
 
     private void loadFileSources(final CommandLine cmd)
     {
-        if(!cmd.hasOption(FILE_SOURCES))
-            return;
-
         // form: sample_dir=pipe_v1;/path_to_sample_dir/;linx_dir=linx;purple_dir=purple etc OR
         // form: linx_dir=pipe_v1;/path_to_linx_data/;purple_dir/path_to_purple_data/ etc OR
-        String fileSourcesStr = cmd.getOptionValue(FILE_SOURCES, "");
-        String[] fileSourceEntries = fileSourcesStr.split(DATA_DELIM, -1);
 
-        if(fileSourceEntries.length != 2)
+        for(String sourceName : SourceNames)
         {
-            CMP_LOGGER.error("invalid file source config({}) - must contain 2 entries", fileSourceEntries);
-            mIsValid = false;
-            return;
-        }
+            String fileConfigValue = cmd.getOptionValue(formConfigSourceStr(FILE_SOURCE, sourceName));
 
-        for(String fileSourceStr : fileSourceEntries)
-        {
-            FileSources fileSources = fromConfig(fileSourceStr);
+            FileSources fileSources = fromConfig(sourceName, fileConfigValue);
 
             if(fileSources == null)
             {
@@ -270,7 +328,6 @@ public class ComparConfig
             }
 
             FileSources.put(fileSources.Source, fileSources);
-            SourceNames.add(fileSources.Source);
         }
     }
 
@@ -283,12 +340,13 @@ public class ComparConfig
         options.addOption(MATCH_LEVEL, true, "Match level from REPORTABLE (default) or DETAILED");
         options.addOption(SAMPLE, true, "Sample data file");
         addSampleIdFile(options);
-        options.addOption(SOURCE_SAMPLE_MAPPINGS, true, "Optional specific source suffixes");
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
         options.addOption(THRESHOLDS, true, "In form: Field,AbsoluteDiff,PercentDiff, separated by ';'");
 
-        options.addOption(DB_SOURCES, true, "Database configurations keyed by soure name");
-        options.addOption(FILE_SOURCES, true, "File locations keyed by source name");
+        options.addOption(formConfigSourceStr(DB_SOURCE, REF_SOURCE), true, "Database configurations for reference data");
+        options.addOption(formConfigSourceStr(DB_SOURCE, NEW_SOURCE), true, "Database configurations for new data");
+        options.addOption(formConfigSourceStr(FILE_SOURCE, REF_SOURCE), true, "File locations for reference data");
+        options.addOption(formConfigSourceStr(FILE_SOURCE, NEW_SOURCE), true, "File locations for new data");
         options.addOption(WRITE_DETAILED_FILES, false, "Write per-type details files");
         addThreadOptions(options);
 
@@ -313,7 +371,7 @@ public class ComparConfig
         SourceNames = Lists.newArrayList();
 
         Thresholds = new DiffThresholds();
-        SourceSampleIds = Maps.newHashMap();
         DriverGenes = Sets.newHashSet();
+        mSampleIdMappings = Maps.newHashMap();
     }
 }

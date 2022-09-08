@@ -237,8 +237,7 @@ public class SomaticVariantComparer implements ItemComparer
         filter.add(new PassingVariantFilter());
 
         // use the Purple suffix if not specified
-        String vcfFile = !fileSources.SomaticVcf.isEmpty() ?
-                fileSources.SomaticVcf : PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId);
+        String vcfFile = PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId);
 
         try
         {
