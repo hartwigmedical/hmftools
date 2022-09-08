@@ -59,11 +59,14 @@ public final class HLAAllele {
     public static String HLApresenceInTumor(@NotNull LilacAllele allele, @NotNull String mutationString, boolean hasReliablePurity) {
         double tumorCopies = Double.parseDouble(HLAAllele.SINGLE_DIGIT.format(allele.tumorCopyNumber()));
         String presenceInTumor = Strings.EMPTY;
+        boolean mutation = mutationString.contains("missense") || mutationString.contains("nonsense or frameshift")
+                || mutationString.contains("splice") || mutationString.contains("synonymous") || mutationString.contains("inframe indel");
         if (!hasReliablePurity || (tumorCopies == 0 && !mutationString.equals("None"))) {
             presenceInTumor = "Unknown";
-        } else if (mutationString.contains("missense") || mutationString.contains("nonsense or frameshift") || mutationString.contains(
-                "splice") || mutationString.contains("synonymous") || mutationString.contains("inframe indel")) {
+        } else if (tumorCopies >= 1 && mutation) {
             presenceInTumor = "Yes, but mutation(s) detected";
+        } else if (tumorCopies == 0 && mutation) {
+            presenceInTumor = "Yes";
         } else if (mutationString.equals("None")) {
             presenceInTumor = "No";
         }
