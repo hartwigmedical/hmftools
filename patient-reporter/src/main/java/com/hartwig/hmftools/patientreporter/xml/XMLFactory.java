@@ -29,136 +29,97 @@ public class XMLFactory {
     @NotNull
     public static ReportXML generateXMLData(@NotNull AnalysedPatientReport report) {
         Map<String, KeyXML> mapXml = Maps.newHashMap();
-        mapXml.put("item1",
+        mapXml.put("itemRefNummerWgs",
                 ImmutableKeyXML.builder()
                         .keyPath("refNummerWgs")
                         .valuePath(Map.of("value", report.sampleReport().tumorSampleId()))
                         .build());
-        mapXml.put("item2", ImmutableKeyXML.builder().keyPath("wgsRedenAanvraag").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsRedenAanvraag",
+                ImmutableKeyXML.builder().keyPath("wgsRedenAanvraag").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsGevrOndzTher",
+                ImmutableKeyXML.builder().keyPath("wgsGevrOndzTher").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsGevrOndzTherAnd",
+                ImmutableKeyXML.builder().keyPath("wgsGevrOndzTherAnd").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsGevrOndzDiffDiag",
+                ImmutableKeyXML.builder().keyPath("wgsGevrOndzDiffDiag").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsGevrOndzDiffDiagAnd",
+                ImmutableKeyXML.builder().keyPath("wgsGevrOndzDiffDiagAnd").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsRefNummer", ImmutableKeyXML.builder().keyPath("wgsRefNummer").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsPercNeoCellenEx",
+                ImmutableKeyXML.builder().keyPath("wgsPercNeoCellenEx").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsPercNeoCellenBeoord",
+                ImmutableKeyXML.builder().keyPath("wgsPercNeoCellenBeoord").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsPercNeoCellen",
+                ImmutableKeyXML.builder().keyPath("wgsPercNeoCellen").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsDatasheetSeqAnaPanel",
+                ImmutableKeyXML.builder().keyPath("wgsDatasheetSeqAnaPanel").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsPlatform", ImmutableKeyXML.builder().keyPath("wgsPlatform").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsPlatformAnd",
+                ImmutableKeyXML.builder().keyPath("wgsPlatformAnd").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsTumorPurity",
+                ImmutableKeyXML.builder().keyPath("wgsTumorPurity").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsGemTuPloid",
+                ImmutableKeyXML.builder().keyPath("wgsGemTuPloid").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsCupAnalyse",
+                ImmutableKeyXML.builder().keyPath("wgsCupAnalyse").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsDisclaimerTonen",
+                ImmutableKeyXML.builder().keyPath("wgsDisclaimerTonen").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsMolecInter",
+                ImmutableKeyXML.builder().keyPath("wgsMolecInter").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsKlinInter", ImmutableKeyXML.builder().keyPath("wgsKlinInter").valuePath(Map.of("value", Strings.EMPTY)).build());
+        mapXml.put("itemWgsAutoKMBP", ImmutableKeyXML.builder().keyPath("wgsAutoKMBP").valuePath(Map.of("value", Strings.EMPTY)).build());
 
+        //  addReportableVariantsToXML(report.genomicAnalysis().reportableVariants(), mapXml); //TODO
+        //  addGainLossesToXML(report.genomicAnalysis().gainsAndLosses(), report.genomicAnalysis().cnPerChromosome(), mapXml); //TODO
         addFusionToXML(report.genomicAnalysis().geneFusions(), mapXml);
-        // mapXml.put("item3", ImmutableKeyXML.builder().keyPath("fusions").valuePath(Map.of("value", ))).build());
+
+        //signature
+        mapXml.put("importwgs.wgsms.line[1]msscore",
+                ImmutableKeyXML.builder()
+                        .keyPath("importwgs.wgsms.line[1]msscore")
+                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().microsatelliteIndelsPerMb())))
+                        .build());
+        mapXml.put("importwgs.wgsms.line[1]msstatus",
+                ImmutableKeyXML.builder()
+                        .keyPath("importwgs.wgsms.line[1]msstatus")
+                        .valuePath(Map.of("value", report.genomicAnalysis().microsatelliteStatus().toString()))
+                        .build());
+        mapXml.put("importwgs.wgsms.line[1]tumuload",
+                ImmutableKeyXML.builder()
+                        .keyPath("importwgs.wgsms.line[1]tumuload")
+                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().tumorMutationalLoad())))
+                        .build());
+        mapXml.put("importwgs.wgsms.line[1]tumulosta",
+                ImmutableKeyXML.builder()
+                        .keyPath("importwgs.wgsms.line[1]tumulosta")
+                        .valuePath(Map.of("value", report.genomicAnalysis().tumorMutationalLoadStatus().toString()))
+                        .build());
+        mapXml.put("importwgs.wgsms.line[1]tutmb",
+                ImmutableKeyXML.builder()
+                        .keyPath("importwgs.wgsms.line[1]tutmb")
+                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().tumorMutationalBurden())))
+                        .build());
+        mapXml.put("importwgs.wgsms.line[1]horesco",
+                ImmutableKeyXML.builder()
+                        .keyPath("importwgs.wgsms.line[1]horesco")
+                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().tumorMutationalBurden())))
+                        .build());
+        mapXml.put("importwgs.wgsms.line[1]horestu",
+                ImmutableKeyXML.builder()
+                        .keyPath("importwgs.wgsms.line[1]horestu")
+                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().chordHrdValue())))
+                        .build());
+        mapXml.put("importwgs.wgsms.line[1]geenpv",
+                ImmutableKeyXML.builder().keyPath("importwgs.wgsms.line[1]geenpv").valuePath(Map.of("value", Strings.EMPTY)).build());
+
+        // addHomozygousDisruptionsToXML(report.genomicAnalysis().homozygousDisruptions(), mapXml); //TODO
+        //  addVirussesToXML(report.genomicAnalysis().reportableViruses(), mapXml); //TODO
 
         TreeMap<String, KeyXML> sorted = new TreeMap<>();
         sorted.putAll(mapXml);
 
         List<ImportWGSXML> importWGSXML = Lists.newArrayList();
         importWGSXML.add(ImmutableImportWGSXML.builder().item(sorted.values()).build());
-
-        //                .item(mapXml.put("item1",
-        //                        ImmutableKeyXML.of(Strings.EMPTY,  Map.of("value", report.sampleReport().tumorSampleId())).))
-        //                .build();
-
-        //                        Map.of("item2",
-        //                                ImmutableKeyXML.builder()
-        //                                        .keyPath("wgsGevrOndzTherAnd")
-        //                                        .valuePath(Map.of("value", Strings.EMPTY)).build()));
-        //                .refNummerWgs(ImmutableKeyItem.builder()
-        //                        .keyPath(ImmutableKeyXML.builder()
-        //                                .keyPath("refNummerWgs")
-        //                                .valuePath(Map.of("value", report.sampleReport().tumorSampleId()))
-        //                                .build())
-        //                        .build())
-        //                .wgsRedenAanvraag(ImmutableKeyItem.builder()
-        //                        .keyPath(ImmutableKeyXML.builder().keyPath("wgsRedenAanvraag").valuePath(Map.of("value", Strings.EMPTY)).build()).build())
-        //                        .wgsGevrOndzTher(Map.of("item", ImmutableKeyXML.builder()
-        //                                .keyPath("wgsGevrOndzTher")
-        //                                .valuePath(Map.of("value", Strings.EMPTY))
-        //                                .build()))
-        //                        .wgsGevrOndzTherAnd(ImmutableKeyXML.builder()
-        //                                .keyPath("wgsGevrOndzTherAnd")
-        //                                .valuePath(Map.of("value", Strings.EMPTY))
-        //                                .build())
-        //                        .wgsGevrOndzDiffDiag(ImmutableKeyXML.builder()
-        //                                .keyPath("wgsGevrOndzDiffDiag")
-        //                                .valuePath(Map.of("value", Strings.EMPTY))
-        //                                .build())
-        //                        .wgsGevrOndzDiffDiagAnd(ImmutableKeyXML.builder()
-        //                                .keyPath("wgsGevrOndzDiffDiagAnd")
-        //                                .valuePath(Map.of("value", Strings.EMPTY))
-        //                                .build())
-        //                        .wgsRefNummer(ImmutableKeyXML.builder()
-        //                                .keyPath("wgsRefNummer")
-        //                                .valuePath(Map.of("value", report.sampleReport().tumorSampleId()))
-        //                                .build())
-        //                        .wgsPercNeoCellenEx(ImmutableKeyXML.builder()
-        //                                .keyPath("wgsPercNeoCellenEx")
-        //                                .valuePath(Map.of("value", Strings.EMPTY))
-        //                                .build())
-        //                        .wgsPercNeoCellenBeoord(ImmutableKeyXML.builder()
-        //                                .keyPath("wgsPercNeoCellenBeoord")
-        //                                .valuePath(Map.of("value", Strings.EMPTY))
-        //                                .build())
-        //                        .wgsPercNeoCellen(ImmutableKeyXML.builder()
-        //                                .keyPath("wgsPercNeoCellen")
-        //                                .valuePath(Map.of("value", Strings.EMPTY))
-        //                                .build())
-        //                        .wgsDatasheetSeqAnaPanel(ImmutableKeyXML.builder()
-        //                                .keyPath("wgsDatasheetSeqAnaPanel")
-        //                                .valuePath(Map.of("value", Strings.EMPTY))
-        //                                .build())
-        //                        .wgsPlatform(ImmutableKeyXML.builder().keyPath("wgsPlatform").valuePath(Map.of("value", Strings.EMPTY)).build())
-        //                        .wgsPlatformAnd(ImmutableKeyXML.builder()
-        //                                .keyPath("wgsPlatformAnd")
-        //                                .valuePath(Map.of("value", Strings.EMPTY))
-        //                                .build())
-        //                        .wgsTumorPurity(ImmutableKeyXML.builder()
-        //                                .keyPath("wgsTumorPurity")
-        //                                .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().impliedPurity())))
-        //                                .build())
-        //                        .wgsGemTuPloid(ImmutableKeyXML.builder()
-        //                                .keyPath("wgsGemTuPloid")
-        //                                .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().averageTumorPloidy())))
-        //                                .build())
-        //                        .reportableVariants(addReportableVariantsToXML(report.genomicAnalysis().reportableVariants()))
-        //                        .gainsAndLosses(addGainLossesToXML(report.genomicAnalysis().gainsAndLosses(),
-        //                                report.genomicAnalysis().cnPerChromosome()))
-        //                        .geneFusions(addFusionToXML(report.genomicAnalysis().geneFusions()))
-        //                        .signature(ImmutableSignatureXML.builder()
-        //                                .msscore(ImmutableKeyXML.builder()
-        //                                        .keyPath("importwgs.wgsms.line[1]msscore")
-        //                                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().microsatelliteIndelsPerMb())))
-        //                                        .build())
-        //                                .msstatus(ImmutableKeyXML.builder()
-        //                                        .keyPath("importwgs.wgsms.line[1]msstatus")
-        //                                        .valuePath(Map.of("value", report.genomicAnalysis().microsatelliteStatus().toString()))
-        //                                        .build())
-        //                                .tumuload(ImmutableKeyXML.builder()
-        //                                        .keyPath("importwgs.wgsms.line[1]tumuload")
-        //                                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().tumorMutationalLoad())))
-        //                                        .build())
-        //                                .tumulosta(ImmutableKeyXML.builder()
-        //                                        .keyPath("importwgs.wgsms.line[1]tumulosta")
-        //                                        .valuePath(Map.of("value", report.genomicAnalysis().tumorMutationalLoadStatus().toString()))
-        //                                        .build())
-        //                                .tutmb(ImmutableKeyXML.builder()
-        //                                        .keyPath("importwgs.wgsms.line[1]tutmb")
-        //                                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().tumorMutationalBurden())))
-        //                                        .build())
-        //                                .horesco(ImmutableKeyXML.builder()
-        //                                        .keyPath("importwgs.wgsms.line[1]horesco")
-        //                                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().chordHrdValue())))
-        //                                        .build())
-        //                                .horestu(ImmutableKeyXML.builder()
-        //                                        .keyPath("importwgs.wgsms.line[1]horestu")
-        //                                        .valuePath(Map.of("value", report.genomicAnalysis().chordHrdStatus().toString()))
-        //                                        .build())
-        //                                .geenpv(ImmutableKeyXML.builder()
-        //                                        .keyPath("importwgs.wgsms.line[1]geenpv")
-        //                                        .valuePath(Map.of("value", Strings.EMPTY))
-        //                                        .build())
-        //                                .build())
-        //                        .homozygousDisruptions(addHomozygousDisruptionsToXML(report.genomicAnalysis().homozygousDisruptions()))
-        //                        .reportableViruses(addVirussesToXML(report.genomicAnalysis().reportableViruses()))
-        //                        .wgsCupAnalyse(ImmutableKeyXML.builder().keyPath("wgsCupAnalyse").valuePath(Map.of("value", Strings.EMPTY)).build())
-        //                        .wgsDisclaimerTonen(ImmutableKeyXML.builder()
-        //                                .keyPath("wgsDisclaimerTonen")
-        //                                .valuePath(Map.of("value", Strings.EMPTY))
-        //                                .build())
-        //                        .wgsMolecInter(ImmutableKeyXML.builder().keyPath("wgsMolecInter").valuePath(Map.of("value", Strings.EMPTY)).build())
-        //                        .wgsKlinInter(ImmutableKeyXML.builder().keyPath("wgsKlinInter").valuePath(Map.of("value", Strings.EMPTY)).build())
-        //                        .wgsAutoKMBP(ImmutableKeyXML.builder().keyPath("wgsAutoKMBP").valuePath(Map.of("value", Strings.EMPTY)).build())
-        //                        .build();
 
         return ImmutableReportXML.builder()
                 .protocol(ImmutableXMLProtocol.builder()
