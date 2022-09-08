@@ -130,8 +130,6 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final VirusInterpreterDAO virusInterpreterDAO;
     @NotNull
-    private final HlaTypeDAO hlaTypeDAO;
-    @NotNull
     private final ProtectDAO protectDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
@@ -167,7 +165,6 @@ public class DatabaseAccess implements AutoCloseable {
         this.chordDAO = new ChordDAO(context);
         this.virusBreakendDAO = new VirusBreakendDAO(context);
         this.virusInterpreterDAO = new VirusInterpreterDAO(context);
-        this.hlaTypeDAO = new HlaTypeDAO(context);
         this.protectDAO = new ProtectDAO(context);
     }
 
@@ -489,13 +486,6 @@ public class DatabaseAccess implements AutoCloseable {
         snpCheckDAO.write(sample, isPass);
     }
 
-    /*
-    public void writeHla(@NotNull final String sample, @NotNull final HlaTypes type, @NotNull final List<HlaTypeDetails> details) {
-        hlaTypeDAO.writeType(sample, type);
-        hlaTypeDAO.writeTypeDetails(sample, details);
-    }
-    */
-
     public void clearCpctEcrf() {
         ecrfDAO.clearCpct();
     }
@@ -589,9 +579,6 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting PEACH data for sample: {}", sample);
         peachDAO.deletePeachForSample(sample);
-
-        // LOGGER.info("Deleting HLA data for sample: {}", sample);
-        hlaTypeDAO.deleteSampleData(sample);
 
         LOGGER.info("Deleting virus breakend data for sample: {}", sample);
         virusBreakendDAO.deleteVirusBreakendForSample(sample);

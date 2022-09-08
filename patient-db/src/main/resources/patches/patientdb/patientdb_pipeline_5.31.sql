@@ -9,3 +9,7 @@ ALTER TABLE protect
 
 ALTER TABLE protect
     ADD COLUMN treatmentApproach varchar(500) after sourceTreatmentApproach;
+
+# Lilac
+DROP table hlaType;
+DROP table hlaTypeDetails;
