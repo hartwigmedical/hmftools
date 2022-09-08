@@ -7,14 +7,16 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.hla.LilacAllele;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class HLAAllele {
 
-    private HLAAllele(){
+    private HLAAllele() {
     }
 
     public static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
@@ -51,5 +53,20 @@ public final class HLAAllele {
 
         String result = joiner.toString();
         return !result.isEmpty() ? result : "None";
+    }
+
+    @NotNull
+    public static String HLApresenceInTumor(@NotNull LilacAllele allele, @NotNull String mutationString, boolean hasReliablePurity) {
+        double tumorCopies = Double.parseDouble(HLAAllele.SINGLE_DIGIT.format(allele.tumorCopyNumber()));
+        String presenceInTumor = Strings.EMPTY;
+        if (!hasReliablePurity || (tumorCopies == 0 && !mutationString.equals("None"))) {
+            presenceInTumor = "Unknown";
+        } else if (mutationString.contains("missense") || mutationString.contains("nonsense or frameshift") || mutationString.contains(
+                "splice") || mutationString.contains("synonymous") || mutationString.contains("inframe indel")) {
+            presenceInTumor = "Yes, but mutation(s) detected";
+        } else if (mutationString.equals("None")) {
+            presenceInTumor = "No";
+        }
+        return presenceInTumor;
     }
 }

@@ -42,7 +42,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class ConclusionAlgo {
-
     private static final Set<String> FUSION_TYPES = Sets.newHashSet(KnownFusionType.PROMISCUOUS_3.toString(),
             KnownFusionType.PROMISCUOUS_5.toString(),
             KnownFusionType.KNOWN_PAIR.toString(),
@@ -186,7 +185,6 @@ public class ConclusionAlgo {
             boolean HRDgene = false;
             TypeAlteration alteration = TypeAlteration.UNKNOWN;
 
-            Set<Boolean> biallelic = Sets.newHashSet();
             StringJoiner variantMerging = new StringJoiner(",");
             for (VariantKey key : keyMap.getValue()) {
                 if (HRD_GENES.contains(keyMap.getKey())) {
@@ -204,7 +202,6 @@ public class ConclusionAlgo {
                 }
 
                 variantMerging.add(key.variantAnnotation());
-                biallelic.add(key.bialleic());
             }
 
             ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder().match(keyMap.getKey()).type(alteration).build();
@@ -215,18 +212,18 @@ public class ConclusionAlgo {
                     if (entry.condition() == Condition.ONLY_HIGH) {
                         actionable.add("variant");
                     }
-                    boolean biallelicBoolean = false;
-                    if (biallelic.size() == 1) {
-                        biallelicBoolean = biallelic.stream().findFirst().get();
-                    }
 
-                    if (driverGenesMap.get(keyMap.getKey()).likelihoodType().equals(DriverCategory.TSG) && !biallelicBoolean) {
-                        ActionabilityKey keyBiallelic =
-                                ImmutableActionabilityKey.builder().match("NOT_BIALLELIC").type(TypeAlteration.NOT_BIALLELIC).build();
-                        ActionabilityEntry entryBiallelic = actionabilityMap.get(keyBiallelic);
-                        if (entryBiallelic.condition() == Condition.OTHER) {
-                            conclusion.add("- " + keyMap.getKey() + " (" + variantMerging + ") " + entry.conclusion() + " "
-                                    + entryBiallelic.conclusion());
+                    if (driverGenesMap.get(keyMap.getKey()).likelihoodType().equals(DriverCategory.TSG) && variantMerging.toString().split(",").length == 1) {
+                        if (!keyMap.getValue().get(0).bialleic()) {
+                            ActionabilityKey keyBiallelic =
+                                    ImmutableActionabilityKey.builder().match("NOT_BIALLELIC").type(TypeAlteration.NOT_BIALLELIC).build();
+                            ActionabilityEntry entryBiallelic = actionabilityMap.get(keyBiallelic);
+                            if (entryBiallelic.condition() == Condition.OTHER) {
+                                conclusion.add("- " + keyMap.getKey() + " (" + variantMerging + ") " + entry.conclusion() + " "
+                                        + entryBiallelic.conclusion());
+                            }
+                        } else {
+                            conclusion.add("- " + keyMap.getKey() + " (" + variantMerging + ") " + entry.conclusion());
                         }
                     } else {
                         conclusion.add("- " + keyMap.getKey() + " (" + variantMerging + ") " + entry.conclusion());

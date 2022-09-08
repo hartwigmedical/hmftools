@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.xml;
+package com.hartwig.hmftools.common.xml;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
@@ -9,12 +9,9 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class RubriekXML {
+public abstract class KeyItem {
 
-    @JacksonXmlProperty(isAttribute = true)
-    private final String naam = "moduleimport";
-
-    @JacksonXmlProperty(localName = "session")
+    @JacksonXmlProperty(localName = "item")
     @NotNull
-    public abstract SessionXML jsonSession();
+    public abstract KeyXML keyPath();
 }

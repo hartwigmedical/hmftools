@@ -163,18 +163,6 @@ public class ConclusionAlgoTest {
         assertEquals(conclusion.get(1), "- CHEK2 (c.123A>C splice) CHEK2 not biallelic");
         assertEquals(conclusion.get(2), "- BRCA1 (p.Val600Arg,p.Val602Arg) BRCA1");
         assertEquals(conclusion.get(3), "- BRCA2 (c.1235A>C splice) BRCA2");
-
-    }
-
-    @NotNull
-    private static String findByVariant(@NotNull List<String> variants, @NotNull String variant) {
-        for (String variantMatch : variants) {
-            if (variantMatch.contains(variant)) {
-                return variant;
-            }
-        }
-
-        throw new IllegalStateException("Could not find variant in list: " + variant);
     }
 
     @Test
@@ -526,7 +514,7 @@ public class ConclusionAlgoTest {
                                         "transcript1",
                                         ONCO),
                                 DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("BRCA2", 0.9, "transcript1", TSG),
-                                DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("BRCA1", 0.7, "transcript1", TSG)));
+                                DriverCatalogTestFactory.createCanonicalSomaticMutationEntryForGene("BRCA1", 0.82, "transcript1", TSG)));
 
         SomaticVariant variant5 = SomaticVariantTestFactory.builder()
                 .reported(true)

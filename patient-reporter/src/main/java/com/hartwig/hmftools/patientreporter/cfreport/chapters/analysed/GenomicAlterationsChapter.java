@@ -391,20 +391,23 @@ public class GenomicAlterationsChapter implements ReportChapter {
             String noConsent = "The QC of the HLA types do not meet the QC cut-offs";
             return TableUtil.createNoConsentReportTable(title, noConsent);
         } else {
-            Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1, 3 },
-                    new Cell[] { TableUtil.createHeaderCell("Allele"), TableUtil.createHeaderCell("Reference Fragments"),
-                            TableUtil.createHeaderCell("Tumor Fragments"), TableUtil.createHeaderCell("Tumor copies"),
-                            TableUtil.createHeaderCell("Somatic #mutations") });
+            Table table = TableUtil.createReportContentTable(new float[] { 2, 2, 3, 3 },
+                    new Cell[] { TableUtil.createHeaderCell("Germline allele"), TableUtil.createHeaderCell("Tumor copies"),
+                            TableUtil.createHeaderCell("# Somatic mutations*"),
+                            TableUtil.createHeaderCell("Interpretation: presence in tumor"), });
 
             for (LilacAllele allele : HLAAllele.sort(lilac.alleles())) {
                 table.addCell(TableUtil.createContentCell(allele.allele()));
-                table.addCell(TableUtil.createContentCell(String.valueOf(allele.refFragments())));
-                table.addCell(TableUtil.createContentCell(String.valueOf(allele.tumorFragments())));
                 table.addCell(TableUtil.createContentCell(hasReliablePurity
                         ? HLAAllele.SINGLE_DIGIT.format(allele.tumorCopyNumber())
-                        : DataUtil.NA_STRING).setTextAlignment(TextAlignment.CENTER));
+                        : DataUtil.NA_STRING));
                 table.addCell(TableUtil.createContentCell(HLAAllele.mutationString(allele)));
+                table.addCell(TableUtil.createContentCell(HLAAllele.HLApresenceInTumor(allele, HLAAllele.mutationString(allele), hasReliablePurity)));
             }
+
+            table.addCell(TableUtil.createLayoutCell(1, table.getNumberOfColumns())
+                    .add(new Paragraph("\n *copy number of detected mutations can be found in the somatic variant table").addStyle(
+                            ReportResources.subTextStyle().setTextAlignment(TextAlignment.CENTER))));
 
             return TableUtil.createWrappingReportTable(title, null, table);
         }

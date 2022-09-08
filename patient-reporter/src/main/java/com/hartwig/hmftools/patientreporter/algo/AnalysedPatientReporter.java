@@ -61,7 +61,9 @@ public class AnalysedPatientReporter {
                 patientPrimaryTumor,
                 config.allowDefaultCohortConfig());
 
-        String clinicalSummary = config.addRose() || config.roseTsv() != null ? RoseConclusionFile.read(config.roseTsv()) : Strings.EMPTY;
+        String roseTcvFile = config.roseTsv();
+        String clinicalSummary = config.addRose() && roseTcvFile != null ? RoseConclusionFile.read(roseTcvFile) : Strings.EMPTY;
+
         String specialRemark = reportData.specialRemarkModel().findSpecialRemarkForSample(sampleMetadata.tumorSampleId());
 
         String pipelineVersion = null;
