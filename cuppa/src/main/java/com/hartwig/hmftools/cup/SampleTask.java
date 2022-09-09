@@ -176,13 +176,16 @@ public class SampleTask implements Callable
     {
         for(SampleResult result : results)
         {
-            if(result.Result != CLASSIFIER)
-                continue;
-
             final Map<String,Double> cancerTypeResults = result.CancerTypeValues;
 
             for(Map.Entry<String,String> mapping : mSampleDataCache.RefCancerMappings.entrySet())
             {
+                if(result.Result != CLASSIFIER)
+                {
+                    cancerTypeResults.remove(mapping.getKey());
+                    continue;
+                }
+
                 Double subtypeProb = cancerTypeResults.get(mapping.getKey());
                 Double mainTypeProb = cancerTypeResults.get(mapping.getValue());
 
