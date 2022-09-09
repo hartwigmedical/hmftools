@@ -174,7 +174,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForACTINSample() throws IOException {
-        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("TEST_FULL")
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("ACTIN_FULL")
                 .limsCohortConfig(LimsCohortTestFactory.createACTINCohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
