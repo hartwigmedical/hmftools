@@ -2,8 +2,12 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Tables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
@@ -26,7 +30,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
-import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneDisruptions;
@@ -42,7 +45,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.ViralPresence;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
@@ -385,32 +387,71 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createImmunoTable(@NotNull LilacSummaryData lilac, boolean hasReliablePurity) {
-        String title = "HLA Alleles";
+        Map<String, List<LilacAllele>> lilacAlleleMap = Maps.newHashMap();
 
+        for (LilacAllele lilacAllele : lilac.alleles()) {
+            List<LilacAllele> lilacAlleleList = Lists.newArrayList();
+            if (lilacAlleleMap.containsKey(lilacAllele.allele())) {
+                lilacAlleleList.addAll(lilacAlleleMap.get(lilacAllele.allele()));
+                lilacAlleleList.add(lilacAllele);
+                lilacAlleleMap.put(lilacAllele.allele(), lilacAlleleList);
+            } else {
+                lilacAlleleList.add(lilacAllele);
+                lilacAlleleMap.put(lilacAllele.allele(), lilacAlleleList);
+            }
+            lilacAlleleMap.put(lilacAllele.allele(),lilacAlleleList );
+        }
+
+
+        String title = "HLA Alleles";
+        Table table = TableUtil.createReportContentTable(new float[] { 10, 10, 10, 10, 10, 10 },
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Germline allele"),
+                        TableUtil.createHeaderCell("Germline copies"), TableUtil.createHeaderCell("Tumor copies"),
+                        TableUtil.createHeaderCell("# Somatic mutations*"),
+                        TableUtil.createHeaderCell("Interpretation: presence in tumor") });
         if (!lilac.qc().equals("PASS")) {
             String noConsent = "The QC of the HLA types do not meet the QC cut-offs";
             return TableUtil.createNoConsentReportTable(title, noConsent);
         } else {
-            Table table = TableUtil.createReportContentTable(new float[] { 2, 2, 3, 3 },
-                    new Cell[] { TableUtil.createHeaderCell("Germline allele"), TableUtil.createHeaderCell("Tumor copies"),
-                            TableUtil.createHeaderCell("# Somatic mutations*"),
-                            TableUtil.createHeaderCell("Interpretation: presence in tumor"), });
 
-            for (LilacAllele allele : HLAAllele.sort(lilac.alleles())) {
-                table.addCell(TableUtil.createContentCell(allele.allele()));
-                table.addCell(TableUtil.createContentCell(hasReliablePurity
-                        ? HLAAllele.SINGLE_DIGIT.format(allele.tumorCopyNumber())
-                        : DataUtil.NA_STRING));
-                table.addCell(TableUtil.createContentCell(HLAAllele.mutationString(allele)));
-                table.addCell(TableUtil.createContentCell(HLAAllele.HLApresenceInTumor(allele, HLAAllele.mutationString(allele), hasReliablePurity)));
+            Set<String> sortedAlleles = Sets.newTreeSet(lilacAlleleMap.keySet().stream().collect(Collectors.toSet()));
+            for (String sortAllele : sortedAlleles) {
+                List<LilacAllele> allele = lilacAlleleMap.get(sortAllele);
+                table.addCell(TableUtil.createContentCell(sortAllele));
+
+                Table tableGermlineAllele = new Table(new float[] { 1 });
+                Table tableGermlineCopies = new Table(new float[] { 1 });
+                Table tableTumorCopies = new Table(new float[] { 1 });
+                Table tableSomaticMutations = new Table(new float[] { 1 });
+                Table tablePrecenseIntumor = new Table(new float[] { 1 });
+
+                for (LilacAllele allele1 : HLAAllele.sort(allele)) {
+
+                    tableGermlineAllele.addCell(TableUtil.createTransparentCell(allele1.allele()));
+                    tableGermlineCopies.addCell(TableUtil.createTransparentCell(hasReliablePurity
+                            ? HLAAllele.SINGLE_DIGIT.format(allele1.tumorCopyNumber())
+                            : DataUtil.NA_STRING));
+                    tableTumorCopies.addCell(TableUtil.createTransparentCell(hasReliablePurity
+                            ? HLAAllele.SINGLE_DIGIT.format(allele1.tumorCopyNumber())
+                            : DataUtil.NA_STRING));
+                    tableSomaticMutations.addCell(TableUtil.createTransparentCell(HLAAllele.mutationString(allele1)));
+                    tablePrecenseIntumor.addCell(TableUtil.createTransparentCell(HLAAllele.HLApresenceInTumor(allele1,
+                            HLAAllele.mutationString(allele1),
+                            hasReliablePurity)));
+                }
+                table.addCell(TableUtil.createContentCell(tableGermlineAllele));
+                table.addCell(TableUtil.createContentCell(tableGermlineCopies));
+                table.addCell(TableUtil.createContentCell(tableTumorCopies));
+                table.addCell(TableUtil.createContentCell(tableSomaticMutations));
+                table.addCell(TableUtil.createContentCell(tablePrecenseIntumor));
             }
-
-            table.addCell(TableUtil.createLayoutCell(1, table.getNumberOfColumns())
-                    .add(new Paragraph("\n *copy number of detected mutations can be found in the somatic variant table").addStyle(
-                            ReportResources.subTextStyle().setTextAlignment(TextAlignment.CENTER))));
-
-            return TableUtil.createWrappingReportTable(title, null, table);
         }
+
+        table.addCell(TableUtil.createLayoutCell(1, table.getNumberOfColumns())
+                .add(new Paragraph("\n *When phasing is unclear the mutation will be counted in both alleles as 0.5. Copy number of"
+                        + " detected mutations can be found in the somatic variant table.").addStyle(ReportResources.subTextStyle()
+                        .setTextAlignment(TextAlignment.CENTER))));
+        return TableUtil.createWrappingReportTable(title, null, table);
     }
 
     @NotNull
