@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.xml.ImmutableKeyItem;
 import com.hartwig.hmftools.common.xml.ImmutableKeyXML;
 import com.hartwig.hmftools.common.xml.KeyXML;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
