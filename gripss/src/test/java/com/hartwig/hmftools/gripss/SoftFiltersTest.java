@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.gripss.GripssTestUtils.createSgl;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSv;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.defaultFilterConstants;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASSR;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IC;
@@ -176,6 +177,7 @@ public class SoftFiltersTest
         // short split read tumor
         tumorOverrides.put(VT_SR, 0);
         tumorOverrides.put(VT_IC, 0);
+        tumorOverrides.put(VT_ASSR, 0);
 
         sv = createShortDel(commonOverrides, refOverrides, tumorOverrides);
         applyFilters(sv);

@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASSR;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.HOM_INV_LENGTH;
@@ -51,6 +52,7 @@ import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.common.VcfUtils;
 
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class SoftFilters
@@ -241,10 +243,7 @@ public class SoftFilters
 
     private boolean shortSplitReadTumor(final SvData sv, final Breakend breakend)
     {
-        int splitReads = getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_SR, 0);
-        int indelCount = getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_IC, 0);
-
-        return sv.isShortLocal() && (splitReads + indelCount == 0);
+        return sv.isShortLocal() && getSplitReadCount(breakend, breakend.TumorGenotype) == 0;
     }
 
     private boolean shortSplitReadNormal(final SvData sv, final Breakend breakend)
@@ -252,10 +251,15 @@ public class SoftFilters
         if(breakend.RefGenotype == null)
             return false;
 
-        int splitReads = getGenotypeAttributeAsInt(breakend.RefGenotype, VT_SR, 0);
-        int indelCount = getGenotypeAttributeAsInt(breakend.RefGenotype, VT_IC, 0);
+        return sv.isShortLocal() && getSplitReadCount(breakend, breakend.RefGenotype) > 0;
+    }
 
-        return sv.isShortLocal() && (splitReads + indelCount > 0);
+    private static int getSplitReadCount(final Breakend breakend, final Genotype genotype)
+    {
+        int splitReads = getGenotypeAttributeAsInt(genotype, VT_SR, 0);
+        int assemblySplitReads = getGenotypeAttributeAsInt(genotype, VT_ASSR, 0);
+        int indelCount = getGenotypeAttributeAsInt(genotype, VT_IC, 0);
+        return splitReads + assemblySplitReads + indelCount;
     }
 
     private boolean strandBias(final SvData sv, final Breakend breakend)
