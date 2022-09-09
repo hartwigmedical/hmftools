@@ -76,7 +76,7 @@ public class CFReportWriterTest {
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
         writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
-
+        writer.writeXMLAnalysedFile(colo829Report, REPORT_BASE_DIR);
     }
 
     @Test
@@ -90,6 +90,7 @@ public class CFReportWriterTest {
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
         writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
+        writer.writeXMLAnalysedFile(colo829Report, REPORT_BASE_DIR);
     }
 
     @Test
@@ -104,6 +105,7 @@ public class CFReportWriterTest {
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
         writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
+        writer.writeXMLAnalysedFile(colo829Report, REPORT_BASE_DIR);
     }
 
     @Test
@@ -118,6 +120,7 @@ public class CFReportWriterTest {
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
         writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
+        writer.writeXMLAnalysedFile(colo829Report, REPORT_BASE_DIR);
     }
 
     @Test
@@ -134,6 +137,7 @@ public class CFReportWriterTest {
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
         writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
+        writer.writeXMLAnalysedFile(colo829Report, REPORT_BASE_DIR);
     }
 
     @Test
@@ -151,6 +155,7 @@ public class CFReportWriterTest {
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
         writer.writeJsonAnalysedFile(colo829Report, REPORT_BASE_DIR);
+        writer.writeXMLAnalysedFile(colo829Report, REPORT_BASE_DIR);
     }
 
     @Test
@@ -164,11 +169,12 @@ public class CFReportWriterTest {
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
         writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
+        writer.writeXMLAnalysedFile(patientReport, REPORT_BASE_DIR);
     }
 
     @Test
     public void canGeneratePatientReportForACTINSample() throws IOException {
-        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("ACTN_FULL")
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("TEST_FULL")
                 .limsCohortConfig(LimsCohortTestFactory.createACTINCohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
@@ -189,6 +195,7 @@ public class CFReportWriterTest {
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
         writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
+        writer.writeXMLAnalysedFile(patientReport, REPORT_BASE_DIR);
     }
 
     @Test
@@ -202,6 +209,7 @@ public class CFReportWriterTest {
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
         writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
+        writer.writeXMLAnalysedFile(patientReport, REPORT_BASE_DIR);
     }
 
     @Test
@@ -215,6 +223,7 @@ public class CFReportWriterTest {
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
         writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
+        writer.writeXMLAnalysedFile(patientReport, REPORT_BASE_DIR);
     }
 
     @Test
@@ -230,6 +239,7 @@ public class CFReportWriterTest {
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
         writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
+        writer.writeXMLAnalysedFile(patientReport, REPORT_BASE_DIR);
     }
 
     @Test
@@ -246,6 +256,7 @@ public class CFReportWriterTest {
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
         writer.writeJsonAnalysedFile(patientReport, REPORT_BASE_DIR);
+        writer.writeXMLAnalysedFile(patientReport, REPORT_BASE_DIR);
     }
 
     @Test
