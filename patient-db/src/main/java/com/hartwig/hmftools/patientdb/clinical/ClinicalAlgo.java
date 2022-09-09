@@ -111,9 +111,9 @@ public class ClinicalAlgo {
         List<Patient> opticPatients = readLimsPatients(samplesPerPatient, "OPTIC", consentConfigMap);
         LOGGER.info(" Finished curation of {} OPTIC patients", opticPatients.size());
 
-        LOGGER.info("Interpreting and curating data for GAYA patients");
-        List<Patient> gayaPatients = readLimsPatients(samplesPerPatient, "GAYA", consentConfigMap);
-        LOGGER.info(" Finished curation of {} GAYA patients", gayaPatients.size());
+        LOGGER.info("Interpreting and curating data for GENAYA patients");
+        List<Patient> gayaPatients = readLimsPatients(samplesPerPatient, "GENAYA", consentConfigMap);
+        LOGGER.info(" Finished curation of {} GENAYA patients", gayaPatients.size());
 
         LOGGER.info("Interpreting and curating data for OMIC patients");
         List<Patient> omicPatients = readLimsPatients(samplesPerPatient, "OMIC", consentConfigMap);
