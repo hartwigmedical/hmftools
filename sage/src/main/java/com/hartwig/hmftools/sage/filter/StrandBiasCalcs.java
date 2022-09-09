@@ -20,7 +20,7 @@ public class StrandBiasCalcs
     private static final double PROB_DIFF = 0.0001;
     private static final double EXPECTED_RATE = 0.5;
     private static final double INVALID_STRAND_BIAS = -1;
-    private static final double STRAND_BAIS_CHECK_THRESHOLD = 0.1;
+    private static final double STRAND_BIAS_CHECK_THRESHOLD = 0.1;
 
 
     public StrandBiasCalcs()
@@ -33,7 +33,7 @@ public class StrandBiasCalcs
     public boolean isDepthBelowProbability(double strandBias, int depth)
     {
         double minStrandBias = min(strandBias, 1 - strandBias);
-        if(minStrandBias > STRAND_BAIS_CHECK_THRESHOLD)
+        if(minStrandBias > STRAND_BIAS_CHECK_THRESHOLD)
             return false;
 
         double requiredStrandBias = depth < mStrandBiasValues.length ? mStrandBiasValues[depth] : mMaxStrandBiasValue;
