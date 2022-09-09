@@ -24,7 +24,7 @@ public class LilacConstants
     public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.001;
     public static final double MIN_CONF_UNIQUE_GROUP_COVERAGE = 0.02;
     public static final double MIN_CONF_UNIQUE_PROTEIN_COVERAGE = 0.01;
-    public static final double HLA_Y_FRAGMENT_THRESHOLD = 0.01;
+    public static final double HLA_Y_FRAGMENT_THRESHOLD = 0.02;
     public static final int MIN_WILDCARD_FRAGMENTS = 2;
 
     public static final double FREQUENCY_SCORE_PENALTY = 0.0018;

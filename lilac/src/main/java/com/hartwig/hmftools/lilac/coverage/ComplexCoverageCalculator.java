@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import java.util.ArrayList;
@@ -15,13 +17,11 @@ import java.util.concurrent.ThreadFactory;
 
 public class ComplexCoverageCalculator
 {
-    private final int mThreadCount;
-    private final double mTopScoreThreshold;
+    private final LilacConfig mConfig;
 
-    public ComplexCoverageCalculator(int threadCount, double topScoreThreshold)
+    public ComplexCoverageCalculator(final LilacConfig config)
     {
-        mThreadCount = threadCount;
-        mTopScoreThreshold = topScoreThreshold;
+        mConfig = config;
     }
 
     public List<ComplexCoverage> calculateComplexCoverages(final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes)
@@ -30,9 +30,9 @@ public class ComplexCoverageCalculator
         complexes.stream().forEach(x -> x.Alleles.stream().filter(y -> !alleles.contains(y)).forEach(y -> alleles.add(y)));
         FragmentAlleleMatrix fragAlleleMatrix = new FragmentAlleleMatrix(fragmentAlleles, alleles);
 
-        if(mThreadCount == 1 || complexes.size() < 10000) // no point in allocating to threads if complex count is small
+        if(mConfig.Threads == 1 || complexes.size() < 10000) // no point in allocating to threads if complex count is small
         {
-            CoverageCalcTask calcTask  = new CoverageCalcTask(0, complexes, fragAlleleMatrix, mTopScoreThreshold);
+            CoverageCalcTask calcTask  = new CoverageCalcTask(0, complexes, fragAlleleMatrix, mConfig.TopScoreThreshold);
             calcTask.call();
             return calcTask.getCoverageResults();
         }
@@ -46,14 +46,14 @@ public class ComplexCoverageCalculator
     private List<ComplexCoverage> calcMultiThreadResults(final List<HlaComplex> complexes, final FragmentAlleleMatrix fragAlleleMatrix)
     {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Lilac-%d").build();
-        ExecutorService executorService = Executors.newFixedThreadPool(mThreadCount, namedThreadFactory);
+        ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
 
         List<CoverageCalcTask> coverageCalcTasks = Lists.newArrayList();
         List<FutureTask<Long>> taskList = new ArrayList<>();
 
-        List<HlaComplex>[] complexLists = new List[mThreadCount];
+        List<HlaComplex>[] complexLists = new List[mConfig.Threads];
 
-        for(int i = 0; i < mThreadCount; ++i)
+        for(int i = 0; i < mConfig.Threads; ++i)
         {
             complexLists[i] = Lists.newArrayList();
         }
@@ -71,7 +71,7 @@ public class ComplexCoverageCalculator
         int threadIndex = 0;
         for(List<HlaComplex> complexList : complexLists)
         {
-            CoverageCalcTask coverageTask = new CoverageCalcTask(threadIndex++, complexList, fragAlleleMatrix, mTopScoreThreshold);
+            CoverageCalcTask coverageTask = new CoverageCalcTask(threadIndex++, complexList, fragAlleleMatrix, mConfig.TopScoreThreshold);
             coverageCalcTasks.add(coverageTask);
 
             FutureTask<Long> futureTask = new FutureTask<>(coverageTask);
@@ -89,12 +89,21 @@ public class ComplexCoverageCalculator
 
             executorService.shutdown();
 
-            coverageCalcTasks.forEach(x -> x.logPerfResults());
+            if(mConfig.LogPerfCalcs)
+            {
+                PerformanceCounter combinedPerfCounter = coverageCalcTasks.get(0).getPerfCounter();
+
+                for(int i = 1; i < coverageCalcTasks.size(); ++i)
+                {
+                    combinedPerfCounter.merge(coverageCalcTasks.get(i).getPerfCounter());
+                }
+
+                combinedPerfCounter.logStats();
+            }
 
             List<ComplexCoverage> results = Lists.newArrayList();
             coverageCalcTasks.forEach(x -> results.addAll(x.getCoverageResults()));
             return results;
-
         }
         catch (Exception e)
         {

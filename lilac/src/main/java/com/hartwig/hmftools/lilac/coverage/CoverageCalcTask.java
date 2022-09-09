@@ -44,6 +44,7 @@ public class CoverageCalcTask implements Callable<Long>
 
     public ComplexCoverage getCoverage() { return mCoverageResults.get(0); }
     public List<ComplexCoverage> getCoverageResults() { return mCoverageResults; }
+    public PerformanceCounter getPerfCounter() { return mPerfCounter; }
 
     @Override
     public Long call()
@@ -118,13 +119,5 @@ public class CoverageCalcTask implements Callable<Long>
     {
         List<AlleleCoverage> alleleCoverage = mFragAlleleMatrix.create(complex);
         return ComplexCoverage.create(alleleCoverage);
-    }
-
-    public void logPerfResults()
-    {
-        if(LL_LOGGER.isDebugEnabled())
-        {
-            mPerfCounter.logStats();
-        }
     }
 }

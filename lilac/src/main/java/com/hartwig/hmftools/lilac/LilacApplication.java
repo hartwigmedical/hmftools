@@ -269,7 +269,7 @@ public class LilacApplication
         addPhasedCandidates(candidateAlleles, bCandidates, mConfig, mRefData);
         addPhasedCandidates(candidateAlleles, cCandidates, mConfig, mRefData);
 
-        LL_LOGGER.debug("post-candidates memory({}mb)", calcMemoryUsage());
+        logStageMemory("post-candidates");
 
         List<HlaAllele> recoveredAlleles = Lists.newArrayList();
 
@@ -381,13 +381,13 @@ public class LilacApplication
         mRefFragAlleles.clear();
         mRefFragAlleles.addAll(mFragAlleleMapper.createFragmentAlleles(refAminoAcidFrags, candidateSequences, candidateNucSequences));
 
-        LL_LOGGER.debug("frag-alleles memory({}mb)", calcMemoryUsage());
+        logStageMemory("frag-alleles");
 
         List<HlaComplex> complexes = complexBuilder.buildComplexes(mRefFragAlleles, confirmedRecoveredAlleles);
         // allValid &= validateComplexes(complexes); // too expensive in current form even for validation, address in unit tests instead
 
         LL_LOGGER.info("calculating coverage for complexes({}) and ref alleles({})", complexes.size(), mRefFragAlleles.size());
-        ComplexCoverageCalculator complexCalculator = new ComplexCoverageCalculator(mConfig.Threads, mConfig.TopScoreThreshold);
+        ComplexCoverageCalculator complexCalculator = new ComplexCoverageCalculator(mConfig);
         List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(mRefFragAlleles, complexes);
 
         ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData);
@@ -399,7 +399,7 @@ public class LilacApplication
             System.exit(1);
         }
 
-        LL_LOGGER.debug("post-calc memory({}mb)", calcMemoryUsage());
+        logStageMemory("post-coverage-calcs");
 
         ComplexCoverage winningRefCoverage = mRankedComplexes.get(0);
 
@@ -722,6 +722,12 @@ public class LilacApplication
         }
 
         return true;
+    }
+
+    private void logStageMemory(final String stage)
+    {
+        if(mConfig.LogPerfCalcs)
+            LL_LOGGER.debug("{} memory({}mb)", stage, calcMemoryUsage());
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

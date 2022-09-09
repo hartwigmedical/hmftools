@@ -72,11 +72,13 @@ public class LilacConfig
 
     public final String CopyNumberFile;
     public final String SomaticVariantsFile;
+    public final String CohortSomaticVariantsFile;
 
     public final boolean DebugPhasing;
     public final boolean RunValidation;
     public final int FatalLowCoverage;
     public final int MaxEliminationCandidates;
+    public final boolean LogPerfCalcs;
 
     // optional: pre-determine sample alleles, forced to be the final solution so coverage can be reported
     public final List<HlaAllele> ActualAlleles;
@@ -95,6 +97,7 @@ public class LilacConfig
     private static final String RUN_ID = "run_id";
 
     private static final String SOMATIC_VCF = "somatic_vcf";
+    private static final String COHORT_SOMATIC_VCF = "cohort_somatic_file";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
 
     // constant overrides
@@ -115,6 +118,7 @@ public class LilacConfig
     public static final String MAX_ELIM_CANDIDATES = "max_elim_candidates";
     public static final String WRITE_ALL_FILES = "write_all_files";
     public static final String FATAL_LOW_COVERAGE = "fatal_low_coverage";
+    public static final String LOG_PERF_CALCS = "log_perf";
 
     public static final Logger LL_LOGGER = LogManager.getLogger(LilacConfig.class);;
 
@@ -142,6 +146,7 @@ public class LilacConfig
 
             String somaticVariantsFile = PurpleCommon.purpleSomaticVcfFile(SampleDataDir, Sample);
             SomaticVariantsFile = checkFileExists(somaticVariantsFile);
+            CohortSomaticVariantsFile = "";
         }
         else
         {
@@ -162,6 +167,7 @@ public class LilacConfig
             RnaBam = cmd.getOptionValue(RNA_BAM, "");
 
             SomaticVariantsFile = cmd.getOptionValue(SOMATIC_VCF, "");
+            CohortSomaticVariantsFile = cmd.getOptionValue(COHORT_SOMATIC_VCF, "");
             CopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER, "");
 
             OutputDir = parseOutputDir(cmd);
@@ -194,6 +200,7 @@ public class LilacConfig
         DebugPhasing = cmd.hasOption(DEBUG_PHASING);
         RunValidation = cmd.hasOption(RUN_VALIDATION);
         WriteAllFiles = cmd.hasOption(WRITE_ALL_FILES);
+        LogPerfCalcs = cmd.hasOption(LOG_PERF_CALCS);
     }
 
     private String checkFileExists(final String filename)
@@ -290,6 +297,7 @@ public class LilacConfig
 
         CopyNumberFile = "";
         SomaticVariantsFile = "";
+        CohortSomaticVariantsFile = "";
 
         ActualAlleles = Lists.newArrayList();
         RestrictedAlleles = Lists.newArrayList();
@@ -299,6 +307,7 @@ public class LilacConfig
         DebugPhasing = false;
         RunValidation = true;
         WriteAllFiles = false;
+        LogPerfCalcs = false;
     }
 
     @NotNull
@@ -339,9 +348,11 @@ public class LilacConfig
         options.addOption(MAX_ELIM_CANDIDATES, true, "Revert to only common alleles if candidate allele count exceeds this after elimination");
         options.addOption(GENE_COPY_NUMBER, true,"Deprecated, use 'gene_copy_number instead': Path to gene copy number file ");
         options.addOption(SOMATIC_VCF, true,"Path to somatic VCF");
+        options.addOption(COHORT_SOMATIC_VCF, true,"Cohort somatic variants file");
         options.addOption(DEBUG_PHASING, false, "More detailed logging of phasing");
         options.addOption(RUN_VALIDATION, false, "Run validation checks");
         options.addOption(WRITE_ALL_FILES, false,"Write more detailed output files");
+        options.addOption(LOG_PERF_CALCS, false,"Log performance metrics");
 
         addRefGenomeConfig(options);
         addOutputDir(options);

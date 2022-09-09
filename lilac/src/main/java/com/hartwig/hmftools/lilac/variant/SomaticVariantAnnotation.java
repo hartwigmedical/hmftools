@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.variant;
 
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
@@ -30,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,8 +39,10 @@ import java.util.stream.Collectors;
 
 public class SomaticVariantAnnotation
 {
-    private final Map<String,List<Integer>> mGeneVariantLoci;
     private final LilacConfig mConfig;
+
+    // variant loci are grouped by the genes they nominally fall within
+    private final Map<String,List<Integer>> mGeneVariantLoci;
 
     private final List<SomaticVariant> mSomaticVariants;
 
@@ -48,7 +52,7 @@ public class SomaticVariantAnnotation
     private final LociPosition mLociPositionFinder;
 
     public SomaticVariantAnnotation(
-            final LilacConfig config, final Map<String, TranscriptData> transcriptData, final LociPosition lociPositionFinder)
+            final LilacConfig config, final Map<String,TranscriptData> transcriptData, final LociPosition lociPositionFinder)
     {
         mConfig = config;
         mHlaTranscriptData = transcriptData;
@@ -91,16 +95,20 @@ public class SomaticVariantAnnotation
             final SomaticVariant variant, final BamReader reader, final List<HlaSequenceLoci> winners)
     {
         List<Fragment> fragments = reader.readFromBam(variant);
-        fragments.forEach(x -> x.qualityFilter(mConfig.MinBaseQual));
-        fragments.forEach(x -> x.buildAminoAcids());
 
         List<AlleleCoverage> coverages = Lists.newArrayList();
 
+        if(fragments.isEmpty())
+            return coverages;
+
+        fragments.forEach(x -> x.qualityFilter(mConfig.MinBaseQual));
+        fragments.forEach(x -> x.buildAminoAcids());
+
+        // take all variants in this gene together, and then ignore those loci
+        List<Integer> variantLoci = mGeneVariantLoci.get(variant.Gene);
+
         for(HlaSequenceLoci sequenceLoci : winners)
         {
-            // any variant in this gene will be skipped
-            List<Integer> variantLoci = mGeneVariantLoci.get(variant.Gene);
-
             if(variantLoci == null || variantLoci.isEmpty())
             {
                 LL_LOGGER.error("no sequences found for variant({})", variant.toString());
@@ -146,7 +154,6 @@ public class SomaticVariantAnnotation
                     }
 
                     ++matchCount;
-
                 }
 
                 if(matches && matchCount > 0)
@@ -154,30 +161,57 @@ public class SomaticVariantAnnotation
                     //LL_LOGGER.debug("allele({}) supported by fragment({} {}) matchedAAs({})",
                     //        seq.Allele, fragment.id(), fragment.readInfo(), matchCount);
                     ++supportCount;
-
                 }
             }
 
             if(supportCount > 0)
-                coverages.add(new AlleleCoverage(sequenceLoci.Allele, supportCount, 0, 0));
+            {
+                if(sequenceLoci.hasWildcards())
+                    coverages.add(new AlleleCoverage(sequenceLoci.Allele, 0, 0, supportCount));
+                else
+                    coverages.add(new AlleleCoverage(sequenceLoci.Allele, supportCount, 0, 0));
+            }
         }
 
-        // take top allele and any matching
-        Collections.sort(coverages, new AlleleCoverage.TotalCoverageSorter());
-        return coverages.stream().filter(x -> x.TotalCoverage == coverages.get(0).TotalCoverage).collect(Collectors.toList());
+        // ignore wildcard alleles if any other have support from at least half the fragment
+        int maxUnique = coverages.stream().mapToInt(x -> x.UniqueCoverage).max().orElse(0);
+
+        if(maxUnique > 0 && maxUnique >= fragments.size() / 2)
+            return coverages.stream().filter(x -> x.UniqueCoverage == maxUnique).collect(Collectors.toList());
+
+        int maxWildcard = coverages.stream().mapToInt(x -> (int)x.WildCoverage).max().orElse(0);
+
+        if(maxWildcard > 0)
+            return coverages.stream().filter(x -> (int)x.WildCoverage == maxWildcard).collect(Collectors.toList());
+        else
+            return Lists.newArrayList();
     }
+
+    private static class VariantCoverageSorter implements Comparator<AlleleCoverage>
+    {
+        // sorts by total coverage descending
+        public int compare(final AlleleCoverage first, final AlleleCoverage second)
+        {
+            if(first.UniqueCoverage != second.UniqueCoverage)
+                return first.UniqueCoverage < second.UniqueCoverage ? 1 : -1;
+
+            if(first.WildCoverage != second.WildCoverage)
+                return first.WildCoverage < second.WildCoverage ? 1 : -1;
+
+            return 0;
+        }
+    }
+
 
     private List<SomaticVariant> loadSomaticVariants()
     {
         List<SomaticVariant> variants = Lists.newArrayList();
 
-        if(mConfig == null || mConfig.SomaticVariantsFile.isEmpty())
+        if(mConfig == null)
             return variants;
 
-        if(mConfig.SomaticVariantsFile.contains(mConfig.Sample))
+        if(!mConfig.SomaticVariantsFile.isEmpty())
         {
-            LL_LOGGER.info("reading somatic vcf: {}", mConfig.SomaticVariantsFile);
-
             int minPosition = mHlaTranscriptData.values().stream().mapToInt(x -> x.TransStart).min().orElse(0);
             int maxPosition = mHlaTranscriptData.values().stream().mapToInt(x -> x.TransEnd).max().orElse(0);
 
@@ -189,20 +223,22 @@ public class SomaticVariantAnnotation
             while(variantIter.hasNext())
             {
                 VariantContext variant = variantIter.next();
-                VariantContextDecorator enriched = new VariantContextDecorator(variant);
 
-                if(HLA_GENES.contains(enriched.gene()) && enriched.isPass()
-                        && !UNKNOWN_CODING_EFFECT.contains(enriched.canonicalCodingEffect()))
+                if(variant.isFiltered() && !variant.getFilters().contains(SomaticVariantFactory.PASS_FILTER))
+                    continue;
+
+                if(mHlaTranscriptData.values().stream().anyMatch(x -> positionWithin(variant.getStart(), x.TransStart, x.TransEnd)))
                 {
+                    VariantContextDecorator enriched = new VariantContextDecorator(variant);
                     variants.add(new SomaticVariant(
                             enriched.gene(), enriched.chromosome(), (int)enriched.position(), enriched.ref(), enriched.alt(),
-                            enriched.filter(), enriched.canonicalCodingEffect(), enriched.context()));
-                }
+                            enriched.filter(), enriched.canonicalCodingEffect(), enriched.context()));                }
             }
 
+            LL_LOGGER.info("loaded {} HLA variants from file: {}", variants.size(), mConfig.SomaticVariantsFile);
             fileReader.close();
         }
-        else
+        else if(!mConfig.CohortSomaticVariantsFile.isEmpty())
         {
             try
             {
@@ -246,6 +282,8 @@ public class SomaticVariantAnnotation
                             gene, items[chrIndex], Integer.parseInt(items[posIndex]), items[refIndex], items[altIndex],
                             filter, codingEffect, null));
                 }
+
+                LL_LOGGER.info("loaded {} HLA variants from cohort file: {}", variants.size(), mConfig.CohortSomaticVariantsFile);
             }
             catch(IOException e)
             {
@@ -253,7 +291,6 @@ public class SomaticVariantAnnotation
             }
         }
 
-        LL_LOGGER.info("  found {} HLA somatic variants", variants.size());
         return variants;
     }
 

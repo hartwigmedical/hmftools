@@ -144,18 +144,6 @@ public class AlleleCoverage implements Comparable<AlleleCoverage>
         return coverage.stream().map(x -> x.Allele).collect(Collectors.toList());
     }
 
-    public static class TotalCoverageSorter implements Comparator<AlleleCoverage>
-    {
-        // sorts by total coverage descending
-        public int compare(final AlleleCoverage first, final AlleleCoverage second)
-        {
-            if(first.TotalCoverage != second.TotalCoverage)
-                return first.TotalCoverage < second.TotalCoverage ? 1 : -1;
-
-            return 0;
-        }
-    }
-
     public static class AlleleSorter implements Comparator<AlleleCoverage>
     {
         public int compare(final AlleleCoverage first, final AlleleCoverage second)
