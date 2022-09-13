@@ -471,11 +471,10 @@ public final class CodingUtils
 
         if(cc.CodingType == ENHANCER)
         {
-            // include the distance from the transcript start to the position
             if(posStrand)
-                cc.CodingBase += transData.TransStart - position;
+                cc.CodingBase = transData.CodingStart - position;
             else
-                cc.CodingBase += position - transData.TransEnd;
+                cc.CodingBase = position - transData.CodingEnd;
 
             // exclude this type if too far upstream
             if(cc.CodingBase > PROMOTOR_UPSTREAM_DISTANCE)

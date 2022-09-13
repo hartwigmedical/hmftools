@@ -378,7 +378,8 @@ public final class HgvsCoding
             boolean spansDownstreamSplice = spansSplice && !spansUpstreamSplice;
 
             int codingBaseStart = codingBase;
-            int codingBaseLen = codingContext.CodingPositionRange[SE_END] - codingContext.CodingPositionRange[SE_START] + 1;
+            int codingBaseLen = codingContext.CodingType == ENHANCER ?
+                    varLength : codingContext.CodingPositionRange[SE_END] - codingContext.CodingPositionRange[SE_START] + 1;
 
             if(variant.isMixed()) // the last coding base matches the ref for these variants
                 --codingBaseLen;
@@ -386,7 +387,7 @@ public final class HgvsCoding
             int codingBaseEnd = codingContext.RegionType == EXONIC ? codingBase + codingBaseLen - 1 : codingBase;
 
             // special scenarios
-            if(codingContext.CodingType == UTR_5P && codingContext.RegionType == EXONIC)
+            if((codingContext.CodingType == UTR_5P && codingContext.RegionType == EXONIC) || codingContext.CodingType == ENHANCER)
             {
                 // the highest exonic base numerically (ie furthest from start of coding) has been recorded
                 // coding bases will be negated but need to drop from the highest to lowest value

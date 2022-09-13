@@ -349,6 +349,29 @@ public class NonCodingContextTest
         HgvsCoding.generate(var, impact.codingContext());
         assertEquals("", impact.codingContext().Hgvs);
 
+        // a common prod SNV
+        pos = 549;
+        var =  createSnv(pos, refBases);
+
+        impact = classifier.classifyVariant(var, transData);
+        assertEquals(UPSTREAM_GENE, impact.topEffect());
+        assertEquals(ENHANCER, impact.codingContext().CodingType);
+        assertEquals(124, impact.codingContext().CodingBase);
+
+        HgvsCoding.generate(var, impact.codingContext());
+        assertEquals("c.-124T>A", impact.codingContext().Hgvs);
+
+        // test again with an MNV which is a common TERT variant
+        pos = 549;
+        var =  new VariantData(CHR_1, pos, refBases.substring(pos, pos + 2), "CC");
+
+        impact = classifier.classifyVariant(var, transData);
+        assertEquals(UPSTREAM_GENE, impact.topEffect());
+        assertEquals(ENHANCER, impact.codingContext().CodingType);
+        assertEquals(125, impact.codingContext().CodingBase);
+
+        HgvsCoding.generate(var, impact.codingContext());
+        assertEquals("c.-125_-124delATinsGG", impact.codingContext().Hgvs);
     }
 
     @Test
