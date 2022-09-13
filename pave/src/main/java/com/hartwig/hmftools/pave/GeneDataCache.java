@@ -131,7 +131,7 @@ public class GeneDataCache
 
             if(!mOtherReportableTranscripts.isEmpty())
             {
-                PV_LOGGER.info("loaded {} driver alternative transcripts from {} genes",
+                PV_LOGGER.debug("loaded {} driver alternative transcripts from {} genes",
                         mOtherReportableTranscripts.values().stream().mapToInt(x -> x.size()).sum(), mOtherReportableTranscripts.size());
             }
         }

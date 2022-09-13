@@ -499,7 +499,7 @@ public class HighDepthCombiner
             else
                 overlapType = "OVERLAPS";
 
-            SV_LOGGER.info("OVERLAP,{},{},{},{},{},{},{},{},{},{}",
+            SV_LOGGER.debug("OVERLAP,{},{},{},{},{},{},{},{},{},{}",
                     geneData.GeneName, geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd,
                     highDepthRegion.start(), highDepthRegion.end(), overlappingBases, overlapType,
                     highDepthRegion.SampleCount, highDepthRegion.DepthMin, highDepthRegion.DepthMax);
@@ -532,7 +532,7 @@ public class HighDepthCombiner
         if(mEnsemblDataCache == null || (mDriverGenes.isEmpty() && !mKnownFusionCache.hasValidData()))
             return;
 
-        SV_LOGGER.info("OVERLAP,GeneName,Chromosome,GeneStart,GeneEnd,RegionStart,RegionEnd,OverlapBases,OverlapType,SampleCount,DepthMin,DepthMax");
+        SV_LOGGER.debug("OVERLAP,GeneName,Chromosome,GeneStart,GeneEnd,RegionStart,RegionEnd,OverlapBases,OverlapType,SampleCount,DepthMin,DepthMax");
 
         // convert driver and fusion genes into regions to compare
         Set<String> addedGenes = Sets.newHashSet();
