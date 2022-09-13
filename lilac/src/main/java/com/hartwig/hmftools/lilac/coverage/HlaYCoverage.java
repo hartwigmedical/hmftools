@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_Y_FRAGMENT_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_HLA_Y_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_HLA_Y_FRAGMENTS;
@@ -154,7 +153,7 @@ public class HlaYCoverage
         }
 
         int totalHlaYFrags = uniqueHlaY  + matchedFragmentAlleles.size();
-        double threshold = fragments.size() * HLA_Y_FRAGMENT_THRESHOLD;
+        double threshold = fragments.size() * mConfig.HlaYPercentThreshold;
         mExceedsThreshold = uniqueHlaY >= threshold;
 
         if(totalHlaYFrags > 0)

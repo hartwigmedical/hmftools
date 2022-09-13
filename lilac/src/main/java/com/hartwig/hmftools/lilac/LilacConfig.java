@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE_FAC
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_TOP_SCORE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_HLA_Y_FRAGMENT_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 
 import com.google.common.collect.Lists;
@@ -64,6 +65,7 @@ public class LilacConfig
     private final int MinEvidence;
     private final double MinEvidenceFactor;
     private final double MinHighQualEvidenceFactor;
+    public final double HlaYPercentThreshold;
 
     public final int MinFragmentsPerAllele;
     public final int MinFragmentsToRemoveSingle;
@@ -108,6 +110,7 @@ public class LilacConfig
     private static final String MIN_FRAGMENTS_PER_ALLELE = "min_fragments_per_allele";
     private static final String MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single";
     private static final String TOP_SCORE_THRESHOLD = "top_score_threshold";
+    private static final String HLA_Y_THRESHOLD = "hla_y_threshold";
 
     // debug and technical config
     private static final String ACTUAL_ALLELES = "actual_alleles";
@@ -184,6 +187,7 @@ public class LilacConfig
         MinEvidence = getConfigValue(cmd, MIN_EVIDENCE, DEFAULT_MIN_EVIDENCE);
         MinEvidenceFactor = getConfigValue(cmd, MIN_EVIDENCE_FACTOR, DEFAULT_MIN_EVIDENCE_FACTOR);
         MinHighQualEvidenceFactor = getConfigValue(cmd, MIN_HIGH_QUAL_EVIDENCE_FACTOR, DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);
+        HlaYPercentThreshold = getConfigValue(cmd, HLA_Y_THRESHOLD, DEFAULT_HLA_Y_FRAGMENT_THRESHOLD);
 
         MinFragmentsPerAllele = getConfigValue(cmd, MIN_FRAGMENTS_PER_ALLELE, DEFAULT_FRAGS_PER_ALLELE);
         MinFragmentsToRemoveSingle = getConfigValue(cmd, MIN_FRAGMENTS_TO_REMOVE_SINGLE, DEFAULT_FRAGS_REMOVE_SGL);
@@ -294,6 +298,7 @@ public class LilacConfig
         MinFragmentsToRemoveSingle = DEFAULT_FRAGS_REMOVE_SGL;
         TopScoreThreshold = DEFAULT_TOP_SCORE_THRESHOLD;
         FatalLowCoverage = DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD;
+        HlaYPercentThreshold = DEFAULT_HLA_Y_FRAGMENT_THRESHOLD;
 
         CopyNumberFile = "";
         SomaticVariantsFile = "";
@@ -341,6 +346,9 @@ public class LilacConfig
 
         options.addOption(
                 FATAL_LOW_COVERAGE, true,"Fatal low coverage, default: " + DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD);
+
+        options.addOption(
+                HLA_Y_THRESHOLD, true,"HLA-Y percent threshold, default: " + DEFAULT_HLA_Y_FRAGMENT_THRESHOLD);
 
         options.addOption(TOP_SCORE_THRESHOLD, true,"Max distance from top score");
         options.addOption(ACTUAL_ALLELES, true,"Comma separated known actual alleles for the sample");
