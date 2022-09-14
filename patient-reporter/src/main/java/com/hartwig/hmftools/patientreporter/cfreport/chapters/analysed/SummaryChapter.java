@@ -9,7 +9,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.hla.LilacAllele;
+import com.hartwig.hmftools.common.hla.LilacGermlineAllele;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
@@ -41,13 +41,10 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class SummaryChapter implements ReportChapter {
-    private static final Logger LOGGER = LogManager.getLogger(SummaryChapter.class);
 
     private static final float TABLE_SPACER_HEIGHT = 5;
     private static final DecimalFormat SINGLE_DECIMAL_FORMAT = ReportResources.decimalFormat("#.#");
@@ -412,16 +409,18 @@ public class SummaryChapter implements ReportChapter {
         List<String> HLCtypes = Lists.newArrayList();
         Style hlaStyle = ReportResources.dataHighlightStyle();
 
-        for (LilacAllele lilacAllele : patientReport.genomicAnalysis().lilac().alleles()) {
-            String allele = lilacAllele.allele();
-            if (allele.startsWith("A*")) {
-                HLAtypes.add(allele);
+        for (LilacGermlineAllele lilacReporting : patientReport.genomicAnalysis().lilac().lilacAlleleGermline()) {
+            String germlineAllele = lilacReporting.germlineAllele();
+            String gene = lilacReporting.gene();
+
+            if (gene.equals("HLA-A")) {
+                HLAtypes.add(germlineAllele);
             }
-            else if (allele.startsWith("B*")) {
-                HLBtypes.add(allele);
+            if (gene.equals("HLA-B")) {
+                HLBtypes.add(germlineAllele);
             }
-            else if (allele.startsWith("C*")) {
-                HLCtypes.add(allele);
+            if (gene.equals("HLA-C")) {
+                HLCtypes.add(germlineAllele);
             }
         }
 

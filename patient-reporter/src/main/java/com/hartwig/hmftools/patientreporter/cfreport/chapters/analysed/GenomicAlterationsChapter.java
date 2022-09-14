@@ -9,8 +9,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.hla.LilacAllele;
-import com.hartwig.hmftools.common.hla.LilacSummaryData;
+import com.hartwig.hmftools.common.hla.LilacReporting;
+import com.hartwig.hmftools.common.hla.LilacReportingData;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
@@ -35,7 +35,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
-import com.hartwig.hmftools.patientreporter.cfreport.data.HLAAllele;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.LohGenes;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
@@ -386,22 +385,21 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createImmunoTable(@NotNull LilacSummaryData lilac, boolean hasReliablePurity) {
-        Map<String, List<LilacAllele>> lilacAlleleMap = Maps.newHashMap();
+    private static Table createImmunoTable(@NotNull LilacReportingData lilac, boolean hasReliablePurity) {
+        Map<String, List<LilacReporting>> lilacAlleleMap = Maps.newHashMap();
 
-        for (LilacAllele lilacAllele : lilac.alleles()) {
-            List<LilacAllele> lilacAlleleList = Lists.newArrayList();
-            if (lilacAlleleMap.containsKey(lilacAllele.allele())) {
-                lilacAlleleList.addAll(lilacAlleleMap.get(lilacAllele.allele()));
+        for (LilacReporting lilacAllele : lilac.lilacReporting()) {
+            List<LilacReporting> lilacAlleleList = Lists.newArrayList();
+            if (lilacAlleleMap.containsKey(lilacAllele.lilacGermlineAllele().gene())) {
+                lilacAlleleList.addAll(lilacAlleleMap.get(lilacAllele.lilacGermlineAllele().gene()));
                 lilacAlleleList.add(lilacAllele);
-                lilacAlleleMap.put(lilacAllele.allele(), lilacAlleleList);
+                lilacAlleleMap.put(lilacAllele.lilacGermlineAllele().gene(), lilacAlleleList);
             } else {
                 lilacAlleleList.add(lilacAllele);
-                lilacAlleleMap.put(lilacAllele.allele(), lilacAlleleList);
+                lilacAlleleMap.put(lilacAllele.lilacGermlineAllele().gene(), lilacAlleleList);
             }
-            lilacAlleleMap.put(lilacAllele.allele(),lilacAlleleList );
+            lilacAlleleMap.put(lilacAllele.lilacGermlineAllele().gene(), lilacAlleleList);
         }
-
 
         String title = "HLA Alleles";
         Table table = TableUtil.createReportContentTable(new float[] { 10, 10, 10, 10, 10, 10 },
@@ -409,14 +407,14 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         TableUtil.createHeaderCell("Germline copies"), TableUtil.createHeaderCell("Tumor copies"),
                         TableUtil.createHeaderCell("# Somatic mutations*"),
                         TableUtil.createHeaderCell("Interpretation: presence in tumor") });
-        if (!lilac.qc().equals("PASS")) {
+        if (!lilac.lilacQc().equals("PASS")) {
             String noConsent = "The QC of the HLA types do not meet the QC cut-offs";
             return TableUtil.createNoConsentReportTable(title, noConsent);
         } else {
 
             Set<String> sortedAlleles = Sets.newTreeSet(lilacAlleleMap.keySet().stream().collect(Collectors.toSet()));
             for (String sortAllele : sortedAlleles) {
-                List<LilacAllele> allele = lilacAlleleMap.get(sortAllele);
+                List<LilacReporting> allele = lilacAlleleMap.get(sortAllele);
                 table.addCell(TableUtil.createContentCell(sortAllele));
 
                 Table tableGermlineAllele = new Table(new float[] { 1 });
@@ -425,20 +423,14 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 Table tableSomaticMutations = new Table(new float[] { 1 });
                 Table tablePrecenseIntumor = new Table(new float[] { 1 });
 
-                for (LilacAllele allele1 : HLAAllele.sort(allele)) {
-
-                    tableGermlineAllele.addCell(TableUtil.createTransparentCell(allele1.allele()));
-                    tableGermlineCopies.addCell(TableUtil.createTransparentCell(hasReliablePurity
-                            ? HLAAllele.SINGLE_DIGIT.format(allele1.tumorCopyNumber())
-                            : DataUtil.NA_STRING));
-                    tableTumorCopies.addCell(TableUtil.createTransparentCell(hasReliablePurity
-                            ? HLAAllele.SINGLE_DIGIT.format(allele1.tumorCopyNumber())
-                            : DataUtil.NA_STRING));
-                    tableSomaticMutations.addCell(TableUtil.createTransparentCell(HLAAllele.mutationString(allele1)));
-                    tablePrecenseIntumor.addCell(TableUtil.createTransparentCell(HLAAllele.HLApresenceInTumor(allele1,
-                            HLAAllele.mutationString(allele1),
-                            hasReliablePurity)));
+                for (LilacReporting allele1 : allele) { //Add sort function
+                    tableGermlineAllele.addCell(TableUtil.createTransparentCell(allele1.lilacGermlineAllele().germlineAllele()));
+                    tableGermlineCopies.addCell(TableUtil.createTransparentCell(String.valueOf(allele1.germlineCopies())));
+                    tableTumorCopies.addCell(TableUtil.createTransparentCell(String.valueOf(allele1.tumorCopies())));
+                    tableSomaticMutations.addCell(TableUtil.createTransparentCell(allele1.somaticMutations()));
+                    tablePrecenseIntumor.addCell(TableUtil.createTransparentCell(allele1.interpretation()));
                 }
+
                 table.addCell(TableUtil.createContentCell(tableGermlineAllele));
                 table.addCell(TableUtil.createContentCell(tableGermlineCopies));
                 table.addCell(TableUtil.createContentCell(tableTumorCopies));

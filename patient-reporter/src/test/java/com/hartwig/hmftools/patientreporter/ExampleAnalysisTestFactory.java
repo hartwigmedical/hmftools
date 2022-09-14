@@ -18,10 +18,11 @@ import com.hartwig.hmftools.common.cuppa.interpretation.ImmutableCuppaPrediction
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
-import com.hartwig.hmftools.common.hla.ImmutableLilacSummaryData;
-import com.hartwig.hmftools.common.hla.LilacAllele;
-import com.hartwig.hmftools.common.hla.LilacSummaryData;
-import com.hartwig.hmftools.common.lilac.LilacTestFactory;
+import com.hartwig.hmftools.common.hla.ImmutableLilacGermlineAllele;
+import com.hartwig.hmftools.common.hla.ImmutableLilacReporting;
+import com.hartwig.hmftools.common.hla.ImmutableLilacReportingData;
+import com.hartwig.hmftools.common.hla.LilacReporting;
+import com.hartwig.hmftools.common.hla.LilacReportingData;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
@@ -119,7 +120,7 @@ public final class ExampleAnalysisTestFactory {
         List<GeneDisruption> disruptions = createCOLO829Disruptions();
         List<AnnotatedVirus> viruses = Lists.newArrayList();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
-        LilacSummaryData lilac = createTestLilacData();
+        LilacReportingData lilac = createTestLilacData();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), config.reportGermline(), config.limsCohortConfig());
 
@@ -196,9 +197,7 @@ public final class ExampleAnalysisTestFactory {
                 .suspectGeneCopyNumbersHRDWithLOH(HRDLOHGenes())
                 .build();
 
-        CuppaPrediction cuppaPrediction = ImmutableCuppaPrediction.builder()
-                .cancerType("Melanoma")
-                .likelihood(99.6).build();
+        CuppaPrediction cuppaPrediction = ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(99.6).build();
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
@@ -231,6 +230,7 @@ public final class ExampleAnalysisTestFactory {
         return geneCopyNumbers;
 
     }
+
     @NotNull
     private static List<GeneCopyNumber> MSILOHGenes() {
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
@@ -1385,16 +1385,45 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static LilacSummaryData createTestLilacData() {
-        List<LilacAllele> alleles = Lists.newArrayList();
-        alleles.add(LilacTestFactory.builder().allele("A*123").build());
-        alleles.add(LilacTestFactory.builder().allele("A*123").somaticInframeIndel(1D).build());
-        alleles.add(LilacTestFactory.builder().allele("B*456").somaticInframeIndel(1D).build());
-        alleles.add(LilacTestFactory.builder().allele("B*456").somaticInframeIndel(0.9).build());
-        alleles.add(LilacTestFactory.builder().allele("C*789").somaticInframeIndel(0.7).build());
-        alleles.add(LilacTestFactory.builder().allele("C*789").somaticInframeIndel(0.8).build());
+    private static LilacReportingData createTestLilacData() {
+        List<LilacReporting> alleles = Lists.newArrayList();
 
-        return ImmutableLilacSummaryData.builder().qc("PASS").alleles(alleles).build();
+        alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                .gene("HLA-A")
+                .germlineAllele("A*456")
+                .build()).build());
+        alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                .gene("HLA-A")
+                .germlineAllele("A*123")
+                .build()).tumorCopies(1D).build());
+        alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                .gene("HLA-B")
+                .germlineAllele("B*456")
+                .build()).tumorCopies(1D).build());
+        alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                .gene("HLA-B")
+                .germlineAllele("B*456")
+                .build()).tumorCopies(0.9).build());
+        alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                .gene("HLA-C")
+                .germlineAllele("C*789")
+                .build()).tumorCopies(0.7).build());
+        alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                .gene("HLA-C")
+                .germlineAllele("C*789")
+                .build()).tumorCopies(0.8).build());
+
+        return ImmutableLilacReportingData.builder().lilacQc("PASS").lilacReporting(alleles).build();
+    }
+
+    @NotNull
+    private static ImmutableLilacReporting.Builder createLilacReporting() {
+        return ImmutableLilacReporting.builder()
+                .lilacGermlineAllele(ImmutableLilacGermlineAllele.builder().gene(Strings.EMPTY).germlineAllele(Strings.EMPTY).build())
+                .germlineCopies(0)
+                .tumorCopies(0)
+                .somaticMutations(Strings.EMPTY)
+                .interpretation(Strings.EMPTY);
     }
 
     @NotNull
