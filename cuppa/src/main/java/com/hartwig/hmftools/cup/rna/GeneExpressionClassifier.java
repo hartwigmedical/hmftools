@@ -168,7 +168,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
         else
         {
             int sampleCount = mSampleDataCache.SampleDataList.size();
-            mSampleGeneExpression = new Matrix(sampleCount, mRefCancerTypeGeneExpression.Cols);
+            mSampleGeneExpression = new Matrix(sampleCount, mRefSampleGeneExpression.Cols);
 
             for(int i = 0; i < sampleCount; ++i)
             {

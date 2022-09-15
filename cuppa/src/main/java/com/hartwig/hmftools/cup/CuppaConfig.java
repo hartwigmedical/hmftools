@@ -43,6 +43,8 @@ import static com.hartwig.hmftools.cup.ref.RefDataConfig.addPipelineDirectories;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
@@ -203,14 +205,14 @@ public class CuppaConfig
         RefGenderRateFile = getRefDataFile(cmd, REF_GENDER_RATE_FILE, REF_FILE_GENDER_RATES);
         RefSvPercFile = getRefDataFile(cmd, REF_SV_PERC_FILE, REF_FILE_SV_PERC);
         RefSnvCancerPosFreqFile = getRefDataFile(cmd, REF_SNV_CANCER_POS_FREQ_FILE, REF_FILE_CANCER_POS_FREQ_COUNTS);
-        RefSnvSamplePosFreqFile = getRefDataFile(cmd, REF_SNV_SAMPLE_POS_FREQ_FILE, REF_FILE_SAMPLE_POS_FREQ_COUNTS);
+        RefSnvSamplePosFreqFile = getRefDataFile(cmd, REF_SNV_SAMPLE_POS_FREQ_FILE, REF_FILE_SAMPLE_POS_FREQ_COUNTS, true);
         RefDriverAvgFile = getRefDataFile(cmd, REF_DRIVER_AVG_FILE, REF_FILE_DRIVER_AVG);
         RefSnvSignaturesFile = getRefDataFile(cmd, REF_SNV_SIGNATURES_FILE, REF_FILE_SNV_SIGNATURES);
 
-        RefGeneExpCancerFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_CANCER_FILE, REF_FILE_GENE_EXP_CANCER);
-        RefGeneExpSampleFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_SAMPLE_FILE, REF_FILE_GENE_EXP_SAMPLE);
-        RefAltSjCancerFile = getRefDataFile(cmd, REF_RNA_ALT_SJ_CANCER_FILE, REF_FILE_ALT_SJ_CANCER);
-        RefAltSjSampleFile = getRefDataFile(cmd, REF_RNA_ALT_SJ_SAMPLE_FILE, REF_FILE_ALT_SJ_SAMPLE);
+        RefGeneExpCancerFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_CANCER_FILE, REF_FILE_GENE_EXP_CANCER, true);
+        RefGeneExpSampleFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_SAMPLE_FILE, REF_FILE_GENE_EXP_SAMPLE, true);
+        RefAltSjCancerFile = getRefDataFile(cmd, REF_RNA_ALT_SJ_CANCER_FILE, REF_FILE_ALT_SJ_CANCER, true);
+        RefAltSjSampleFile = getRefDataFile(cmd, REF_RNA_ALT_SJ_SAMPLE_FILE, REF_FILE_ALT_SJ_SAMPLE, true);
 
         TestRefData = cmd.hasOption(TEST_REF_SAMPLE_DATA);
 
@@ -292,10 +294,17 @@ public class CuppaConfig
 
     private String getRefDataFile(final CommandLine cmd, final String configStr, final String defaultFilename)
     {
-        if(cmd.hasOption(configStr))
-            return cmd.getOptionValue(configStr);
+        return getRefDataFile(cmd, configStr, defaultFilename, false);
+    }
 
-        return RefDataDir + defaultFilename;
+    private String getRefDataFile(final CommandLine cmd, final String configStr, final String defaultFilename, boolean checkZipped)
+    {
+        String refFilename = cmd.hasOption(configStr) ? cmd.getOptionValue(configStr) : RefDataDir + defaultFilename;
+
+        if(checkZipped && !Files.exists(Paths.get(refFilename)) && Files.exists(Paths.get(refFilename + ".gz")))
+            return refFilename + ".gz";
+
+        return refFilename;
     }
 
     private String getCohortSampleDataFile(

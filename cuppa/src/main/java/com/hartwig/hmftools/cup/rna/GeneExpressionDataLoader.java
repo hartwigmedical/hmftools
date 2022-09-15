@@ -125,48 +125,4 @@ public class GeneExpressionDataLoader
 
         return true;
     }
-
-    public static Matrix loadSampleGeneExpressionMatrix(
-            final String filename, final Map<String,Integer> refGeneIdIndexMap, final Map<String,Integer> sampleIndexMap)
-    {
-        Matrix sampleMatrix = loadMatrixDataFile(filename, sampleIndexMap, GENE_EXP_IGNORE_FIELDS, true);
-
-        // ensure genes are ordered as per the reference data
-        final Map<String,Integer> sampleGeneIdIndices = Maps.newHashMap();
-        if(!loadGeneIdIndices(filename, sampleGeneIdIndices))
-            return null;
-
-        if(sampleGeneIdIndices.size() != refGeneIdIndexMap.size())
-        {
-            CUP_LOGGER.error("sample gene expression matrix size({}) differs from ref size({})",
-                    sampleGeneIdIndices.size(), refGeneIdIndexMap.size());
-            return null;
-        }
-
-        if(sampleGeneIdIndices.entrySet().stream().anyMatch(x -> !refGeneIdIndexMap.containsKey(x.getKey())))
-        {
-            CUP_LOGGER.error("sample gene expression matrix missing ref gene entries");
-            return null;
-        }
-
-        if(sampleGeneIdIndices.entrySet().stream().anyMatch(x -> refGeneIdIndexMap.get(x.getKey()) != x.getValue()))
-        {
-            // sample matrix is ordered differently so build it to match
-            Matrix newMatrix = new Matrix(sampleMatrix.Rows, sampleMatrix.Cols);
-
-            for(Map.Entry<String,Integer> refEntry : refGeneIdIndexMap.entrySet())
-            {
-                String refGeneId = refEntry.getKey();
-                int refGeneIndex = refEntry.getValue();
-                int sampleGeneIndex = sampleGeneIdIndices.get(refGeneId);
-
-                newMatrix.setRow(refGeneIndex, sampleMatrix.getRow(sampleGeneIndex));
-            }
-
-            return newMatrix;
-        }
-
-        return sampleMatrix;
-    }
-
 }
