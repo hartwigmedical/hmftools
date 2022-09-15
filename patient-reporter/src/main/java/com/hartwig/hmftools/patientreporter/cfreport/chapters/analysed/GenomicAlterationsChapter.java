@@ -35,6 +35,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.HLAAllele;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.LohGenes;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
@@ -423,7 +424,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 Table tableSomaticMutations = new Table(new float[] { 1 });
                 Table tablePrecenseIntumor = new Table(new float[] { 1 });
 
-                for (LilacReporting allele1 : allele) { //Add sort function
+                for (LilacReporting allele1 : HLAAllele.sort(allele)) {
                     tableGermlineAllele.addCell(TableUtil.createTransparentCell(allele1.lilacGermlineAllele().germlineAllele()));
                     tableGermlineCopies.addCell(TableUtil.createTransparentCell(String.valueOf(allele1.germlineCopies())));
                     tableTumorCopies.addCell(TableUtil.createTransparentCell(String.valueOf(allele1.tumorCopies())));
