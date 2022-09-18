@@ -244,6 +244,10 @@ public class ComparConfig
                 String[] values = line.split(DATA_DELIM, -1);
 
                 String sampleId = values[sampleIndex];
+
+                if(sampleId.startsWith("#"))
+                    continue;
+
                 SampleIds.add(sampleId);
 
                 String refSampleId = refSampleIndex != null ? values[refSampleIndex] : null;
