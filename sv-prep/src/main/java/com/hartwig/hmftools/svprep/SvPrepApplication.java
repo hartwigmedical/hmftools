@@ -87,11 +87,11 @@ public class SvPrepApplication
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         double timeTakeMins = timeTakenMs / 60000.0;
 
-        if(combinedStats.ReadStats.TotalReads > 10000 || timeTakenMs > 10000)
+        if(mConfig.PerfDebug && (combinedStats.ReadStats.TotalReads > 10000 || timeTakenMs > 10000))
         {
             SV_LOGGER.info("final stats: {}", combinedStats.ReadStats.toString());
 
-            if(mConfig.PerfDebug)
+            if(SV_LOGGER.isDebugEnabled())
                 combinedStats.PerfCounters.forEach(x -> x.logIntervalStats());
             else
                 combinedStats.PerfCounters.forEach(x -> x.logStats());

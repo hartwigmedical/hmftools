@@ -64,7 +64,7 @@ public class ChromosomeTask implements AutoCloseable
     public void process()
     {
         int regionCount = mPartitions.size();
-        SV_LOGGER.info("chromosome({}) executing {} regions", mChromosome, regionCount);
+        SV_LOGGER.debug("chromosome({}) executing {} regions", mChromosome, regionCount);
 
         List<Thread> workers = new ArrayList<>();
 
@@ -97,9 +97,9 @@ public class ChromosomeTask implements AutoCloseable
 
         mSpanningReadCache.logStats();
 
-        if(mCombinedStats.ReadStats.TotalReads > 10000)
+        if(mConfig.PerfDebug && mCombinedStats.ReadStats.TotalReads > 10000)
         {
-            if(mConfig.PerfDebug)
+            if(SV_LOGGER.isDebugEnabled())
                 mCombinedStats.PerfCounters.forEach(x -> x.logIntervalStats(5));
             else
                 mCombinedStats.PerfCounters.forEach(x -> x.logStats());

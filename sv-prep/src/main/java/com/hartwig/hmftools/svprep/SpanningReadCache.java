@@ -318,7 +318,7 @@ public class SpanningReadCache
 
     public synchronized void logStats()
     {
-        if(!mConfig.writeReads())
+        if(!mConfig.PerfDebug)
             return;
 
         logCacheCount(true);

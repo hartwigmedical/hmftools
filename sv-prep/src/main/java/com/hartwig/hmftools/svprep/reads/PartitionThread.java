@@ -68,7 +68,7 @@ public class PartitionThread extends Thread
 
                 if(logAndGc)
                 {
-                    SV_LOGGER.info("chromosome({}) processing partition({}), remaining({})",
+                    SV_LOGGER.debug("chromosome({}) processing partition({}), remaining({})",
                             mChromosome, partition.TaskId, mPartitions.size());
                 }
 
