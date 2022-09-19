@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.groupByImpact;
+import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.hasTranscriptCodingEffect;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.isReportable;
 
 import java.util.List;
@@ -88,8 +89,18 @@ public class OncoDrivers
 
             for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
             {
-                driverCatalog.add(createOncoDriver(
-                        sampleSNVCount, sampleINDELCount, dndsLikelihood, geneVariants, geneCopyNumber));
+                if(geneCopyNumbers.size() == 1)
+                {
+                    driverCatalog.add(createOncoDriver(sampleSNVCount, sampleINDELCount, dndsLikelihood, geneVariants, geneCopyNumber));
+                }
+                else
+                {
+                    // confirm this variant has a reportable effect against the specific transcript
+                    if(geneVariants.stream().anyMatch(x -> hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.transName())))
+                    {
+                        driverCatalog.add(createOncoDriver(sampleSNVCount, sampleINDELCount, dndsLikelihood, geneVariants, geneCopyNumber));
+                    }
+                }
             }
         }
 

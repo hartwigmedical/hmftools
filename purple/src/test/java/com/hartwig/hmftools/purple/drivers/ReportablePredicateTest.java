@@ -2,6 +2,8 @@ package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate.MAX_ONCO_REPEAT_COUNT;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
+import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.VAR_IMPACT_OTHER_REPORT_DELIM;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -20,17 +22,42 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
+import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 import org.junit.Test;
 
-public class ReportablePredicateTest {
-
+public class ReportablePredicateTest
+{
+    private final String GENE_AR = "AR";
     private final DriverGenePanel genePanel = loadTestPanel();
 
     @Test
-    public void testIgnoreIndelsWithLargeRepeatCount() {
+    public void testAlternateTranscriptImpact()
+    {
+        AltTranscriptReportableInfo altTransInfo1 = new AltTranscriptReportableInfo(
+                "TRANS_03", "", "", VariantEffect.INTRONIC.effect(), CodingEffect.NONE);
+
+        AltTranscriptReportableInfo altTransInfo2 = new AltTranscriptReportableInfo(
+                "TRANS_02", "", "", VariantEffect.MISSENSE.effect(), CodingEffect.MISSENSE);
+
+        String altTransInfo = altTransInfo1.serialise() + VAR_IMPACT_OTHER_REPORT_DELIM + altTransInfo2.serialise();
+
+        VariantImpact impact = new VariantImpact(
+                GENE_AR, "TRANS_01", VariantEffect.INTRONIC.effect(), CodingEffect.NONE, "",
+                "", false, altTransInfo, CodingEffect.MISSENSE, 1);
+
+        ReportablePredicate predicate = new ReportablePredicate(ONCO, genePanel.driverGenes());
+
+        assertTrue(predicate.isReportable(impact, VariantType.SNP, 0, false));
+    }
+
+    @Test
+    public void testIgnoreIndelsWithLargeRepeatCount()
+    {
         final SomaticVariant variant = SomaticVariantTestFactory.builder()
-                .gene("AR")
+                .gene(GENE_AR)
                 .repeatCount(MAX_ONCO_REPEAT_COUNT)
                 .type(VariantType.INDEL)
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
@@ -41,11 +68,11 @@ public class ReportablePredicateTest {
 
         ReportablePredicate oncoPredicate = new ReportablePredicate(ONCO, genePanel.driverGenes());
 
-        assertTrue(oncoPredicate.test(
+        assertTrue(oncoPredicate.isReportable(
                 variant.gene(), variant.type(), variant.repeatCount(), variant.isHotspot(),
                 variant.canonicalCodingEffect(), variant.canonicalEffect()));
 
-        assertFalse(oncoPredicate.test(
+        assertFalse(oncoPredicate.isReportable(
                 variantLargeRepeatCount.gene(), variantLargeRepeatCount.type(), variantLargeRepeatCount.repeatCount(),
                 variantLargeRepeatCount.isHotspot(), variantLargeRepeatCount.canonicalCodingEffect(), variantLargeRepeatCount.canonicalEffect()));
     }
@@ -55,7 +82,7 @@ public class ReportablePredicateTest {
         List<DriverGene> driverGenes = Lists.newArrayList();
 
         driverGenes.add(ImmutableDriverGene.builder()
-                .gene("AR")
+                .gene(GENE_AR)
                 .reportMissenseAndInframe(true)
                 .reportNonsenseAndFrameshift(false)
                 .reportSplice(false)

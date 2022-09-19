@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.protect.variant;
 
+import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.VAR_IMPACT_OTHER_REPORT_DELIM;
+import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.VAR_IMPACT_OTHER_REPORT_ITEM_DELIM;
+
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 
@@ -8,8 +11,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class OtherEffectsInterpreter {
 
-    private static final String IMPACT_SPLITTER = VariantImpactSerialiser.VAR_IMPACT_OTHER_REPORT_DELIM;
-    private static final String FIELD_SPLITTER = "\\" + VariantImpactSerialiser.VAR_IMPACT_OTHER_REPORT_ITEM_DELIM;
+    private static final String IMPACT_SPLITTER = VAR_IMPACT_OTHER_REPORT_DELIM;
+    private static final String FIELD_SPLITTER = "\\" + VAR_IMPACT_OTHER_REPORT_ITEM_DELIM;
 
     private static final int TRANSCRIPT_INDEX = 0;
     private static final int HGVS_CODING_IMPACT_INDEX = 1;

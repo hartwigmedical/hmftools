@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.protect.variant;
 
+import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.VAR_IMPACT_OTHER_REPORT_DELIM;
+
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -39,7 +41,7 @@ public class OtherEffectsInterpreterTest {
     @Test
     public void worksOnDoubleExample() {
         String impact = "ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT";
-        String example = impact+ VariantImpactSerialiser.VAR_IMPACT_OTHER_REPORT_DELIM + impact;
+        String example = impact+ VAR_IMPACT_OTHER_REPORT_DELIM + impact;
 
         assertEquals("ENST00000579755", OtherEffectsInterpreter.transcript(example));
         assertEquals("c.246_247delCG", OtherEffectsInterpreter.hgvsCodingImpact(example));

@@ -5,9 +5,7 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SYNONYMOUS;
-import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
-import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT_OTHER_REPORT_DELIM;
-import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.toOtherReportableTransInfo;
+import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.VAR_IMPACT_OTHER_REPORT_DELIM;
 
 import java.util.List;
 import java.util.Map;
@@ -15,6 +13,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 public class VariantImpactBuilder
@@ -97,7 +96,7 @@ public class VariantImpactBuilder
                     {
                         CodingEffect codingEffect = determineCodingEffect(transImpact);
 
-                        sj.add(toOtherReportableTransInfo(
+                        sj.add(AltTranscriptReportableInfo.serialise(
                                 transImpact.TransData.TransName, transImpact.hgvsCoding(), transImpact.hgvsProtein(),
                                 transImpact.effectsStr(), codingEffect));
                     }

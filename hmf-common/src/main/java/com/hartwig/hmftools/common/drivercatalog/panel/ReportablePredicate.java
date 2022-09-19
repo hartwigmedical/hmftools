@@ -1,17 +1,18 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
+import static com.hartwig.hmftools.common.variant.impact.VariantImpact.parseAltTranscriptInfo;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 public class ReportablePredicate
 {
@@ -29,7 +30,24 @@ public class ReportablePredicate
         mMaxRepeatCount = type == DriverCategory.ONCO ? MAX_ONCO_REPEAT_COUNT : -1;
     }
 
-    public boolean test(
+    public boolean isReportable(final VariantImpact variantImpact, final VariantType type, int repeatCount, boolean isHotspot)
+    {
+        if(isReportable(
+            variantImpact.CanonicalGeneName, type, repeatCount, isHotspot, variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect))
+        {
+            return true;
+        }
+
+        if(variantImpact.OtherReportableEffects.isEmpty())
+            return false;
+
+        List<AltTranscriptReportableInfo> altTransEffects = parseAltTranscriptInfo(variantImpact.OtherReportableEffects);
+
+        return altTransEffects.stream().anyMatch(x ->
+                isReportable(variantImpact.CanonicalGeneName, type, repeatCount, isHotspot, x.Effect, x.Effects));
+    }
+
+    public boolean isReportable(
             final String gene, final VariantType type, int repeatCount, boolean isHotspot,
             final CodingEffect codingEffect, final String effects)
     {

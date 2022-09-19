@@ -4,6 +4,9 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
+import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.getWorstReportableCodingEffect;
+import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.hasTranscriptCodingEffect;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +21,7 @@ import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -38,14 +42,31 @@ public class GermlineDrivers
 
         for(String gene : genes)
         {
-            // TODO: decide how to handle multiple transcripts per gene
-            GeneCopyNumber geneCopyNumber = geneCopyNumberMap.get(gene).get(0);
-
             DriverCategory category = mDriverCatalogMap.get(gene);
             List<GermlineVariant> geneVariants = variants.stream().filter(x -> x.gene().equals(gene)).collect(toList());
 
-            if(category != null)
-                driverCatalog.add(germlineDriver(category, gene, geneVariants, geneCopyNumber));
+            if(category == null)
+                continue;
+
+            List<GeneCopyNumber> geneCopyNumbers = geneCopyNumberMap.get(gene);
+
+            if(geneCopyNumbers == null)
+                continue;
+
+            for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
+            {
+                if(geneCopyNumbers.size() == 1)
+                {
+                    driverCatalog.add(germlineDriver(category, gene, geneVariants, geneCopyNumber));
+                }
+                else
+                {
+                    if(geneVariants.stream().anyMatch(x -> hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.transName())))
+                    {
+                        driverCatalog.add(germlineDriver(category, gene, geneVariants, geneCopyNumber));
+                    }
+                }
+            }
         }
 
         return driverCatalog;
@@ -59,6 +80,7 @@ public class GermlineDrivers
 
         for(GermlineVariant variant : geneVariants)
         {
+            CodingEffect worstCodingEffect = getWorstReportableCodingEffect(variant.variantImpact());
             DriverImpact driverImpact = DriverImpact.select(variant.type(), variant.variantImpact().CanonicalCodingEffect);
             Integer count = variantCounts.get(driverImpact);
             variantCounts.put(driverImpact, count != null ? count + 1 : 1);

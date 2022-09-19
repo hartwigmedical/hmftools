@@ -233,16 +233,12 @@ public class SampleComparisonTask implements Callable
         if(variantImpact == null)
             return false;
 
-        if(mReportableOncoGenes.test(
-                variantImpact.CanonicalGeneName, variant.type(), variant.repeatCount(), refVariant.IsHotspot,
-                variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect))
+        if(mReportableOncoGenes.isReportable(variantImpact, variant.type(), variant.repeatCount(), refVariant.IsHotspot))
         {
             return true;
         }
 
-        if(mReportableTsgGenes.test(
-                variantImpact.CanonicalGeneName, variant.type(), variant.repeatCount(), refVariant.IsHotspot,
-                variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect))
+        if(mReportableTsgGenes.isReportable(variantImpact, variant.type(), variant.repeatCount(), refVariant.IsHotspot))
         {
             return true;
         }

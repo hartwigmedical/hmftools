@@ -1,6 +1,14 @@
 package com.hartwig.hmftools.common.variant.impact;
 
+import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.VAR_IMPACT_OTHER_REPORT_DELIM;
+import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.VAR_IMPACT_OTHER_REPORT_ITEM_COUNT;
+import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.VAR_IMPACT_OTHER_REPORT_ITEM_DELIM;
+
+import java.util.List;
+
 import com.hartwig.hmftools.common.variant.CodingEffect;
+
+import org.apache.commons.compress.utils.Lists;
 
 public class VariantImpact
 {
@@ -45,6 +53,22 @@ public class VariantImpact
                 OtherReportableEffects.equals(other.OtherReportableEffects) &&
                 WorstCodingEffect == other.WorstCodingEffect &&
                 GenesAffected == other.GenesAffected;
+    }
+
+    public static List<AltTranscriptReportableInfo> parseAltTranscriptInfo(final String otherReportableEffects)
+    {
+        List<AltTranscriptReportableInfo> altTransEffects = Lists.newArrayList();
+
+        String[] otherReportableTranscripts = otherReportableEffects.split(VAR_IMPACT_OTHER_REPORT_DELIM, -1);
+
+        for(String transInfo : otherReportableTranscripts)
+        {
+            AltTranscriptReportableInfo altTransInfo = AltTranscriptReportableInfo.parse(transInfo);
+            if(altTransInfo != null)
+                altTransEffects.add(altTransInfo);
+        }
+
+        return altTransEffects;
     }
 
     public String toString()

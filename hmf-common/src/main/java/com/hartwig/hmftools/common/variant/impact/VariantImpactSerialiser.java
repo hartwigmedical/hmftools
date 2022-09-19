@@ -21,9 +21,6 @@ public final class VariantImpactSerialiser
     // in the VCF, the components of the variant impact are separated by ',' and effects are separated by '&'
     // other reportable effects are separated by '-' and their sub-details by '|'
 
-    public static final String VAR_IMPACT_OTHER_REPORT_ITEM_DELIM = "|";
-    public static final String VAR_IMPACT_OTHER_REPORT_DELIM = "-";
-
     public static VCFHeader writeHeader(final VCFHeader header)
     {
         StringJoiner fields = new StringJoiner(", ");
@@ -91,18 +88,5 @@ public final class VariantImpactSerialiser
         return new VariantImpact(
                 canonicalGeneName, canonicalTranscript, canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact,
                 canonicalHgvsProteinImpact, canonicalSpliceRegion, otherReportableEffects, worstCodingEffect, genesAffected);
-    }
-
-    public static String toOtherReportableTransInfo(
-            final String transName, final String hgvsCoding, final String hgvsProtein, final String effects, final CodingEffect codingEffect)
-    {
-        // eg ENST00000579755|c.209_210delCCinsTT|p.Pro70Leu|missense_variant|MISSENSE;
-        StringJoiner sj = new StringJoiner(VAR_IMPACT_OTHER_REPORT_ITEM_DELIM);
-        sj.add(transName);
-        sj.add(hgvsCoding);
-        sj.add(hgvsProtein);
-        sj.add(effects);
-        sj.add(codingEffect.toString());
-        return sj.toString();
     }
 }
