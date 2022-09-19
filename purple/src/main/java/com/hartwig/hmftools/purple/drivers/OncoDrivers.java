@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.drivers;
 
+import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.getWorstReportableCodingEffect;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.groupByImpact;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.hasTranscriptCodingEffect;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.isReportable;
@@ -153,7 +154,8 @@ public class OncoDrivers
         {
             for(SomaticVariant variant : geneVariants)
             {
-                final DriverImpact impact = DriverImpact.select(variant.type(), variant.variantImpact().CanonicalCodingEffect);
+                CodingEffect codingEffect = getWorstReportableCodingEffect(variant.variantImpact());
+                final DriverImpact impact = DriverImpact.select(variant.type(), codingEffect);
 
                 final DndsDriverImpactLikelihood likelihood = geneLikelihood.select(impact);
 

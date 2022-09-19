@@ -94,7 +94,7 @@ public class SomaticVariantDrivers
 
             for(AltTranscriptReportableInfo altTransInfo : altTransEffects)
             {
-                if(topCodingEffect.ordinal() > altTransInfo.Effect.ordinal())
+                if(altTransInfo.Effect.ordinal() < topCodingEffect.ordinal())
                 {
                     topCodingEffect = altTransInfo.Effect;
                 }
@@ -109,7 +109,6 @@ public class SomaticVariantDrivers
         DriverImpact impact = DriverImpact.select(type, codingEffect);
         return impact != DriverImpact.UNKNOWN;
     }
-
 
     public List<DriverCatalog> buildCatalog(final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
     {

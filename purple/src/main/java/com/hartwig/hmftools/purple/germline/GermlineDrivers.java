@@ -80,8 +80,8 @@ public class GermlineDrivers
 
         for(GermlineVariant variant : geneVariants)
         {
-            CodingEffect worstCodingEffect = getWorstReportableCodingEffect(variant.variantImpact());
-            DriverImpact driverImpact = DriverImpact.select(variant.type(), variant.variantImpact().CanonicalCodingEffect);
+            CodingEffect codingEffect = getWorstReportableCodingEffect(variant.variantImpact());
+            DriverImpact driverImpact = DriverImpact.select(variant.type(), codingEffect);
             Integer count = variantCounts.get(driverImpact);
             variantCounts.put(driverImpact, count != null ? count + 1 : 1);
         }
