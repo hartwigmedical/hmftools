@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.svprep.SvCommon.ITEM_DELIM;
@@ -26,6 +28,7 @@ import static com.hartwig.hmftools.svprep.SvConstants.MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_SOFT_CLIP_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_SUPPORTING_READ_DISTANCE;
 import static com.hartwig.hmftools.svprep.WriteType.BAM;
+import static com.hartwig.hmftools.svprep.WriteType.FRAGMENT_LENGTH_DIST;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
 
 import java.nio.file.Files;
@@ -73,8 +76,6 @@ public class SvConfig
     // debug
     public final List<String> SpecificChromosomes;
     public final List<String> LogReadIds;
-    public final boolean FindDiscordantGroups;
-    public final boolean RetrieveBlacklistMates;
     public final List<ChrBaseRegion> SpecificRegions;
     public final boolean TrackRemotes;
     public final boolean PerfDebug;
@@ -104,12 +105,11 @@ public class SvConfig
     private static final String LOG_READ_IDS = "log_read_ids";
     private static final String MAX_PARTITION_READS = "max_partition_reads";
     private static final String APPLY_DOWNSAMPLING = "apply_downsampling";
-    private static final String FIND_DISCORDANT_GROUPS = "discordant_groups";
     private static final String CAPTURE_DEPTH = "capture_depth";
     private static final String TRACK_REMOTES = "track_remotes";
-    private static final String USE_CACHE_BAM = "use_cache_bam";
+    private static final String NO_CACHE_BAM = "no_cache_bam";
     private static final String NO_CLEAN_UP = "no_clean_up";
-    private static final String TRIM_READ_ID = "trim_read_id";
+    private static final String NO_TRIM_READ_ID = "no_trim_read_id";
     private static final String PERF_DEBUG = "perf_debug";
     private static final String JUNCTION_FRAGS_CAP = "junction_frags_cap";
 
@@ -145,9 +145,6 @@ public class SvConfig
 
         ReadFiltering = new ReadFilters(ReadFilterConfig.from(cmd));
 
-        CalcFragmentLength = cmd.hasOption(CALC_FRAG_LENGTH);
-        TrimReadId = cmd.hasOption(TRIM_READ_ID);
-
         WriteTypes = Sets.newHashSet();
 
         if(cmd.hasOption(WRITE_TYPES))
@@ -158,7 +155,10 @@ public class SvConfig
         else
         {
             WriteTypes.add(WriteType.JUNCTIONS);
+            WriteTypes.add(WriteType.BAM);
         }
+
+        CalcFragmentLength = cmd.hasOption(CALC_FRAG_LENGTH) || WriteTypes.contains(FRAGMENT_LENGTH_DIST);
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
@@ -176,9 +176,10 @@ public class SvConfig
                 Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
 
         Threads = parseThreads(cmd);
-        FindDiscordantGroups = cmd.hasOption(FIND_DISCORDANT_GROUPS);
-        UseCacheBam = cmd.hasOption(USE_CACHE_BAM);
 
+        // optimisations and debug
+        TrimReadId = !cmd.hasOption(NO_TRIM_READ_ID) && SpecificRegions.isEmpty();
+        UseCacheBam = !cmd.hasOption(NO_CACHE_BAM) && SpecificRegions.isEmpty();
         MaxPartitionReads = Integer.parseInt(cmd.getOptionValue(MAX_PARTITION_READS, "0"));
         JunctionFragmentCap = Integer.parseInt(cmd.getOptionValue(JUNCTION_FRAGS_CAP, "0"));
         CaptureDepth = cmd.hasOption(CAPTURE_DEPTH);
@@ -186,7 +187,6 @@ public class SvConfig
         TrackRemotes = cmd.hasOption(TRACK_REMOTES);
         NoCleanUp = cmd.hasOption(NO_CLEAN_UP);
         PerfDebug = cmd.hasOption(PERF_DEBUG);
-        RetrieveBlacklistMates = false;
     }
 
     public boolean isValid()
@@ -273,7 +273,6 @@ public class SvConfig
 
         CalcFragmentLength = false;
         CaptureDepth = false;
-        FindDiscordantGroups = true;
         WriteTypes = Sets.newHashSet();
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
@@ -281,7 +280,6 @@ public class SvConfig
         Threads = 1;
         MaxPartitionReads = 0;
         ApplyDownsampling = false;
-        RetrieveBlacklistMates = false;
         TrackRemotes = true;
         UseCacheBam = false;
         PerfDebug = false;
@@ -311,11 +309,10 @@ public class SvConfig
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
         options.addOption(MAX_PARTITION_READS, true, "Limit to stop processing reads in partition, for debug");
         options.addOption(CAPTURE_DEPTH, false, "Capture depth for junctions");
-        options.addOption(FIND_DISCORDANT_GROUPS, false, "Find junctions from discordant groups");
         options.addOption(APPLY_DOWNSAMPLING, false, "Apply downsampling of reads in high-depth regions");
-        options.addOption(USE_CACHE_BAM, false, "Write a BAM to cache candidate reads");
+        options.addOption(NO_CACHE_BAM, false, "Write a BAM to cache candidate reads");
         options.addOption(TRACK_REMOTES, false, "Track support for remote junctions");
-        options.addOption(TRIM_READ_ID, false, "Use a shortened readId internally");
+        options.addOption(NO_TRIM_READ_ID, false, "Use a shortened readId internally");
         options.addOption(NO_CLEAN_UP, false, "Keep candidate cache files");
         options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
         options.addOption(JUNCTION_FRAGS_CAP, true, "Limit to supporting reads added to a junction");

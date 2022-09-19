@@ -315,8 +315,7 @@ public class JunctionTracker
                 mRemoteCandidateReadGroups.add(readGroup);
             }
 
-            if(mConfig.FindDiscordantGroups && !hasBlacklistedRead &&
-            isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
+            if(!hasBlacklistedRead && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
             {
                 mCandidateDiscordantGroups.add(readGroup);
             }
@@ -327,9 +326,6 @@ public class JunctionTracker
 
     public void findDiscordantGroups()
     {
-        if(!mConfig.FindDiscordantGroups)
-            return;
-
         perfCounterStart(PerfCounters.DiscordantGroups);
 
         if(mCandidateDiscordantGroups.size() > 1000)
