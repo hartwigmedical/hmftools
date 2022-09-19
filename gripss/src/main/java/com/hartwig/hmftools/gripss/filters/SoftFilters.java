@@ -278,15 +278,13 @@ public class SoftFilters
         if(!sv.hasReference())
             return false;
 
-        if(sv.isSgl() || sv.isShortLocal())
+        if(sv.type() != INV || sv.length() > HOM_INV_LENGTH)
             return false;
 
         return getGenotypeAttributeAsInt(breakend.RefGenotype, VT_RP, 0) == 0
                 && getGenotypeAttributeAsInt(breakend.RefGenotype, VT_ASRP, 0) == 0
-                && getGenotypeAttributeAsInt(breakend.RefGenotype, VT_ASSR, 0) == 0
                 && getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_RP, 0) == 0
-                && getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_ASRP, 0) == 0
-                && getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_ASSR, 0) == 0;
+                && getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_ASRP, 0) == 0;
     }
 
     private boolean minLength(final SvData sv)

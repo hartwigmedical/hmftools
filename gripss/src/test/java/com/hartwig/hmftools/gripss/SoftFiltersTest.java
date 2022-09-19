@@ -203,7 +203,10 @@ public class SoftFiltersTest
         tumorOverrides.put(VT_ASRP, 0);
         tumorOverrides.put(VT_ASSR, 0);
 
-        sv = createLongDel(commonOverrides, refOverrides, tumorOverrides);
+        sv = createSv(
+                mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 148, POS_ORIENT, POS_ORIENT, "", mGenotypeIds,
+                commonOverrides, refOverrides, tumorOverrides);
+
         applyFilters(sv);
         assertTrue(hasFilter(sv.breakendStart(), DISCORDANT_PAIR_SUPPORT));
 

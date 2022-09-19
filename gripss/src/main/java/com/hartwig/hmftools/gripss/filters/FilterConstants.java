@@ -38,7 +38,7 @@ public class FilterConstants
 
     // default filter values
     public static final int SHORT_CALLING_SIZE = 1000;
-    public static final int HOM_INV_LENGTH = 40;
+    public static final int HOM_INV_LENGTH = 50;
 
     public static final int SGL_INS_SEQ_MIN_LENGTH = 16;
     public static final double SGL_MIN_STRAND_BIAS = 0.05;
