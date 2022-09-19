@@ -198,8 +198,10 @@ public class SoftFiltersTest
         // discordant support
         refOverrides.put(VT_RP, 0);
         refOverrides.put(VT_ASRP, 0);
+        refOverrides.put(VT_ASSR, 0);
         tumorOverrides.put(VT_RP, 0);
         tumorOverrides.put(VT_ASRP, 0);
+        tumorOverrides.put(VT_ASSR, 0);
 
         sv = createLongDel(commonOverrides, refOverrides, tumorOverrides);
         applyFilters(sv);

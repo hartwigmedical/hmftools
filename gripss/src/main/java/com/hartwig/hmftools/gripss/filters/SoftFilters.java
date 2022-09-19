@@ -283,8 +283,10 @@ public class SoftFilters
 
         return getGenotypeAttributeAsInt(breakend.RefGenotype, VT_RP, 0) == 0
                 && getGenotypeAttributeAsInt(breakend.RefGenotype, VT_ASRP, 0) == 0
+                && getGenotypeAttributeAsInt(breakend.RefGenotype, VT_ASSR, 0) == 0
                 && getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_RP, 0) == 0
-                && getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_ASRP, 0) == 0;
+                && getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_ASRP, 0) == 0
+                && getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_ASSR, 0) == 0;
     }
 
     private boolean minLength(final SvData sv)
@@ -292,7 +294,7 @@ public class SoftFilters
         if(sv.type() == DEL)
             return sv.length() + sv.insertSequence().length() - 1 < mFilterConstants.MinLength;
         else if(sv.type() == DUP)
-            return sv.length() + sv.insertSequence().length()  < mFilterConstants.MinLength;
+            return sv.length() + sv.insertSequence().length() < mFilterConstants.MinLength;
         else if(sv.type() == INS)
             return sv.length() + sv.insertSequence().length() + 1 < mFilterConstants.MinLength;
         else
