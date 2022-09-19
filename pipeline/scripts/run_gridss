@@ -6,8 +6,11 @@ tumor_bam=$1 && shift
 reference_id=$1 && shift
 reference_bam=$1 && shift
 output_dir=$1 && shift
+ref_genome_version=$1 && shift
 ref_genome=$1 && shift
-blacklist_bed=$1 && shift
+sv_blacklist_bed=$1 && shift
+known_fusion_bed=$1 && shift
+gridss_blacklist_bed=$1 && shift
 gridss_config=$1 && shift
 threads=$1 && shift
 max_memory=$1 && shift
@@ -19,52 +22,91 @@ fi
 output_vcf=${output_dir}/${tumor_id}.gridss.unfiltered.vcf.gz
 
 if [[ -f "${output_vcf}" ]]; then
-  echo "Skipping GRIDSS for ${tumor_id}, since VCF ${output_vcf} exists"
+  echo "Skipping Gridss for ${tumor_id}, since VCF ${output_vcf} exists"
   exit
 fi
 
-echo "Running GRIDSS for ${tumor_id}, output dir ${output_dir}"
+sv_prep_jar=${tools_dir}/sv-prep.jar
+gridss_script=${tools_dir}/gridss.run.sh
+gridss_jar=${tools_dir}/gridss.jar
 
-gridss_app=${tools_dir}/gridss/gridss
-gridss_jar=${tools_dir}/gridss/gridss.jar
+echo "Running SvPrep for ${tumor_id}, output dir ${output_dir}"
 
-export PATH=$PATH:${tools_dir}/samtools:${tools_dir}/bwa
+java -jar ${sv_prep_jar} -sample ${tumor_id} \
+  -bam_file ${tumor_bam} \
+  -ref_genome ${ref_genome} \
+  -ref_genome_version ${ref_genome_version} \
+  -blacklist_bed ${sv_blacklist_bed} \
+  -known_fusion_bed ${known_fusion_bed} \
+  -write_types "JUNCTIONS;BAM;FRAGMENT_LENGTH_DIST" \
+  -output_dir ${output_dir} \
+  -threads ${threads}
 
-assembly_bam=${output_dir}/${tumor_id}.assembly.bam
+#echo ${args}
+#java -jar ${sv_prep_jar} ${args}
 
-arguments="--output ${output_vcf} \
-  --assembly ${assembly_bam} \
-  --workingdir ${output_dir}/gridss_working \
+sv_prep_tumor_bam=${output_dir}/${tumor_id}.sv_prep.bam
+sv_prep_tumor_sorted_bam=${output_dir}/${tumor_id}.sv_prep.sorted.bam
+
+samtools sort -O bam ${sv_prep_tumor_bam} -o ${sv_prep_tumor_sorted_bam}
+samtools index ${sv_prep_tumor_sorted_bam}
+# rm ${sv_prep_tumor_bam}
+
+tumor_junction_file=${output_dir}/${tumor_id}.sv_prep.junctions.csv
+
+java -jar ${sv_prep_jar} \
+  -sample ${reference_id} \
+  -bam_file ${reference_bam} \
+  -ref_genome ${ref_genome} \
+  -ref_genome_version ${ref_genome_version} \
+  -blacklist_bed ${sv_blacklist_bed} \
+  -known_fusion_bed ${known_fusion_bed} \
+  -existing_junction_file ${tumor_junction_file} \
+  -write_types "JUNCTIONS;BAM;FRAGMENT_LENGTH_DIST" \
+  -output_dir ${output_dir} \
+  -threads ${threads} \
+
+sv_prep_ref_bam=${output_dir}/${reference_id}.sv_prep.bam
+sv_prep_ref_sorted_bam=${output_dir}/${reference_id}.sv_prep.sorted.bam
+
+samtools sort -O bam ${sv_prep_ref_bam} -o ${sv_prep_ref_sorted_bam}
+samtools index ${sv_prep_ref_sorted_bam}
+# rm ${sv_prep_ref_bam}
+
+
+echo "Running Gridss for ${tumor_id}, output dir ${output_dir}"
+
+# gridss_app=${tools_dir}/gridss/gridss
+
+gridss_vcf=${output_dir}/${tumor_id}.gridss.pre_depth.vcf.gz
+
+${gridss_script} --jar ${gridss_jar} \
+  --steps all \
+  --workingdir ${output_dir}/gridss \
   --reference ${ref_genome} \
-  --jar ${gridss_jar} \
-  --blacklist ${blacklist_bed} \
+  --blacklist ${gridss_blacklist_bed} \
   --configuration ${gridss_config} \
   --labels "${reference_id},${tumor_id}" \
+  --bams "${reference_bam},${tumor_bam}" \
+  --filtered_bams "${sv_prep_ref_sorted_bam},${sv_prep_tumor_sorted_bam}" \
+  --output ${gridss_vcf} \
   --jvmheap ${max_memory}G \
   --threads ${threads}  \
-  --externalaligner \
-  ${reference_bam} ${tumor_bam}"
 
-# echo "Gridss arguments: ${arguments}"
 
-${gridss_app} ${arguments}
+echo "Running SvPrep reference depth"
 
-repeat_masker=${tools_dir}/repeatmasker
+final_vcf=${output_dir}/${tumor_id}.gridss.unfiltered.vcf.gz
 
-if [[ -d "${repeat_masker}" ]]; then
-  echo "Running RepeatMasker"
+java -cp ${sv_prep_jar} com.hartwig.hmftools.svprep.depth.DepthAnnotator \
+  -input_vcf ${gridss_vcf} \
+  -output_vcf ${final_vcf} \
+  -samples "${reference_id},${tumor_id}" \
+  -bam_files "${reference_bam},${tumor_bam}" \
+  -ref_genome ${ref_genome} \
+  -ref_genome_version ${ref_genome_version} \
+  -log_level DEBUG \
+  -threads ${threads} \
 
-  export PATH=$PATH:${tools_dir}/repeatmasker
-
-  rm_vcf=${output_dir}/${tumor_id}.gridss.repeatmasker.vcf.gz
-
-  ${tools_dir}/gridss_annotate_vcf_repeatmasker --output ${rm_vcf} \
-    --jar gridss_jar \
-    -w ${output_dir} \
-    --rm RepeatMasker \
-    ${output_vcf}
-
-    mv ${rm_vcf} ${output_vcf}
-
-fi
+rm ${gridss_vcf}
 

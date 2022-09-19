@@ -11,6 +11,7 @@ ref_genome=$1 && shift
 ensembl_dir=$1 && shift
 hotspots=$1 && shift
 panel_bed=$1 && shift
+coverage_bed=$1 && shift
 high_confidence_bed=$1 && shift
 threads=$1 && shift
 
@@ -34,6 +35,7 @@ java -jar ${sage_jar} \
   -reference_bam ${reference_bam} \
   -hotspots ${hotspots} \
   -panel_bed ${panel_bed} \
+  -coverage_bed ${coverage_bed} \
   -high_confidence_bed ${high_confidence_bed} \
   -ref_genome ${ref_genome} \
   -ref_genome_version ${ref_genome_version} \

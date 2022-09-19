@@ -50,6 +50,7 @@ if [ "${ref_genome_version}" == "V37" ]; then
   sage_somatic_hotspots=${resources_dir}/variants/KnownHotspots.somatic.37.vcf.gz
   sage_germline_hotspots=${resources_dir}/variants/KnownHotspots.germline.37.vcf.gz
   sage_panel_bed=${resources_dir}/variants/ActionableCodingPanel.37.bed.gz
+  sage_coverage_bed=${resources_dir}/variants/CoverageCodingPanel.37.bed.gz
   sage_germline_panel_bed=${resources_dir}/variants/ActionableCodingPanel.germline.37.bed.gz
   high_confidence_bed=${resources_dir}/variants/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed.gz
   somatic_pon_file=${resources_dir}/variants/SageGermlinePon.1000x.37.tsv.gz
@@ -60,15 +61,16 @@ if [ "${ref_genome_version}" == "V37" ]; then
 
   # SVs (for Gripss, Linx)
   sv_hotspot_file=${resources_dir}/sv/known_fusions.37.bedpe
-  sv_pon_file=${resources_dir}/sv/gridss_pon_breakpoint.37.bedpe.gz
-  sgl_pon_file=${resources_dir}/sv/gridss_pon_single_breakend.37.bed.gz
+  sv_blacklist_bed=${resources_dir}/sv/sv_prep_blacklist.37.bed
+  gridss_blacklist_bed=${resources_dir}/sv/gridss_blacklist.37.bed.gz
+  gridss_config=${resources_dir}/sv/gridss.properties
+  sv_pon_file=${resources_dir}/sv/sv_pon.37.bedpe.gz
+  sgl_pon_file=${resources_dir}/sv/sgl_pon.37.bed.gz
+  repeat_mask_file=${resources_dir}/sv/repeat_mask_data.37.fa.gz
   fragile_site_file=${resources_dir}/sv/fragile_sites_hmf.37.csv
   line_element_file=${resources_dir}/sv/line_elements.37.csv
   known_fusion_file=${resources_dir}/sv/known_fusion_data.37.csv
-  sv_blacklist_bed=${resources_dir}/sv/ENCFF001TDO.37.bed.gz
-  gridss_config=${resources_dir}/sv/gridss.properties
-  repeat_mask_file=${resources_dir}/sv/37.fa.out.gz
-
+  
   # Copy number (for Amber, Cobalt, Purple)
   amber_loci_vcf=${resources_dir}/copy_number/GermlineHetPon.37.vcf.gz
   gc_profile=${resources_dir}/copy_number/GC_profile.1000bp.37.cnp
@@ -88,6 +90,7 @@ else
   sage_somatic_hotspots=${resources_dir}/variants/KnownHotspots.somatic.38.vcf.gz
   sage_germline_hotspots=${resources_dir}/variants/KnownHotspots.germline.38.vcf.gz
   sage_panel_bed=${resources_dir}/variants/ActionableCodingPanel.38.bed.gz
+  sage_coverage_bed=${resources_dir}/variants/CoverageCodingPanel.37.bed.gz
   high_confidence_bed=${resources_dir}/variants/HG001_GRCh38_GIAB_highconf_CG-IllFB-IllGATKHC-Ion-10X-SOLID_CHROM1-X_v.3.3.2_highconf_nosomaticdel_noCENorHET7.bed.gz
   somatic_pon_file=${resources_dir}/variants/SageGermlinePon.98x.38.tsv.gz
   mappability_bed=${resources_dir}/variants/mappability_150.38.bed.gz
@@ -97,14 +100,15 @@ else
 
   # SVs (for Gripss, Linx)
   sv_hotspot_file=${resources_dir}/sv/known_fusions.38.bedpe
-  sv_pon_file=${resources_dir}/sv/gridss_pon_breakpoint.38.bedpe.gz
-  sgl_pon_file=${resources_dir}/sv/gridss_pon_single_breakend.38.bed.gz
+  sv_blacklist_bed=${resources_dir}/sv/sv_prep_blacklist.38.bed
+  gridss_blacklist_bed=${resources_dir}/sv/gridss_blacklist.38.bed.gz
+  gridss_config=${resources_dir}/sv/gridss.properties
+  sv_pon_file=${resources_dir}/sv/sv_pon.38.bedpe.gz
+  sgl_pon_file=${resources_dir}/sv/sgl_pon.38.bed.gz
+  repeat_mask_file=${resources_dir}/sv/repeat_mask_data.37.fa.gz
   fragile_site_file=${resources_dir}/sv/fragile_sites_hmf.38.csv
   line_element_file=${resources_dir}/sv/line_elements.38.csv
   known_fusion_file=${resources_dir}/sv/known_fusion_data.38.csv
-  sv_blacklist_bed=${resources_dir}/sv/ENCFF001TDO.38.bed.gz
-  gridss_config=${resources_dir}/sv/gridss.properties
-  repeat_mask_file=${resources_dir}/sv/38.fa.out.gz
 
   # Copy number (for Amber, Cobalt, Purple)
   amber_loci_vcf=${resources_dir}/copy_number/GermlineHetPon.38.vcf.gz
@@ -138,7 +142,7 @@ ${scripts_dir}/run_sage_somatic ${sage_jar} \
   ${tumor_id} ${tumor_bam} ${reference_id} ${reference_bam} \
   ${sage_somatic_dir} \
   ${ref_genome_version} ${ref_genome} \
-  ${ensembl_dir} ${sage_somatic_hotspots} ${sage_panel_bed} ${high_confidence_bed} \
+  ${ensembl_dir} ${sage_somatic_hotspots} ${sage_panel_bed} ${sage_coverage_bed} ${high_confidence_bed} \
   ${threads} \
 
 
@@ -179,7 +183,9 @@ gridss_dir=${sample_dir}/gridss
 ${scripts_dir}/run_gridss ${tools_dir} \
   ${tumor_id} ${tumor_bam} ${reference_id} ${reference_bam} \
   ${gridss_dir} \
-  ${ref_genome} ${sv_blacklist_bed} ${gridss_config} \
+  ${ref_genome_version} ${ref_genome} \
+  ${sv_blacklist_bed} ${sv_hotspot_file} \
+  ${gridss_blacklist_bed} ${gridss_config} \
   ${threads} ${max_memory} \
 
 
