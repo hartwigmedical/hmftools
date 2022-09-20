@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
-import com.hartwig.hmftools.common.protect.variant.OtherEffectsTestFactory;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.purple.loader.GainLossTestFactory;
 import com.hartwig.hmftools.common.linx.LinxFusion;
@@ -36,11 +35,12 @@ public class ProtectEventGeneratorTest {
         ReportableVariant nonCanonical = ReportableVariantTestFactory.builder()
                 .from(base)
                 .isCanonical(false)
-                .otherReportedEffects(OtherEffectsTestFactory.create())
+                .otherReportedEffects(createAltTranscriptInfo())
                 .build();
         assertNotNull(EventGenerator.variantEvent(nonCanonical));
     }
 
+    private static String createAltTranscriptInfo() { return "trans|coding|impact|effect|MISSENSE"; }
     @Test
     public void canGenerateEventForVariant() {
         Variant base = SomaticVariantTestFactory.builder().canonicalEffect("some effect").build();

@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.purple.drivers;
 
-import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
-import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
-import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
-import static com.hartwig.hmftools.common.variant.impact.VariantImpact.parseAltTranscriptInfo;
+import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.parseAltTranscriptInfo;
 
 import java.util.List;
 import java.util.Map;

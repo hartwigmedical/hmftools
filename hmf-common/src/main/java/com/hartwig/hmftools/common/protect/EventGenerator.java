@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.common.protect;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.protect.variant.OtherEffectsInterpreter;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 
@@ -43,10 +43,10 @@ public final class EventGenerator {
 
     @NotNull
     private static String nonCanonicalVariantEvent(@NotNull ReportableVariant variant) {
-        return toVariantEvent(OtherEffectsInterpreter.hgvsProteinImpact(variant.otherReportedEffects()),
-                OtherEffectsInterpreter.hgvsCodingImpact(variant.otherReportedEffects()),
-                OtherEffectsInterpreter.effect(variant.otherReportedEffects()),
-                OtherEffectsInterpreter.codingEffect(variant.otherReportedEffects()));
+        return toVariantEvent(AltTranscriptReportableInfo.firstOtherHgvsProteinImpact(variant.otherReportedEffects()),
+                AltTranscriptReportableInfo.firstOtherHgvsCodingImpact(variant.otherReportedEffects()),
+                AltTranscriptReportableInfo.firstOtherEffects(variant.otherReportedEffects()),
+                AltTranscriptReportableInfo.firstOtherCodingEffect(variant.otherReportedEffects()));
     }
 
     @NotNull

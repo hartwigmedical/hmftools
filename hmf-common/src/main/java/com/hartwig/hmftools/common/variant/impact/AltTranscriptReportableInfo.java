@@ -1,8 +1,15 @@
 package com.hartwig.hmftools.common.variant.impact;
 
+import java.util.List;
 import java.util.StringJoiner;
 
+import javax.annotation.Nullable;
+
 import com.hartwig.hmftools.common.variant.CodingEffect;
+
+import org.apache.commons.compress.utils.Lists;
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 
 public class AltTranscriptReportableInfo
 {
@@ -24,6 +31,22 @@ public class AltTranscriptReportableInfo
         HgvsProtein = hgvsProtein;
         Effects = effects;
         Effect = codingEffect;
+    }
+
+    public static List<AltTranscriptReportableInfo> parseAltTranscriptInfo(final String otherReportableEffects)
+    {
+        List<AltTranscriptReportableInfo> altTransEffects = Lists.newArrayList();
+
+        String[] otherReportableTranscripts = otherReportableEffects.split(VAR_IMPACT_OTHER_REPORT_DELIM, -1);
+
+        for(String transInfo : otherReportableTranscripts)
+        {
+            AltTranscriptReportableInfo altTransInfo = AltTranscriptReportableInfo.parse(transInfo);
+            if(altTransInfo != null)
+                altTransEffects.add(altTransInfo);
+        }
+
+        return altTransEffects;
     }
 
     public static AltTranscriptReportableInfo parse(final String transInfo)
@@ -50,4 +73,57 @@ public class AltTranscriptReportableInfo
         sj.add(codingEffect.toString());
         return sj.toString();
     }
+
+    // convenience methods for Protect
+
+    @Nullable
+    public static AltTranscriptReportableInfo getFirstAltTranscriptInfo(final String otherReportableEffects)
+    {
+        if(otherReportableEffects.isEmpty())
+            return null;
+
+        return parseAltTranscriptInfo(otherReportableEffects).get(0);
+    }
+
+    public static String firstOtherTranscript(final String otherReportedEffects)
+    {
+        if(otherReportedEffects.isEmpty())
+            return Strings.EMPTY;
+
+        return getFirstAltTranscriptInfo(otherReportedEffects).TransName;
+    }
+
+    public static String firstOtherEffects(final String otherReportedEffects)
+    {
+        if(otherReportedEffects.isEmpty())
+            return Strings.EMPTY;
+
+        return getFirstAltTranscriptInfo(otherReportedEffects).Effects;
+    }
+
+    public static String firstOtherHgvsCodingImpact(final String otherReportedEffects)
+    {
+        if(otherReportedEffects.isEmpty())
+            return Strings.EMPTY;
+
+        return getFirstAltTranscriptInfo(otherReportedEffects).HgvsCoding;
+    }
+
+    public static String firstOtherHgvsProteinImpact(final String otherReportedEffects)
+    {
+        if(otherReportedEffects.isEmpty())
+            return Strings.EMPTY;
+
+        return getFirstAltTranscriptInfo(otherReportedEffects).HgvsProtein;
+    }
+
+    public static CodingEffect firstOtherCodingEffect(final String otherReportedEffects)
+    {
+        if(otherReportedEffects.isEmpty())
+            return CodingEffect.UNDEFINED;
+
+        return getFirstAltTranscriptInfo(otherReportedEffects).Effect;
+    }
+
 }
+

@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.variant.OtherEffectsInterpreter;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -15,6 +14,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
@@ -159,7 +159,7 @@ public class VariantEvidence {
             ReportableVariant reportable = (ReportableVariant) variant;
             effect = reportable.isCanonical()
                     ? reportable.canonicalCodingEffect()
-                    : OtherEffectsInterpreter.codingEffect(reportable.otherReportedEffects());
+                    : AltTranscriptReportableInfo.firstOtherCodingEffect(reportable.otherReportedEffects());
         } else {
             effect = variant.canonicalCodingEffect();
         }

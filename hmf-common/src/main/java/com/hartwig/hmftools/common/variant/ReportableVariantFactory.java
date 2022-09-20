@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogMap;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.protect.variant.OtherEffectsInterpreter;
+import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -97,7 +97,7 @@ public final class ReportableVariantFactory {
             @NotNull SomaticVariant variant) {
         assert variant.reported();
 
-        String nonCanonicalTranscript = OtherEffectsInterpreter.transcript(variant.otherReportedEffects());
+        String nonCanonicalTranscript = AltTranscriptReportableInfo.firstOtherTranscript(variant.otherReportedEffects());
 
         for (DriverCatalog catalog : entries.values()) {
             if (variant.gene().equals(catalog.gene()) && !catalog.isCanonical()) {

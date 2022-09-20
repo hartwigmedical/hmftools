@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
+import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.parseAltTranscriptInfo;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
-import static com.hartwig.hmftools.common.variant.impact.VariantImpact.parseAltTranscriptInfo;
 
 import java.util.List;
 import java.util.Map;

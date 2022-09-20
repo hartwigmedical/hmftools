@@ -55,22 +55,6 @@ public class VariantImpact
                 GenesAffected == other.GenesAffected;
     }
 
-    public static List<AltTranscriptReportableInfo> parseAltTranscriptInfo(final String otherReportableEffects)
-    {
-        List<AltTranscriptReportableInfo> altTransEffects = Lists.newArrayList();
-
-        String[] otherReportableTranscripts = otherReportableEffects.split(VAR_IMPACT_OTHER_REPORT_DELIM, -1);
-
-        for(String transInfo : otherReportableTranscripts)
-        {
-            AltTranscriptReportableInfo altTransInfo = AltTranscriptReportableInfo.parse(transInfo);
-            if(altTransInfo != null)
-                altTransEffects.add(altTransInfo);
-        }
-
-        return altTransEffects;
-    }
-
     public String toString()
     {
         return String.format("%s canonical(%s: %s) worst(%s) hgvs(%s %s)",
