@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.drivers;
 
+import static com.hartwig.hmftools.purple.drivers.AltTranscriptReportableInfo.parseAltTranscriptInfo;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -11,6 +13,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
@@ -69,6 +72,64 @@ public class SomaticVariantDrivers
         return predicate.test(
                 variantImpact.CanonicalGeneName, variant.type(), variant.decorator().repeatCount(), variant.isHotspot(),
                 variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect);
+    }
+
+    public boolean isReportable(
+            final ReportablePredicate predicate, final VariantImpact variantImpact, final VariantType type, int repeatCount, boolean isHotspot)
+    {
+        if(predicate.test(
+                variantImpact.CanonicalGeneName, type, repeatCount, isHotspot, variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect))
+        {
+            return true;
+        }
+
+        if(variantImpact.OtherReportableEffects.isEmpty())
+            return false;
+
+        List<AltTranscriptReportableInfo> altTransEffects = parseAltTranscriptInfo(variantImpact.OtherReportableEffects);
+
+        return altTransEffects.stream().anyMatch(x ->
+                predicate.test(variantImpact.CanonicalGeneName, type, repeatCount, isHotspot, x.Effect, x.Effects));
+    }
+
+    public static boolean hasTranscriptCodingEffect(final VariantImpact variantImpact, final VariantType variantType, final String transcript)
+    {
+        if(variantImpact.CanonicalTranscript.equals(transcript))
+            return hasCodingEffect(variantType, variantImpact.CanonicalCodingEffect);
+
+        if(!variantImpact.OtherReportableEffects.isEmpty())
+        {
+            List<AltTranscriptReportableInfo> altTransEffects = parseAltTranscriptInfo(variantImpact.OtherReportableEffects);
+            return altTransEffects.stream().filter(x -> x.TransName.equals(transcript)).anyMatch(x -> hasCodingEffect(variantType, x.Effect));
+        }
+
+        return false;
+    }
+
+    public static CodingEffect getWorstReportableCodingEffect(final VariantImpact variantImpact)
+    {
+        CodingEffect topCodingEffect = variantImpact.CanonicalCodingEffect;
+
+        if(!variantImpact.OtherReportableEffects.isEmpty())
+        {
+            List<AltTranscriptReportableInfo> altTransEffects = parseAltTranscriptInfo(variantImpact.OtherReportableEffects);
+
+            for(AltTranscriptReportableInfo altTransInfo : altTransEffects)
+            {
+                if(topCodingEffect.ordinal() > altTransInfo.Effect.ordinal())
+                {
+                    topCodingEffect = altTransInfo.Effect;
+                }
+            }
+        }
+
+        return topCodingEffect;
+    }
+
+    private static boolean hasCodingEffect(final VariantType type, final CodingEffect codingEffect)
+    {
+        DriverImpact impact = DriverImpact.select(type, codingEffect);
+        return impact != DriverImpact.UNKNOWN;
     }
 
     public List<DriverCatalog> buildCatalog(final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)

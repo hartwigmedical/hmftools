@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.purple.drivers;
 
+import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.getWorstReportableCodingEffect;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.groupByImpact;
+import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.hasTranscriptCodingEffect;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.isReportable;
 
 import java.util.List;
@@ -20,6 +22,7 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
@@ -71,7 +74,17 @@ public class TsgDrivers
 
             for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
             {
-                driverCatalog.add(geneDriver(likelihood, geneVariants, variantTypeCounts, variantTypeCountsBiallelic, geneCopyNumber));
+                if(geneCopyNumbers.size() == 1)
+                {
+                    driverCatalog.add(geneDriver(likelihood, geneVariants, variantTypeCounts, variantTypeCountsBiallelic, geneCopyNumber));
+                }
+                else
+                {
+                    if(geneVariants.stream().anyMatch(x -> hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.transName())))
+                    {
+                        driverCatalog.add(geneDriver(likelihood, geneVariants, variantTypeCounts, variantTypeCountsBiallelic, geneCopyNumber));
+                    }
+                }
             }
         }
 
@@ -122,7 +135,8 @@ public class TsgDrivers
             return builder.likelihoodMethod(LikelihoodMethod.BIALLELIC).build();
         }
 
-        final DriverImpact firstImpact = DriverImpact.select(topVariant.type(), topVariant.variantImpact().CanonicalCodingEffect);
+        CodingEffect firstCodingEffect = getWorstReportableCodingEffect(topVariant.variantImpact());
+        final DriverImpact firstImpact = DriverImpact.select(topVariant.type(), firstCodingEffect);
         final DndsDriverImpactLikelihood firstImpactLikelihood = likelihood.select(firstImpact);
         final int firstVariantTypeCount = variantCount(topVariant.biallelic(), topVariant, standardCounts, biallelicCounts);
 
@@ -140,7 +154,8 @@ public class TsgDrivers
         // MultiHit
         SomaticVariant secondVariant = geneVariants.get(1);
 
-        final DriverImpact secondImpact = DriverImpact.select(secondVariant.type(), secondVariant.variantImpact().CanonicalCodingEffect);
+        CodingEffect secondCodingEffect = getWorstReportableCodingEffect(secondVariant.variantImpact());
+        final DriverImpact secondImpact = DriverImpact.select(secondVariant.type(), secondCodingEffect);
 
         final DndsDriverImpactLikelihood secondImpactLikelihood = likelihood.select(secondImpact);
 
