@@ -6,10 +6,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.hla.ImmutableLilacAllele;
-import com.hartwig.hmftools.common.hla.ImmutableLilacSummaryData;
-import com.hartwig.hmftools.common.hla.LilacAllele;
-import com.hartwig.hmftools.common.hla.LilacSummaryData;
+import com.hartwig.hmftools.common.hla.ImmutableLilacReporting;
+import com.hartwig.hmftools.common.hla.ImmutableLilacReportingData;
+import com.hartwig.hmftools.common.hla.LilacReporting;
+import com.hartwig.hmftools.common.hla.LilacReportingData;
 import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -45,7 +45,7 @@ public final class QualityOverruleFunctions {
             newNotifyPerVariant.put(overruled.variant(), overruled.notifyVariant());
         }
 
-        LilacSummaryData lilacSummaryData = overuleImmuno(genomicAnalysis.lilac(), genomicAnalysis.hasReliablePurity());
+        LilacReportingData lilacSummaryData = overuleImmuno(genomicAnalysis.lilac(), genomicAnalysis.hasReliablePurity());
 
         return ImmutableGenomicAnalysis.builder()
                 .from(genomicAnalysis)
@@ -71,18 +71,19 @@ public final class QualityOverruleFunctions {
     }
 
     @NotNull
-    private static LilacSummaryData overuleImmuno(@NotNull  LilacSummaryData lilacSummaryData,
+    private static LilacReportingData overuleImmuno(@NotNull  LilacReportingData lilacreportingData,
             boolean hasReliablePurity) {
 
-        List<LilacAllele> alleles = Lists.newArrayList();
+        List<LilacReporting> alleles = Lists.newArrayList();
 
-        for (LilacAllele allele: lilacSummaryData.alleles()) {
-            alleles.add(ImmutableLilacAllele.builder()
+        for (LilacReporting allele: lilacreportingData.lilacReporting()) {
+            alleles.add(ImmutableLilacReporting.builder()
                             .from(allele)
-                            .tumorCopyNumber(hasReliablePurity ? allele.tumorCopyNumber() :  Double.NaN)
+                    .germlineCopies(hasReliablePurity ? allele.germlineCopies() :  Double.NaN)
+                            .tumorCopies(hasReliablePurity ? allele.tumorCopies() :  Double.NaN)
                     .build());
         }
-        return ImmutableLilacSummaryData.builder().from(lilacSummaryData).alleles(alleles).build();
+        return ImmutableLilacReportingData.builder().from(lilacreportingData).lilacReporting(alleles).build();
     }
 
     @NotNull
