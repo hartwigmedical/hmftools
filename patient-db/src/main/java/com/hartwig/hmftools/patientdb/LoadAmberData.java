@@ -37,8 +37,8 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.vcf.VCFFileReader;
 
-public class LoadAmberData {
-
+public class LoadAmberData
+{
     private static final Logger LOGGER = LogManager.getLogger(LoadAmberData.class);
 
     private static final int DEFAULT_MIN_DEPTH = 10;
@@ -49,7 +49,8 @@ public class LoadAmberData {
     private static final String AMBER_SNP_VCF = "amber_snp_vcf";
     private static final String SNPCHECK_VCF = "snpcheck_vcf";
 
-    public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
+    public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException
+    {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
@@ -62,8 +63,9 @@ public class LoadAmberData {
 
         final GenomePositionSelector<AmberSite> selector = GenomePositionSelectorFactory.create(mappingSites);
 
-        try (final DatabaseAccess dbAccess = databaseAccess(cmd);
-                final VCFFileReader fileReader = new VCFFileReader(new File(amberSnpPath), false)) {
+        try(final DatabaseAccess dbAccess = databaseAccess(cmd);
+                final VCFFileReader fileReader = new VCFFileReader(new File(amberSnpPath), false))
+        {
             LOGGER.info("Loading vcf snp data from {}", amberSnpPath);
             final List<BaseDepth> baseDepths = fileReader.iterator()
                     .stream()
@@ -81,14 +83,18 @@ public class LoadAmberData {
         LOGGER.info("Complete");
     }
 
-    public static void processSample(final AmberSample sample, final DatabaseAccess dbAccess) {
+    public static void processSample(final AmberSample sample, final DatabaseAccess dbAccess)
+    {
         LOGGER.info("Comparing with existing samples");
         final List<AmberSample> allSamples = dbAccess.readAmberSamples();
         final List<AmberMapping> sampleMappings = Lists.newArrayList();
-        for (AmberSample other : allSamples) {
-            if (!other.sampleId().equals(sample.sampleId())) {
+        for(AmberSample other : allSamples)
+        {
+            if(!other.sampleId().equals(sample.sampleId()))
+            {
                 final AmberMapping mapping = AmberMappingFactory.create(sample, other);
-                if (mapping.likelihood() > 0.8) {
+                if(mapping.likelihood() > 0.8)
+                {
                     sampleMappings.add(mapping);
                 }
             }
@@ -106,7 +112,8 @@ public class LoadAmberData {
     }
 
     @NotNull
-    private static Options createOptions() {
+    private static Options createOptions()
+    {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample");
         options.addOption(AMBER_SNP_VCF, true, "Path to the amber snp vcf");
