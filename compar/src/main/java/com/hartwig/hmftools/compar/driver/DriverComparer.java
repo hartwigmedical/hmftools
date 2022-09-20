@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKE_METHOD;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -74,8 +76,12 @@ public class DriverComparer implements ItemComparer
 
         try
         {
-            List<DriverCatalog> drivers =
-                    DriverCatalogFile.read(LinxDriver.generateCatalogFilename(fileSources.Linx, sampleId, true));
+            // use Linx if present, otherwise Purple drivers
+            String linxDriverFile = LinxDriver.generateCatalogFilename(fileSources.Linx, sampleId, true);
+            String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(fileSources.Purple, sampleId);
+
+            List<DriverCatalog> drivers = Files.exists(Paths.get(linxDriverFile)) ?
+                    DriverCatalogFile.read(linxDriverFile) : DriverCatalogFile.read(purpleDriverFile);
 
             // add germline as well
             List<DriverCatalog> germlineDrivers =
