@@ -2,31 +2,36 @@
 
 pave_jar=$1 && shift
 sample_id=$1 && shift
-sage_germline_dir=$1 && shift
+sage_somatic_dir=$1 && shift
 output_dir=$1 && shift
 ref_genome_version=$1 && shift
 ref_genome=$1 && shift
 ensembl_dir=$1 && shift
 driver_gene_panel=$1 && shift
+pon_file=$1 && shift
 mappability_bed=$1 && shift
-clinvar_vcf=$1 && shift
-blacklist_bed=$1 && shift
-blacklist_vcf=$1 && shift
 
 if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
 fi
 
-output_vcf=${output_dir}/${sample_id}.sage.germline.pave.vcf.gz
+output_vcf=${output_dir}/${sample_id}.sage.somatic.pave.vcf.gz
 
 if [[ -f "${output_vcf}" ]]; then
-  echo "Skipping Pave germline for ${sample_id}, since VCF ${output_vcf} exists"
+  echo "Skipping Pave somatic for ${sample_id}, since VCF ${output_vcf} exists"
   exit
 fi
 
-echo "Running Pave germline for ${sample_id}, output dir ${output_dir}"
+sage_vcf=${sage_somatic_dir}/${sample_id}.sage.somatic.vcf.gz
 
-sage_vcf=${sage_germline_dir}/${sample_id}.sage.germline.vcf.gz
+if [[ ! -f "${sage_vcf}" ]]; then
+  echo "Missing Sage somatic VCF, not running Pave somatic for ${sample_id}"
+  exit
+fi
+
+echo "Running Pave somatic for ${sample_id}, output dir ${output_dir}
+
+pon_filters="HOTSPOT:5:5;PANEL:2:5;UNKNOWN:2:0"
 
 java -jar ${pave_jar} \
   -sample ${sample_id} \
@@ -34,12 +39,9 @@ java -jar ${pave_jar} \
   -driver_gene_panel ${driver_gene_panel} \
   -ref_genome_version ${ref_genome_version} \
   -ref_genome ${ref_genome} \
+  -pon_file ${pon_file} \
+  -pon_filters ${pon_filters} \
   -mappability_bed ${mappability_bed} \
-  -clinvar_vcf ${clinvar_vcf} \
-  -blacklist_bed ${blacklist_bed} \
-  -blacklist_vcf ${blacklist_vcf} \
   -vcf_file ${sage_vcf} \
   -read_pass_only \
   -output_dir ${output_dir} \
-
-

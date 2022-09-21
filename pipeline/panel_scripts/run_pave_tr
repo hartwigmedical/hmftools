@@ -10,21 +10,28 @@ ensembl_dir=$1 && shift
 driver_gene_panel=$1 && shift
 pon_file=$1 && shift
 mappability_bed=$1 && shift
+pon_artefact_file=$1 && shift
+gnomad_dir=$1 && shift
 
 if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
 fi
 
-output_vcf=${output_dir}/${sample_id}.sage.somatic.pave.vcf.gz
+output_vcf=${output_dir}/${sample_id}.sage.pave.vcf.gz
 
 if [[ -f "${output_vcf}" ]]; then
   echo "Skipping Pave somatic for ${sample_id}, since VCF ${output_vcf} exists"
   exit
 fi
 
-echo "Running Pave somatic for ${sample_id}, output dir ${output_dir} with pon ${pon_file}"
+sage_vcf=${sage_somatic_dir}/${sample_id}.sage.vcf.gz
 
-sage_vcf=${sage_somatic_dir}/${sample_id}.sage.somatic.vcf.gz
+if [[ ! -f "${sage_vcf}" ]]; then
+  echo "Missing Sage VCF, not running Pave for ${tumor_id}"
+  exit
+fi
+
+echo "Running Pave for ${sample_id}, output dir ${output_dir}"
 
 pon_filters="HOTSPOT:5:5;PANEL:2:5;UNKNOWN:2:0"
 
@@ -36,7 +43,11 @@ java -jar ${pave_jar} \
   -ref_genome ${ref_genome} \
   -pon_file ${pon_file} \
   -pon_filters ${pon_filters} \
+  -pon_artefact_file ${pon_artefact_file} \
   -mappability_bed ${mappability_bed} \
+  -gnomad_freq_dir ${gnomad_dir} -gnomad_load_chr_on_demand \
   -vcf_file ${sage_vcf} \
   -read_pass_only \
+  -write_pass_only \
   -output_dir ${output_dir} \
+  -log_debug \

@@ -1,0 +1,176 @@
+#!/bin/bash
+
+# example command:
+# ./pipeline/scripts/run_panel_pipeline ./pipeline/panel_scripts ./sample_data_dir/ ./ref_data_dir/ ./tools_dir/ COLO829T 5
+
+# required arguments
+scripts_dir=$1 && shift
+samples_dir=$1 && shift
+resources_dir=$1 && shift
+tools_dir=$1 && shift
+tumor_id=$1 && shift
+threads=$1 && shift
+
+echo "Environment:"
+echo "  scripts dir: ${scripts_dir}"
+echo "  samples dir: ${samples_dir}"
+echo "  resources dir: ${resources_dir}"
+echo "  tools dir: ${tools_dir}"
+echo "  tumorId: ${tumor_id}"
+echo "  ref genome version: ${ref_genome_version}"
+echo "  threads: ${threads}"
+
+sample_dir=${samples_dir}/${tumor_id}
+
+# assume BAM names match tumor and reference names
+tumor_bam=${sample_dir}/${tumor_id}.bam
+
+echo "Sample output dir: ${sample_dir}"
+
+echo "Reference genome version GRCh38"
+
+ref_genome=${resources_dir}/ref_genome/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+ref_genome_version=V38
+ensembl_dir=${resources_dir}/common/ensembl_data/
+driver_gene_panel=${resources_dir}/common/DriverGenePanel.38.tsv
+
+# Point mutations (for Sage, Pave)
+sage_somatic_hotspots=${resources_dir}/variants/KnownHotspots.somatic.38.vcf.gz
+sage_panel_bed=${resources_dir}/variants/ActionableCodingPanel.38.bed.gz
+sage_coverage_bed=${resources_dir}/variants/CoverageCodingPanel.38.bed.gz
+high_confidence_bed=${resources_dir}/variants/HG001_GRCh38_GIAB_highconf_CG-IllFB-IllGATKHC-Ion-10X-SOLID_CHROM1-X_v.3.3.2_highconf_nosomaticdel_noCENorHET7.bed.gz
+somatic_pon_file=${resources_dir}/variants/SageGermlinePon.98x.38.tsv.gz
+mappability_bed=${resources_dir}/variants/mappability_150.38.bed.gz
+clinvar_vcf=${resources_dir}/variants/clinvar.38.vcf.gz
+pon_artefact_file=${resources_dir}/variants/PanelArtefacts.38.tsv
+gnomad_dir=${resources_dir}/variants/gnomad/
+
+# SVs (for Gripss, Linx)
+sv_hotspot_file=${resources_dir}/sv/known_fusions.38.bedpe
+sv_blacklist_bed=${resources_dir}/sv/sv_prep_blacklist.38.bed
+gridss_blacklist_bed=${resources_dir}/sv/gridss_blacklist.38.bed.gz
+gridss_config=${resources_dir}/sv/gridss.properties
+sv_pon_file=${resources_dir}/sv/sv_pon.38.bedpe.gz
+sgl_pon_file=${resources_dir}/sv/sgl_pon.38.bed.gz
+repeat_mask_file=${resources_dir}/sv/repeat_mask_data.38.fa.gz
+fragile_site_file=${resources_dir}/sv/fragile_sites_hmf.38.csv
+line_element_file=${resources_dir}/sv/line_elements.38.csv
+known_fusion_file=${resources_dir}/sv/known_fusion_data.38.csv
+
+# Copy number (for Amber, Cobalt, Purple)
+amber_loci_vcf=${resources_dir}/copy_number/GermlineHetPon.38.vcf.gz
+gc_profile=${resources_dir}/copy_number/GC_profile.1000bp.38.cnp
+tumor_only_diploid_bed=${resources_dir}/copy_number/DiploidRegions.38.bed.gz
+target_region_normalisation=${resources_dir}/copy_number/target_regions_normalisation.38.tsv
+target_regions_definition=${resources_dir}/copy_number/target_regions_definition.38.bed
+target_regions_ratios=${resources_dir}/copy_number/target_regions_ratios.38.tsv
+target_regions_msi_indels=${resources_dir}/copy_number/target_regions_msi_indels.38.tsv
+
+
+# set tool links
+sage_jar=${tools_dir}/sage.jar
+pave_jar=${tools_dir}/pave.jar
+amber_jar=${tools_dir}/amber.jar
+gripss_jar=${tools_dir}/gripss.jar
+cobalt_jar=${tools_dir}/cobalt.jar
+purple_jar=${tools_dir}/purple.jar
+linx_jar=${tools_dir}/linx.jar
+
+circos=${tools_dir}/circos
+
+max_memory=16
+
+
+# Sage
+sage_dir=${sample_dir}/sage
+
+${scripts_dir}/run_sage_tr ${sage_jar} \
+  ${tumor_id} ${tumor_bam} \
+  ${sage_dir} \
+  ${ref_genome_version} ${ref_genome} \
+  ${ensembl_dir} ${sage_somatic_hotspots} ${sage_panel_bed} ${sage_coverage_bed} ${high_confidence_bed} \
+  ${threads} \
+
+
+# Pave
+pave_dir=${sample_dir}/pave
+
+${scripts_dir}/run_pave_tr ${pave_jar} \
+  ${tumor_id}  \
+  ${sage_dir} ${pave_dir} \
+  ${ref_genome_version} ${ref_genome} \
+  ${ensembl_dir} ${driver_gene_panel} ${somatic_pon_file} ${mappability_bed} \
+  ${pon_artefact_file} ${gnomad_dir} \
+  
+
+# Gridss 
+gridss_dir=${sample_dir}/gridss
+
+${scripts_dir}/run_gridss_tr ${tools_dir} \
+  ${tumor_id} ${tumor_bam} \
+  ${gridss_dir} \
+  ${ref_genome_version} ${ref_genome} \
+  ${sv_blacklist_bed} ${sv_hotspot_file} \
+  ${gridss_blacklist_bed} ${gridss_config} \
+  ${threads} ${max_memory} \
+
+
+# Gripss
+gripss_dir=${sample_dir}/gripss
+gridss_vcf=${sample_dir}/gridss/${tumor_id}.gridss.unfiltered.vcf.gz
+
+${scripts_dir}/run_gripss_tr ${gripss_jar} \
+  ${tumor_id}  \
+  ${gripss_dir} ${gridss_vcf} \
+  ${ref_genome_version} ${ref_genome} \
+  ${sv_hotspot_file} ${sv_pon_file} ${sgl_pon_file} ${repeat_mask_file} \
+
+
+# Amber
+amber_dir=${sample_dir}/amber
+
+${scripts_dir}/run_amber_tr ${amber_jar} \
+  ${tumor_id} ${tumor_bam} \
+  ${amber_dir} \
+  ${ref_genome_version} ${ref_genome} \
+  ${amber_loci_vcf} ${threads} \
+
+
+# Cobalt
+cobalt_dir=${sample_dir}/cobalt
+
+${scripts_dir}/run_cobalt_tr ${cobalt_jar} \
+  ${tumor_id} ${tumor_bam} \
+  ${cobalt_dir} \
+  ${ref_genome} ${gc_profile} ${tumor_only_diploid_bed} ${target_region_normalisation} \
+  ${threads} \
+
+
+# Purple
+purple_dir=${sample_dir}/purple
+
+sv_vcf=${gripss_dir}/${tumor_id}.gripss.filtered.vcf.gz
+sv_unfiltered_vcf=${gripss_dir}/${tumor_id}.gripss.vcf.gz
+somatic_vcf=${pave_dir}/${tumor_id}.sage.pave.vcf.gz
+
+${scripts_dir}/run_purple_tr ${purple_jar} \
+  ${tumor_id} \
+  ${sv_vcf} ${sv_unfiltered_vcf} ${somatic_vcf} ${amber_dir} ${cobalt_dir}  ${purple_dir} \
+  ${ref_genome_version} ${ref_genome} ${gc_profile} ${sage_somatic_hotspots} \
+  ${driver_gene_panel} ${ensembl_dir} \
+  ${target_regions_definition} ${target_regions_ratios} ${target_regions_msi_indels} \
+  ${threads} ${circos} \
+
+
+# Linx
+linx_dir=${sample_dir}/linx_somatic
+
+sv_vcf=${purple_dir}/${tumor_id}.purple.sv.vcf.gz
+
+${scripts_dir}/run_linx_somatic ${linx_jar} \
+  ${tumor_id} \
+  ${sv_vcf} ${purple_dir} ${linx_dir} \
+  ${ref_genome_version} ${fragile_site_file} ${line_element_file} ${ensembl_dir} ${driver_gene_panel} ${known_fusion_file} \
+  ${circos} \
+
+
