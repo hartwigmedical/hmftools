@@ -108,10 +108,10 @@ open class CiderGeneDatastore(vjAnchorTemplates: List<VJAnchorTemplate>, igTcrCo
         mGeneTypeAnchorSeqMap = Maps.immutable.ofMap(
             geneTypeAnchorSeqMap.entries.stream().collect(
                 Collectors.toMap(
-                    { (key: VJGeneType, _) -> key },
-                    { (_, value: MutableMultimap<String, VJAnchorTemplate>) -> value.toImmutable() })
-            )
-        )
+                    { entry -> entry.key },
+                    { entry -> entry.value.toImmutable() }
+                )))
+
         mGeneLocationTemplateMap = geneLocationVJGeneMap.toImmutable()
 
         mVjAnchorGenomeLocations =

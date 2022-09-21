@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.cider.layout.ReadLayoutBuilderTest
+import com.hartwig.hmftools.cider.layout.TestLayoutRead
 import htsjdk.samtools.SAMUtils
 import org.apache.logging.log4j.Level
 import org.eclipse.collections.api.factory.Lists
@@ -14,9 +15,16 @@ class MockVJReadLayoutAdaptor : IVJReadLayoutAdaptor
 {
     val anchorRangeMap = IdentityHashMap<ReadLayout, IntRange>()
 
-    override fun getAnchorMatchMethod(layout: ReadLayout): VJReadCandidate.AnchorMatchMethod
+    /*
+    override fun toReadCandidate(read: TestLayoutRead) : VJReadCandidate
     {
-        return VJReadCandidate.AnchorMatchMethod.ALIGN
+        // return VJReadCandidate(SAMRecord(null), )
+    }
+     */
+
+    override fun getAnchorMatchMethod(layout: ReadLayout): VJReadCandidate.MatchMethod
+    {
+        return VJReadCandidate.MatchMethod.ALIGN
     }
 
     override fun getTemplateAnchorSequence(layout: ReadLayout) : String
@@ -167,12 +175,12 @@ class VDJSequenceBuilderTest
 
         // we are aligned at the T
         val baseQual1 = SAMUtils.fastqToPhred("FF:FFFF:FF") // F is 37, : is 25
-        val read1 = ReadLayout.Read("read1", ReadKey("read1", true), seq, baseQual1, 4)
+        val read1 = TestLayoutRead("read1", ReadKey("read1", true), seq, baseQual1, 4)
         layout1.addRead(read1, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
 
         val layout2 = ReadLayout()
         val baseQual2 = SAMUtils.fastqToPhred("FFFF::FFFF") // F is 37, : is 25
-        val read2 = ReadLayout.Read("read2", ReadKey("read2", true), seq, baseQual2, 4)
+        val read2 = TestLayoutRead("read2", ReadKey("read2", true), seq, baseQual2, 4)
         layout2.addRead(read2, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
 
         val vdj1 = createVDJ(layout1, 3, 7, 0, 10)
@@ -195,7 +203,7 @@ class VDJSequenceBuilderTest
         val seq1 = "CAGGTG"
         val baseQual1 = SAMUtils.fastqToPhred("FF::FF") // F is 37, : is 25
         // we are aligned at the T
-        val read1 = ReadLayout.Read("read1", ReadKey("read1", true), seq1, baseQual1, 4)
+        val read1 = TestLayoutRead("read1", ReadKey("read1", true), seq1, baseQual1, 4)
         layout1.addRead(read1, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
         val vdj1 = createVDJ(layout1, 2, 5, 0, 6)
 
@@ -203,7 +211,7 @@ class VDJSequenceBuilderTest
         val seq2 = "AGGTGAT"
         val baseQual2 = SAMUtils.fastqToPhred("F:FFFF:") // F is 37, : is 25
         // aligned at the first A
-        val read2 = ReadLayout.Read("read2", ReadKey("read2", true), seq2, baseQual2, 0)
+        val read2 = TestLayoutRead("read2", ReadKey("read2", true), seq2, baseQual2, 0)
         layout2.addRead(read2, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
         val vdj2 = createVDJ(layout2, 1, 4, 0, 7)
 

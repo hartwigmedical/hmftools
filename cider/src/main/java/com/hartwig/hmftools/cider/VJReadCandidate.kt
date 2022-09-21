@@ -12,7 +12,7 @@ data class VJReadCandidate(
     val vjAnchorTemplates: ImmutableCollection<VJAnchorTemplate>,
     val vjGeneType: VJGeneType,
     val templateAnchorSequence: String,
-    val anchorMatchMethod: AnchorMatchMethod,
+    val matchMethod: MatchMethod,
     val useReverseComplement: Boolean,
     val anchorOffsetStart: Int, // this is after reverse complement if needed, can be negative
     val anchorOffsetEnd: Int, // this is after reverse complement if needed, can be after sequence end
@@ -20,7 +20,7 @@ data class VJReadCandidate(
     val rightSoftClip: Int
 )
 {
-    enum class AnchorMatchMethod
+    enum class MatchMethod
     {
         ALIGN, EXACT, BLOSUM
     }
@@ -59,7 +59,6 @@ data class VJReadCandidate(
         else bq
     }
 
-    // this is the sequence that is the potential CDR3 sequence
     val anchorSequence: String get()
     {
         return readSequence.substring(Math.max(anchorOffsetStart, 0), Math.min(anchorOffsetEnd, readLength))

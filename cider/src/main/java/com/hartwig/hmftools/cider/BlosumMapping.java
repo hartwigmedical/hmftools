@@ -84,12 +84,39 @@ public class BlosumMapping
 
     private int getMapping(int aa1Index, int aa2Index)
     {
+        if (aa1Index > aa2Index)
+        {
+            int tmp = aa1Index;
+            aa1Index = aa2Index;
+            aa2Index = tmp;
+        }
         return mMappings[aa1Index * AMINO_ACIDS.length + aa2Index];
     }
 
     private void setMapping(int aa1Index, int aa2Index, byte val)
     {
         mMappings[aa1Index * AMINO_ACIDS.length + aa2Index] = val;
+    }
+
+    private int getMappingArrayIndex(int row, int col)
+    {
+        // we store only half of the matrix, so each row is smaller than previous
+        // i.e. for the n x n where n = 4 matrix:
+        //             row index(i)    row array index        check i * (2n - i + 1) / 2
+        //    0 1 2 3      0              0 = 0                 0 * (2 * 4 - 0 + 1) / 2 = 0
+        //      4 5 6      1              4 = 4                 1 * (2 * 4 - 1 + 1) / 2 = 4
+        //        7 8      2              7 = 4 + 3             2 * (2 * 4 - 2 + 1) / 2 = 7
+        //          9      3              9 = 4 + 3 + 2         3 * (2 * 4 - 3 + 1) / 2 = 9
+        //
+        // from here we can work out that for row index i,
+        // row array index is given by arithmetic sum:
+        // S[n .. (n - i + 1)] = i * (n + n - i + 1) / 2 = i / 2 * (2n - i + 1)
+        // we can see in the check column that the values do match
+
+        Preconditions.checkArgument(row >= col);
+        int N = AMINO_ACIDS.length;
+        int rowArrayIndex = row * (2 * N - row + 1) / 2;
+        return rowArrayIndex + col;
     }
 
     public int selfMapping(final char aa)

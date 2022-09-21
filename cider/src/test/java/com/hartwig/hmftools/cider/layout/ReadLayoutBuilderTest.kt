@@ -48,7 +48,7 @@ class ReadLayoutBuilderTest
         var seq = "CAGGTG"
 
         // we are aligned at the T
-        var readData = ReadLayout.Read("read1", ReadKey("read1", true), seq, ByteArray(seq.length){ 50 }, 4)
+        var readData = TestLayoutRead("read1", ReadKey("read1", true), seq, ByteArray(seq.length){ 50 }, 4)
         group.addRead(readData, MIN_BASE_QUALITY)
 
         assertEquals(seq, group.consensusSequence())
@@ -56,7 +56,7 @@ class ReadLayoutBuilderTest
 
         // now test a sequence that extend the start by 3 bases
         seq = "AGCCAGGT"
-        readData = ReadLayout.Read("read2", ReadKey("read2", true), seq, ByteArray(seq.length){ 50 }, 7)
+        readData = TestLayoutRead("read2", ReadKey("read2", true), seq, ByteArray(seq.length){ 50 }, 7)
         group.addRead(readData, MIN_BASE_QUALITY)
 
         assertEquals(seq + "G", group.consensusSequence())
@@ -64,7 +64,7 @@ class ReadLayoutBuilderTest
 
         // now test a sequence that extend the end by 3 bases
         seq = "AGGTGCAA"
-        readData = ReadLayout.Read("read3", ReadKey("read3", true), seq, ByteArray(seq.length){ 50 }, 3)
+        readData = TestLayoutRead("read3", ReadKey("read3", true), seq, ByteArray(seq.length){ 50 }, 3)
         group.addRead(readData, MIN_BASE_QUALITY)
 
         assertEquals("AGCC" + seq, group.consensusSequence())
@@ -95,7 +95,7 @@ class ReadLayoutBuilderTest
         var baseQual = SAMUtils.fastqToPhred("FF::FF") // F is 37, : is 25
 
         // we are aligned at the T
-        var readData = ReadLayout.Read("read1", ReadKey("read1", true), seq, baseQual, 4)
+        var readData = TestLayoutRead("read1", ReadKey("read1", true), seq, baseQual, 4)
         layout.addRead(readData, MIN_BASE_QUALITY)
 
         assertEquals(seq, layout.consensusSequence())
@@ -103,7 +103,7 @@ class ReadLayoutBuilderTest
 
         // match a new sequence against the overlay
         seq = "CAGGTG"
-        readData = ReadLayout.Read("read2", ReadKey("read2", true), seq, baseQual, 4)
+        readData = TestLayoutRead("read2", ReadKey("read2", true), seq, baseQual, 4)
 
         // this should match
         assertTrue(ReadLayoutBuilder.layoutMatch(layout, readData, MIN_BASE_QUALITY, 6))
@@ -113,12 +113,12 @@ class ReadLayoutBuilderTest
 
         // match another one which should not match
         seq = "CTGGTG"
-        readData = ReadLayout.Read("read2", ReadKey("read2", true), seq, baseQual, 4)
+        readData = TestLayoutRead("read2", ReadKey("read2", true), seq, baseQual, 4)
         assertFalse(ReadLayoutBuilder.layoutMatch(layout, readData, MIN_BASE_QUALITY, 6))
 
         // now try to match a shorter sequence, should match also
         seq = "GGTG"
-        readData = ReadLayout.Read("read2", ReadKey("read2", true), seq, baseQual, 2)
+        readData = TestLayoutRead("read2", ReadKey("read2", true), seq, baseQual, 2)
         assertTrue(ReadLayoutBuilder.layoutMatch(layout, readData, MIN_BASE_QUALITY, 4))
     }
 
@@ -195,7 +195,7 @@ class ReadLayoutBuilderTest
         var seq = "CAGGTG"
 
         // we are aligned at the T
-        var readData = ReadLayout.Read("read1", ReadKey("read1", true), seq, ByteArray(seq.length){ 50 }, 4)
+        var readData = TestLayoutRead("read1", ReadKey("read1", true), seq, ByteArray(seq.length){ 50 }, 4)
         group.addRead(readData, MIN_BASE_QUALITY)
 
         assertEquals(seq, group.consensusSequence())
@@ -203,7 +203,7 @@ class ReadLayoutBuilderTest
 
         // match a new sequence against the overlay
         seq = "AGCCAGAT"
-        readData = ReadLayout.Read("read2", ReadKey("read2", true), seq, ByteArray(seq.length){ 50 }, 7)
+        readData = TestLayoutRead("read2", ReadKey("read2", true), seq, ByteArray(seq.length){ 50 }, 7)
 
         //val (matchCount, compareCount) = ReadLayoutBuilder.layoutMatchCount(group, readData, false, MIN_BASE_QUALITY)
 
@@ -219,7 +219,7 @@ class ReadLayoutBuilderTest
         val baseQual1 = SAMUtils.fastqToPhred("FF::FF") // F is 37, : is 25
 
         // we are aligned at the T
-        var read1 = ReadLayout.Read("read1", ReadKey("read1", true), seq1, baseQual1, 4)
+        var read1 = TestLayoutRead("read1", ReadKey("read1", true), seq1, baseQual1, 4)
         layout1.addRead(read1, MIN_BASE_QUALITY)
 
         val layout2 = ReadLayout()
@@ -227,7 +227,7 @@ class ReadLayoutBuilderTest
         val baseQual2 = SAMUtils.fastqToPhred("F:FFFF:") // F is 37, : is 25
 
         // aligned at the first A
-        var read2 = ReadLayout.Read("read2", ReadKey("read2", true), seq2, baseQual2, 0)
+        var read2 = TestLayoutRead("read2", ReadKey("read2", true), seq2, baseQual2, 0)
         layout2.addRead(read2, MIN_BASE_QUALITY)
 
         // now we have 2 layouts, one is GAGGTG, another is AGGTGAT, we merge them together to create CAGGTGAT

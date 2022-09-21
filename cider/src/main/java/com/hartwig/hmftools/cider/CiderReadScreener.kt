@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.cider.VJReadCandidate.AnchorMatchMethod
+import com.hartwig.hmftools.cider.VJReadCandidate.MatchMethod
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.genome.region.Strand
@@ -15,8 +15,10 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 class CiderReadScreener(// collect the reads and sort by types
-    private val mCiderGeneDatastore: ICiderGeneDatastore, private val mAnchorBlosumSearcher: IAnchorBlosumSearcher,
-    private val mMinAnchorOverlap: Int, private val mMaxFragmentLength: Int
+    private val mCiderGeneDatastore: ICiderGeneDatastore,
+    private val mAnchorBlosumSearcher: IAnchorBlosumSearcher,
+    private val mMinAnchorOverlap: Int,
+    private val mMaxFragmentLength: Int
 )
 {
     // this read key would work for supplementary reads also
@@ -170,7 +172,7 @@ class CiderReadScreener(// collect the reads and sort by types
 
             if (!genes.isEmpty)
             {
-                return addVjReadCandidate(samRecord, genes, AnchorMatchMethod.ALIGN,
+                return addVjReadCandidate(samRecord, genes, MatchMethod.ALIGN,
                     anchorLocation.strand === Strand.REVERSE,
                     readAnchorStart, readAnchorEnd, anchorLocation.genomeLocation)
             }
@@ -243,10 +245,10 @@ class CiderReadScreener(// collect the reads and sort by types
                     val readCandidate = addVjReadCandidate(
                         read,
                         anchorBlosumMatch.templateGenes,
-                        AnchorMatchMethod.BLOSUM,
+                        MatchMethod.BLOSUM,
                         reverseRead,
                         anchorBlosumMatch.anchorStart,
-                        anchorBlosumMatch.anchorEnd, null
+                        anchorBlosumMatch.anchorEnd
                     )
                     if (readCandidate != null)
                     {
@@ -290,10 +292,10 @@ class CiderReadScreener(// collect the reads and sort by types
                 val readCandidate = addVjReadCandidate(
                     samRecord,
                     anchorBlosumMatch.templateGenes,
-                    AnchorMatchMethod.BLOSUM,
+                    MatchMethod.BLOSUM,
                     strand == Strand.REVERSE,
                     anchorBlosumMatch.anchorStart,
-                    anchorBlosumMatch.anchorEnd, null
+                    anchorBlosumMatch.anchorEnd
                 )
                 if (readCandidate != null)
                 {
@@ -355,10 +357,10 @@ class CiderReadScreener(// collect the reads and sort by types
                 return addVjReadCandidate(
                     samRecord,
                     anchorBlosumMatch.templateGenes,
-                    AnchorMatchMethod.BLOSUM,
+                    MatchMethod.BLOSUM,
                     strand == Strand.REVERSE,
                     anchorBlosumMatch.anchorStart,
-                    anchorBlosumMatch.anchorEnd, null
+                    anchorBlosumMatch.anchorEnd
                 )
             }
         }
@@ -366,9 +368,13 @@ class CiderReadScreener(// collect the reads and sort by types
     }
 
     private fun addVjReadCandidate(
-        samRecord: SAMRecord, vjAnchorTemplates: ImmutableCollection<VJAnchorTemplate>,
-        templateMatchMethod: AnchorMatchMethod, useRevComp: Boolean,
-        readAnchorStart: Int, readAnchorEnd: Int, templateLocation: GenomeRegionStrand?)
+        samRecord: SAMRecord,
+        vjAnchorTemplates: ImmutableCollection<VJAnchorTemplate>,
+        templateMatchMethod: MatchMethod,
+        useRevComp: Boolean,
+        readAnchorStart: Int,
+        readAnchorEnd: Int,
+        templateLocation: GenomeRegionStrand? = null)
     : VJReadCandidate?
     {
         if (vjAnchorTemplates.isEmpty)
@@ -405,16 +411,15 @@ class CiderReadScreener(// collect the reads and sort by types
 
         val geneNames = vjAnchorTemplates.map({ o: VJAnchorTemplate -> o.name }).distinct().toList()
         sLogger.debug(
-            "genes: {} read({}) match method({}) anchor range([{},{})) template loc({}) "
+            "genes: {} read({}) method({}) anchor range({}-{}) template loc({}) "
                     + "anchor AA({}) template AA({}) similarity({})",
             geneNames, samRecord, templateMatchMethod,
             readMatch.anchorOffsetStart, readMatch.anchorOffsetEnd,
             templateLocation,
-            readMatch.anchorAA, templateAnchorAA, readMatch.similarityScore
-        )
+            readMatch.anchorAA, templateAnchorAA, readMatch.similarityScore)
 
         // add a check here to make sure we have not made a mistake somewhere
-        if (templateMatchMethod == AnchorMatchMethod.BLOSUM && readMatch.similarityScore <= 0)
+        if (templateMatchMethod == MatchMethod.BLOSUM && readMatch.similarityScore <= 0)
         {
             sLogger.error("blosum match with -ve similarity score: {}", readMatch)
             throw RuntimeException("blosum match with -ve similarity score: ${readMatch}")

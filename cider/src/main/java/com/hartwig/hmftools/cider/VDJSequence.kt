@@ -8,7 +8,7 @@ interface VJAnchor
 {
     val vj: VJ
     val geneType: VJGeneType
-    val anchorBoundary: Int // end of V or start of J
+    val anchorBoundary: Int // last base of V or first base of J
     val matchMethod: String
     val templateAnchorSeq: String
 }

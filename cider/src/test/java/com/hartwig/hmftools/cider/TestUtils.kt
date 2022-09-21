@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.layout.ReadLayout
+import com.hartwig.hmftools.cider.layout.TestLayoutRead
 import htsjdk.samtools.SAMUtils
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -17,7 +18,7 @@ object TestUtils
         val baseQual = SAMUtils.fastqToPhred(baseQualityString)
 
         // we are aligned at the T
-        return ReadLayout.Read(readId, ReadKey(readId, firstOfPair), seq, baseQual, alignedPosition)
+        return TestLayoutRead(readId, ReadKey(readId, firstOfPair), seq, baseQual, alignedPosition)
     }
 
     // create a very simple layout with just a sequence

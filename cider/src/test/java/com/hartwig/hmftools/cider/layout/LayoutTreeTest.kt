@@ -1,3 +1,5 @@
+/*
+
 package com.hartwig.hmftools.cider.layout
 
 import com.hartwig.hmftools.cider.ReadKey
@@ -207,3 +209,5 @@ class LayoutTreeTest
         const val MIN_OVERLAP_BASES = 3
     }
 }
+
+ */

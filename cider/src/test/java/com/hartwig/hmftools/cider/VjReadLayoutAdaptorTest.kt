@@ -9,7 +9,7 @@ import kotlin.test.assertNotNull
 class VjReadLayoutAdaptorTest
 {
     @Test
-    fun testReadCandidateToLayoutRead()
+    fun testReadCandidateToLayoutReadPosStrand()
     {
         val layoutAdaptor = VJReadLayoutAdaptor(0)
         val seq = "AAGACACGGC" // 10 bases long
@@ -31,6 +31,36 @@ class VjReadLayoutAdaptorTest
         anchorOffsetEnd = 8
         readCandidate = createReadCandidate(seq, false,
             false, VJ.J, anchorOffsetStart, anchorOffsetEnd)
+
+        layoutRead = layoutAdaptor.readCandidateToLayoutRead(readCandidate)
+        assertNotNull(layoutRead)
+        assertEquals("AAGACACG", layoutRead.sequence) // remove the bases after anchor
+        assertEquals(5, layoutRead.alignedPosition) // aligned at first base of anchor
+    }
+
+    @Test
+    fun testReadCandidateToLayoutReadNegStrand()
+    {
+        val layoutAdaptor = VJReadLayoutAdaptor(0)
+        val seq = "GCCGTGTCTT" // 10 bases long, reverse comp of AAGACACGGC
+
+        // test V read
+        var anchorOffsetStart = 2
+        var anchorOffsetEnd = 6
+        var readCandidate = createReadCandidate(seq, false,
+            true, VJ.V, anchorOffsetStart, anchorOffsetEnd)
+
+        var layoutRead = layoutAdaptor.readCandidateToLayoutRead(readCandidate)
+
+        assertNotNull(layoutRead)
+        assertEquals("GACACGGC", layoutRead.sequence) // remove the bases before anchor
+        assertEquals(3, layoutRead.alignedPosition) // aligned at last base of anchor
+
+        // now test J read
+        anchorOffsetStart = 5
+        anchorOffsetEnd = 8
+        readCandidate = createReadCandidate(seq, false,
+            true, VJ.J, anchorOffsetStart, anchorOffsetEnd)
 
         layoutRead = layoutAdaptor.readCandidateToLayoutRead(readCandidate)
         assertNotNull(layoutRead)
@@ -150,7 +180,7 @@ class VjReadLayoutAdaptorTest
         val vjGeneType = if (vj == VJ.V) VJGeneType.TRAV else VJGeneType.TRAJ
 
         return VJReadCandidate(record, Lists.immutable.empty(), vjGeneType,
-            "CACGTG", VJReadCandidate.AnchorMatchMethod.ALIGN,
+            "CACGTG", VJReadCandidate.MatchMethod.ALIGN,
                                 useReverseComplement, anchorOffsetStart, anchorOffsetEnd,
                                 0, 0)
     }

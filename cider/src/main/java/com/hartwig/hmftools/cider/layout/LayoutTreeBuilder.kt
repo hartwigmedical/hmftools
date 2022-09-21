@@ -4,6 +4,8 @@ import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.collections.ArrayList
 
+/*
+
 class LayoutTreeBuilder(inputReads: List<LayoutTree.Read>,
                         minBaseQuality: Int,
                         minOverlapBases: Int,
@@ -67,3 +69,5 @@ class LayoutTreeBuilder(inputReads: List<LayoutTree.Read>,
 
     }
 }
+
+ */

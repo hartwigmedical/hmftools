@@ -5,6 +5,8 @@ import htsjdk.samtools.util.SequenceUtil
 import org.apache.logging.log4j.LogManager
 import java.util.IdentityHashMap
 
+/*
+
 class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
 {
     class Read (
@@ -422,7 +424,12 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
     }
 
     // create a layout from the leaf node
-    fun buildReadLayout(leafNode: Node, readToLayoutReadMap: IdentityHashMap<Read, ReadLayout.Read>, useReverseComp: Boolean = false) : ReadLayout
+    fun buildReadLayout(leafNode: Node,
+                        layoutReadCreate: (readKey: ReadKey,
+                                        sequence: String,
+                                        baseQualities: ByteArray,
+                                        alignedPosition: Int) -> ReadLayout.Read,
+                        useReverseComp: Boolean = false) : ReadLayout
     {
         sLogger.debug("building layout from node")
 
@@ -453,14 +460,14 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
                         // we need to create layout read from this read
                         if (useReverseComp)
                         {
-                            layoutRead = ReadLayout.Read(r.source,
+                            layoutRead = layoutReadCreate(
                                 r.readKey, SequenceUtil.reverseComplement(r.sequence),
                                 r.baseQualities.reversed().toByteArray(),
                                 r.sequence.length - r.layoutPosition - 1)
                         }
                         else
                         {
-                            layoutRead = ReadLayout.Read(r.source,
+                            layoutRead = layoutReadCreate(
                                 r.readKey, r.sequence,
                                 r.baseQualities,
                                 r.layoutPosition)
@@ -491,3 +498,5 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
         const val UNKNOWN_BASE: Char = 'N'
     }
 }
+
+ */

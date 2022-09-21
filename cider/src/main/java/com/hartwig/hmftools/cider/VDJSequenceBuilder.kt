@@ -330,9 +330,9 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         val matchMethodStr =
             when (vjLayoutAdaptor.getAnchorMatchMethod(layout))
             {
-                VJReadCandidate.AnchorMatchMethod.ALIGN -> "align"
-                VJReadCandidate.AnchorMatchMethod.EXACT -> "exact"
-                VJReadCandidate.AnchorMatchMethod.BLOSUM -> "blosum"
+                VJReadCandidate.MatchMethod.ALIGN -> "align"
+                VJReadCandidate.MatchMethod.EXACT -> "exact"
+                VJReadCandidate.MatchMethod.BLOSUM -> "blosum"
             }
 
         val templateAnchorSeq = vjLayoutAdaptor.getTemplateAnchorSequence(layout)

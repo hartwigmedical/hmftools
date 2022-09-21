@@ -15,13 +15,22 @@ class ReadLayout(var id: String = String())
     internal val highQualSequenceSupport: SequenceSupport = SequenceSupport()
     var alignedPosition: Int = 0
 
-    data class Read (
-        // have a source that allows us to refer back to where this comes from
-        val source: Any,
+    abstract class Read (
         val readKey: ReadKey,
         val sequence: String,
         val baseQualities: ByteArray,
         val alignedPosition: Int)
+    {
+        init
+        {
+            require(sequence.length == baseQualities.size)
+        }
+
+        val readLength: Int get() { return sequence.length }
+
+        // this function allows us to copy the layout read with different aligned position
+        abstract fun copy(alignedPosition: Int): Read
+    }
 
     private val mutableReads: MutableList<Read> = ArrayList()
     private val mutableReadSet: MutableSet<ReadKey> = HashSet()
@@ -66,7 +75,7 @@ class ReadLayout(var id: String = String())
         for (r in reads)
         {
             val readStart = getReadOffset(r)
-            val readEnd = readStart + r.sequence.length
+            val readEnd = readStart + r.readLength
 
             if (readStart < end && start < readEnd)
             {

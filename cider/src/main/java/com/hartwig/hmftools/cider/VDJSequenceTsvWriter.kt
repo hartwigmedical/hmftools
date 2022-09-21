@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.CiderConstants.MIN_NON_SPLIT_READ_STRADDLE_LENGTH
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.utils.FileWriterUtils
+import com.hartwig.hmftools.common.utils.IntPair
+import htsjdk.samtools.AlignmentBlock
+import htsjdk.samtools.SAMRecord
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
+import org.apache.logging.log4j.LogManager
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
@@ -31,20 +36,25 @@ object VDJSequenceTsvWriter
         vAnchorTemplateSeq,
         vAnchorAA,
         vAnchorTemplateAA,
+        vMatchMethod,
         vSimilarityScore,
+        vNonSplitReads,
         jType,
         jAnchorStart,
         jAnchorSeq,
         jAnchorTemplateSeq,
         jAnchorAA,
         jAnchorTemplateAA,
+        jMatchMethod,
         jSimilarityScore,
+        jNonSplitReads,
         layoutId,
         vdjSeq,
         support
     }
 
     private const val FILE_EXTENSION = ".cider.vdj_seq.tsv"
+    private val sLogger = LogManager.getLogger(VDJSequenceTsvWriter::class.java)
 
     @JvmStatic
     fun generateFilename(basePath: String, sample: String): String
@@ -53,7 +63,7 @@ object VDJSequenceTsvWriter
     }
 
     @JvmStatic
-    fun writeVDJSequences(basePath: String, sample: String, vdjSequences: List<VDJSequence>)
+    fun writeVDJSequences(basePath: String, sample: String, vdjSequences: List<VDJSequence>, adaptor: VJReadLayoutAdaptor)
     {
         val filePath = generateFilename(basePath, sample)
 
@@ -83,12 +93,12 @@ object VDJSequenceTsvWriter
             for (vdj in sortedVdj)
             {
                 val isDuplicate: Boolean = cdr3SupportMap.getOrDefault(vdj.cdr3Sequence, 0) > vdj.supportMin
-                writeVDJSequence(printer, vdj, isDuplicate)
+                writeVDJSequence(printer, vdj, isDuplicate, adaptor)
             }
         }
     }
 
-    private fun writeVDJSequence(csvPrinter: CSVPrinter, vdj: VDJSequence, isDuplicate: Boolean)
+    private fun writeVDJSequence(csvPrinter: CSVPrinter, vdj: VDJSequence, isDuplicate: Boolean, adaptor: VJReadLayoutAdaptor)
     {
         val vAnchorByReadMatch: VJAnchorByReadMatch? = vdj.vAnchor as? VJAnchorByReadMatch
         val jAnchorByReadMatch: VJAnchorByReadMatch? = vdj.jAnchor as? VJAnchorByReadMatch
@@ -112,14 +122,18 @@ object VDJSequenceTsvWriter
                 Column.vAnchorTemplateSeq -> csvPrinter.print(vdj.vAnchor.templateAnchorSeq)
                 Column.vAnchorAA -> csvPrinter.print(aminoAcidFromBases(vdj.vAnchorSequence))
                 Column.vAnchorTemplateAA -> csvPrinter.print(aminoAcidFromBases(vdj.vAnchor.templateAnchorSeq))
+                Column.vMatchMethod -> csvPrinter.print(vdj.vAnchor.matchMethod)
                 Column.vSimilarityScore -> csvPrinter.print(calcAnchorSimilarity(vdj, vdj.vAnchor))
+                Column.vNonSplitReads -> csvPrinter.print(countNonSplitReads(vdj, VJ.V, adaptor))
                 Column.jType -> csvPrinter.print(vdj.jAnchor.geneType)
                 Column.jAnchorStart -> csvPrinter.print(vdj.jAnchor.anchorBoundary)
                 Column.jAnchorSeq -> csvPrinter.print(vdj.jAnchorSequence)
                 Column.jAnchorTemplateSeq -> csvPrinter.print(vdj.jAnchor.templateAnchorSeq)
                 Column.jAnchorAA -> csvPrinter.print(aminoAcidFromBases(vdj.jAnchorSequence))
                 Column.jAnchorTemplateAA -> csvPrinter.print(aminoAcidFromBases(vdj.jAnchor.templateAnchorSeq))
+                Column.jMatchMethod -> csvPrinter.print(vdj.jAnchor.matchMethod)
                 Column.jSimilarityScore -> csvPrinter.print(calcAnchorSimilarity(vdj, vdj.jAnchor))
+                Column.jNonSplitReads -> csvPrinter.print(countNonSplitReads(vdj, VJ.J, adaptor))
                 Column.layoutId -> csvPrinter.print(vdj.layout.id)
                 Column.vdjSeq -> csvPrinter.print(vdj.sequence)
                 Column.support -> csvPrinter.print(CiderUtils.countsToString(vdj.supportCounts))
@@ -193,5 +207,89 @@ object VDJSequenceTsvWriter
             filters.add("PASS")
 
         return filters.joinToString(separator = ";")
+    }
+
+    // for now we want to just log where the mappings are
+    fun countNonSplitReads(vdj: VDJSequence, vj: VJ, adaptor: VJReadLayoutAdaptor) : Int
+    {
+        val alignedPos = vdj.layout.alignedPosition - vdj.layoutSliceStart
+        val boundaryPos: Int = if (vj == VJ.V)
+        {
+            // for our calculations, we want to set it to the end of v anchor
+            vdj.vAnchor.anchorBoundary + 1
+        }
+        else
+        {
+            vdj.jAnchor.anchorBoundary
+        }
+        var nonSplitReadCount = 0
+
+        for (read in vdj.layout.reads)
+        {
+            val samRecord: SAMRecord = adaptor.toReadCandidate(read).read
+            val layoutReadSlice: ReadSlice = adaptor.toLayoutReadSlice(read)
+
+            // AGATCTGAG-GACACGGCCGTGTATTACTGT-GCGAGAGACACAGTGTGAAAACCCACATCCTGAGAGTGTCAGAAACCCTGAGGGA
+            //           |___________________|
+            //                 V anchor
+            //                  =========================> read slice
+            //                                        |  <-- aligned position
+            //                  |------------|           <-- this is the value we want
+            val readPosWithinVdj = alignedPos - read.alignedPosition
+            val readSliceAnchorBoundary = boundaryPos - readPosWithinVdj
+
+            // work out where in the VDJ sequence is this read mapped
+            if (!samRecord.readUnmappedFlag)
+            {
+                for (alignBlock in samRecord.alignmentBlocks)
+                {
+                    // now get those positions in terms of read slice
+                    val alignRangeInReadSlice: IntPair = layoutReadSlice.readRangeToSliceRange(
+                        alignBlock.readStart - 1,
+                        alignBlock.readStart - 1 + alignBlock.length)
+
+                    require(alignRangeInReadSlice.left < alignRangeInReadSlice.right)
+
+                    // to count as a non split read, it needs to be away from the boundary
+                    if (readSliceAnchorBoundary >= alignRangeInReadSlice.left + MIN_NON_SPLIT_READ_STRADDLE_LENGTH &&
+                        readSliceAnchorBoundary <= alignRangeInReadSlice.right - MIN_NON_SPLIT_READ_STRADDLE_LENGTH)
+                    {
+                        ++nonSplitReadCount
+
+                        // this read straddles a v anchor boundary
+                        sLogger.info("read({}) cigar({}) revcomp({}), straddles {} boundary, align offset({}:{}), boundary offset({})",
+                            samRecord, samRecord.cigarString, layoutReadSlice.reverseComplement, vj,
+                            alignRangeInReadSlice.left, alignRangeInReadSlice.right, readSliceAnchorBoundary)
+                    }
+                }
+            }
+        }
+        return nonSplitReadCount
+    }
+
+    // merge blocks that are very close by
+    fun getSimplifiedAlignBlocks(samRecord: SAMRecord) : List<AlignmentBlock>
+    {
+        val simplifiedAlignBlocks = ArrayList<AlignmentBlock>()
+
+        var currentAlignmentBlock: AlignmentBlock? = null
+
+        for (alignBlock in samRecord.alignmentBlocks)
+        {
+            if (currentAlignmentBlock == null)
+            {
+                currentAlignmentBlock = alignBlock
+                continue
+            }
+
+            // compare with previous block end
+            //if (alignBlock.readStart - currentAlignmentBlock.readStart )
+
+        }
+
+        if (currentAlignmentBlock != null)
+            simplifiedAlignBlocks.add(currentAlignmentBlock)
+
+        return simplifiedAlignBlocks
     }
 }

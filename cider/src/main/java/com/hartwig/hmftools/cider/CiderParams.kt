@@ -55,7 +55,7 @@ class CiderParams
     var minBaseQuality = 25
 
     @Parameter(names = ["-write_filtered_bam"], description = "Write a output BAM file containing all CDR3 reads")
-    var writeFilteredBam = false
+    var writeFilteredBam = true
 
     @Parameter(names = ["-num_trim_bases"], description = "Number of bases to trim on each side of reads")
     var numBasesToTrim = 0

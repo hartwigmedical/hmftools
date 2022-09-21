@@ -2,13 +2,15 @@ package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.cider.layout.ReadLayoutBuilder
+import htsjdk.samtools.SAMRecord
 import org.apache.logging.log4j.LogManager
 
 // helper class to convert from the outer VJ classes to the layout classes
 // create an interface to make it easier to test
 interface IVJReadLayoutAdaptor
 {
-    fun getAnchorMatchMethod(layout: ReadLayout) : VJReadCandidate.AnchorMatchMethod
+    //fun toReadCandidate(read: ReadLayout.Read) : VJReadCandidate
+    fun getAnchorMatchMethod(layout: ReadLayout) : VJReadCandidate.MatchMethod
     fun getTemplateAnchorSequence(layout: ReadLayout) : String
     fun getAnchorRange(vj: VJ, layout: ReadLayout) : IntRange?
 }
@@ -29,6 +31,31 @@ interface IVJReadLayoutAdaptor
 // Most functions here rely on this.
 class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
 {
+    private class VjLayoutRead private constructor(
+        val layoutReadSlice: ReadSlice,
+        val readCandidate: VJReadCandidate,
+        readKey: ReadKey,
+        sequence: String,
+        baseQualities: ByteArray,
+        alignedPosition: Int)
+        : ReadLayout.Read(readKey, sequence, baseQualities, alignedPosition)
+    {
+        constructor(layoutReadSlice: ReadSlice, readCandidate: VJReadCandidate, alignedPosition: Int)
+                : this(layoutReadSlice,
+            readCandidate,
+            ReadKey(layoutReadSlice.readName, layoutReadSlice.firstOfPairFlag),
+            layoutReadSlice.readString,
+            layoutReadSlice.baseQualities,
+            alignedPosition)
+        {
+        }
+
+        override fun copy(alignedPosition: Int): ReadLayout.Read
+        {
+            return VjLayoutRead(layoutReadSlice, readCandidate, readKey, sequence, baseQualities, alignedPosition)
+        }
+    }
+
     companion object
     {
         private val sLogger = LogManager.getLogger(VJReadLayoutAdaptor::class.java)
@@ -60,67 +87,38 @@ class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
 
     fun readCandidateToLayoutRead(readCandidate: VJReadCandidate) : ReadLayout.Read?
     {
-        // work out the slice start and end
-        var sliceStart: Int = trimBases
-        var sliceEnd: Int = readCandidate.readLength - trimBases
-        val alignedPosition: Int
+        val slice = determineReadSlice(readCandidate.read, readCandidate.useReverseComplement,
+                                        readCandidate.vjGeneType.vj, readCandidate.anchorOffsetStart,
+                                        readCandidate.anchorOffsetEnd)
 
-        // now we also want to try poly G tail trimming
-        // we want to work out there the tail is.
-        // the tail is on the right side and poly G if useReverseComplement == read.readNegativeStrandFlag
-        // the tail is on the left side and poly C otherwise
-        if (readCandidate.useReverseComplement == readCandidate.read.readNegativeStrandFlag)
-        {
-            // ends with poly G, but take trim bases into account
-            val numGs = numTrailingPolyG(readCandidate.readSequence, sliceEnd)
-            if (numGs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
-            {
-                sLogger.info("read: {}, poly G tail found: {}", readCandidate.read, readCandidate.readSequence)
-                sliceEnd -= numGs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
-            }
-        }
-        else
-        {
-            val numCs = numLeadingPolyC(readCandidate.readSequence, sliceStart)
-            if (numCs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
-            {
-                sLogger.info("read: {}, poly G tail found: {}", readCandidate.read, readCandidate.readSequence)
-                sliceStart += numCs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
-            }
-        }
+        if (slice == null)
+            return null
+
+        // now determine the aligned position
+        val alignedPosition: Int
 
         if (readCandidate.vjGeneType.vj == VJ.V)
         {
-            // for V, we layout from the anchor start, left to right
-            // we are only interested in what comes after anchor start
-            sliceStart = Math.max(readCandidate.anchorOffsetStart, sliceStart)
-
             // aligned position we must take into account that we remove all bases before vAnchor start
-            alignedPosition = readCandidate.anchorOffsetEnd - 1 - sliceStart
+            alignedPosition = readCandidate.anchorOffsetEnd - 1 - slice.sliceStart
         }
         else
         {
-            // for J, we layout from the anchor last, right to left
-            // we are only interested in what comes before anchor end
-            sliceEnd = Math.min(readCandidate.anchorOffsetEnd, sliceEnd)
-
             // aligned position we must take into account that we remove all bases before vAnchor start
-            alignedPosition = readCandidate.anchorOffsetStart - sliceStart
+            alignedPosition = readCandidate.anchorOffsetStart - slice.sliceStart
         }
 
-        // if nothing left return null
-        if (sliceStart >= sliceEnd)
-            return null
-
-        return ReadLayout.Read(readCandidate, ReadKey(readCandidate.read.readName, readCandidate.read.firstOfPairFlag),
-            readCandidate.readSequence.substring(sliceStart, sliceEnd),
-            readCandidate.baseQualities.sliceArray(sliceStart until sliceEnd),
-            alignedPosition)
+        return VjLayoutRead(slice, readCandidate, alignedPosition)
     }
 
     fun toReadCandidate(read: ReadLayout.Read) : VJReadCandidate
     {
-        return read.source as VJReadCandidate
+        return (read as VjLayoutRead).readCandidate
+    }
+
+    fun toLayoutReadSlice(read: ReadLayout.Read) : ReadSlice
+    {
+        return (read as VjLayoutRead).layoutReadSlice
     }
 
     fun getReadCandidates(layout: ReadLayout) : List<VJReadCandidate>
@@ -128,7 +126,70 @@ class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
         return layout.reads.map({ read: ReadLayout.Read -> toReadCandidate(read)})
     }
 
-    override fun getAnchorMatchMethod(layout: ReadLayout): VJReadCandidate.AnchorMatchMethod
+    // get the anchor boundary position for this layout read
+    fun getAnchorBoundaryPosition(read: ReadLayout.Read) : Int
+    {
+        return read.alignedPosition
+    }
+
+    // apply trim bases and polyG trimming
+    private fun determineReadSlice(read: SAMRecord, useReverseComplement: Boolean, vj: VJ,
+                            anchorOffsetStart: Int, anchorOffsetEnd: Int) : ReadSlice?
+    {
+        // work out the slice start and end
+        var sliceStart: Int = trimBases
+        var sliceEnd: Int = read.readLength - trimBases
+
+        // now we also want to try poly G tail trimming
+        // we want to work out there the tail is.
+        // the tail is on the right side and poly G if !read.readNegativeStrandFlag
+        // the tail is on the left side and poly C otherwise
+        if (!read.readNegativeStrandFlag)
+        {
+            // ends with poly G, but take trim bases into account
+            val numGs = numTrailingPolyG(read.readString, sliceEnd)
+            if (numGs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
+            {
+                sLogger.info("read: {}, poly G tail found: {}", read, read.readString)
+                sliceEnd -= numGs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
+            }
+        }
+        else
+        {
+            val numCs = numLeadingPolyC(read.readString, sliceStart)
+            if (numCs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
+            {
+                sLogger.info("read: {}, poly G tail found: {}", read, read.readString)
+                sliceStart += numCs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
+            }
+        }
+
+        // the above logic is before reverse complement, the following logic is after
+        // so we swap the start / end here
+        if (useReverseComplement)
+        {
+            val sliceStartTmp = sliceStart
+            sliceStart = read.readLength - sliceEnd
+            sliceEnd = read.readLength - sliceStartTmp
+        }
+
+        if (vj == VJ.V)
+        {
+            // for V, we layout from the anchor start, left to right
+            // we are only interested in what comes after anchor start
+            sliceStart = Math.max(anchorOffsetStart, sliceStart)
+        }
+        else
+        {
+            // for J, we layout from the anchor last, right to left
+            // we are only interested in what comes before anchor end
+            sliceEnd = Math.min(anchorOffsetEnd, sliceEnd)
+        }
+
+        return ReadSlice(read, useReverseComplement, sliceStart, sliceEnd)
+    }
+
+    override fun getAnchorMatchMethod(layout: ReadLayout): VJReadCandidate.MatchMethod
     {
         val readCandidates = getReadCandidates(layout)
 
@@ -137,7 +198,7 @@ class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
             throw IllegalArgumentException("read candidate list is empty")
 
         // just return first one for now, not the best but should be fine
-        return readCandidates.first().anchorMatchMethod
+        return readCandidates.first().matchMethod
     }
 
     override fun getTemplateAnchorSequence(layout: ReadLayout) : String
