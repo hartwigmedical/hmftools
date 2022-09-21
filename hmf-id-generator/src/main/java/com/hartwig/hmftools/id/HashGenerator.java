@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.id;
 
+import static java.lang.String.format;
+
 import java.util.List;
 import java.util.Map;
 
@@ -12,14 +14,41 @@ import org.bouncycastle.util.encoders.Hex;
 public class HashGenerator
 {
     private final String mPassword;
+    private final int mMaxSampleCount;
 
     private static final List<String> PREFIXES = Lists.newArrayList("WIDE", "CPCT", "DRUP");
     private static final List<String> LOCATIONS = Lists.newArrayList("01", "02");
     private static final List<String> SUFFIXES = Lists.newArrayList("T", "TI", "TII", "TIII", "TIV");
 
-    public HashGenerator(final String password)
+    public HashGenerator(final String password, int maxSampleCount)
     {
         mPassword = password;
+        mMaxSampleCount = maxSampleCount;
+    }
+
+    public Map<String,String> precomputeHashes()
+    {
+        // creates a pre-computed map of hash to expected original sample IDs
+        // seems flawed since does not cover many of the new sample ID formats - does this matter?
+        Map<String,String> hashMap = Maps.newHashMap();
+
+        for(String prefix : PREFIXES)
+        {
+            for(String location : LOCATIONS)
+            {
+                for(String suffix : SUFFIXES)
+                {
+                    for(int i = 0; i < mMaxSampleCount; ++i)
+                    {
+                        String sample = format("%s%s%06d%s", prefix, location, i, suffix);
+                        String newHash = hash(sample);
+                        hashMap.put(newHash, sample);
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     public String hash(final String plaintext)
@@ -29,39 +58,4 @@ public class HashGenerator
         sha3.update(bytes);
         return Hex.toHexString(sha3.digest());
     }
-
-    public static Map<String,String> precomputeHashes()
-    {
-        Map<String,String> hashMap = Maps.newHashMap();
-
-        return null;
-    }
-
-    /*
-    private fun precomputeHashes(generator: IdGenerator): Map<String, String> {
-    val result = mutableMapOf<String, String>()
-    val prefixes = setOf("WIDE", "CPCT", "DRUP")
-    val locations = setOf("01", "02")
-    val suffixes: Set<String> = setOf("T", "TI", "TII", "TIII", "TIV")
-
-    for (prefix in prefixes) {
-        logger.debug("  using prefix $prefix")
-        for (location in locations) {
-            logger.debug("   using location $location")
-            for (suffix in suffixes) {
-                logger.debug("     using suffix $suffix")
-                for (i in 1..500000) {
-                    val sample = prefix + location + i.toString().padStart(6, '0') + suffix
-                    val newHash = generator.hash(sample)
-                    result[newHash] = sample
-                }
-            }
-
-        }
-    }
-
-    return result
-}
-     */
-
 }

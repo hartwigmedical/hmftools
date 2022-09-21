@@ -20,7 +20,7 @@ public class HmfIdGeneratorTest
     private AmberPatient mSample6;
 
     private List<AmberPatient> mInitialSamples;
-    private final List<HmfSample> mInitialMappings;
+    private final List<SampleData> mInitialMappings;
 
     public HmfIdGeneratorTest()
     {
@@ -44,10 +44,10 @@ public class HmfIdGeneratorTest
         assertMapping("sample4", "HMF000003A", mInitialMappings.get(3));
     }
 
-    private void assertMapping(final String sampleHash, final String hmfSample, final HmfSample sample)
+    private void assertMapping(final String sampleId, final String hmfSampleId, final SampleData sample)
     {
-        assertEquals(sampleHash, sample.SampleHash);
-        assertEquals(hmfSample, sample.hmfSample());
+        assertEquals(sampleId, sample.SampleId);
+        assertEquals(hmfSampleId, sample.hmfSampleId());
     }
 
     @Test
@@ -56,7 +56,7 @@ public class HmfIdGeneratorTest
         List<AmberPatient> patients = Lists.newArrayList(mInitialSamples);
         patients.add(mSample5);
 
-        List<HmfSample> mappings = HmfIdGenerator.anonymize(patients, mInitialMappings);
+        List<SampleData> mappings = HmfIdGenerator.anonymize(patients, mInitialMappings);
         assertMapping("sample1", "HMF000001A", mappings.get(0));
         assertMapping("sample3", "HMF000001B", mappings.get(1));
         assertMapping("sample2", "HMF000002A", mappings.get(2));
@@ -70,7 +70,7 @@ public class HmfIdGeneratorTest
         List<AmberPatient> patients = Lists.newArrayList(mInitialSamples);
         patients.add(mSample6);
 
-        List<HmfSample> mappings = HmfIdGenerator.anonymize(patients, mInitialMappings);
+        List<SampleData> mappings = HmfIdGenerator.anonymize(patients, mInitialMappings);
         assertMapping("sample1", "HMF000001A", mappings.get(0));
         assertMapping("sample3", "HMF000001B", mappings.get(1));
         assertMapping("sample2", "HMF000002A", mappings.get(2));
@@ -83,7 +83,7 @@ public class HmfIdGeneratorTest
     {
         List<AmberPatient> patients = Lists.newArrayList(mSample1);
 
-        List<HmfSample> mappings = HmfIdGenerator.anonymize(patients, mInitialMappings);
+        List<SampleData> mappings = HmfIdGenerator.anonymize(patients, mInitialMappings);
         assertMapping("sample1", "HMF000001A", mappings.get(0));
         assertMapping("sample3", "HMF000001B", mappings.get(1));
         assertMapping("sample2", "HMF000002A", mappings.get(2));

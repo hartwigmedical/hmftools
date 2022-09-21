@@ -1,16 +1,17 @@
 package com.hartwig.hmftools.id;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.id.HmfIdConfig.DATA_DELIM;
 import static com.hartwig.hmftools.id.HmfIdConfig.ID_LOGGER;
-import static com.hartwig.hmftools.id.HmfSample.DELETED;
-import static com.hartwig.hmftools.id.HmfSample.PATIENT_ID;
-import static com.hartwig.hmftools.id.HmfSample.SAMPLE_HASH;
-import static com.hartwig.hmftools.id.HmfSample.SAMPLE_ID;
+import static com.hartwig.hmftools.id.HmfIdConfig.addCmdLineArgs;
+import static com.hartwig.hmftools.id.SampleData.DELETED;
+import static com.hartwig.hmftools.id.SampleData.PATIENT_ID;
+import static com.hartwig.hmftools.id.SampleData.SAMPLE_HASH;
+import static com.hartwig.hmftools.id.SampleData.SAMPLE_INDEX;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -46,8 +47,6 @@ public class HmfIdGenerator
 
     public void run() throws IOException
     {
-        // ID_LOGGER.info("resource reference directory: {}", mResourceRepoDir);
-
         if(mConfig.Restore)
         {
             restoreFromFile();
@@ -56,154 +55,172 @@ public class HmfIdGenerator
 
         ID_LOGGER.info("running HMF Id Generator");
 
+        HashGenerator oldGenerator = new HashGenerator(mConfig.Password, mConfig.MaxPrecomputeCount);
+
+        HashGenerator newGenerator = mConfig.Password.equals(mConfig.NewPassword) ?
+                oldGenerator : new HashGenerator(mConfig.NewPassword, mConfig.MaxPrecomputeCount);
+
         // Retrieve Data
         List<AmberPatient> amberPatients = mDbAccess.readAmberPatients();
         ID_LOGGER.info("Retrieved ${amberPatients.size} samples from amberPatient table");
 
         List<AmberAnonymous> currentDbAnonymous = mDbAccess.readAmberAnonymous();
-        List<HmfSample> currentDbSamples = currentDbAnonymous.stream().map(x -> HmfSample.fromAmberAnonymous(x)).collect(Collectors.toList());
+        List<SampleData> currentDbSamples = currentDbAnonymous.stream().map(x -> SampleData.fromAmberAnonymous(x)).collect(Collectors.toList());
         ID_LOGGER.info("retrieved {}} sample mappings from amberAnonymous table", currentDbSamples.size());
 
-        List<HmfSample> currentFileSamples = loadSampleFile();
-
-        // validate amberPatient and amberAnonymous tables
+        // compare entries in the amberPatient and amberAnonymous tables
         if(!validAmberPatients(currentDbSamples, amberPatients))
         {
             ID_LOGGER.error("amberPatient and amberAnonymous are not synchronized");
             System.exit(1);
         }
 
-        /*
-        // validate synchronization between database and file
-        val currentDatabaseCsv = currentAnonymous.map { x -> x.toCsv(oldGenerator) }.toSet()
-        if (!databaseAndFileInSync(currentDatabaseCsv, currentFileAnonymous))
+        if(!compareDatabaseVsFile(currentDbSamples))
         {
-            ID_LOGGER.error("database and file are not synchronized")
+            ID_LOGGER.error("sample file and amberAnonymous are not synchronized");
             System.exit(1);
         }
-         */
 
         ID_LOGGER.info("processing samples");
 
-        List<HmfSample> newSamples = anonymize(amberPatients, currentDbSamples);
+        // create anonymised (HMF) sampleIDs for any new samples
+        List<SampleData> newDbSamples = anonymize(amberPatients, currentDbSamples);
 
         // Write to file and database
-        ID_LOGGER.info("writing {} samples hashes to {}", newSamples.size(), mConfig.OutputHashFile);
-        // CsvWriter.writeCSV(result.map { x -> x.toCsv(newGenerator) }, hashFileOut)
+        writeSampleFile(newDbSamples, newGenerator);
 
-        List<AmberAnonymous> newAnonymous = newSamples.stream().map(x -> x.toAmberAnonymous()).collect(Collectors.toList());
+        List<AmberAnonymous> newAnonymous = newDbSamples.stream().map(x -> x.toAmberAnonymous()).collect(Collectors.toList());
         ID_LOGGER.info("writing {} sample mappings to database", newAnonymous.size());
         mDbAccess.writeAmberAnonymous(newAnonymous);
 
         ID_LOGGER.info("ID generation complete");
     }
 
-    public static List<HmfSample> anonymize(final List<AmberPatient> amberPatients, final List<HmfSample> existingSamples)
+    public static List<SampleData> anonymize(final List<AmberPatient> amberPatients, final List<SampleData> existingDbSamples)
     {
-        List<HmfSample> newSamples = Lists.newArrayList();
+        // searches in amberPatients for samples without an entry in amberAnonymous, and for any new ones an HmfSampleId
+        // is generated using the existing patientId and sampleIndex values
+        List<SampleData> newSamples = Lists.newArrayList();
 
-        int maxPatientId = existingSamples.stream().mapToInt(x -> x.PatientId).max().orElse(0);
+        // find the maximum patient ID (including previously deleted samples to avoid reuse of an ID)
+        int maxPatientId = existingDbSamples.stream().mapToInt(x -> x.PatientId).max().orElse(0);
+
+        // extract unique patient IDs
         Set<Integer> amberPatientIds = Sets.newHashSet();
         amberPatients.forEach(x -> amberPatientIds.add(x.patientId()));
 
         for(Integer patientId : amberPatientIds)
         {
-            List<String> matchingSampleHashes = amberPatients.stream()
+            List<String> matchingSampleIds = amberPatients.stream()
                     .filter(x -> x.patientId() == patientId).map(x -> x.sample()).collect(Collectors.toList());
 
-            List<HmfSample> patientSamples = existingSamples.stream()
-                    .filter(x -> matchingSampleHashes.contains(x.SampleHash)).collect(Collectors.toList());
+            List<SampleData> patientSamples = existingDbSamples.stream()
+                    .filter(x -> matchingSampleIds.contains(x.SampleId)).collect(Collectors.toList());
 
             int hmfPatientId = patientSamples.stream().mapToInt(x -> x.PatientId).max().orElse(-1);
             if(hmfPatientId < 0)
                 hmfPatientId = ++maxPatientId;
 
-            int maxHmfSampleId = patientSamples.stream().mapToInt(x -> x.SampleId).max().orElse(0);
+            int maxHmfSampleId = patientSamples.stream().mapToInt(x -> x.SampleIndex).max().orElse(0);
 
-            for(String sampleHash : matchingSampleHashes)
+            for(String sampleId : matchingSampleIds)
             {
-                if(existingSamples.stream().noneMatch(x -> x.SampleHash.equals(sampleHash)))
+                if(existingDbSamples.stream().noneMatch(x -> x.SampleId.equals(sampleId)))
                 {
-                    newSamples.add(new HmfSample(hmfPatientId, ++maxHmfSampleId, sampleHash, false));
+                    newSamples.add(new SampleData(hmfPatientId, ++maxHmfSampleId, sampleId, "", false));
                 }
             }
         }
 
-        List<HmfSample> allSamples = Lists.newArrayList(existingSamples);
+        List<SampleData> allSamples = Lists.newArrayList(existingDbSamples);
         allSamples.addAll(newSamples);
-        Collections.sort(allSamples, new HmfSample.SampleComparator());
+        Collections.sort(allSamples, new SampleData.SampleComparator());
         return allSamples;
     }
 
-    private boolean validAmberPatients(final List<HmfSample> dbSamples, final List<AmberPatient> patients)
+    private boolean validAmberPatients(final List<SampleData> dbSamples, final List<AmberPatient> patients)
     {
-        /*
-        val actualSamples = patients.map { x -> x.sample() }.toSet()
-        val expectedSamples = dbSamples.filter { x -> !x.deleted }.map { x -> x.sample }
-        val missingSamples = expectedSamples subtract actualSamples
-        for (missingSample in missingSamples) {
-            logger.error("Missing sample $missingSample from amberPatient table")
+        // extract original / non-anonymised sampleIDs from each source
+        Set<String> actualSamples = patients.stream().map(x -> x.sample()).collect(Collectors.toSet());
+        Set<String> expectedSamples = dbSamples.stream().filter(x -> !x.Deleted).map(x -> x.SampleId).collect(Collectors.toSet());
+        Set<String> missingSamples = expectedSamples.stream().filter(x -> !actualSamples.contains(x)).collect(Collectors.toSet());
+
+        for(String sample : missingSamples)
+        {
+            ID_LOGGER.error("missing sample({}) from amberPatient table", sample);
         }
 
-        val deletedSamples = dbSamples.filter { x -> x.deleted }.map { x -> x.sample }
-        val unexpectedSamples = actualSamples intersect deletedSamples
-        for (unexpectedSample in unexpectedSamples) {
-            logger.error("Deleted sample $unexpectedSample in amberPatient table")
+        Set<String> deleteSamples = dbSamples.stream().filter(x -> x.Deleted).map(x -> x.SampleId).collect(Collectors.toSet());
+        Set<String> unexpectedSamples = actualSamples.stream().filter(x -> deleteSamples.contains(x)).collect(Collectors.toSet());
+
+        for(String sample : unexpectedSamples)
+        {
+            ID_LOGGER.error("deleted sample({}) in amberPatient table", sample);
         }
 
-        if (missingSamples.isNotEmpty() || unexpectedSamples.isNotEmpty()) {
-            return false
-        }
-        */
+        if(!missingSamples.isEmpty() || !unexpectedSamples.isEmpty())
+            return false;
 
         return true;
     }
 
-    private boolean databaseAndFileInSync() // currentDatabaseCsv: Set<HmfSampleCsv>, currentFileCsv: Set<HmfSampleCsv>
+    private boolean compareDatabaseVsFile(final List<SampleData> currentDbSamples)
     {
-        /*
-        // Ignore deleted flag for moment
-        val adjustedCurrentDatabaseCsv = currentDatabaseCsv.map { x -> x.copy(deleted = false.toString()) }
-        val adjustedCurrentFileCsv = currentFileCsv.map { x -> x.copy(deleted = false.toString()) }
+        List<SampleData> currentFileSamples = loadSampleFile();
 
-        val missingFromDatabase = adjustedCurrentFileCsv subtract adjustedCurrentDatabaseCsv
-        val missingFromFile = adjustedCurrentDatabaseCsv subtract adjustedCurrentFileCsv
-        if (missingFromDatabase.isNotEmpty()) {
-            for (missing in missingFromDatabase) {
-                logger.error("${missing.hmfSampleId} missing from database")
+        List<SampleData> missingFromFile = Lists.newArrayList();
+
+        for(SampleData dbSample : currentDbSamples)
+        {
+            boolean matched = false;
+
+            for(int i = 0; i < currentFileSamples.size(); ++i)
+            {
+                SampleData fileSample = currentFileSamples.get(i);
+
+                if(dbSample.matches(fileSample))
+                {
+                    currentFileSamples.remove(i);
+                    matched = true;
+                    break;
+                }
             }
+
+            if(!matched)
+                missingFromFile.add(dbSample);
         }
 
-        if (missingFromFile.isNotEmpty()) {
-            for (missing in missingFromFile) {
-                logger.error("${missing.hmfSampleId} missing from file")
-            }
+        for(SampleData sample : missingFromFile)
+        {
+            ID_LOGGER.error("sample({}) missing from file");
         }
 
-        if (missingFromDatabase.isNotEmpty() || missingFromFile.isNotEmpty()) {
-            return false
+        for(SampleData sample : currentFileSamples)
+        {
+            ID_LOGGER.error("sample({}) missing from database");
         }
-        */
 
-        return true;
+        return currentFileSamples.isEmpty() && missingFromFile.isEmpty();
     }
 
     private void restoreFromFile()
     {
+        // this method seems flawed since the pre-compute step cannot handle the current variation in actual sampleIDs
         ID_LOGGER.info("precomputing hashes");
 
-        Map<String,String> hashMap = HashGenerator.precomputeHashes();
+        HashGenerator generator = new HashGenerator(mConfig.Password, mConfig.MaxPrecomputeCount);
+        Map<String,String> hashMap = generator.precomputeHashes();
 
-        List<HmfSample> existingSamples = loadSampleFile();
-        List<HmfSample> newSamples = loadSampleFile();
+        List<SampleData> existingSamples = loadSampleFile();
+        List<SampleData> newSamples = Lists.newArrayList();
 
-        for(HmfSample sample : existingSamples)
+        for(SampleData sample : existingSamples)
         {
-            String sampleFromHash = hashMap.get(sample.SampleHash);
+            String sampleId = hashMap.get(sample.sampleHash());
 
-            if(sampleFromHash != null)
+            if(sampleId != null)
             {
-                HmfSample newSample = new HmfSample(sample.PatientId, sample.SampleId, sampleFromHash, sample.Deleted);
+                SampleData newSample = new SampleData(sample.PatientId, sample.SampleIndex, sampleId, sample.sampleHash(), sample.Deleted);
                 newSamples.add(newSample);
             }
             else
@@ -214,40 +231,15 @@ public class HmfIdGenerator
 
         if(!newSamples.isEmpty())
         {
-            ID_LOGGER.info("writing {} samples to database");
+            ID_LOGGER.info("writing {} samples to database", newSamples.size());
             List<AmberAnonymous> amberAnonymous = newSamples.stream().map(x -> x.toAmberAnonymous()).collect(Collectors.toList());
             mDbAccess.writeAmberAnonymous(amberAnonymous);
         }
-
-        /*
-            ID_LOGGER.info("Precomputing hashes")
-    val hashes = precomputeHashes(generator)
-
-    val currentFileAnonymous = CsvReader.readCSVByName<HmfSampleCsv>(hashFileIn).toSet()
-    ID_LOGGER.info("Retrieved ${currentFileAnonymous.size} sample mappings from $hashFileIn")
-
-    val result = mutableListOf<HmfSample>()
-    for (fileEntry in currentFileAnonymous) {
-        val sampleFromHash = hashes[fileEntry.sampleHash]
-        if (sampleFromHash != null) {
-            val record = HmfSample(fileEntry.patientId.toInt(), fileEntry.sampleId.toInt(), fileEntry.deleted.toBoolean(), sampleFromHash)
-            result.add(record)
-        } else {
-            ID_LOGGER.warn("Unable to determine sample of ${fileEntry.hmfSampleId}")
-        }
     }
 
-    if (result.isNotEmpty()) {
-        ID_LOGGER.info("Writing ${result.size} sample mappings to database")
-        mDbAccess.writeAmberAnonymous(result.map { x -> x.toAmberAnonymous() })
-    }
-
-         */
-    }
-
-    public List<HmfSample> loadSampleFile()
+    public List<SampleData> loadSampleFile()
     {
-        List<HmfSample> sampleDataList = Lists.newArrayList();
+        List<SampleData> sampleDataList = Lists.newArrayList();
 
         try
         {
@@ -259,7 +251,7 @@ public class HmfIdGenerator
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
 
             int patientIdIndex = fieldsIndexMap.get(PATIENT_ID);
-            int sampleIdIndex = fieldsIndexMap.get(SAMPLE_ID);
+            int sampleIdIndex = fieldsIndexMap.get(SAMPLE_INDEX);
             // int hmfSampleIdIndex = fieldsIndexMap.get(HMF_SAMPLE_ID);
             int sampleHashIndex = fieldsIndexMap.get(SAMPLE_HASH);
             int deletedIndex = fieldsIndexMap.get(DELETED);
@@ -268,9 +260,12 @@ public class HmfIdGenerator
             {
                 String[] values = line.split(DATA_DELIM);
 
-                HmfSample sample = new HmfSample(
-                        Integer.parseInt(values[patientIdIndex]), Integer.parseInt(values[sampleIdIndex]),
-                        values[sampleHashIndex], Boolean.parseBoolean(values[deletedIndex]));
+                SampleData sample = new SampleData(
+                        Integer.parseInt(values[patientIdIndex]),
+                        Integer.parseInt(values[sampleIdIndex]),
+                        "", // original sampleID is not stored in this file
+                        values[sampleHashIndex],
+                        Boolean.parseBoolean(values[deletedIndex]));
 
                 sampleDataList.add(sample);
             }
@@ -285,24 +280,44 @@ public class HmfIdGenerator
         return sampleDataList;
     }
 
+    private void writeSampleFile(final List<SampleData> samples, final HashGenerator hashGenerator)
+    {
+        ID_LOGGER.info("regenerating samples hashes for {} samples", samples.size());
+        samples.forEach(x -> x.setSampleHash(hashGenerator.hash(x.SampleId)));
+
+        ID_LOGGER.info("writing {} samples hashes to {}", samples.size(), mConfig.OutputHashFile);
+
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(mConfig.OutputHashFile, false);
+
+            writer.write(SampleData.header());
+            writer.newLine();
+
+            for(SampleData sample : samples)
+            {
+                writer.write(sample.toCsv());
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            ID_LOGGER.error(" failed to write sample data: {}", e.toString());
+        }
+    }
+
     public static void main(String[] args) throws IOException, ParseException
     {
-        Options options = createOptions();
+        Options options = new Options();
+        addCmdLineArgs(options);
+
         CommandLine cmd = new DefaultParser().parse(options, args);
 
         setLogLevel(cmd);
 
         HmfIdGenerator generator = new HmfIdGenerator(cmd);
         generator.run();
-    }
-
-    private static Options createOptions()
-    {
-        Options options = new Options();
-
-        addOutputDir(options);
-        addLoggingOptions(options);
-
-        return options;
     }
 }

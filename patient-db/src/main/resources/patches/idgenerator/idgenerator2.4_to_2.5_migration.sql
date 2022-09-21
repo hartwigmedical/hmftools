@@ -1,2 +1,0 @@
-ALTER TABLE amberAnonymous
-    ADD COLUMN deleted BOOLEAN NOT NULL;

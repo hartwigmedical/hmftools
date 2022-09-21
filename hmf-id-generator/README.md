@@ -18,13 +18,13 @@ The tool expects a properly populated amberPatient in the database that is conne
  ```bash
 java -jar /path/to/id_generator_jar \
     -password ${anonymization_password} \
-    -in "/path/to/sample_hashes.csv" \
-    -out "/path/to/new_sample_hashes.csv" \
+    -input_sample_file "/path/to/sample_hashes.csv" \
+    -output_sample_file "/path/to/new_sample_hashes.csv" \
     -db_user ${db_user} -db_pass ${db_pass} -db_url ${db_url}
  ```
 
 Do note:
- - Parameters "in" and "out" can point to the same file in which case the sample hashes will be overwritten.
+ - Parameters "input_sample_file" and "output_sample_file" can point to the same file in which case the sample hashes will be overwritten.
  - A "new_password" parameter can optionally be provided to reset the anonymization password to a new value.  
 
 The following checks are done by the algorithm:
