@@ -113,13 +113,13 @@ public class HaplotypeQC
             if(inPon(unmatched))
             {
                 pon++;
-                LL_LOGGER.info("  UNMATCHED_PON_HAPLTOYPE - {}", unmatched);
+                LL_LOGGER.info("  UNMATCHED_PON_HAPLOTYPE - {}", unmatched);
             }
             else
             {
                 maxSupport = max(maxSupport, unmatched.matchingFragmentCount());
                 unusedCount++;
-                LL_LOGGER.info("  UNMATCHED_HAPLTOYPE {}", unmatched);
+                LL_LOGGER.info("  UNMATCHED_HAPLOTYPE {}", unmatched);
             }
         }
 
