@@ -83,31 +83,20 @@ public class XMLFactory {
         } else {
             cupAnalyse = report.cuppaReporting().interpretCancerType() + " (" + report.cuppaReporting().interpretLikelihood() + ")";
         }
-        mapXml.put("itemWgsCupAnalyse",
-                ImmutableKeyXML.builder()
-                        .keyPath("wgsCupAnalyse")
-                        .valuePath(Map.of("value", cupAnalyse))
-                        .build());
+        mapXml.put("itemWgsCupAnalyse", ImmutableKeyXML.builder().keyPath("wgsCupAnalyse").valuePath(Map.of("value", cupAnalyse)).build());
 
         String disclaimer = Strings.EMPTY;
         disclaimer += report.genomicAnalysis().hasReliablePurity() ? Strings.EMPTY : "Disclaimer. ";
         disclaimer += !report.specialRemark().isEmpty() ? report.specialRemark() : Strings.EMPTY;
         mapXml.put("itemWgsDisclaimerTonen",
-                ImmutableKeyXML.builder()
-                        .keyPath("WgsDisclaimerTonen")
-                        .valuePath(Map.of("value", disclaimer ))
-                        .build());
+                ImmutableKeyXML.builder().keyPath("WgsDisclaimerTonen").valuePath(Map.of("value", disclaimer)).build());
 
         mapXml.put("itemWgsMolecInter",
                 ImmutableKeyXML.builder()
                         .keyPath("WgsMolecInter")
                         .valuePath(Map.of("value", report.clinicalSummary() != null ? report.clinicalSummary() : Strings.EMPTY))
                         .build());
-        mapXml.put("itemWgsKlinInter",
-                ImmutableKeyXML.builder()
-                        .keyPath("WgsKlinInter")
-                        .valuePath(Map.of("value", report.clinicalSummary() != null ? report.clinicalSummary() : Strings.EMPTY))
-                        .build());
+        mapXml.put("itemWgsKlinInter", ImmutableKeyXML.builder().keyPath("WgsKlinInter").valuePath(Map.of("value", Strings.EMPTY)).build());
 
         addReportableVariantsToXML(report.genomicAnalysis().reportableVariants(), mapXml);
         addGainLossesToXML(report.genomicAnalysis().gainsAndLosses(), report.genomicAnalysis().cnPerChromosome(), mapXml);
