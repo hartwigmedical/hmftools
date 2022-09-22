@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -74,15 +73,18 @@ public class ReportableVariantFactoryTest {
                 ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant), Lists.newArrayList(driverNonCanonical));
 
         assertEquals(1, reportable.size());
-        assertEquals(likelihood, reportable.get(0).driverLikelihood(), EPSILON);
-        //assertEquals("c.246_247delCG", reportable.get(0).canonicalHgvsCodingImpact());
-       // assertEquals("p.Gly83fs", reportable.get(0).canonicalHgvsProteinImpact());
+        ReportableVariant reportableVariant = extractVariant("ENST00000579755", reportable);
+        assertEquals(likelihood, reportableVariant.driverLikelihood(), EPSILON);
+        assertEquals("c.246_247delCG", reportableVariant.canonicalHgvsCodingImpact());
+        assertEquals("p.Gly83fs", reportableVariant.canonicalHgvsProteinImpact());
 
         double likelihoodCanonical = 0.6;
         SomaticVariant variant2 = SomaticVariantTestBuilderFactory.create()
                 .reported(true)
                 .gene(gene)
                 .canonicalTranscript("transcript2")
+                .canonicalHgvsCodingImpact("c.123G>A")
+                .canonicalHgvsProteinImpact("p.Met?")
                 .otherReportedEffects("ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT")
                 .build();
         DriverCatalog driverCanonical = ImmutableDriverCatalog.builder()
@@ -94,25 +96,26 @@ public class ReportableVariantFactoryTest {
 
         assertEquals(2, reportable2.size());
 
-//        ReportableVariant reportableVariant1 = extractVariant(true, reportable2);
-//        assertEquals(likelihoodCanonical, reportableVariant1.driverLikelihood(), EPSILON);
-//        assertEquals(Strings.EMPTY, reportableVariant1.canonicalHgvsCodingImpact());
-//        assertEquals(Strings.EMPTY, reportableVariant1.canonicalHgvsProteinImpact());
-//
-//        ReportableVariant reportableVariant2 = extractVariant(false, reportable2);
-//        assertEquals(likelihoodCanonical, reportableVariant2.driverLikelihood(), EPSILON);
-//        assertEquals(Strings.EMPTY, reportableVariant2.canonicalHgvsCodingImpact());
-//        assertEquals(Strings.EMPTY, reportableVariant2.canonicalHgvsProteinImpact());
+        ReportableVariant reportableVariant1 = extractVariant("transcript2", reportable2);
+        assertEquals(likelihoodCanonical, reportableVariant1.driverLikelihood(), EPSILON);
+        assertEquals("c.123G>A", reportableVariant1.canonicalHgvsCodingImpact());
+        assertEquals("p.Met?", reportableVariant1.canonicalHgvsProteinImpact());
+
+        ReportableVariant reportableVariant2 = extractVariant("ENST00000579755", reportable2);
+        assertEquals(likelihoodCanonical, reportableVariant2.driverLikelihood(), EPSILON);
+        assertEquals("c.246_247delCG", reportableVariant2.canonicalHgvsCodingImpact());
+        assertEquals("p.Gly83fs", reportableVariant2.canonicalHgvsProteinImpact());
 
     }
 
     @NotNull
-    public static ReportableVariant extractVariant(boolean canonical, @NotNull List<ReportableVariant> reportableVariants) {
-        for (ReportableVariant reportableVariant: reportableVariants) {
-            if (reportableVariant.isCanonical() && canonical) {
+    public static ReportableVariant extractVariant(@NotNull String transcript,
+            @NotNull List<ReportableVariant> reportableVariants) {
+        for (ReportableVariant reportableVariant : reportableVariants) {
+            if (reportableVariant.transcript().equals(transcript)) {
                 return reportableVariant;
             }
         }
-        throw new IllegalStateException("Could not find reportbale variant : " + canonical);
+        throw new IllegalStateException("Could not find transcript : " + transcript);
     }
 }

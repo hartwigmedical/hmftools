@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -12,12 +11,9 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogMap;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class ReportableVariantFactory {
-    private static final Logger LOGGER = LogManager.getLogger(ReportableVariantFactory.class);
 
     private ReportableVariantFactory() {
     }
@@ -72,7 +68,7 @@ public final class ReportableVariantFactory {
                                     fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood())
                                             .transcript(geneDriver.transcript())
                                             .canonicalHgvsProteinImpact(variant.otherReportedEffects().split("\\|")[2])
-                                            .canonicalHgvsProteinImpact(variant.otherReportedEffects().split("\\|")[1])
+                                            .canonicalHgvsCodingImpact(variant.otherReportedEffects().split("\\|")[1])
                                             .isCanonical(geneDriver.isCanonical());
                             reportable.from(build.build());
                             result.add(reportable.build());
