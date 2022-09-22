@@ -205,9 +205,15 @@ public class SummaryChapter implements ReportChapter {
                 TumorPurity.RANGE_MAX,
                 table);
 
-        String cuppaPrediction = patientReport.cuppaPrediction() != null && patientReport.genomicAnalysis().hasReliablePurity()
-                ? patientReport.cuppaPrediction().cancerType() + " (" + patientReport.cuppaPrediction().likelihood() + ")"
-                : DataUtil.NA_STRING;
+        String cuppaPrediction = Strings.EMPTY;
+        if (patientReport.cuppaReporting() != null && patientReport.genomicAnalysis().hasReliablePurity()) {
+            if (patientReport.cuppaReporting().interpretLikelihood() == null) {
+                cuppaPrediction = patientReport.cuppaReporting().interpretCancerType();
+            } else {
+                cuppaPrediction = patientReport.cuppaReporting().interpretCancerType() + " (" + patientReport.cuppaReporting().interpretLikelihood() + ")";
+            }
+        }
+
         Style dataStyleMolecularTissuePrediction =
                 hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
@@ -445,16 +451,14 @@ public class SummaryChapter implements ReportChapter {
         String text = "Data concerning cancer predisposition genes may be requested by a clinical geneticist after the patient has "
                 + "given informed consent.";
 
-            Div div = createSectionStartDiv(contentWidth());
-            div.add(new Paragraph("Germline results").addStyle(ReportResources.sectionTitleStyle()));
+        Div div = createSectionStartDiv(contentWidth());
+        div.add(new Paragraph("Germline results").addStyle(ReportResources.sectionTitleStyle()));
 
-            div.add(new Paragraph(text).setWidth(contentWidth()).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
+        div.add(new Paragraph(text).setWidth(contentWidth()).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
 
-            reportDocument.add(div);
+        reportDocument.add(div);
 
     }
-
-
 
     @NotNull
     @VisibleForTesting

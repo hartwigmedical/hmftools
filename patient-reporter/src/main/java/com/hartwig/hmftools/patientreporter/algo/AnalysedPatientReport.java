@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.algo;
 import java.util.List;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaReporting;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
@@ -38,7 +38,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract GenomicAnalysis genomicAnalysis();
 
     @Nullable
-    public abstract CuppaPrediction cuppaPrediction();
+    public abstract CuppaReporting cuppaReporting();
 
     @Nullable
     public abstract String cuppaPlot();
