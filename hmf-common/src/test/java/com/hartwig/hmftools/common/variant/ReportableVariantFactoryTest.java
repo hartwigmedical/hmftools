@@ -11,6 +11,8 @@ import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
 
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ReportableVariantFactoryTest {
@@ -73,6 +75,8 @@ public class ReportableVariantFactoryTest {
 
         assertEquals(1, reportable.size());
         assertEquals(likelihood, reportable.get(0).driverLikelihood(), EPSILON);
+        //assertEquals("c.246_247delCG", reportable.get(0).canonicalHgvsCodingImpact());
+       // assertEquals("p.Gly83fs", reportable.get(0).canonicalHgvsProteinImpact());
 
         double likelihoodCanonical = 0.6;
         SomaticVariant variant2 = SomaticVariantTestBuilderFactory.create()
@@ -89,6 +93,26 @@ public class ReportableVariantFactoryTest {
                 Lists.newArrayList(driverNonCanonical, driverCanonical));
 
         assertEquals(2, reportable2.size());
-        assertEquals(likelihoodCanonical, reportable2.get(0).driverLikelihood(), EPSILON);
+
+//        ReportableVariant reportableVariant1 = extractVariant(true, reportable2);
+//        assertEquals(likelihoodCanonical, reportableVariant1.driverLikelihood(), EPSILON);
+//        assertEquals(Strings.EMPTY, reportableVariant1.canonicalHgvsCodingImpact());
+//        assertEquals(Strings.EMPTY, reportableVariant1.canonicalHgvsProteinImpact());
+//
+//        ReportableVariant reportableVariant2 = extractVariant(false, reportable2);
+//        assertEquals(likelihoodCanonical, reportableVariant2.driverLikelihood(), EPSILON);
+//        assertEquals(Strings.EMPTY, reportableVariant2.canonicalHgvsCodingImpact());
+//        assertEquals(Strings.EMPTY, reportableVariant2.canonicalHgvsProteinImpact());
+
+    }
+
+    @NotNull
+    public static ReportableVariant extractVariant(boolean canonical, @NotNull List<ReportableVariant> reportableVariants) {
+        for (ReportableVariant reportableVariant: reportableVariants) {
+            if (reportableVariant.isCanonical() && canonical) {
+                return reportableVariant;
+            }
+        }
+        throw new IllegalStateException("Could not find reportbale variant : " + canonical);
     }
 }

@@ -72,6 +72,7 @@ public final class ReportableVariantFactory {
                                     fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood())
                                             .transcript(geneDriver.transcript())
                                             .canonicalHgvsProteinImpact(variant.otherReportedEffects().split("\\|")[2])
+                                            .canonicalHgvsProteinImpact(variant.otherReportedEffects().split("\\|")[1])
                                             .isCanonical(geneDriver.isCanonical());
                             reportable.from(build.build());
                             result.add(reportable.build());
