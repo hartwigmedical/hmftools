@@ -83,11 +83,11 @@ public class DriverComparer implements ItemComparer
             List<DriverCatalog> drivers = Files.exists(Paths.get(linxDriverFile)) ?
                     DriverCatalogFile.read(linxDriverFile) : DriverCatalogFile.read(purpleDriverFile);
 
-            // add germline as well
-            List<DriverCatalog> germlineDrivers =
-                    DriverCatalogFile.read(DriverCatalogFile.generateGermlineFilename(fileSources.Purple, sampleId));
+            // add germline as well if present
+            String purpleGermlineDriverFile = DriverCatalogFile.generateGermlineFilename(fileSources.Purple, sampleId);
 
-            drivers.addAll(germlineDrivers);
+            if(Files.exists(Paths.get(purpleGermlineDriverFile)))
+                drivers.addAll(DriverCatalogFile.read(purpleGermlineDriverFile));
 
             for(DriverCatalog driver : drivers)
             {

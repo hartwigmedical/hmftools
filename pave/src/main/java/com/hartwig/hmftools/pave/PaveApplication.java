@@ -156,7 +156,7 @@ public class PaveApplication
 
                 if(variantCount > 0 && (variantCount % 10000) == 0)
                 {
-                    PV_LOGGER.debug("processed {} variants", variantCount);
+                    PV_LOGGER.info("processed {} variants", variantCount);
                 }
             }
 

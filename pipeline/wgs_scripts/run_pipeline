@@ -16,6 +16,8 @@ sample_array=($(echo $sample_data | tr "," " "))
 tumor_id=${sample_array[0]}
 reference_id=${sample_array[1]}
 
+echo "Running HMF WGS pipeline"
+
 echo "Environment:"
 echo "  scripts dir: ${scripts_dir}"
 echo "  samples dir: ${samples_dir}"
@@ -282,3 +284,4 @@ ${scripts_dir}/run_lilac ${lilac_jar} \
   ${threads} \
 
 
+echo "Pipeline complete"

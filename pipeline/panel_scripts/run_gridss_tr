@@ -36,7 +36,7 @@ java -jar ${sv_prep_jar} -sample ${tumor_id} \
   -ref_genome_version ${ref_genome_version} \
   -blacklist_bed ${sv_blacklist_bed} \
   -known_fusion_bed ${known_fusion_bed} \
-  -write_types "JUNCTIONS;BAM;FRAGMENT_LENGTH_DIST" \
+  -calc_fragment_length \
   -output_dir ${output_dir} \
   -threads ${threads}
 
@@ -82,7 +82,6 @@ java -cp ${sv_prep_jar} com.hartwig.hmftools.svprep.depth.DepthAnnotator \
   -bam_files ${tumor_bam} \
   -ref_genome ${ref_genome} \
   -ref_genome_version ${ref_genome_version} \
-  -log_level DEBUG \
   -threads ${threads} \
 
 rm ${gridss_vcf}

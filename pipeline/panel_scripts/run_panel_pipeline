@@ -11,6 +11,8 @@ tools_dir=$1 && shift
 tumor_id=$1 && shift
 threads=$1 && shift
 
+echo "Running HMF target-regions pipeline"
+
 echo "Environment:"
 echo "  scripts dir: ${scripts_dir}"
 echo "  samples dir: ${samples_dir}"
@@ -62,7 +64,7 @@ amber_loci_vcf=${resources_dir}/copy_number/GermlineHetPon.38.vcf.gz
 gc_profile=${resources_dir}/copy_number/GC_profile.1000bp.38.cnp
 tumor_only_diploid_bed=${resources_dir}/copy_number/DiploidRegions.38.bed.gz
 target_region_normalisation=${resources_dir}/copy_number/target_regions_normalisation.38.tsv
-target_regions_definition=${resources_dir}/copy_number/target_regions_definition.38.bed
+target_regions_definition=${resources_dir}/variants/CoverageCodingPanel.38.bed.gz
 target_regions_ratios=${resources_dir}/copy_number/target_regions_ratios.38.tsv
 target_regions_msi_indels=${resources_dir}/copy_number/target_regions_msi_indels.38.tsv
 
@@ -163,7 +165,7 @@ ${scripts_dir}/run_purple_tr ${purple_jar} \
 
 
 # Linx
-linx_dir=${sample_dir}/linx_somatic
+linx_dir=${sample_dir}/linx
 
 sv_vcf=${purple_dir}/${tumor_id}.purple.sv.vcf.gz
 
@@ -174,3 +176,4 @@ ${scripts_dir}/run_linx_somatic ${linx_jar} \
   ${circos} \
 
 
+echo "Pipeline complete"

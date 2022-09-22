@@ -98,7 +98,7 @@ public class CandidateBamWriter
         if(mCandidatesWriters.isEmpty())
             return;
 
-        SV_LOGGER.info("assigning candidate reads for {} chromosomes", mChrJunctionReadIds.size());
+        SV_LOGGER.info("assigning candidate mate read to junctions");
 
         // close before re-accessing
         mCandidatesWriters.values().forEach(x -> x.close());
@@ -171,7 +171,7 @@ public class CandidateBamWriter
         @Override
         public Long call()
         {
-            SV_LOGGER.info("chr({}) assigning candidates from {} junction fragments", mChromosome, mJunctionReadIds.size());
+            SV_LOGGER.debug("chr({}) assigning candidates from {} junction fragments", mChromosome, mJunctionReadIds.size());
 
             int matchedCandidates = 0;
             int recordCount = 0;
@@ -214,7 +214,7 @@ public class CandidateBamWriter
 
             mResultsWriter.writeReadGroup(readGroups);
 
-            SV_LOGGER.info("chr({}) matched and wrote {} candidate reads", mChromosome, matchedCandidates);
+            SV_LOGGER.debug("chr({}) matched and wrote {} candidate reads", mChromosome, matchedCandidates);
 
             return (long)0;
         }
