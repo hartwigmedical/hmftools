@@ -14,7 +14,8 @@ import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
 import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPredictionFactory;
-import com.hartwig.hmftools.common.cuppa.interpretation.ImmutableCuppaPrediction;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaReporting;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaReportingFactory;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
@@ -95,12 +96,7 @@ public class AnalysedPatientReporter {
 
         List<CuppaPrediction> predictions = CuppaPredictionFactory.create(cuppaEntries);
         CuppaPrediction best = predictions.get(0);
-        if (best.likelihood() > 0.8) {
-            best = predictions.get(0);
-        } else {
-            // our cut-off is 80% likelihood. When this is below 80% then the results is inconclusive
-            best = ImmutableCuppaPrediction.builder().cancerType("results inconclusive").likelihood(0).build();
-        }
+        CuppaReporting cuppaReporting = CuppaReportingFactory.createCuppaReportingData(best);
 
         LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
 
@@ -117,10 +113,10 @@ public class AnalysedPatientReporter {
                 .specialRemark(specialRemark)
                 .pipelineVersion(pipelineVersion)
                 .genomicAnalysis(curateGeneName)
-                .cuppaPrediction(
+                .cuppaReporting(
                         curateGeneName.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION) || !curateGeneName.hasReliablePurity()
                                 ? null
-                                : best)
+                                : cuppaReporting)
                 .cuppaPlot(config.cuppaPlot())
                 .circosPath(config.purpleCircosPlot())
                 .comments(Optional.ofNullable(config.comments()))
@@ -179,8 +175,8 @@ public class AnalysedPatientReporter {
         GenomicAnalysis analysis = report.genomicAnalysis();
 
         LOGGER.info("Printing genomic analysis results for {}:", report.sampleReport().tumorSampleId());
-        if (report.cuppaPrediction() != null) {
-            LOGGER.info(" Molecular tissue origin conclusion: {}", report.cuppaPrediction().cancerType());
+        if (report.cuppaReporting() != null) {
+            LOGGER.info(" Molecular tissue origin conclusion: {}", report.cuppaReporting().interpretCancerType());
         }
         LOGGER.info(" Somatic variants to report: {}", analysis.reportableVariants().size());
         if (report.sampleReport().germlineReportingLevel() != LimsGermlineReportingLevel.NO_REPORTING) {
