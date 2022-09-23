@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
@@ -40,8 +41,10 @@ public class BmConfig
     public final int MaxCoverage;
 
     public final int PartitionSize;
+    public final boolean ExcludeZeroCoverage;
 
     public final String OutputDir;
+    public final String OutputId;
 
     public final int Threads;
 
@@ -62,17 +65,16 @@ public class BmConfig
     private static final String MAP_QUAL_THRESHOLD = "map_qual_threshold";
     private static final String BASE_QUAL_THRESHOLD = "base_qual_threshold";
     private static final String MAX_COVERAGE = "max_coverage";
+    private static final String EXCLUDE_ZERO_COVERAGE = "exclude_zero_coverage";
     private static final String LOG_READ_IDS = "log_read_ids";
     private static final String PERF_DEBUG = "perf_debug";
 
-    public static final String DELIM = ",";
     public static final String ITEM_DELIM = ";";
 
-    private static final int DEFAULT_CHR_PARTITION_SIZE = 100000;
+    private static final int DEFAULT_CHR_PARTITION_SIZE = 1000000;
     private static final int DEFAULT_MAP_QUAL_THRESHOLD = 20;
     private static final int DEFAULT_BASE_QUAL_THRESHOLD = 10;
     private static final int DEFAULT_MAX_COVERAGE = 250;
-    public static final int DEFAULT_READ_LENGTH = 151;
 
     public BmConfig(final CommandLine cmd)
     {
@@ -82,6 +84,7 @@ public class BmConfig
         BamFile = cmd.getOptionValue(BAM_FILE);
         RefGenomeFile = cmd.getOptionValue(REF_GENOME);
         OutputDir = parseOutputDir(cmd);
+        OutputId = cmd.getOptionValue(OUTPUT_ID);
 
         if(SampleId == null || BamFile == null || OutputDir == null || RefGenomeFile == null)
         {
@@ -99,6 +102,7 @@ public class BmConfig
         MapQualityThreshold = Integer.parseInt(cmd.getOptionValue(MAP_QUAL_THRESHOLD, String.valueOf(DEFAULT_MAP_QUAL_THRESHOLD)));
         BaseQualityThreshold = Integer.parseInt(cmd.getOptionValue(BASE_QUAL_THRESHOLD, String.valueOf(DEFAULT_BASE_QUAL_THRESHOLD)));
         MaxCoverage = Integer.parseInt(cmd.getOptionValue(MAX_COVERAGE, String.valueOf(DEFAULT_MAX_COVERAGE)));
+        ExcludeZeroCoverage = cmd.hasOption(EXCLUDE_ZERO_COVERAGE);
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
@@ -140,6 +144,20 @@ public class BmConfig
         return true;
     }
 
+    public String formFilename(final String fileType)
+    {
+        String filename = OutputDir + SampleId;
+
+        filename += ".bam_" + fileType;
+
+        if(OutputId != null)
+            filename += "." + OutputId;
+
+        filename += ".csv";
+        return filename;
+    }
+
+
     /*
     public BmConfig(int partitionSize)
     {
@@ -174,6 +192,7 @@ public class BmConfig
         options.addOption(MAP_QUAL_THRESHOLD, true, "Map quality threshold, default: " + DEFAULT_MAP_QUAL_THRESHOLD);
         options.addOption(BASE_QUAL_THRESHOLD, true, "Base quality threshold, default: " + DEFAULT_BASE_QUAL_THRESHOLD);
         options.addOption(MAX_COVERAGE, true, "Max coverage, default: " + DEFAULT_MAX_COVERAGE);
+        options.addOption(EXCLUDE_ZERO_COVERAGE, false, "Exclude bases with zero coverage");
         addThreadOptions(options);
 
         addSpecificChromosomesRegionsConfig(options);

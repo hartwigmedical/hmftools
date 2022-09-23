@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.bammetrics;
 
-import static java.lang.Math.min;
+import static java.lang.Math.pow;
+import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
 import java.util.StringJoiner;
@@ -10,6 +11,8 @@ public class Metrics
     public final long[] FilterTypeCounts;
     public final int[] CoverageFrequency;
 
+    private int mCoverageBases; // bases with any level of coverage
+
     private long mTotalFiltered;
     private Statistics mStatistics;
 
@@ -17,12 +20,23 @@ public class Metrics
     {
         FilterTypeCounts = new long[FilterType.values().length];
         CoverageFrequency = new int[maxCoverage + 1];
+        mCoverageBases = 0;
         mTotalFiltered = -1;
         mStatistics = null;
     }
 
-    public long totalFiltered() { return mTotalFiltered; }
-    public Statistics statistics() { return mStatistics;}
+    public void addCoverageBases(int bases) { mCoverageBases += bases; }
+    public int coverageBases() { return mCoverageBases; }
+    public int zeroCoverageBases() { return CoverageFrequency[0]; }
+
+    public Statistics statistics() { return mStatistics; }
+
+    public void finalise(boolean excludeZeroCoverge)
+    {
+        calcTotalFiltered();
+
+        calcStatistics(excludeZeroCoverge);
+    }
 
     public double calcFilteredPercentage(final FilterType type)
     {
@@ -36,29 +50,67 @@ public class Metrics
 
     public double calcCoverageFrequency(int coverageLevel)
     {
-        calcTotalFiltered();
+        long totalCoverage = FilterTypeCounts[FilterType.UNFILTERED.ordinal()];
 
-        if(mTotalFiltered == 0)
-            return 0;
+        long frequencyTotal = 0;
 
-        int frequencyTotal = 0;
-
-        for(int i = 0; i < min(CoverageFrequency.length, coverageLevel); ++i)
+        for(int i = 0; i < CoverageFrequency.length; ++i)
         {
-            frequencyTotal += CoverageFrequency[i];
+            if(i < coverageLevel)
+                continue;
+
+            frequencyTotal += CoverageFrequency[i] * i;
         }
 
-        return frequencyTotal / (double)mTotalFiltered;
+        return frequencyTotal / (double)totalCoverage;
     }
 
-    private void calcStatistics()
+    private void calcStatistics(boolean excludeZeroCoverge)
     {
         if(mStatistics != null)
             return;
 
+        long total = 0;
+        long totalFrequency = 0;
+        for(int i = 0; i < CoverageFrequency.length; ++i)
+        {
+            if(excludeZeroCoverge && i == 0)
+                continue;
 
+            total += CoverageFrequency[i];
+            totalFrequency += CoverageFrequency[i] * i;
+        }
 
-        mStatistics = new Statistics(0, 0, 0);
+        if(total == 0)
+        {
+            mStatistics = new Statistics(0, 0, 0, 0);
+            return;
+        }
+
+        double mean = totalFrequency / (double)total;
+
+        double median = -1;
+        double varianceTotal = 0;
+        long cumulativeTotal = 0;
+        long medianTotal = total / 2;
+        for(int i = 0; i < CoverageFrequency.length; ++i)
+        {
+            if(excludeZeroCoverge && i == 0)
+                continue;
+
+            if(median < 0)
+            {
+                if(cumulativeTotal + CoverageFrequency[i] >= medianTotal)
+                    median = i;
+                else
+                    cumulativeTotal += CoverageFrequency[i];
+            }
+
+            varianceTotal += CoverageFrequency[i] * pow(i - mean, 2);
+        }
+
+        double stdDeviation = sqrt(varianceTotal / total);
+        mStatistics = new Statistics(mean, median, stdDeviation, 0);
     }
 
     private void calcTotalFiltered()
@@ -88,6 +140,8 @@ public class Metrics
         {
             CoverageFrequency[i] += other.CoverageFrequency[i];
         }
+
+        addCoverageBases(other.coverageBases());
     }
 
     public String toString()

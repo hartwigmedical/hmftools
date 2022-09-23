@@ -25,7 +25,6 @@ import htsjdk.samtools.SamReader;
 
 public class PartitionSlicer
 {
-    private final int mId;
     private final BmConfig mConfig;
     private final ChrBaseRegion mRegion;
     private final ChrBaseRegion mFilterRegion;
@@ -43,12 +42,10 @@ public class PartitionSlicer
     private boolean mLogReadIds;
 
     public PartitionSlicer(
-            final int id, final ChrBaseRegion region, final BmConfig config, final SamReader samReader, final BamSlicer bamSlicer,
+            final ChrBaseRegion region, final BmConfig config, final SamReader samReader, final BamSlicer bamSlicer,
             final Metrics combinedMetrics)
     {
-        mId = id;
         mConfig = config;
-        // mWriter = writer;
         mRegion = region;
         mCombinedMetrics = combinedMetrics;
 
@@ -67,6 +64,8 @@ public class PartitionSlicer
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
     }
+
+    public PerformanceCounter getPerfCounter() { return mPerfCounter; }
 
     public void run()
     {
@@ -143,11 +142,12 @@ public class PartitionSlicer
         if(!record.getReferenceName().equals(record.getMateReferenceName()))
             return false;
 
+        int readLength = record.getReadBases().length;
         int readStart = record.getAlignmentStart();
-        int readEnd = readStart + record.getReadBases().length - 1;
+        int readEnd = readStart + readLength - 1;
 
         int mateStart = record.getMateAlignmentStart();
-        int mateEnd = record.getReadBases().length - 1;
+        int mateEnd = mateStart + readLength - 1;
 
         return positionsOverlap(readStart, readEnd, mateStart, mateEnd);
     }

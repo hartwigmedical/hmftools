@@ -28,7 +28,7 @@ public class ChromosomeTask
         mChromosome = chromosome;
         mConfig = config;
 
-        mCombinedMetrics = new Metrics(config.PartitionSize);
+        mCombinedMetrics = new Metrics(config.MaxCoverage);
 
         mPartitions = new ConcurrentLinkedQueue<>();
         List<ChrBaseRegion> partitions = partition(chromosome);

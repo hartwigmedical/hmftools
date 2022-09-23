@@ -48,7 +48,7 @@ public class PartitionThread extends Thread
                 PartitionTask partition = mPartitions.remove();
 
                 PartitionSlicer slicer = new PartitionSlicer(
-                        partition.TaskId, partition.Region, mConfig, mSamReader, mBamSlicer, mCombinedMetrics);
+                        partition.Region, mConfig, mSamReader, mBamSlicer, mCombinedMetrics);
 
                 boolean logAndGc = partition.TaskId > 0 && (partition.TaskId % 10) == 0;
 

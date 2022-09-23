@@ -118,13 +118,13 @@ public class BaseCoverage
                 break;
 
             int readIndex = readIndexStart + i;
-            int baseIndex = position = mRegionStart;
+            int baseIndex = position - mRegionStart;
 
             boolean lowBaseQual = record.getBaseQualities()[readIndex] < mConfig.BaseQualityThreshold;
 
             boolean overlapped = mateBaseCoords != null && positionWithin(position, mateBaseCoords[SE_START], mateBaseCoords[SE_END]);
 
-            boolean exceedsCoverage = ++mBaseDepth[baseIndex] >= mConfig.MaxCoverage;
+            boolean exceedsCoverage = mBaseDepth[baseIndex] >= mConfig.MaxCoverage;
 
             boolean passFilters = !lowBaseQual && !exceedsCoverage && !overlapped;
 
@@ -137,11 +137,9 @@ public class BaseCoverage
             {
                 if(lowBaseQual)
                     ++mFilterTypeCounts[LOW_BASE_QUAL.ordinal()];
-
-                if(overlapped)
+                else if(overlapped)
                     ++mFilterTypeCounts[OVERLAPPED.ordinal()];
-
-                if(exceedsCoverage)
+                else if(exceedsCoverage)
                     ++mFilterTypeCounts[MAX_COVERAGE.ordinal()];
             }
         }
@@ -151,9 +149,21 @@ public class BaseCoverage
     {
         Metrics metrics = new Metrics(mConfig.MaxCoverage);
 
+        int coverageBases = 0;
+
         for(int i = 0; i < mBaseDepth.length; ++i)
         {
             int coverage = mBaseDepth[i];
+
+            if(coverage == 0)
+            {
+                if(mConfig.ExcludeZeroCoverage)
+                    continue;
+            }
+            else
+            {
+                ++coverageBases;
+            }
 
             ++metrics.CoverageFrequency[coverage];
         }
@@ -162,6 +172,8 @@ public class BaseCoverage
         {
             metrics.FilterTypeCounts[type.ordinal()] += mFilterTypeCounts[type.ordinal()];
         }
+
+        metrics.addCoverageBases(coverageBases);
 
         return metrics;
     }
