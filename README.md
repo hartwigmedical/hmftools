@@ -9,18 +9,19 @@ This repository contains the suite of tools used in the Hartwig Medical Foundati
 The table below has links for the full functional detail and configuration for each component. The versions match those used in the current HMF GCP pipeline which can be run using [Platinum](https://github.com/hartwigmedical/platinum).
 
 #### Current versions
-Component | Description | Current Version
----|---|---
-[Amber](./amber/README.md) | Generate a tumor BAF file for Purple's copy number fit | [3.9](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.9)
-[Cobalt](./cobalt/README.md) | Determines the read depth ratios for Purple's copy number fit | [1.13](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.13)
-[Cuppa](./cuppa/README.md) | Tissue of origin prediction from WGS/WTS | [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.6)
-[Gripss](./gripss/README.md) | SV filtering | [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.2) 
-[Lilac](./lilac/README.md) | HLA typing | [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.2)
-[Linx](./linx/README.md) | SV annotation, clustering & chaining, fusion and disruption calling | [1.20](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.20)
-[Pave](./pave/README.md) | Point mutation annotation and gene impact | [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.3)
-[Purple](./purple/README.md) | Estimates copy number, purity and ploidy, and identifies driver events | [3.5](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.5)
-[Sage](./sage/README.md) | Point mutation variant calling and filtering | [3.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.1)
-[Teal](./lilac/README.md) | Measures telomere content and estimates telomeric length | [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.0.1)
+Component | Description                                                            | Current Version
+---|------------------------------------------------------------------------|---
+[Amber](./amber/README.md) | Generate a tumor BAF file for Purple's copy number fit                 | [3.9](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.9)
+[Cobalt](./cobalt/README.md) | Determines the read depth ratios for Purple's copy number fit          | [1.13](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.13)
+[Cuppa](./cuppa/README.md) | Tissue of origin prediction from WGS/WTS                               | [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.7)
+[Gripss](./gripss/README.md) | SV filtering                                                           | [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.3) 
+[Lilac](./lilac/README.md) | HLA typing                                                             | [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.4)
+[Linx](./linx/README.md) | SV annotation, clustering & chaining, fusion and disruption calling    | [1.22](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.22)
+[Pave](./pave/README.md) | Point mutation annotation and gene impact                              | [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.4)
+[Purple](./purple/README.md) | Estimates copy number, purity and ploidy, and identifies driver events | [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.7)
+[Sage](./sage/README.md) | Point mutation variant calling and filtering                           | [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.2)
+[Teal](./teal/README.md) | Measures telomere content and estimates telomeric length               | [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.0.1)
+[SvPrep](./sv-prep/README.md) | Pre-GRIDSS BAM filtering | [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.0.1)
 
 The following external tools are used in the pipeline:
 
@@ -31,7 +32,8 @@ Component | Description | Current Version
 
 
 ### Demo pipeline
-A example pipeline which runs each of these components in turn is detailed [here](./pipeline/).
+An example WGS pipeline which runs each of these components in turn is detailed [here](./pipeline/README_WGS.md).
+An example targeted-panel pipeline, including support for the HMF and TSO-500 panels, is detailed [here](./pipeline/README_PANEL.md).
 
 ## Resource files
 Resource files for each component (GRCh37 and GRCh38) are available to download from [HMFTools-Resources > DNA-Resources](https://resources.hartwigmedicalfoundation.nl/). 
