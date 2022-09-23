@@ -101,6 +101,7 @@ public class ReadFilterConfig
         options.addOption(
                 CFG_MIN_ALIGN_BASES, true, "Junction fragment min aligned bases, default: " + MIN_ALIGNMENT_BASES);
 
-        options.addOption(CFG_MIN_JUNCTION_FRAGS, true, "Required fragments to keep a junction");
+        options.addOption(
+                CFG_MIN_JUNCTION_FRAGS, true, "Required fragments to keep a junction, default: " + MIN_JUNCTION_SUPPORT);
     }
 }

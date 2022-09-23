@@ -585,6 +585,7 @@ Phasing improvements
 - **Germline phased variants may not be deduped** - SAGE does not dedup filtered variants so this may cause confusion in phasing.   This can be an issue around microsatellites.
 
 # Version History and Download Links
+- [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.2)
 - [3.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.1)
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.0)
 - [2.8](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.8)

@@ -867,8 +867,9 @@ Shown below is an example of a SS18-SSX1 fusion:
 
 
 ## Version History
-- [1.20](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.21)
-- [1.21](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.20)
+- [1.22](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.22)
+- [1.21](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.21)
+- [1.20](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.20)
 - [1.19](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.19)
 - [1.18](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.18)
 - [1.17](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.17)

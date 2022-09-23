@@ -24,8 +24,6 @@ public class AmplificationDrivers
 
     public static final double MAX_COPY_NUMBER_DEL = 0.5;
 
-    private static final Set<SegmentSupport> MERE = Sets.newHashSet(SegmentSupport.CENTROMERE, SegmentSupport.TELOMERE);
-
     private static final List<String> TARGET_REGIONS_PARTIAL_AMP_GENES = Lists.newArrayList(
             "BRAF", "EGFR", "CTNNB1", "CBL", "MET", "ALK", "PDGFRA");
 

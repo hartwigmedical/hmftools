@@ -238,6 +238,8 @@ Version | Samples | HOTSPOT | PANEL | OTHER
 - Where multiple ALTs are included on a single line only the 1st ALT allele will be annotated.   A workaround is to split multiallelic lines into multiple recorrds first (eg.  the -m none option in bcftools).
 
 # Version History and Download Links
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.4)
+- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.3)
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.2)
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.1)
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.0)
