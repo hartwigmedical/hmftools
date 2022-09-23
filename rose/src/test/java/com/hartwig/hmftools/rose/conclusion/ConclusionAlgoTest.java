@@ -60,10 +60,18 @@ public class ConclusionAlgoTest {
     public void canGenerateCUPPAConclusion() {
         List<String> conclusion = Lists.newArrayList();
         Map<ActionabilityKey, ActionabilityEntry> actionabilityMap = Maps.newHashMap();
-        actionabilityMap = testActionabilityMap(actionabilityMap, "CUPPA", TypeAlteration.CUPPA, "CUPPA", Condition.OTHER, "Molecular Tissue of Origin classifier: XXXX.");
+        actionabilityMap = testActionabilityMap(actionabilityMap,
+                "CUPPA",
+                TypeAlteration.CUPPA,
+                "CUPPA",
+                Condition.OTHER,
+                "Molecular Tissue of Origin classifier: XXXX.");
 
-        CuppaPrediction cuppaPrediction =
-                ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(99.6).build();
+        CuppaPrediction cuppaPrediction = ImmutableCuppaPrediction.builder()
+                .cancerType("Melanoma")
+                .likelihood(99.6)
+                .build();
+
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
         assertEquals(1, conclusion.size());
@@ -82,8 +90,10 @@ public class ConclusionAlgoTest {
                 Condition.OTHER,
                 "Molecular Tissue of Origin classifier: Inconclusive (highest likelihood: xxx - xx%).");
 
-        CuppaPrediction cuppaPrediction =
-                ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(0).build();
+        CuppaPrediction cuppaPrediction = ImmutableCuppaPrediction.builder()
+                .cancerType("Melanoma")
+                .likelihood(0.45)
+                .build();
 
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
@@ -103,8 +113,10 @@ public class ConclusionAlgoTest {
                 Condition.OTHER,
                 "Molecular Tissue of Origin classifier: Inconclusive (highest likelihood: xxx - xx%).");
 
-        CuppaPrediction cuppaPrediction =
-                ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(0.60).build();
+        CuppaPrediction cuppaPrediction = ImmutableCuppaPrediction.builder()
+                .cancerType("Melanoma")
+                .likelihood(0.60)
+                .build();
 
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 

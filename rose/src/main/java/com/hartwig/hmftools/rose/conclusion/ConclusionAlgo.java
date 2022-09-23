@@ -126,10 +126,11 @@ public class ConclusionAlgo {
         return driverGeneMap;
     }
 
-    public static void generateStartSentence(@NotNull List<String> conclusion){
+    public static void generateStartSentence(@NotNull List<String> conclusion) {
         conclusion.add("Sample showing: ");
 
     }
+
     public static void generateCUPPAConclusion(@NotNull List<String> conclusion, CuppaPrediction cuppaPrediction,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
 
@@ -139,8 +140,10 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppaInconclusice);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                if (cuppaPrediction.likelihood()>= 0.5) {
-                    conclusion.add("- " + entry.conclusion().replace("xxx - xx%", cuppaPrediction.cancerType() + "-" + cuppaPrediction.likelihood()));
+                if (cuppaPrediction.likelihood() >= 0.5) {
+                    conclusion.add("- " + entry.conclusion()
+                            .replace("xxx - xx%",
+                                    cuppaPrediction.cancerType() + "-" + cuppaPrediction.likelihood()));
                 } else {
                     conclusion.add("- " + entry.conclusion().replace(" (highest likelihood: xxx - xx%)", ""));
                 }
@@ -151,7 +154,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppa);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.add("- " + entry.conclusion() .replace("XXXX", cuppaPrediction.cancerType()));
+                conclusion.add("- " + entry.conclusion().replace("XXXX", cuppaPrediction.cancerType()));
             }
         }
     }
@@ -213,7 +216,8 @@ public class ConclusionAlgo {
                         actionable.add("variant");
                     }
 
-                    if (driverGenesMap.get(keyMap.getKey()).likelihoodType().equals(DriverCategory.TSG) && variantMerging.toString().split(",").length == 1) {
+                    if (driverGenesMap.get(keyMap.getKey()).likelihoodType().equals(DriverCategory.TSG)
+                            && variantMerging.toString().split(",").length == 1) {
                         if (!keyMap.getValue().get(0).bialleic()) {
                             ActionabilityKey keyBiallelic =
                                     ImmutableActionabilityKey.builder().match("NOT_BIALLELIC").type(TypeAlteration.NOT_BIALLELIC).build();

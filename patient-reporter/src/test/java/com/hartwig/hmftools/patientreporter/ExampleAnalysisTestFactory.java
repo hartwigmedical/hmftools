@@ -13,8 +13,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
-import com.hartwig.hmftools.common.cuppa.interpretation.ImmutableCuppaPrediction;
+import com.hartwig.hmftools.common.cuppa.interpretation.CuppaReporting;
+import com.hartwig.hmftools.common.cuppa.interpretation.ImmutableCuppaReporting;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
@@ -197,7 +197,12 @@ public final class ExampleAnalysisTestFactory {
                 .suspectGeneCopyNumbersHRDWithLOH(HRDLOHGenes())
                 .build();
 
-        CuppaPrediction cuppaPrediction = ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(99.6).build();
+        CuppaReporting cuppaReporting = ImmutableCuppaReporting.builder()
+                .bestCancerType("Melanoma")
+                .bestLikelihood(99.1)
+                .interpretCancerType("Melanoma")
+                .interpretLikelihood(99.1)
+                .build();
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
@@ -206,7 +211,7 @@ public final class ExampleAnalysisTestFactory {
                 .specialRemark(specialremark)
                 .genomicAnalysis(analysis)
                 .circosPath(REPORTER_CONFIG.purpleCircosPlot())
-                .cuppaPrediction(cuppaPrediction)
+                .cuppaReporting(cuppaReporting)
                 .cuppaPlot(REPORTER_CONFIG.cuppaPlot())
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectionReport())
