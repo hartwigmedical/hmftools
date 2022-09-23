@@ -7,6 +7,7 @@ They match the current tool version, configuration and resource files as used in
 ## Set-up
 
 1. Download the latest release JAR for each tool as listed [here](https://github.com/hartwigmedical/hmftools#current-versions).
+- also ensure that samtools (1.10 or higher) and bwa (0.7.17 or higher) are on the path
 
 2. Download the resources files for either GRCh37 or GRCh38 from [HMFTools-Resources > DNA-Resources](https://resources.hartwigmedicalfoundation.nl/). The latest resource files version is v5.31. The reference genome files are available separately [HMFTools-Resources > Ref-Genome](https://resources.hartwigmedicalfoundation.nl/).
 
