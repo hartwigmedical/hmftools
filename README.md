@@ -21,7 +21,7 @@ Component | Description                                                         
 [Purple](./purple/README.md) | Estimates copy number, purity and ploidy, and identifies driver events | [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.7)
 [Sage](./sage/README.md) | Point mutation variant calling and filtering                           | [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.2)
 [Teal](./teal/README.md) | Measures telomere content and estimates telomeric length               | [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.0.1)
-[SvPrep](./sv-prep/README.md) | Pre-GRIDSS BAM filtering | [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.0.1)
+[SvPrep](./sv-prep/README.md) | Pre-GRIDSS BAM filtering | [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.0)
 
 The following external tools are used in the pipeline:
 
