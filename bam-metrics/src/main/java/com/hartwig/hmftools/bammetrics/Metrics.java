@@ -4,6 +4,8 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.bammetrics.BmConfig.BM_LOGGER;
+
 import java.util.StringJoiner;
 
 public class Metrics
@@ -13,7 +15,7 @@ public class Metrics
 
     private long mCoverageBases; // bases with any level of coverage
 
-    private long mTotalFiltered;
+    private long mTotalBases; // filtered and unfiltered
     private Statistics mStatistics;
 
     public Metrics(int maxCoverage)
@@ -21,7 +23,7 @@ public class Metrics
         FilterTypeCounts = new long[FilterType.values().length];
         CoverageFrequency = new int[maxCoverage + 1];
         mCoverageBases = 0;
-        mTotalFiltered = -1;
+        mTotalBases = -1;
         mStatistics = null;
     }
 
@@ -40,12 +42,13 @@ public class Metrics
 
     public double calcFilteredPercentage(final FilterType type)
     {
+        // calculate percentage of a filtered type vs all bases including unfiltered
         calcTotalFiltered();
 
-        if(mTotalFiltered == 0)
+        if(mTotalBases == 0)
             return 0;
 
-        return FilterTypeCounts[type.ordinal()] / (double)mTotalFiltered;
+        return FilterTypeCounts[type.ordinal()] / (double) mTotalBases;
     }
 
     public double calcCoverageFrequency(int coverageLevel)
@@ -60,7 +63,7 @@ public class Metrics
             if(i < coverageLevel)
                 continue;
 
-            frequencyTotal += CoverageFrequency[i] * i;
+            frequencyTotal += (long)CoverageFrequency[i] * i;
         }
 
         return frequencyTotal / (double)totalCoverage;
@@ -79,7 +82,7 @@ public class Metrics
                 continue;
 
             total += CoverageFrequency[i];
-            totalFrequency += CoverageFrequency[i] * i;
+            totalFrequency += (long)CoverageFrequency[i] * i;
         }
 
         if(total == 0)
@@ -107,26 +110,27 @@ public class Metrics
                     cumulativeTotal += CoverageFrequency[i];
             }
 
-            varianceTotal += CoverageFrequency[i] * pow(i - mean, 2);
+            varianceTotal += pow(i - mean, 2) * CoverageFrequency[i];
         }
 
         double stdDeviation = sqrt(varianceTotal / total);
+
+        BM_LOGGER.debug(format("mean(%.3f totalFrequency=%d total=%d) stdDeviation(%.3f variantTotal=%.3f)",
+                mean, totalFrequency, total, stdDeviation, varianceTotal));
+
         mStatistics = new Statistics(mean, median, stdDeviation, 0);
     }
 
     private void calcTotalFiltered()
     {
-        if(mTotalFiltered >= 0)
+        if(mTotalBases >= 0)
             return;
 
-        mTotalFiltered = 0;
+        mTotalBases = 0;
 
         for(FilterType type : FilterType.values())
         {
-            if(type == FilterType.UNFILTERED)
-                continue;
-
-            mTotalFiltered += FilterTypeCounts[type.ordinal()];
+            mTotalBases += FilterTypeCounts[type.ordinal()];
         }
     }
 

@@ -103,7 +103,7 @@ public class BamMetricsApplication
         else
             combinedStats.perfCounter().logStats();
 
-        writeResults(combinedStats.metrics());
+        MetricsWriter.writeResults(combinedStats.metrics(), mConfig);
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         double timeTakeMins = timeTakenMs / 60000.0;
@@ -150,77 +150,6 @@ public class BamMetricsApplication
         return partitions;
     }
 
-    private void writeResults(final Metrics metrics)
-    {
-        try
-        {
-            // write summary metrics
-            String filename = mConfig.formFilename("metrics");
-            BufferedWriter writer = createBufferedWriter(filename, false);
-
-            writer.write("GenomeTerritory,CoverageTotal,CoverageMean,CoverageMedian,CoverageStdDev");
-
-            for(FilterType type : FilterType.values())
-            {
-                if(type == FilterType.UNFILTERED)
-                    continue;
-
-                writer.write(format(",Pct%s", type.description()));
-            }
-
-            List<Integer> coverageLevels = Lists.newArrayList(1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100);
-
-            for(Integer coverage : coverageLevels)
-            {
-                writer.write(format(",Pct%dx", coverage));
-            }
-
-            writer.newLine();
-
-            final Statistics statistics = metrics.statistics();
-
-            long genomeTerritory = metrics.zeroCoverageBases() + metrics.coverageBases();
-
-            writer.write(format("%d,%d,%.3f,%.3f,%.3f",
-                    genomeTerritory, metrics.coverageBases(), statistics.Mean, statistics.Median, statistics.StandardDeviation));
-
-            for(FilterType type : FilterType.values())
-            {
-                if(type == FilterType.UNFILTERED)
-                    continue;
-
-                writer.write(format(",%.5f", metrics.calcFilteredPercentage(type)));
-            }
-
-            for(Integer coverage : coverageLevels)
-            {
-                writer.write(format(",%.5f", metrics.calcCoverageFrequency(coverage)));
-            }
-
-            writer.newLine();
-
-            writer.close();
-
-            // write coverage frequency for unfiltered aligned bases
-            filename = mConfig.formFilename("coverage");
-            writer = createBufferedWriter(filename, false);
-
-            writer.write("Coverage,Frequency");
-            writer.newLine();
-
-            for(int i = 0; i < metrics.CoverageFrequency.length; ++i)
-            {
-                writer.write(format("%d,%d", i, metrics.CoverageFrequency[i]));
-                writer.newLine();
-            }
-
-            writer.close();
-        }
-        catch(IOException e)
-        {
-            BM_LOGGER.error("failed to write output file: {}", e.toString());
-        }
-    }
 
     public static void main(@NotNull final String[] args) throws Exception
     {

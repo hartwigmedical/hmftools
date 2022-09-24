@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.metrics;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
@@ -15,12 +14,12 @@ public class WGSMetricsFileTest {
     private static final String METRICS_DIRECTORY = Resources.getResource("metrics").getPath();
     private static final double EPSILON = 1.0E-10;
 
-    private static final String PV4_FILE = METRICS_DIRECTORY + File.separator + "sample.pv4.wgsmetrics";
-    private static final String PV5_FILE = METRICS_DIRECTORY + File.separator + "sample.pv5.wgsmetrics";
+    private static final String PV4_FILE = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.pv4");
+    private static final String PV5_FILE = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.pv5");
 
-    private static final String EMPTY_FILE = METRICS_DIRECTORY + File.separator + "sample.empty.wgsmetrics";
-    private static final String INCORRECT_FILE = METRICS_DIRECTORY + File.separator + "sample.incorrect.wgsmetrics";
-    private static final String NON_EXISTING_FILE = METRICS_DIRECTORY + File.separator + "sample.non-existing.wgsmetrics";
+    private static final String EMPTY_FILE = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.empty");
+    private static final String INCORRECT_FILE = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.incorrect");
+    private static final String NON_EXISTING_FILE = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.non-existing");
 
     @Test
     public void worksForPv4Input() throws IOException {

@@ -42,6 +42,7 @@ public class BmConfig
 
     public final int PartitionSize;
     public final boolean ExcludeZeroCoverage;
+    public final boolean WriteOldStyle;
 
     public final String OutputDir;
     public final String OutputId;
@@ -66,6 +67,7 @@ public class BmConfig
     private static final String BASE_QUAL_THRESHOLD = "base_qual_threshold";
     private static final String MAX_COVERAGE = "max_coverage";
     private static final String EXCLUDE_ZERO_COVERAGE = "exclude_zero_coverage";
+    private static final String WRITE_OLD_STYLE = "write_old_style";
     private static final String LOG_READ_IDS = "log_read_ids";
     private static final String PERF_DEBUG = "perf_debug";
 
@@ -103,6 +105,7 @@ public class BmConfig
         BaseQualityThreshold = Integer.parseInt(cmd.getOptionValue(BASE_QUAL_THRESHOLD, String.valueOf(DEFAULT_BASE_QUAL_THRESHOLD)));
         MaxCoverage = Integer.parseInt(cmd.getOptionValue(MAX_COVERAGE, String.valueOf(DEFAULT_MAX_COVERAGE)));
         ExcludeZeroCoverage = cmd.hasOption(EXCLUDE_ZERO_COVERAGE);
+        WriteOldStyle = cmd.hasOption(WRITE_OLD_STYLE);
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
@@ -193,6 +196,7 @@ public class BmConfig
         options.addOption(BASE_QUAL_THRESHOLD, true, "Base quality threshold, default: " + DEFAULT_BASE_QUAL_THRESHOLD);
         options.addOption(MAX_COVERAGE, true, "Max coverage, default: " + DEFAULT_MAX_COVERAGE);
         options.addOption(EXCLUDE_ZERO_COVERAGE, false, "Exclude bases with zero coverage");
+        options.addOption(WRITE_OLD_STYLE, false, "Write data in same format as Picard CollectWgsMetrics");
         addThreadOptions(options);
 
         addSpecificChromosomesRegionsConfig(options);

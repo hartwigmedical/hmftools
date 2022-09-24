@@ -1,23 +1,32 @@
 package com.hartwig.hmftools.common.metrics;
 
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
+import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class WGSMetricsFile {
-
-    private static final String MEAN_COVERAGE_COLUMN = "MEAN_COVERAGE";
-    private static final String SD_COVERAGE_COLUMN = "SD_COVERAGE";
-    private static final String MEDIAN_COVERAGE_COLUMN = "MEDIAN_COVERAGE";
-    private static final String MAD_COVERAGE_COLUMN = "MAD_COVERAGE";
-    private static final String PCT_EXC_ADAPTER_COLUMN = "PCT_EXC_ADAPTER";
-    private static final String PCT_EXC_MAPQ_COLUMN = "PCT_EXC_MAPQ";
-    private static final String PCT_EXC_DUPE_COLUMN = "PCT_EXC_DUPE";
-    private static final String PCT_EXC_UNPAIRED_COLUMN = "PCT_EXC_UNPAIRED";
-    private static final String PCT_EXC_BASEQ_COLUMN = "PCT_EXC_BASEQ";
-    private static final String PCT_EXC_OVERLAP_COLUMN = "PCT_EXC_OVERLAP";
-    private static final String PCT_EXC_CAPPED_COLUMN = "PCT_EXC_CAPPED";
-    private static final String PCT_EXC_TOTAL_COLUMN = "PCT_EXC_TOTAL";
+public final class WGSMetricsFile
+{
+    public static final String GENOME_TERRITORY_COLUMN = "GENOME_TERRITORY";
+    public static final String MEAN_COVERAGE_COLUMN = "MEAN_COVERAGE";
+    public static final String SD_COVERAGE_COLUMN = "SD_COVERAGE";
+    public static final String MEDIAN_COVERAGE_COLUMN = "MEDIAN_COVERAGE";
+    public static final String MAD_COVERAGE_COLUMN = "MAD_COVERAGE";
+    public static final String PCT_EXC_ADAPTER_COLUMN = "PCT_EXC_ADAPTER";
+    public static final String PCT_EXC_MAPQ_COLUMN = "PCT_EXC_MAPQ";
+    public static final String PCT_EXC_DUPE_COLUMN = "PCT_EXC_DUPE";
+    public static final String PCT_EXC_UNPAIRED_COLUMN = "PCT_EXC_UNPAIRED";
+    public static final String PCT_EXC_BASEQ_COLUMN = "PCT_EXC_BASEQ";
+    public static final String PCT_EXC_OVERLAP_COLUMN = "PCT_EXC_OVERLAP";
+    public static final String PCT_EXC_CAPPED_COLUMN = "PCT_EXC_CAPPED";
+    public static final String PCT_EXC_TOTAL_COLUMN = "PCT_EXC_TOTAL";
+    public static final String HET_SNP_SENSITIVITY_COLUMN = "HET_SNP_SENSITIVITY";
+    public static final String HET_SNP_Q_COLUMN = "HET_SNP_Q";
 
     private static final String COVERAGE_1X_COLUMN = "PCT_1X";
     private static final String COVERAGE_10X_COLUMN = "PCT_10X";
@@ -25,35 +34,60 @@ public final class WGSMetricsFile {
     private static final String COVERAGE_30X_COLUMN = "PCT_30X";
     private static final String COVERAGE_60X_COLUMN = "PCT_60X";
 
-    private WGSMetricsFile() {
+    public static final String FILE_EXTENSION = ".wgsmetrics";
+    public static final String DELIM = "\t";
+
+    public static String generateFilename(final String basePath, final String sampleId)
+    {
+        return basePath + File.separator + sampleId + FILE_EXTENSION;
     }
 
     @NotNull
-    public static WGSMetrics read(@NotNull String metricsPath) throws IOException {
-        WGSMetricsLines lines = WGSMetricsLines.fromFile(metricsPath);
+    public static WGSMetrics read(final String filename) throws IOException
+    {
+        List<String> lines = Files.readAllLines(new File(filename).toPath());
 
-        // These 2 columns do not exist in older versions
-        String pctExcAdapter = lines.findValueByHeader(PCT_EXC_ADAPTER_COLUMN);
-        String coverage1x = lines.findValueByHeader(COVERAGE_1X_COLUMN);
+        String headerLine = null;
+        String valuesLine = null;
+
+        for(int i = 0; i < lines.size() - 1; ++i)
+        {
+            if(lines.get(i).startsWith(GENOME_TERRITORY_COLUMN))
+            {
+                headerLine = lines.get(i);
+                valuesLine = lines.get(i + 1);
+                break;
+            }
+        }
+
+        if(headerLine == null)
+            throw new IOException("invalid WGS metrics file: " + filename);
+
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(headerLine, DELIM);
+        String[] values = valuesLine.split(DELIM, -1);
+
+        // NOTE: adapter and 1x coverage not exist in older versions
 
         return ImmutableWGSMetrics.builder()
-                .meanCoverage(Double.parseDouble(lines.findValueByHeader(MEAN_COVERAGE_COLUMN)))
-                .sdCoverage(Double.parseDouble(lines.findValueByHeader(SD_COVERAGE_COLUMN)))
-                .medianCoverage(Integer.parseInt(lines.findValueByHeader(MEDIAN_COVERAGE_COLUMN)))
-                .madCoverage(Integer.parseInt(lines.findValueByHeader(MAD_COVERAGE_COLUMN)))
-                .pctExcAdapter(pctExcAdapter != null ? Double.parseDouble(pctExcAdapter) : null)
-                .pctExcMapQ(Double.parseDouble(lines.findValueByHeader(PCT_EXC_MAPQ_COLUMN)))
-                .pctExcDupe(Double.parseDouble(lines.findValueByHeader(PCT_EXC_DUPE_COLUMN)))
-                .pctExcUnpaired(Double.parseDouble(lines.findValueByHeader(PCT_EXC_UNPAIRED_COLUMN)))
-                .pctExcBaseQ(Double.parseDouble(lines.findValueByHeader(PCT_EXC_BASEQ_COLUMN)))
-                .pctExcOverlap(Double.parseDouble(lines.findValueByHeader(PCT_EXC_OVERLAP_COLUMN)))
-                .pctExcCapped(Double.parseDouble(lines.findValueByHeader(PCT_EXC_CAPPED_COLUMN)))
-                .pctExcTotal(Double.parseDouble(lines.findValueByHeader(PCT_EXC_TOTAL_COLUMN)))
-                .coverage1xPercentage(coverage1x != null ? Double.parseDouble(coverage1x) : null)
-                .coverage10xPercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_10X_COLUMN)))
-                .coverage20xPercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_20X_COLUMN)))
-                .coverage30xPercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_30X_COLUMN)))
-                .coverage60xPercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_60X_COLUMN)))
+                .meanCoverage(Double.parseDouble(values[fieldsIndexMap.get(MEAN_COVERAGE_COLUMN)]))
+                .sdCoverage(Double.parseDouble(values[fieldsIndexMap.get(SD_COVERAGE_COLUMN)]))
+                .medianCoverage(Integer.parseInt(values[fieldsIndexMap.get(MEDIAN_COVERAGE_COLUMN)]))
+                .madCoverage(Integer.parseInt(values[fieldsIndexMap.get(MAD_COVERAGE_COLUMN)]))
+                .pctExcAdapter(fieldsIndexMap.containsKey(PCT_EXC_ADAPTER_COLUMN) ?
+                        Double.parseDouble(values[fieldsIndexMap.get(PCT_EXC_ADAPTER_COLUMN)]) : null)
+                .pctExcMapQ(Double.parseDouble(values[fieldsIndexMap.get(PCT_EXC_MAPQ_COLUMN)]))
+                .pctExcDupe(Double.parseDouble(values[fieldsIndexMap.get(PCT_EXC_DUPE_COLUMN)]))
+                .pctExcUnpaired(Double.parseDouble(values[fieldsIndexMap.get(PCT_EXC_UNPAIRED_COLUMN)]))
+                .pctExcBaseQ(Double.parseDouble(values[fieldsIndexMap.get(PCT_EXC_BASEQ_COLUMN)]))
+                .pctExcOverlap(Double.parseDouble(values[fieldsIndexMap.get(PCT_EXC_OVERLAP_COLUMN)]))
+                .pctExcCapped(Double.parseDouble(values[fieldsIndexMap.get(PCT_EXC_CAPPED_COLUMN)]))
+                .pctExcTotal(Double.parseDouble(values[fieldsIndexMap.get(PCT_EXC_TOTAL_COLUMN)]))
+                .coverage1xPercentage(fieldsIndexMap.containsKey(COVERAGE_1X_COLUMN) ?
+                        Double.parseDouble(values[fieldsIndexMap.get(COVERAGE_1X_COLUMN)]) : null)
+                .coverage10xPercentage(Double.parseDouble(values[fieldsIndexMap.get(COVERAGE_10X_COLUMN)]))
+                .coverage20xPercentage(Double.parseDouble(values[fieldsIndexMap.get(COVERAGE_20X_COLUMN)]))
+                .coverage30xPercentage(Double.parseDouble(values[fieldsIndexMap.get(COVERAGE_30X_COLUMN)]))
+                .coverage60xPercentage(Double.parseDouble(values[fieldsIndexMap.get(COVERAGE_60X_COLUMN)]))
                 .build();
     }
 }

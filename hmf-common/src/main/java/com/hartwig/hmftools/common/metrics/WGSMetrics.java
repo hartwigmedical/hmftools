@@ -6,8 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class WGSMetrics {
-
+public abstract class WGSMetrics
+{
     public abstract double meanCoverage();
 
     public abstract double sdCoverage();

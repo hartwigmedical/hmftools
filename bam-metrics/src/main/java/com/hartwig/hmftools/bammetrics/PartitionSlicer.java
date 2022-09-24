@@ -56,16 +56,15 @@ public class PartitionSlicer
 
         mReadGroupMap = Maps.newHashMap();
 
-        ChrBaseRegion excludedRegion = getPolyGRegion(mConfig.RefGenVersion);
-        mFilterRegion = region.overlaps(excludedRegion) ? excludedRegion : null;
+        //ChrBaseRegion excludedRegion = getPolyGRegion(mConfig.RefGenVersion);
+        // mFilterRegion = region.overlaps(excludedRegion) ? excludedRegion : null;
+        mFilterRegion = null;
 
         mTotalReads = 0;
         mPerfCounter = new PerformanceCounter("Coverage");
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
     }
-
-    public PerformanceCounter getPerfCounter() { return mPerfCounter; }
 
     public void run()
     {
