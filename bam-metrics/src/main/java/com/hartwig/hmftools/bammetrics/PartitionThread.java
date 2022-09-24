@@ -14,20 +14,17 @@ import htsjdk.samtools.SamReaderFactory;
 
 public class PartitionThread extends Thread
 {
-    private final String mChromosome;
     private final BmConfig mConfig;
-    private final Metrics mCombinedMetrics;
+    private final CombinedStats mCombinedStats;
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
     private final Queue<PartitionTask> mPartitions;
 
-    public PartitionThread(
-            final String chromosome, final BmConfig config, final Queue<PartitionTask> partitions, final Metrics combinedStats)
+    public PartitionThread(final BmConfig config, final Queue<PartitionTask> partitions, final CombinedStats combinedStats)
     {
-        mChromosome = chromosome;
         mConfig = config;
-        mCombinedMetrics = combinedStats;
+        mCombinedStats = combinedStats;
         mPartitions = partitions;
 
         mSamReader = mConfig.BamFile != null ?
@@ -47,15 +44,13 @@ public class PartitionThread extends Thread
             {
                 PartitionTask partition = mPartitions.remove();
 
-                PartitionSlicer slicer = new PartitionSlicer(
-                        partition.Region, mConfig, mSamReader, mBamSlicer, mCombinedMetrics);
+                PartitionSlicer slicer = new PartitionSlicer(partition.Region, mConfig, mSamReader, mBamSlicer, mCombinedStats);
 
                 boolean logAndGc = partition.TaskId > 0 && (partition.TaskId % 10) == 0;
 
                 if(logAndGc)
                 {
-                    BM_LOGGER.debug("chromosome({}) processing partition({}), remaining({})",
-                            mChromosome, partition.TaskId, mPartitions.size());
+                    BM_LOGGER.debug("processing partition({}), remaining({})", partition.TaskId, mPartitions.size());
                 }
 
                 slicer.run();

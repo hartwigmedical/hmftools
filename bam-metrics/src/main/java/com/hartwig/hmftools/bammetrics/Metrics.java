@@ -11,7 +11,7 @@ public class Metrics
     public final long[] FilterTypeCounts;
     public final int[] CoverageFrequency;
 
-    private int mCoverageBases; // bases with any level of coverage
+    private long mCoverageBases; // bases with any level of coverage
 
     private long mTotalFiltered;
     private Statistics mStatistics;
@@ -25,9 +25,9 @@ public class Metrics
         mStatistics = null;
     }
 
-    public void addCoverageBases(int bases) { mCoverageBases += bases; }
-    public int coverageBases() { return mCoverageBases; }
-    public int zeroCoverageBases() { return CoverageFrequency[0]; }
+    public void addCoverageBases(long bases) { mCoverageBases += bases; }
+    public long coverageBases() { return mCoverageBases; }
+    public long zeroCoverageBases() { return CoverageFrequency[0]; }
 
     public Statistics statistics() { return mStatistics; }
 
@@ -50,6 +50,7 @@ public class Metrics
 
     public double calcCoverageFrequency(int coverageLevel)
     {
+        // calculates the percentage of bases with this coverage level or higher, exclude the bases with zero coverage
         long totalCoverage = FilterTypeCounts[FilterType.UNFILTERED.ordinal()];
 
         long frequencyTotal = 0;

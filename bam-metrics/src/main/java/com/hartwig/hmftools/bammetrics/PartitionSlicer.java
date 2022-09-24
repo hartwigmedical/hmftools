@@ -35,7 +35,7 @@ public class PartitionSlicer
     private final BaseCoverage mBaseCoverage;
     private final Map<String,ReadGroup> mReadGroupMap; // keyed by readId
 
-    private final Metrics mCombinedMetrics;
+    private final CombinedStats mCombinedStats;
     private int mTotalReads;
     private final PerformanceCounter mPerfCounter;
 
@@ -43,16 +43,16 @@ public class PartitionSlicer
 
     public PartitionSlicer(
             final ChrBaseRegion region, final BmConfig config, final SamReader samReader, final BamSlicer bamSlicer,
-            final Metrics combinedMetrics)
+            final CombinedStats combinedStats)
     {
         mConfig = config;
         mRegion = region;
-        mCombinedMetrics = combinedMetrics;
+        mCombinedStats = combinedStats;
 
         mSamReader = samReader;
         mBamSlicer = bamSlicer;
 
-        mBaseCoverage = new BaseCoverage(mConfig, mConfig.PartitionSize);
+        mBaseCoverage = new BaseCoverage(mConfig, mRegion.start(), mRegion.end());
 
         mReadGroupMap = Maps.newHashMap();
 
@@ -71,9 +71,7 @@ public class PartitionSlicer
     {
         BM_LOGGER.debug("processing region({})", mRegion);
 
-        mBaseCoverage.initialise(mRegion.start());
-
-        mPerfCounter.start();
+        mPerfCounter.start(mConfig.PerfDebug ? mRegion.toString() : null);
         mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
         mPerfCounter.stop();
 
@@ -85,9 +83,8 @@ public class PartitionSlicer
         }
 
         Metrics metrics = mBaseCoverage.createMetrics();
-        mCombinedMetrics.merge(metrics);
 
-        // mCombinedStats.addPerfCounters(mPerfCounters);
+        mCombinedStats.addStats(metrics, mTotalReads, mPerfCounter);
     }
 
     private void processSamRecord(final SAMRecord record)

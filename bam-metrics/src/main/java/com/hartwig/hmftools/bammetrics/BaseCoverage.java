@@ -25,28 +25,13 @@ public class BaseCoverage
     private final int[] mBaseDepth;
     private final long[] mFilterTypeCounts;
 
-    public BaseCoverage(final BmConfig config, int size)
+    public BaseCoverage(final BmConfig config, int regionStart, int regionEnd)
     {
         mConfig = config;
-        mRegionSize = size;
-        mRegionStart = -1;
-        mBaseDepth = new int[size];
-        mFilterTypeCounts = new long[FilterType.values().length];
-    }
-
-    public void initialise(final int regionStart)
-    {
+        mRegionSize = regionEnd - regionStart + 1;
         mRegionStart = regionStart;
-
-        for(int i = 0; i < mBaseDepth.length; ++i)
-        {
-            mBaseDepth[i] = 0;
-        }
-
-        for(int i = 0; i < mFilterTypeCounts.length; ++i)
-        {
-            mFilterTypeCounts[i] = 0;
-        }
+        mBaseDepth = new int[mRegionSize];
+        mFilterTypeCounts = new long[FilterType.values().length];
     }
 
     public void processRead(final SAMRecord record, final int[] mateBaseCoords)
@@ -149,7 +134,7 @@ public class BaseCoverage
     {
         Metrics metrics = new Metrics(mConfig.MaxCoverage);
 
-        int coverageBases = 0;
+        long coverageBases = 0;
 
         for(int i = 0; i < mBaseDepth.length; ++i)
         {

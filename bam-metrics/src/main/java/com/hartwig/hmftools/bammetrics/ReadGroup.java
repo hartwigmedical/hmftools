@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.bammetrics;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -26,17 +24,6 @@ public class ReadGroup
     {
         mReads.add(read);
     }
-
-    public boolean isSimpleComplete()
-    {
-        // no supplementaries and both reads received
-        if(mReads.size() != 2)
-            return false;
-
-        // if(mReads.stream().anyMatch(x -> !x.record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE)hasSuppAlignment() && !x.isSupplementaryAlignment());
-        return true;
-    }
-
 
     public String toString()
     {

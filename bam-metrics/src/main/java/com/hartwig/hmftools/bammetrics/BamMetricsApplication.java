@@ -1,18 +1,27 @@
 package com.hartwig.hmftools.bammetrics;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bammetrics.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.bammetrics.BmConfig.createCmdLineOptions;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.commons.cli.CommandLine;
@@ -41,7 +50,7 @@ public class BamMetricsApplication
 
         long startTimeMs = System.currentTimeMillis();
 
-        Metrics combinedMetrics = new Metrics(mConfig.MaxCoverage);
+        List<ChrBaseRegion> allRegions = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
@@ -50,32 +59,95 @@ public class BamMetricsApplication
             if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosomeStr))
                 continue;
 
-            BM_LOGGER.info("processing chromosome({})", chromosomeStr);
-
-            ChromosomeTask chromosomeTask = new ChromosomeTask(chromosomeStr, mConfig);
-            chromosomeTask.process();
-            combinedMetrics.merge(chromosomeTask.combinedMetrics());
-
-            if(mConfig.PerfDebug)
-            {
-                // combinedStats.PerfCounters.get(i).merge(chromosomeTask.combinedMetrics().PerfCounters.get((i)));
-            }
-
-            System.gc();
+            allRegions.addAll(partitionChromosome(chromosomeStr));
         }
 
-        combinedMetrics.finalise(mConfig.ExcludeZeroCoverage);
-        writeResults(combinedMetrics);
+        BM_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
+
+        Queue<PartitionTask> partitions = new ConcurrentLinkedQueue<>();
+
+        int taskId = 0;
+        for(int i = 0; i < allRegions.size(); ++i)
+        {
+            partitions.add(new PartitionTask(allRegions.get(i), taskId++));
+        }
+
+        CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
+
+        List<Thread> workers = new ArrayList<>();
+
+        for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
+        {
+            workers.add(new PartitionThread(mConfig, partitions, combinedStats));
+        }
+
+        for(Thread worker : workers)
+        {
+            try
+            {
+                worker.join();
+            }
+            catch(InterruptedException e)
+            {
+                BM_LOGGER.error("task execution error: {}", e.toString());
+                e.printStackTrace();
+            }
+        }
+
+        combinedStats.metrics().finalise(mConfig.ExcludeZeroCoverage);
+
+        BM_LOGGER.info("all regions complete, totalReads({}) stats: {}", combinedStats.totalReads(), combinedStats.metrics());
+
+        if(mConfig.PerfDebug)
+            combinedStats.perfCounter().logIntervalStats(10);
+        else
+            combinedStats.perfCounter().logStats();
+
+        writeResults(combinedStats.metrics());
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         double timeTakeMins = timeTakenMs / 60000.0;
 
-        if(mConfig.PerfDebug)
+        BM_LOGGER.info("BamMetrics complete, mins({})", format("%.3f", timeTakeMins));
+    }
+
+    private List<ChrBaseRegion> partitionChromosome(final String chromosome)
+    {
+        if(!mConfig.SpecificRegions.isEmpty())
         {
-            // combinedStats.PerfCounters.forEach(x -> x.logStats());
+            List<ChrBaseRegion> partitions = Lists.newArrayList();
+
+            for(ChrBaseRegion region : mConfig.SpecificRegions)
+            {
+                if(region.Chromosome.equals(chromosome))
+                {
+                    partitions.addAll(buildPartitions(chromosome, region.start() ,region.end()));
+                }
+            }
+
+            return partitions;
         }
 
-        BM_LOGGER.info("BamMetrics complete, mins({})", format("%.3f", timeTakeMins));
+        RefGenomeCoordinates refGenomeCoords = mConfig.RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+        int chromosomeLength = refGenomeCoords.length(stripChrPrefix(chromosome));
+        return buildPartitions(chromosome, 1, chromosomeLength);
+    }
+
+    private List<ChrBaseRegion> buildPartitions(final String chromosome, int minPosition, int maxPosition)
+    {
+        final List<ChrBaseRegion> partitions = Lists.newArrayList();
+
+        for(int i = 0; ; i++)
+        {
+            int start = minPosition + i * mConfig.PartitionSize;
+            int end = min(start + mConfig.PartitionSize - 1, maxPosition);
+            partitions.add(new ChrBaseRegion(chromosome, start, end));
+
+            if(end >= maxPosition)
+                break;
+        }
+
+        return partitions;
     }
 
     private void writeResults(final Metrics metrics)
@@ -107,7 +179,7 @@ public class BamMetricsApplication
 
             final Statistics statistics = metrics.statistics();
 
-            int genomeTerritory = metrics.zeroCoverageBases() + metrics.coverageBases();
+            long genomeTerritory = metrics.zeroCoverageBases() + metrics.coverageBases();
 
             writer.write(format("%d,%d,%.3f,%.3f,%.3f",
                     genomeTerritory, metrics.coverageBases(), statistics.Mean, statistics.Median, statistics.StandardDeviation));
