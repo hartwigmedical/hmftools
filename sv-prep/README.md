@@ -87,7 +87,6 @@ The blacklist is the combination of the existing encode blacklisted regions and 
 
 ## Known issues and future improvements
 
-### Calling and filtering
 - **PolyG** - Currently we filter reads with PolyG.   Better would be to trim
 - **Quality trimming** - Currently we filter reads with max(5,15% of SC) low qual soft clipped bases.   Better would be to trim
 Short INDEL Artefacts - Short INDELS (10-40 bases) may be called as SGL and not filtered (normally with poor qual or shortish assemblies).  This could be addressed by identifying these better in GRIPSS
@@ -95,10 +94,7 @@ Short INDEL Artefacts - Short INDELS (10-40 bases) may be called as SGL and not 
 MT chromosome - currently dropped
 Variants near blacklisted regions - GRIDSS will ignore any read that overlaps a blacklisted region.   Hence we cannot call any breakpoint which is within ~30-70 bases of a blacklisted region.
 - **Max softclip overlap** - Currently must be 30 bases of soft clip overlap.  This may cuause us occassionally to miss 1 or 2 reads support at one end of a break junction if it is only identified at one end.
-
-### Performance
-- Soft clip to split reads may not be necessary on extracted files
-- ComputeSamTags could be done in extraction step
+- **Performance** - ComputeSamTags could be done in extraction step
 
 # Version History and Download Links
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.0)
