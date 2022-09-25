@@ -1,6 +1,6 @@
 # SV Prep - pre-GRIDSS filtering and post-GRIDSS annotation
 
-SV Prep generates a maximally filtered SV BAM file by identifying candidate SV junctions and extracting all reads that may provide support to that junction.    The BAM file is intended to be fed into the GRIDSS assembly.   In tumor-normal mode, SV Prep may be run first on the tumor and then a 2nd time on the reference sample using the junctions found in the tumor mode, to ensure all potential evidence in the reference sample is collected for candidate tumor junctions.    
+SV Prep generates a maximally filtered SV BAM file by identifying candidate SV junctions and extracting all reads that may provide support to that junction. The BAM file is intended to be fed into the GRIDSS assembly. In tumor-normal mode, SV Prep may be run first on the tumor and then a 2nd time on the reference sample using the junctions found in the tumor mode, to ensure all potential evidence in the reference sample is collected for candidate tumor junctions.    
 
 Example usage of SV Prep can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/wgs_scripts/run_gridss)
 
@@ -66,8 +66,39 @@ Output a bam file which is subsequently name sorted  and used as input to Comput
 
 ### Post GRIDSS Depth Annotation
 
-Sv Prep also has a DepthAnnotator
+Sv Prep also has an additional feature to replace the depth annotation of GRIDSS (ie the annotation of REF and REFPAIR) with a faster implmenetation.  This can be run with the following command: 
 
+```
+java -cp ${sv_prep_jar} com.hartwig.hmftools.svprep.depth.DepthAnnotator \
+  -input_vcf ${gridss_vcf} \
+  -output_vcf ${final_vcf} \
+  -samples "${reference_id},${tumor_id}" \
+  -bam_files "${reference_bam},${tumor_bam}" \
+  -ref_genome ${ref_genome} \
+  -ref_genome_version ${ref_genome_version} \
+  -threads ${threads} \
+```
+
+Please see the example [script](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/wgs_scripts/run_gridss) for how to run this post GRIDSS.
+
+## SV Prep Blacklist
+
+The blacklist is the combination of the existing encode blacklisted regions and all regions with 200x or greater depth found in 4 out of 11 reference samples  40x mean coverage) used to identify artefacts (and 4 out of 8 for HG38).   Regions that overlap PANEL or fusion KB genes are excluded from the blacklist,. These  regions mainly capture long repeat sections of the genome with poorly aligned reads and make up 13M bases of the genome (0.4%).  
+
+## Known issues and future improvements
+
+### Calling and filtering
+- **PolyG** - Currently we filter reads with PolyG.   Better would be to trim
+- **Quality trimming** - Currently we filter reads with max(5,15% of SC) low qual soft clipped bases.   Better would be to trim
+Short INDEL Artefacts - Short INDELS (10-40 bases) may be called as SGL and not filtered (normally with poor qual or shortish assemblies).  This could be addressed by identifying these better in GRIPSS
+- **Microsatellites** - Related, other artefacts may still be called immediately adjacent to microsatellites.   Additional filtering may help
+MT chromosome - currently dropped
+Variants near blacklisted regions - GRIDSS will ignore any read that overlaps a blacklisted region.   Hence we cannot call any breakpoint which is within ~30-70 bases of a blacklisted region.
+- **Max softclip overlap** - Currently must be 30 bases of soft clip overlap.  This may cuause us occassionally to miss 1 or 2 reads support at one end of a break junction if it is only identified at one end.
+
+### Performance
+- Soft clip to split reads may not be necessary on extracted files
+- ComputeSamTags could be done in extraction step
 
 # Version History and Download Links
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.0)
