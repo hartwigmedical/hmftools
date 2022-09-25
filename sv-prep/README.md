@@ -1,6 +1,8 @@
-# SV Prep - pre-GRIDSS filtering
+# SV Prep - pre-GRIDSS filtering and post-GRIDSS annotation
 
-SvPrep generates a filtered BAM file by identifying candidate SV reads, and then feeds this BAM into Gridss assembly.
+SV Prep generates a maximally filtered SV BAM file by identifying candidate SV junctions and extracting all reads that may provide support to that junction.    The BAM file is intended to be fed into the GRIDSS assembly.   In tumor-normal mode, SV Prep may be run first on the tumor and then a 2nd time on the reference sample using the junctions found in the tumor mode, to ensure all potential evidence in the reference sample is collected for candidate tumor junctions.    
+
+Example usage of SV Prep can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/wgs_scripts/run_gridss)
 
 ## Running SvPrep
 
@@ -37,20 +39,34 @@ java -jar sv-prep.jar
   -output_dir /sample_data/output/ 
 ```
 
-
 ## Overview and algorithm
 
-### Junction Fragments
+### Extract Fragments
 
+Ignoring reads that are duplicate (or where the primary is a duplicate), secondary or contain soft clipping with more than 16 consecutive bases of PolyG/C), and excluding sites in blacklisted regions, parse through BAM end to end to identify breakend sites with CREDIBLE soft clipping
 
-### Support Fragments
+At least 1 read with 50 base alignment and  abs(Insert size - M length) > 5 bases (ie test for short fragments with adapter) AND a soft clip length of 30 with >=75% of soft clip bases with qual > 25. Soft clip length of <30 is allowed where the soft clip meet the polyA LINE criteria (ie 16 of first 18 soft clip bases must be A/T). The read must also not be a repeat expansion (ie the first 9 bases of soft clip and the last 9 bases of aligned read are not matching 1,2 or 3 nucleotide repeats).       
+At least 1 additional read which have any length soft clipping at the same base OR within 50 bases with <=1 high quality mismatch between the soft clip locations  (not required for HOTSPOT regions)   
+At least 1 read supporting directly or indirectly with a MAPQ of 20 (not required for HOTSPOT regions)
 
+Sites with aligned INDELs of >= 32 bases are also treated as candidate sites.
 
-### Discordang Group Fragments
+Additionally, to ensure we capture SV with long (inexact) homology we also identify sites where there are >=5 reads within a 500 base region with insert size outside the max(1000,99.75%) insert size (or >=3 reads if insert size is more than twice that length) with their mates also starting within a 1000 base region of each other. The range can be further extended to the inner side of the fragment up to the 99.75% fragment size if more reads can be found in that region with long insert sizes and mates within 1kb of each other.  If such a candidate region is found and the reads do not support a site of credible soft clipping, then create a junction regardless on the innermost base of the reads supporting the potential breakend.
 
+For each site we also obtain the following reads (excluding reads with alignments that overlap blacklist regions or which have PolyG/C tails) and their mates
+All reads with soft clipping that matches the orientation and position of the variant (+/-50 bases)
+All reads within min[99.75%,1kb] range fragment length of the site on the correct side of the breakend with read facing the breakend and mate is unmapped, interchromosomal, has the same orientation or has an insert size outside the percentile range [0.25,99.75]
+All reads that overlap the breakend and contain an INDEL of > 15 bases
 
-### Blacklist Regions
+For the last 2 categories (discordant & indel containing reads), we filter if they have more than max(5,25% of soft clip length) soft clip bases with base qual < 25, since these frequently cause FP calls in GRIDSS. 
 
+When run in germline + tumor mode, the tumor is run first and reads in the germline that may support for a site in the tumor are also obtained as well as searching for additional sites.   
+
+Output a bam file which is subsequently name sorted  and used as input to ComputeSamTags step in GRIDSS
+
+### Post GRIDSS Depth Annotation
+
+Sv Prep also has a DepthAnnotator
 
 
 # Version History and Download Links
