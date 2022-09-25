@@ -20,7 +20,7 @@ public class AltTranscriptReportableInfo
     public final CodingEffect Effect;
 
     public static final String VAR_IMPACT_OTHER_REPORT_ITEM_DELIM = "|";
-    public static final String VAR_IMPACT_OTHER_REPORT_DELIM = "-";
+    public static final String VAR_IMPACT_OTHER_REPORT_DELIM = "--"; // a single hyphen conflicts with the HGVS coding annotation
     public static final int VAR_IMPACT_OTHER_REPORT_ITEM_COUNT = 5;
 
     public AltTranscriptReportableInfo(
@@ -35,18 +35,19 @@ public class AltTranscriptReportableInfo
 
     public static List<AltTranscriptReportableInfo> parseAltTranscriptInfo(final String otherReportableEffects)
     {
-        List<AltTranscriptReportableInfo> altTransEffects = Lists.newArrayList();
+        List<AltTranscriptReportableInfo> altTransInfos = Lists.newArrayList();
 
-        String[] otherReportableTranscripts = otherReportableEffects.split(VAR_IMPACT_OTHER_REPORT_DELIM, -1);
+        String[] altTransInfoItems = otherReportableEffects.split(VAR_IMPACT_OTHER_REPORT_DELIM, -1);
 
-        for(String transInfo : otherReportableTranscripts)
+        for(String altTransInfoStr : altTransInfoItems)
         {
-            AltTranscriptReportableInfo altTransInfo = AltTranscriptReportableInfo.parse(transInfo);
+            AltTranscriptReportableInfo altTransInfo = parse(altTransInfoStr);
+
             if(altTransInfo != null)
-                altTransEffects.add(altTransInfo);
+                altTransInfos.add(altTransInfo);
         }
 
-        return altTransEffects;
+        return altTransInfos;
     }
 
     public static AltTranscriptReportableInfo parse(final String transInfo)
