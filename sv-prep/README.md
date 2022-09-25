@@ -2,7 +2,9 @@
 
 SV Prep generates a maximally filtered SV BAM file by identifying candidate SV junctions and extracting all reads that may provide support to that junction. The BAM file is intended to be fed into the GRIDSS assembly.   SV Prep reduces the overall runtime of GRIDSS SV calling by ~80%.
 
-In tumor-normal mode, SV Prep may be run first on the tumor and then a 2nd time on the reference sample using the junctions found in the tumor mode, to ensure all potential evidence in the reference sample is collected for candidate tumor junctions. Example usage of SV Prep can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/wgs_scripts/run_gridss)
+In tumor-normal mode, SV Prep may be run first on the tumor and then a 2nd time on the reference sample using the junctions found in the tumor mode, to ensure all potential evidence in the reference sample is collected for candidate tumor junctions. 
+
+Example usage of SV Prep can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/wgs_scripts/run_gridss)
 
 ## Running SvPrep
 
