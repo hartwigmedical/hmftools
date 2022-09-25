@@ -41,6 +41,8 @@ java -jar sv-prep.jar
   -output_dir /sample_data/output/ 
 ```
 
+The bed file resources can be downloaded from [HMFTools-Resources > DNA-Resources](https://resources.hartwigmedicalfoundation.nl/).
+
 ## Overview and algorithm
 
 ### Extract Fragments
