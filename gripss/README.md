@@ -112,7 +112,7 @@ minLength | min_length | 32 | DEL, DUP & INS | Minimum absolute length (includin
 minSingleInsertLength | N/A | 16 | SGL | Minimum insert sequence length for a single breakend
 singleStrandBias | max_short_strand_bias | 0.05<SB<0.95 | SGL (excluding polyA tails) | Minimum/maximum proportion of reads from the forward strand supporting the single breakend
 maxHomLengthShortInv | max_hom_length_short_inv | 6 | INV(<50b) | Very short INV with high homology are a common sequencer artefact
-discordantPairSupport | N/A | TRUE | INV(<50b) | Breakpoints must have at least 1 read mapped at each end. 
+discordantPairSupport | N/A | TRUE | INV(<50b) | Breakpoints must have at least 1 read mapped at each end.  Filters if ASRP=RP=0.
 shortStrandBias | N/A | TRUE | INS,DEL & DUP(<1kb) | Short DEL and DUP must be strand balanced
 shortSRTumorSupport | N/A | TRUE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must be supported by at least 1 split read or in the case of very short DEL and INS at least 1 supporting indel containing read.
 shortSRNormalSupport | N/A | FALSE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must not be supported by 1 split read or 1 indel containing read in the normal 
