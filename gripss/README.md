@@ -25,7 +25,7 @@ This will write 2 files:
 
 These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
 
-The bed and bedpe files are available to download from [HMFTools-Resources > Gripss](https://resources.hartwigmedicalfoundation.nl/). Both files need to be sorted by chromosome and start breakend start position.
+The bed and bedpe files are available to download from [HMFTools-Resources > DNA Resources](https://resources.hartwigmedicalfoundation.nl/). Both files need to be sorted by chromosome and start breakend start position.
 
 ### Mandatory Arguments
 
