@@ -172,12 +172,12 @@ public abstract class LilacAllele {
                 .add(String.valueOf(allele.rnaUnique()))
                 .add(String.valueOf(allele.rnaShared()))
                 .add(String.valueOf(allele.rnaWild()))
-                .add(String.valueOf(allele.tumorCopyNumber()))
-                .add(String.valueOf(allele.somaticMissense()))
-                .add(String.valueOf(allele.somaticNonsenseOrFrameshift()))
-                .add(String.valueOf(allele.somaticSplice()))
-                .add(String.valueOf(allele.somaticSynonymous()))
-                .add(String.valueOf(allele.somaticInframeIndel()))
+                .add(String.format("%.2f", allele.tumorCopyNumber()))
+                .add(String.format("%.1f", allele.somaticMissense()))
+                .add(String.format("%.1f", allele.somaticNonsenseOrFrameshift()))
+                .add(String.format("%.1f", allele.somaticSplice()))
+                .add(String.format("%.1f", allele.somaticSynonymous()))
+                .add(String.format("%.1f", allele.somaticInframeIndel()))
                 .toString();
     }
 }

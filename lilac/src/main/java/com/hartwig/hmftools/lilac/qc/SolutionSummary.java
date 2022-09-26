@@ -4,7 +4,6 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 
 import com.hartwig.hmftools.common.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.common.hla.LilacAllele;
@@ -17,8 +16,9 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
+
+import org.apache.commons.compress.utils.Lists;
 
 public class SolutionSummary
 {
@@ -43,21 +43,17 @@ public class SolutionSummary
     {
         try
         {
-            BufferedWriter writer = createBufferedWriter(fileName, false);
-
-            writer.write(LilacAllele.header());
-            writer.newLine();
+            List<LilacAllele> alleles = Lists.newArrayList();
 
             if(ReferenceCoverage != null)
             {
                 for(int i = 0; i < 6; ++i)
                 {
-                    writer.write(generateAlleleBody(i));
-                    writer.newLine();
+                    alleles.add(buildAlleleData(i));
                 }
             }
 
-            writer.close();
+            LilacAllele.write(fileName, alleles);
         }
         catch(IOException e)
         {
@@ -66,8 +62,7 @@ public class SolutionSummary
         }
     }
 
-
-    private final String generateAlleleBody(int index)
+    private LilacAllele buildAlleleData(int index)
     {
         AlleleCoverage ref = ReferenceCoverage.getAlleleCoverage().get(index);
 
@@ -80,30 +75,27 @@ public class SolutionSummary
         double copyNumber = TumorCopyNumber.get(index);
         SomaticCodingCount codingCount = SomaticCodingCount.get(index);
 
-        // TODO: use LilacAllele write method
-
-        StringJoiner alelelData = new StringJoiner(DELIM)
-                .add(ref.Allele.toString())
-                .add(String.valueOf(round(ref.TotalCoverage)))
-                .add(String.valueOf(ref.UniqueCoverage))
-                .add(String.valueOf(round(ref.SharedCoverage)))
-                .add(String.valueOf(round(ref.WildCoverage)))
-                .add(String.valueOf(round(tumor.TotalCoverage)))
-                .add(String.valueOf(tumor.UniqueCoverage))
-                .add(String.valueOf(round(tumor.SharedCoverage)))
-                .add(String.valueOf(round(tumor.WildCoverage)))
-                .add(String.format("%.2f", copyNumber))
-                .add(String.valueOf(round(rna.TotalCoverage)))
-                .add(String.valueOf(rna.UniqueCoverage))
-                .add(String.valueOf(round(rna.SharedCoverage)))
-                .add(String.valueOf(round(rna.WildCoverage)))
-                .add(String.format("%.2f", codingCount.missense()))
-                .add(String.format("%.2f", codingCount.nonsense()))
-                .add(String.format("%.2f", codingCount.splice()))
-                .add(String.format("%.2f", codingCount.synonymous()))
-                .add(String.format("%.2f", codingCount.inframeIndel()));
-
-        return alelelData.toString();
+        return ImmutableLilacAllele.builder()
+                .allele(ref.Allele.toString())
+                .refFragments((int)round(ref.TotalCoverage))
+                .refUnique(ref.UniqueCoverage)
+                .refShared((int)round(ref.SharedCoverage))
+                .refWild((int)round(ref.WildCoverage))
+                .tumorFragments((int)round(tumor.TotalCoverage))
+                .tumorUnique(tumor.UniqueCoverage)
+                .tumorShared((int)round(tumor.SharedCoverage))
+                .tumorWild((int)round(tumor.WildCoverage))
+                .tumorCopyNumber(copyNumber)
+                .rnaFragments((int)round(rna.TotalCoverage))
+                .rnaUnique(rna.UniqueCoverage)
+                .rnaShared((int)round(rna.SharedCoverage))
+                .rnaWild((int)round(rna.WildCoverage))
+                .somaticMissense(codingCount.missense())
+                .somaticNonsenseOrFrameshift(codingCount.nonsense())
+                .somaticSplice(codingCount.splice())
+                .somaticSynonymous(codingCount.synonymous())
+                .somaticInframeIndel(codingCount.inframeIndel())
+                .build();
     }
 
     public static SolutionSummary create(
