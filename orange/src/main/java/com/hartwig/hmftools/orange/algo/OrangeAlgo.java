@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo;
 
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -239,11 +241,20 @@ public class OrangeAlgo {
     @NotNull
     private static Map<String, Double> loadGermlineMVLHPerGene(@NotNull OrangeConfig config) throws IOException {
         Map<String, Double> mvlhPerGene = Maps.newTreeMap();
+
         List<String> lines = Files.readAllLines(new File(config.sageGermlineGeneCoverageTsv()).toPath());
+        String header = lines.get(0);
+
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, "\t");
+        int geneIndex = fieldsIndexMap.get("gene");
+        int mvlhIndex = fieldsIndexMap.get("missedVariantLikelihood");
+
         for (String line : lines.subList(1, lines.size())) {
             String[] values = line.split("\t");
-            double mvlh = Double.parseDouble(values[1].substring(0, values[1].length() - 1)) / 100D;
-            mvlhPerGene.put(values[0], mvlh);
+            String gene = values[geneIndex];
+            String mvlhString = values[mvlhIndex].substring(0, values[mvlhIndex].length() - 1);
+            double missedVariantLikelihood = Double.parseDouble(mvlhString) / 100D;
+            mvlhPerGene.put(gene, missedVariantLikelihood);
         }
         return mvlhPerGene;
     }
