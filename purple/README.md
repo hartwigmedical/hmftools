@@ -8,7 +8,7 @@ It combines B-allele frequency (BAF) from [AMBER](../amber), read depth ratios f
 
 PURPLE supports both grch 37 and 38 reference assemblies. 
 
-Whole exome sequenced (WES) data is not supported.
+To run PURPLE in targeted mode please see [here](https://github.com/hartwigmedical/hmftools/blob/master/README_TARGETED.md)
 
 ## Contents
 
