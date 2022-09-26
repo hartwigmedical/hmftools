@@ -1,4 +1,4 @@
-# HMF DNA Panel Example Pipeline
+# HMF DNA Targeted Example Pipeline
 
 ![HMF_Pipeline](./hmf_tools_panel_pipeline.png)
 
