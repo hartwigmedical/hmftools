@@ -10,6 +10,8 @@ The key changes in targeted mode are mostly with 2 components
 
 Other components, operate essentially the same but may also require different configuration to reflect ths sparsity of data, higher on target depth and .   We have so far implemented 2 broad panels only: TSO500 (1.3Mb) & HMF panel (2Mb).   The configuration suggested below should work well for these panels with on target depth of ~300-2000x
 
+A demo of the targeted pipeline is available [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_PANEL.md)
+
 
 ## Special resources files for targeted mode
 
