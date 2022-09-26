@@ -15,7 +15,7 @@ When using paired reference/tumor data, AMBER is also able to:
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
 
-Ref genome versions 37 and 38 of the likely heterozygous sites are available to download from [HMFTools-Resources > Amber](https://resources.hartwigmedicalfoundation.nl/).
+Ref genome versions 37 and 38 of the likely heterozygous sites are available to download from [HMFTools-Resources > DNA Resources](https://resources.hartwigmedicalfoundation.nl/).
 
 The Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package is required for segmentation.
 After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.com/), the copy number package can be added with the following R commands:

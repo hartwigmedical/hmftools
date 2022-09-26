@@ -47,7 +47,7 @@ Whole exome sequenced (WES) data is not supported.
 ## Installation
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
-PURPLE also requires the same GC profile as used in COBALT (available from [HMFTools-Resources > Cobalt](https://resources.hartwigmedicalfoundation.nl/) and a reference genome.
+PURPLE also requires the same GC profile as used in COBALT (available from [HMFTools-Resources > DNA resources](https://resources.hartwigmedicalfoundation.nl/) and a reference genome.
 While these are sufficient to run PURPLE there are a number of optional dependencies that provide additional functionality.
 
 To generate [output charts](#charts), PURPLE depends on a number of [bioconductor](http://www.bioconductor.org) packages. After installing [R](https://www.r-project.org/) 
@@ -117,7 +117,7 @@ ref_genome | Path to reference genome fasta file.
 ref_genome_version | 37 (default) or 38
 ensembl_data_dir | Path to Ensembl data cache
 
-The GC Profile file used by HMF (GC_profile.1000bp.37.cnp) is available to download from [HMFTools-Resources > Cobalt](https://resources.hartwigmedicalfoundation.nl). 
+The GC Profile file used by HMF (GC_profile.1000bp.37.cnp) is available to download from [HMFTools-Resources > DNA Resources](https://resources.hartwigmedicalfoundation.nl). 
 A 38 equivalent is also available.
 
 The ref genome must be indexed and have an associated sequence dictionary. These can be created with samtools as follows:
@@ -193,11 +193,11 @@ somatic_hotspots | VCF of somatic hotspot locations. Mandatory if driver catalog
 germline_hotspots | VCF of germline hotspot locations. Mandatory if driver catalog enabled and germline variants supplied.
 driver_gene_panel | TSV of driver genes. Mandatory if driver catalog enabled.
 
-The hotspot VCF used by HMF (KnownHotspots.37.vcf.gz) is available to download from [HMFTools-Resources > Sage2](https://resources.hartwigmedicalfoundation.nl). 
+The hotspot VCF used by HMF (KnownHotspots.37.vcf.gz) is available to download from [HMFTools-Resources > DNA Resources](https://resources.hartwigmedicalfoundation.nl). 
 A 38 equivalent is also available. The file is used to re-annotate all somatic variants with a HOTSPOT or NEAR_HOTSPOT flag if they are on or within 5 bases of a hotspot. 
 Hotspots are assigned a driver likelihood of 1. 
 
-The driver gene panel (DriverGenePanel.37.tsv) and 38 equivalent is also available from [HMFTools-Resources > Gene Panel](https://resources.hartwigmedicalfoundation.nl)
+The driver gene panel (DriverGenePanel.37.tsv) and 38 equivalent is also available from [HMFTools-Resources > DNA Resources](https://resources.hartwigmedicalfoundation.nl)
 
 Note that generating the driver catalog for SNVs assumes that the VCF has been annotated with [PAVE](../pave/README.md).
 
