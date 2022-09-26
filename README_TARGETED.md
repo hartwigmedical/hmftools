@@ -1,5 +1,3 @@
-**WORK IN PROGRESS**
-
 # Targeted NGS Analysis in HMF Tools
 
 Whilst designed initiallly for WGS, the HMF tools have been adapted to fully support targeted sequenincing input.   The implementation is panel independent, but each new panel requires an initial set of input samples (20-50) for training to learn the read depth profile (see 'Generation of targetRegions CN normalisation file' section below) as well as a target bed file to identify the targeted regions for that panel.   To estimate MSI, a set of microsatellites with high coverage in the panel must also be defined.
