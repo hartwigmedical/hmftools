@@ -1,6 +1,6 @@
 **WORK IN PROGRESS**
 
-# Targeted NGS in HMF tools
+# Targeted NGS Analysis in HMF Tools
 
 TO DO:    Aims to generically handling targeted sequencing
 
