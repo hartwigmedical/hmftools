@@ -2,21 +2,37 @@
 
 # Targeted NGS Analysis in HMF Tools
 
-TO DO:    Aims to generically handling targeted sequencing
+Whilst designed initiallly for WGS, the HMF tools have been adapted to fully support targeted sequenincing input.   The implementation is panel independent, but each new panel requires an initial set of input samples (20-50) for training to learn the read depth profile (see 'Generation of targetRegions CN normalisation file' section below) as well as a target bed file to identify the targeted regions for that panel.   To estimate MSI, a set of microsatellites with high coverage in the panel must also be defined.
 
-Handles TSO500 + HMF
-link to demo
+The key changes in targeted mode are mostly with 2 components
+• Cobalt normalises copy number and masks off target regions according to the CN normalisation file
+• PURPLE has custom routines for TMB / TML / MSI and special rules for calling drivers
+
+Other components, operate essentially the same but may also require different configuration to reflect ths sparsity of data, higher on target depth and .   We have so far implemented 2 broad panels only: TSO500 (1.3Mb) & HMF panel (2Mb).   The configuration suggested below should work well for these panels with on target depth of ~300-2000x
 
 
 ## Special resources files for targeted mode
 
+The following files are all required in targeted mode and are panel specific:
+
 File Name | Tool | Purpose
 -- | -- | --
+targetRegionsNormalisation.tsv | Cobalt | Normalise copy number regions and mask off target regions.
+CodingRegions.bed | Purple | Coding regions to consider for TMB/TML model.
+MSI.Bed | Purple | List of MSI locii to consider in MSI model
 
-TO DO
+The driverGenePanel.tsv, ActionableCodingPanel.bed and CoverageCodingPanel.bed should also all be adapted to match the specific panel
 
 ## Recommended configuration changes in targeted mode
 
+AMBER
+```
+-minTumorDepth 80
+```
+COBALT
+```
+pcf_gamma 15
+```
 SAGE
 ```
 -hotspot_min_tumor_vaf 0.01
