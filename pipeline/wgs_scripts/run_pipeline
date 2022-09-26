@@ -60,6 +60,7 @@ if [ "${ref_genome_version}" == "V37" ]; then
   clinvar_vcf=${resources_dir}/variants/clinvar.37.vcf.gz
   germline_blacklist_bed=${resources_dir}/variants/KnownBlacklist.germline.37.bed
   germline_blacklist_vcf=${resources_dir}/variants/KnownBlacklist.germline.37.vcf.gz
+  gnomad_dir=${resources_dir}/variants/
 
   # SVs (for Gripss, Linx)
   sv_hotspot_file=${resources_dir}/sv/known_fusions.37.bedpe
@@ -99,6 +100,7 @@ else
   clinvar_vcf=${resources_dir}/variants/clinvar.38.vcf.gz
   germline_blacklist_bed=${resources_dir}/variants/KnownBlacklist.germline.38.bed
   germline_blacklist_vcf=${resources_dir}/variants/KnownBlacklist.germline.38.vcf.gz
+  gnomad_dir=${resources_dir}/variants/gnomad/
 
   # SVs (for Gripss, Linx)
   sv_hotspot_file=${resources_dir}/sv/known_fusions.38.bedpe
@@ -166,7 +168,7 @@ ${scripts_dir}/run_pave_somatic ${pave_jar} \
   ${tumor_id}  \
   ${sage_somatic_dir} ${pave_somatic_dir} \
   ${ref_genome_version} ${ref_genome} \
-  ${ensembl_dir} ${driver_gene_panel} ${somatic_pon_file} ${mappability_bed} \
+  ${ensembl_dir} ${driver_gene_panel} ${somatic_pon_file} ${mappability_bed} ${gnomad_dir} \
   
 
 # Pave germline

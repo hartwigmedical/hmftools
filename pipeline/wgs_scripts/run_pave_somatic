@@ -10,6 +10,7 @@ ensembl_dir=$1 && shift
 driver_gene_panel=$1 && shift
 pon_file=$1 && shift
 mappability_bed=$1 && shift
+gnomad_dir=$1 && shift
 
 if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
@@ -29,12 +30,11 @@ if [[ ! -f "${sage_vcf}" ]]; then
   exit
 fi
 
-echo "Running Pave somatic for ${sample_id}, output dir ${output_dir}
+echo "Running Pave somatic for ${sample_id}, output dir ${output_dir}"
 
 pon_filters="HOTSPOT:5:5;PANEL:2:5;UNKNOWN:2:0"
 
-java -jar ${pave_jar} \
-  -sample ${sample_id} \
+args="-sample ${sample_id} \
   -ensembl_data_dir ${ensembl_dir} \
   -driver_gene_panel ${driver_gene_panel} \
   -ref_genome_version ${ref_genome_version} \
@@ -44,4 +44,10 @@ java -jar ${pave_jar} \
   -mappability_bed ${mappability_bed} \
   -vcf_file ${sage_vcf} \
   -read_pass_only \
-  -output_dir ${output_dir} \
+  -output_dir ${output_dir}"
+
+if [ "${ref_genome_version}" == "V38" ]; then
+  args="${args} -gnomad_freq_dir ${gnomad_dir} -gnomad_load_chr_on_demand"
+fi
+
+java -jar ${pave_jar} ${args}
