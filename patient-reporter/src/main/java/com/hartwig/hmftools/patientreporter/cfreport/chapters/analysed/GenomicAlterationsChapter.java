@@ -426,8 +426,10 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
                 for (LilacReporting allele1 : HLAAllele.sort(allele)) {
                     tableGermlineAllele.addCell(TableUtil.createTransparentCell(allele1.lilacGermlineAllele().germlineAllele()));
-                    tableGermlineCopies.addCell(TableUtil.createTransparentCell(String.valueOf(allele1.germlineCopies())));
-                    tableTumorCopies.addCell(TableUtil.createTransparentCell(String.valueOf(allele1.tumorCopies())));
+                    tableGermlineCopies.addCell(TableUtil.createTransparentCell(HLAAllele.copyNumberStringGermline(allele1.germlineCopies(),
+                            hasReliablePurity)));
+                    tableTumorCopies.addCell(TableUtil.createTransparentCell(HLAAllele.copyNumberStringTumor(allele1.tumorCopies(),
+                            hasReliablePurity)));
                     tableSomaticMutations.addCell(TableUtil.createTransparentCell(allele1.somaticMutations()));
                     tablePrecenseIntumor.addCell(TableUtil.createTransparentCell(allele1.interpretation()));
                 }
