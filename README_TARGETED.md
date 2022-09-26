@@ -33,7 +33,8 @@ AMBER
 ```
 COBALT
 ```
-pcf_gamma 15
+-target_region ${target_region_normalisation}
+-pcf_gamma 15
 ```
 SAGE
 ```
@@ -54,7 +55,9 @@ PURPLE
 ```
 -min_diploid_tumor_ratio_count 3
 -min_diploid_tumor_ratio_count_centromere 3
--deletedGenesThreshold 1500
+-target_regions_bed ${target_regions_definition}
+-target_regions_ratios ${target_regions_ratios}
+-target_regions_msi_indels ${target_regions_msi_indels}
 ```
 
 ## Targeted specific methods
