@@ -118,6 +118,8 @@ shortSRTumorSupport | N/A | TRUE | INS,DEL & DUP(<1kb) | Short DELs and DUPs mus
 shortSRNormalSupport | N/A | FALSE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must not be supported by 1 split read or 1 indel containing read in the normal 
 shortDelInsArtefact | N/A | TRUE | DEL(<1kb) | Filter any short DEL where the insert sequence length + 1 = deletion length, unless the insert sequence is identical to the reverse complement (ie a short reciprocal inversion).  This is a known GRIDSS artefact.
 
+For targeted data with higher depth please see additional recommendations for filters [here](https://github.com/hartwigmedical/hmftools/blob/master/README_TARGETED.md).
+
 ## 4. Linkage, deduplication and rescue
 
 ### A. Assembly linkage
