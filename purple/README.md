@@ -274,7 +274,6 @@ Tumor only mode impacts PURPLE in the following ways:
   - COBALT allosome reference ratios are adjusted according to AMBER gender
   - No germline chromosomal aberrations are detected 
   - HLA SNV / INDEL are ignored and hard filtered (assumed to be germline)
-  - Mutation burden calculations are adjusted according to expected germline leakage (TO DO: add calculations)
   - somatic SNV/INDEL and SV with PON_ filters are hardfiltered and ignored
   
 Example command:
