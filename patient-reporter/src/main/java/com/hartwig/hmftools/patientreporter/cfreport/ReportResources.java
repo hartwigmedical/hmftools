@@ -3,11 +3,9 @@ package com.hartwig.hmftools.patientreporter.cfreport;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.time.LocalDate;
 import java.util.Locale;
 
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
-import com.hartwig.hmftools.common.utils.DataUtil;
 import com.itextpdf.io.font.FontProgram;
 import com.itextpdf.io.font.FontProgramFactory;
 import com.itextpdf.io.font.PdfEncodings;
@@ -42,6 +40,7 @@ public final class ReportResources {
     public static final float CONTENT_WIDTH_NARROW = 330; // Width of the content on a narrow page (page with full side panel)
     public static final float CONTENT_WIDTH_WIDE = 510; // Width of the content on a narrow page (page without full side panel)
     public static final float CONTENT_WIDTH_WIDE_SMALL = 240; // Width of the content on a narrow page (page with full side panel)
+    public static final float CONTENT_WIDTH_WIDE_SUMMARY = 320; // Width of the content on a narrow page (page without full side panel)
 
     public static final DeviceRgb PALETTE_WHITE = new DeviceRgb(255, 255, 255);
     public static final DeviceRgb PALETTE_BLACK = new DeviceRgb(0, 0, 0);

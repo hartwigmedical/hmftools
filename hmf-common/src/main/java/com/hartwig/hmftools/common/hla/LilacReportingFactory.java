@@ -23,19 +23,6 @@ public class LilacReportingFactory {
     public static final DecimalFormat SINGLE_DIGIT = new DecimalFormat("#.#", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
 
     @NotNull
-    public static List<LilacGermlineAllele> generateLilacGermline(@NotNull LilacSummaryData lilacSummaryData) {
-        List<LilacGermlineAllele> germlineAlleles = Lists.newArrayList();
-        for (LilacAllele lilacAllele : lilacSummaryData.alleles()) {
-            germlineAlleles.add(ImmutableLilacGermlineAllele.builder()
-                    .germlineAllele(lilacAllele.allele())
-                    .gene(extractHLAGene(lilacAllele))
-                    .build());
-        }
-
-        return germlineAlleles;
-    }
-
-    @NotNull
     public static Map<String, List<LilacAllele>> generateLilacMap(@NotNull LilacSummaryData lilacSummaryData) {
         Map<String, List<LilacAllele>> mapLilacReportingAlleles = Maps.newHashMap();
         for (LilacAllele lilacAllele : lilacSummaryData.alleles()) {
@@ -91,7 +78,6 @@ public class LilacReportingFactory {
         return ImmutableLilacReportingData.builder()
                 .lilacQc(lilacSummaryData.qc())
                 .lilacReporting(lilacReportingList)
-                .lilacAlleleGermline(generateLilacGermline(lilacSummaryData))
                 .build();
     }
 

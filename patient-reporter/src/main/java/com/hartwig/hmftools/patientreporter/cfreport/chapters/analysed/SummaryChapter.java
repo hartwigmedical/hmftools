@@ -3,13 +3,16 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.hla.LilacGermlineAllele;
+import com.hartwig.hmftools.common.hla.LilacReporting;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
@@ -27,6 +30,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
 import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
+import com.hartwig.hmftools.patientreporter.cfreport.data.HLAAllele;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
@@ -210,7 +214,9 @@ public class SummaryChapter implements ReportChapter {
             if (patientReport.cuppaReporting().interpretLikelihood() == null) {
                 cuppaPrediction = patientReport.cuppaReporting().interpretCancerType();
             } else {
-                cuppaPrediction = patientReport.cuppaReporting().interpretCancerType() + " (" + patientReport.cuppaReporting().interpretLikelihood() + ")";
+                cuppaPrediction =
+                        patientReport.cuppaReporting().interpretCancerType() + " (" + patientReport.cuppaReporting().interpretLikelihood()
+                                + ")";
             }
         }
 
@@ -404,45 +410,45 @@ public class SummaryChapter implements ReportChapter {
 
     private void renderHla(@NotNull Document report) {
         Div div = createSectionStartDiv(contentWidth());
+        String title = "HLA Alleles";
+        Map<String, List<LilacReporting>> lilacAlleleMap = Maps.newHashMap();
 
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-        table.setWidth(contentWidth());
-        table.addCell(TableUtil.createLayoutCellSummary().add(new Paragraph("HLA Alleles").addStyle(ReportResources.sectionTitleStyle())));
-        table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
-
-        List<String> HLAtypes = Lists.newArrayList();
-        List<String> HLBtypes = Lists.newArrayList();
-        List<String> HLCtypes = Lists.newArrayList();
-        Style hlaStyle = ReportResources.dataHighlightStyle();
-
-        for (LilacGermlineAllele lilacReporting : patientReport.genomicAnalysis().lilac().lilacAlleleGermline()) {
-            String germlineAllele = lilacReporting.germlineAllele();
-            String gene = lilacReporting.gene();
-
-            if (gene.equals("HLA-A")) {
-                HLAtypes.add(germlineAllele);
+        for (LilacReporting lilacReporting : patientReport.genomicAnalysis().lilac().lilacReporting()) {
+            List<LilacReporting> lilacAlleleList = Lists.newArrayList();
+            if (lilacAlleleMap.containsKey(lilacReporting.lilacGermlineAllele().gene())) {
+                lilacAlleleList.addAll(lilacAlleleMap.get(lilacReporting.lilacGermlineAllele().gene()));
+                lilacAlleleList.add(lilacReporting);
+                lilacAlleleMap.put(lilacReporting.lilacGermlineAllele().gene(), lilacAlleleList);
+            } else {
+                lilacAlleleList.add(lilacReporting);
+                lilacAlleleMap.put(lilacReporting.lilacGermlineAllele().gene(), lilacAlleleList);
             }
-            if (gene.equals("HLA-B")) {
-                HLBtypes.add(germlineAllele);
-            }
-            if (gene.equals("HLA-C")) {
-                HLCtypes.add(germlineAllele);
-            }
+            lilacAlleleMap.put(lilacReporting.lilacGermlineAllele().gene(), lilacAlleleList);
         }
 
-        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("HLA-A Alleles").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(HLAtypes).addStyle(hlaStyle));
+        Table table = TableUtil.createReportContentTableSummary(new float[] { 15, 15, 15 },
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Germline allele"),
+                        TableUtil.createHeaderCell("Interpretation: presence in tumor") });
 
-        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("HLA-B Alleles").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(HLBtypes).addStyle(hlaStyle));
+        Set<String> sortedAlleles = Sets.newTreeSet(lilacAlleleMap.keySet().stream().collect(Collectors.toSet()));
 
-        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("HLA-C Alleles").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(HLCtypes).addStyle(hlaStyle));
+        for (String sortAllele : sortedAlleles) {
+            List<LilacReporting> allele = lilacAlleleMap.get(sortAllele);
+            table.addCell(TableUtil.createContentCell(sortAllele));
 
-        div.add(table);
+            Table tableGermlineAllele = new Table(new float[] { 1 });
+            Table tablePrecenseIntumor = new Table(new float[] { 1 });
+
+            for (LilacReporting allele1 : HLAAllele.sort(allele)) {
+                tableGermlineAllele.addCell(TableUtil.createTransparentCell(allele1.lilacGermlineAllele().germlineAllele()));
+                tablePrecenseIntumor.addCell(TableUtil.createTransparentCell(allele1.interpretation()));
+            }
+
+            table.addCell(TableUtil.createContentCell(tableGermlineAllele));
+            table.addCell(TableUtil.createContentCell(tablePrecenseIntumor));
+        }
+
+        div.add(TableUtil.createWrappingReportTableSummary(title, table));
 
         report.add(div);
     }
