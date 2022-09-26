@@ -48,6 +48,12 @@ GRIPSS
 -min_qual_break_end 1000
 -filter_sgls
 ```
+PURPLE
+```
+-min_diploid_tumor_ratio_count 3
+-min_diploid_tumor_ratio_count_centromere 3
+-deletedGenesThreshold 1500
+```
 
 ## Targeted specific methods
 ### Cobalt depth coverage normalisation
@@ -113,10 +119,13 @@ TMB = 0.05 * TML + MSIIndelPerMb
 ```
 The constant 0.74 is the approximate proportion of coding variants expected to be missense, since TML is defined as count of missense variants in Hartwig’s platform. The 0.05 conversion from TML to TMB is the empirically observed relationship in the Hartwig database.
 
+### Other PURPLE differences in targeted mode
 
-### PURPLE driver catalog differences
+The following special rules
+- **DELS**: Don’t report DELS >10Mb or if the copy number segment has less than 2 depth windows (unless supported by SV on both sides)
+- **PARTIAL_AMP**: only in genes with known pathogenic exon deletions {BRAF, EGFR, CTNNB1, CBL,MET, ALK, PDGFRA}
 
-TO DO
+There is also no somatic fit mode or somatic penalty and no SV recovery in PURPLE in targeted mode.
 
 ## Panel specific PONs	
 
