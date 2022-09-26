@@ -13,7 +13,7 @@ link to demo
 File Name | Tool | Purpose
 -- | -- | --
 
-
+TO DO
 
 ## Recommended configuration changes in targeted mode
 
@@ -98,7 +98,7 @@ TMB = 0.05 * TML + MSIIndelPerMb
 The constant 0.74 is the approximate proportion of coding variants expected to be missense, since TML is defined as count of missense variants in Hartwig’s platform. The 0.05 conversion from TML to TMB is the empirically observed relationship in the Hartwig database.
 
 
-### PURPLE Driver calling differences
+### PURPLE driver catalog differences
 
 TO DO
 
