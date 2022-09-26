@@ -23,7 +23,7 @@ MSI.Bed | Purple | List of MSI locii to consider in MSI model
 
 The driverGenePanel.tsv, ActionableCodingPanel.bed and CoverageCodingPanel.bed should also all be adapted to match the specific panel
 
-## Recommended configuration changes in targeted mode
+## Recommended configuration changes for broad panel (500k-2Mb) with 200-2000x depth
 
 AMBER
 ```
