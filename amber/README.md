@@ -119,6 +119,10 @@ If the tumor / tumor bam are not specified then Amber will be run in germline on
 - tumor fields are set to -1 for amber.baf.tsv.gz
 - amber.baf.tsv.gz named with ref sample (instead of tumor sample)
 
+## Targeted Mode
+
+AMBER may be run on targeted data.   For more information on how to run hmftools in targeted mode please see [here](https://github.com/hartwigmedical/hmftools/blob/master/README_TARGETED.md)
+
 ## Multiple Reference / Donor mode
 The `reference` and `reference_bam` arguments supports multiple arguments separated by commas. 
 When run in this mode the heterozygous baf points are taken as the intersection of each of the reference bams. 
