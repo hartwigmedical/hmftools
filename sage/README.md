@@ -1,7 +1,7 @@
 
 # Somatic Alterations in Genome (SAGE)
 
-SAGE is a precise and highly sensitive somatic SNV, MNV and small INDEL caller.   It has been optimised for 100x tumor / 40x normal coverage, but has a flexible set of filters that can be adapted to lower depth coverage.
+SAGE is a precise and highly sensitive somatic SNV, MNV and small INDEL caller.   It has been optimised for 100x tumor / 40x normal coverage, but has a flexible set of filters that can be adapted to lower or higher depth coverage.
 
 Key features include:
   - 4 tiered (`HOTSPOT`,`PANEL`, `HIGH_CONFIDENCE`, `LOW_CONFIDENCE`) calling allows high sensitivity calling in regions of high prior likelihood including hotspots in low mappability regions such as HIST2H3C K28M
@@ -462,7 +462,7 @@ max_germline_vaf<sup>3</sup>|10%|4%|4% | 4% | Normal`RC_CNT[0+1+2+3+4]` / `RC_CN
 max_germline_rel_raw_base_qual|50%|4%|4% | 4% | Normal `RABQ[1]` / Tumor `RABQ[1]` 
 strandBias|0.0005 |0.0005|0.0005 |0.0005| SBLikelihood<sup>4</sup>
 
-1. These min_tumor_qual cutoffs should be set lower for lower depth samples.  For example for 30x tumor coverage, we recommend (Hotspot=40;Panel=60;HC=100;LC=150)
+1. These min_tumor_qual cutoffs should be set lower for lower depth samples.  For example for 30x tumor coverage, we recommend (Hotspot=40;Panel=60;HC=100;LC=150).   For targeted data with higher depth please see recommendations [here](https://github.com/hartwigmedical/hmftools/blob/master/README_TARGETED.md).
 
 2. Even if tumor qual score cutoff is not met, hotspots are also called so long as tumor vaf >= 0.08 and  allelic depth in tumor supporting the ALT >= 8 reads and tumorRawBQ1 > 150.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
 
