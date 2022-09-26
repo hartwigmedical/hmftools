@@ -1,6 +1,6 @@
 # Targeted NGS Analysis in HMF Tools
 
-Whilst designed initiallly for WGS, the HMF tools have been adapted to fully support targeted sequenincing input.   The implementation is panel independent, but each new panel requires an initial set of input samples (20-50) for training to learn the read depth profile (see 'Generation of targetRegions CN normalisation file' section below) as well as a target bed file to identify the targeted regions for that panel.   To estimate MSI, a set of microsatellites with high coverage in the panel must also be defined.
+Whilst designed initiallly for WGS, the core HMF tools have been adapted to fully support targeted sequenincing input.   The implementation is panel independent, but each new panel requires an initial set of input samples (20-50) for training to learn the read depth profile (see 'Generation of targetRegions CN normalisation file' section below) as well as a target bed file to identify the targeted regions for that panel.   To estimate MSI, a set of microsatellites with high coverage in the panel must also be defined.
 
 The key changes in targeted mode are mostly with 2 components
 • Cobalt normalises copy number and masks off target regions according to the CN normalisation file
@@ -9,7 +9,6 @@ The key changes in targeted mode are mostly with 2 components
 Other components, operate essentially the same but may also require different configuration to reflect ths sparsity of data, higher on target depth and .   We have so far implemented 2 broad panels only: TSO500 (1.3Mb) & HMF panel (2Mb).   The configuration suggested below should work well for these panels with on target depth of ~300-2000x
 
 A demo of the targeted pipeline is available [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_PANEL.md)
-
 
 ## Special resources files for targeted mode
 
