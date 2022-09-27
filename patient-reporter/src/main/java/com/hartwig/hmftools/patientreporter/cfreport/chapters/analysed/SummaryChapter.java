@@ -14,6 +14,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.hla.LilacReporting;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
@@ -32,7 +33,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HLAAllele;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
-import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.hartwig.hmftools.patientreporter.cfreport.data.ViralPresence;
@@ -368,43 +368,40 @@ public class SummaryChapter implements ReportChapter {
 
     private void renderPeach(@NotNull Document report) {
         Div div = createSectionStartDiv(contentWidth());
+        String title = "Pharmacogenetics";
 
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-        table.setWidth(contentWidth());
-        table.addCell(TableUtil.createLayoutCellSummary()
-                .add(new Paragraph("Pharmacogenetics").addStyle(ReportResources.sectionTitleStyle())));
-        table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
+        Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
 
-        Set<String> pgxFunctions;
-        Set<String> pgxGenes;
-        Style pgxStyle;
-        String reportedPhenotypes;
-
-        if (patientReport.sampleReport().reportPharmogenetics() && patientReport.peachGenotypes().size() > 0) {
-            pgxFunctions = Pharmacogenetics.phenotypesFunctions(patientReport.peachGenotypes());
-            pgxGenes = Pharmacogenetics.phenotypesGenes(patientReport.peachGenotypes());
-            pgxStyle = ReportResources.dataHighlightStyle();
-            reportedPhenotypes = Integer.toString(Pharmacogenetics.countPhenotypes(patientReport.peachGenotypes()));
-        } else {
-            pgxFunctions = Sets.newHashSet(DataUtil.NA_STRING);
-            pgxGenes = Sets.newHashSet(DataUtil.NA_STRING);
-            pgxStyle = ReportResources.dataHighlightNaStyle();
-            reportedPhenotypes = DataUtil.NA_STRING;
+        for (PeachGenotype peach : patientReport.peachGenotypes()) {
+            List<PeachGenotype> peachList = Lists.newArrayList();
+            if (peachMap.containsKey(peach.gene())) {
+                peachList.addAll(peachMap.get(peach.gene()));
+                peachList.add(peach);
+                peachMap.put(peach.gene(), peachList);
+            } else {
+                peachList.add(peach);
+                peachMap.put(peach.gene(), peachList);
+            }
+            peachMap.put(peach.gene(), peachList);
         }
 
-        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("Genes with haplotypes").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneSetCell(sortGenes(pgxGenes)).addStyle(pgxStyle));
+        Table contentTable = TableUtil.createReportContentTableSummary(new float[] { 10, 10 },
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Function") });
 
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of reported haplotypes").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(reportedPhenotypes).addStyle(pgxStyle)));
+        Set<String> sortedPeach = Sets.newTreeSet(peachMap.keySet().stream().collect(Collectors.toSet()));
+        for (String sortPeach : sortedPeach) {
+            List<PeachGenotype> peachGenotypeList = peachMap.get(sortPeach);
+            contentTable.addCell(TableUtil.createContentCell(sortPeach));
 
-        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("Functions of the haplotypes").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneSetCell(sortGenes(pgxFunctions)).addStyle(pgxStyle));
+            Table tableFunction = new Table(new float[] { 1 });
 
-        div.add(table);
+            for (PeachGenotype peachGenotype : peachGenotypeList) {
+                tableFunction.addCell(TableUtil.createTransparentCell(peachGenotype.function()));
+            }
 
+            contentTable.addCell(TableUtil.createContentCell(tableFunction));
+        }
+        div.add(TableUtil.createWrappingReportTableSummary(title, contentTable));
         report.add(div);
     }
 
@@ -426,12 +423,11 @@ public class SummaryChapter implements ReportChapter {
             lilacAlleleMap.put(lilacReporting.lilacGermlineAllele().gene(), lilacAlleleList);
         }
 
-        Table table = TableUtil.createReportContentTableSummary(new float[] { 15, 15, 15 },
+        Table table = TableUtil.createReportContentTableSummary(new float[] { 15,15,15 },
                 new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Germline allele"),
                         TableUtil.createHeaderCell("Interpretation: presence in tumor") });
 
         Set<String> sortedAlleles = Sets.newTreeSet(lilacAlleleMap.keySet().stream().collect(Collectors.toSet()));
-
         for (String sortAllele : sortedAlleles) {
             List<LilacReporting> allele = lilacAlleleMap.get(sortAllele);
             table.addCell(TableUtil.createContentCell(sortAllele));
@@ -449,7 +445,6 @@ public class SummaryChapter implements ReportChapter {
         }
 
         div.add(TableUtil.createWrappingReportTableSummary(title, table));
-
         report.add(div);
     }
 
