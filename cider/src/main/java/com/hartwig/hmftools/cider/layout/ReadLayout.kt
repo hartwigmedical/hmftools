@@ -23,7 +23,7 @@ class ReadLayout(var id: String = String())
     {
         init
         {
-            require(sequence.length == baseQualities.size)
+            require(sequence.length == baseQualities.size, { "sequence.length != baseQualities.size" })
         }
 
         val readLength: Int get() { return sequence.length }

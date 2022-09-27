@@ -43,7 +43,7 @@ class VDJSequenceBuilderTest
     @Before
     fun setUp()
     {
-        org.apache.logging.log4j.core.config.Configurator.setRootLevel(Level.TRACE)
+        //org.apache.logging.log4j.core.config.Configurator.setRootLevel(Level.TRACE)
     }
 
     // build a VDJ from a layout with just V anchor
@@ -78,8 +78,10 @@ class VDJSequenceBuilderTest
         val vdjSeq = vdjSeqBuilder.tryCompleteLayoutWithBlosum(VJGeneType.IGHV, layout, 0)
 
         assertNotNull(vdjSeq)
-        assertEquals(VJGeneType.IGHV, vdjSeq.vAnchor.geneType)
-        assertEquals(VJGeneType.IGHJ, vdjSeq.jAnchor.geneType)
+        assertNotNull(vdjSeq.vAnchor)
+        assertNotNull(vdjSeq.jAnchor)
+        assertEquals(VJGeneType.IGHV, vdjSeq.vAnchor!!.geneType)
+        assertEquals(VJGeneType.IGHJ, vdjSeq.jAnchor!!.geneType)
         assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)
         assertIs<VJAnchorByBlosum>(vdjSeq.jAnchor)
         assertEquals("GAATACC", vdjSeq.vAnchorSequence)
@@ -117,8 +119,10 @@ class VDJSequenceBuilderTest
         val vdjSeq = vdjSeqBuilder.tryCompleteLayoutWithBlosum(VJGeneType.IGHJ, layout, 0)
 
         assertNotNull(vdjSeq)
-        assertEquals(VJGeneType.IGHV, vdjSeq.vAnchor.geneType)
-        assertEquals(VJGeneType.IGHJ, vdjSeq.jAnchor.geneType)
+        assertNotNull(vdjSeq.vAnchor)
+        assertNotNull(vdjSeq.jAnchor)
+        assertEquals(VJGeneType.IGHV, vdjSeq.vAnchor!!.geneType)
+        assertEquals(VJGeneType.IGHJ, vdjSeq.jAnchor!!.geneType)
         assertIs<VJAnchorByBlosum>(vdjSeq.vAnchor)
         assertIs<VJAnchorByReadMatch>(vdjSeq.jAnchor)
         assertEquals("GAATACC", vdjSeq.vAnchorSequence)
@@ -156,8 +160,10 @@ class VDJSequenceBuilderTest
         val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ)
 
         assertNotNull(vdjSeq)
-        assertEquals(VJGeneType.TRAV, vdjSeq.vAnchor.geneType)
-        assertEquals(VJGeneType.TRAJ, vdjSeq.jAnchor.geneType)
+        assertNotNull(vdjSeq.vAnchor)
+        assertNotNull(vdjSeq.jAnchor)
+        assertEquals(VJGeneType.TRAV, vdjSeq.vAnchor!!.geneType)
+        assertEquals(VJGeneType.TRAJ, vdjSeq.jAnchor!!.geneType)
         assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)
         assertIs<VJAnchorByReadMatch>(vdjSeq.jAnchor)
         assertEquals("GAATACC", vdjSeq.vAnchorSequence)
@@ -217,22 +223,25 @@ class VDJSequenceBuilderTest
 
         var vdjCombine = VDJSequenceBuilder.mergeVDJs(vdj1, vdj2, MIN_BASE_QUALITY)
 
+        assertNotNull(vdjCombine.vAnchor)
+        assertNotNull(vdjCombine.jAnchor)
         assertEquals("CAGGTGAT", vdjCombine.sequence)
-        assertEquals(2, vdjCombine.vAnchor.anchorBoundary)
-        assertEquals(5, vdjCombine.jAnchor.anchorBoundary)
+        assertEquals(2, vdjCombine.vAnchor!!.anchorBoundary)
+        assertEquals(5, vdjCombine.jAnchor!!.anchorBoundary)
         //assertEquals("1133333311", vdjCombine.supportString)
 
         // try to merge it the other way, result should be the same
         vdjCombine = VDJSequenceBuilder.mergeVDJs(vdj2, vdj1, MIN_BASE_QUALITY)
 
+        assertNotNull(vdjCombine.vAnchor)
+        assertNotNull(vdjCombine.jAnchor)
         assertEquals("CAGGTGAT", vdjCombine.sequence)
-        assertEquals(2, vdjCombine.vAnchor.anchorBoundary)
-        assertEquals(5, vdjCombine.jAnchor.anchorBoundary)
+        assertEquals(2, vdjCombine.vAnchor!!.anchorBoundary)
+        assertEquals(5, vdjCombine.jAnchor!!.anchorBoundary)
     }
 
     companion object
     {
-        const val RADIX = 36
         const val MIN_BASE_QUALITY = 30.toByte()
 
         // a simple function to create VDJ sequence
@@ -266,7 +275,7 @@ class VDJSequenceBuilderTest
                 numReads = layout.reads.size
             )
 
-            val vdj = VDJSequence("id", layout, layoutStart, layoutEnd, vAnchor, jAnchor)
+            val vdj = VDJSequence(layout, layoutStart, layoutEnd, vAnchor, jAnchor)
             return vdj
         }
 

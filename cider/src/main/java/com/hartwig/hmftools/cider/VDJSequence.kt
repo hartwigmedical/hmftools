@@ -8,7 +8,7 @@ interface VJAnchor
 {
     val vj: VJ
     val geneType: VJGeneType
-    val anchorBoundary: Int // last base of V or first base of J
+    val anchorBoundary: Int // last base of V + 1 or first base of J
     val matchMethod: String
     val templateAnchorSeq: String
 }
@@ -46,20 +46,13 @@ data class VJAnchorByReadMatch(
 }
 
 class VDJSequence(
-    val id: String,
     val layout: ReadLayout,
     val layoutSliceStart: Int,
     val layoutSliceEnd: Int,
-    val vAnchor: VJAnchor,
-    val jAnchor: VJAnchor)
+    val vAnchor: VJAnchor?,
+    val jAnchor: VJAnchor?)
 {
     val numReads: Int get() = layout.reads.size
-
-    init
-    {
-        //if (sequence.length != support.size)
-          //  throw RuntimeException("VDJSequence: sequence.length != support.size")
-    }
 
     val length: Int get()
     {
@@ -71,14 +64,29 @@ class VDJSequence(
         return layout.consensusSequence().substring(layoutSliceStart, layoutSliceEnd)
     }
 
+    val isFullyRearranged: Boolean get()
+    {
+        return vAnchor != null && jAnchor != null
+    }
+
+    val vAnchorBoundary: Int? get()
+    {
+        return vAnchor?.anchorBoundary
+    }
+
+    val jAnchorBoundary: Int? get()
+    {
+        return jAnchor?.anchorBoundary
+    }
+
     val sequenceFormatted: String get()
     {
-        return CiderUtils.insertDashes(sequence, vAnchor.anchorBoundary, jAnchor.anchorBoundary)
+        return CiderUtils.insertDashes(sequence, vAnchorBoundary ?: 0, jAnchorBoundary ?: length)
     }
 
     val aminoAcidSequence: String get()
     {
-        val codonAlignedSeq = sequence.drop(vAnchor.anchorBoundary % 3)
+        val codonAlignedSeq = sequence.drop((vAnchorBoundary ?: jAnchorBoundary ?: 0) % 3)
         return Codons.aminoAcidFromBases(codonAlignedSeq)
     }
 
@@ -86,30 +94,36 @@ class VDJSequence(
     {
         // we print the pre J anchor part first then the J anchor. This ensures that if J anchor is not aligned to codon
         // it will still get printed the way we want it
-        val codonAlignedSeqBeforeJ = sequence.substring(0, jAnchor.anchorBoundary).drop(vAnchor.anchorBoundary % 3)
+        var codonAlignedSeqBeforeJ = if (jAnchor != null) sequence.substring(0, jAnchor.anchorBoundary) else sequence
 
-        return CiderUtils.insertDashes(Codons.aminoAcidFromBases(codonAlignedSeqBeforeJ), vAnchor.anchorBoundary / 3) + '-' +
+        if (vAnchor != null)
+        {
+            // codon align
+            codonAlignedSeqBeforeJ = codonAlignedSeqBeforeJ.drop(vAnchor.anchorBoundary % 3)
+        }
+
+        return CiderUtils.insertDashes(Codons.aminoAcidFromBases(codonAlignedSeqBeforeJ), (vAnchorBoundary ?: 0) / 3) + '-' +
                 Codons.aminoAcidFromBases(jAnchorSequence)
     }
 
     val vAnchorLength: Int get()
     {
-        return vAnchor.anchorBoundary
+        return vAnchor?.anchorBoundary ?: 0
     }
 
     val jAnchorLength: Int get()
     {
-        return length - jAnchor.anchorBoundary
+        return length - (jAnchor?.anchorBoundary ?: 0)
     }
 
     val vAnchorSequence: String get()
     {
-        return sequence.take(vAnchor.anchorBoundary)
+        return sequence.take(vAnchorBoundary ?: 0)
     }
 
     val jAnchorSequence: String get()
     {
-        return sequence.substring(jAnchor.anchorBoundary)
+        return if (jAnchor == null) String() else sequence.substring(jAnchorBoundary!!)
     }
 
     val vAnchorAA: String get()
@@ -127,12 +141,22 @@ class VDJSequence(
     // does not include the C and W
     val cdr3SequenceShort: String get()
     {
-        return sequence.substring(vAnchor.anchorBoundary, jAnchor.anchorBoundary)
+        return sequence.substring(vAnchorBoundary ?: 0, jAnchorBoundary ?: length)
+    }
+
+    private val cdr3Start: Int get()
+    {
+        return Math.max((vAnchorBoundary ?: return 0) - 3, 0)
+    }
+
+    private val cdr3End: Int get()
+    {
+        return Math.min((jAnchorBoundary ?: return length) + 3, length)
     }
 
     val cdr3Sequence: String get()
     {
-        return sequence.substring(Math.max(vAnchor.anchorBoundary - 3, 0), Math.min(jAnchor.anchorBoundary + 3, length))
+        return sequence.substring(cdr3Start, cdr3End)
     }
 
     val supportCounts: IntArray get()
@@ -149,13 +173,12 @@ class VDJSequence(
 
     val cdr3SupportMin: Int get()
     {
-        return supportCounts.slice(Math.max(vAnchor.anchorBoundary - 3, 0) until
-                Math.min(jAnchor.anchorBoundary + 3, length)).minOrNull() ?: 0
+        return supportCounts.slice(cdr3Start until cdr3End).minOrNull() ?: 0
     }
 
     val isInFrame: Boolean get()
     {
-        return (jAnchor.anchorBoundary % 3) == 0
+        return ((jAnchorBoundary ?: 0) % 3) == 0
     }
 
     fun getSupportAt(index: Int) : Map.Entry<Char, Int>

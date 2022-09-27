@@ -86,7 +86,7 @@ class CiderApplication
         )
 
         val vdjSequences = vdjSeqBuilder.buildVDJSequences(layoutMap)
-        writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjSequences, vjReadLayoutAdaptor)
+        writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjSequences, vjReadLayoutAdaptor, mParams.reportPartialSeq)
         writeCdr3Bam(readProcessor.allMatchedReads)
         val finish = Instant.now()
         val seconds = Duration.between(start, finish).seconds

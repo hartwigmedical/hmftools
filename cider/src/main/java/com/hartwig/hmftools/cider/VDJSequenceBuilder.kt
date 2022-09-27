@@ -15,7 +15,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         val vdjList = ArrayList<VDJSequence>()
 
         // remember the layouts which are not used
-        val orphanedLayouts: ArrayListMultimap<VJGeneType, ReadLayout> = ArrayListMultimap.create()
+        val oneSidedLayouts: ArrayListMultimap<VJGeneType, ReadLayout> = ArrayListMultimap.create()
 
         var seqIndex = 0
         for ((geneType, layouts) in layoutMultimap)
@@ -30,7 +30,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                 }
                 else
                 {
-                    orphanedLayouts.put(geneType, l)
+                    oneSidedLayouts.put(geneType, l)
                 }
 
                 ++seqIndex
@@ -38,16 +38,18 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         }
 
         // try to join together the orphaned layouts
-        for (vGeneType: VJGeneType in orphanedLayouts.keySet().filter({ vjGeneType -> vjGeneType.vj == VJ.V }))
+        for (vGeneType: VJGeneType in oneSidedLayouts.keySet().filter({ vjGeneType -> vjGeneType.vj == VJ.V }))
         {
             val jGeneType: VJGeneType = CiderUtils.getPairedVjGeneType(vGeneType)
-            val vLayoutList: List<ReadLayout> = orphanedLayouts[vGeneType]
-            val jLayoutList: MutableList<ReadLayout> = orphanedLayouts[jGeneType]
+            val vLayoutList: MutableList<ReadLayout> = oneSidedLayouts[vGeneType]
+            val jLayoutList: MutableList<ReadLayout> = oneSidedLayouts[jGeneType]
 
             // we try each pair see if they can be aligned together
             // we find the best aligned pair and remove them and try again
-            for (vLayout in vLayoutList)
+            var i = 0
+            while (i < vLayoutList.size)
             {
+                val vLayout: ReadLayout = vLayoutList[i]
                 var j = 0
                 while (j < jLayoutList.size)
                 {
@@ -57,11 +59,14 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                     if (vdj != null)
                     {
                         vdjList.add(vdj)
+                        vLayoutList.removeAt(i)
+                        --i
                         jLayoutList.removeAt(j)
                         break
                     }
                     ++j
                 }
+                ++i
             }
         }
 
@@ -70,18 +75,33 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
         sLogger.info("found {} vdj sequences before merge", vdjList.size)
 
-        val vTypeVdjMap: ArrayListMultimap<VJGeneType, VDJSequence> = ArrayListMultimap.create()
+        val vjGeneToVdjMap: ArrayListMultimap<Pair<VJGeneType?, VJGeneType?>, VDJSequence> = ArrayListMultimap.create()
 
         for (vdj in vdjList)
         {
-            vTypeVdjMap.put(vdj.vAnchor.geneType, vdj)
+            if (vdj.vAnchor == null && vdj.jAnchor == null)
+            {
+                assert(false)
+                continue
+            }
+            vjGeneToVdjMap.put(Pair(vdj.vAnchor?.geneType, vdj.jAnchor?.geneType), vdj)
         }
 
         vdjList.clear()
 
-        for (vType in vTypeVdjMap.keySet())
+        for (vjType in vjGeneToVdjMap.keySet())
         {
-            vdjList.addAll(mergeIdentical(vTypeVdjMap.get(vType), minBaseQuality))
+            vdjList.addAll(mergeIdentical(vjGeneToVdjMap.get(vjType), minBaseQuality))
+        }
+
+        // add all of the VDJ with only one side
+        for ((geneType, layout) in oneSidedLayouts.entries())
+        {
+            val vdj = tryCreateOneSidedVdj(geneType, layout)
+            if (vdj != null)
+            {
+                vdjList.add(vdj)
+            }
         }
 
         // sort again
@@ -97,7 +117,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     // use the blosum searcher to find the other side
     // if it is found then build a VDJSequence
     fun tryCompleteLayoutWithBlosum(layoutGeneType: VJGeneType, layout: ReadLayout, seqIndex: Int)
-        : VDJSequence?
+            : VDJSequence?
     {
         sLogger.debug("try complete {} layout: {}", layoutGeneType, layout.consensusSequence())
 
@@ -194,7 +214,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             )
         }
 
-        val vdj = VDJSequence(seqIndex.toString(), layout, layoutStart, layoutEnd, vAnchor, jAnchor)
+        val vdj = VDJSequence(layout, layoutStart, layoutEnd, vAnchor, jAnchor)
 
         sLogger.debug("built VDJ sequence: {}-{}-{}",
             Codons.aminoAcidFromBases(vdj.vAnchorSequence),
@@ -311,13 +331,74 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             vjGeneType = jLayoutGeneType,
             layout = jLayout)
 
-        val vdj = VDJSequence("", combinedVjLayout, layoutSliceStart, layoutSliceEnd, vAnchor, jAnchor)
+        val vdj = VDJSequence(combinedVjLayout, layoutSliceStart, layoutSliceEnd, vAnchor, jAnchor)
 
         sLogger.debug("built VDJ sequence: {}-{}-{}, by overlapping V layout({}): {} and J layout({}): {}",
             Codons.aminoAcidFromBases(vdj.vAnchorSequence),
             Codons.aminoAcidFromBases(vdj.cdr3SequenceShort),
             Codons.aminoAcidFromBases(vdj.jAnchorSequence),
             vLayout.id, vLayout.consensusSequence(), jLayout.id, jLayout.consensusSequence())
+
+        return vdj
+    }
+
+    fun tryCreateOneSidedVdj(layoutGeneType: VJGeneType, layout: ReadLayout): VDJSequence?
+    {
+        sLogger.debug("create one sided {} layout: {}", layoutGeneType, layout.consensusSequence())
+
+        // we want to use the indices to work where things are
+        val layoutAnchorRange: IntRange? = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)
+
+        if (layoutAnchorRange == null)
+            return null
+
+        // construct a VDJ sequence
+        val vAnchor: VJAnchor?
+        val jAnchor: VJAnchor?
+        val vdj: VDJSequence
+
+        if (layoutGeneType.vj == VJ.V)
+        {
+            val vAnchorRange = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)
+
+            if (vAnchorRange == null)
+                return null
+
+            val layoutStart = vAnchorRange.first
+            val layoutEnd = layout.length
+
+            vAnchor = createVJAnchorByReadMatch(
+                anchorBoundary = vAnchorRange.last + 1 - layoutStart,
+                vjGeneType = layoutGeneType,
+                layout = layout
+            )
+            vdj = VDJSequence(layout, layoutStart, layoutEnd, vAnchor, null)
+
+            sLogger.debug("built V only sequence: {}-{}",
+                Codons.aminoAcidFromBases(vdj.vAnchorSequence),
+                Codons.aminoAcidFromBases(vdj.cdr3SequenceShort))
+        }
+        else
+        {
+            val jAnchorRange = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)
+
+            if (jAnchorRange == null)
+                return null
+
+            val layoutStart = 0
+            val layoutEnd = jAnchorRange.last + 1
+
+            jAnchor = createVJAnchorByReadMatch(
+                anchorBoundary = jAnchorRange.first,
+                vjGeneType = layoutGeneType,
+                layout = layout
+            )
+            vdj = VDJSequence(layout, layoutStart, layoutEnd, null, jAnchor)
+
+            sLogger.debug("built J only sequence: {}-{}",
+                Codons.aminoAcidFromBases(vdj.cdr3SequenceShort),
+                Codons.aminoAcidFromBases(vdj.jAnchorSequence))
+        }
 
         return vdj
     }
@@ -452,6 +533,11 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
         internal fun mergeVDJs(vdj1: VDJSequence, vdj2: VDJSequence, minBaseQuality: Byte): VDJSequence
         {
+            require(vdj1.vAnchor != null)
+            require(vdj1.jAnchor != null)
+            require(vdj2.vAnchor != null)
+            require(vdj2.jAnchor != null)
+
             val vdjPrimary: VDJSequence
             val vdjSecondary: VDJSequence
 
@@ -491,6 +577,11 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                 vdjSecondary = vdj1
             }
 
+            require(vdjPrimary.vAnchor != null)
+            require(vdjPrimary.jAnchor != null)
+            require(vdjSecondary.vAnchor != null)
+            require(vdjSecondary.jAnchor != null)
+
             // we calculate the aligned position for both sequences with respect to the V anchor boundary
             val primaryAlignedPos = vdjPrimary.layout.alignedPosition - vdjPrimary.layoutSliceStart - vdjPrimary.vAnchor.anchorBoundary
             val secondaryAlignedPos = vdjSecondary.layout.alignedPosition - vdjSecondary.layoutSliceStart - vdjSecondary.vAnchor.anchorBoundary
@@ -498,7 +589,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             // this would shift them to overlap each other
             val secondaryLayoutOffsetShift = primaryAlignedPos - secondaryAlignedPos
             val mergedLayout = ReadLayout.merge(vdjPrimary.layout, vdjSecondary.layout, 0, secondaryLayoutOffsetShift, minBaseQuality)
-            mergedLayout.id = "${vdjPrimary.id};${vdjSecondary.id}"
+            mergedLayout.id = "${vdjPrimary.layout.id};${vdjSecondary.layout.id}"
 
             // now we have to work out where to place the layout, using the final aligned position
             val posStartWithinLayout = vdjPrimary.layoutSliceStart +
@@ -508,7 +599,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
             sLogger.debug("primary start: {}, primary v anchor: {}, v anchor: {}, layout aligned pos: {}, primary aligned pos: {}",
                 vdjPrimary.layoutSliceStart, vdjPrimary.vAnchor.anchorBoundary, vAnchor.anchorBoundary,
-                        mergedLayout.alignedPosition, vdjPrimary.layout.alignedPosition)
+                mergedLayout.alignedPosition, vdjPrimary.layout.alignedPosition)
 
             sLogger.debug("layout: {}, aligned pos: {}, pos within layout: {}-{}, v: {}, j: {}",
                 mergedLayout.consensusSequence(), mergedLayout.alignedPosition, posStartWithinLayout, posEndWithinLayout,
@@ -519,7 +610,10 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             if (supports.size < jAnchorBoundary)
                 throw RuntimeException()*/
 
-            val combinedVDJ = VDJSequence(vdjPrimary.id, mergedLayout, posStartWithinLayout, posEndWithinLayout, vAnchor, jAnchor)
+            val combinedVDJ = VDJSequence(mergedLayout, posStartWithinLayout, posEndWithinLayout, vAnchor, jAnchor)
+
+            require(combinedVDJ.vAnchor != null)
+            require(combinedVDJ.jAnchor != null)
 
             sLogger.debug("merge: {}(v:{}, j:{}, read count: {}) and {}(v:{}, j:{}, read count: {}) together, merged: {}(v:{}, j:{}), 2ndary aligned pos shift: {}",
                 vdj1.aminoAcidSequenceFormatted, vdj1.vAnchor.matchMethod, vdj1.jAnchor.matchMethod, vdj1.numReads,
@@ -551,8 +645,14 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         private fun vdjSequenceCompare(vdj1: VDJSequence, vdj2: VDJSequence,
                                        diffAccumulator: (Map.Entry<Char, Int>, Map.Entry<Char, Int>) -> Boolean) : Boolean
         {
+            require(vdj1.vAnchor != null)
+            require(vdj1.jAnchor != null)
+            require(vdj2.vAnchor != null)
+            require(vdj2.jAnchor != null)
+
             // the lengths between V and J anchor must be equal
-            if (vdj1.jAnchor.anchorBoundary - vdj1.vAnchor.anchorBoundary != vdj2.jAnchor.anchorBoundary - vdj2.vAnchor.anchorBoundary)
+            if (vdj1.jAnchor.anchorBoundary - vdj1.vAnchor.anchorBoundary !=
+                vdj2.jAnchor.anchorBoundary - vdj2.vAnchor.anchorBoundary)
             {
                 return false
             }
@@ -582,6 +682,11 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         // get the ranges that line up both sequences based on anchor position
         fun getVdjRanges(vdj1: VDJSequence, vdj2: VDJSequence) : Pair<IntRange, IntRange>
         {
+            require(vdj1.vAnchor != null)
+            require(vdj1.jAnchor != null)
+            require(vdj2.vAnchor != null)
+            require(vdj2.jAnchor != null)
+
             var vdj1Start: Int = 0
             var vdj1End: Int = vdj1.length
             var vdj2Start: Int = 0

@@ -118,6 +118,7 @@ class ReadLayoutBuilderTest
 
         // now try to match a shorter sequence, should match also
         seq = "GGTG"
+        baseQual = SAMUtils.fastqToPhred("FFFF") // F is 37, : is 25
         readData = TestLayoutRead("read2", ReadKey("read2", true), seq, baseQual, 2)
         assertTrue(ReadLayoutBuilder.layoutMatch(layout, readData, MIN_BASE_QUALITY, 4))
     }

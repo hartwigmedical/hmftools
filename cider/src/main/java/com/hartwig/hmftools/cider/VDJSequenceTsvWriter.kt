@@ -63,7 +63,9 @@ object VDJSequenceTsvWriter
     }
 
     @JvmStatic
-    fun writeVDJSequences(basePath: String, sample: String, vdjSequences: List<VDJSequence>, adaptor: VJReadLayoutAdaptor)
+    fun writeVDJSequences(
+        basePath: String, sample: String, vdjSequences: List<VDJSequence>,
+        adaptor: VJReadLayoutAdaptor, reportPartialSeq: Boolean)
     {
         val filePath = generateFilename(basePath, sample)
 
@@ -72,17 +74,24 @@ object VDJSequenceTsvWriter
             .setHeader(Column::class.java)
             .build()
 
-        val sortedVdj = vdjSequences.sortedWith(
-                Collections.reverseOrder(
+        var sortedVdj = vdjSequences.sortedWith(
+            Collections.reverseOrder(
                 Comparator.comparingInt({ vdj: VDJSequence -> vdj.cdr3SupportMin })
                     .thenComparingInt({ vdj: VDJSequence -> vdj.numReads }) // handle the highest quality ones first
                     .thenComparingInt({ vdj: VDJSequence -> vdj.length })
-                ))
-        
+                    .thenComparing({ vdj: VDJSequence -> vdj.cdr3Sequence })
+            ))
+
+        if (!reportPartialSeq)
+        {
+            // remove all the partially rearranged sequences
+            sortedVdj = sortedVdj.filter({ seq: VDJSequence -> seq.isFullyRearranged })
+        }
+
         // in order to work out which ones are duplicate, we create a map of all VDJ sequences,
         // and the one with highest support count
         val cdr3SupportMap = HashMap<String, Int>()
-        
+
         for (vdjSeq in sortedVdj)
         {
             val cdr3 = vdjSeq.cdr3Sequence
@@ -116,23 +125,23 @@ object VDJSequenceTsvWriter
                 Column.jAlignedReads -> csvPrinter.print(jAnchorByReadMatch?.numReads ?: 0)
                 Column.inFrame -> csvPrinter.print(vdj.isInFrame)
                 Column.containsStop -> csvPrinter.print(vdj.aminoAcidSequence.contains(Codons.STOP_AMINO_ACID))
-                Column.vType -> csvPrinter.print(vdj.vAnchor.geneType)
-                Column.vAnchorEnd -> csvPrinter.print(vdj.vAnchor.anchorBoundary)
+                Column.vType -> csvPrinter.print(vdj.vAnchor?.geneType)
+                Column.vAnchorEnd -> csvPrinter.print(vdj.vAnchor?.anchorBoundary)
                 Column.vAnchorSeq -> csvPrinter.print(vdj.vAnchorSequence)
-                Column.vAnchorTemplateSeq -> csvPrinter.print(vdj.vAnchor.templateAnchorSeq)
+                Column.vAnchorTemplateSeq -> csvPrinter.print(vdj.vAnchor?.templateAnchorSeq)
                 Column.vAnchorAA -> csvPrinter.print(aminoAcidFromBases(vdj.vAnchorSequence))
-                Column.vAnchorTemplateAA -> csvPrinter.print(aminoAcidFromBases(vdj.vAnchor.templateAnchorSeq))
-                Column.vMatchMethod -> csvPrinter.print(vdj.vAnchor.matchMethod)
-                Column.vSimilarityScore -> csvPrinter.print(calcAnchorSimilarity(vdj, vdj.vAnchor))
+                Column.vAnchorTemplateAA -> csvPrinter.print(if (vdj.vAnchor != null) aminoAcidFromBases(vdj.vAnchor.templateAnchorSeq) else null)
+                Column.vMatchMethod -> csvPrinter.print(vdj.vAnchor?.matchMethod)
+                Column.vSimilarityScore -> csvPrinter.print(if (vdj.vAnchor != null) calcAnchorSimilarity(vdj, vdj.vAnchor) else null)
                 Column.vNonSplitReads -> csvPrinter.print(countNonSplitReads(vdj, VJ.V, adaptor))
-                Column.jType -> csvPrinter.print(vdj.jAnchor.geneType)
-                Column.jAnchorStart -> csvPrinter.print(vdj.jAnchor.anchorBoundary)
+                Column.jType -> csvPrinter.print(vdj.jAnchor?.geneType)
+                Column.jAnchorStart -> csvPrinter.print(vdj.jAnchor?.anchorBoundary)
                 Column.jAnchorSeq -> csvPrinter.print(vdj.jAnchorSequence)
-                Column.jAnchorTemplateSeq -> csvPrinter.print(vdj.jAnchor.templateAnchorSeq)
+                Column.jAnchorTemplateSeq -> csvPrinter.print(vdj.jAnchor?.templateAnchorSeq)
                 Column.jAnchorAA -> csvPrinter.print(aminoAcidFromBases(vdj.jAnchorSequence))
-                Column.jAnchorTemplateAA -> csvPrinter.print(aminoAcidFromBases(vdj.jAnchor.templateAnchorSeq))
-                Column.jMatchMethod -> csvPrinter.print(vdj.jAnchor.matchMethod)
-                Column.jSimilarityScore -> csvPrinter.print(calcAnchorSimilarity(vdj, vdj.jAnchor))
+                Column.jAnchorTemplateAA -> csvPrinter.print(if (vdj.jAnchor != null) aminoAcidFromBases(vdj.jAnchor.templateAnchorSeq) else null)
+                Column.jMatchMethod -> csvPrinter.print(vdj.jAnchor?.matchMethod)
+                Column.jSimilarityScore -> csvPrinter.print(if (vdj.jAnchor != null) calcAnchorSimilarity(vdj, vdj.jAnchor) else null)
                 Column.jNonSplitReads -> csvPrinter.print(countNonSplitReads(vdj, VJ.J, adaptor))
                 Column.layoutId -> csvPrinter.print(vdj.layout.id)
                 Column.vdjSeq -> csvPrinter.print(vdj.sequence)
@@ -183,13 +192,21 @@ object VDJSequenceTsvWriter
     {
         val filters = ArrayList<String>()
 
-        if ((vdj.vAnchor is VJAnchorByBlosum) && (vdj.vAnchor.similarityScore < 0))
+        if (vdj.vAnchor == null)
         {
             filters.add("NO_V_ANCHOR")
         }
-        if ((vdj.jAnchor is VJAnchorByBlosum) && (vdj.jAnchor.similarityScore < 0))
+        if (vdj.jAnchor == null)
         {
             filters.add("NO_J_ANCHOR")
+        }
+        if ((vdj.vAnchor is VJAnchorByBlosum) && (vdj.vAnchor.similarityScore < 0))
+        {
+            filters.add("POOR_V_ANCHOR")
+        }
+        if ((vdj.jAnchor is VJAnchorByBlosum) && (vdj.jAnchor.similarityScore < 0))
+        {
+            filters.add("POOR_J_ANCHOR")
         }
         if (isDuplicate)
         {
@@ -213,14 +230,20 @@ object VDJSequenceTsvWriter
     fun countNonSplitReads(vdj: VDJSequence, vj: VJ, adaptor: VJReadLayoutAdaptor) : Int
     {
         val alignedPos = vdj.layout.alignedPosition - vdj.layoutSliceStart
+
+        if (vj == VJ.V && vdj.vAnchor == null)
+            return 0
+
+        if (vj == VJ.J && vdj.jAnchor == null)
+            return 0
+
         val boundaryPos: Int = if (vj == VJ.V)
         {
-            // for our calculations, we want to set it to the end of v anchor
-            vdj.vAnchor.anchorBoundary + 1
+            vdj.vAnchorBoundary!!
         }
         else
         {
-            vdj.jAnchor.anchorBoundary
+            vdj.jAnchorBoundary!!
         }
         var nonSplitReadCount = 0
 

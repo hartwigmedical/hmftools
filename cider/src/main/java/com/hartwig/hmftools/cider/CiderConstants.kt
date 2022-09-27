@@ -16,5 +16,5 @@ object CiderConstants
     const val POLY_G_TRIM_EXTRA_BASE_COUNT: Int = 5
     const val MIN_CDR3_LENGTH_BASES: Int = 9
 
-    const val MIN_NON_SPLIT_READ_STRADDLE_LENGTH: Int = 25
+    const val MIN_NON_SPLIT_READ_STRADDLE_LENGTH: Int = 30
 }

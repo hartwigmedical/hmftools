@@ -22,9 +22,8 @@ public class BlosumMapping
     // an array that allows fast conversion from the ascii code of the amino acid to index in the above AMINO_ACIDS list
     private static final byte[] AMINO_ACID_INDEX = new byte[charToInt('Y') + 1];
 
-    // mappings from one letter to another, indexed by the standard order so consistent with other data structures which reference AAs.
-    // use byte to make this array small
-    private final byte[] mMappings = new byte[AMINO_ACIDS.length * AMINO_ACIDS.length];
+    // mappings from one letter to another.
+    private final byte[] mMappings = new byte[calcMappingArrayLength()];
 
     private static final String BLOSUM62_MATRIX =
               "AminoAcid,A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V\n"
@@ -90,33 +89,46 @@ public class BlosumMapping
             aa1Index = aa2Index;
             aa2Index = tmp;
         }
-        return mMappings[aa1Index * AMINO_ACIDS.length + aa2Index];
+        return mMappings[getMappingArrayIndex(aa1Index, aa2Index)];
     }
 
     private void setMapping(int aa1Index, int aa2Index, byte val)
     {
-        mMappings[aa1Index * AMINO_ACIDS.length + aa2Index] = val;
+        mMappings[getMappingArrayIndex(aa1Index, aa2Index)] = val;
     }
 
-    private int getMappingArrayIndex(int row, int col)
+    // we store only half of the matrix, so each row is smaller than previous
+    // i.e. for the n x n where n = 4 matrix:
+    //             row index(i)    row array index        check (i + 1) * i / 2
+    //    0            0              0 = 0                 (0 + 1) * 0 / 2 = 0
+    //    1 2          1              1 = 0 + 1             (1 + 1) * 1 / 2 = 1
+    //    3 4 5        2              3 = 0 + 1 + 2         (2 + 1) * 2 / 2 = 3
+    //    6 7 8 9      3              6 = 0 + 1 + 2 + 3     (3 + 1) * 3 / 2 = 6
+    //
+    // from here we can work out that for row index i,
+    // row array index is given by arithmetic sum:
+    // S[0 .. i] = (i + 1) * i / 2
+    // we can see in the check column that the values do match
+    private static int getMappingArrayIndex(int row, int col)
     {
-        // we store only half of the matrix, so each row is smaller than previous
-        // i.e. for the n x n where n = 4 matrix:
-        //             row index(i)    row array index        check i * (2n - i + 1) / 2
-        //    0 1 2 3      0              0 = 0                 0 * (2 * 4 - 0 + 1) / 2 = 0
-        //      4 5 6      1              4 = 4                 1 * (2 * 4 - 1 + 1) / 2 = 4
-        //        7 8      2              7 = 4 + 3             2 * (2 * 4 - 2 + 1) / 2 = 7
-        //          9      3              9 = 4 + 3 + 2         3 * (2 * 4 - 3 + 1) / 2 = 9
-        //
-        // from here we can work out that for row index i,
-        // row array index is given by arithmetic sum:
-        // S[n .. (n - i + 1)] = i * (n + n - i + 1) / 2 = i / 2 * (2n - i + 1)
-        // we can see in the check column that the values do match
+        if (col > row)
+        {
+            // swap them around
+            int tmp = row;
+            row = col;
+            col = tmp;
+        }
 
         Preconditions.checkArgument(row >= col);
-        int N = AMINO_ACIDS.length;
-        int rowArrayIndex = row * (2 * N - row + 1) / 2;
+        int rowArrayIndex = (row + 1) * row / 2;
         return rowArrayIndex + col;
+    }
+
+    private int calcMappingArrayLength()
+    {
+        // using N as row index we get the index of the last element + 1
+        // which is the array length
+        return getMappingArrayIndex(AMINO_ACIDS.length, 0);
     }
 
     public int selfMapping(final char aa)
