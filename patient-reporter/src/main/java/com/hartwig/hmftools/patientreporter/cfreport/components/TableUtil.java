@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 public final class TableUtil {
 
     private static final float TABLE_BOTTOM_MARGIN = 20;
+    private static final float TABLE_BOTTOM_MARGIN_SUMMARY = 0;
 
     private TableUtil() {
     }
@@ -189,7 +190,7 @@ public final class TableUtil {
                 .addCell(new Cell().add(contentTable).setPadding(0).setBorder(Border.NO_BORDER));
 
         return new Table(1).setMinWidth(contentTable.getWidth())
-                .setMarginBottom(TABLE_BOTTOM_MARGIN)
+                .setMarginBottom(TABLE_BOTTOM_MARGIN_SUMMARY)
                 .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
                         .setPadding(0)
                         .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle())))

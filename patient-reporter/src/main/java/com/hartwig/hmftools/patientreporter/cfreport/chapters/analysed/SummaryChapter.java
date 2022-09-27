@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -47,6 +48,7 @@ import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class SummaryChapter implements ReportChapter {
 
@@ -385,21 +387,24 @@ public class SummaryChapter implements ReportChapter {
             peachMap.put(peach.gene(), peachList);
         }
 
-        Table contentTable = TableUtil.createReportContentTableSummary(new float[] { 10, 10 },
-                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Function") });
+        Table contentTable = TableUtil.createReportContentTableSummary(new float[] { 10, 10, 10 },
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Number haplotypes"),
+                        TableUtil.createHeaderCell("Function") });
 
         Set<String> sortedPeach = Sets.newTreeSet(peachMap.keySet().stream().collect(Collectors.toSet()));
         for (String sortPeach : sortedPeach) {
             List<PeachGenotype> peachGenotypeList = peachMap.get(sortPeach);
-            contentTable.addCell(TableUtil.createContentCell(sortPeach));
 
-            Table tableFunction = new Table(new float[] { 1 });
+            Set<String> function = Sets.newHashSet();
+            int count = peachGenotypeList.size();
 
             for (PeachGenotype peachGenotype : peachGenotypeList) {
-                tableFunction.addCell(TableUtil.createTransparentCell(peachGenotype.function()));
+                function.add(peachGenotype.function());
             }
 
-            contentTable.addCell(TableUtil.createContentCell(tableFunction));
+            contentTable.addCell(TableUtil.createContentCell(sortPeach));
+            contentTable.addCell(TableUtil.createContentCell(Integer.toString(count)));
+            contentTable.addCell(TableUtil.createContentCell(concat(function)));
         }
         div.add(TableUtil.createWrappingReportTableSummary(title, contentTable));
         report.add(div);
@@ -423,25 +428,24 @@ public class SummaryChapter implements ReportChapter {
             lilacAlleleMap.put(lilacReporting.lilacGermlineAllele().gene(), lilacAlleleList);
         }
 
-        Table table = TableUtil.createReportContentTableSummary(new float[] { 15,15,15 },
+        Table table = TableUtil.createReportContentTableSummary(new float[] { 15, 15, 15 },
                 new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Germline allele"),
                         TableUtil.createHeaderCell("Interpretation: presence in tumor") });
 
         Set<String> sortedAlleles = Sets.newTreeSet(lilacAlleleMap.keySet().stream().collect(Collectors.toSet()));
         for (String sortAllele : sortedAlleles) {
             List<LilacReporting> allele = lilacAlleleMap.get(sortAllele);
-            table.addCell(TableUtil.createContentCell(sortAllele));
 
-            Table tableGermlineAllele = new Table(new float[] { 1 });
-            Table tablePrecenseIntumor = new Table(new float[] { 1 });
+            Set<String> germlineAllele = Sets.newHashSet();
+            Set<String> interpretation = Sets.newHashSet();
 
             for (LilacReporting allele1 : HLAAllele.sort(allele)) {
-                tableGermlineAllele.addCell(TableUtil.createTransparentCell(allele1.lilacGermlineAllele().germlineAllele()));
-                tablePrecenseIntumor.addCell(TableUtil.createTransparentCell(allele1.interpretation()));
+                germlineAllele.add(allele1.lilacGermlineAllele().germlineAllele());
+                interpretation.add(allele1.interpretation());
             }
-
-            table.addCell(TableUtil.createContentCell(tableGermlineAllele));
-            table.addCell(TableUtil.createContentCell(tablePrecenseIntumor));
+            table.addCell(TableUtil.createContentCell(sortAllele));
+            table.addCell(TableUtil.createContentCell(concat(germlineAllele)));
+            table.addCell(TableUtil.createContentCell(concat(interpretation)));
         }
 
         div.add(TableUtil.createWrappingReportTableSummary(title, table));
@@ -459,6 +463,19 @@ public class SummaryChapter implements ReportChapter {
 
         reportDocument.add(div);
 
+    }
+
+    @NotNull
+    public static String concat(@Nullable Iterable<String> strings) {
+        if (strings == null) {
+            return Strings.EMPTY;
+        }
+
+        StringJoiner joiner = new StringJoiner(" | ");
+        for (String entry : strings) {
+            joiner.add(entry);
+        }
+        return joiner.toString();
     }
 
     @NotNull
