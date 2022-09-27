@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
@@ -12,7 +14,9 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
@@ -22,7 +26,7 @@ import org.apache.logging.log4j.Logger;
 
 public class PvConfig
 {
-    public final String SampleId;
+    public final List<String> SampleIds;
     public final String LinxDir;
     public final String PurpleDir;
 
@@ -39,8 +43,8 @@ public class PvConfig
     public final int NonReportableSvCount;
     public final boolean WriteAll;
 
+    public final int Threads;
     public final String OutputDir;
-    private boolean mIsValid;
 
     public static final Logger PV_LOGGER = LogManager.getLogger(PvConfig.class);
 
@@ -67,7 +71,17 @@ public class PvConfig
 
     public PvConfig(final CommandLine cmd)
     {
-        SampleId = cmd.getOptionValue(SAMPLE);
+        SampleIds = Lists.newArrayList();
+
+        if(cmd.hasOption(SAMPLE))
+        {
+            SampleIds.add(cmd.getOptionValue(SAMPLE));
+        }
+        else
+        {
+            SampleIds.addAll(loadSampleIdsFile(cmd));
+        }
+
         PurpleDir = cmd.getOptionValue(PURPLE_DIR);
         LinxDir = cmd.getOptionValue(LINX_DIR);
         RefGenomeFile = cmd.getOptionValue(REF_GENOME);
@@ -86,15 +100,27 @@ public class PvConfig
         VafThreshold = Double.parseDouble(cmd.getOptionValue(VAF_THRESHOLD, String.valueOf(DEFAULT_VAF_THRESHOLD)));
         FragmentCountThreshold = Integer.parseInt(cmd.getOptionValue(FRAG_COUNT_THRESHOLD, String.valueOf(DEFAULT_FRAG_COUNT_THRESHOLD)));
         WriteAll = cmd.hasOption(WRITE_ALL);
+        Threads = parseThreads(cmd);
+    }
+
+    public boolean isMultiSample() { return SampleIds.size() > 1; }
+    public String sample() { return SampleIds.get(0); }
+
+    public static String getSampleFilePath(final String sampleId, final String filePath)
+    {
+        return filePath.replaceAll("\\*", sampleId);
     }
 
     public boolean isValid()
     {
-        if(!checkFilePath(PURPLE_DIR, PurpleDir, true))
-            return false;
+        if(SampleIds.size() == 1)
+        {
+            if(!checkFilePath(PURPLE_DIR, PurpleDir, true))
+                return false;
 
-        if(!checkFilePath(LINX_DIR, LinxDir, true))
-            return false;
+            if(!checkFilePath(LINX_DIR, LinxDir, true))
+                return false;
+        }
 
         if(!checkFilePath(REF_GENOME, RefGenomeFile, true))
             return false;
@@ -105,7 +131,7 @@ public class PvConfig
         if(!checkFilePath(POLYMORPHISMS_FILE, PolymorphismsFile, false))
             return false;
 
-        if(SampleId == null)
+        if(SampleIds.isEmpty())
         {
             PV_LOGGER.error("missing sampleId config");
             return false;
@@ -143,7 +169,7 @@ public class PvConfig
         NonReportableSvCount = nonReportableSvCount;
         VafThreshold = vafThreshold;
         FragmentCountThreshold = fragmentCountThreshold;
-        SampleId = "";
+        SampleIds = Lists.newArrayList();
         PurpleDir = "";
         LinxDir = "";
         RefGenomeFile = "";
@@ -152,15 +178,15 @@ public class PvConfig
         PolymorphismsFile = "";
         RefGenVersion = V37;
         WriteAll = false;
+        Threads = 1;
     }
 
     public static Options createCmdLineOptions()
     {
         final Options options = new Options();
-        addOutputOptions(options);
-        addLoggingOptions(options);
 
         options.addOption(SAMPLE, true, "Tumor sample ID");
+        addSampleIdFile(options);
         options.addOption(LINX_DIR, true, "Linx directory");
         options.addOption(PURPLE_DIR, true, "Purple directory");
         addRefGenomeConfig(options);
@@ -172,6 +198,10 @@ public class PvConfig
         options.addOption(PROBE_LENGTH, true, "Probe length, default: " + DEFAULT_PROBE_LENGTH);
         options.addOption(NON_REPORTABLE_SV_COUNT, true, "Max count of non-reportable SVs, default: " + DEFAULT_NON_REPORTABLE_SV_COUNT);
         options.addOption(WRITE_ALL, false, "Write all variants to file");
+
+        addOutputOptions(options);
+        addLoggingOptions(options);
+        addThreadOptions(options, 1);
 
         return options;
     }

@@ -136,9 +136,10 @@ public class PointMutation implements Variant
         return format("variant(%s) category(%s)", description(), categoryType());
     }
 
-    public static List<Variant> loadSomatics(final PvConfig config)
+    public static List<Variant> loadSomatics(final String sampleId, final PvConfig config)
     {
-        String vcfFile = PurpleCommon.purpleSomaticVcfFile(config.PurpleDir, config.SampleId);
+        String purpleDir = PvConfig.getSampleFilePath(sampleId, config.PurpleDir);
+        String vcfFile = PurpleCommon.purpleSomaticVcfFile(purpleDir, sampleId);
 
         List<Variant> variants = Lists.newArrayList();
 
@@ -158,7 +159,7 @@ public class PointMutation implements Variant
                 if(alt.length() >= MAX_INSERT_BASES)
                     continue;
 
-                variants.add(new PointMutation(variantContext, config.SampleId));
+                variants.add(new PointMutation(variantContext, sampleId));
             }
         }
         catch(IOException e)
