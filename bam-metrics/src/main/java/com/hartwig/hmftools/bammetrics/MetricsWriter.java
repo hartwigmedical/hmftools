@@ -107,6 +107,10 @@ public final class MetricsWriter
             tsvData.add(format("%.5f", metrics.calcCoverageFrequency(coverage)));
         }
 
+        // HET SNP values are uncalculated
+        tsvData.add("0");
+        tsvData.add("0");
+
         return tsvData.toString();
     }
 
@@ -161,7 +165,6 @@ public final class MetricsWriter
         try
         {
             // write summary metrics
-            //String filename = config.formFilename("metrics");
             String filename = WGSMetricsFile.generateFilename(config.OutputDir, config.SampleId);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
