@@ -4,6 +4,14 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.SUPER_TYPE_ARTIFACT;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.SUPER_TYPE_COMPLEX;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.SUPER_TYPE_DOUBLE_MINUTE;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.SUPER_TYPE_INCOMPLETE;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.SUPER_TYPE_INSERTION;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.SUPER_TYPE_RECIPROCAL;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.SUPER_TYPE_SIMPLE;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.SUPER_TYPE_TEMPLATED_INSERTION;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -49,15 +57,6 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class ClusterClassification
 {
-    // super category for an SV or cluster
-    public static final String SUPER_TYPE_SIMPLE = "SIMPLE";
-    public static final String SUPER_TYPE_INSERTION = "INSERTION";
-    public static final String SUPER_TYPE_RECIPROCAL = "RECIPROCAL";
-    public static final String SUPER_TYPE_TEMPLATED_INSERTION = "TEMPLATED_INSERTION";
-    public static final String SUPER_TYPE_COMPLEX = "COMPLEX";
-    public static final String SUPER_TYPE_DOUBLE_MINUTE = "DOUBLE_MINUTE";
-    public static final String SUPER_TYPE_INCOMPLETE = "INCOMPLETE";
-    public static final String SUPER_TYPE_ARTIFACT = "ARTIFACT";
 
     public static String getClusterCategory(SvCluster cluster)
     {
