@@ -7,11 +7,14 @@ import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.ctdna.CategoryType.REPORTABLE_MUTATION;
 import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
+import static com.hartwig.hmftools.ctdna.VariantSelection.addRegisteredLocation;
+import static com.hartwig.hmftools.ctdna.VariantSelection.isNearRegisteredLocation;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
@@ -116,6 +119,16 @@ public class PointMutation implements Variant
         {
             PV_LOGGER.error("variant({}) invalid sequenceLength({}): {}", description(), mSequence.length(), mSequence);
         }
+    }
+
+    @Override
+    public boolean checkAndRegisterLocation(final Map<String,List<Integer>> registeredLocations)
+    {
+        if(isNearRegisteredLocation(registeredLocations, mVariantDecorator.chromosome(), mVariantDecorator.position()))
+            return false;
+
+        addRegisteredLocation(registeredLocations, mVariantDecorator.chromosome(), mVariantDecorator.position());
+        return true;
     }
 
     public String toString()

@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.ctdna;
 
-import static java.lang.String.format;
-
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -31,4 +30,5 @@ public interface Variant
 
     void generateSequences(final RefGenomeInterface refGenome, final PvConfig config);
 
+    boolean checkAndRegisterLocation(final Map<String,List<Integer>> registeredLocations);
 }

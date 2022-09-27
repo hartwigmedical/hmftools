@@ -13,8 +13,11 @@ import static com.hartwig.hmftools.ctdna.CategoryType.FUSION;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_SV;
 import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
+import static com.hartwig.hmftools.ctdna.VariantSelection.addRegisteredLocation;
+import static com.hartwig.hmftools.ctdna.VariantSelection.isNearRegisteredLocation;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -199,6 +202,20 @@ public class StructuralVariant implements Variant
         {
             PV_LOGGER.error("variant({}) invalid sequenceLength({}): {}", description(), mSequence.length(), mSequence);
         }
+    }
+
+    @Override
+    public boolean checkAndRegisterLocation(final Map<String,List<Integer>> registeredLocations)
+    {
+        if(isNearRegisteredLocation(registeredLocations, mVariant.startChromosome(), mVariant.startPosition())
+        || isNearRegisteredLocation(registeredLocations, mVariant.endChromosome(), mVariant.endPosition()))
+        {
+            return false;
+        }
+
+        addRegisteredLocation(registeredLocations, mVariant.startChromosome(), mVariant.startPosition());
+        addRegisteredLocation(registeredLocations, mVariant.endChromosome(), mVariant.endPosition());
+        return true;
     }
 
     public String toString()

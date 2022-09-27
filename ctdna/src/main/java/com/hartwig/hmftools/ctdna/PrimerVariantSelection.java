@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFactory;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -27,9 +28,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
-
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class PrimerVariantSelection
 {
@@ -47,7 +45,14 @@ public class PrimerVariantSelection
 
         PV_LOGGER.info("sample({}) starting primer variant selection", mConfig.SampleId);
 
-        List<Variant> variants = PointMutation.loadSomatics(mConfig);
+        List<Variant> variants = Lists.newArrayList();
+
+        if(mConfig.ActionableVariantsFile != null)
+        {
+            variants.addAll(KnownMutation.loadKnownMutations(mConfig.ActionableVariantsFile));
+        }
+
+        variants.addAll(PointMutation.loadSomatics(mConfig));
 
         variants.addAll(StructuralVariant.loadStructuralVariants(mConfig));
 
