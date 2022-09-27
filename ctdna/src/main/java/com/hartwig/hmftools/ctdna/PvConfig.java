@@ -63,7 +63,7 @@ public class PvConfig
     private static final int DEFAULT_FRAG_COUNT_THRESHOLD = 10;
     private static final int DEFAULT_NON_REPORTABLE_SV_COUNT = 30;
 
-    public static final int MIN_REQUIRED_REF_BASES = 30;
+    public static final int MAX_INSERT_BASES = 60;
 
     public PvConfig(final CommandLine cmd)
     {
@@ -134,6 +134,24 @@ public class PvConfig
         }
 
         return true;
+    }
+
+    public PvConfig(int probeLength, int probeCount, int nonReportableSvCount, double vafThreshold, int fragmentCountThreshold)
+    {
+        ProbeCount = probeCount;
+        ProbeLength = probeLength;
+        NonReportableSvCount = nonReportableSvCount;
+        VafThreshold = vafThreshold;
+        FragmentCountThreshold = fragmentCountThreshold;
+        SampleId = "";
+        PurpleDir = "";
+        LinxDir = "";
+        RefGenomeFile = "";
+        OutputDir = "";
+        ActionableVariantsFile = "";
+        PolymorphismsFile = "";
+        RefGenVersion = V37;
+        WriteAll = false;
     }
 
     public static Options createCmdLineOptions()

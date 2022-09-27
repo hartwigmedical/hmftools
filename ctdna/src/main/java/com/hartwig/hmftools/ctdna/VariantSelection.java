@@ -34,10 +34,8 @@ public final class VariantSelection
             if(variant.categoryType().ordinal() <= REPORTABLE_MUTATION.ordinal())
             {
                 addVariant(variant, selectedVariants, typeCounts);
-                continue;
             }
-
-            if(variant.categoryType() == OTHER_SV)
+            else if(variant.categoryType() == OTHER_SV)
             {
                 if(typeCounts[OTHER_SV.ordinal()] < config.NonReportableSvCount)
                 {
@@ -48,6 +46,8 @@ public final class VariantSelection
             {
                 addVariant(variant, selectedVariants, typeCounts);
             }
+
+            ++index;
         }
 
         StringJoiner sj = new StringJoiner(" ");

@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.ctdna.CategoryType.FUSION;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_SV;
-import static com.hartwig.hmftools.ctdna.PvConfig.MIN_REQUIRED_REF_BASES;
+import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
 
 import java.util.List;
@@ -31,7 +31,6 @@ import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 
 public class StructuralVariant implements Variant
@@ -234,10 +233,7 @@ public class StructuralVariant implements Variant
                 if(!variant.filter().equals(PASS))
                     continue;
 
-                int insertSeqLength = variant.insertSequence().length();
-                int sideRefBases = (config.ProbeLength - insertSeqLength) / 2;
-
-                if(sideRefBases < MIN_REQUIRED_REF_BASES)
+                if(variant.insertSequence().length() >= MAX_INSERT_BASES)
                     continue;
 
                 LinxSvAnnotation annotation = annotations.stream().filter(x -> x.vcfId().equals(variant.id())).findFirst().orElse(null);

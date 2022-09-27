@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_CODING_MUTATION;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.ctdna.CategoryType.REPORTABLE_MUTATION;
+import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -13,12 +14,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantVcfTags;
 
@@ -100,12 +97,20 @@ public class PointMutation implements Variant
     @Override
     public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
     {
-        int variantLength = mVariantDecorator.alt().length();
-        int startLength = config.ProbeLength / 2 - variantLength / 2;
+        int variantPosition = mVariantDecorator.position();
+        String alt = mVariantDecorator.alt();
+        int altLength = alt.length();
+        int refLength = mVariantDecorator.ref().length();
+        int startLength = config.ProbeLength / 2 - altLength / 2;
         int startPos = mVariantDecorator.position() - startLength;
-        int endPos = startPos + config.ProbeLength - 1;
 
-        mSequence = refGenome.getBaseString(mVariantDecorator.chromosome(), startPos, endPos);
+        String basesStart = refGenome.getBaseString(mVariantDecorator.chromosome(), startPos, variantPosition - 1);
+        int endBaseLength = config.ProbeLength - basesStart.length() - altLength;
+
+        int postPosition = variantPosition + refLength;
+        String basesEnd = refGenome.getBaseString(mVariantDecorator.chromosome(), postPosition, postPosition + endBaseLength - 1);
+
+        mSequence = basesStart + alt + basesEnd;
 
         if(mSequence.length() != config.ProbeLength)
         {
@@ -136,6 +141,10 @@ public class PointMutation implements Variant
                 if(!filter.test(variantContext))
                     continue;
 
+                String alt = VariantContextDecorator.getAlt(variantContext);
+                if(alt.length() >= MAX_INSERT_BASES)
+                    continue;
+
                 variants.add(new PointMutation(variantContext, config.SampleId));
             }
         }
@@ -149,5 +158,4 @@ public class PointMutation implements Variant
 
         return variants;
     }
-
 }
