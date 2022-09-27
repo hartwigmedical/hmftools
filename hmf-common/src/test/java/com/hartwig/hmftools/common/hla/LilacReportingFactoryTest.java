@@ -41,9 +41,9 @@ public class LilacReportingFactoryTest {
         Map<String, List<LilacAllele>> mapLilac = LilacReportingFactory.generateLilacMap(createTestLilacData());
         assertEquals(LilacReportingFactory.mutationString(mapLilac.get("A*03:01").get(0)), "2 missense");
         assertEquals(LilacReportingFactory.mutationString(mapLilac.get("B*18:02").get(0)), "1 nonsense or frameshift, 1 splice");
-        assertEquals(LilacReportingFactory.mutationString(mapLilac.get("B*35:02").get(0)), "None");
+        assertEquals(LilacReportingFactory.mutationString(mapLilac.get("B*35:02").get(0)), "No");
         assertEquals(LilacReportingFactory.mutationString(mapLilac.get("C*10:12").get(0)), "1 synonymous");
-        assertEquals(LilacReportingFactory.mutationString(mapLilac.get("C*16:02").get(0)), "None");
+        assertEquals(LilacReportingFactory.mutationString(mapLilac.get("C*16:02").get(0)), "No");
     }
 
     @Test
@@ -111,7 +111,7 @@ public class LilacReportingFactoryTest {
         LilacReporting lilacReporting3 = extractLilacReporting("B*35:02", lilacReporting);
         assertEquals(lilacReporting3.lilacGermlineAllele().gene(), "HLA-B");
         assertEquals(lilacReporting3.lilacGermlineAllele().germlineAllele(), "B*35:02");
-        assertEquals(lilacReporting3.somaticMutations(), "None");
+        assertEquals(lilacReporting3.somaticMutations(), "No");
         assertEquals(lilacReporting3.interpretation(), "Yes");
         assertEquals(lilacReporting3.tumorCopies(), 1,1);
         assertEquals(lilacReporting3.germlineCopies(), 1D);
@@ -127,7 +127,7 @@ public class LilacReportingFactoryTest {
         LilacReporting lilacReporting5 = extractLilacReporting("C*16:02", lilacReporting);
         assertEquals(lilacReporting5.lilacGermlineAllele().gene(), "HLA-C");
         assertEquals(lilacReporting5.lilacGermlineAllele().germlineAllele(), "C*16:02");
-        assertEquals(lilacReporting5.somaticMutations(), "None");
+        assertEquals(lilacReporting5.somaticMutations(), "No");
         assertEquals(lilacReporting5.interpretation(), "No");
         assertEquals(lilacReporting5.tumorCopies(), 0D);
         assertEquals(lilacReporting5.germlineCopies(), 1D);

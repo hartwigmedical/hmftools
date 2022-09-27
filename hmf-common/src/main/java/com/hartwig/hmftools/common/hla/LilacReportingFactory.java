@@ -119,7 +119,7 @@ public class LilacReportingFactory {
         }
 
         String result = joiner.toString();
-        return !result.isEmpty() ? result : "None";
+        return !result.isEmpty() ? result : "No";
     }
 
     @NotNull
