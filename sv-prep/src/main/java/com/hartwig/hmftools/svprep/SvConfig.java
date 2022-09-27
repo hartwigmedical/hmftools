@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svprep;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
@@ -295,9 +296,8 @@ public class SvConfig
         addLoggingOptions(options);
 
         options.addOption(SAMPLE, true, "Tumor sample ID");
-        options.addOption(BAM_FILE, true, "RNA BAM file location");
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default) or 38");
+        options.addOption(BAM_FILE, true, "BAM file location");
+        addRefGenomeConfig(options);
         options.addOption(KNOWN_FUSION_BED, true, "Known fusion hotspot BED file");
         options.addOption(BLACKLIST_BED, true, "Blacklist regions BED file");
         options.addOption(EXISTING_JUNCTION_FILE, true, "Load existing junction file to find supporting reads");

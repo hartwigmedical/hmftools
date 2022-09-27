@@ -5,6 +5,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_C_INSERT;
 import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_INSERT;
 import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_LENGTH;
@@ -60,7 +62,7 @@ public class ReadFilters
         if(record.getMappingQuality() < mConfig.MinMapQuality)
             filters = ReadFilterType.set(filters, MIN_MAP_QUAL);
 
-        if(!record.getMateUnmappedFlag() && !record.getReadUnmappedFlag())
+        if(!mateUnmapped(record) && !record.getReadUnmappedFlag())
         {
             int insertAlignmentOverlap = abs(abs(record.getInferredInsertSize()) - alignedBases);
 
@@ -164,7 +166,7 @@ public class ReadFilters
             return true;
 
         // an unmapped mate
-        if(record.getMateUnmappedFlag())
+        if(mateUnmapped(record))
             return true;
 
         // interchromosomal
@@ -172,7 +174,7 @@ public class ReadFilters
             return true;
 
         // inversion
-        if(record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag())
+        if(record.getReadNegativeStrandFlag() == mateNegativeStrand(record))
             return true;
 
         return false;

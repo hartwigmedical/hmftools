@@ -176,7 +176,7 @@ public class ReadContextCounter implements VariantHotspot
     public double strandBias()
     {
         double total = mForwardStrand + mReverseStrand;
-        return total > 0 ? mForwardStrand / total : 0;
+        return total > 0 ? mForwardStrand / total : 0.5;
     }
 
     public int strandDepth() { return mForwardStrand + mReverseStrand; }
@@ -612,6 +612,9 @@ public class ReadContextCounter implements VariantHotspot
 
     private void countStrandedness(final SAMRecord record)
     {
+        if(!record.getReadPairedFlag())
+            return;
+
         if(record.getFirstOfPairFlag())
             mForwardStrand++;
         else

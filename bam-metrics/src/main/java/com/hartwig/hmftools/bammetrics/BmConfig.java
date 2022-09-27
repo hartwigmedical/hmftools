@@ -2,6 +2,7 @@ package com.hartwig.hmftools.bammetrics;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
@@ -160,27 +161,6 @@ public class BmConfig
         return filename;
     }
 
-
-    /*
-    public BmConfig(int partitionSize)
-    {
-        SampleId = "TEST";
-        BamFile = null;
-        RefGenomeFile = "";
-        OutputDir = null;
-
-        RefGenVersion = V37;
-
-        PartitionSize = partitionSize;
-
-        SpecificChromosomes = Lists.newArrayList();
-        SpecificRegions = Lists.newArrayList();
-        LogReadIds = Lists.newArrayList();
-        Threads = 1;
-        PerfDebug = false;
-    }
-    */
-
     public static Options createCmdLineOptions()
     {
         final Options options = new Options();
@@ -188,9 +168,8 @@ public class BmConfig
         addLoggingOptions(options);
 
         options.addOption(SAMPLE, true, "Tumor sample ID");
-        options.addOption(BAM_FILE, true, "RNA BAM file location");
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default) or 38");
+        options.addOption(BAM_FILE, true, "BAM file location");
+        addRefGenomeConfig(options);;
         options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_CHR_PARTITION_SIZE);
         options.addOption(MAP_QUAL_THRESHOLD, true, "Map quality threshold, default: " + DEFAULT_MAP_QUAL_THRESHOLD);
         options.addOption(BASE_QUAL_THRESHOLD, true, "Base quality threshold, default: " + DEFAULT_BASE_QUAL_THRESHOLD);

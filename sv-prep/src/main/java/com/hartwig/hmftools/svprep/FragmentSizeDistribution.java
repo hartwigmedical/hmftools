@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.firstInPair;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.FRAG_LENGTH_DIST_MAX_LENGTH;
@@ -232,7 +234,7 @@ public class FragmentSizeDistribution
 
         private boolean isCandidateRecord(final SAMRecord record)
         {
-            if(!record.getFirstOfPairFlag())
+            if(!firstInPair(record))
                 return false;
 
             int fragmentLength = abs(record.getInferredInsertSize());
@@ -240,7 +242,7 @@ public class FragmentSizeDistribution
                 return false;
 
             // ignore translocations and inversions
-            if(!record.getMateReferenceName().equals(record.getReferenceName()) || record.getMateNegativeStrandFlag() == record.getReadNegativeStrandFlag())
+            if(!record.getMateReferenceName().equals(record.getReferenceName()) || mateNegativeStrand(record) == record.getReadNegativeStrandFlag())
                 return false;
 
             if(record.isSecondaryOrSupplementary())

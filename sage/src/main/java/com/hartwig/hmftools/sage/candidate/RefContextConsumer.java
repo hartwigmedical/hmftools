@@ -518,6 +518,9 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
     private boolean reachedDepthLimit(final RefContext refContext)
     {
+        if(refContext == null)
+            return false;
+
         return refContext.exceedsDepthLimit(mConfig.MaxReadDepth, mConfig.MaxReadDepthPanel);
     }
 

@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.bammetrics.FilterType.LOW_BASE_QUAL;
 import static com.hartwig.hmftools.bammetrics.FilterType.LOW_MAP_QUAL;
 import static com.hartwig.hmftools.bammetrics.FilterType.DUPLICATE;
 import static com.hartwig.hmftools.bammetrics.FilterType.MATE_UNMAPPED;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -51,7 +52,7 @@ public class BaseCoverage
             return;
         }
 
-        if(record.getMateUnmappedFlag())
+        if(mateUnmapped(record))
         {
             mFilterTypeCounts[MATE_UNMAPPED.ordinal()] += alignedBases;
             return;

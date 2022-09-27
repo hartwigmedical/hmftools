@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -62,7 +63,7 @@ public class ReadRecord
             Positions = new int[] { 0, 0 };
         }
 
-        if(!record.getMateUnmappedFlag())
+        if(!mateUnmapped(record))
         {
             MateChromosome = record.getMateReferenceName();
             MatePosStart = record.getMateAlignmentStart();

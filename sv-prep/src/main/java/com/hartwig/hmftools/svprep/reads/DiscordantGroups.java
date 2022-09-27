@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svprep.reads;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -181,7 +182,7 @@ public final class DiscordantGroups
         if(!read.Chromosome.equals(read.MateChromosome))
             return true;
 
-        if(read.record().getReadNegativeStrandFlag() == read.record().getMateNegativeStrandFlag())
+        if(read.record().getReadNegativeStrandFlag() == mateNegativeStrand(read.record()))
             return true;
 
         return false;

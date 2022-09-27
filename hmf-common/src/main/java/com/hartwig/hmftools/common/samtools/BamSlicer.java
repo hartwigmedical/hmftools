@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.samtools;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SAM_LOGGER;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.firstInPair;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -137,7 +138,7 @@ public class BamSlicer
             if(maxReadDepth > 0 && readCount >= maxReadDepth)
                 break;
 
-            if(firstInPair != nextRecord.getFirstOfPairFlag())
+            if(firstInPair != firstInPair(nextRecord))
                 continue;
 
             // must match supplementary status so as not to be confused with the mate of its supplementary pair
@@ -171,7 +172,7 @@ public class BamSlicer
             iter = samReader.queryAlignmentStart(record.getMateReferenceName(), record.getMateAlignmentStart());
         }
 
-        boolean isFirstInPair = record.getFirstOfPairFlag();
+        boolean isFirstInPair = firstInPair(record);
         boolean isFirstSupplementary = record.getSupplementaryAlignmentFlag();
 
         SAMRecord mateRecord = null;
@@ -190,7 +191,7 @@ public class BamSlicer
                 continue;
             }
 
-            if(isFirstInPair == nextRecord.getFirstOfPairFlag())
+            if(isFirstInPair == firstInPair(nextRecord))
                 continue;
 
             // must match supplementary status so as not to be confused with the mate of its supplementary pair

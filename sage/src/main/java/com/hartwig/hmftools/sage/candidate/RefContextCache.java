@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.candidate;
 
+import static java.lang.Math.max;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +37,8 @@ public class RefContextCache
 
         final Consumer<RefContext> evictionHandler = (refContext) -> processAltContexts(refContext);
 
-        mRollingCandidates = new EvictingArray(MIN_ARRAY_CAPACITY, evictionHandler);
+        int minCapacity = max(MIN_ARRAY_CAPACITY, config.ExpectedReadLength);
+        mRollingCandidates = new EvictingArray(minCapacity, evictionHandler);
     }
 
     public RefContext getOrCreateRefContext(final String chromosome, int position)

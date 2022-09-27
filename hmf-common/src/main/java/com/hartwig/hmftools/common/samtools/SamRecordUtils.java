@@ -32,12 +32,38 @@ public final class SamRecordUtils
         return quality - PHRED_OFFSET;
     }
 
-    public static int getBaseQuality(@NotNull final SAMRecord record, int readPosition)
+    public static int getBaseQuality(final SAMRecord record, int readPosition)
     {
         return getAvgBaseQuality(record, readPosition, 1);
     }
 
-    public static int getAvgBaseQuality(@NotNull final SAMRecord record, int readPosition, int length)
+    // convenience methods to avoid triggering a crash if unpaired
+    public static boolean firstInPair(final SAMRecord record)
+    {
+        return !record.getReadPairedFlag() || record.getFirstOfPairFlag();
+    }
+
+    public static boolean secondInPair(final SAMRecord record)
+    {
+        return record.getReadPairedFlag() && record.getSecondOfPairFlag();
+    }
+
+    public static boolean mateNegativeStrand(final SAMRecord record)
+    {
+        return record.getReadPairedFlag() && record.getMateNegativeStrandFlag();
+    }
+
+    public static boolean properPair(final SAMRecord record)
+    {
+        return record.getReadPairedFlag() && record.getProperPairFlag();
+    }
+
+    public static boolean mateUnmapped(final SAMRecord record)
+    {
+        return record.getReadPairedFlag() && record.getMateUnmappedFlag();
+    }
+
+    public static int getAvgBaseQuality(final SAMRecord record, int readPosition, int length)
     {
         assert (readPosition > 0);
 
@@ -51,7 +77,7 @@ public final class SamRecordUtils
         return score / length;
     }
 
-    public static final List<int[]> generateMappedCoords(final Cigar cigar, int posStart)
+    public static List<int[]> generateMappedCoords(final Cigar cigar, int posStart)
     {
         final List<int[]> mappedCoords = Lists.newArrayList();
 

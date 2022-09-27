@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -285,7 +286,7 @@ public class FragmentSizeCalcs implements Callable
             return false;
 
         // ignore translocations and inversions
-        if(!record.getMateReferenceName().equals(record.getReferenceName()) || record.getMateNegativeStrandFlag() == record.getReadNegativeStrandFlag())
+        if(!record.getMateReferenceName().equals(record.getReferenceName()) || mateNegativeStrand(record) == record.getReadNegativeStrandFlag())
             return false;
 
         // ignore split and soft-clipped reads above the read length

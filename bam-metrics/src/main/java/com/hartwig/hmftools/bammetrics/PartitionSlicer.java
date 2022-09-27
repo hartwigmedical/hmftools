@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.bammetrics.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -132,7 +133,7 @@ public class PartitionSlicer
 
     private boolean mateReadOverlaps(final SAMRecord record)
     {
-        if(record.getMateUnmappedFlag())
+        if(mateUnmapped(record))
             return false;
 
         if(!record.getReferenceName().equals(record.getMateReferenceName()))

@@ -88,8 +88,6 @@ public class EvictingArray
         }
     }
 
-    public static final int MIN_INITIAL_CAPACITY = 8;
-
     public static int calculateSize(int numElements)
     {
         return ceilingPowerOfTwo(numElements);
