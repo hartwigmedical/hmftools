@@ -81,5 +81,4 @@ public class ComparTask implements Callable
 
         CMP_LOGGER.debug("sample({}) wrote {} mismatches", sampleId, totalMismatches);
     }
-
 }
