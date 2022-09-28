@@ -77,7 +77,7 @@ public class Coverage
             String geneFile = parent + File.separator + sampleId + ".sage.gene.coverage.tsv";
             String exonFile = parent + File.separator + sampleId + ".sage.exon.medians.tsv";
 
-            GeneDepthFile.write(geneFile, depth(sampleId));
+            GeneDepthFile.write(geneFile, depth(sampleId), GeneDepthBuilder.DEPTH_BUCKETS);
             ExonMedianDepth.write(exonFile, geneCoverages);
         }
     }
@@ -85,8 +85,7 @@ public class Coverage
     private List<GeneDepth> depth(final String sample)
     {
         return coverage(sample).stream()
-                .map(x -> GeneDepth.buildGeneDepth(x))
-                // .sorted(Comparator.comparing(GeneDepth::gene))
+                .map(x -> GeneDepthBuilder.buildGeneDepth(x))
                 .collect(Collectors.toList());
     }
 

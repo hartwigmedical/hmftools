@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.coverage;
 
-import static com.hartwig.hmftools.sage.coverage.GeneDepth.MAX_DEPTH_BUCKET;
-import static com.hartwig.hmftools.sage.coverage.GeneDepth.populateCoverageBuckets;
+import static com.hartwig.hmftools.sage.coverage.GeneDepthBuilder.MAX_DEPTH_BUCKET;
 
 import static org.junit.Assert.assertEquals;
 
@@ -17,9 +16,7 @@ public class GeneCoverageTest
         baseCoverage[20] = 100;
         baseCoverage[31] = 800;
 
-        populateCoverageBuckets();
-
-        assertEquals(0.002302649, GeneDepth.missedVariantLikelihood(baseCoverage), 1e-9);
+        assertEquals(0.002302649, GeneDepthBuilder.missedVariantLikelihood(baseCoverage), 1e-9);
     }
 
     @Test
@@ -28,19 +25,15 @@ public class GeneCoverageTest
         int[] baseCoverage = new int[37];
         baseCoverage[0] = 1;
 
-        populateCoverageBuckets();
-
-        assertEquals(1, GeneDepth.missedVariantLikelihood(baseCoverage), 1e-9);
+        assertEquals(1, GeneDepthBuilder.missedVariantLikelihood(baseCoverage), 1e-9);
     }
 
     @Test
     public void testBucket()
     {
-        populateCoverageBuckets();
-
         for(int depth = 0; depth < 30; depth++)
         {
-            assertEquals(depth, GeneDepth.bucket(depth));
+            assertEquals(depth, GeneDepthBuilder.bucket(depth));
         }
 
         assertBucketAndDepth(30, 39, 30, 35);
@@ -56,20 +49,20 @@ public class GeneCoverageTest
         assertBucketAndDepth(1900, 2000, 59, 1950);
         assertBucketAndDepth(9000, 10000, 67, 9500);
 
-        assertEquals(68, GeneDepth.bucket(10000));
-        assertEquals(68, GeneDepth.bucket(MAX_DEPTH_BUCKET));
-        assertEquals(10000, GeneDepth.depth(68));
-        assertEquals(MAX_DEPTH_BUCKET, GeneDepth.depth(68));
+        assertEquals(68, GeneDepthBuilder.bucket(10000));
+        assertEquals(68, GeneDepthBuilder.bucket(MAX_DEPTH_BUCKET));
+        assertEquals(10000, GeneDepthBuilder.depth(68));
+        assertEquals(MAX_DEPTH_BUCKET, GeneDepthBuilder.depth(68));
     }
 
     private static void assertBucketAndDepth(int minDepth, int maxDepth, int expectedBucket, int expectedDepth)
     {
         for(int depth = minDepth; depth < maxDepth; depth++)
         {
-            assertEquals(expectedBucket, GeneDepth.bucket(depth));
+            assertEquals(expectedBucket, GeneDepthBuilder.bucket(depth));
         }
 
-        assertEquals(expectedDepth, GeneDepth.depth(expectedBucket));
+        assertEquals(expectedDepth, GeneDepthBuilder.depth(expectedBucket));
     }
 
 }

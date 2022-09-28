@@ -2,8 +2,6 @@ package com.hartwig.hmftools.sage.coverage;
 
 import static com.hartwig.hmftools.sage.SageCommon.DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.coverage.GeneDepth.MAX_DEPTH_BUCKET;
-import static com.hartwig.hmftools.sage.coverage.GeneDepth.DEPTH_BUCKETS;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,15 +12,13 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class GeneDepthFile
 {
-    public static void write(final String filename, final List<GeneDepth> depths)
+    public static void write(final String filename, final List<GeneDepth> depths, final List<Integer> depthBuckets)
     {
         try
         {
-            Files.write(new File(filename).toPath(), toLines(depths));
+            Files.write(new File(filename).toPath(), toLines(depths, depthBuckets));
         }
         catch(IOException e)
         {
@@ -30,13 +26,12 @@ public final class GeneDepthFile
         }
     }
 
-    @NotNull
-    private static List<String> toLines(@NotNull final List<GeneDepth> depths)
+    private static List<String> toLines(final List<GeneDepth> depths, final List<Integer> depthBuckets)
     {
         if(!depths.isEmpty())
         {
             final List<String> lines = Lists.newArrayList();
-            lines.add(header());
+            lines.add(header(depthBuckets));
             depths.stream().map(GeneDepthFile::toString).forEach(lines::add);
             return lines;
         }
@@ -44,7 +39,7 @@ public final class GeneDepthFile
         return Collections.emptyList();
     }
 
-    static String header()
+    private static String header(final List<Integer> depthBuckets)
     {
         StringJoiner joiner = new StringJoiner(DELIM);
 
@@ -54,10 +49,10 @@ public final class GeneDepthFile
         joiner.add("posEnd");
         joiner.add("missedVariantLikelihood");
 
-        for(int bucket = 0; bucket < DEPTH_BUCKETS.size() - 1; ++bucket)
+        for(int bucket = 0; bucket < depthBuckets.size() - 1; ++bucket)
         {
-            int depth = DEPTH_BUCKETS.get(bucket);
-            int depthNext = DEPTH_BUCKETS.get(bucket + 1);
+            int depth = depthBuckets.get(bucket);
+            int depthNext = depthBuckets.get(bucket + 1);
 
             if(depthNext == depth + 1)
             {
@@ -69,7 +64,8 @@ public final class GeneDepthFile
             }
         }
 
-        joiner.add(String.format("DR_%d", MAX_DEPTH_BUCKET));
+        int maxDepth = depthBuckets.get(depthBuckets.size() - 1);
+        joiner.add(String.format("DR_%d", maxDepth));
 
         return joiner.toString();
     }
