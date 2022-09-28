@@ -52,7 +52,7 @@ public class BamRecordReader implements BamReader
     private final Set<String> mDiscardIndelReadIds;
     private int mFilteredRecordCount;
 
-    public static final int MIN_MAPPING_QUALITY = 1;
+    public static final int MIN_MAPPING_QUALITY = 0;
     public static final int MAX_DISTANCE = 1000;
 
     public BamRecordReader(
