@@ -24,6 +24,7 @@ public final class SamRecordUtils
 
     public static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
     public static final String SECONDARY_ATTRIBUTE = "HI";
+    public static final String NO_MATE_CHROMOSOME = "*";
 
     public static final Logger SAM_LOGGER = LogManager.getLogger(SamRecordUtils.class);
 

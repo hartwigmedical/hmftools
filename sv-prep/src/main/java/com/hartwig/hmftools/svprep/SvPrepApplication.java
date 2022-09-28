@@ -112,6 +112,9 @@ public class SvPrepApplication
 
         if(fragmentDistLengths[0] > 0 && fragmentDistLengths[1] > 0)
             mConfig.ReadFiltering.config().setFragmentLengths(fragmentDistLengths[0], fragmentDistLengths[1]);
+
+        if(fragSizeDistribution.maxReadLength() > 0)
+            mConfig.ReadLength = fragSizeDistribution.maxReadLength();
     }
 
     public static void main(@NotNull final String[] args) throws Exception

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svprep;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.floor;
+import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.firstInPair;
@@ -37,11 +38,13 @@ public class FragmentSizeDistribution
 {
     private final SvConfig mConfig;
     private final List<LengthFrequency> mLengthFrequencies;
+    private int mMaxReadLength;
     
     public FragmentSizeDistribution(final SvConfig config)
     {
         mConfig = config;
         mLengthFrequencies = Lists.newArrayList();
+        mMaxReadLength = 0;
     }
     
     public void run()
@@ -73,7 +76,10 @@ public class FragmentSizeDistribution
         for(final ChromosomeTask chrTask : chrTasks)
         {
             mergeDistributions(mLengthFrequencies, chrTask.lengthFrequencies());
+            mMaxReadLength = max(mMaxReadLength, chrTask.maxReadLength());
         }
+
+        SV_LOGGER.info("maxReadLength({})", mMaxReadLength);
 
         if(mLengthFrequencies.isEmpty())
         {
@@ -84,11 +90,13 @@ public class FragmentSizeDistribution
         int minLength = mLengthFrequencies.get(0).Length;
         int maxLength = mLengthFrequencies.get(mLengthFrequencies.size() - 1).Length;
 
-        SV_LOGGER.debug("fragment size distribution complete: min({}) max({})", minLength, maxLength);
+        SV_LOGGER.info("fragment size distribution complete: min({}) max({})", minLength, maxLength);
 
         if(mConfig.WriteTypes.contains(FRAGMENT_LENGTH_DIST))
             writeDistribution();
     }
+
+    public int maxReadLength() { return mMaxReadLength; }
 
     public int[] calculatePercentileLengths()
     {
@@ -191,11 +199,13 @@ public class FragmentSizeDistribution
         private final BamSlicer mBamSlicer;
         private final SamReader mSamReader;
         private final List<LengthFrequency> mLengthFrequencies;
+        private int mMaxReadLength;
 
         public ChromosomeTask(final String chromosome)
         {
             mChromosome = chromosome;
             mProcessedReads = 0;
+            mMaxReadLength = 0;
 
             mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
             mBamSlicer = new BamSlicer(FRAG_LENGTH_DIST_MIN_QUAL, false, false, false);
@@ -204,21 +214,27 @@ public class FragmentSizeDistribution
         }
 
         public List<LengthFrequency> lengthFrequencies() { return mLengthFrequencies; }
+        public int maxReadLength() { return mMaxReadLength; }
 
         @Override
         public Long call()
         {
-            ChrBaseRegion region = new ChrBaseRegion(mChromosome, 1000_000, 20_000_000);
+            // slice a fixed region from each chromosome
+            ChrBaseRegion region = !mConfig.SpecificRegions.isEmpty() ?
+                mConfig.SpecificRegions.get(0) : new ChrBaseRegion(mChromosome, 1_000_000, 10_000_000);
+
             mBamSlicer.slice(mSamReader, Lists.newArrayList(region), this::processBamRead);
 
             return (long)0;
         }
 
-        private void processBamRead(@NotNull final SAMRecord read)
+        private void processBamRead(final SAMRecord record)
         {
             // cull invalid reads without waiting for the paired read
-            if(!isCandidateRecord(read))
+            if(!isCandidateRecord(record))
                 return;
+
+            mMaxReadLength = max(mMaxReadLength, record.getReadBases().length);
 
             ++mProcessedReads;
 
@@ -229,24 +245,32 @@ public class FragmentSizeDistribution
                 return;
             }
 
-            addFragmentLength(read);
+            addFragmentLength(record);
         }
 
         private boolean isCandidateRecord(final SAMRecord record)
         {
-            if(!firstInPair(record))
-                return false;
+            boolean isPaired = record.getReadPairedFlag();
 
-            int fragmentLength = abs(record.getInferredInsertSize());
-            if(fragmentLength > FRAG_LENGTH_DIST_MAX_LENGTH)
-                return false;
+            if(isPaired)
+            {
+                if(record.getSecondOfPairFlag())
+                    return false;
 
-            // ignore translocations and inversions
-            if(!record.getMateReferenceName().equals(record.getReferenceName()) || mateNegativeStrand(record) == record.getReadNegativeStrandFlag())
-                return false;
+                int fragmentLength = abs(record.getInferredInsertSize());
+                if(fragmentLength > FRAG_LENGTH_DIST_MAX_LENGTH)
+                    return false;
 
-            if(record.isSecondaryOrSupplementary())
-                return false;
+                // ignore translocations and inversions
+                if(!record.getMateReferenceName().equals(record.getReferenceName()))
+                    return false;
+
+                if(mateNegativeStrand(record) == record.getReadNegativeStrandFlag())
+                    return false;
+
+                if(record.isSecondaryOrSupplementary())
+                    return false;
+            }
 
             if(record.getCigar().containsOperator(CigarOperator.N) || record.getCigar().containsOperator(CigarOperator.S))
                 return false;

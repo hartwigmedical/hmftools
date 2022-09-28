@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.properPair;
 import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_C_INSERT;
 import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_INSERT;
 import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_LENGTH;
@@ -159,11 +160,7 @@ public class ReadFilters
         if(record.getReadUnmappedFlag())
             return false;
 
-        // any read with a supplementary
-        if(record.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
-            return true;
-
-        // or an fragment length outside the observed distribution
+        // or a fragment length outside the observed distribution
         if(abs(record.getInferredInsertSize()) > config.fragmentLengthMax())
             return true;
 
@@ -171,13 +168,16 @@ public class ReadFilters
         if(mateUnmapped(record))
             return true;
 
-        // interchromosomal
-        if(!record.getReferenceName().equals(record.getMateReferenceName()))
-            return true;
+        if(properPair(record))
+        {
+            // interchromosomal
+            if(!record.getReferenceName().equals(record.getMateReferenceName()))
+                return true;
 
-        // inversion
-        if(record.getReadNegativeStrandFlag() == mateNegativeStrand(record))
-            return true;
+            // inversion
+            if(record.getReadNegativeStrandFlag() == mateNegativeStrand(record))
+                return true;
+        }
 
         return false;
     }

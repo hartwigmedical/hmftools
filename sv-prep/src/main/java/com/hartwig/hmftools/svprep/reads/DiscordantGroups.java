@@ -167,6 +167,9 @@ public final class DiscordantGroups
 
     public static boolean isDiscordantGroup(final ReadGroup readGroup, final int minFragmentLength, final int maxFragmentLength)
     {
+        if(readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).count() < 2)
+            return false;
+
         // only the first read is used and so only that is checked
         return isDiscordantRead(readGroup.reads().get(0), minFragmentLength, maxFragmentLength);
     }

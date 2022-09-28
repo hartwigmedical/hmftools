@@ -26,7 +26,7 @@ public class ReadIdTrimmer
 
     private static int findReadIdTrimIndex(final String readId)
     {
-        // expected IDs: A00260:251:HLYGFDSXY:1:1673:32280:4946
+        // expected IDs: A00260:251:HLYGFDSXY:1:1673:32280:4946, ultima 011852_2-UGAv3-2-1333458495
         int delimCount = 0;
         for(int i = 0; i < readId.length(); ++i)
         {

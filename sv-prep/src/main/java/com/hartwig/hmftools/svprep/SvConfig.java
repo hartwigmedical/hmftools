@@ -63,7 +63,7 @@ public class SvConfig
     public final String ExistingJunctionFile;
 
     public final int PartitionSize;
-    public final int ReadLength;
+    public int ReadLength; // can be set from default, config or the fragment length distribution routine
     public final boolean CalcFragmentLength;
 
     public final String OutputDir;
