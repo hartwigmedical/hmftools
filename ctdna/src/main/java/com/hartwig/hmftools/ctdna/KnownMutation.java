@@ -141,10 +141,12 @@ public class KnownMutation implements Variant
                         values[chrIndex], Integer.parseInt(values[posIndex]), values[refIndex], values[altIndex], values[sourceIndex],
                         values[geneIndex]));
             }
+
+            PV_LOGGER.info("load {} known mutations from file({})", variants.size(), filename);
         }
         catch(Exception e)
         {
-            PV_LOGGER.error("sample({}) failed to load known mutation file({}): {}", filename, e.toString());
+            PV_LOGGER.error("failed to load known mutation file({}): {}", filename, e.toString());
         }
 
         return variants;

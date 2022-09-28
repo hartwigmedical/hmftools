@@ -34,11 +34,14 @@ public class PrimerVariantSelection
 {
     private final PvConfig mConfig;
     private final List<Variant> mCommonVariants;
+    private final RefGenomeInterface mRefGenome;
     private final BufferedWriter mWriter;
 
     public PrimerVariantSelection(final CommandLine cmd)
     {
         mConfig = new PvConfig(cmd);
+        mRefGenome = loadRefGenome(mConfig.RefGenomeFile);
+
         mCommonVariants = Lists.newArrayList();
 
         mWriter = initialiseWriter();
@@ -46,7 +49,7 @@ public class PrimerVariantSelection
 
     public void run()
     {
-        if(!mConfig.isValid() || mWriter == null)
+        if(!mConfig.isValid() || mWriter == null || mRefGenome == null)
             System.exit(1);
 
         if(mConfig.isMultiSample())
@@ -138,15 +141,7 @@ public class PrimerVariantSelection
 
             variants.addAll(StructuralVariant.loadStructuralVariants(sampleId, mConfig));
 
-            RefGenomeInterface refGenome = loadRefGenome(mConfig.RefGenomeFile);
-
-            if(refGenome == null)
-            {
-                PV_LOGGER.error("failed to load ref genome");
-                System.exit(1);
-            }
-
-            variants.forEach(x -> x.generateSequences(refGenome, mConfig));
+            variants.forEach(x -> x.generateSequences(mRefGenome, mConfig));
 
             List<Variant> selectedVariants = VariantSelection.selectVariants(variants, mConfig);
 

@@ -31,4 +31,6 @@ public interface Variant
     void generateSequences(final RefGenomeInterface refGenome, final PvConfig config);
 
     boolean checkAndRegisterLocation(final Map<String,List<Integer>> registeredLocations);
+
+    default int sequenceCount() { return 1 + refSequences().size(); }
 }

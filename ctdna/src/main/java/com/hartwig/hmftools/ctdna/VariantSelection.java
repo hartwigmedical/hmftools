@@ -33,7 +33,7 @@ public final class VariantSelection
         int index = 0;
         int[] typeCounts = new int[CategoryType.values().length];
 
-        while(selectedVariants.size() < config.ProbeCount && index < variants.size())
+        while(index < variants.size())
         {
             Variant variant = variants.get(index);
 
@@ -63,6 +63,10 @@ public final class VariantSelection
                 }
             }
 
+            int variantSequences = selectedVariants.stream().mapToInt(x -> x.sequenceCount()).sum();
+            if(variantSequences >= config.ProbeCount)
+                break;
+
             ++index;
         }
 
@@ -72,7 +76,7 @@ public final class VariantSelection
             sj.add(format("%s=%d", type, typeCounts[type.ordinal()]));
         }
 
-        PV_LOGGER.info("select variant type counts: {}", sj.toString());
+        PV_LOGGER.info("selected variant type counts: {}", sj.toString());
 
         return selectedVariants;
     }
