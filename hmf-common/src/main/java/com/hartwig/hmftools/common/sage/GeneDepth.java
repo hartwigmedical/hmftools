@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.coverage;
+package com.hartwig.hmftools.common.sage;
 
 public class GeneDepth
 {

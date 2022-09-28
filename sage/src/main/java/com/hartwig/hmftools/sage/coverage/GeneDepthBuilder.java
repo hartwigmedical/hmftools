@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sage.GeneDepth;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 

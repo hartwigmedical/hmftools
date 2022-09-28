@@ -1,7 +1,4 @@
-package com.hartwig.hmftools.sage.coverage;
-
-import static com.hartwig.hmftools.sage.SageCommon.DELIM;
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+package com.hartwig.hmftools.common.sage;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,16 +11,17 @@ import com.google.common.collect.Lists;
 
 public final class GeneDepthFile
 {
-    public static void write(final String filename, final List<GeneDepth> depths, final List<Integer> depthBuckets)
+    public static final String DELIM = "\t";
+
+    public static final String COL_GENE = "gene";
+    public static final String COL_CHROMOSOME = "chromosome";
+    public static final String COL_POS_START = "posStart";
+    public static final String COL_POS_END = "posEnd";
+    public static final String COL_MV_LIKELIHOOD = "missedVariantLikelihood";
+
+    public static void write(final String filename, final List<GeneDepth> depths, final List<Integer> depthBuckets) throws IOException
     {
-        try
-        {
-            Files.write(new File(filename).toPath(), toLines(depths, depthBuckets));
-        }
-        catch(IOException e)
-        {
-            SG_LOGGER.error("failed to write gene coverage file: {}", e.toString());
-        }
+        Files.write(new File(filename).toPath(), toLines(depths, depthBuckets));
     }
 
     private static List<String> toLines(final List<GeneDepth> depths, final List<Integer> depthBuckets)
@@ -43,11 +41,11 @@ public final class GeneDepthFile
     {
         StringJoiner joiner = new StringJoiner(DELIM);
 
-        joiner.add("gene");
-        joiner.add("chromosome");
-        joiner.add("posStart");
-        joiner.add("posEnd");
-        joiner.add("missedVariantLikelihood");
+        joiner.add(COL_GENE);
+        joiner.add(COL_CHROMOSOME);
+        joiner.add(COL_POS_START);
+        joiner.add(COL_POS_END);
+        joiner.add(COL_MV_LIKELIHOOD);
 
         for(int bucket = 0; bucket < depthBuckets.size() - 1; ++bucket)
         {

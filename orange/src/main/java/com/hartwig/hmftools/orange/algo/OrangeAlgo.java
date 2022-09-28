@@ -38,6 +38,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.common.purple.loader.PurpleData;
 import com.hartwig.hmftools.common.purple.loader.PurpleDataLoader;
+import com.hartwig.hmftools.common.sage.GeneDepthFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.common.wildtype.WildTypeFactory;
@@ -245,12 +246,12 @@ public class OrangeAlgo {
         List<String> lines = Files.readAllLines(new File(config.sageGermlineGeneCoverageTsv()).toPath());
         String header = lines.get(0);
 
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, "\t");
-        int geneIndex = fieldsIndexMap.get("gene");
-        int mvlhIndex = fieldsIndexMap.get("missedVariantLikelihood");
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, GeneDepthFile.DELIM);
+        int geneIndex = fieldsIndexMap.get(GeneDepthFile.COL_GENE);
+        int mvlhIndex = fieldsIndexMap.get(GeneDepthFile.COL_MV_LIKELIHOOD);
 
         for (String line : lines.subList(1, lines.size())) {
-            String[] values = line.split("\t");
+            String[] values = line.split(GeneDepthFile.DELIM);
             String gene = values[geneIndex];
             String mvlhString = values[mvlhIndex].substring(0, values[mvlhIndex].length() - 1);
             double missedVariantLikelihood = Double.parseDouble(mvlhString) / 100D;

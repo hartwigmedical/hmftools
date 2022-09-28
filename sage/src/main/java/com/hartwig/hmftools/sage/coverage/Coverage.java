@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.sage.coverage;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +15,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
+import com.hartwig.hmftools.common.sage.GeneDepth;
+import com.hartwig.hmftools.common.sage.GeneDepthFile;
 
 public class Coverage
 {
@@ -77,8 +82,15 @@ public class Coverage
             String geneFile = parent + File.separator + sampleId + ".sage.gene.coverage.tsv";
             String exonFile = parent + File.separator + sampleId + ".sage.exon.medians.tsv";
 
-            GeneDepthFile.write(geneFile, depth(sampleId), GeneDepthBuilder.DEPTH_BUCKETS);
-            ExonMedianDepth.write(exonFile, geneCoverages);
+            try
+            {
+                GeneDepthFile.write(geneFile, depth(sampleId), GeneDepthBuilder.DEPTH_BUCKETS);
+                ExonMedianDepth.write(exonFile, geneCoverages);
+            }
+            catch(IOException e)
+            {
+                SG_LOGGER.error("failed to write gene coverage file: {}", e.toString());
+            }
         }
     }
 
