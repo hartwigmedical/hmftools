@@ -206,7 +206,7 @@ public class VariantPhaser
 
             if(readCountThreshold >= 3)
             {
-                SG_LOGGER.info("region({}) phasing group collection({}) sets min read count to {}",
+                SG_LOGGER.debug("region({}) phasing group collection({}) sets min read count to {}",
                         mRegion, collection, readCountThreshold);
             }
 
