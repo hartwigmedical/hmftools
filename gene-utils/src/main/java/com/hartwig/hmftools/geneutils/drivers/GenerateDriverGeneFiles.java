@@ -145,7 +145,8 @@ public class GenerateDriverGeneFiles
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
-            List<GeneData> geneDataList = chrGeneDataMap.get(refGenomeVersion.versionedChromosome(chromosome.toString()));
+            String chromosomeStr = refGenomeVersion.versionedChromosome(chromosome.toString());
+            List<GeneData> geneDataList = chrGeneDataMap.get(chromosomeStr);
 
             for(GeneData geneData : geneDataList)
             {
@@ -179,7 +180,7 @@ public class GenerateDriverGeneFiles
                         continue;
 
                     CodingRegion lastRegion = allRegions.get(allRegions.size() - 1);
-                    if(!lastRegion.Chromosome.equals(chromosome.toString()))
+                    if(!lastRegion.Chromosome.equals(chromosomeStr))
                         continue;
 
                     int newLastRegionEnd = 0;
