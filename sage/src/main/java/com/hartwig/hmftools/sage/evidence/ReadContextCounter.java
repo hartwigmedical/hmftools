@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
@@ -391,8 +393,8 @@ public class ReadContextCounter implements VariantHotspot
         if(mMaxCandidateDeleteLength < 5)
             return RawContext.INVALID_CONTEXT;
 
-        int scLenLeft = record.getCigar().isLeftClipped() ? record.getCigar().getFirstCigarElement().getLength() : 0;
-        int scLenRight = record.getCigar().isRightClipped() ? record.getCigar().getLastCigarElement().getLength() : 0;
+        int scLenLeft = leftSoftClipLength(record);
+        int scLenRight = rightSoftClipLength(record);
 
         if(max(scLenLeft, scLenRight) < 5)
             return RawContext.INVALID_CONTEXT;

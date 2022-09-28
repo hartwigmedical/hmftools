@@ -3,6 +3,8 @@ package com.hartwig.hmftools.isofox.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -417,9 +419,9 @@ public class ReadRecord
             // is classified as alt
             if(validTranscriptType(transMatchType) && containsSoftClipping() && !likelyAdaperSoftClipping())
             {
-                if(Cigar.isLeftClipped() && mSoftClipRegionsMatched[SE_START] == 0)
+                if(leftSoftClipped(Cigar) && mSoftClipRegionsMatched[SE_START] == 0)
                     transMatchType = ALT;
-                else if(Cigar.isRightClipped() && mSoftClipRegionsMatched[SE_END] == 0)
+                else if(rightSoftClipped(Cigar) && mSoftClipRegionsMatched[SE_END] == 0)
                     transMatchType = ALT;
             }
 

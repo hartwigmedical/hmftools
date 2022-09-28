@@ -4,6 +4,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -217,8 +219,8 @@ public class ResultsWriter
                 {
                     // check the read supports this junction (it can only support another junction)
                     boolean supportsJunction =
-                            (expectLeftClipped && read.start() == junctionData.Position && read.cigar().isLeftClipped())
-                            || (!expectLeftClipped && read.end() == junctionData.Position && read.cigar().isRightClipped());
+                            (expectLeftClipped && read.start() == junctionData.Position && leftSoftClipped(read.cigar()))
+                            || (!expectLeftClipped && read.end() == junctionData.Position && rightSoftClipped(read.cigar()));
 
                     if(!supportsJunction)
                         continue;

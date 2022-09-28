@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.samtools;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
@@ -18,7 +20,7 @@ public class SoftClipSide
         Length = length;
     }
 
-    public static SoftClipSide fromCigar(final Cigar cigar) { return from(cigar, cigar.isLeftClipped(), cigar.isRightClipped()); }
+    public static SoftClipSide fromCigar(final Cigar cigar) { return from(cigar, leftSoftClipped(cigar), rightSoftClipped(cigar)); }
 
     public static SoftClipSide from(final Cigar cigar, boolean isLeftClipped, boolean isRightClipped)
     {

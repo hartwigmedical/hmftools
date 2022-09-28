@@ -3,6 +3,8 @@ package com.hartwig.hmftools.sage.read;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -35,13 +37,7 @@ public final class NumberEvents
 
     public static double calcSoftClipAdjustment(final SAMRecord record)
     {
-        int softClippedBases = 0;
-
-        if(record.getCigar().isLeftClipped())
-            softClippedBases += record.getCigar().getFirstCigarElement().getLength();
-
-        if(record.getCigar().isRightClipped())
-            softClippedBases += record.getCigar().getLastCigarElement().getLength();
+        int softClippedBases = leftSoftClipLength(record) + rightSoftClipLength(record);
 
         return softClippedBases > 0 ? max(1, softClippedBases / SC_READ_EVENTS_FACTOR) : 0;
     }

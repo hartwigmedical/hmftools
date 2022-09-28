@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -763,10 +765,10 @@ public class JunctionTracker
         // any soft-clipping on the correct side if close to the junction
         if(junctionDistance <= filterConfig.MinSupportingReadDistance)
         {
-            if(junctionData.Orientation == POS_ORIENT && read.record().getCigar().isRightClipped())
+            if(junctionData.Orientation == POS_ORIENT && rightSoftClipped(read.record()))
                 return true;
 
-            if(junctionData.Orientation == NEG_ORIENT && read.record().getCigar().isLeftClipped())
+            if(junctionData.Orientation == NEG_ORIENT && leftSoftClipped(read.record()))
                 return true;
         }
 
@@ -780,7 +782,10 @@ public class JunctionTracker
     public static boolean hasExactJunctionSupport(
             final ReadRecord read, final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {
-        if(!read.cigar().isLeftClipped() && !read.cigar().isRightClipped())
+        boolean leftSoftClipped = leftSoftClipped(read.cigar());
+        boolean rightSoftClipped = rightSoftClipped(read.cigar());
+
+        if(!leftSoftClipped && !rightSoftClipped)
             return false;
 
         /*
@@ -794,7 +799,7 @@ public class JunctionTracker
 
         if(junctionData.Orientation == POS_ORIENT)
         {
-            if(!read.cigar().isRightClipped())
+            if(!rightSoftClipped)
                 return false;
 
             int readRightPos = read.end();
@@ -851,7 +856,7 @@ public class JunctionTracker
         }
         else
         {
-            if(!read.cigar().isLeftClipped())
+            if(!leftSoftClipped)
                 return false;
 
             int readLeftPos = read.start();

@@ -311,7 +311,7 @@ class BreakEndSupportCounter(refGenomeVersion: RefGenomeVersion, telomereMatchTh
             if (frag.alignedReadType == Fragment.AlignedReadType.SPLIT_READ_TELOMERIC || frag.alignedReadType == Fragment.AlignedReadType.SPLIT_READ_NOT_TELOMERIC)
             {
                 val splitRead = frag.alignedRead
-                val alignedLength = splitRead.readLength - leftSoftClip(splitRead) - rightSoftClip(splitRead)
+                val alignedLength = splitRead.readLength - leftSoftClipLength(splitRead) - rightSoftClipLength(splitRead)
                 breakEnd.longestSplitReadAlignLength = max(breakEnd.longestSplitReadAlignLength, alignedLength)
             }
         }

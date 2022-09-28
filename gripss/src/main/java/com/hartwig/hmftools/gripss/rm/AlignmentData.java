@@ -3,6 +3,7 @@ package com.hartwig.hmftools.gripss.rm;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.calcCigarLength;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -92,7 +93,7 @@ public class AlignmentData
     {
         Cigar cigar = CigarUtils.cigarFromStr(CigarStr);
 
-        int matchStartPos = cigar.isLeftClipped() ? cigar.getFirstCigarElement().getLength() : 0;
+        int matchStartPos = leftSoftClipped(cigar) ? cigar.getFirstCigarElement().getLength() : 0;
         int matchBases = cigar.getCigarElements().stream()
                 .filter(x -> x.getOperator() == M || x.getOperator() == I)
                 .mapToInt(x -> x.getLength()).sum();

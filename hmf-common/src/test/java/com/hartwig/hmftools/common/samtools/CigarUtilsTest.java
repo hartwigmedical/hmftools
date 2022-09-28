@@ -49,19 +49,19 @@ public class CigarUtilsTest
         // left soft clip
         SAMRecord record = new SAMRecord(null);
         record.setCigarString("10S85M");
-        TestCase.assertEquals(10, CigarUtils.leftSoftClip(record));
-        TestCase.assertEquals(0, CigarUtils.rightSoftClip(record));
+        TestCase.assertEquals(10, CigarUtils.leftSoftClipLength(record));
+        TestCase.assertEquals(0, CigarUtils.rightSoftClipLength(record));
 
         // right soft clip
         record = new SAMRecord(null);
         record.setCigarString("85M10S");
-        TestCase.assertEquals(0, CigarUtils.leftSoftClip(record));
-        TestCase.assertEquals(10, CigarUtils.rightSoftClip(record));
+        TestCase.assertEquals(0, CigarUtils.leftSoftClipLength(record));
+        TestCase.assertEquals(10, CigarUtils.rightSoftClipLength(record));
 
         // hard clip should not count
         record = new SAMRecord(null);
         record.setCigarString("10H85M7H");
-        TestCase.assertEquals(0, CigarUtils.leftSoftClip(record));
-        TestCase.assertEquals(0, CigarUtils.rightSoftClip(record));
+        TestCase.assertEquals(0, CigarUtils.leftSoftClipLength(record));
+        TestCase.assertEquals(0, CigarUtils.rightSoftClipLength(record));
     }
 }

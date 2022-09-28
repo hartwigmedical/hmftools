@@ -5,6 +5,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READPAIR_COVERAGE;
@@ -303,8 +305,8 @@ public class DepthTask implements Callable
                 readGroupPosMax = max(readEnd, readGroupPosMax);
 
                 // check for an exact SC match
-                if((variantOrientation == NEG_ORIENT && positionWithin(readStart, varPosMin, varPosMax) && record.getCigar().isLeftClipped())
-                || (variantOrientation == POS_ORIENT && positionWithin(readEnd, varPosMin, varPosMax)) && record.getCigar().isRightClipped())
+                if((variantOrientation == NEG_ORIENT && positionWithin(readStart, varPosMin, varPosMax) && leftSoftClipped(record))
+                || (variantOrientation == POS_ORIENT && positionWithin(readEnd, varPosMin, varPosMax)) && rightSoftClipped(record))
                 {
                     SV_LOGGER.trace("var({}) pos({}-{}) read({}-{}) id({}) at junction",
                             variantPosition, varPosMin, varPosMax, readStart, readEnd, record.getReadName());

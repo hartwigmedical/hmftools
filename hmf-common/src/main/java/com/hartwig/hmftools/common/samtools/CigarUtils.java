@@ -65,13 +65,26 @@ public final class CigarUtils
         return baseLength;
     }
 
-    public static int leftSoftClip(@NotNull final SAMRecord record)
+    public static boolean leftSoftClipped(final SAMRecord record) { return leftSoftClipped(record.getCigar()); }
+    public static boolean rightSoftClipped(final SAMRecord record) { return rightSoftClipped(record.getCigar()); }
+
+    public static boolean leftSoftClipped(final Cigar cigar)
+    {
+        return cigar.getCigarElements().get(0).getOperator() == CigarOperator.S;
+    }
+
+    public static boolean rightSoftClipped(final Cigar cigar)
+    {
+        return cigar.getCigarElements().get(cigar.getCigarElements().size() - 1).getOperator() == CigarOperator.S;
+    }
+
+    public static int leftSoftClipLength(final SAMRecord record)
     {
         CigarElement firstElement = record.getCigar().getFirstCigarElement();
         return (firstElement != null && firstElement.getOperator() == CigarOperator.S) ? firstElement.getLength() : 0;
     }
 
-    public static int rightSoftClip(@NotNull final SAMRecord record)
+    public static int rightSoftClipLength(final SAMRecord record)
     {
         CigarElement lastElement = record.getCigar().getLastCigarElement();
         return (lastElement != null && lastElement.getOperator() == CigarOperator.S) ? lastElement.getLength() : 0;
@@ -80,7 +93,7 @@ public final class CigarUtils
     @Nullable
     public static String leftSoftClipBases(@NotNull final SAMRecord record)
     {
-        int leftClip = leftSoftClip(record);
+        int leftClip = leftSoftClipLength(record);
         if (leftClip == 0)
         {
             return null;
@@ -91,7 +104,7 @@ public final class CigarUtils
     @Nullable
     public static String rightSoftClipBases(@NotNull final SAMRecord record)
     {
-        int rightClip = rightSoftClip(record);
+        int rightClip = rightSoftClipLength(record);
         if (rightClip == 0)
         {
             return null;
