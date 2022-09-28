@@ -52,9 +52,9 @@ public final class OutputFileUtil {
         String fileSuffix;
         if (report.isCorrectedReport()) {
             if (report.isCorrectedReportExtern()) {
-                fileSuffix = "_corrected_external.json";
+                fileSuffix = "_corrected.json";
             } else {
-                fileSuffix = "_corrected_internal.json";
+                fileSuffix = "_corrected.json";
             }
         } else {
             fileSuffix = ".json";
@@ -70,9 +70,9 @@ public final class OutputFileUtil {
         String fileSuffix;
         if (report.isCorrectedReport()) {
             if (report.isCorrectedReportExtern()) {
-                fileSuffix = "_corrected_external.xml";
+                fileSuffix = "_corrected.xml";
             } else {
-                fileSuffix = "_corrected_internal.xml";
+                fileSuffix = "_corrected.xml";
             }
         } else {
             fileSuffix = ".xml";

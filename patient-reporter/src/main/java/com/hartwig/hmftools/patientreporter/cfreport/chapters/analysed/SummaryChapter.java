@@ -445,7 +445,7 @@ public class SummaryChapter implements ReportChapter {
             }
             table.addCell(TableUtil.createContentCell(sortAllele));
             table.addCell(TableUtil.createContentCell(concat(germlineAllele)));
-            table.addCell(TableUtil.createContentCell(concat(interpretation)));
+            table.addCell(TableUtil.createContentCell(conclusionInterpretation(concat(interpretation))));
         }
 
         div.add(TableUtil.createWrappingReportTableSummary(title, table));
@@ -463,6 +463,19 @@ public class SummaryChapter implements ReportChapter {
 
         reportDocument.add(div);
 
+    }
+
+    @NotNull
+    public static String conclusionInterpretation(@NotNull String interpretation) {
+        if (interpretation.contains("Yes, but mutation(s) detected")) {
+            return "Present in tumor with mutations";
+        } else if (interpretation.contains("Yes")) {
+            return "Present in tumor";
+        } else if (interpretation.contains("No")) {
+            return "Not present in tumor";
+        }else {
+            return Strings.EMPTY;
+        }
     }
 
     @NotNull
