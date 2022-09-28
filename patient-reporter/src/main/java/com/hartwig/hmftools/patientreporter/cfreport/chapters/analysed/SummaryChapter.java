@@ -3,14 +3,19 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.hla.LilacGermlineAllele;
+import com.hartwig.hmftools.common.hla.LilacReporting;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
@@ -27,8 +32,8 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
 import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
+import com.hartwig.hmftools.patientreporter.cfreport.data.HLAAllele;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
-import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.hartwig.hmftools.patientreporter.cfreport.data.ViralPresence;
@@ -43,6 +48,7 @@ import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class SummaryChapter implements ReportChapter {
 
@@ -210,7 +216,9 @@ public class SummaryChapter implements ReportChapter {
             if (patientReport.cuppaReporting().interpretLikelihood() == null) {
                 cuppaPrediction = patientReport.cuppaReporting().interpretCancerType();
             } else {
-                cuppaPrediction = patientReport.cuppaReporting().interpretCancerType() + " (" + patientReport.cuppaReporting().interpretLikelihood() + ")";
+                cuppaPrediction =
+                        patientReport.cuppaReporting().interpretCancerType() + " (" + patientReport.cuppaReporting().interpretLikelihood()
+                                + ")";
             }
         }
 
@@ -362,88 +370,85 @@ public class SummaryChapter implements ReportChapter {
 
     private void renderPeach(@NotNull Document report) {
         Div div = createSectionStartDiv(contentWidth());
+        String title = "Pharmacogenetics";
 
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-        table.setWidth(contentWidth());
-        table.addCell(TableUtil.createLayoutCellSummary()
-                .add(new Paragraph("Pharmacogenetics").addStyle(ReportResources.sectionTitleStyle())));
-        table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
+        Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
 
-        Set<String> pgxFunctions;
-        Set<String> pgxGenes;
-        Style pgxStyle;
-        String reportedPhenotypes;
-
-        if (patientReport.sampleReport().reportPharmogenetics() && patientReport.peachGenotypes().size() > 0) {
-            pgxFunctions = Pharmacogenetics.phenotypesFunctions(patientReport.peachGenotypes());
-            pgxGenes = Pharmacogenetics.phenotypesGenes(patientReport.peachGenotypes());
-            pgxStyle = ReportResources.dataHighlightStyle();
-            reportedPhenotypes = Integer.toString(Pharmacogenetics.countPhenotypes(patientReport.peachGenotypes()));
-        } else {
-            pgxFunctions = Sets.newHashSet(DataUtil.NA_STRING);
-            pgxGenes = Sets.newHashSet(DataUtil.NA_STRING);
-            pgxStyle = ReportResources.dataHighlightNaStyle();
-            reportedPhenotypes = DataUtil.NA_STRING;
+        for (PeachGenotype peach : patientReport.peachGenotypes()) {
+            List<PeachGenotype> peachList = Lists.newArrayList();
+            if (peachMap.containsKey(peach.gene())) {
+                peachList.addAll(peachMap.get(peach.gene()));
+                peachList.add(peach);
+                peachMap.put(peach.gene(), peachList);
+            } else {
+                peachList.add(peach);
+                peachMap.put(peach.gene(), peachList);
+            }
+            peachMap.put(peach.gene(), peachList);
         }
 
-        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("Genes with haplotypes").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneSetCell(sortGenes(pgxGenes)).addStyle(pgxStyle));
+        Table contentTable = TableUtil.createReportContentTableSummary(new float[] { 10, 10, 10 },
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Number haplotypes"),
+                        TableUtil.createHeaderCell("Function") });
 
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of reported haplotypes").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(reportedPhenotypes).addStyle(pgxStyle)));
+        Set<String> sortedPeach = Sets.newTreeSet(peachMap.keySet().stream().collect(Collectors.toSet()));
+        for (String sortPeach : sortedPeach) {
+            List<PeachGenotype> peachGenotypeList = peachMap.get(sortPeach);
 
-        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("Functions of the haplotypes").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneSetCell(sortGenes(pgxFunctions)).addStyle(pgxStyle));
+            Set<String> function = Sets.newHashSet();
+            int count = peachGenotypeList.size();
 
-        div.add(table);
+            for (PeachGenotype peachGenotype : peachGenotypeList) {
+                function.add(peachGenotype.function());
+            }
 
+            contentTable.addCell(TableUtil.createContentCell(sortPeach));
+            contentTable.addCell(TableUtil.createContentCell(Integer.toString(count)));
+            contentTable.addCell(TableUtil.createContentCell(concat(function)));
+        }
+        div.add(TableUtil.createWrappingReportTableSummary(title, contentTable));
         report.add(div);
     }
 
     private void renderHla(@NotNull Document report) {
         Div div = createSectionStartDiv(contentWidth());
+        String title = "HLA Alleles";
+        Map<String, List<LilacReporting>> lilacAlleleMap = Maps.newHashMap();
 
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-        table.setWidth(contentWidth());
-        table.addCell(TableUtil.createLayoutCellSummary().add(new Paragraph("HLA Alleles").addStyle(ReportResources.sectionTitleStyle())));
-        table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
-
-        List<String> HLAtypes = Lists.newArrayList();
-        List<String> HLBtypes = Lists.newArrayList();
-        List<String> HLCtypes = Lists.newArrayList();
-        Style hlaStyle = ReportResources.dataHighlightStyle();
-
-        for (LilacGermlineAllele lilacReporting : patientReport.genomicAnalysis().lilac().lilacAlleleGermline()) {
-            String germlineAllele = lilacReporting.germlineAllele();
-            String gene = lilacReporting.gene();
-
-            if (gene.equals("HLA-A")) {
-                HLAtypes.add(germlineAllele);
+        for (LilacReporting lilacReporting : patientReport.genomicAnalysis().lilac().lilacReporting()) {
+            List<LilacReporting> lilacAlleleList = Lists.newArrayList();
+            if (lilacAlleleMap.containsKey(lilacReporting.lilacGermlineAllele().gene())) {
+                lilacAlleleList.addAll(lilacAlleleMap.get(lilacReporting.lilacGermlineAllele().gene()));
+                lilacAlleleList.add(lilacReporting);
+                lilacAlleleMap.put(lilacReporting.lilacGermlineAllele().gene(), lilacAlleleList);
+            } else {
+                lilacAlleleList.add(lilacReporting);
+                lilacAlleleMap.put(lilacReporting.lilacGermlineAllele().gene(), lilacAlleleList);
             }
-            if (gene.equals("HLA-B")) {
-                HLBtypes.add(germlineAllele);
-            }
-            if (gene.equals("HLA-C")) {
-                HLCtypes.add(germlineAllele);
-            }
+            lilacAlleleMap.put(lilacReporting.lilacGermlineAllele().gene(), lilacAlleleList);
         }
 
-        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("HLA-A Alleles").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(HLAtypes).addStyle(hlaStyle));
+        Table table = TableUtil.createReportContentTableSummary(new float[] { 15, 15, 15 },
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Germline allele"),
+                        TableUtil.createHeaderCell("Interpretation: presence in tumor") });
 
-        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("HLA-B Alleles").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(HLBtypes).addStyle(hlaStyle));
+        Set<String> sortedAlleles = Sets.newTreeSet(lilacAlleleMap.keySet().stream().collect(Collectors.toSet()));
+        for (String sortAllele : sortedAlleles) {
+            List<LilacReporting> allele = lilacAlleleMap.get(sortAllele);
 
-        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("HLA-C Alleles").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(HLCtypes).addStyle(hlaStyle));
+            Set<String> germlineAllele = Sets.newHashSet();
+            Set<String> interpretation = Sets.newHashSet();
 
-        div.add(table);
+            for (LilacReporting allele1 : HLAAllele.sort(allele)) {
+                germlineAllele.add(allele1.lilacGermlineAllele().germlineAllele());
+                interpretation.add(allele1.interpretation());
+            }
+            table.addCell(TableUtil.createContentCell(sortAllele));
+            table.addCell(TableUtil.createContentCell(concat(germlineAllele)));
+            table.addCell(TableUtil.createContentCell(concat(interpretation)));
+        }
 
+        div.add(TableUtil.createWrappingReportTableSummary(title, table));
         report.add(div);
     }
 
@@ -458,6 +463,19 @@ public class SummaryChapter implements ReportChapter {
 
         reportDocument.add(div);
 
+    }
+
+    @NotNull
+    public static String concat(@Nullable Iterable<String> strings) {
+        if (strings == null) {
+            return Strings.EMPTY;
+        }
+
+        StringJoiner joiner = new StringJoiner(" | ");
+        for (String entry : strings) {
+            joiner.add(entry);
+        }
+        return joiner.toString();
     }
 
     @NotNull

@@ -426,8 +426,10 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
                 for (LilacReporting allele1 : HLAAllele.sort(allele)) {
                     tableGermlineAllele.addCell(TableUtil.createTransparentCell(allele1.lilacGermlineAllele().germlineAllele()));
-                    tableGermlineCopies.addCell(TableUtil.createTransparentCell(String.valueOf(allele1.germlineCopies())));
-                    tableTumorCopies.addCell(TableUtil.createTransparentCell(String.valueOf(allele1.tumorCopies())));
+                    tableGermlineCopies.addCell(TableUtil.createTransparentCell(HLAAllele.copyNumberStringGermline(allele1.germlineCopies(),
+                            hasReliablePurity)));
+                    tableTumorCopies.addCell(TableUtil.createTransparentCell(HLAAllele.copyNumberStringTumor(allele1.tumorCopies(),
+                            hasReliablePurity)));
                     tableSomaticMutations.addCell(TableUtil.createTransparentCell(allele1.somaticMutations()));
                     tablePrecenseIntumor.addCell(TableUtil.createTransparentCell(allele1.interpretation()));
                 }
@@ -479,6 +481,22 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createPeachGenotypesTable(@NotNull List<PeachGenotype> peachGenotypes, boolean reportPeach) {
+
+        Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
+
+        for (PeachGenotype peach : peachGenotypes) {
+            List<PeachGenotype> peachList = Lists.newArrayList();
+            if (peachMap.containsKey(peach.gene())) {
+                peachList.addAll(peachMap.get(peach.gene()));
+                peachList.add(peach);
+                peachMap.put(peach.gene(), peachList);
+            } else {
+                peachList.add(peach);
+                peachMap.put(peach.gene(), peachList);
+            }
+            peachMap.put(peach.gene(), peachList);
+        }
+
         String title = "Pharmacogenetics";
 
         if (reportPeach) {
@@ -488,17 +506,31 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
                         new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
                                 TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
-                                TableUtil.createHeaderCell("Source").setTextAlignment(TextAlignment.CENTER) });
+                                TableUtil.createHeaderCell("Source") });
 
-                for (PeachGenotype peachGenotype : Pharmacogenetics.sort(peachGenotypes)) {
-                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.gene()));
-                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
-                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.function()));
-                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()));
-                    contentTable.addCell(TableUtil.createContentCell(new Paragraph(Pharmacogenetics.sourceName(peachGenotype.urlPrescriptionInfo())).addStyle(
-                                    ReportResources.dataHighlightLinksStyle()))
-                            .setAction(PdfAction.createURI(Pharmacogenetics.url(peachGenotype.urlPrescriptionInfo())))
-                            .setTextAlignment(TextAlignment.CENTER));
+                Set<String> sortedPeach = Sets.newTreeSet(peachMap.keySet().stream().collect(Collectors.toSet()));
+                for (String sortPeach : sortedPeach) {
+                    List<PeachGenotype> peachGenotypeList = peachMap.get(sortPeach);
+                    contentTable.addCell(TableUtil.createContentCell(sortPeach));
+
+                    Table tableGenotype = new Table(new float[] { 1 });
+                    Table tableFunction = new Table(new float[] { 1 });
+                    Table tableLinkedDrugs = new Table(new float[] { 1 });
+                    Table tableSource = new Table(new float[] { 1 });
+
+                    for (PeachGenotype peachGenotype : peachGenotypeList) {
+                        tableGenotype.addCell(TableUtil.createTransparentCell(peachGenotype.haplotype()));
+                        tableFunction.addCell(TableUtil.createTransparentCell(peachGenotype.function()));
+                        tableLinkedDrugs.addCell(TableUtil.createTransparentCell(peachGenotype.linkedDrugs()));
+                        tableSource.addCell(TableUtil.createTransparentCell(new Paragraph(Pharmacogenetics.sourceName(peachGenotype.urlPrescriptionInfo())).addStyle(
+                                        ReportResources.dataHighlightLinksStyle()))
+                                .setAction(PdfAction.createURI(Pharmacogenetics.url(peachGenotype.urlPrescriptionInfo()))));
+                    }
+
+                    contentTable.addCell(TableUtil.createContentCell(tableGenotype));
+                    contentTable.addCell(TableUtil.createContentCell(tableFunction));
+                    contentTable.addCell(TableUtil.createContentCell(tableLinkedDrugs));
+                    contentTable.addCell(TableUtil.createContentCell(tableSource));
                 }
                 return TableUtil.createWrappingReportTable(title, null, contentTable);
             }

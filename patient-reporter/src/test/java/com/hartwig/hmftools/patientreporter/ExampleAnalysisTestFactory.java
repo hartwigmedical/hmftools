@@ -1386,6 +1386,16 @@ public final class ExampleAnalysisTestFactory {
                         + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
                 .panelVersion("PGx_min_DPYD_v1.2")
                 .repoVersion("1.6")
+                .build(), ImmutablePeachGenotype.builder()
+                .gene("DPYD")
+                .haplotype("*2_HOM")
+                .function("Normal Function")
+                .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
+                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939"
+                        + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963"
+                        + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
+                .panelVersion("PGx_min_DPYD_v1.2")
+                .repoVersion("1.6")
                 .build());
     }
 
@@ -1396,27 +1406,27 @@ public final class ExampleAnalysisTestFactory {
         alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
                 .gene("HLA-A")
                 .germlineAllele("A*456")
-                .build()).build());
+                .build()).interpretation("None").build());
         alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
                 .gene("HLA-A")
                 .germlineAllele("A*123")
-                .build()).tumorCopies(1D).build());
+                .build()).tumorCopies(1D).interpretation("Yes").build());
         alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
                 .gene("HLA-B")
                 .germlineAllele("B*456")
-                .build()).tumorCopies(1D).build());
+                .build()).tumorCopies(1D).interpretation("Yes, but with mutation").build());
         alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
                 .gene("HLA-B")
                 .germlineAllele("B*456")
-                .build()).tumorCopies(0.9).build());
+                .build()).tumorCopies(0.9).interpretation("None").build());
         alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
                 .gene("HLA-C")
                 .germlineAllele("C*789")
-                .build()).tumorCopies(0.7).build());
+                .build()).tumorCopies(0.7).interpretation("None").build());
         alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
                 .gene("HLA-C")
                 .germlineAllele("C*789")
-                .build()).tumorCopies(0.8).build());
+                .build()).tumorCopies(0.8).interpretation("None").build());
 
         return ImmutableLilacReportingData.builder().lilacQc("PASS").lilacReporting(alleles).build();
     }

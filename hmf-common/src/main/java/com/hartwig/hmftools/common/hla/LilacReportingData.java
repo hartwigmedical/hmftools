@@ -11,9 +11,6 @@ import org.jetbrains.annotations.Nullable;
 public abstract class LilacReportingData {
 
     @NotNull
-    public abstract List<LilacGermlineAllele> lilacAlleleGermline();
-
-    @NotNull
     public abstract List<LilacReporting> lilacReporting();
 
     @NotNull
