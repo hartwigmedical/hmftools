@@ -2,6 +2,9 @@ package com.hartwig.hmftools.sage.candidate;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
+import static com.hartwig.hmftools.sage.common.EvictingArray.MIN_CAPACITY;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -25,8 +28,6 @@ public class RefContextCache
     private final List<AltContext> mSavedCandidates;
     private final HotspotSelector mHotspotSelector;
 
-    private static final int MIN_ARRAY_CAPACITY = 256;
-
     public RefContextCache(final SageConfig config, final List<VariantHotspot> hotspots, final List<BaseRegion> panel)
     {
         mConfig = config;
@@ -37,7 +38,8 @@ public class RefContextCache
 
         final Consumer<RefContext> evictionHandler = (refContext) -> processAltContexts(refContext);
 
-        int minCapacity = max(MIN_ARRAY_CAPACITY, config.ExpectedReadLength);
+        int minCapacity = config.ExpectedReadLength == DEFAULT_READ_LENGTH ?
+                MIN_CAPACITY : max(MIN_CAPACITY, config.ExpectedReadLength * 2);
         mRollingCandidates = new EvictingArray(minCapacity, evictionHandler);
     }
 

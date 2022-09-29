@@ -8,8 +8,6 @@ import java.util.function.Function;
 
 import com.hartwig.hmftools.sage.candidate.RefContext;
 
-import org.jetbrains.annotations.NotNull;
-
 public class EvictingArray
 {
     private final RefContext[] mElements;
@@ -19,14 +17,16 @@ public class EvictingArray
 
     private final int mCapacity;
 
+    public static final int MIN_CAPACITY = 256;
+
     public EvictingArray(int minCapacity, Consumer<RefContext> evictionHandler)
     {
         mEvictionHandler = evictionHandler;
-        mCapacity = calculateSize(minCapacity);
+        mCapacity = minCapacity; // calculateSize(minCapacity);
         mElements = new RefContext[mCapacity];
     }
 
-    public RefContext computeIfAbsent(int position, @NotNull final Function<Integer,RefContext> supplier)
+    public RefContext computeIfAbsent(int position, final Function<Integer,RefContext> supplier)
     {
         if(mMinPosition == 0)
         {
@@ -38,12 +38,17 @@ public class EvictingArray
         {
             SG_LOGGER.warn("ignoring read with position({}) before prior position({})", position, mMinPosition);
             return null;
-            // throw new IllegalArgumentException("Cannot add position: " + position + " before min position: " + mMinPosition);
         }
 
         if(distanceFromMinPosition >= mCapacity)
         {
+            //int prevMinPosition = mMinPosition;
+
             flush(position - mMinPosition - mCapacity + 1);
+
+            //SG_LOGGER.trace("flushing rolling array: minPos({} -> {}) capacity({}) read position({})",
+            //        prevMinPosition, mMinPosition, mCapacity, position);
+
             distanceFromMinPosition = position - mMinPosition;
         }
 

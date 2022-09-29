@@ -4,11 +4,13 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_SC_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 
+import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
@@ -70,6 +72,9 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             return;
 
         ++mReadCount;
+
+        //SG_LOGGER.trace("read({}:{}) cigar({}) id({})",
+        //        record.getContig(), record.getAlignmentStart(), record.getCigarString(), record.getReadName());
 
         if(reachedDepthLimit(record))
             return;
@@ -532,7 +537,6 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             return true;
 
         RefContext endRefContext = mRefContextCache.getOrCreateRefContext(mBounds.Chromosome, record.getAlignmentEnd());
-
         return reachedDepthLimit(endRefContext);
     }
 

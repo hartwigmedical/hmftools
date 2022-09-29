@@ -19,7 +19,7 @@ public final class CigarTraversal
             switch(e.getOperator())
             {
                 case H:
-                    break; // ignore hard clips
+                    break; // ignore hard clips - no need to skip either bases or positions
                 case P:
                     break; // ignore pads
                 case S:

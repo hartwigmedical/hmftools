@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.common;
 
+import static com.hartwig.hmftools.sage.common.EvictingArray.MIN_CAPACITY;
 import static com.hartwig.hmftools.sage.common.EvictingArray.calculateSize;
 
 import static org.junit.Assert.assertEquals;
@@ -16,8 +17,6 @@ import org.junit.Test;
 
 public class EvictingArrayTest
 {
-    private static final int CAPACITY = 256;
-
     private EvictingArray mArray;
     private EvictionHandler mHandler;
 
@@ -25,7 +24,7 @@ public class EvictingArrayTest
     public void setup()
     {
         mHandler = new EvictionHandler();
-        mArray = new EvictingArray(CAPACITY, mHandler);
+        mArray = new EvictingArray(MIN_CAPACITY, mHandler);
     }
 
     @Test
@@ -48,7 +47,7 @@ public class EvictingArrayTest
     @Test
     public void testFillCapacity()
     {
-        for(int i = 0; i < CAPACITY; i++)
+        for(int i = 0; i < MIN_CAPACITY; i++)
         {
             mArray.computeIfAbsent(1000 + i, EvictingArrayTest::create);
         }
@@ -67,7 +66,7 @@ public class EvictingArrayTest
     @Test
     public void testCapacityOverflow()
     {
-        for(int i = 0; i < CAPACITY + 100; i++)
+        for(int i = 0; i < MIN_CAPACITY + 100; i++)
         {
             mArray.computeIfAbsent(1000 + i, EvictingArrayTest::create);
         }

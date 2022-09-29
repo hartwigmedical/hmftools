@@ -28,6 +28,8 @@ import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -231,22 +233,13 @@ public class ReadContextCounterTest
                 + "CTTGTTCTGAGGTGGACCTAATAGGATTTGTCGTTTCTGTTGTGAAAAAAACAGGTAATGCACAATATAGTTAATTTTTTTTATTGATTCTTTTAAAAAACATTGTCTTTTAAAATCT"
                 + "CTTATGATTAGTTGGAGCTACCAGTTGGCAAATTTGCTAGCTAACTAGTGATCTGAAAGTAAGCCTCTTTGAACCTCTGATTTTTCATGAAAAGCAATTCTCTC";
 
-        tester.RefGenome.RefGenomeMap.put(CHR_1, refBases + generateRandomBases(1500));
-
-        SAMRecord read0 = createSamRecord("READ_00", CHR_1, 171, // 36965
-                "TACCAGCCACGGGAGCCCCTTCACTTCAGCAAATTTTTAGATCCAAATAGGATCTAAACAAATAGGATTTGTTTCTGTTGTGAAAAAAACAGGTAATGCACAATATAGT"
-                        + "TAATTTTTTTTATTGATTCTTTTAAAAAACATTGTCTTTTAA",
-                "47M23D1M1I6M5I10M3D81M");
-
-        tester.TumorSamSlicer.ReadRecords.add(read0);
-        tester.TumorSamSlicer.ReadRecords.add(read0);
+        String allRefBases = refBases + generateRandomBases(1500);
+        tester.RefGenome.RefGenomeMap.put(CHR_1, allRefBases);
 
         SAMRecord read1 = createSamRecord("READ_01", CHR_1, 87, // 8187
                 "AGTGCTTGTTAGTTTATGGAATCTCCATATGTTGAATTTTTGTTTTGTTTTCTGTAGGTTTCAGATGAAATTTTATTTCAGATTTACCAGCCACGGGAGCCCCTTCACTT"
                         + "CAGCAAATTTTTAGATCCAAATAGGATCTAAACAAATAGGA",
                 "129M22S");
-
-        tester.TumorSamSlicer.ReadRecords.add(read1);
 
         SAMRecord read2 = createSamRecord("READ_02", CHR_1, 92,
                 "TTGTTAGTTTATGGAATCTCCATATGTTGAATTTTTGTTTTGTTTTCTGTAGGTTTCAGATGAAATTTTATTTCAGATTTACCAGCCACGGGAGCCCCTTCACTTCAGCA"
@@ -263,9 +256,19 @@ public class ReadContextCounterTest
                         + "TGAAAAAAACAGGTAATGCACAATATAGTTAATTTTTTTTA",
                 "77M23D1M1I6M5I10M3D51M");
 
+        SAMRecord read5 = createSamRecord("READ_00", CHR_1, 171, // 36965
+                "TACCAGCCACGGGAGCCCCTTCACTTCAGCAAATTTTTAGATCCAAATAGGATCTAAACAAATAGGATTTGTTTCTGTTGTGAAAAAAACAGGTAATGCACAATATAGT"
+                        + "TAATTTTTTTTATTGATTCTTTTAAAAAACATTGTCTTTTAA",
+                "47M23D1M1I6M5I10M3D81M");
+
+        tester.TumorSamSlicer.ReadRecords.add(read1);
         tester.TumorSamSlicer.ReadRecords.add(read2);
         tester.TumorSamSlicer.ReadRecords.add(read3);
         tester.TumorSamSlicer.ReadRecords.add(read4);
+        tester.TumorSamSlicer.ReadRecords.add(read5);
+        tester.TumorSamSlicer.ReadRecords.add(read5);
+
+        // Configurator.setRootLevel(Level.TRACE);
 
         task.run();
 
