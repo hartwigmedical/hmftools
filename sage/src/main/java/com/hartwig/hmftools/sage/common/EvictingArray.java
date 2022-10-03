@@ -42,12 +42,12 @@ public class EvictingArray
 
         if(distanceFromMinPosition >= mCapacity)
         {
-            //int prevMinPosition = mMinPosition;
+            int prevMinPosition = mMinPosition;
 
             flush(position - mMinPosition - mCapacity + 1);
 
-            //SG_LOGGER.trace("flushing rolling array: minPos({} -> {}) capacity({}) read position({})",
-            //        prevMinPosition, mMinPosition, mCapacity, position);
+            SG_LOGGER.trace("flushing rolling array: minPos({} -> {}) capacity({}) read position({})",
+                    prevMinPosition, mMinPosition, mCapacity, position);
 
             distanceFromMinPosition = position - mMinPosition;
         }
@@ -91,10 +91,5 @@ public class EvictingArray
             mMinPosition++;
             mMinPositionIndex = (mMinPositionIndex + 1) & (mElements.length - 1);
         }
-    }
-
-    public static int calculateSize(int numElements)
-    {
-        return ceilingPowerOfTwo(numElements);
     }
 }

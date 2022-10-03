@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.sage.common.EvictingArray.MIN_CAPACITY;
-import static com.hartwig.hmftools.sage.common.EvictingArray.calculateSize;
 
 import static org.junit.Assert.assertEquals;
 
@@ -25,16 +24,6 @@ public class EvictingArrayTest
     {
         mHandler = new EvictionHandler();
         mArray = new EvictingArray(MIN_CAPACITY, mHandler);
-    }
-
-    @Test
-    public void testCapacityCalc()
-    {
-        assertEquals(8, calculateSize(8));
-        assertEquals(32, calculateSize(32));
-        assertEquals(256, calculateSize(256));
-        assertEquals(1024, calculateSize(1024));
-        assertEquals(8192, calculateSize(8192));
     }
 
     @Test

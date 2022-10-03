@@ -61,8 +61,7 @@ public class CandidateSerializationTest
         final ReadContext readContext = new ReadContext(
                 expositionPosition, expectedRepeat, expectedRepeatCount, expectedMH, readBases, false);
 
-        final Candidate candidate = new Candidate(expectedTier, variant, readContext, 1000, 2,
-                0, 0, 0);
+        final Candidate candidate = new Candidate(expectedTier, variant, readContext, 2,0);
 
         final VariantContext serialized = toContext(candidate);
         final IndexedBases deserializedReadBases = CandidateSerialization.readBases(serialized);
@@ -78,7 +77,6 @@ public class CandidateSerializationTest
         assertEquals(expected.tier(), victim.tier());
         assertEquals(expected.position(), victim.position());
         assertEquals(expected.chromosome(), victim.chromosome());
-        assertEquals(expected.maxReadDepth(), victim.maxReadDepth());
         assertEquals(expected.minNumberOfEvents(), victim.minNumberOfEvents());
         assertEquals(expected.readContext().Repeat, victim.readContext().Repeat);
         assertEquals(expected.readContext().RepeatCount, victim.readContext().RepeatCount);
@@ -92,7 +90,7 @@ public class CandidateSerializationTest
     {
         VariantContextBuilder builder = CandidateSerialization.toContext(candidate);
 
-        Genotype genotype = new GenotypeBuilder("SAMPLE").DP(candidate.maxReadDepth()).make();
+        Genotype genotype = new GenotypeBuilder("SAMPLE").DP(1000).make();
         builder.genotypes(genotype);
 
         return builder.make();

@@ -428,8 +428,7 @@ public class PhasingGroupsTest
         List<ReadContextCounter> tumorCounters = Lists.newArrayList(createReadCounter(position));
 
         Candidate candidate = new Candidate(
-                VariantTier.HIGH_CONFIDENCE, variant, tumorCounters.get(0).readContext(),
-                100, 1, 1, 0, 0);
+                VariantTier.HIGH_CONFIDENCE, variant, tumorCounters.get(0).readContext(), 1, 1);
 
         List<ReadContextCounter> normalCounters = Lists.newArrayList();
         return new SageVariant(candidate, normalCounters, tumorCounters);
