@@ -144,8 +144,8 @@ public class SummaryChapter implements ReportChapter {
             div.add(new Paragraph("Summary of clinical relevance").addStyle(ReportResources.sectionTitleStyle()));
 
             div.add(new Paragraph(text).setWidth(contentWidth()).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
-            div.add(new Paragraph("\nThis summary is generated based on DNA analysis only. Clinical patient characteristics or "
-                    + "medical records have not been considered.").addStyle(ReportResources.subTextStyle()));
+            div.add(new Paragraph("\nThis summary is generated based on DNA analysis only. Medical history and clinical patient characteristics "
+                    + "have not been considered.").addStyle(ReportResources.subTextStyle()));
 
             reportDocument.add(div);
         }
