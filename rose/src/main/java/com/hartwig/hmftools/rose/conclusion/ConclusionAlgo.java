@@ -159,7 +159,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppa);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.add("- " + entry.conclusion().replace("XXXX", cuppaPrediction.cancerType()));
+                conclusion.add("- " + entry.conclusion().replace("XXXX", cuppaPrediction.cancerType() + " (likelihood: " + cuppaPrediction.likelihood() +")"));
             }
         }
     }

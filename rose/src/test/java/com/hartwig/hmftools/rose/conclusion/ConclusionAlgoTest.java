@@ -75,7 +75,7 @@ public class ConclusionAlgoTest {
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
         assertEquals(1, conclusion.size());
-        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Melanoma.");
+        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Melanoma (likelihood: 99.6).");
     }
 
     @Test
