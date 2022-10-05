@@ -75,7 +75,7 @@ public class ConclusionAlgoTest {
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
         assertEquals(1, conclusion.size());
-        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Melanoma (likelihood: 99.6).");
+        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Melanoma (likelihood: 99.6%).");
     }
 
     @Test
@@ -121,7 +121,7 @@ public class ConclusionAlgoTest {
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
         assertEquals(1, conclusion.size());
-        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Inconclusive (highest likelihood: Melanoma-0.6).");
+        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Inconclusive (highest likelihood: Melanoma-0.6%).");
     }
 
     @Test
@@ -385,7 +385,7 @@ public class ConclusionAlgoTest {
         ConclusionAlgo.generatePurityConclusion(conclusion, 0.1, true, actionabilityMap);
 
         assertEquals(1, conclusion.size());
-        assertEquals(conclusion.get(0), "- low purity (0.1%)");
+        assertEquals(conclusion.get(0), "- low purity (0%)");
     }
 
     @Test

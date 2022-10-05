@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.rose.ActionabilityConclusion;
 import com.hartwig.hmftools.common.rose.ImmutableActionabilityConclusion;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
@@ -148,7 +149,7 @@ public class ConclusionAlgo {
                 if (cuppaPrediction.likelihood() >= 0.5) {
                     conclusion.add("- " + entry.conclusion()
                             .replace("xxx - xx%",
-                                    cuppaPrediction.cancerType() + "-" + cuppaPrediction.likelihood()));
+                                    cuppaPrediction.cancerType() + "-" + cuppaPrediction.likelihood() + "%"));
                 } else {
                     conclusion.add("- " + entry.conclusion().replace(" (highest likelihood: xxx - xx%)", ""));
                 }
@@ -159,7 +160,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppa);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.add("- " + entry.conclusion().replace("XXXX", cuppaPrediction.cancerType() + " (likelihood: " + cuppaPrediction.likelihood() +")"));
+                conclusion.add("- " + entry.conclusion().replace("XXXX", cuppaPrediction.cancerType() + " (likelihood: " + cuppaPrediction.likelihood() +"%)"));
             }
         }
     }
@@ -456,7 +457,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyPurity);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.add("- " + entry.conclusion().replace("XX%", purity + "%"));
+                conclusion.add("- " + entry.conclusion().replace("XX%", DataUtil.formatPercentage(purity)));
             }
         }
     }
