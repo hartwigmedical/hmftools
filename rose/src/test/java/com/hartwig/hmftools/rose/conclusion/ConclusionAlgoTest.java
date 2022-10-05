@@ -190,10 +190,10 @@ public class ConclusionAlgoTest {
 
         ConclusionAlgo.generateCNVConclusion(conclusion, gainLosse, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertEquals(4, conclusion.size());
-        assertEquals(conclusion.get(0), "- BRAF BRAF");
-        assertEquals(conclusion.get(1), "- KRAS KRAS");
-        assertEquals(conclusion.get(2), "- CDKN2A CDKN2A");
-        assertEquals(conclusion.get(3), "- EGFR EGFR");
+        assertEquals(conclusion.get(0), "- BRAF (min copies: 0, max copies: 0) BRAF");
+        assertEquals(conclusion.get(1), "- KRAS (min copies: 0, max copies: 0) KRAS");
+        assertEquals(conclusion.get(2), "- CDKN2A (min copies: 0, max copies: 0) CDKN2A");
+        assertEquals(conclusion.get(3), "- EGFR (min copies: 0, max copies: 0) EGFR");
     }
 
     @Test
