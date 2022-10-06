@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.select;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -7,7 +8,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.junit.Test;
 
@@ -16,21 +16,21 @@ public class PanelSelectorTest
     private final List<BaseRegion> panel =
             Lists.newArrayList(region(995, 995), region(998, 1102), region(1995, 1995), region(1998, 2102));
 
-    private final PanelSelector victim = new PanelSelector(panel);
+    private final PanelSelector mPanelSelector = new PanelSelector(panel);
 
     @Test
     public void testOverlap()
     {
-        assertTrue(victim.inPanel(995, 995));
-        assertTrue(victim.inPanel(994, 996));
-        assertTrue(victim.inPanel(1102, 1102));
-        assertTrue(victim.inPanel(1000, 1002));
-        assertTrue(victim.inPanel(996, 1000));
-        assertFalse(victim.inPanel(1, 994));
-        assertTrue(victim.inPanel(998, 998));
-        assertFalse(victim.inPanel(996, 997));
-        assertTrue(victim.inPanel(994, 1000));
-        assertFalse(victim.inPanel(2200, 10000));
+        assertTrue(mPanelSelector.inPanel(995, 995));
+        assertTrue(mPanelSelector.inPanel(994, 996));
+        assertTrue(mPanelSelector.inPanel(1102, 1102));
+        assertTrue(mPanelSelector.inPanel(1000, 1002));
+        assertTrue(mPanelSelector.inPanel(996, 1000));
+        assertFalse(mPanelSelector.inPanel(1, 994));
+        assertTrue(mPanelSelector.inPanel(998, 998));
+        assertFalse(mPanelSelector.inPanel(996, 997));
+        assertTrue(mPanelSelector.inPanel(994, 1000));
+        assertFalse(mPanelSelector.inPanel(2200, 10000));
     }
 
     @Test
@@ -40,9 +40,24 @@ public class PanelSelectorTest
         testOverlap();
     }
 
+    @Test
+    public void testPanelStatus()
+    {
+        assertEquals(ReadPanelStatus.WITHIN_PANEL, mPanelSelector.panelStatus(995));
+        assertEquals(ReadPanelStatus.OUTSIDE_PANEL, mPanelSelector.panelStatus(996));
+        assertEquals(ReadPanelStatus.OUTSIDE_PANEL, mPanelSelector.panelStatus(994));
+        assertEquals(ReadPanelStatus.OUTSIDE_PANEL, mPanelSelector.panelStatus(2103));
+        assertEquals(ReadPanelStatus.WITHIN_PANEL, mPanelSelector.panelStatus(2100));
+
+        assertEquals(ReadPanelStatus.MIXED, mPanelSelector.panelStatus(995, 996));
+        assertEquals(ReadPanelStatus.MIXED, mPanelSelector.panelStatus(994, 995));
+        assertEquals(ReadPanelStatus.MIXED, mPanelSelector.panelStatus(994, 996)); // straddling
+        assertEquals(ReadPanelStatus.MIXED, mPanelSelector.panelStatus(1995, 2000));
+        assertEquals(ReadPanelStatus.MIXED, mPanelSelector.panelStatus(1500, 2500)); // straddling
+    }
+
     private static BaseRegion region(int start, int end)
     {
         return new BaseRegion(start, end);
     }
-
 }

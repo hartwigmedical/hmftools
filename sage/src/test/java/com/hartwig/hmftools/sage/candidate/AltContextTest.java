@@ -25,7 +25,7 @@ public class AltContextTest
     @Test
     public void testIncompleteReadContext()
     {
-        final RefContext refContext = new RefContext(CHROM, POS, false);
+        final RefContext refContext = new RefContext(CHROM, POS);
         final AltContext altContext = new AltContext(refContext, "C", "T");
         final String core1 = "GATAC";
         final String core2 = "GATAA";
@@ -46,7 +46,7 @@ public class AltContextTest
     @Test
     public void testFullMatch()
     {
-        final RefContext refContext = new RefContext(CHROM, POS, false);
+        final RefContext refContext = new RefContext(CHROM, POS);
         final AltContext altContext = new AltContext(refContext, "C", "T");
         final String core1 = "GATAC";
 
@@ -67,7 +67,7 @@ public class AltContextTest
     @Test
     public void testCoreMatchAfterFullMatch()
     {
-        final RefContext refContext = new RefContext(CHROM, POS, false);
+        final RefContext refContext = new RefContext(CHROM, POS);
         final AltContext altContext = new AltContext(refContext, "C", "T");
 
         final String core1 = "GATAC";
@@ -97,7 +97,7 @@ public class AltContextTest
     @Test
     public void testPartialMatchAfterFullMatch()
     {
-        final RefContext refContext = new RefContext(CHROM, POS, false);
+        final RefContext refContext = new RefContext(CHROM, POS);
         final AltContext altContext = new AltContext(refContext, "C", "T");
 
         final String core1 = "GATAC";
@@ -129,7 +129,7 @@ public class AltContextTest
     {
         String core = "CAT";
 
-        final RefContext refContext = new RefContext(CHROM, POS, false);
+        final RefContext refContext = new RefContext(CHROM, POS);
         final AltContext altContext = new AltContext(refContext, "C", "T");
 
         altContext.addReadContext(3, simpleReadContext("AAA", core, "CCC"));

@@ -23,7 +23,7 @@ import com.hartwig.hmftools.sage.select.PanelSelector;
 public class RefContextCache
 {
     private final SageConfig mConfig;
-    private final EvictingArray mRollingCandidates;
+    private final EvictingArray mEvictingArray;
     private final PanelSelector mPanelSelector;
     private final List<AltContext> mSavedCandidates;
     private final HotspotSelector mHotspotSelector;
@@ -40,19 +40,24 @@ public class RefContextCache
 
         int minCapacity = config.ExpectedReadLength == DEFAULT_READ_LENGTH ?
                 MIN_CAPACITY : max(MIN_CAPACITY, config.ExpectedReadLength * 2);
-        mRollingCandidates = new EvictingArray(minCapacity, evictionHandler);
+        mEvictingArray = new EvictingArray(minCapacity, evictionHandler);
     }
+
+    public PanelSelector panelSelector() { return mPanelSelector; }
+
+    public void registerDepthLimit(int position, int limit) { mEvictingArray.registerDepthLimit(position, limit);}
+    public void incrementDepth(int position) { mEvictingArray.registerDepth(position); }
+
+    public Boolean exceedsDepthLimit(int position) { return mEvictingArray.exceedsDepthLimit(position); }
 
     public RefContext getOrCreateRefContext(final String chromosome, int position)
     {
-        boolean usePanelDepth = MitochondrialChromosome.contains(chromosome) || mPanelSelector.inPanel(position, position);
-
-        return mRollingCandidates.computeIfAbsent(position, aLong -> new RefContext(chromosome, position, usePanelDepth));
+        return mEvictingArray.getOrCreateRefContext(position, aLong -> new RefContext(chromosome, position));
     }
 
     public List<AltContext> altContexts()
     {
-        mRollingCandidates.evictAll();
+        mEvictingArray.evictAll();
         Collections.sort(mSavedCandidates);
         return mSavedCandidates;
     }

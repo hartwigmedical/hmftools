@@ -3,8 +3,6 @@ package com.hartwig.hmftools.sage.candidate;
 import java.util.Collection;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -17,14 +15,10 @@ public class RefContext implements GenomePosition
     
     private Map<String,AltContext> mAlts;
 
-    private final boolean mUsePanelDepth;
-    private int mRawDepth;
-
-    public RefContext(final String chromosome, int position, boolean usePanelDepth)
+    public RefContext(final String chromosome, int position)
     {
         Chromosome = chromosome;
         Position = position;
-        mUsePanelDepth = usePanelDepth;
         mAlts = null;
     }
 
@@ -33,21 +27,10 @@ public class RefContext implements GenomePosition
         return mAlts != null ? mAlts.values() : null;
     }
 
-    public void refRead(boolean sufficientMapQuality)
-    {
-        if(sufficientMapQuality)
-            mRawDepth++;
-    }
-
-    public void processAltRead(
-            final String ref, final String alt, int baseQuality, boolean sufficientMapQuality,
-            int numberOfEvents, final ReadContext readContext)
+    public void processAltRead(final String ref, final String alt, int baseQuality, int numberOfEvents, final ReadContext readContext)
     {
         final AltContext altContext = getOrCreateAltContext(ref, alt);
         altContext.incrementAltRead(baseQuality);
-
-        if(sufficientMapQuality)
-            mRawDepth++;
 
         if(readContext != null && !readContext.hasIncompleteCore())
         {
@@ -67,21 +50,8 @@ public class RefContext implements GenomePosition
         return Position;
     }
 
-    public int rawDepth()
-    {
-        return mRawDepth;
-    }
-
-    public boolean exceedsDepthLimit(int standardDepthLimit, int panelDepthLimit)
-    {
-        if(mUsePanelDepth)
-            return mRawDepth >= panelDepthLimit;
-        else
-            return mRawDepth >= standardDepthLimit;
-    }
-
     @Override
-    public boolean equals(@Nullable Object another)
+    public boolean equals(final Object another)
     {
         if(this == another)
             return true;

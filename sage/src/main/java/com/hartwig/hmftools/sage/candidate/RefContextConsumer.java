@@ -4,23 +4,21 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_SC_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 
-import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.beust.jcommander.internal.Sets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
@@ -32,11 +30,12 @@ import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextFactory;
 import com.hartwig.hmftools.sage.read.NumberEvents;
+import com.hartwig.hmftools.sage.select.ReadPanelStatus;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
-public class RefContextConsumer implements Consumer<SAMRecord>
+public class RefContextConsumer
 {
     private final SageConfig mConfig;
     private final ChrBaseRegion mBounds;
@@ -65,10 +64,12 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
     public int getReadCount() { return mReadCount; }
 
-    @Override
-    public void accept(final SAMRecord record)
+    public void processRead(final SAMRecord record)
     {
-        if(!inBounds(record))
+        int readStart = record.getAlignmentStart();
+        int readEnd = record.getAlignmentEnd();
+
+        if(!positionsOverlap(readStart, readEnd, mBounds.start(), mBounds.end()))
             return;
 
         ++mReadCount;
@@ -76,7 +77,10 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         //SG_LOGGER.trace("read({}:{}) cigar({}) id({})",
         //        record.getContig(), record.getAlignmentStart(), record.getCigarString(), record.getReadName());
 
-        if(reachedDepthLimit(record))
+        // check if the read falls within or overlaps a panel region, since this impacts the depth limits
+        ReadPanelStatus panelStatus = mRefContextCache.panelSelector().panelStatus(readStart, readEnd);
+
+        if(reachedDepthLimit(readStart, panelStatus) || reachedDepthLimit(readEnd, panelStatus))
             return;
 
         int numberOfEvents = !record.getSupplementaryAlignmentFlag() ? NumberEvents.calc(record, mRefGenome) : 0;
@@ -84,12 +88,12 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         int adjustedMapQual = calcAdjustedMapQualLessEventsPenalty(record, numberOfEvents);
         boolean readExceedsQuality = adjustedMapQual > 0;
 
-        if(!readExceedsQuality)
-        {
-            // if the read is below the required threshold and does not cover a hotspot position, then stop processing it
-            if(mHotspotPositions.stream().noneMatch(x -> positionWithin(x, record.getStart(), record.getEnd())))
-                return;
-        }
+        final Boolean readCoversHotspot = !readExceedsQuality ?
+                mHotspotPositions.stream().anyMatch(x -> positionWithin(x, readStart, readEnd)) : null;
+
+        // if the read is below the required threshold and does not cover a hotspot position, then stop processing it
+        if(!readExceedsQuality && !readCoversHotspot)
+            return;
 
         int scAdjustedMapQual = adjustedMapQual - scEvents * mConfig.Quality.MapQualityReadEventsPenalty;
         boolean readExceedsScAdjustedQuality = scAdjustedMapQual > 0;
@@ -108,12 +112,15 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
                 if(!readExceedsScAdjustedQuality)
                 {
-                    if(mHotspotPositions.stream().noneMatch(x -> positionWithin(x, record.getStart(), record.getEnd())))
+                    if((readCoversHotspot != null && !readCoversHotspot)
+                    || mHotspotPositions.stream().noneMatch(x -> positionWithin(x, readStart, readEnd)))
+                    {
                         return;
+                    }
                 }
 
                 altReads.addAll(processAlignment(
-                        record, readIndex, refPosition, element.getLength(), refBases, numberOfEvents,
+                        record, readIndex, refPosition, element.getLength(), panelStatus, refBases, numberOfEvents,
                         readExceedsScAdjustedQuality));
             }
 
@@ -124,7 +131,8 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                     return;
 
                 AltRead altRead = processInsert(
-                        element, record, readIndex, refPosition, refBases, numberOfEvents, readExceedsQuality, readExceedsScAdjustedQuality);
+                        element, record, readIndex, refPosition, panelStatus, refBases, numberOfEvents, readExceedsQuality,
+                        readExceedsScAdjustedQuality);
 
                 if(altRead != null)
                     altReads.add(altRead);
@@ -137,7 +145,8 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                     return;
 
                 AltRead altRead = processDel(
-                        element, record, readIndex, refPosition, refBases, numberOfEvents, readExceedsQuality, readExceedsScAdjustedQuality);
+                        element, record, readIndex, refPosition, panelStatus, refBases, numberOfEvents, readExceedsQuality,
+                        readExceedsScAdjustedQuality);
 
                 if(altRead != null)
                     altReads.add(altRead);
@@ -150,7 +159,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                     return;
 
                 AltRead altRead = processSoftClip(
-                        record, element.getLength(), 0, refBases, readExceedsQuality, numberOfEvents, true);
+                        record, element.getLength(), 0, panelStatus, refBases, readExceedsQuality, numberOfEvents, true);
 
                 if(altRead != null)
                     altReads.add(altRead);
@@ -163,7 +172,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                     return;
 
                 AltRead altRead = processSoftClip(
-                        record, element.getLength(), readIndex, refBases, readExceedsQuality, numberOfEvents, false);
+                        record, element.getLength(), readIndex, panelStatus, refBases, readExceedsQuality, numberOfEvents, false);
 
                 if(altRead != null)
                     altReads.add(altRead);
@@ -174,7 +183,13 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
         checkCoreExtension(altReads);
 
-        altReads.forEach(AltRead::updateRefContext);
+        for(AltRead altRead : altReads)
+        {
+            altRead.updateRefContext();
+
+            if(altRead.SufficientMapQuality)
+                mRefContextCache.incrementDepth(altRead.position());
+        }
     }
 
     public static boolean ignoreSoftClipAdapter(final SAMRecord record)
@@ -188,6 +203,33 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         int alignedBases = record.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
         int insertAlignmentOverlap = abs(fragmentLength - alignedBases);
         return insertAlignmentOverlap < MIN_INSERT_ALIGNMENT_OVERLAP;
+    }
+
+    private boolean reachedDepthLimit(int position, final ReadPanelStatus panelStatus)
+    {
+        Boolean exceedsLimit = mRefContextCache.exceedsDepthLimit(position);
+
+        if(exceedsLimit != null)
+            return exceedsLimit;
+
+        // set depth limit on the first time this position is processed
+        int depthLimit = depthLimit(panelStatus, position);
+        mRefContextCache.registerDepthLimit(position, depthLimit);
+        return false;
+    }
+
+    private int depthLimit(final ReadPanelStatus panelStatus, int position)
+    {
+        if(mConfig.IncludeMT && MitochondrialChromosome.contains(mBounds.Chromosome))
+            return mConfig.MaxReadDepthPanel;
+
+        if(panelStatus == ReadPanelStatus.WITHIN_PANEL)
+            return mConfig.MaxReadDepthPanel;
+        else if(panelStatus == ReadPanelStatus.OUTSIDE_PANEL)
+            return mConfig.MaxReadDepth;
+
+        return mRefContextCache.panelSelector().panelStatus(position) == ReadPanelStatus.WITHIN_PANEL ?
+                mConfig.MaxReadDepthPanel : mConfig.MaxReadDepth;
     }
 
     private int calcAdjustedMapQualLessEventsPenalty(final SAMRecord record, int numberOfEvents)
@@ -207,15 +249,18 @@ public class RefContextConsumer implements Consumer<SAMRecord>
     private boolean isHotspotPosition(int position) { return mHotspotPositions.contains(position); }
 
     private AltRead processInsert(
-            final CigarElement element, final SAMRecord record, int readIndex, int refPosition,
+            final CigarElement element, final SAMRecord record, int readIndex, int refPosition, final ReadPanelStatus panelStatus,
             final IndexedBases refBases, int numberOfEvents, boolean readExceedsQuality, boolean readExceedsScAdjustedQuality)
     {
-        if(refPosition > mBounds.end() || refPosition < mBounds.start())
+        if(!mBounds.containsPosition(refPosition))
             return null;
 
         boolean exceedsQuality = element.getLength() <= SC_READ_EVENTS_FACTOR ? readExceedsScAdjustedQuality : readExceedsQuality;
 
         if(!exceedsQuality && !isHotspotPosition(refPosition))
+            return null;
+
+        if(reachedDepthLimit(refPosition, panelStatus))
             return null;
 
         int refIndex = refBases.index(refPosition);
@@ -226,27 +271,26 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         boolean findReadContext = withinReadContext(readIndex, record);
 
         final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
-        if(!reachedDepthLimit(refContext))
-        {
-            final int baseQuality = baseQuality(readIndex, record, alt.length());
-            final ReadContext readContext =
-                    findReadContext ? mReadContextFactory.createInsertContext(alt, refPosition, readIndex, record, refBases) : null;
-            return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
-        }
+        final int baseQuality = baseQuality(readIndex, record, alt.length());
+        final ReadContext readContext =
+                findReadContext ? mReadContextFactory.createInsertContext(alt, refPosition, readIndex, record, refBases) : null;
 
-        return null;
+        return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
     }
 
     private AltRead processDel(
-            final CigarElement element, final SAMRecord record, int readIndex, int refPosition,
+            final CigarElement element, final SAMRecord record, int readIndex, int refPosition, final ReadPanelStatus panelStatus,
             final IndexedBases refBases, int numberOfEvents, boolean readExceedsQuality, boolean readExceedsScAdjustedQuality)
     {
-        if(refPosition > mBounds.end() || refPosition < mBounds.start())
+        if(!mBounds.containsPosition(refPosition))
             return null;
 
         boolean exceedsQuality = element.getLength() <= SC_READ_EVENTS_FACTOR ? readExceedsScAdjustedQuality : readExceedsQuality;
 
         if(!exceedsQuality && !isHotspotPosition(refPosition))
+            return null;
+
+        if(reachedDepthLimit(refPosition, panelStatus))
             return null;
 
         int refIndex = refBases.index(refPosition);
@@ -257,7 +301,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         boolean findReadContext = withinReadContext(readIndex, record);
 
         final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
-        if(refContext != null && !reachedDepthLimit(refContext))
+        if(refContext != null)
         {
             final int baseQuality = baseQuality(readIndex, record, 2);
             final ReadContext readContext =
@@ -270,9 +314,9 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
     private List<AltRead> processAlignment(
             final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
-            final IndexedBases refBases, int numberOfEvents, boolean readExceedsQuality)
+            final ReadPanelStatus panelStatus, final IndexedBases refBases, int numberOfEvents, boolean readExceedsQuality)
     {
-        final List<AltRead> result = Lists.newArrayList();
+        List<AltRead> result = Lists.newArrayList();
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
         int refIndex = refBases.index(refPositionStart);
@@ -283,10 +327,16 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             int readBaseIndex = readBasesStartIndex + i;
             int refBaseIndex = refIndex + i;
 
-            if(!mBounds.containsPosition(refPosition))
+            if(refPosition < mBounds.start())
                 continue;
 
+            if(refPosition > mBounds.end())
+                break;
+
             if(!readExceedsQuality && !isHotspotPosition(refPosition))
+                continue;
+
+            if(reachedDepthLimit(refPosition, panelStatus))
                 continue;
 
             final byte refByte = refBases.Bases[refBaseIndex];
@@ -294,59 +344,60 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             final byte readByte = record.getReadBases()[readBaseIndex];
             boolean isWithinReadContext = withinReadContext(readBaseIndex, record);
 
-            final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
-            if(refContext != null && !reachedDepthLimit(refContext))
+            if(readByte != refByte)
             {
-                if(readByte != refByte)
+                final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
+                if(refContext == null)
+                    continue;
+
+                int baseQuality = record.getBaseQualities()[readBaseIndex];
+                final String alt = String.valueOf((char) readByte);
+                final ReadContext readContext = isWithinReadContext ?
+                        mReadContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases) : null;
+
+                result.add(new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext));
+
+                if(mConfig.MnvEnabled)
                 {
-                    int baseQuality = record.getBaseQualities()[readBaseIndex];
-                    final String alt = String.valueOf((char) readByte);
-                    final ReadContext readContext = isWithinReadContext ?
-                            mReadContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases) : null;
+                    int mnvMaxLength = mnvLength(readBaseIndex, refBaseIndex, record.getReadBases(), refBases.Bases);
 
-                    result.add(new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext));
-
-                    if(mConfig.MnvEnabled)
+                    int nextReadIndex = i;
+                    for(int mnvLength = 2; mnvLength <= mnvMaxLength; mnvLength++)
                     {
-                        int mnvMaxLength = mnvLength(readBaseIndex, refBaseIndex, record.getReadBases(), refBases.Bases);
+                        ++nextReadIndex;
 
-                        int nextReadIndex = i;
-                        for(int mnvLength = 2; mnvLength <= mnvMaxLength; mnvLength++)
+                        // MNVs cannot extend past the end of this Cigar element
+                        if(nextReadIndex >= alignmentLength)
+                            break;
+
+                        final String mnvRef = new String(refBases.Bases, refBaseIndex, mnvLength);
+                        final String mnvAlt = new String(record.getReadBases(), readBaseIndex, mnvLength);
+
+                        // Only check last base because some subsets may not be valid,
+                        // ie CA > TA is not a valid subset of CAC > TAT
+                        if(mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1))
                         {
-                            ++nextReadIndex;
+                            final ReadContext mnvReadContext = isWithinReadContext ? mReadContextFactory.createMNVContext(refPosition,
+                                    readBaseIndex,
+                                    mnvLength,
+                                    record,
+                                    refBases) : null;
 
-                            // MNVs cannot extend past the end of this Cigar element
-                            if(nextReadIndex >= alignmentLength)
-                                break;
-
-                            final String mnvRef = new String(refBases.Bases, refBaseIndex, mnvLength);
-                            final String mnvAlt = new String(record.getReadBases(), readBaseIndex, mnvLength);
-
-                            // Only check last base because some subsets may not be valid,
-                            // ie CA > TA is not a valid subset of CAC > TAT
-                            if(mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1))
-                            {
-                                final ReadContext mnvReadContext = isWithinReadContext ? mReadContextFactory.createMNVContext(refPosition,
-                                        readBaseIndex,
-                                        mnvLength,
-                                        record,
-                                        refBases) : null;
-
-                                result.add(new AltRead(refContext,
-                                        mnvRef,
-                                        mnvAlt,
-                                        baseQuality,
-                                        NumberEvents.calcWithMnvRaw(numberOfEvents, mnvRef, mnvAlt),
-                                        sufficientMapQuality,
-                                        mnvReadContext));
-                            }
+                            result.add(new AltRead(refContext,
+                                    mnvRef,
+                                    mnvAlt,
+                                    baseQuality,
+                                    NumberEvents.calcWithMnvRaw(numberOfEvents, mnvRef, mnvAlt),
+                                    sufficientMapQuality,
+                                    mnvReadContext));
                         }
                     }
                 }
-                else
-                {
-                    refContext.refRead(sufficientMapQuality);
-                }
+            }
+            else
+            {
+                if(sufficientMapQuality)
+                    mRefContextCache.incrementDepth(refPosition);
             }
         }
 
@@ -354,8 +405,8 @@ public class RefContextConsumer implements Consumer<SAMRecord>
     }
 
     private AltRead processSoftClip(
-            final SAMRecord record, int scLength, int scReadIndex, final IndexedBases refBases, boolean readExceedsQuality,
-            int numberOfEvents, boolean onLeft)
+            final SAMRecord record, int scLength, int scReadIndex, final ReadPanelStatus panelStatus, final IndexedBases refBases,
+            boolean readExceedsQuality, int numberOfEvents, boolean onLeft)
     {
         if(!readExceedsQuality)
             return null;
@@ -391,10 +442,10 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         if(!withinReadContext(readIndex, record))
             return null;
 
-        final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
-
-        if(reachedDepthLimit(refContext))
+        if(reachedDepthLimit(refPosition, panelStatus))
             return null;
+
+        final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
 
         final int baseQuality = baseQuality(readIndex, record, altRead.Alt.length());
 
@@ -516,30 +567,6 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         return quality;
     }
 
-    private boolean inBounds(final SAMRecord record)
-    {
-        return positionsOverlap(record.getStart(), record.getEnd(), mBounds.start(), mBounds.end());
-    }
-
-    private boolean reachedDepthLimit(final RefContext refContext)
-    {
-        if(refContext == null)
-            return false;
-
-        return refContext.exceedsDepthLimit(mConfig.MaxReadDepth, mConfig.MaxReadDepthPanel);
-    }
-
-    private boolean reachedDepthLimit(final SAMRecord record)
-    {
-        RefContext startRefContext = mRefContextCache.getOrCreateRefContext(mBounds.Chromosome, record.getAlignmentStart());
-
-        if(reachedDepthLimit(startRefContext))
-            return true;
-
-        RefContext endRefContext = mRefContextCache.getOrCreateRefContext(mBounds.Chromosome, record.getAlignmentEnd());
-        return reachedDepthLimit(endRefContext);
-    }
-
     private void checkCoreExtension(final List<AltRead> altReads)
     {
         if(altReads.size() < 2)
@@ -584,7 +611,6 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                         }
                     }
                 }
-
             }
         }
     }

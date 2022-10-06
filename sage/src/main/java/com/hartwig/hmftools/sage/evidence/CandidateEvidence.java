@@ -16,8 +16,6 @@ import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.coverage.GeneCoverage;
 import com.hartwig.hmftools.sage.common.RefSequence;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.samtools.SAMRecord;
 
 public class CandidateEvidence
@@ -51,7 +49,7 @@ public class CandidateEvidence
 
         final Consumer<SAMRecord> consumer = record ->
         {
-            refContextConsumer.accept(record);
+            refContextConsumer.processRead(record);
 
             if(!geneCoverage.isEmpty())
             {

@@ -70,8 +70,8 @@ public class AltRead
 
     public void updateRefContext()
     {
-        mRefContext.processAltRead(Ref, Alt, BaseQuality, SufficientMapQuality, NumberOfEvents, mReadContext);
+        mRefContext.processAltRead(Ref, Alt, BaseQuality, NumberOfEvents, mReadContext);
     }
 
-    public String toString() { return String.format("%s>%s", Ref, Alt); }
+    public String toString() { return String.format("%d: %s>%s", position(), Ref, Alt); }
 }

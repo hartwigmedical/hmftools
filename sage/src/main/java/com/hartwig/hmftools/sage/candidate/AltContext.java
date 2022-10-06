@@ -184,8 +184,6 @@ public class AltContext implements VariantHotspot
 
     public int rawAltSupport() { return mRawSupportAlt; }
 
-    public int rawDepth() { return RefContext.rawDepth(); }
-
     public int rawAltBaseQuality() { return mRawBaseQualityAlt; }
 
     @Override
