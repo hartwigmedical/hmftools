@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.rose.ActionabilityConclusion;
 import com.hartwig.hmftools.common.rose.ImmutableActionabilityConclusion;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
@@ -30,6 +31,7 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.rose.RoseApplication;
 import com.hartwig.hmftools.rose.RoseData;
 import com.hartwig.hmftools.rose.actionability.ActionabilityEntry;
 import com.hartwig.hmftools.rose.actionability.ActionabilityKey;
@@ -38,10 +40,14 @@ import com.hartwig.hmftools.rose.actionability.ImmutableActionabilityKey;
 import com.hartwig.hmftools.rose.actionability.TypeAlteration;
 
 import org.apache.commons.compress.utils.Lists;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class ConclusionAlgo {
+    private static final Logger LOGGER = LogManager.getLogger(RoseApplication.class);
+
     private static final Set<String> FUSION_TYPES = Sets.newHashSet(KnownFusionType.PROMISCUOUS_3.toString(),
             KnownFusionType.PROMISCUOUS_5.toString(),
             KnownFusionType.KNOWN_PAIR.toString(),
@@ -143,7 +149,7 @@ public class ConclusionAlgo {
                 if (cuppaPrediction.likelihood() >= 0.5) {
                     conclusion.add("- " + entry.conclusion()
                             .replace("xxx - xx%",
-                                    cuppaPrediction.cancerType() + "-" + cuppaPrediction.likelihood()));
+                                    cuppaPrediction.cancerType() + "-" + cuppaPrediction.likelihood() + "%"));
                 } else {
                     conclusion.add("- " + entry.conclusion().replace(" (highest likelihood: xxx - xx%)", ""));
                 }
@@ -154,7 +160,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppa);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.add("- " + entry.conclusion().replace("XXXX", cuppaPrediction.cancerType()));
+                conclusion.add("- " + entry.conclusion().replace("XXXX", cuppaPrediction.cancerType() + " (likelihood: " + cuppaPrediction.likelihood() +"%)"));
             }
         }
     }
@@ -163,10 +169,9 @@ public class ConclusionAlgo {
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap, @NotNull Map<String, DriverGene> driverGenesMap,
             @NotNull Set<String> oncogenic, @NotNull Set<String> actionable, @NotNull Set<String> HRD, @NotNull ChordData chordAnalysis) {
 
-        Map<String, List<VariantKey>> variantKeyList = Maps.newHashMap();
+        Map<String, Set<VariantKey>> variantKeyList = Maps.newHashMap();
 
         for (ReportableVariant reportableVariant : reportableVariants) {
-            List<VariantKey> variantKeys = Lists.newArrayList();
             VariantKey variantKey = ImmutableVariantKey.builder()
                     .gene(reportableVariant.gene())
                     .variantAnnotation(EventGenerator.variantEvent(reportableVariant))
@@ -175,16 +180,15 @@ public class ConclusionAlgo {
                     .build();
 
             if (variantKeyList.containsKey(reportableVariant.gene())) {
-                variantKeys.addAll(variantKeyList.get(reportableVariant.gene()));
-                variantKeys.add(variantKey);
-                variantKeyList.put(reportableVariant.gene(), variantKeys);
+                Set<VariantKey> curent = variantKeyList.get(reportableVariant.gene());
+                curent.add(variantKey);
+                variantKeyList.put(reportableVariant.gene(), curent);
             } else {
-                variantKeys.add(variantKey);
-                variantKeyList.put(reportableVariant.gene(), variantKeys);
+                variantKeyList.put(reportableVariant.gene(), Sets.newHashSet(variantKey));
             }
         }
 
-        for (Map.Entry<String, List<VariantKey>> keyMap : variantKeyList.entrySet()) {
+        for (Map.Entry<String, Set<VariantKey>> keyMap : variantKeyList.entrySet()) {
             boolean HRDgene = false;
             TypeAlteration alteration = TypeAlteration.UNKNOWN;
 
@@ -210,7 +214,7 @@ public class ConclusionAlgo {
             ActionabilityKey keySomaticVariant = ImmutableActionabilityKey.builder().match(keyMap.getKey()).type(alteration).build();
             ActionabilityEntry entry = actionabilityMap.get(keySomaticVariant);
             if (entry != null) {
-                if ((keyMap.getValue().get(0).driverInterpretation() == DriverInterpretation.HIGH
+                if ((keyMap.getValue().iterator().next().driverInterpretation() == DriverInterpretation.HIGH
                         && entry.condition() == Condition.ONLY_HIGH) || entry.condition() == Condition.ALWAYS_NO_ACTIONABLE) {
                     if (entry.condition() == Condition.ONLY_HIGH) {
                         actionable.add("variant");
@@ -218,7 +222,7 @@ public class ConclusionAlgo {
 
                     if (driverGenesMap.get(keyMap.getKey()).likelihoodType().equals(DriverCategory.TSG)
                             && variantMerging.toString().split(",").length == 1) {
-                        if (!keyMap.getValue().get(0).bialleic()) {
+                        if (!keyMap.getValue().iterator().next().bialleic()) {
                             ActionabilityKey keyBiallelic =
                                     ImmutableActionabilityKey.builder().match("NOT_BIALLELIC").type(TypeAlteration.NOT_BIALLELIC).build();
                             ActionabilityEntry entryBiallelic = actionabilityMap.get(keyBiallelic);
@@ -255,7 +259,8 @@ public class ConclusionAlgo {
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
 
                 if (entry != null && (entry.condition() == Condition.ALWAYS || entry.condition() == Condition.ALWAYS_NO_ACTIONABLE)) {
-                    conclusion.add("- " + gainLoss.gene() + " " + entry.conclusion());
+                    String copies = " (min copies: " + gainLoss.minCopies() + ", max copies: " + gainLoss.maxCopies() + ")";
+                    conclusion.add("- " + gainLoss.gene() + copies + " " + entry.conclusion());
                     actionable.add("CNV");
                 }
             }
@@ -268,7 +273,8 @@ public class ConclusionAlgo {
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
 
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
-                    conclusion.add("- " + gainLoss.gene() + " " + entry.conclusion());
+                    String copies = " (min copies: " + gainLoss.minCopies() + ", max copies: " + gainLoss.maxCopies() + ")";
+                    conclusion.add("- " + gainLoss.gene() + copies + " " + entry.conclusion());
                     actionable.add("CNV");
                 }
             }
@@ -451,7 +457,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyPurity);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.add("- " + entry.conclusion().replace("XX%", purity + "%"));
+                conclusion.add("- " + entry.conclusion().replace("XX%", DataUtil.formatPercentage(purity)));
             }
         }
     }

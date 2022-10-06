@@ -75,7 +75,7 @@ public class ConclusionAlgoTest {
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
         assertEquals(1, conclusion.size());
-        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Melanoma.");
+        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Melanoma (likelihood: 99.6%).");
     }
 
     @Test
@@ -121,7 +121,7 @@ public class ConclusionAlgoTest {
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
         assertEquals(1, conclusion.size());
-        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Inconclusive (highest likelihood: Melanoma-0.6).");
+        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Inconclusive (highest likelihood: Melanoma-0.6%).");
     }
 
     @Test
@@ -190,10 +190,10 @@ public class ConclusionAlgoTest {
 
         ConclusionAlgo.generateCNVConclusion(conclusion, gainLosse, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertEquals(4, conclusion.size());
-        assertEquals(conclusion.get(0), "- BRAF BRAF");
-        assertEquals(conclusion.get(1), "- KRAS KRAS");
-        assertEquals(conclusion.get(2), "- CDKN2A CDKN2A");
-        assertEquals(conclusion.get(3), "- EGFR EGFR");
+        assertEquals(conclusion.get(0), "- BRAF (min copies: 0, max copies: 0) BRAF");
+        assertEquals(conclusion.get(1), "- KRAS (min copies: 0, max copies: 0) KRAS");
+        assertEquals(conclusion.get(2), "- CDKN2A (min copies: 0, max copies: 0) CDKN2A");
+        assertEquals(conclusion.get(3), "- EGFR (min copies: 0, max copies: 0) EGFR");
     }
 
     @Test
@@ -385,7 +385,7 @@ public class ConclusionAlgoTest {
         ConclusionAlgo.generatePurityConclusion(conclusion, 0.1, true, actionabilityMap);
 
         assertEquals(1, conclusion.size());
-        assertEquals(conclusion.get(0), "- low purity (0.1%)");
+        assertEquals(conclusion.get(0), "- low purity (0%)");
     }
 
     @Test
