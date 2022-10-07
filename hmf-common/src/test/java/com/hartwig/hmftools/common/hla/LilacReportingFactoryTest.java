@@ -89,10 +89,9 @@ public class LilacReportingFactoryTest {
     @Test
     public void testConvertDataReliable() {
         LilacReportingData lilacReportingData = LilacReportingFactory.convertToReportData(createTestLilacData(), true);
-        List<LilacReporting> lilacReporting = lilacReportingData.lilacReporting();
-        assertEquals(lilacReporting.size(), 5);
+        Map<String, List<LilacReporting>> lilacReporting = lilacReportingData.lilacReporting();
 
-        LilacReporting lilacReporting1 = extractLilacReporting("A*03:01", lilacReporting);
+        LilacReporting lilacReporting1 = extractLilacReporting("A*03:01", lilacReporting.get("HLA-A"));
         assertEquals(lilacReporting1.lilacGermlineAllele().gene(), "HLA-A");
         assertEquals(lilacReporting1.lilacGermlineAllele().germlineAllele(), "A*03:01");
         assertEquals(lilacReporting1.somaticMutations(), "2 missense");
@@ -100,7 +99,7 @@ public class LilacReportingFactoryTest {
         assertEquals(lilacReporting1.tumorCopies(), 6,2);
         assertEquals(lilacReporting1.germlineCopies(), 2D);
 
-        LilacReporting lilacReporting2 = extractLilacReporting("B*18:02", lilacReporting);
+        LilacReporting lilacReporting2 = extractLilacReporting("B*18:02", lilacReporting.get("HLA-B"));
         assertEquals(lilacReporting2.lilacGermlineAllele().gene(), "HLA-B");
         assertEquals(lilacReporting2.lilacGermlineAllele().germlineAllele(), "B*18:02");
         assertEquals(lilacReporting2.somaticMutations(), "1 nonsense or frameshift, 1 splice");
@@ -108,7 +107,7 @@ public class LilacReportingFactoryTest {
         assertEquals(lilacReporting2.tumorCopies(), 1.2);
         assertEquals(lilacReporting2.germlineCopies(), 1D);
 
-        LilacReporting lilacReporting3 = extractLilacReporting("B*35:02", lilacReporting);
+        LilacReporting lilacReporting3 = extractLilacReporting("B*35:02", lilacReporting.get("HLA-B"));
         assertEquals(lilacReporting3.lilacGermlineAllele().gene(), "HLA-B");
         assertEquals(lilacReporting3.lilacGermlineAllele().germlineAllele(), "B*35:02");
         assertEquals(lilacReporting3.somaticMutations(), "No");
@@ -116,7 +115,7 @@ public class LilacReportingFactoryTest {
         assertEquals(lilacReporting3.tumorCopies(), 1,1);
         assertEquals(lilacReporting3.germlineCopies(), 1D);
 
-        LilacReporting lilacReporting4 = extractLilacReporting("C*10:12", lilacReporting);
+        LilacReporting lilacReporting4 = extractLilacReporting("C*10:12", lilacReporting.get("HLA-C"));
         assertEquals(lilacReporting4.lilacGermlineAllele().gene(), "HLA-C");
         assertEquals(lilacReporting4.lilacGermlineAllele().germlineAllele(), "C*10:12");
         assertEquals(lilacReporting4.somaticMutations(), "1 synonymous");
@@ -124,7 +123,7 @@ public class LilacReportingFactoryTest {
         assertEquals(lilacReporting4.tumorCopies(), 0D);
         assertEquals(lilacReporting4.germlineCopies(), 1D);
 
-        LilacReporting lilacReporting5 = extractLilacReporting("C*16:02", lilacReporting);
+        LilacReporting lilacReporting5 = extractLilacReporting("C*16:02", lilacReporting.get("HLA-C"));
         assertEquals(lilacReporting5.lilacGermlineAllele().gene(), "HLA-C");
         assertEquals(lilacReporting5.lilacGermlineAllele().germlineAllele(), "C*16:02");
         assertEquals(lilacReporting5.somaticMutations(), "No");

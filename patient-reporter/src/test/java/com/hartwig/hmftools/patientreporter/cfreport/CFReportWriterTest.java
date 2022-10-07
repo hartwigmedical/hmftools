@@ -6,10 +6,12 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -541,18 +543,32 @@ public class CFReportWriterTest {
     }
 
     @NotNull
-    private static List<PeachGenotype> createTestPeachGenotypes() {
-        return Lists.newArrayList(ImmutablePeachGenotype.builder()
-                .gene("DPYD")
-                .haplotype("*1_HOM")
-                .function("Normal Function")
-                .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
-                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939;"
-                        + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963;"
-                        + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
-                .panelVersion("PGx_min_DPYD_v0.3")
-                .repoVersion("1.0")
-                .build());
+    private static Map<String, List<PeachGenotype>> createTestPeachGenotypes() {
+        Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
+        peachMap.put("DPYD",
+                Lists.newArrayList(ImmutablePeachGenotype.builder()
+                                .gene("DPYD")
+                                .haplotype("*1_HOM")
+                                .function("Normal Function")
+                                .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
+                                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939"
+                                        + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963"
+                                        + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
+                                .panelVersion("PGx_min_DPYD_v1.2")
+                                .repoVersion("1.6")
+                                .build(),
+                        ImmutablePeachGenotype.builder()
+                                .gene("DPYD")
+                                .haplotype("*2_HOM")
+                                .function("Normal Function")
+                                .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
+                                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939"
+                                        + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963"
+                                        + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
+                                .panelVersion("PGx_min_DPYD_v1.2")
+                                .repoVersion("1.6")
+                                .build()));
+        return peachMap;
     }
 
     @NotNull

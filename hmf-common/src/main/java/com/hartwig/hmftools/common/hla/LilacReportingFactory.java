@@ -7,10 +7,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Doubles;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -26,15 +26,13 @@ public class LilacReportingFactory {
     public static Map<String, List<LilacAllele>> generateLilacMap(@NotNull LilacSummaryData lilacSummaryData) {
         Map<String, List<LilacAllele>> mapLilacReportingAlleles = Maps.newHashMap();
         for (LilacAllele lilacAllele : lilacSummaryData.alleles()) {
-            List<LilacAllele> variantKeys = Lists.newArrayList();
 
             if (mapLilacReportingAlleles.containsKey(lilacAllele.allele())) {
-                variantKeys.addAll(mapLilacReportingAlleles.get(lilacAllele.allele()));
-                variantKeys.add(lilacAllele);
-                mapLilacReportingAlleles.put(lilacAllele.allele(), variantKeys);
+                List<LilacAllele> curent = mapLilacReportingAlleles.get(lilacAllele.allele());
+                curent.add(lilacAllele);
+                mapLilacReportingAlleles.put(lilacAllele.allele(), curent);
             } else {
-                variantKeys.add(lilacAllele);
-                mapLilacReportingAlleles.put(lilacAllele.allele(), variantKeys);
+                mapLilacReportingAlleles.put(lilacAllele.allele(), Lists.newArrayList(lilacAllele));
             }
         }
         return mapLilacReportingAlleles;
@@ -75,9 +73,21 @@ public class LilacReportingFactory {
                     .build());
         }
 
+        Map<String, List<LilacReporting>> lilacAlleleMap = Maps.newHashMap();
+
+        for (LilacReporting lilacAllele : lilacReportingList) {
+            if (lilacAlleleMap.containsKey(lilacAllele.lilacGermlineAllele().gene())) {
+                List<LilacReporting> curent = lilacAlleleMap.get(lilacAllele.lilacGermlineAllele().gene());
+                curent.add(lilacAllele);
+                lilacAlleleMap.put(lilacAllele.lilacGermlineAllele().gene(), curent);
+            } else {
+                lilacAlleleMap.put(lilacAllele.lilacGermlineAllele().gene(), Lists.newArrayList(lilacAllele));
+            }
+        }
+
         return ImmutableLilacReportingData.builder()
                 .lilacQc(lilacSummaryData.qc())
-                .lilacReporting(lilacReportingList)
+                .lilacReporting(lilacAlleleMap)
                 .build();
     }
 

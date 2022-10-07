@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.peach.PeachGenotype;
@@ -71,7 +72,7 @@ public interface PatientReport {
     String udiDi();
 
     @NotNull
-    List<PeachGenotype> peachGenotypes();
+    Map<String, List<PeachGenotype>> peachGenotypes();
 
     @NotNull
     String reportDate();
