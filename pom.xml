@@ -34,6 +34,7 @@
         <module>purple</module>
         <module>rose</module>
         <module>pave</module>
+        <module>peach</module>
         <module>protect</module>
         <module>sage</module>
         <module>serve</module>
@@ -82,6 +83,7 @@
         <patient-db.version>3.71.1</patient-db.version>
         <patient-reporter.version>7.26</patient-reporter.version>
         <pave.version>1.4</pave.version>
+        <peach.version>2.0</peach.version>
         <protect.version>2.3</protect.version>
         <purple.version>3.7.1</purple.version>
         <rose.version>1.2</rose.version>
