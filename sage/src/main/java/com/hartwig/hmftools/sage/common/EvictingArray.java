@@ -131,7 +131,7 @@ public class EvictingArray
     {
         if(mMinPosition > 0 && position < mMinPosition)
         {
-            SG_LOGGER.warn("{}: ignoring read with position({}) before prior position({})", position, mMinPosition);
+            SG_LOGGER.warn("{}: ignoring read with position({}) before prior position({})", caller, position, mMinPosition);
             return false;
         }
 
@@ -183,8 +183,6 @@ public class EvictingArray
                 mMinPositionIndex = 0;
             else
                 ++mMinPositionIndex;
-
-            // mMinPositionIndex = (mMinPositionIndex + 1) & (mElements.length - 1);
         }
 
         if(flushCount >= mCapacity)
@@ -196,44 +194,4 @@ public class EvictingArray
         mMinPositionIndex = 0;
         mMinPosition = max(1, position - (int)round(mCapacity * 0.5));
     }
-
-        /*
-    public RefContext computeIfAbsent(int position, final Function<Integer,RefContext> supplier)
-    {
-        if(mMinPosition == 0)
-        {
-            mMinPosition = position - mCapacity + 1;
-        }
-
-        int distanceFromMinPosition = position - mMinPosition;
-        if(distanceFromMinPosition < 0)
-        {
-            SG_LOGGER.warn("ignoring read with position({}) before prior position({})", position, mMinPosition);
-            return null;
-        }
-
-        if(distanceFromMinPosition >= mCapacity)
-        {
-            int prevMinPosition = mMinPosition;
-
-            checkFlush(position - mMinPosition - mCapacity + 1);
-
-            SG_LOGGER.trace("flushing evicting array: minPos({} -> {}) capacity({}) read position({})",
-                    prevMinPosition, mMinPosition, mCapacity, position);
-
-            distanceFromMinPosition = position - mMinPosition;
-        }
-
-        int index = (mMinPositionIndex + distanceFromMinPosition) & (mElements.length - 1);
-        RefContext element = mElements[index];
-        if(element == null)
-        {
-            element = supplier.apply(position);
-            mElements[index] = element;
-        }
-
-        return element;
-    }
-    */
-
 }
