@@ -31,7 +31,6 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
-import com.hartwig.hmftools.rose.RoseApplication;
 import com.hartwig.hmftools.rose.RoseData;
 import com.hartwig.hmftools.rose.actionability.ActionabilityEntry;
 import com.hartwig.hmftools.rose.actionability.ActionabilityKey;
@@ -39,14 +38,11 @@ import com.hartwig.hmftools.rose.actionability.Condition;
 import com.hartwig.hmftools.rose.actionability.ImmutableActionabilityKey;
 import com.hartwig.hmftools.rose.actionability.TypeAlteration;
 
-import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.commons.compress.utils.Lists;;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class ConclusionAlgo {
-    private static final Logger LOGGER = LogManager.getLogger(RoseApplication.class);
 
     private static final Set<String> FUSION_TYPES = Sets.newHashSet(KnownFusionType.PROMISCUOUS_3.toString(),
             KnownFusionType.PROMISCUOUS_5.toString(),
