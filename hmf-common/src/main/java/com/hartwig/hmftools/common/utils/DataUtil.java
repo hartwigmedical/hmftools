@@ -11,11 +11,16 @@ public final class DataUtil {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
     private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");
-
+    private static final DecimalFormat PERCENTAGE_FORMAT_WITH_DIGIT = new DecimalFormat("#.#'%'");
     public static final String NONE_STRING = "NONE";
     public static final String NA_STRING = "N/A";
 
     private DataUtil() {
+    }
+
+    @NotNull
+    public static String formatPercentageDigit(double percentage) {
+        return PERCENTAGE_FORMAT_WITH_DIGIT.format(percentage * 100);
     }
 
     @NotNull

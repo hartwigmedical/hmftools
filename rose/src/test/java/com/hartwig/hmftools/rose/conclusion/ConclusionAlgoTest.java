@@ -69,7 +69,7 @@ public class ConclusionAlgoTest {
 
         CuppaPrediction cuppaPrediction = ImmutableCuppaPrediction.builder()
                 .cancerType("Melanoma")
-                .likelihood(99.6)
+                .likelihood(0.996)
                 .build();
 
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
@@ -115,13 +115,13 @@ public class ConclusionAlgoTest {
 
         CuppaPrediction cuppaPrediction = ImmutableCuppaPrediction.builder()
                 .cancerType("Melanoma")
-                .likelihood(0.60)
+                .likelihood(0.601)
                 .build();
 
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
         assertEquals(1, conclusion.size());
-        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Inconclusive (highest likelihood: Melanoma-0.6%).");
+        assertEquals(conclusion.get(0), "- Molecular Tissue of Origin classifier: Inconclusive (highest likelihood: Melanoma-60.1%).");
     }
 
     @Test

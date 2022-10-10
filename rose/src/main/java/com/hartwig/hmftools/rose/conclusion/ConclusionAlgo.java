@@ -140,6 +140,7 @@ public class ConclusionAlgo {
     public static void generateCUPPAConclusion(@NotNull List<String> conclusion, CuppaPrediction cuppaPrediction,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
 
+        String likelihoodPercentage = DataUtil.formatPercentageDigit(cuppaPrediction.likelihood());
         if (cuppaPrediction.likelihood() < 0.8) {
             ActionabilityKey keyCuppaInconclusice =
                     ImmutableActionabilityKey.builder().match("CUPPA_INCONCLUSIVE").type(TypeAlteration.CUPPA_INCONCLUSIVE).build();
@@ -149,7 +150,7 @@ public class ConclusionAlgo {
                 if (cuppaPrediction.likelihood() >= 0.5) {
                     conclusion.add("- " + entry.conclusion()
                             .replace("xxx - xx%",
-                                    cuppaPrediction.cancerType() + "-" + cuppaPrediction.likelihood() + "%"));
+                                    cuppaPrediction.cancerType() + "-" + likelihoodPercentage));
                 } else {
                     conclusion.add("- " + entry.conclusion().replace(" (highest likelihood: xxx - xx%)", ""));
                 }
@@ -160,7 +161,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppa);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.add("- " + entry.conclusion().replace("XXXX", cuppaPrediction.cancerType() + " (likelihood: " + cuppaPrediction.likelihood() +"%)"));
+                conclusion.add("- " + entry.conclusion().replace("XXXX", cuppaPrediction.cancerType() + " (likelihood: " + likelihoodPercentage + ")"));
             }
         }
     }
