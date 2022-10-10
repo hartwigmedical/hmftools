@@ -152,7 +152,7 @@ Field  | Description | Example
 conclusion | The clinical conclusion of the sample | BRCA2 inactivation, potential benefit from PARP inhibitors <enter> BRCA1 inactivation, potential benefit from PARP inhibitors <enter>
 
 ## Known issues 
-- We don't interpret the type alteration for NO_MSI_HRD_PROFILE, EXTRACELLULAR_DOMAIN_MUTATION and RESISTANCE_MUTATION
+- We don't interpret the type alteration for EXTRACELLULAR_DOMAIN_MUTATION and RESISTANCE_MUTATION
 
 ## Version History and Download Links
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/rose-v1.1)
