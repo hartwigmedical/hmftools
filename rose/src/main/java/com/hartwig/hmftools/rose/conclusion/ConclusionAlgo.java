@@ -260,7 +260,7 @@ public class ConclusionAlgo {
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
 
                 if (entry != null && (entry.condition() == Condition.ALWAYS || entry.condition() == Condition.ALWAYS_NO_ACTIONABLE)) {
-                    String copies = " (min copies: " + gainLoss.minCopies() + ", max copies: " + gainLoss.maxCopies() + ")";
+                    String copies = " (copies: " + gainLoss.minCopies() + ")";
                     conclusion.add("- " + gainLoss.gene() + copies + " " + entry.conclusion());
                     actionable.add("CNV");
                 }
@@ -274,7 +274,7 @@ public class ConclusionAlgo {
                 ActionabilityEntry entry = actionabilityMap.get(keyVirus);
 
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
-                    String copies = " (min copies: " + gainLoss.minCopies() + ", max copies: " + gainLoss.maxCopies() + ")";
+                    String copies = " (copies: " + gainLoss.maxCopies() + ")";
                     conclusion.add("- " + gainLoss.gene() + copies + " " + entry.conclusion());
                     actionable.add("CNV");
                 }

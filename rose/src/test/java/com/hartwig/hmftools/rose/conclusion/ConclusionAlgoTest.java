@@ -67,10 +67,7 @@ public class ConclusionAlgoTest {
                 Condition.OTHER,
                 "Molecular Tissue of Origin classifier: XXXX.");
 
-        CuppaPrediction cuppaPrediction = ImmutableCuppaPrediction.builder()
-                .cancerType("Melanoma")
-                .likelihood(0.996)
-                .build();
+        CuppaPrediction cuppaPrediction = ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(0.996).build();
 
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
@@ -90,10 +87,7 @@ public class ConclusionAlgoTest {
                 Condition.OTHER,
                 "Molecular Tissue of Origin classifier: Inconclusive (highest likelihood: xxx - xx%).");
 
-        CuppaPrediction cuppaPrediction = ImmutableCuppaPrediction.builder()
-                .cancerType("Melanoma")
-                .likelihood(0.45)
-                .build();
+        CuppaPrediction cuppaPrediction = ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(0.45).build();
 
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
@@ -113,10 +107,7 @@ public class ConclusionAlgoTest {
                 Condition.OTHER,
                 "Molecular Tissue of Origin classifier: Inconclusive (highest likelihood: xxx - xx%).");
 
-        CuppaPrediction cuppaPrediction = ImmutableCuppaPrediction.builder()
-                .cancerType("Melanoma")
-                .likelihood(0.601)
-                .build();
+        CuppaPrediction cuppaPrediction = ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(0.601).build();
 
         ConclusionAlgo.generateCUPPAConclusion(conclusion, cuppaPrediction, actionabilityMap);
 
@@ -190,10 +181,10 @@ public class ConclusionAlgoTest {
 
         ConclusionAlgo.generateCNVConclusion(conclusion, gainLosse, actionabilityMap, Sets.newHashSet(), Sets.newHashSet());
         assertEquals(4, conclusion.size());
-        assertEquals(conclusion.get(0), "- BRAF (min copies: 0, max copies: 0) BRAF");
-        assertEquals(conclusion.get(1), "- KRAS (min copies: 0, max copies: 0) KRAS");
-        assertEquals(conclusion.get(2), "- CDKN2A (min copies: 0, max copies: 0) CDKN2A");
-        assertEquals(conclusion.get(3), "- EGFR (min copies: 0, max copies: 0) EGFR");
+        assertEquals(conclusion.get(0), "- BRAF (copies: 4) BRAF");
+        assertEquals(conclusion.get(1), "- KRAS (copies: 8) KRAS");
+        assertEquals(conclusion.get(2), "- CDKN2A (copies: 0) CDKN2A");
+        assertEquals(conclusion.get(3), "- EGFR (copies: 0) EGFR");
     }
 
     @Test
@@ -567,14 +558,26 @@ public class ConclusionAlgoTest {
 
     @NotNull
     public List<GainLoss> gainloss() {
-        GainLoss gainLoss1 =
-                ImmutableGainLoss.builder().from(GainLossTestFactory.createGainLoss("BRAF", CopyNumberInterpretation.FULL_GAIN)).build();
-        GainLoss gainLoss2 =
-                ImmutableGainLoss.builder().from(GainLossTestFactory.createGainLoss("KRAS", CopyNumberInterpretation.PARTIAL_GAIN)).build();
-        GainLoss gainLoss3 =
-                ImmutableGainLoss.builder().from(GainLossTestFactory.createGainLoss("CDKN2A", CopyNumberInterpretation.FULL_LOSS)).build();
-        GainLoss gainLoss4 =
-                ImmutableGainLoss.builder().from(GainLossTestFactory.createGainLoss("EGFR", CopyNumberInterpretation.PARTIAL_LOSS)).build();
+        GainLoss gainLoss1 = ImmutableGainLoss.builder()
+                .from(GainLossTestFactory.createGainLoss("BRAF", CopyNumberInterpretation.FULL_GAIN))
+                .minCopies(4)
+                .maxCopies(4)
+                .build();
+        GainLoss gainLoss2 = ImmutableGainLoss.builder()
+                .from(GainLossTestFactory.createGainLoss("KRAS", CopyNumberInterpretation.PARTIAL_GAIN))
+                .minCopies(3)
+                .maxCopies(8)
+                .build();
+        GainLoss gainLoss3 = ImmutableGainLoss.builder()
+                .from(GainLossTestFactory.createGainLoss("CDKN2A", CopyNumberInterpretation.FULL_LOSS))
+                .minCopies(0)
+                .maxCopies(0)
+                .build();
+        GainLoss gainLoss4 = ImmutableGainLoss.builder()
+                .from(GainLossTestFactory.createGainLoss("EGFR", CopyNumberInterpretation.PARTIAL_LOSS))
+                .minCopies(0)
+                .maxCopies(3)
+                .build();
         return Lists.newArrayList(gainLoss1, gainLoss2, gainLoss3, gainLoss4);
     }
 
