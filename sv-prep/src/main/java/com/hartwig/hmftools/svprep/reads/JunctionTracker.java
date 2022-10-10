@@ -139,7 +139,7 @@ public class JunctionTracker
             addUniqueReadGroups(readIds, junctionGroups, junction.ExactSupportGroups);
         }
 
-        // also gather up expected remote reads and mark them as such
+        // also gather expected remote reads and mark them as such
         for(ReadGroup readGroup : mExpectedReadGroups)
         {
             if(readIds.contains(readGroup.id()))
@@ -155,7 +155,7 @@ public class JunctionTracker
 
     public List<ReadGroup> getRemoteCandidateReadGroups()
     {
-        // gather up groups with a read in another partition and not linked to a junction
+        // gather groups with a read in another partition and not linked to a junction
         // to then pass to the combined cache
         return mRemoteCandidateReadGroups.stream().filter(x -> x.junctionPositions() == null).collect(Collectors.toList());
     }
@@ -164,6 +164,13 @@ public class JunctionTracker
 
     public void processRead(final ReadRecord read)
     {
+        if(!read.hasMate() && !read.hasSuppAlignment())
+        {
+            // handle unpaired reads similarly to simple groups
+            if(read.readType() == ReadType.NO_SUPPORT || readInBlacklist(read))
+                return;
+        }
+
         String readId = mReadIdTrimmer.trim(read.id());
 
         ReadGroup readGroup = mReadGroupMap.get(readId);
@@ -430,6 +437,9 @@ public class JunctionTracker
 
     private boolean readMateInBlacklist(final ReadRecord read)
     {
+        if(!read.hasMate())
+            return false;
+
         return mBlacklist.inBlacklistLocation(read.MateChromosome, read.MatePosStart, read.MatePosStart + mConfig.ReadLength);
     }
 

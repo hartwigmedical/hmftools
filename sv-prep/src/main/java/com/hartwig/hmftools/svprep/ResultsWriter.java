@@ -159,7 +159,7 @@ public class ResultsWriter
 
             mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s",
                     read.isFirstOfPair(), read.isReadReversed(), read.hasFlag(PROPER_PAIR), read.hasFlag(READ_UNMAPPED),
-                    read.isMateUnmapped(), read.hasFlag(SUPPLEMENTARY_ALIGNMENT), read.hasFlag(DUPLICATE_READ)));
+                    read.hasMate() && read.isMateUnmapped(), read.hasFlag(SUPPLEMENTARY_ALIGNMENT), read.hasFlag(DUPLICATE_READ)));
 
             mReadWriter.write(format(",%s", junctionPositions));
 
