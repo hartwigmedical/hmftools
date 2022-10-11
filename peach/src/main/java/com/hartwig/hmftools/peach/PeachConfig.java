@@ -3,6 +3,7 @@ package com.hartwig.hmftools.peach;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
@@ -60,6 +61,8 @@ public class PeachConfig {
         options.addOption(TARGET_REF_GENOME, true, "Target reference FASTA file for liftover, if liftover is needed");
 
         addOutputDir(options);
+        addLoggingOptions(options);
+
         return options;
     }
 }
