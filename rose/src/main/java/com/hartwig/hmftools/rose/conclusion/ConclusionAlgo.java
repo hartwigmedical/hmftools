@@ -454,7 +454,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyPurity);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.add("- " + entry.conclusion().replace("XX%", DataUtil.formatPercentage(purity)));
+                conclusion.add("- " + entry.conclusion().replace("XX%", DataUtil.formatPercentageRound(purity)));
             }
         }
     }

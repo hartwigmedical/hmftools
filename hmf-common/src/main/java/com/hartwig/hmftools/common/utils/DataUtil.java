@@ -24,6 +24,11 @@ public final class DataUtil {
     }
 
     @NotNull
+    public static String formatPercentageRound(double percentage) {
+        return PERCENTAGE_FORMAT.format(percentage * 100);
+    }
+
+    @NotNull
     public static String formatPercentage(double percentage) {
         return PERCENTAGE_FORMAT.format(percentage);
     }

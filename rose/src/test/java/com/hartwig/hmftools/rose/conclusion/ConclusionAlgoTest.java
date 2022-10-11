@@ -373,10 +373,10 @@ public class ConclusionAlgoTest {
         actionabilityMap =
                 testActionabilityMap(actionabilityMap, "PURITY", TypeAlteration.PURITY, "PURITY", Condition.OTHER, "low purity (XX%)");
 
-        ConclusionAlgo.generatePurityConclusion(conclusion, 0.1, true, actionabilityMap);
+        ConclusionAlgo.generatePurityConclusion(conclusion, 0.16, true, actionabilityMap);
 
         assertEquals(1, conclusion.size());
-        assertEquals(conclusion.get(0), "- low purity (0%)");
+        assertEquals(conclusion.get(0), "- low purity (16%)");
     }
 
     @Test
