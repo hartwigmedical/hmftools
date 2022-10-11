@@ -2,13 +2,18 @@ package com.hartwig.hmftools.peach;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
 public class PeachConfig {
+    @NotNull
     public final String vcfFile;
+    @NotNull
     public final String outputDir;
 
     public final boolean doLiftOver;
@@ -35,14 +40,11 @@ public class PeachConfig {
         picardJar = cmd.getOptionValue(PICARD);
         targetRefGenome = cmd.getOptionValue(TARGET_REF_GENOME);
 
-        outputDir = parseOutputDir(cmd);
+        outputDir = Objects.requireNonNull(parseOutputDir(cmd));
     }
 
     public boolean isValid()
     {
-        if(vcfFile == null || outputDir == null)
-            return false;
-
         if (doLiftOver)
             return !(liftOverBed == null || picardJar == null || chainFile == null || targetRefGenome == null);
 
