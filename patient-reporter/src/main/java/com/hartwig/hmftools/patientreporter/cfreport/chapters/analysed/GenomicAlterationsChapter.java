@@ -5,8 +5,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.hla.LilacReporting;
@@ -387,20 +385,6 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createImmunoTable(@NotNull LilacReportingData lilac, boolean hasReliablePurity) {
-        Map<String, List<LilacReporting>> lilacAlleleMap = Maps.newHashMap();
-
-        for (LilacReporting lilacAllele : lilac.lilacReporting()) {
-            List<LilacReporting> lilacAlleleList = Lists.newArrayList();
-            if (lilacAlleleMap.containsKey(lilacAllele.lilacGermlineAllele().gene())) {
-                lilacAlleleList.addAll(lilacAlleleMap.get(lilacAllele.lilacGermlineAllele().gene()));
-                lilacAlleleList.add(lilacAllele);
-                lilacAlleleMap.put(lilacAllele.lilacGermlineAllele().gene(), lilacAlleleList);
-            } else {
-                lilacAlleleList.add(lilacAllele);
-                lilacAlleleMap.put(lilacAllele.lilacGermlineAllele().gene(), lilacAlleleList);
-            }
-            lilacAlleleMap.put(lilacAllele.lilacGermlineAllele().gene(), lilacAlleleList);
-        }
 
         String title = "HLA Alleles";
         Table table = TableUtil.createReportContentTable(new float[] { 10, 10, 10, 10, 10, 10 },
@@ -413,9 +397,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoConsentReportTable(title, noConsent);
         } else {
 
-            Set<String> sortedAlleles = Sets.newTreeSet(lilacAlleleMap.keySet().stream().collect(Collectors.toSet()));
+            Set<String> sortedAlleles = Sets.newTreeSet(lilac.lilacReporting().keySet().stream().collect(Collectors.toSet()));
             for (String sortAllele : sortedAlleles) {
-                List<LilacReporting> allele = lilacAlleleMap.get(sortAllele);
+                List<LilacReporting> allele = lilac.lilacReporting().get(sortAllele);
                 table.addCell(TableUtil.createContentCell(sortAllele));
 
                 Table tableGermlineAllele = new Table(new float[] { 1 });
@@ -480,27 +464,11 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createPeachGenotypesTable(@NotNull List<PeachGenotype> peachGenotypes, boolean reportPeach) {
-
-        Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
-
-        for (PeachGenotype peach : peachGenotypes) {
-            List<PeachGenotype> peachList = Lists.newArrayList();
-            if (peachMap.containsKey(peach.gene())) {
-                peachList.addAll(peachMap.get(peach.gene()));
-                peachList.add(peach);
-                peachMap.put(peach.gene(), peachList);
-            } else {
-                peachList.add(peach);
-                peachMap.put(peach.gene(), peachList);
-            }
-            peachMap.put(peach.gene(), peachList);
-        }
+    private static Table createPeachGenotypesTable(@NotNull Map<String, List<PeachGenotype>> peachMap, boolean reportPeach) {
 
         String title = "Pharmacogenetics";
-
         if (reportPeach) {
-            if (peachGenotypes.isEmpty()) {
+            if (peachMap.isEmpty()) {
                 return TableUtil.createNoneReportTable(title, null);
             } else {
                 Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },

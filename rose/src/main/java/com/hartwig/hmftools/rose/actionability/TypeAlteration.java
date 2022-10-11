@@ -27,7 +27,6 @@ public enum TypeAlteration {
     CUPPA,
     CUPPA_INCONCLUSIVE,
     NO_HRD_CAUSE,
-    NO_MSI_HRD_PROFILE,
     NOT_BIALLELIC,
     VUS_REMARK,
     UNKNOWN;

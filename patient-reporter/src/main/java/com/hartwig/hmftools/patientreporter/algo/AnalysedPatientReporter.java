@@ -5,10 +5,12 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
@@ -106,6 +108,17 @@ public class AnalysedPatientReporter {
 
         List<PeachGenotype> peachGenotypesOverrule = sampleReport.reportPharmogenetics() ? peachGenotypes : Lists.newArrayList();
 
+        Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
+        for (PeachGenotype peach : peachGenotypesOverrule) {
+            if (peachMap.containsKey(peach.gene())) {
+                List<PeachGenotype> curent = peachMap.get(peach.gene());
+                curent.add(peach);
+                peachMap.put(peach.gene(), curent);
+            } else {
+                peachMap.put(peach.gene(), Lists.newArrayList(peach));
+            }
+        }
+
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(qcForm)
@@ -126,7 +139,7 @@ public class AnalysedPatientReporter {
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .udiDi(reportData.udiDi())
-                .peachGenotypes(peachGenotypesOverrule)
+                .peachGenotypes(peachMap)
                 .reportDate(reportDate)
                 .isWGSreport(true)
                 .build();

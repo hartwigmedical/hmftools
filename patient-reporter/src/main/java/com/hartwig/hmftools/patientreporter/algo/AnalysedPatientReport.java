@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.cuppa.interpretation.CuppaReporting;
@@ -48,7 +49,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     @NotNull
     @Override
-    public abstract List<PeachGenotype> peachGenotypes();
+    public abstract Map<String, List<PeachGenotype>> peachGenotypes();
 
     @Override
     @NotNull

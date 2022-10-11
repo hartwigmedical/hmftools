@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters.failed;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
@@ -66,7 +70,7 @@ public class QCFailPGXChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createPeachGenotypesTable(@NotNull List<PeachGenotype> peachGenotypes, boolean reportPeach) {
+    private static Table createPeachGenotypesTable(@NotNull Map<String, List<PeachGenotype>> peachGenotypes, boolean reportPeach) {
         String title = "Pharmacogenetics";
 
         if (reportPeach) {
@@ -78,20 +82,35 @@ public class QCFailPGXChapter implements ReportChapter {
                                 TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
                                 TableUtil.createHeaderCell("Source").setTextAlignment(TextAlignment.CENTER) });
 
-                for (PeachGenotype peachGenotype : Pharmacogenetics.sort(peachGenotypes)) {
-                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.gene()));
-                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
-                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.function()));
-                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()));
-                    contentTable.addCell(TableUtil.createContentCell(new Paragraph(Pharmacogenetics.sourceName(peachGenotype.urlPrescriptionInfo())).addStyle(
-                                    ReportResources.dataHighlightLinksStyle()))
-                            .setAction(PdfAction.createURI(Pharmacogenetics.url(peachGenotype.urlPrescriptionInfo())))
-                            .setTextAlignment(TextAlignment.CENTER));
+                Set<String> sortedPeach = Sets.newTreeSet(peachGenotypes.keySet().stream().collect(Collectors.toSet()));
+                for (String sortPeach : sortedPeach) {
+                    List<PeachGenotype> peachGenotypeList = peachGenotypes.get(sortPeach);
+                    contentTable.addCell(TableUtil.createContentCell(sortPeach));
+
+                    Table tableGenotype = new Table(new float[] { 1 });
+                    Table tableFunction = new Table(new float[] { 1 });
+                    Table tableLinkedDrugs = new Table(new float[] { 1 });
+                    Table tableSource = new Table(new float[] { 1 });
+
+                    for (PeachGenotype peachGenotype : peachGenotypeList) {
+                        tableGenotype.addCell(TableUtil.createTransparentCell(peachGenotype.haplotype()));
+                        tableFunction.addCell(TableUtil.createTransparentCell(peachGenotype.function()));
+                        tableLinkedDrugs.addCell(TableUtil.createTransparentCell(peachGenotype.linkedDrugs()));
+                        tableSource.addCell(TableUtil.createTransparentCell(new Paragraph(Pharmacogenetics.sourceName(peachGenotype.urlPrescriptionInfo())).addStyle(
+                                        ReportResources.dataHighlightLinksStyle()))
+                                .setAction(PdfAction.createURI(Pharmacogenetics.url(peachGenotype.urlPrescriptionInfo()))));
+                    }
+
+                    contentTable.addCell(TableUtil.createContentCell(tableGenotype));
+                    contentTable.addCell(TableUtil.createContentCell(tableFunction));
+                    contentTable.addCell(TableUtil.createContentCell(tableLinkedDrugs));
+                    contentTable.addCell(TableUtil.createContentCell(tableSource));
                 }
                 return TableUtil.createWrappingReportTable(title, null, contentTable);
             }
         } else {
-            return TableUtil.createNAReportTable(title);
+            String noConsent = "This patient did not give his/her permission for reporting of pharmacogenomics results.";
+            return TableUtil.createNoConsentReportTable(title, noConsent);
         }
     }
 

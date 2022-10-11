@@ -2,14 +2,17 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.hla.ImmutableLilacReporting;
 import com.hartwig.hmftools.common.hla.ImmutableLilacReportingData;
 import com.hartwig.hmftools.common.hla.LilacReporting;
 import com.hartwig.hmftools.common.hla.LilacReportingData;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -71,17 +74,22 @@ public final class QualityOverruleFunctions {
     }
 
     @NotNull
-    private static LilacReportingData overuleImmuno(@NotNull  LilacReportingData lilacreportingData,
-            boolean hasReliablePurity) {
+    private static LilacReportingData overuleImmuno(@NotNull LilacReportingData lilacreportingData, boolean hasReliablePurity) {
 
-        List<LilacReporting> alleles = Lists.newArrayList();
+        Map<String, List<LilacReporting>> alleles = Maps.newHashMap();
 
-        for (LilacReporting allele: lilacreportingData.lilacReporting()) {
-            alleles.add(ImmutableLilacReporting.builder()
-                            .from(allele)
-                    .germlineCopies(hasReliablePurity ? allele.germlineCopies() :  Double.NaN)
-                            .tumorCopies(hasReliablePurity ? allele.tumorCopies() :  Double.NaN)
-                    .build());
+        Set<String> lilacAlleles = Sets.newTreeSet(lilacreportingData.lilacReporting().keySet().stream().collect(Collectors.toSet()));
+        for (String allele : lilacAlleles) {
+            List<LilacReporting> lilacReportingList = lilacreportingData.lilacReporting().get(allele);
+            List<LilacReporting> lilacReportingListCurated = Lists.newArrayList();
+            for (LilacReporting reporting : lilacReportingList) {
+                lilacReportingListCurated.add(ImmutableLilacReporting.builder()
+                        .from(reporting)
+                        .germlineCopies(hasReliablePurity ? reporting.germlineCopies() : Double.NaN)
+                        .tumorCopies(hasReliablePurity ? reporting.tumorCopies() : Double.NaN)
+                        .build());
+            }
+            alleles.put(allele, lilacReportingListCurated);
         }
         return ImmutableLilacReportingData.builder().from(lilacreportingData).lilacReporting(alleles).build();
     }

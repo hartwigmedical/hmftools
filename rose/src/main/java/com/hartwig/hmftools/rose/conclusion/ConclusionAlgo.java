@@ -31,7 +31,6 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
-import com.hartwig.hmftools.rose.RoseApplication;
 import com.hartwig.hmftools.rose.RoseData;
 import com.hartwig.hmftools.rose.actionability.ActionabilityEntry;
 import com.hartwig.hmftools.rose.actionability.ActionabilityKey;
@@ -39,14 +38,11 @@ import com.hartwig.hmftools.rose.actionability.Condition;
 import com.hartwig.hmftools.rose.actionability.ImmutableActionabilityKey;
 import com.hartwig.hmftools.rose.actionability.TypeAlteration;
 
-import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.commons.compress.utils.Lists;;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class ConclusionAlgo {
-    private static final Logger LOGGER = LogManager.getLogger(RoseApplication.class);
 
     private static final Set<String> FUSION_TYPES = Sets.newHashSet(KnownFusionType.PROMISCUOUS_3.toString(),
             KnownFusionType.PROMISCUOUS_5.toString(),
@@ -140,6 +136,7 @@ public class ConclusionAlgo {
     public static void generateCUPPAConclusion(@NotNull List<String> conclusion, CuppaPrediction cuppaPrediction,
             @NotNull Map<ActionabilityKey, ActionabilityEntry> actionabilityMap) {
 
+        String likelihoodPercentage = DataUtil.formatPercentageDigit(cuppaPrediction.likelihood());
         if (cuppaPrediction.likelihood() < 0.8) {
             ActionabilityKey keyCuppaInconclusice =
                     ImmutableActionabilityKey.builder().match("CUPPA_INCONCLUSIVE").type(TypeAlteration.CUPPA_INCONCLUSIVE).build();
@@ -149,7 +146,7 @@ public class ConclusionAlgo {
                 if (cuppaPrediction.likelihood() >= 0.5) {
                     conclusion.add("- " + entry.conclusion()
                             .replace("xxx - xx%",
-                                    cuppaPrediction.cancerType() + "-" + cuppaPrediction.likelihood() + "%"));
+                                    cuppaPrediction.cancerType() + "-" + likelihoodPercentage));
                 } else {
                     conclusion.add("- " + entry.conclusion().replace(" (highest likelihood: xxx - xx%)", ""));
                 }
@@ -160,7 +157,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyCuppa);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.add("- " + entry.conclusion().replace("XXXX", cuppaPrediction.cancerType() + " (likelihood: " + cuppaPrediction.likelihood() +"%)"));
+                conclusion.add("- " + entry.conclusion().replace("XXXX", cuppaPrediction.cancerType() + " (likelihood: " + likelihoodPercentage + ")"));
             }
         }
     }
@@ -255,11 +252,11 @@ public class ConclusionAlgo {
                     .display()
                     .equals(CopyNumberInterpretation.PARTIAL_LOSS.display())) {
 
-                ActionabilityKey keyVirus = ImmutableActionabilityKey.builder().match(gainLoss.gene()).type(TypeAlteration.LOSS).build();
-                ActionabilityEntry entry = actionabilityMap.get(keyVirus);
+                ActionabilityKey keyLoss = ImmutableActionabilityKey.builder().match(gainLoss.gene()).type(TypeAlteration.LOSS).build();
+                ActionabilityEntry entry = actionabilityMap.get(keyLoss);
 
                 if (entry != null && (entry.condition() == Condition.ALWAYS || entry.condition() == Condition.ALWAYS_NO_ACTIONABLE)) {
-                    String copies = " (min copies: " + gainLoss.minCopies() + ", max copies: " + gainLoss.maxCopies() + ")";
+                    String copies = " (copies: " + gainLoss.minCopies() + ")";
                     conclusion.add("- " + gainLoss.gene() + copies + " " + entry.conclusion());
                     actionable.add("CNV");
                 }
@@ -268,12 +265,12 @@ public class ConclusionAlgo {
             if (gainLoss.interpretation().display().equals(CopyNumberInterpretation.FULL_GAIN.display()) || gainLoss.interpretation()
                     .display()
                     .equals(CopyNumberInterpretation.PARTIAL_GAIN.display())) {
-                ActionabilityKey keyVirus =
+                ActionabilityKey keyGain =
                         ImmutableActionabilityKey.builder().match(gainLoss.gene()).type(TypeAlteration.AMPLIFICATION).build();
-                ActionabilityEntry entry = actionabilityMap.get(keyVirus);
+                ActionabilityEntry entry = actionabilityMap.get(keyGain);
 
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
-                    String copies = " (min copies: " + gainLoss.minCopies() + ", max copies: " + gainLoss.maxCopies() + ")";
+                    String copies = " (copies: " + gainLoss.maxCopies() + ")";
                     conclusion.add("- " + gainLoss.gene() + copies + " " + entry.conclusion());
                     actionable.add("CNV");
                 }
@@ -457,7 +454,7 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entry = actionabilityMap.get(keyPurity);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.add("- " + entry.conclusion().replace("XX%", DataUtil.formatPercentage(purity)));
+                conclusion.add("- " + entry.conclusion().replace("XX%", DataUtil.formatPercentageRound(purity)));
             }
         }
     }
