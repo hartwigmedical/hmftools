@@ -252,8 +252,8 @@ public class ConclusionAlgo {
                     .display()
                     .equals(CopyNumberInterpretation.PARTIAL_LOSS.display())) {
 
-                ActionabilityKey keyVirus = ImmutableActionabilityKey.builder().match(gainLoss.gene()).type(TypeAlteration.LOSS).build();
-                ActionabilityEntry entry = actionabilityMap.get(keyVirus);
+                ActionabilityKey keyLoss = ImmutableActionabilityKey.builder().match(gainLoss.gene()).type(TypeAlteration.LOSS).build();
+                ActionabilityEntry entry = actionabilityMap.get(keyLoss);
 
                 if (entry != null && (entry.condition() == Condition.ALWAYS || entry.condition() == Condition.ALWAYS_NO_ACTIONABLE)) {
                     String copies = " (copies: " + gainLoss.minCopies() + ")";
@@ -265,9 +265,9 @@ public class ConclusionAlgo {
             if (gainLoss.interpretation().display().equals(CopyNumberInterpretation.FULL_GAIN.display()) || gainLoss.interpretation()
                     .display()
                     .equals(CopyNumberInterpretation.PARTIAL_GAIN.display())) {
-                ActionabilityKey keyVirus =
+                ActionabilityKey keyGain =
                         ImmutableActionabilityKey.builder().match(gainLoss.gene()).type(TypeAlteration.AMPLIFICATION).build();
-                ActionabilityEntry entry = actionabilityMap.get(keyVirus);
+                ActionabilityEntry entry = actionabilityMap.get(keyGain);
 
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
                     String copies = " (copies: " + gainLoss.maxCopies() + ")";
