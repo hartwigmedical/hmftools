@@ -61,7 +61,9 @@ public class PeachApplication {
                     "OUTPUT=" + v38Vcf,
                     "REFERENCE_SEQUENCE=" + config.targetRefGenome,
                     "REJECT=" + rejectVcf,
-                    "RECOVER_SWAPPED_REF_ALT=true"
+                    "RECOVER_SWAPPED_REF_ALT=true",
+                    "WRITE_ORIGINAL_POSITION=true",
+                    "WRITE_ORIGINAL_ALLELES=true"
             );
             try
             {
