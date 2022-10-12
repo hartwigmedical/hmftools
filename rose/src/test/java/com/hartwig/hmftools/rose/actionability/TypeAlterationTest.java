@@ -27,7 +27,6 @@ public class TypeAlterationTest {
         assertEquals(TypeAlteration.CUPPA, TypeAlteration.toType("CUPPA"));
         assertEquals(TypeAlteration.CUPPA_INCONCLUSIVE, TypeAlteration.toType("CUPPA_INCONCLUSIVE"));
         assertEquals(TypeAlteration.NO_HRD_CAUSE, TypeAlteration.toType("NO_HRD_CAUSE"));
-        assertEquals(TypeAlteration.NO_MSI_HRD_PROFILE, TypeAlteration.toType("NO_MSI_HRD_PROFILE"));
         assertEquals(TypeAlteration.NOT_BIALLELIC, TypeAlteration.toType("NOT_BIALLELIC"));
     }
 

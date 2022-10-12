@@ -4,9 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
@@ -89,6 +91,17 @@ public class QCFailReporter {
             peachGenotypesOverrule = sampleReport.reportPharmogenetics() ? peachGenotypes : Lists.newArrayList();
         }
 
+        Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
+        for (PeachGenotype peach : peachGenotypesOverrule) {
+            if (peachMap.containsKey(peach.gene())) {
+                List<PeachGenotype> curent = peachMap.get(peach.gene());
+                curent.add(peach);
+                peachMap.put(peach.gene(), curent);
+            } else {
+                peachMap.put(peach.gene(), com.google.common.collect.Lists.newArrayList(peach));
+            }
+        }
+
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(reason.qcFormNumber())
@@ -101,7 +114,7 @@ public class QCFailReporter {
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .udiDi(reportData.udiDi())
-                .peachGenotypes(peachGenotypesOverrule)
+                .peachGenotypes(peachMap)
                 .purpleQC(purpleQc)
                 .reportDate(reportDate)
                 .isWGSreport(true)

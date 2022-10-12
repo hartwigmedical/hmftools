@@ -119,7 +119,7 @@ public final class ExampleAnalysisTestFactory {
         List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<GeneDisruption> disruptions = createCOLO829Disruptions();
         List<AnnotatedVirus> viruses = Lists.newArrayList();
-        List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
+        Map<String, List<PeachGenotype>> peachGenotypes = createTestPeachGenotypes();
         LilacReportingData lilac = createTestLilacData();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), config.reportGermline(), config.limsCohortConfig());
@@ -1375,60 +1375,65 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<PeachGenotype> createTestPeachGenotypes() {
-        return Lists.newArrayList(ImmutablePeachGenotype.builder()
-                        .gene("DPYD")
-                        .haplotype("*1_HOM")
-                        .function("Normal Function")
-                        .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
-                        .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939"
-                                + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963"
-                                + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
-                        .panelVersion("PGx_min_DPYD_v1.2")
-                        .repoVersion("1.6")
-                        .build(),
-                ImmutablePeachGenotype.builder()
-                        .gene("DPYD")
-                        .haplotype("*2_HOM")
-                        .function("Normal Function")
-                        .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
-                        .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939"
-                                + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963"
-                                + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
-                        .panelVersion("PGx_min_DPYD_v1.2")
-                        .repoVersion("1.6")
-                        .build());
+    private static Map<String, List<PeachGenotype>> createTestPeachGenotypes() {
+        Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
+        peachMap.put("DPYD",
+                Lists.newArrayList(ImmutablePeachGenotype.builder()
+                                .gene("DPYD")
+                                .haplotype("*1_HOM")
+                                .function("Normal Function")
+                                .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
+                                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939"
+                                        + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963"
+                                        + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
+                                .panelVersion("PGx_min_DPYD_v1.2")
+                                .repoVersion("1.6")
+                                .build(),
+                        ImmutablePeachGenotype.builder()
+                                .gene("DPYD")
+                                .haplotype("*2_HOM")
+                                .function("Normal Function")
+                                .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
+                                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939"
+                                        + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963"
+                                        + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
+                                .panelVersion("PGx_min_DPYD_v1.2")
+                                .repoVersion("1.6")
+                                .build()));
+        return peachMap;
     }
 
     @NotNull
     private static LilacReportingData createTestLilacData() {
-        List<LilacReporting> alleles = Lists.newArrayList();
+        Map<String, List<LilacReporting>> alleles = Maps.newHashMap();
 
-        alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
-                .gene("HLA-A")
-                .germlineAllele("A*456")
-                .build()).interpretation("None").build());
-        alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
-                .gene("HLA-A")
-                .germlineAllele("A*123")
-                .build()).tumorCopies(1D).interpretation("Yes").build());
-        alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
-                .gene("HLA-B")
-                .germlineAllele("B*456")
-                .build()).tumorCopies(1D).interpretation("Yes, but mutation(s) detected").build());
-        alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
-                .gene("HLA-B")
-                .germlineAllele("B*456")
-                .build()).tumorCopies(0.9).interpretation("Yes").build());
-        alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
-                .gene("HLA-C")
-                .germlineAllele("C*789")
-                .build()).tumorCopies(0.7).interpretation("None").build());
-        alleles.add(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
-                .gene("HLA-C")
-                .germlineAllele("C*789")
-                .build()).tumorCopies(0.8).interpretation("Unknown").build());
-
+        alleles.put("HLA-A",
+                Lists.newArrayList(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                                .gene("HLA-A")
+                                .germlineAllele("A*456")
+                                .build()).interpretation("None").build(),
+                        createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                                .gene("HLA-A")
+                                .germlineAllele("A*123")
+                                .build()).tumorCopies(1D).interpretation("Yes").build()));
+        alleles.put("HLA-B",
+                Lists.newArrayList(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                                .gene("HLA-B")
+                                .germlineAllele("B*456")
+                                .build()).tumorCopies(1D).interpretation("Yes, but mutation(s) detected").build(),
+                        createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                                .gene("HLA-B")
+                                .germlineAllele("B*456")
+                                .build()).tumorCopies(0.9).interpretation("Yes").build()));
+        alleles.put("HLA-C",
+                Lists.newArrayList(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                                .gene("HLA-C")
+                                .germlineAllele("C*789")
+                                .build()).tumorCopies(0.7).interpretation("None").build(),
+                        createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                                .gene("HLA-C")
+                                .germlineAllele("C*789")
+                                .build()).tumorCopies(0.8).interpretation("Unknown").build()));
         return ImmutableLilacReportingData.builder().lilacQc("PASS").lilacReporting(alleles).build();
     }
 

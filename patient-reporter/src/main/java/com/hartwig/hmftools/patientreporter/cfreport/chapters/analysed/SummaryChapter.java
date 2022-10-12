@@ -144,8 +144,9 @@ public class SummaryChapter implements ReportChapter {
             div.add(new Paragraph("Summary of clinical relevance").addStyle(ReportResources.sectionTitleStyle()));
 
             div.add(new Paragraph(text).setWidth(contentWidth()).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
-            div.add(new Paragraph("\nThis summary is generated based on DNA analysis only. Medical history and clinical patient characteristics "
-                    + "have not been considered.").addStyle(ReportResources.subTextStyle()));
+            div.add(new Paragraph(
+                    "\nThis summary is generated based on DNA analysis only. Medical history and clinical patient characteristics "
+                            + "have not been considered.").addStyle(ReportResources.subTextStyle()));
 
             reportDocument.add(div);
         }
@@ -372,28 +373,13 @@ public class SummaryChapter implements ReportChapter {
         Div div = createSectionStartDiv(contentWidth());
         String title = "Pharmacogenetics";
 
-        Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
-
-        for (PeachGenotype peach : patientReport.peachGenotypes()) {
-            List<PeachGenotype> peachList = Lists.newArrayList();
-            if (peachMap.containsKey(peach.gene())) {
-                peachList.addAll(peachMap.get(peach.gene()));
-                peachList.add(peach);
-                peachMap.put(peach.gene(), peachList);
-            } else {
-                peachList.add(peach);
-                peachMap.put(peach.gene(), peachList);
-            }
-            peachMap.put(peach.gene(), peachList);
-        }
-
         Table contentTable = TableUtil.createReportContentTableSummary(new float[] { 10, 10, 10 },
                 new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Number haplotypes"),
                         TableUtil.createHeaderCell("Function") });
 
-        Set<String> sortedPeach = Sets.newTreeSet(peachMap.keySet().stream().collect(Collectors.toSet()));
+        Set<String> sortedPeach = Sets.newTreeSet(patientReport.peachGenotypes().keySet().stream().collect(Collectors.toSet()));
         for (String sortPeach : sortedPeach) {
-            List<PeachGenotype> peachGenotypeList = peachMap.get(sortPeach);
+            List<PeachGenotype> peachGenotypeList = patientReport.peachGenotypes().get(sortPeach);
 
             Set<String> function = Sets.newHashSet();
             int count = peachGenotypeList.size();
@@ -413,28 +399,15 @@ public class SummaryChapter implements ReportChapter {
     private void renderHla(@NotNull Document report) {
         Div div = createSectionStartDiv(contentWidth());
         String title = "HLA Alleles";
-        Map<String, List<LilacReporting>> lilacAlleleMap = Maps.newHashMap();
-
-        for (LilacReporting lilacReporting : patientReport.genomicAnalysis().lilac().lilacReporting()) {
-            List<LilacReporting> lilacAlleleList = Lists.newArrayList();
-            if (lilacAlleleMap.containsKey(lilacReporting.lilacGermlineAllele().gene())) {
-                lilacAlleleList.addAll(lilacAlleleMap.get(lilacReporting.lilacGermlineAllele().gene()));
-                lilacAlleleList.add(lilacReporting);
-                lilacAlleleMap.put(lilacReporting.lilacGermlineAllele().gene(), lilacAlleleList);
-            } else {
-                lilacAlleleList.add(lilacReporting);
-                lilacAlleleMap.put(lilacReporting.lilacGermlineAllele().gene(), lilacAlleleList);
-            }
-            lilacAlleleMap.put(lilacReporting.lilacGermlineAllele().gene(), lilacAlleleList);
-        }
 
         Table table = TableUtil.createReportContentTableSummary(new float[] { 15, 15, 15 },
                 new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Germline allele"),
                         TableUtil.createHeaderCell("Interpretation: presence in tumor") });
 
-        Set<String> sortedAlleles = Sets.newTreeSet(lilacAlleleMap.keySet().stream().collect(Collectors.toSet()));
+        Set<String> sortedAlleles =
+                Sets.newTreeSet(patientReport.genomicAnalysis().lilac().lilacReporting().keySet().stream().collect(Collectors.toSet()));
         for (String sortAllele : sortedAlleles) {
-            List<LilacReporting> allele = lilacAlleleMap.get(sortAllele);
+            List<LilacReporting> allele = patientReport.genomicAnalysis().lilac().lilacReporting().get(sortAllele);
 
             Set<String> germlineAllele = Sets.newHashSet();
             Set<String> interpretation = Sets.newHashSet();
@@ -473,7 +446,7 @@ public class SummaryChapter implements ReportChapter {
             return "Present in tumor";
         } else if (interpretation.contains("No")) {
             return "Not present in tumor";
-        }else {
+        } else {
             return Strings.EMPTY;
         }
     }

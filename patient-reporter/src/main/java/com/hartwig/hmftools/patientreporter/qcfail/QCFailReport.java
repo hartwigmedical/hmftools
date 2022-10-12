@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.qcfail;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -59,7 +60,7 @@ public abstract class QCFailReport implements PatientReport {
 
     @NotNull
     @Override
-    public abstract List<PeachGenotype> peachGenotypes();
+    public abstract Map<String, List<PeachGenotype>> peachGenotypes();
 
     @NotNull
     @Override

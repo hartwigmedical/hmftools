@@ -40,6 +40,10 @@ KINASE_DOMAIN_DUPLICATION | Actionable when the genomic event determined a kinas
 LOSS | Actionable when the gene is deleted
 POSITIVE | Actionable when there is a positive call for a specific signature e.g. HRD deficient 
 RESISTANCE_MUTATION | Actionable when it is related to a resistence mutation
+ACTIVATING_MUTATION_BRAF_CLASS_I  | Actionable when the mutation is a class I mutation
+ACTIVATING_MUTATION_BRAF_CLASS_II | Actionable when the mutation is a class II mutation
+ACTIVATING_MUTATION_BRAF_CLASS_III  | Actionable when the mutation is a class III mutation
+PROMOTER_MUTATION | Actionable when the variant is a promoter mutation 
 
 The field type alteration could also contain the following values which are related to disclaimers or general information which are 
 important to know for interpretation of the clinical relevance:
@@ -55,8 +59,8 @@ CUPPA_INCONCLUSIVE | The molecular tissue of origin classifier prediction could 
 NO_ONCOGENIC | The WGS analyse could not detect any oncogenic genomic event/signature
 NO_ACTIONABLE | The WGS analyse could not detect any oncogenic genomic event/signature wich is actionable 
 NO_HRD_CAUSE | The WGS analyse detected an HRD mutational profile but no genomic event has been found to support this signature 
-NO_MSI_HRD_PROFILE | The WGS analyse detected no genomic event supportting the HRD/MSI signature that has been found  
 NOT_BIALLELIC | The WGS analyse called a TSG small variant but the variant itself is not biallelic  
+VUS_REMARK  | A sentence that the detected variant is a VUS
 
 ## Matching of actionability based on genomic events and signatures
 Genomic events and signatures are categorized in six categories and actionability is matched for every category independently.
@@ -75,6 +79,10 @@ variants the precense is relevant for clinical interpretation but without action
 and will be added into the conclusion unless the driver likelihood. 
   - Checking the presence if the variant is bi-allelic. When an intact allele is still present, we notify this for interpretation
 
+Next to this there are some other logics: 
+- When the HRD signature is called, the HRD variants are also mentioned in the conclusion unless the driver likelihood 
+- When there are 2 or more variants of the same gene this will be shown in one sentence. 
+
 Do note that germline and somatic variants are treated equally. It is not considered relevant for clinical evidence whether the variant is
 present in the germline already or has been acquired by the tumor somatically.
 
@@ -83,6 +91,8 @@ Actionability on amplifications and deletions is considered applicable in case a
 [PURPLE](../purple/README.md). If an CNV is called, the actionability will be match with the following type alteration: 
 - If it is an amplification the type alteration will be AMPLIFICATION
 - If it is a deletion the type alteration will be LOSS
+
+When the CNV is present in the actionability db the gene copy numbers of that gene is also added to the conclusion 
 
 #### Homozygous disruptions
 When a gene has been homozygously disrupted according to [LINX](../linx/README.md), the actionability will always match with the
@@ -97,6 +107,8 @@ actionability of KINASE_DOMAIN_DUPLICATION for EGFR
 - If fusion type is PROMISCUOUS_3, PROMISCUOUS_5, KNOWN_PAIR, IG_KNOWN_PAIR or IG_PROMISCUOUS this will match to the type alteration
 FUSION for actionability when the fusion gene is either on 3' promiscuous or 5' side 
 
+For every actionable fusion the range of the fusion will also be added. 
+
 #### Viral presence
 For matching viral presence to actionability, the interpretation by [Virus Interpreter](../virus-interpreter/README.md) is used. 
 The type alteration will be POSITIVE and the virus should be present in the actionability database. Also, the actionability is meets 
@@ -106,7 +118,7 @@ unless the driver likelihood
 The signatures are categorized in four categories and actionability is matched for every category independently.
 
 ###### HRD
-When a tumor has the signature homologous recombination repair, which means a value >= 0.5 with the status omologous recombination 
+When a tumor has the signature homologous recombination repair, which means a value >= 0.5 with the status homologous recombination 
 deficient, according to [CHORD](https://github.com/UMCUGenetics/CHORD) the signature is match for actionability. Also, when there is no 
 support for this signature this will be also mentioned. 
 
@@ -128,9 +140,12 @@ the signature is match for actionability.
 At the start of the clinical conclusion, the patient tumor location is mentioned. 
 
 ###### Molecular Tissue of Origin classifier
-The molecular tissue of origin classifier predicts the primary tumor location of the patient based on the WGS date by 
-[CUPPA](../cuppa/README.md). When this classify a tumor location with a likelihood above the 80% the primary tumor location is added. 
-However, it is also possible that the likelihood is below the 80% and then 'inconclusive' is added to the clincial conclusion. 
+The molecular tissue of origin classifier predicts the primary tumor location of the patient based on the WGS data by 
+[CUPPA](../cuppa/README.md). When this classify a tumor location with a likelihood above the 80% the primary tumor location is added with 
+their likelihood. 
+However, it is also possible that the likelihood is below the 80% and then the tumor prediction is 'inconclusive'. When 'inconclusive' 
+is predicted but with a likelihood above 50% the classification is also added with highest likelihood. When the likleihood is below 50% then 
+only 'inconclusive' is shown in the conclusion. 
 
 ###### Disclaimer of tumor purity
 For every sample which we have analysed the tumor purity will be determined. For this, there are two flavours: 
@@ -152,9 +167,31 @@ Field  | Description | Example
 conclusion | The clinical conclusion of the sample | BRCA2 inactivation, potential benefit from PARP inhibitors <enter> BRCA1 inactivation, potential benefit from PARP inhibitors <enter>
 
 ## Known issues 
-- We don't interpret the type alteration for NO_MSI_HRD_PROFILE, EXTRACELLULAR_DOMAIN_MUTATION and RESISTANCE_MUTATION
+The following field type alteration didn't interpret currently but present in the actionability db: 
+
+Field |
+--- |
+EXTRACELLULAR_DOMAIN_MUTATION |
+RESISTANCE_MUTATION |
+ACTIVATING_MUTATION_BRAF_CLASS_I  |
+ACTIVATING_MUTATION_BRAF_CLASS_II |
+ACTIVATING_MUTATION_BRAF_CLASS_III  |
+PROMOTER_MUTATION |
+GERMLINE  |
+VUS_REMARK  |
 
 ## Version History and Download Links
+- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/rose-v1.3)
+  - Solve the bug of purity percentage
+- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/rose-v1.2)
+  - Updating the matching of fusions (updating fusion name + adding the fusion range)
+  - Support combining variants of the same gene and determine the balletic status of the variants 
+  - Add variants of HRD genes to the conclusion when the signature is HRD 
+  - Add the positive calls of viruses 
+  - Add the gene copy number to the CNV. (min copy number for losses and max copy number for gains)
+  - Update the output layout of ROSE. 
+    - Remove sample ID 
+    - Add every clinical relevant finding to an new row
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/rose-v1.1)
   - Add the primary tumor location of the patient at the start of the clinical summary 
   - Add space between signature and the score of the signature 
