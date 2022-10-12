@@ -4,7 +4,9 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -14,10 +16,12 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_EXACT_BASE_PERC;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_MAP_QUALITY;
+import static com.hartwig.hmftools.svprep.SvConstants.UNPAIRED_READ_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.svprep.reads.DiscordantGroups.formDiscordantJunctions;
 import static com.hartwig.hmftools.svprep.reads.DiscordantGroups.isDiscordantGroup;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
@@ -334,6 +338,9 @@ public class JunctionTracker
 
     public void findDiscordantGroups()
     {
+        if(mConfig.UnpairedReads)
+            return;
+
         perfCounterStart(PerfCounters.DiscordantGroups);
 
         if(mCandidateDiscordantGroups.size() > 1000)
@@ -589,7 +596,7 @@ public class JunctionTracker
         // first check indel support
         checkIndelSupport(read, supportedJunctions);
 
-        int maxSupportDistance = mFilterConfig.maxSupportingFragmentDistance();
+        int maxSupportDistance = mConfig.UnpairedReads ? UNPAIRED_READ_JUNCTION_DISTANCE : mFilterConfig.maxSupportingFragmentDistance();
 
         // first check the last index since the next read is likely to be close by
         int closeJunctionIndex = -1;
@@ -654,7 +661,7 @@ public class JunctionTracker
             return;
         }
 
-        if(readType != SUPPORT && hasDiscordantJunctionSupport(read, junctionData, mFilterConfig))
+        if(readType != SUPPORT && !mConfig.UnpairedReads && hasDiscordantJunctionSupport(read, junctionData, mFilterConfig))
         {
             junctionData.addReadType(read, SUPPORT);
             read.setReadType(SUPPORT, true);
@@ -791,19 +798,20 @@ public class JunctionTracker
     public static boolean hasExactJunctionSupport(
             final ReadRecord read, final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {
-        boolean leftSoftClipped = leftSoftClipped(read.cigar());
-        boolean rightSoftClipped = rightSoftClipped(read.cigar());
+        boolean leftSoftClipped = read.cigar().isLeftClipped();
+        boolean rightSoftClipped = read.cigar().isRightClipped();
 
         if(!leftSoftClipped && !rightSoftClipped)
             return false;
 
-        /*
-        eg if there is a candidate read with 101M50S at base 1000, how does a supporting read need to align and match?
-         In this case the soft clip is at 1050. Check all reads which have a soft clip on the same side within +/- 50 bases.
-        eg. you may find a read with soft clip at 1047 with 10S.
-        Check if the 10 bases match the last 3 M and first 7S of the original read allowing for low base qual mismatches.
-         If they do then that counts as an additional read even though it is much shorter soft clip and does not exactly match the base.
-         */
+        // for a read to be classified as exact support it needs to meet the following criteria:
+        // a) soft or hard-clipped at exactly the same base as the junction
+        // b) soft-clipped before or after the junction with:
+        // - the read's ref/SC bases matching any overlapping junction ref/SC bases
+        // - allowing for 1 high-qual mismatch
+        // - ignoring low-qual mismatches
+        // - requiring > 25% of all bases to match
+
         final ReadRecord juncRead = junctionData.topJunctionRead();
 
         if(junctionData.Orientation == POS_ORIENT)
@@ -824,9 +832,9 @@ public class JunctionTracker
                 return false;
 
             // must also overlap the junction
-            int scLength = read.cigar().getLastCigarElement().getLength();
+            int scLength = rightSoftClipLength(read.record());
 
-            if(readRightPos + scLength < junctionData.Position)
+            if(read.start() > junctionData.Position || readRightPos + scLength < junctionData.Position)
                 return false;
 
             int readLength = read.readBases().length();
@@ -839,9 +847,15 @@ public class JunctionTracker
 
             int junctionReadOffset = juncReadEndPosIndex - readEndPosIndex - endPosDiff;
 
-            // test against all the read's right soft-clipped bases
+            // test all overlapping bases - either from ref or soft-clip bases
+            int startIndex = readLength - scLength - max(read.end() - junctionData.Position, 0);
+
+            if(startIndex < 0)
+                return false;
+
             int highQualMismatches = 0;
-            for(int i = readLength - scLength; i < readLength; ++i)
+            int baseMatches = 0;
+            for(int i = startIndex; i < readLength; ++i)
             {
                 char readBase = read.readBases().charAt(i);
 
@@ -852,7 +866,10 @@ public class JunctionTracker
                 char juncReadBase = juncRead.readBases().charAt(juncIndex);
 
                 if(readBase == juncReadBase)
+                {
+                    ++baseMatches;
                     continue;
+                }
 
                 if(read.baseQualities()[i] < LOW_BASE_QUALITY || juncRead.baseQualities()[juncIndex] < LOW_BASE_QUALITY)
                     continue;
@@ -862,6 +879,9 @@ public class JunctionTracker
                 if(highQualMismatches > MAX_HIGH_QUAL_BASE_MISMATCHES)
                     return false;
             }
+
+            double baseMatchPerc = baseMatches / (double)(readLength - startIndex);
+            return baseMatchPerc > MIN_EXACT_BASE_PERC;
         }
         else
         {
@@ -886,9 +906,9 @@ public class JunctionTracker
             // junc: SC length -> start position
             // junc read index = sc length diff - position diff
 
-            int scLength = read.cigar().getFirstCigarElement().getLength();
+            int scLength = leftSoftClipLength(read.record());
 
-            if(readLeftPos - scLength > junctionData.Position)
+            if(read.end() < junctionData.Position || readLeftPos - scLength > junctionData.Position)
                 return false;
 
             int juncReadScLength = juncRead.cigar().getFirstCigarElement().getLength();
@@ -896,9 +916,13 @@ public class JunctionTracker
             int softClipDiff = juncReadScLength - scLength;
             int junctionReadOffset = softClipDiff - posOffset;
             int juncReadLength = juncRead.readBases().length();
-            int highQualMismatches = 0;
 
-            for(int i = 0; i < scLength; ++i)
+            int endIndex = scLength + max(junctionData.Position - read.start(), 0);
+
+            int highQualMismatches = 0;
+            int baseMatches = 0;
+
+            for(int i = 0; i < endIndex; ++i)
             {
                 char readBase = read.readBases().charAt(i);
 
@@ -909,7 +933,10 @@ public class JunctionTracker
                 char juncReadBase = juncRead.readBases().charAt(juncIndex);
 
                 if(readBase == juncReadBase)
+                {
+                    ++baseMatches;
                     continue;
+                }
 
                 if(read.baseQualities()[i] < LOW_BASE_QUALITY || juncRead.baseQualities()[juncIndex] < LOW_BASE_QUALITY)
                     continue;
@@ -919,9 +946,10 @@ public class JunctionTracker
                 if(highQualMismatches > MAX_HIGH_QUAL_BASE_MISMATCHES)
                     return false;
             }
-        }
 
-        return true;
+            double baseMatchPerc = baseMatches / (double)endIndex;
+            return baseMatchPerc > MIN_EXACT_BASE_PERC;
+        }
     }
 
     private void filterJunctions()

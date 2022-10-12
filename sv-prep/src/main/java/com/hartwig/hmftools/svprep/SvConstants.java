@@ -31,8 +31,10 @@ public final class SvConstants
 
     // supporting reads
     public static final int MIN_SUPPORTING_READ_DISTANCE = 50;
+    public static final int UNPAIRED_READ_JUNCTION_DISTANCE = 5;
     public static final int MAX_SUPPORT_FRAGMENT_DISTANCE = 1000;
     public static final int MAX_HIGH_QUAL_BASE_MISMATCHES = 1;
+    public static final double MIN_EXACT_BASE_PERC = 0.25;
 
     // discordant groups
     public static final int DISCORDANT_GROUP_MIN_FRAGMENTS = 3;

@@ -73,6 +73,7 @@ public class SvConfig
     public final int Threads;
     public final boolean UseCacheBam;
     public final boolean TrimReadId;
+    public final boolean UnpairedReads;
 
     // debug
     public final List<String> SpecificChromosomes;
@@ -113,6 +114,7 @@ public class SvConfig
     private static final String NO_TRIM_READ_ID = "no_trim_read_id";
     private static final String PERF_DEBUG = "perf_debug";
     private static final String JUNCTION_FRAGS_CAP = "junction_frags_cap";
+    private static final String UNPAIRED_READS = "unpaired_reads";
 
     public SvConfig(final CommandLine cmd)
     {
@@ -180,6 +182,7 @@ public class SvConfig
 
         // optimisations and debug
         TrimReadId = !cmd.hasOption(NO_TRIM_READ_ID) && SpecificRegions.isEmpty();
+        UnpairedReads = cmd.hasOption(UNPAIRED_READS);
         UseCacheBam = !cmd.hasOption(NO_CACHE_BAM) && SpecificRegions.isEmpty();
         MaxPartitionReads = Integer.parseInt(cmd.getOptionValue(MAX_PARTITION_READS, "0"));
         JunctionFragmentCap = Integer.parseInt(cmd.getOptionValue(JUNCTION_FRAGS_CAP, "0"));
@@ -285,6 +288,7 @@ public class SvConfig
         UseCacheBam = false;
         PerfDebug = false;
         TrimReadId = false;
+        UnpairedReads = false;
         NoCleanUp = false;
         JunctionFragmentCap = 0;
     }
@@ -305,6 +309,7 @@ public class SvConfig
         options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_CHR_PARTITION_SIZE);
         options.addOption(CALC_FRAG_LENGTH, false, "Calculate distribution for fragment length");
         options.addOption(WRITE_TYPES, true, "Write types: " + WriteType.values().toString());
+        options.addOption(UNPAIRED_READS, false, "Unpaired reads ignores non-expect junction support");
         addSpecificChromosomesRegionsConfig(options);
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
         options.addOption(MAX_PARTITION_READS, true, "Limit to stop processing reads in partition, for debug");
