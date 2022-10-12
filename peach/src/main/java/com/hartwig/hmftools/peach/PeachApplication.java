@@ -49,7 +49,7 @@ public class PeachApplication {
             String adjustedChainFile = getAdjustedChainFile(config.chainFile);
 
             PCH_LOGGER.info("do lift over");
-            v38Vcf = getExtendedFileName(config.vcfFile, "38", ".vcf");
+            v38Vcf = getExtendedFileName(config.vcfFile, "liftover", ".vcf");
             String rejectVcf = getExtendedFileName(config.vcfFile, "reject", ".vcf");
             ProcessBuilder pb = new ProcessBuilder(
                     "java",
