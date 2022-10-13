@@ -66,7 +66,7 @@ public class PeachApplication
             doLiftover(liftOverVcf, rejectVcf);
 
             PCH_LOGGER.info("read bed of important regions");
-            var chromosomeToRelevantRegions = loadBedFile(config.liftOverBed);
+            Map<Chromosome, List<BaseRegion>> chromosomeToRelevantRegions = loadBedFile(config.liftOverBed);
 
             PCH_LOGGER.info("check rejected liftover variants for relevance");
             int potentiallyMissedCount = countPotentiallyRelevantVariantsMissed(rejectVcf, chromosomeToRelevantRegions);
