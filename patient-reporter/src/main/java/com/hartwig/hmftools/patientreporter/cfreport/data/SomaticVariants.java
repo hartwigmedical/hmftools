@@ -55,17 +55,6 @@ public final class SomaticVariants {
         }).collect(Collectors.toList());
     }
 
-    @NotNull
-    public static String determineCanonicalImpact(@NotNull String canonicalHgvsCodingImpact, @NotNull String canonicalEffect) {
-        String consequence;
-        if (canonicalEffect.equals(UPSTREAM_GENE_VARIANT)) {
-            consequence = "upstream";
-        } else {
-            consequence = canonicalHgvsCodingImpact;
-        }
-        return consequence;
-    }
-
     public static boolean hasNotifiableGermlineVariant(@NotNull Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant) {
         for (Boolean notify : notifyGermlineStatusPerVariant.values()) {
             if (notify) {
