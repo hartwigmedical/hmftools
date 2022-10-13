@@ -45,10 +45,9 @@ public class ExplanationChapter implements ReportChapter {
 
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] { "The analysis is based on reference genome version GRCh37." }))
-                .add(createContentDivWithLinkThree("Transcripts used for reporting can be found on",
-                        "https://resources.hartwigmedicalfoundation.nl",
-                        " in directory 'Patient-Reporting' and are generally the canonical transcripts as defined by Ensembl.",
-                        "https://resources.hartwigmedicalfoundation.nl"))
+                .add(createContentDivWithLinkThree("Transcripts used for reporting can be ", "downloaded",
+                        " and are generally the canonical transcripts as defined by Ensembl.",
+                        "https://storage.googleapis.com/hmf-public/OncoAct-Resources/latest_oncoact.zip"))
                 .add(createContentDiv(new String[] {
                         "Variant detection in samples with lower tumor content is less sensitive. In case of a low tumor "
                                 + "purity (below 20%) likelihood of failing to detect potential variants increases.",
@@ -108,9 +107,9 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] { "The canonical, or otherwise longest transcript validly fused is reported." }))
-                .add(createContentDivWithLinkThree("Fusions are restricted to those in the HMF known fusion list and can be found on ",
-                        "https://resources.hartwigmedicalfoundation.nl ", "in directory 'Patient-Reporting'. ",
-                        "https://resources.hartwigmedicalfoundation.nl"))
+                .add(createContentDivWithLinkThree("Fusions are restricted to those in the HMF known fusion list and can be ",
+                        "downloaded", ". ",
+                        "https://storage.googleapis.com/hmf-public/OncoAct-Resources/latest_oncoact.zip"))
                 .add(createContentDiv(new String[] {
                         "We additionally select fusions where one partner is promiscuous in either 5' or 3' position.",
                         "The 'Driver' field is set to HIGH in case the fusion is a known pathogenic fusion, or otherwise a fusion where "
@@ -148,10 +147,9 @@ public class ExplanationChapter implements ReportChapter {
                         + "mean coverage."})));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDivWithLinkThree("See the directory 'Patient Reporting' in ",
-                        "https://resources.hartwigmedicalfoundation.nl ",
-                        "for details on the panel and for more links to advice on treatment adjustments.",
-                        "https://resources.hartwigmedicalfoundation.nl"))
+                .add(createContentDivWithLinkThree("The details on the panel and for more links to advice on treatment adjustments "
+                                + "can be ", "downloaded", ".",
+                        "https://storage.googleapis.com/hmf-public/OncoAct-Resources/latest_oncoact.zip"))
                 .add(createContentDiv(new String[] {
                         "The called haplotypes for a gene are the simplest combination of haplotypes that perfectly explains all of the "
                                 + "observed variants for that gene. If no combination of haplotypes in the panel can perfectly explain the "
