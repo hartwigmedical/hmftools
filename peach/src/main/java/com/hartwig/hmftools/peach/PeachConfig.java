@@ -10,7 +10,8 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
-public class PeachConfig {
+public class PeachConfig
+{
     @NotNull
     public final String vcfFile;
     @NotNull
