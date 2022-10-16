@@ -16,6 +16,7 @@ import static org.apache.commons.math3.util.FastMath.log;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.aminoacid.BlosumMapping;
 import com.hartwig.hmftools.neo.utils.AminoAcidFrequency;
 
 public class PosWeightModel
