@@ -59,6 +59,7 @@ import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -97,11 +98,11 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     public static AnalysedPatientReport createWithCOLO829Data(@NotNull ExampleAnalysisConfig config,
             @NotNull PurpleQCStatus purpleQCStatus) {
-        String pipelineVersion = "5.28";
+        String pipelineVersion = "5.31";
         double averageTumorPloidy = 3.1;
-        int tumorMutationalLoad = 186;
+        int tumorMutationalLoad = 185;
         double tumorMutationalBurden = 13.7205;
-        double microsatelliteIndelsPerMb = 0.1172;
+        double microsatelliteIndelsPerMb = 0.1203;
         double chordHrdValue = 0D;
         ChordStatus chordStatus = ChordStatus.HR_PROFICIENT;
         String reportDate = DataUtil.formatDate(LocalDate.now());
@@ -199,9 +200,9 @@ public final class ExampleAnalysisTestFactory {
 
         CuppaReporting cuppaReporting = ImmutableCuppaReporting.builder()
                 .bestCancerType("Melanoma")
-                .bestLikelihood(99.1)
+                .bestLikelihood(0.996)
                 .interpretCancerType("Melanoma")
-                .interpretLikelihood(99.1)
+                .interpretLikelihood(0.996)
                 .build();
 
         return ImmutableAnalysedPatientReport.builder()
@@ -286,52 +287,53 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     public static List<CnPerChromosomeArmData> extractCnPerChromosome() {
         List<CnPerChromosomeArmData> cnPerChromosomeArm = Lists.newArrayList();
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("1"), ChromosomeArm.P_ARM, 2.5772792739090105));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("1"), ChromosomeArm.Q_ARM, 3.923536090197291));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("2"), ChromosomeArm.P_ARM, 3.016271458549662));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("1"), ChromosomeArm.P_ARM, 2.577279278488992));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("1"), ChromosomeArm.Q_ARM, 3.923555406796647));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("2"), ChromosomeArm.P_ARM, 3.017299967841595));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("2"), ChromosomeArm.Q_ARM, 3.02120002022585));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("3"), ChromosomeArm.P_ARM, 3.5910709809245502));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("3"), ChromosomeArm.P_ARM, 3.5911825173202274));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("3"), ChromosomeArm.Q_ARM, 4.000879324279213));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("4"), ChromosomeArm.P_ARM, 2.0210999604946176));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("4"), ChromosomeArm.Q_ARM, 3.8453841055332885));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("4"), ChromosomeArm.Q_ARM, 3.84538439455249));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("5"), ChromosomeArm.P_ARM, 2.0000481443928493));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("5"), ChromosomeArm.Q_ARM, 2.0096989504909413));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("6"), ChromosomeArm.P_ARM, 3.8479440436530545));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("6"), ChromosomeArm.Q_ARM, 2.913192184870031));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("7"), ChromosomeArm.P_ARM, 4.024620078272729));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("7"), ChromosomeArm.Q_ARM, 4.171334679722508));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("5"), ChromosomeArm.Q_ARM, 2.0096989688505156));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("6"), ChromosomeArm.P_ARM, 3.847943829939073));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("6"), ChromosomeArm.Q_ARM, 2.913192227059896));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("7"), ChromosomeArm.P_ARM, 4.0246200936217384));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("7"), ChromosomeArm.Q_ARM, 4.17271256763564));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("8"), ChromosomeArm.P_ARM, 3.3325999264957695));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("8"), ChromosomeArm.Q_ARM, 3.3429529791412795));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("9"), ChromosomeArm.P_ARM, 2.7291755064569365));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("8"), ChromosomeArm.Q_ARM, 3.3429530044399343));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("9"), ChromosomeArm.P_ARM, 2.7291755500808623));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("9"), ChromosomeArm.Q_ARM, 3.6992000400581495));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("10"), ChromosomeArm.P_ARM, 2.5009802424099066));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("10"), ChromosomeArm.Q_ARM, 2.007094743290902));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("11"), ChromosomeArm.P_ARM, 3.1661435478205004));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("10"), ChromosomeArm.P_ARM, 2.500979668565291));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("10"), ChromosomeArm.Q_ARM, 2.0071004137917052));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("11"), ChromosomeArm.P_ARM, 3.1661436985048503));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("11"), ChromosomeArm.Q_ARM, 2.9098638260285616));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("12"), ChromosomeArm.P_ARM, 3.0115999171651855));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("12"), ChromosomeArm.Q_ARM, 3.003116732830778));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("12"), ChromosomeArm.Q_ARM, 3.0031553296330964));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("13"), ChromosomeArm.P_ARM, 3.1564998196285714));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("13"), ChromosomeArm.Q_ARM, 3.146714774779385));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("14"), ChromosomeArm.P_ARM, 3.0139998277714284));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("14"), ChromosomeArm.Q_ARM, 3.0138455205847463));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("14"), ChromosomeArm.P_ARM, 3.014099827765714));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("14"), ChromosomeArm.Q_ARM, 3.0138727282866444));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("15"), ChromosomeArm.P_ARM, 3.7023997998702702));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("15"), ChromosomeArm.Q_ARM, 2.546611471333237));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("16"), ChromosomeArm.P_ARM, 3.1919712830460782));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("15"), ChromosomeArm.Q_ARM, 2.5465950447637473));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("16"), ChromosomeArm.P_ARM, 3.191969293780255));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("16"), ChromosomeArm.Q_ARM, 1.989521251230779));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("17"), ChromosomeArm.P_ARM, 2.9938998740100473));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("17"), ChromosomeArm.Q_ARM, 3.0477000530660465));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("17"), ChromosomeArm.Q_ARM, 3.0513148194434603));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("18"), ChromosomeArm.P_ARM, 2.370931614063123));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("18"), ChromosomeArm.Q_ARM, 2.8490432529511334));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("19"), ChromosomeArm.P_ARM, 2.889021931658433));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("19"), ChromosomeArm.P_ARM, 2.8890213317794795));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("19"), ChromosomeArm.Q_ARM, 2.934100089054606));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("20"), ChromosomeArm.P_ARM, 4.013880905298536));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("20"), ChromosomeArm.Q_ARM, 4.008612196597953));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("21"), ChromosomeArm.P_ARM, 2.991999766033014));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("20"), ChromosomeArm.P_ARM, 4.013880853952209));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("20"), ChromosomeArm.Q_ARM, 4.0086125804931285));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("21"), ChromosomeArm.P_ARM, 2.9919997660330138));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("21"), ChromosomeArm.Q_ARM, 2.9982181161009325));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("22"), ChromosomeArm.P_ARM, 3.9915997247172412));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("22"), ChromosomeArm.Q_ARM, 3.983474946385728));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("X"), ChromosomeArm.P_ARM, 1.9496150872949336));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("X"), ChromosomeArm.Q_ARM, 1.9547000205458256));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("Y"), ChromosomeArm.P_ARM, 0.23189998001646422));
         return cnPerChromosomeArm;
     }
 
@@ -369,6 +371,7 @@ public final class ExampleAnalysisTestFactory {
                         .subType(Strings.EMPTY)
                         .extraDetails(Strings.EMPTY)
                         .doids(Lists.newArrayList("8923"))
+                        .snomedConceptIds(Lists.newArrayList("93655004"))
                         .isOverridden(false)
                         .build())
                 .biopsyLocation("Skin")
@@ -1132,20 +1135,20 @@ public final class ExampleAnalysisTestFactory {
                 .gene("BRAF")
                 .transcript("ENST00000288602")
                 .isCanonical(true)
-                .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("7")
                 .position(140453136)
                 .ref("A")
                 .alt("T")
-                .type(VariantType.SNP)
-                .otherReportedEffects(Strings.EMPTY)
                 .canonicalTranscript("ENST00000288602")
                 .canonicalEffect("missense_variant")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1799T>A")
                 .canonicalHgvsProteinImpact("p.Val600Glu")
+                .otherReportedEffects(Strings.EMPTY)
                 .alleleReadCount(150)
                 .totalReadCount(221)
+                .rnaAlleleReadCount(null)
+                .rnaTotalReadCount(null)
                 .alleleCopyNumber(4.09962)
                 .totalCopyNumber(6.02)
                 .minorAlleleCopyNumber(2.01)
@@ -1153,6 +1156,9 @@ public final class ExampleAnalysisTestFactory {
                 .driverLikelihood(1D)
                 .clonalLikelihood(1D)
                 .biallelic(false)
+                .genotypeStatus(GenotypeStatus.HOM_REF)
+                .localPhaseSet(null)
+                .type(VariantType.SNP)
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
@@ -1160,20 +1166,20 @@ public final class ExampleAnalysisTestFactory {
                 .gene("CDKN2A (p16)")
                 .transcript("ENST00000498124")
                 .isCanonical(true)
-                .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("9")
                 .position(21971153)
                 .ref("CCG")
                 .alt("C")
-                .type(VariantType.INDEL)
-                .otherReportedEffects("ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT")
                 .canonicalTranscript("ENST00000498124")
                 .canonicalEffect("frameshift_variant")
                 .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .canonicalHgvsCodingImpact("c.203_204delCG")
                 .canonicalHgvsProteinImpact("p.Ala68fs")
+                .otherReportedEffects("ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT")
                 .alleleReadCount(99)
                 .totalReadCount(99)
+                .rnaAlleleReadCount(null)
+                .rnaTotalReadCount(null)
                 .alleleCopyNumber(2.0)
                 .minorAlleleCopyNumber(0.0)
                 .totalCopyNumber(2.0)
@@ -1181,27 +1187,61 @@ public final class ExampleAnalysisTestFactory {
                 .clonalLikelihood(1D)
                 .driverLikelihood(1D)
                 .biallelic(true)
+                .genotypeStatus(GenotypeStatus.HOM_REF)
+                .localPhaseSet(null)
+                .type(VariantType.INDEL)
                 .build();
 
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
+                .source(forceCDKN2AVariantToBeGermline ? ReportableVariantSource.GERMLINE : ReportableVariantSource.SOMATIC)
+                .gene("CDKN2A (p14Arf)")
+                .transcript("ENST00000579755")
+                .isCanonical(false)
+                .chromosome("9")
+                .position(21971153)
+                .ref("CCG")
+                .alt("C")
+                .canonicalTranscript("ENST00000498124")
+                .canonicalEffect("frameshift_variant")
+                .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
+                .canonicalHgvsCodingImpact("c.203_204delCG")
+                .canonicalHgvsProteinImpact("p.Ala68fs")
+                .otherReportedEffects("ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT")
+                .alleleReadCount(99)
+                .totalReadCount(99)
+                .rnaAlleleReadCount(null)
+                .rnaTotalReadCount(null)
+                .alleleCopyNumber(2.0)
+                .minorAlleleCopyNumber(0.0)
+                .totalCopyNumber(2.0)
+                .hotspot(Hotspot.NEAR_HOTSPOT)
+                .clonalLikelihood(1D)
+                .driverLikelihood(1D)
+                .biallelic(true)
+                .genotypeStatus(GenotypeStatus.HOM_REF)
+                .localPhaseSet(null)
+                .type(VariantType.INDEL)
+                .build();
+
+        ReportableVariant variant4 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("TERT")
                 .transcript("ENST00000310581")
                 .isCanonical(true)
-                .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("5")
                 .position(1295228)
                 .ref("GG")
                 .alt("AA")
-                .type(VariantType.MNP)
-                .otherReportedEffects(Strings.EMPTY)
                 .canonicalTranscript("ENST00000310581")
                 .canonicalEffect("upstream_gene_variant")
                 .canonicalCodingEffect(CodingEffect.NONE)
-                .canonicalHgvsCodingImpact(Strings.EMPTY)
+                .canonicalHgvsCodingImpact("c.-125_-124delCCinsTT")
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .otherReportedEffects(Strings.EMPTY)
                 .alleleReadCount(56)
                 .totalReadCount(65)
+                .rnaAlleleReadCount(null)
+                .rnaTotalReadCount(null)
                 .alleleCopyNumber(1.7404)
                 .minorAlleleCopyNumber(0.0)
                 .totalCopyNumber(2.0)
@@ -1209,56 +1249,61 @@ public final class ExampleAnalysisTestFactory {
                 .clonalLikelihood(1D)
                 .driverLikelihood(1D)
                 .biallelic(true)
-                .localPhaseSet(4410)
+                .genotypeStatus(GenotypeStatus.HOM_REF)
+                .localPhaseSet(4570)
+                .type(VariantType.MNP)
                 .build();
 
-        ReportableVariant variant4 = ImmutableReportableVariant.builder()
+        ReportableVariant variant5 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("SF3B1")
                 .transcript("ENST00000335508")
                 .isCanonical(true)
-                .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("2")
                 .position(198266779)
                 .ref("G")
                 .alt("A")
-                .type(VariantType.SNP)
-                .otherReportedEffects(Strings.EMPTY)
                 .canonicalTranscript("ENST00000335508")
                 .canonicalEffect("missense_variant")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.2153C>T")
                 .canonicalHgvsProteinImpact("p.Pro718Leu")
+                .otherReportedEffects(Strings.EMPTY)
                 .alleleReadCount(74)
                 .totalReadCount(111)
+                .rnaAlleleReadCount(null)
+                .rnaTotalReadCount(null)
                 .alleleCopyNumber(2.026722)
                 .minorAlleleCopyNumber(1.0)
                 .totalCopyNumber(3.02)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
-                .driverLikelihood(0.1458)
+                .driverLikelihood(0.1459)
                 .biallelic(false)
+                .genotypeStatus(GenotypeStatus.HOM_REF)
+                .localPhaseSet(null)
+                .type(VariantType.SNP)
                 .build();
 
-        ReportableVariant variant5 = ImmutableReportableVariant.builder()
+        ReportableVariant variant6 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("TP63")
                 .transcript("ENST00000264731")
                 .isCanonical(true)
-                .genotypeStatus(GenotypeStatus.HOM_REF)
                 .chromosome("3")
                 .position(189604330)
                 .ref("G")
                 .alt("T")
-                .type(VariantType.SNP)
-                .otherReportedEffects(Strings.EMPTY)
                 .canonicalTranscript("ENST00000264731")
                 .canonicalEffect("missense_variant")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")
+                .otherReportedEffects(Strings.EMPTY)
                 .alleleReadCount(47)
                 .totalReadCount(112)
+                .rnaAlleleReadCount(null)
+                .rnaTotalReadCount(null)
                 .alleleCopyNumber(1.678764)
                 .minorAlleleCopyNumber(1.97)
                 .totalCopyNumber(3.98)
@@ -1266,9 +1311,12 @@ public final class ExampleAnalysisTestFactory {
                 .clonalLikelihood(1D)
                 .driverLikelihood(0)
                 .biallelic(false)
+                .genotypeStatus(GenotypeStatus.HOM_REF)
+                .localPhaseSet(null)
+                .type(VariantType.SNP)
                 .build();
 
-        return Lists.newArrayList(variant1, variant2, variant3, variant4, variant5);
+        return Lists.newArrayList(variant1, variant2, variant3, variant4, variant5, variant6);
     }
 
     @NotNull
@@ -1352,10 +1400,10 @@ public final class ExampleAnalysisTestFactory {
                 .gene("PTEN")
                 .range("Intron 5 -> Intron 6")
                 .type("DEL")
-                .junctionCopyNumber(2.0076)
+                .junctionCopyNumber(2.005)
                 .undisruptedCopyNumber(0.0)
                 .firstAffectedExon(5)
-                .clusterId(67)
+                .clusterId(70)
                 .transcriptId("ENST00000371953")
                 .isCanonical(true)
                 .build();
@@ -1377,29 +1425,28 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static Map<String, List<PeachGenotype>> createTestPeachGenotypes() {
         Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
+        peachMap.put("UGT1A1",
+                Lists.newArrayList(ImmutablePeachGenotype.builder()
+                        .gene("UGT1A1")
+                        .haplotype("*1_HOM")
+                        .function("Normal Function")
+                        .linkedDrugs("Irinotecan")
+                        .urlPrescriptionInfo("https://www.pharmgkb.org/guidelineAnnotation/PA166104951")
+                        .panelVersion("peach_prod_v1.3")
+                        .repoVersion("1.7")
+                        .build()));
         peachMap.put("DPYD",
                 Lists.newArrayList(ImmutablePeachGenotype.builder()
-                                .gene("DPYD")
-                                .haplotype("*1_HOM")
-                                .function("Normal Function")
-                                .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
-                                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939"
-                                        + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963"
-                                        + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
-                                .panelVersion("PGx_min_DPYD_v1.2")
-                                .repoVersion("1.6")
-                                .build(),
-                        ImmutablePeachGenotype.builder()
-                                .gene("DPYD")
-                                .haplotype("*2_HOM")
-                                .function("Normal Function")
-                                .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
-                                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939"
-                                        + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963"
-                                        + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
-                                .panelVersion("PGx_min_DPYD_v1.2")
-                                .repoVersion("1.6")
-                                .build()));
+                        .gene("DPYD")
+                        .haplotype("*1_HOM")
+                        .function("Normal Function")
+                        .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
+                        .urlPrescriptionInfo("https://www.pharmgkb.org/guidelineAnnotation/PA166104939"
+                                + "https://www.pharmgkb.org/guidelineAnnotation/PA166104963"
+                                + "https://www.pharmgkb.org/guidelineAnnotation/PA166104944")
+                        .panelVersion("peach_prod_v1.3")
+                        .repoVersion("1.7")
+                        .build()));
         return peachMap;
     }
 
@@ -1409,32 +1456,28 @@ public final class ExampleAnalysisTestFactory {
 
         alleles.put("HLA-A",
                 Lists.newArrayList(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
-                                .gene("HLA-A")
-                                .germlineAllele("A*456")
-                                .build()).interpretation("None").build(),
-                        createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
-                                .gene("HLA-A")
-                                .germlineAllele("A*123")
-                                .build()).tumorCopies(1D).interpretation("Yes").build()));
+                        .gene("HLA-A")
+                        .germlineAllele("A*01:01")
+                        .build()).germlineCopies(2.0).tumorCopies(3.83).somaticMutations("No").interpretation("Yes").build()));
         alleles.put("HLA-B",
                 Lists.newArrayList(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
                                 .gene("HLA-B")
-                                .germlineAllele("B*456")
-                                .build()).tumorCopies(1D).interpretation("Yes, but mutation(s) detected").build(),
+                                .germlineAllele("B*40:02")
+                                .build()).germlineCopies(1.0).tumorCopies(2D).somaticMutations("No").interpretation("Yes").build(),
                         createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
                                 .gene("HLA-B")
-                                .germlineAllele("B*456")
-                                .build()).tumorCopies(0.9).interpretation("Yes").build()));
+                                .germlineAllele("B*08:01")
+                                .build()).germlineCopies(1D).tumorCopies(1.83).somaticMutations("No").interpretation("Yes").build()));
         alleles.put("HLA-C",
                 Lists.newArrayList(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
                                 .gene("HLA-C")
-                                .germlineAllele("C*789")
-                                .build()).tumorCopies(0.7).interpretation("None").build(),
+                                .germlineAllele("C*07:01")
+                                .build()).germlineCopies(1D).tumorCopies(1.83).somaticMutations("No").interpretation("yes").build(),
                         createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
                                 .gene("HLA-C")
-                                .germlineAllele("C*789")
-                                .build()).tumorCopies(0.8).interpretation("Unknown").build()));
-        return ImmutableLilacReportingData.builder().lilacQc("PASS").lilacReporting(alleles).build();
+                                .germlineAllele("C*03:04")
+                                .build()).germlineCopies(1D).tumorCopies(2.0).somaticMutations("No").interpretation("Yes").build()));
+        return ImmutableLilacReportingData.builder().lilacQc("WARN_UNMATCHED_SOMATIC_VARIANT").lilacReporting(alleles).build();
     }
 
     @NotNull

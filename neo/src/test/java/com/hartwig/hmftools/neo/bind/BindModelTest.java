@@ -90,21 +90,6 @@ public class BindModelTest
         assertEquals(INVALID_POS, refPeptidePosToActual(8, 8));
     }
 
-    @Test
-    public void testBlosumCalcs()
-    {
-        BlosumMapping blosum = new BlosumMapping();
-
-        assertEquals(16.0, blosum.calcSequenceScore("A"));
-        assertEquals(4096.0, blosum.calcSequenceScore("AAA"));
-        assertEquals(128.0, blosum.calcSequenceScore("Y"));
-
-        assertEquals(4.0, blosum.calcSequenceScore("D", "E"));
-        assertEquals(4.0, blosum.calcSequenceScore("E", "D"));
-
-        assertEquals(0.125, blosum.calcSequenceScore("W", "A"), 0.001);
-        assertEquals(0.125, blosum.calcSequenceScore("A", "W"), 0.001);
-    }
 
     @Test
     public void testPeptideLengthWeights()

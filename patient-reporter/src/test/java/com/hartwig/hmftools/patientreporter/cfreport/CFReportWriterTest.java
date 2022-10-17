@@ -73,7 +73,7 @@ public class CFReportWriterTest {
                 .comments(COLO_COMMENT_STRING)
                 .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
                 .build();
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.FAIL_CONTAMINATION);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));

@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.common.utils;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,7 +13,8 @@ public final class DataUtil {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
     private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");
-    private static final DecimalFormat PERCENTAGE_FORMAT_WITH_DIGIT = new DecimalFormat("#.#'%'");
+    private static final DecimalFormat PERCENTAGE_FORMAT_WITH_DIGIT =
+            new DecimalFormat("#.#'%'", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     public static final String NONE_STRING = "NONE";
     public static final String NA_STRING = "N/A";
 
