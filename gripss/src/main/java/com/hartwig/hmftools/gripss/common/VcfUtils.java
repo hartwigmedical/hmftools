@@ -81,7 +81,7 @@ public class VcfUtils
     public static final String VT_ALT_PATH = "ALT_PATH";
     public static final String VT_RESCUE_INFO = "RESCUED";
 
-    public static GenotypeIds parseVcfSampleIds(final VCFHeader header, final String referenceId, final String tumorId)
+    public static GenotypeIds parseVcfSampleIds(final VCFHeader header, final String referenceId, final String tumorId, final boolean germlineMode)
     {
         List<String> vcfSampleNames = header.getGenotypeSamples();
 
@@ -118,8 +118,7 @@ public class VcfUtils
             return null;
         }
 
-
-        return new GenotypeIds(referenceOrdinal, tumorOrdinal, vcfRefefenceId, vcfTumorId);
+        return new GenotypeIds(referenceOrdinal, tumorOrdinal, vcfRefefenceId, vcfTumorId, germlineMode);
     }
 
 

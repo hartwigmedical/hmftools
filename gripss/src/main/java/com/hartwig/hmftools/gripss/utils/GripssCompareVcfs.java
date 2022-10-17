@@ -181,7 +181,7 @@ public class GripssCompareVcfs
                 vcfFile, new VCFCodec(), false);
 
         VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
-        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, "", mSampleId);
+        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, "", mSampleId, false);
 
         if(genotypeIds == null)
         {
@@ -238,7 +238,7 @@ public class GripssCompareVcfs
                 newVcfFile, new VCFCodec(), false);
 
         VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
-        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, "", mSampleId);
+        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, "", mSampleId, false);
 
         if(genotypeIds == null)
             System.exit(1);

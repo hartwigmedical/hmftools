@@ -139,7 +139,7 @@ public class Breakend
         final Genotype refGenotype = referenceOrdinal >= 0 ? variantContext.getGenotype(referenceOrdinal) : null;
 
         return new Breakend(
-                svData, isStart, variantContext, svLeg.chromosome(), (int)svLeg.position(), svLeg.orientation(), refGenotype, tumorGenotype);
+                svData, isStart, variantContext, svLeg.chromosome(), svLeg.position(), svLeg.orientation(), refGenotype, tumorGenotype);
     }
 
     public static Breakend realigned(final Breakend original, final VariantContext newContext, final int newPosition)

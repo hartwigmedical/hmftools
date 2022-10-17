@@ -80,7 +80,7 @@ public class GripssApplication
         mHotspotCache = new HotspotCache(cmd);
 
         mVariantBuilder = new VariantBuilder(mFilterConstants, mHotspotCache);
-        mSoftFilters = new SoftFilters(mFilterConstants);
+        mSoftFilters = new SoftFilters(mFilterConstants, mConfig.GermlineMode);
         mRealigner = null;
 
         mProcessedVariants = 0;
@@ -130,7 +130,7 @@ public class GripssApplication
 
         GR_LOGGER.info("sample({}) processing VCF({})", mConfig.SampleId, vcfFile);
 
-        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, mConfig.ReferenceId, mConfig.SampleId);
+        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, mConfig.ReferenceId, mConfig.SampleId, mConfig.GermlineMode);
 
         if(genotypeIds == null)
         {
@@ -141,8 +141,9 @@ public class GripssApplication
 
         if(!mConfig.tumorOnly())
         {
-            GR_LOGGER.info("genetype info: ref({}: {}) tumor({}: {})",
-                    genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId, genotypeIds.TumorOrdinal, genotypeIds.TumorId);
+            GR_LOGGER.info("genetype info: ref({}: {}) tumor({}: {}) {}",
+                    genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId, genotypeIds.TumorOrdinal, genotypeIds.TumorId,
+                    mConfig.GermlineMode ? "germline mode" : "");
         }
         else
         {

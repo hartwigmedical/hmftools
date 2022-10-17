@@ -40,6 +40,7 @@ public class GripssConfig
     public final String ReferenceId;
     public final RefGenomeVersion RefGenVersion;
     public final String VcfFile;
+    public final boolean GermlineMode;
 
     public final String OutputDir;
     public final String OutputId;
@@ -48,6 +49,7 @@ public class GripssConfig
     public static final String SAMPLE = "sample";
     private static final String REFERENCE = "reference";
     private static final String VCF_FILE = "vcf";
+    private static final String GERMLINE = "germline";
 
     public static final Logger GR_LOGGER = LogManager.getLogger(GripssApplication.class);
 
@@ -55,6 +57,7 @@ public class GripssConfig
     {
         SampleId = cmd.getOptionValue(SAMPLE, "");
         ReferenceId = cmd.getOptionValue(REFERENCE, "");
+        GermlineMode = cmd.hasOption(GERMLINE);
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
@@ -70,6 +73,7 @@ public class GripssConfig
         SampleId = sampleId;
         ReferenceId = referenceId;
         RefGenVersion = refGenVersion;
+        GermlineMode = false;
         VcfFile = vcfFile;
         OutputDir = null;
         OutputId = null;
@@ -112,6 +116,7 @@ public class GripssConfig
         options.addOption(SAMPLE, true, "Name of the tumor sample");
         options.addOption(REFERENCE, true, "Optional, name of the reference sample");
         options.addOption(VCF_FILE, true, "Path to the GRIDSS structural variant VCF file");
+        options.addOption(GERMLINE, false, "Run in germline mode");
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
 
