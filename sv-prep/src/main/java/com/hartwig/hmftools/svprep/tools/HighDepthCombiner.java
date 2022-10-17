@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svprep.tools;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.addGenePanelOption;
@@ -14,6 +15,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.immune.ImmuneRegions.getIgRegion;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
@@ -89,6 +91,7 @@ public class HighDepthCombiner
 
     private static final int DEFAULT_MIN_SAMPLE_COUNT = 4;
     private static final int MIN_REGION_LENGTH = 11;
+    private static final int PANEL_HIGH_DEPTH_THRESHOLD = 2000;
 
     public HighDepthCombiner(final CommandLine cmd)
     {
@@ -313,11 +316,13 @@ public class HighDepthCombiner
 
                     if(positionsOverlap(region.start(), region.end(), refRegion.start(), refRegion.end()))
                     {
-                        region.setStart(min(region.start(), refRegion.start()));
-                        region.setEnd(max(region.end(), refRegion.end()));
                         matched = true;
 
-                        // check if subsequent regions can now be merged in
+                        // check if subsequent regions can now be merged in - and average out their min and max depth
+                        long depthMinTotal = (long)region.baseLength() * region.DepthMin;
+                        long depthMaxTotal = (long)region.baseLength() * region.DepthMax;
+                        int regionBaseTotal = region.baseLength();
+
                         int nextIndex = index + 1;
                         while(nextIndex < highDepthRegions.size())
                         {
@@ -326,9 +331,18 @@ public class HighDepthCombiner
                             if(!positionsOverlap(nextRegion.start(), nextRegion.end(), refRegion.start(), refRegion.end()))
                                 break;
 
+                            depthMinTotal += (long)nextRegion.baseLength() * nextRegion.DepthMin;
+                            depthMaxTotal += (long)nextRegion.baseLength() * nextRegion.DepthMax;
+                            regionBaseTotal += nextRegion.baseLength();
+
+
                             highDepthRegions.remove(nextIndex);
                         }
 
+                        region.setStart(min(region.start(), refRegion.start()));
+                        region.setEnd(max(region.end(), refRegion.end()));
+                        region.DepthMin = (int)round(depthMinTotal / (double)regionBaseTotal);
+                        region.DepthMax = (int)round(depthMaxTotal / (double)regionBaseTotal);
                         break;
                     }
                     else
@@ -455,14 +469,12 @@ public class HighDepthCombiner
         GeneData geneData = mEnsemblDataCache.getGeneDataByName(geneName);
         if(geneData == null)
         {
-            if(geneName.equals("IGL"))
-                geneData = new GeneData(geneName, geneName, "22", POS_STRAND, 22380474, 23265085, "");
-            if(geneName.equals("IGH"))
-                geneData = new GeneData(geneName, geneName, "14", POS_STRAND, 106032614, 106434161, "");
-            if(geneName.equals("IGK"))
-                geneData = new GeneData(geneName, geneName, "2", NEG_STRAND, 89156874, 90274235, "");
-            else
+            ChrBaseRegion igRegion = getIgRegion(geneName, mRefGenVersion);
+
+            if(igRegion == null)
                 return;
+
+            geneData = new GeneData(geneName, geneName, igRegion.chromosome(), POS_STRAND, igRegion.start(), igRegion.end(), "");
         }
 
         List<HighDepthRegion> highDepthRegions = mFinalRegions.get(geneData.Chromosome);
@@ -499,12 +511,14 @@ public class HighDepthCombiner
             else
                 overlapType = "OVERLAPS";
 
-            SV_LOGGER.debug("OVERLAP,{},{},{},{},{},{},{},{},{},{}",
+            SV_LOGGER.debug("OVERLAP,{},{},{},{},{},{},{},{},{},{},{}",
                     geneData.GeneName, geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd,
                     highDepthRegion.start(), highDepthRegion.end(), overlappingBases, overlapType,
                     highDepthRegion.SampleCount, highDepthRegion.DepthMin, highDepthRegion.DepthMax);
 
-            if(!mRemoveGeneOverlaps)
+            boolean removeGeneOverlaps = mRemoveGeneOverlaps && highDepthRegion.DepthMin < PANEL_HIGH_DEPTH_THRESHOLD;
+
+            if(!removeGeneOverlaps)
             {
                 ++index;
                 continue;
