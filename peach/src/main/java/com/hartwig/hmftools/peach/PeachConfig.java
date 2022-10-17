@@ -2,9 +2,6 @@ package com.hartwig.hmftools.peach;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.Objects;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
@@ -12,9 +9,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
 public class PeachConfig
 {
-    @NotNull
     public final String vcfFile;
-    @NotNull
+    public final String haplotypesTsv;
     public final String outputDir;
 
     public final boolean doLiftOver;
@@ -24,6 +20,7 @@ public class PeachConfig
     public final String targetRefGenome;
 
     private static final String VCF_FILE = "vcf_file";
+    private static final String HAPLOTYPES_TSV = "haplotypes_tsv";
 
     private static final String DO_LIFT_OVER = "do_lift_over";
     private static final String CHAIN_FILE = "chain_file";
@@ -34,6 +31,7 @@ public class PeachConfig
     public PeachConfig(final CommandLine cmd)
     {
         vcfFile = cmd.getOptionValue(VCF_FILE);
+        haplotypesTsv = cmd.getOptionValue(HAPLOTYPES_TSV);
 
         doLiftOver = cmd.hasOption(DO_LIFT_OVER);
         chainFile = cmd.getOptionValue(CHAIN_FILE);
@@ -41,11 +39,13 @@ public class PeachConfig
         picardJar = cmd.getOptionValue(PICARD);
         targetRefGenome = cmd.getOptionValue(TARGET_REF_GENOME);
 
-        outputDir = Objects.requireNonNull(parseOutputDir(cmd));
+        outputDir = parseOutputDir(cmd);
     }
 
     public boolean isValid()
     {
+        if (vcfFile == null || haplotypesTsv == null || outputDir == null)
+            return false;
         if (doLiftOver)
             return !(liftOverBed == null || picardJar == null || chainFile == null || targetRefGenome == null);
 
@@ -56,6 +56,7 @@ public class PeachConfig
     {
         final Options options = new Options();
         options.addOption(VCF_FILE, true, "VCF input file");
+        options.addOption(HAPLOTYPES_TSV, true, "Haplotype config file");
 
         options.addOption(DO_LIFT_OVER, false, "Do liftover to 38");
         options.addOption(CHAIN_FILE, true, "USCS chain file for liftover, if liftover is needed");

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.peach;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -15,26 +16,29 @@ import htsjdk.variant.vcf.VCFCodec;
 import org.apache.commons.cli.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Stream;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 public class PeachApplication
 {
-    static final String CHAIN_FILE_DELIM = " ";
-    static final String BED_FILE_DELIM = "\t";
+    static final String CHAIN_FILE_DELIMITER = " ";
+    static final String BED_FILE_DELIMITER = "\t";
+    static final String TSV_DELIMITER = "\t";
+    static final String HAPLOTYPE_EVENT_DELIMITER = ",";
+
     @NotNull
     private final PeachConfig config;
     public PeachApplication(@NotNull final PeachConfig config)
@@ -58,6 +62,9 @@ public class PeachApplication
             PCH_LOGGER.error("could not create output directory, exiting");
             System.exit(1);
         }
+
+        PCH_LOGGER.info("read haplotypes TSV");
+        List<Haplotype> haplotypes = loadHaplotypes(config.haplotypesTsv);
 
         if (config.doLiftOver)
         {
@@ -177,7 +184,7 @@ public class PeachApplication
         }
         catch (IOException e)
         {
-            PCH_LOGGER.error("Could not create adjusted chain file: ");
+            PCH_LOGGER.error("could not create adjusted chain file: ");
             e.printStackTrace();
             System.exit(1);
         }
@@ -189,8 +196,8 @@ public class PeachApplication
     {
         if (line.startsWith("chain"))
         {
-            String[] items = line.split(CHAIN_FILE_DELIM);
-            StringJoiner newLineJoiner = new StringJoiner(CHAIN_FILE_DELIM);
+            String[] items = line.split(CHAIN_FILE_DELIMITER);
+            StringJoiner newLineJoiner = new StringJoiner(CHAIN_FILE_DELIMITER);
             for (int i = 0; i < items.length; i++)
             {
                 if (i == 2)
@@ -212,16 +219,71 @@ public class PeachApplication
         return config.outputDir + filename.substring(0, extensionIndex) + "." + addition + filename.substring(extensionIndex);
     }
 
-    private Map<Chromosome, List<BaseRegion>> loadBedFile(final String bedFile)
+    private List<Haplotype> loadHaplotypes(String filename)
+    {
+        List<Haplotype> haplotypes = Lists.newArrayList();
+
+        try
+        {
+            List<String> lines = Files.readAllLines(Paths.get(filename));
+            String header = lines.get(0);
+
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIMITER);
+
+            int geneIndex = fieldsIndexMap.get("Gene");
+            int haplotypeIndex = fieldsIndexMap.get("Haplotype");
+            int wildTypeIndex = fieldsIndexMap.get("WildType");
+            int eventsIndex = fieldsIndexMap.get("Events");
+
+            lines.remove(0);
+
+            for(String line : lines)
+            {
+                String[] values = line.split(TSV_DELIMITER, -1);
+
+                String haplotypeEventsString = values[eventsIndex];
+                ImmutableSet<HaplotypeEvent> haplotypeEvents;
+                if (haplotypeEventsString.isEmpty())
+                    haplotypeEvents = ImmutableSet.of();
+                else
+                    haplotypeEvents = getHaplotypeEvents(haplotypeEventsString);
+
+                Haplotype haplotype = new Haplotype(
+                        values[geneIndex],
+                        values[haplotypeIndex],
+                        Boolean.parseBoolean(values[wildTypeIndex]),
+                        haplotypeEvents
+                );
+                haplotypes.add(haplotype);
+            }
+
+            PCH_LOGGER.info("loaded {} haplotypes from file ({})", haplotypes.size(), filename);
+        }
+        catch(Exception e)
+        {
+            PCH_LOGGER.error("failed to load haplotypes TSV({}): {}", filename, e.toString());
+            System.exit(1);
+        }
+
+        return haplotypes;
+    }
+
+    private static ImmutableSet<HaplotypeEvent> getHaplotypeEvents(String haplotypeEventsString)
+    {
+        return Arrays.stream(haplotypeEventsString.split(HAPLOTYPE_EVENT_DELIMITER))
+                .map(HaplotypeEventFactory::fromId).collect(ImmutableSet.toImmutableSet());
+    }
+
+    private Map<Chromosome, List<BaseRegion>> loadBedFile(final String filename)
     {
         final Map<Chromosome,List<BaseRegion>> chromosomeToRegions = Maps.newHashMap();
 
-        try (BufferedReader fileReader = createBufferedReader(bedFile))
+        try
         {
-            String line;
-            while((line = fileReader.readLine()) != null)
+            List<String> lines = Files.readAllLines(Paths.get(filename));
+            for(String line : lines)
             {
-                final String[] values = line.split(BED_FILE_DELIM, -1);
+                final String[] values = line.split(BED_FILE_DELIMITER, -1);
 
                 Chromosome chromosome = HumanChromosome.fromString(values[0]);
                 int posStart = Integer.parseInt(values[1]) + 1; // as per convention
@@ -237,7 +299,7 @@ public class PeachApplication
         }
         catch(IOException e)
         {
-            PCH_LOGGER.error("failed to load BED file({}): {}", bedFile, e.toString());
+            PCH_LOGGER.error("failed to load BED file({}): {}", filename, e.toString());
             System.exit(1);
         }
 
