@@ -117,7 +117,7 @@ public class SvPrepApplication
             mConfig.ReadLength = fragSizeDistribution.maxReadLength();
     }
 
-    public static void main(@NotNull final String[] args) throws Exception
+    public static void main(@NotNull final String[] args)
     {
         final VersionInfo version = new VersionInfo("sv-prep.version");
         SV_LOGGER.info("SvPrep version: {}", version.version());
