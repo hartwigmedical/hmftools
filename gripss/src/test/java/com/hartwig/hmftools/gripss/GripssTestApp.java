@@ -24,7 +24,7 @@ public class GripssTestApp
     {
         IdGen = new VcfIdGenerator();
         RefGenome = new MockRefGenome();
-        GenotypeIds = new GenotypeIds(0, 1, TEST_REF_ID, TEST_SAMPLE_ID);
+        GenotypeIds = new GenotypeIds(0, 1, TEST_REF_ID, TEST_SAMPLE_ID, false);
         DataCache = new SvDataCache();
         FilterCache = new FilterCache();
     }

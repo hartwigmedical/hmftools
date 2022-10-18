@@ -1187,6 +1187,7 @@ public final class ExampleAnalysisTestFactory {
                 .clonalLikelihood(1D)
                 .driverLikelihood(1D)
                 .biallelic(true)
+                .genotypeStatus(GenotypeStatus.HOM_REF)
                 .localPhaseSet(null)
                 .type(VariantType.INDEL)
                 .build();
@@ -1217,6 +1218,7 @@ public final class ExampleAnalysisTestFactory {
                 .clonalLikelihood(1D)
                 .driverLikelihood(1D)
                 .biallelic(true)
+                .genotypeStatus(GenotypeStatus.HOM_REF)
                 .localPhaseSet(null)
                 .type(VariantType.INDEL)
                 .build();

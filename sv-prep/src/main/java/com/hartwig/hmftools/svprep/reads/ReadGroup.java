@@ -86,7 +86,13 @@ public class ReadGroup
 
     public boolean isSimpleComplete()
     {
-        // no supplementaries and both reads received
+        // no supplementaries and both reads received or no mate
+        if(mReads.size() == 1)
+        {
+            ReadRecord read = mReads.get(0);
+            return !read.hasMate() && !read.hasSuppAlignment();
+        }
+
         return mReads.size() == 2 && mReads.stream().allMatch(x -> !x.hasSuppAlignment() && !x.isSupplementaryAlignment());
     }
 
@@ -133,7 +139,8 @@ public class ReadGroup
         }
 
         int suppCount = (firstHasSupp ? 1 : 0) + (secondHasSupp ? 1 : 0);
-        mExpectedReadCount = 2 + suppCount;
+        int mainReadCount = mReads.get(0).hasMate() ? 2 : 1;
+        mExpectedReadCount = mainReadCount + suppCount;
 
         if(mReads.size() >= mExpectedReadCount)
             mStatus = ReadGroupStatus.COMPLETE;
@@ -152,8 +159,10 @@ public class ReadGroup
             return true;
 
         if(mReads.stream().allMatch(x -> x.readType() == CANDIDATE_SUPPORT
-                || (x.readType() == SUPPORT && ReadFilterType.isSet(x.filters(), SOFT_CLIP_LOW_BASE_QUAL))))
+        || (x.readType() == SUPPORT && ReadFilterType.isSet(x.filters(), SOFT_CLIP_LOW_BASE_QUAL))))
+        {
             return true;
+        }
 
         return false;
     }
@@ -175,7 +184,7 @@ public class ReadGroup
                 }
             }
 
-            if(HumanChromosome.contains(read.MateChromosome) && !region.containsPosition(read.MateChromosome, read.MatePosStart))
+            if(read.hasMate() && HumanChromosome.contains(read.MateChromosome) && !region.containsPosition(read.MateChromosome, read.MatePosStart))
             {
                 mRemotePartitions.add(formChromosomePartition(read.MateChromosome, read.MatePosStart, partitionSize));
             }
@@ -184,6 +193,9 @@ public class ReadGroup
 
     public boolean hasReadMate(final ReadRecord read)
     {
+        if(!read.hasMate())
+            return false;
+
         for(ReadRecord otherRead : mReads)
         {
             if(otherRead == read)

@@ -63,6 +63,9 @@ public class PaveApplication
 
     public PaveApplication(final CommandLine cmd)
     {
+        final VersionInfo version = new VersionInfo("pave.version");
+        PV_LOGGER.info("Pave version: {}", version.version());
+
         mConfig = new PaveConfig(cmd);
 
         mGeneDataCache = new GeneDataCache(
@@ -91,6 +94,8 @@ public class PaveApplication
 
         if(mConfig.WriteTranscriptCsv)
             initialiseTranscriptWriter();
+
+        try { version.write(mConfig.OutputDir); } catch(IOException e) {}
     }
 
     public void run()

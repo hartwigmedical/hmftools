@@ -68,7 +68,7 @@ public class HardFilters
 
     private boolean hasExcessiveReferenceSupport(final VariantContext variant, final GenotypeIds genotypeIds, boolean isSgl)
     {
-        if(!genotypeIds.hasReference())
+        if(!genotypeIds.hasReference() || genotypeIds.GermlineMode)
             return false;
 
         Genotype refGenotype = variant.getGenotype(genotypeIds.ReferenceOrdinal);

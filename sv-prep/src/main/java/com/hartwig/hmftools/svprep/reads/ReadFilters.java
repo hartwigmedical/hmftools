@@ -150,8 +150,8 @@ public class ReadFilters
         if(isChimericRead(record, mConfig))
             return true;
 
-        // or with any amount of soft-clipping or a long INDEL
-        return leftSoftClipped(record) || rightSoftClipped(record)
+        // or with any amount of soft or hard clipping or a long INDEL
+        return record.getCigar().isLeftClipped() || record.getCigar().isRightClipped()
                 || ReadRecord.maxIndelLength(record.getCigar()) >= MIN_INDEL_SUPPORT_LENGTH;
     }
 

@@ -67,10 +67,10 @@ public class SoftFiltersTest
 
     public SoftFiltersTest()
     {
-        mSoftFilters = new SoftFilters(defaultFilterConstants());
+        mSoftFilters = new SoftFilters(defaultFilterConstants(), false);
         mFilterCache = new FilterCache();
         mIdGenerator = new VcfIdGenerator();
-        mGenotypeIds = new GenotypeIds(0, 1, TEST_REF_ID, TEST_SAMPLE_ID);
+        mGenotypeIds = new GenotypeIds(0, 1, TEST_REF_ID, TEST_SAMPLE_ID, false);
     }
 
     private SvData createLongDel(

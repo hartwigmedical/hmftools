@@ -53,7 +53,7 @@ public class VariantBuilderTest
         mHotspotCache = new HotspotCache(null);
         mBuilder = new VariantBuilder(defaultFilterConstants(), mHotspotCache);
         mIdGenerator = new VcfIdGenerator();
-        mGenotypeIds = new GenotypeIds(0, 1, TEST_REF_ID, TEST_SAMPLE_ID);
+        mGenotypeIds = new GenotypeIds(0, 1, TEST_REF_ID, TEST_SAMPLE_ID, false);
     }
 
     @Test

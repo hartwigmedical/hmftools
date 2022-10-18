@@ -21,7 +21,7 @@ import com.hartwig.hmftools.svprep.reads.PartitionTask;
 import com.hartwig.hmftools.svprep.reads.PartitionThread;
 import com.hartwig.hmftools.svprep.reads.ReadFilterType;
 
-public class ChromosomeTask implements AutoCloseable
+public class ChromosomeTask
 {
     private final String mChromosome;
     private final SvConfig mConfig;
@@ -83,6 +83,7 @@ public class ChromosomeTask implements AutoCloseable
             {
                 SV_LOGGER.error("task execution error: {}", e.toString());
                 e.printStackTrace();
+                System.exit(1);
             }
         }
 
@@ -143,15 +144,5 @@ public class ChromosomeTask implements AutoCloseable
         }
 
         return partitions;
-    }
-
-    /*
-    public int maxMemoryUsage() { return mRegionResults.maxMemoryUsage(); }
-    */
-
-    @Override
-    public void close()
-    {
-        // mRefGenome.close();
     }
 }

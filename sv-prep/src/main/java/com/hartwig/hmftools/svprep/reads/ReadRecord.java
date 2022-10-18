@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.properPair;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -64,7 +65,7 @@ public class ReadRecord
             Positions = new int[] { 0, 0 };
         }
 
-        if(!mateUnmapped(record))
+        if(properPair(record) && !mateUnmapped(record))
         {
             MateChromosome = record.getMateReferenceName();
             MatePosStart = record.getMateAlignmentStart();
@@ -96,6 +97,8 @@ public class ReadRecord
     public boolean isFirstOfPair() { return firstInPair(mRecord); }
     public boolean isSupplementaryAlignment() { return (mRecord.getFlags() & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
     public boolean isUnmapped() { return (mRecord.getFlags() & SAMFlag.READ_UNMAPPED.intValue()) != 0; }
+
+    public boolean hasMate() { return MatePosStart > 0; }
     public boolean isMateUnmapped() { return (mRecord.getFlags() & SAMFlag.MATE_UNMAPPED.intValue()) != 0; }
 
     public boolean hasFlag(final SAMFlag flag) { return (mRecord.getFlags() & flag.intValue()) != 0; }

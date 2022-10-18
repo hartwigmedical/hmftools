@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
+import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.HIGH;
+import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.UNKNOWN;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
@@ -48,7 +50,6 @@ import com.hartwig.hmftools.common.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.linx.LinxViralInsertion;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
@@ -109,7 +110,6 @@ public class FeatureDataLoader
         // extract features from standard pipeline output files and fail if any cannot be loaded
         try
         {
-            String viralInsertFilename = LinxViralInsertion.generateFilename(linxDataDir, sampleId);
             String viralAnnotationFilename = AnnotatedVirusFile.generateFileName(linxDataDir, sampleId);
 
             final List<AnnotatedVirus> virusAnnotations = Lists.newArrayList();
@@ -118,10 +118,9 @@ public class FeatureDataLoader
             {
                 AnnotatedVirusFile.read(viralAnnotationFilename).stream().filter(x -> x.reported()).forEach(x -> virusAnnotations.add(x));
             }
-            else if(Files.exists(Paths.get(viralInsertFilename)))
+            else
             {
-                final List<LinxViralInsertion> viralInserts = LinxViralInsertion.read(viralInsertFilename);
-                virusAnnotations.addAll(mapViralInsertsToAnnotations(viralInserts));
+                CUP_LOGGER.warn("sample({}) missing viral annotations file: {}", sampleId, viralAnnotationFilename);
             }
 
             final String fusionsFilename = LinxFusion.generateFilename(linxDataDir, sampleId);
@@ -238,7 +237,7 @@ public class FeatureDataLoader
         return true;
     }
 
-    private static final Map<String,List<LinxFusion>> getAllFusions(final DatabaseAccess dbAccess, final String specificSampleId)
+    private static Map<String,List<LinxFusion>> getAllFusions(final DatabaseAccess dbAccess, final String specificSampleId)
     {
         final Map<String,List<LinxFusion>> sampleFusionMap = Maps.newHashMap();
 
@@ -247,7 +246,7 @@ public class FeatureDataLoader
                 .and(specificSampleId != null ? SVFUSION.SAMPLEID.eq(specificSampleId) : SVFUSION.SAMPLEID.isNotNull())
                 .fetch();
 
-        for (Record record : result)
+        for(Record record : result)
         {
             final String sampleId = record.getValue(SVFUSION.SAMPLEID);
 
@@ -287,7 +286,7 @@ public class FeatureDataLoader
         return sampleFusionMap;
     }
 
-    private static final Map<String,List<AnnotatedVirus>> getAllViruses(final DatabaseAccess dbAccess, final String specificSampleId)
+    private static Map<String,List<AnnotatedVirus>> getAllViruses(final DatabaseAccess dbAccess, final String specificSampleId)
     {
         final Map<String,List<AnnotatedVirus>> sampleVirusMap = Maps.newHashMap();
 
@@ -315,8 +314,7 @@ public class FeatureDataLoader
                         .meanCoverage(record.getValue(VIRUSANNOTATION.MEANCOVERAGE))
                         .expectedClonalCoverage(record.getValue(VIRUSANNOTATION.EXPECTEDCLONALCOVERAGE))
                         .percentageCovered(record.getValue(VIRUSANNOTATION.PERCENTAGECOVERED))
-                        .virusDriverLikelihoodType(VirusLikelihoodType.UNKNOWN)
-                        //.virusDriverLikelihoodType(VirusLikelihoodType.valueOf(record.getValue(VIRUSANNOTATION.LIKELIHOOD)))
+                        .virusDriverLikelihoodType(VirusLikelihoodType.valueOf(record.getValue(VIRUSANNOTATION.LIKELIHOOD)))
                         .build();
 
             List<AnnotatedVirus> annotatedVirusList = sampleVirusMap.get(sampleId);
@@ -376,7 +374,7 @@ public class FeatureDataLoader
         return false;
     }
 
-    private static final Map<String,List<String>> getSpecificMutations(
+    private static Map<String,List<String>> getSpecificMutations(
             final DatabaseAccess dbAccess, final String specificSampleId, boolean checkIndels)
     {
         final Map<String,List<String>> sampleMutationMap = Maps.newHashMap();
@@ -434,7 +432,7 @@ public class FeatureDataLoader
         return mutations;
     }
 
-    private static final Map<String,List<DriverCatalog>> getAllDrivers(final DatabaseAccess dbAccess, final String specificSampleId)
+    private static Map<String,List<DriverCatalog>> getAllDrivers(final DatabaseAccess dbAccess, final String specificSampleId)
     {
         final Map<String,List<DriverCatalog>> sampleDriverMap = Maps.newHashMap();
 
@@ -543,11 +541,29 @@ public class FeatureDataLoader
             final List<SampleFeatureData> viralInsertDataList = Lists.newArrayList();
 
             // convert to virus group name and ensure no duplicates per sample
+            for(AnnotatedVirus annotatedVirus : virusAnnotations)
+            {
+                if(!annotatedVirus.reported())
+                    continue;
+
+                double likelihood = (annotatedVirus.virusDriverLikelihoodType() == HIGH || annotatedVirus.virusDriverLikelihoodType() == UNKNOWN) ? 1 : 0.5;
+
+                // String virusName = annotatedVirus.interpretation(); // to be confirmed
+                String virusName = ViralInsertionType.fromVirusName(annotatedVirus.name()).toString();
+
+                if(viralInsertDataList.stream().anyMatch(x -> x.Name.equals(virusName)))
+                    continue;
+
+                viralInsertDataList.add(new SampleFeatureData(sampleId, virusName, FeatureType.VIRUS, likelihood));
+            }
+
+            /*
             virusAnnotations.stream()
-                    .map(x -> new SampleFeatureData(sampleId, fromVirusName(x.name()).toString(), FeatureType.VIRUS, 1))
+                    .map(x -> new SampleFeatureData(sampleId, x.interpretation(), FeatureType.VIRUS, 1))
                     .filter(x -> !x.Name.equals(OTHER.toString()))
                     .filter(x -> viralInsertDataList.stream().noneMatch(y -> y.Name.equals(x.Name)))
                     .forEach(x -> viralInsertDataList.add(x));
+            */
 
             featuresList.addAll(viralInsertDataList);
         }
@@ -672,27 +688,5 @@ public class FeatureDataLoader
         }
 
         return true;
-    }
-
-    private static List<AnnotatedVirus> mapViralInsertsToAnnotations(final List<LinxViralInsertion> viralInserts)
-    {
-        final List<AnnotatedVirus> virusAnnotations = Lists.newArrayList();
-
-        for(LinxViralInsertion viralInsertion : viralInserts)
-        {
-            virusAnnotations.add(ImmutableAnnotatedVirus.builder()
-                    .taxid(0)
-                    .name(viralInsertion.VirusName)
-                    .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
-                    .interpretation(null)
-                    .expectedClonalCoverage(0.0)
-                    .meanCoverage(0)
-                    .percentageCovered(0)
-                    .reported(true)
-                    .integrations(0)
-                    .build());
-        }
-
-        return virusAnnotations;
     }
 }

@@ -13,6 +13,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.aminoacid.BlosumMapping;
 
 public class RecognitionSimilarity
 {

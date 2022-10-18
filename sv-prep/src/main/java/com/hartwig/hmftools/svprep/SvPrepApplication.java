@@ -37,7 +37,7 @@ public class SvPrepApplication
         if(!mConfig.isValid())
             System.exit(1);
 
-        SV_LOGGER.info("running SvPre for sample({})", mConfig.SampleId);
+        SV_LOGGER.info("running SvPrep for sample({})", mConfig.SampleId);
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -117,7 +117,7 @@ public class SvPrepApplication
             mConfig.ReadLength = fragSizeDistribution.maxReadLength();
     }
 
-    public static void main(@NotNull final String[] args) throws Exception
+    public static void main(@NotNull final String[] args)
     {
         final VersionInfo version = new VersionInfo("sv-prep.version");
         SV_LOGGER.info("SvPrep version: {}", version.version());

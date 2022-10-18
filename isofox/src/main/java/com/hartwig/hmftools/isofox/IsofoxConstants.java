@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox;
 
+import static com.hartwig.hmftools.common.immune.ImmuneRegions.getIgRegions;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -50,26 +52,14 @@ public class IsofoxConstants
     // process genes with longer expected processing times first
     public static final List<String> PRIORITISED_CHROMOSOMES = Lists.newArrayList("14", "22", "2", "3", "6", "9", "16", "17");
 
-    // HLA region: chr 6: 29690552-33111102
-    // IG regions: chr 14:106032614-107288051, chr22: 22380474-23265085
     public static void populateImmuneRegions(final List<ChrBaseRegion> regions, final RefGenomeVersion version)
     {
+        regions.addAll(getIgRegions(version));
+
+        // also add in the HLA genes region
         if(version == RefGenomeVersion.V38)
-        {
-            regions.add(new ChrBaseRegion("chr2", 88857161, 90315836)); // IGK
-            regions.add(new ChrBaseRegion("chr6", 29722775, 33143325)); // HLA
-            regions.add(new ChrBaseRegion("chr14", 105586437, 106879844)); // IGH
-            regions.add(new ChrBaseRegion("chr22", 22026076, 22922913)); // IGL
-        }
+            regions.add(new ChrBaseRegion("chr6", 29722775, 33143325));
         else
-        {
-            regions.add(new ChrBaseRegion("2", 89156674, 90538397));
             regions.add(new ChrBaseRegion("6", 29690552, 33111102));
-            regions.add(new ChrBaseRegion("14", 106032614, 107288051));
-            regions.add(new ChrBaseRegion("22", 22380474, 23265085));
-        }
     }
-
-
-
 }

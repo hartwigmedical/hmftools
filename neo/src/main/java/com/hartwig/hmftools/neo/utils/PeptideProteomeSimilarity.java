@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.aminoacid.BlosumMapping;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
@@ -46,8 +47,6 @@ import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
-import com.hartwig.hmftools.neo.bind.TrainConfig;
-import com.hartwig.hmftools.neo.bind.BlosumMapping;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

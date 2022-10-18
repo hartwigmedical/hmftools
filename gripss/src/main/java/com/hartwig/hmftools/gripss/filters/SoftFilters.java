@@ -58,10 +58,12 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class SoftFilters
 {
     private final FilterConstants mFilterConstants;
+    private final boolean mGermlineMode;
 
-    public SoftFilters(final FilterConstants filterConstants)
+    public SoftFilters(final FilterConstants filterConstants, final boolean germlineMode)
     {
         mFilterConstants = filterConstants;
+        mGermlineMode = germlineMode;
     }
 
     public void applyFilters(final SvData sv, final FilterCache filterCache)
@@ -138,7 +140,7 @@ public class SoftFilters
 
     private boolean normalCoverage(final Breakend breakend)
     {
-        if(breakend.RefGenotype == null)
+        if(breakend.RefGenotype == null || mGermlineMode)
             return false;
 
         int refSupportReads = getGenotypeAttributeAsInt(breakend.RefGenotype, VT_REF, 0);
@@ -149,7 +151,7 @@ public class SoftFilters
 
     private boolean normalRelativeSupport(final Breakend breakend)
     {
-        if(breakend.RefGenotype == null)
+        if(breakend.RefGenotype == null || mGermlineMode)
             return false;
 
         return breakend.ReferenceFragments > mFilterConstants.SoftMaxNormalRelativeSupport * breakend.TumorFragments;
@@ -248,7 +250,7 @@ public class SoftFilters
 
     private boolean shortSplitReadNormal(final SvData sv, final Breakend breakend)
     {
-        if(breakend.RefGenotype == null)
+        if(breakend.RefGenotype == null || mGermlineMode)
             return false;
 
         return sv.isShortLocal() && getSplitReadCount(breakend, breakend.RefGenotype) > 0;
@@ -275,7 +277,7 @@ public class SoftFilters
 
     private boolean discordantPairSupport(final SvData sv, final Breakend breakend)
     {
-        if(!sv.hasReference())
+        if(!sv.hasReference() || mGermlineMode)
             return false;
 
         if(sv.type() != INV || sv.length() > HOM_INV_LENGTH)

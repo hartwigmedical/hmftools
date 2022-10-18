@@ -145,6 +145,45 @@ public class ReadSupportTest
     }
 
     @Test
+    public void testHardClipSupport()
+    {
+        int readId = 1;
+        ReadRecord junctionRead = ReadRecord.from(createSamRecord(
+                readIdStr(readId++), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
+
+        JunctionData junctionData = new JunctionData(230, NEG_ORIENT, junctionRead);
+
+        // exact position match
+        ReadRecord supportRead = ReadRecord.from(createSamRecord(
+                readIdStr(readId++), CHR_1, 230, REF_BASES.substring(30, 100), "1H70M"));
+
+        assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
+
+        // a few ref bases extend past the junction
+        supportRead = ReadRecord.from(createSamRecord(
+                readIdStr(readId++), CHR_1, 227, REF_BASES.substring(27, 100), "1H73M"));
+
+        assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
+
+        // same again or pos orientation
+        junctionRead = ReadRecord.from(createSamRecord(
+                "01", CHR_1, 200, REF_BASES.substring(0, 80), "50M30S"));
+
+        junctionData = new JunctionData(249, POS_ORIENT, junctionRead);
+
+        // exact position match
+        supportRead = ReadRecord.from(createSamRecord(
+                readIdStr(readId++), CHR_1, 200, REF_BASES.substring(0, 50), "50M3H"));
+
+        assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
+
+        supportRead = ReadRecord.from(createSamRecord(
+                readIdStr(readId++), CHR_1, 200, REF_BASES.substring(0, 53), "53M30H"));
+
+        assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
+    }
+
+    @Test
     public void testDistantSupportingReads()
     {
         int readId = 1;

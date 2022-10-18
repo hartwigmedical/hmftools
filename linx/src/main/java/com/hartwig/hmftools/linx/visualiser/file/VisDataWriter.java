@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
+import static com.hartwig.hmftools.common.immune.ImmuneRegions.getIgRegion;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -29,6 +30,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptProteinData;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.LinkedPair;
@@ -475,39 +477,11 @@ public class VisDataWriter
         if(!geneData.TransName.contains("@IG"))
             return false;
 
-        /*
-            v37
-            @IGH:    1;14;106032614;107288051
-            @IGK:   -1;2;89890568;90274235
-            @IGL:	1;22;22380474;23265085
-
-            v38
-            @IGH:    1;14;105586437;106879844
-            @IGK:   -1;2;88857361;90235368
-            @IGL:	1;22;22026076;22922913
-        */
-
-        int posStart = 0;
-        int posEnd = 0;
-
-        if(geneData.TransName.equals("@IGH"))
-        {
-            posStart = RG_VERSION.is37() ? 106032614 : 105586437;
-            posEnd = RG_VERSION.is37() ? 107288051 : 106879844;
-        }
-        else if(geneData.TransName.equals("@IGK"))
-        {
-            posStart = RG_VERSION.is37() ? 89890568 : 88857361;
-            posEnd = RG_VERSION.is37() ? 90274235 : 90235368;
-        }
-        else if(geneData.TransName.equals("@IGL"))
-        {
-            posStart = RG_VERSION.is37() ? 22380474 : 22026076;
-            posEnd = RG_VERSION.is37() ? 23265085 : 22922913;
-        }
+        String igGene = geneData.TransName.replace("@", "");
+        ChrBaseRegion igRegion = getIgRegion(igGene, RG_VERSION);
 
         geneExonList.add(new VisGeneExon(sampleId, geneData.ClusterId, geneData.TransName, geneData.TransName,
-                geneData.Chromosome, geneData.AnnotationType, 1, posStart, posEnd));
+                geneData.Chromosome, geneData.AnnotationType, 1, igRegion.start(), igRegion.end()));
 
         return true;
     }
