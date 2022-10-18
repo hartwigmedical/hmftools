@@ -26,7 +26,7 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
             @NotNull final String alt
     )
     {
-        if (! id.startsWith(EVENT_TYPE_STRING))
+        if (!id.startsWith(EVENT_TYPE_STRING))
         {
             throw new java.lang.IllegalArgumentException(String.format("Invalid ID for VariantHaplotypeEvent: %s", id));
         }

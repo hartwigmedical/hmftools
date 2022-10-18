@@ -57,7 +57,7 @@ public class PeachApplication
 
         PCH_LOGGER.info("creating output directory");
         File outputDirectory = new File(config.outputDir);
-        if (! outputDirectory.exists() && ! outputDirectory.mkdirs())
+        if (!outputDirectory.exists() && !outputDirectory.mkdirs())
         {
             PCH_LOGGER.error("could not create output directory, exiting");
             System.exit(1);
@@ -164,7 +164,7 @@ public class PeachApplication
     private boolean isPotentiallyRelevant(VariantContext variantContext, Map<Chromosome, List<BaseRegion>> chromosomeToRelevantRegions)
     {
         Chromosome variantChromosome = HumanChromosome.fromString(variantContext.getContig());
-        if (! chromosomeToRelevantRegions.containsKey(variantChromosome))
+        if (!chromosomeToRelevantRegions.containsKey(variantChromosome))
             return false;
 
         BaseRegion variantRegion = new BaseRegion(variantContext.getStart(), variantContext.getEnd());
