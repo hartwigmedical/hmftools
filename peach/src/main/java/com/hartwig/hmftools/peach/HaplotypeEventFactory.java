@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.peach;
 
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import org.jetbrains.annotations.NotNull;
 
 public class HaplotypeEventFactory
