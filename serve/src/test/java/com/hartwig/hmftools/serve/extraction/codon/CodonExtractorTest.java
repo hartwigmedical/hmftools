@@ -8,14 +8,13 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.common.serve.datamodel.MutationTypeFilter;
 import com.hartwig.hmftools.serve.DriverGenesTestFactory;
 import com.hartwig.hmftools.serve.EnsemblDataCacheTestFactory;
 import com.hartwig.hmftools.serve.extraction.util.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
-import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
 
 import org.jetbrains.annotations.NotNull;

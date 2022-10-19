@@ -2,7 +2,7 @@ package com.hartwig.hmftools.serve.extraction.exon;
 
 import java.util.Comparator;
 
-import com.hartwig.hmftools.serve.extraction.range.RangeCompare;
+import com.hartwig.hmftools.common.serve.datamodel.range.RangeCompare;
 
 import org.jetbrains.annotations.NotNull;
 

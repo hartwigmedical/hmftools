@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.extraction.copynumber;
 
-import static com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions.FIELD_DELIMITER;
+import static com.hartwig.hmftools.common.serve.actionability.util.ActionableFileFunctions.FIELD_DELIMITER;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,10 +12,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.serve.extraction.exon.ImmutableExonAnnotation;
-import com.hartwig.hmftools.serve.extraction.exon.ImmutableKnownExon;
-import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
-import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
 import org.jetbrains.annotations.NotNull;
 

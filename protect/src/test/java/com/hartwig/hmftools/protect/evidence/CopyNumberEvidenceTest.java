@@ -7,17 +7,17 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.EvidenceType;
 import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.purple.loader.GainLossTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.serve.ServeTestFactory;
-import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
-import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
+import com.hartwig.hmftools.common.serve.ServeTestFactory;
+import com.hartwig.hmftools.common.serve.actionability.gene.ActionableGene;
+import com.hartwig.hmftools.common.serve.actionability.gene.ImmutableActionableGene;
+import com.hartwig.hmftools.common.serve.datamodel.gene.GeneLevelEvent;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

@@ -2,30 +2,29 @@ package com.hartwig.hmftools.protect.evidence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.EvidenceType;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.ServeTestFactory;
+import com.hartwig.hmftools.common.serve.actionability.gene.ActionableGene;
+import com.hartwig.hmftools.common.serve.actionability.gene.ImmutableActionableGene;
+import com.hartwig.hmftools.common.serve.actionability.hotspot.ActionableHotspot;
+import com.hartwig.hmftools.common.serve.actionability.hotspot.ImmutableActionableHotspot;
+import com.hartwig.hmftools.common.serve.actionability.range.ActionableRange;
+import com.hartwig.hmftools.common.serve.actionability.range.ImmutableActionableRange;
+import com.hartwig.hmftools.common.serve.datamodel.MutationTypeFilter;
+import com.hartwig.hmftools.common.serve.datamodel.gene.GeneLevelEvent;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.serve.ServeTestFactory;
-import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
-import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
-import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
-import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
-import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
-import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
-import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

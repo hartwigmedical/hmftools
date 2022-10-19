@@ -8,6 +8,9 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.common.serve.datamodel.gene.GeneLevelAnnotation;
+import com.hartwig.hmftools.common.serve.datamodel.gene.GeneLevelEvent;
+import com.hartwig.hmftools.common.serve.datamodel.gene.ImmutableGeneLevelAnnotation;
 import com.hartwig.hmftools.serve.extraction.util.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 

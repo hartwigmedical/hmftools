@@ -9,13 +9,11 @@ import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
+import com.hartwig.hmftools.common.serve.actionability.ActionableEvents;
+import com.hartwig.hmftools.common.serve.actionability.ActionableEventsLoader;
 import com.hartwig.hmftools.protect.algo.ProtectAlgo;
-import com.hartwig.hmftools.serve.actionability.ActionableEvents;
-import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
-import com.hartwig.hmftools.serve.refgenome.RefGenomeManagerFactory;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;

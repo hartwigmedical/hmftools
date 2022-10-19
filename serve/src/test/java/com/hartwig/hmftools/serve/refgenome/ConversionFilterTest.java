@@ -3,9 +3,9 @@ package com.hartwig.hmftools.serve.refgenome;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.serve.actionability.fusion.ImmutableActionableFusion;
+import com.hartwig.hmftools.common.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.ServeTestFactory;
-import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
-import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;

@@ -2,12 +2,12 @@ package com.hartwig.hmftools.serve.extraction.fusion;
 
 import static com.hartwig.hmftools.serve.extraction.fusion.FusionAnnotationConfig.EXONIC_FUSIONS_MAP;
 
-import java.sql.Array;
 import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.common.serve.datamodel.fusion.ExonicDelDupType;
 import com.hartwig.hmftools.serve.extraction.util.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 

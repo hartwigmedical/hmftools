@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.extraction.events;
 
-import static com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions.FIELD_DELIMITER;
+import static com.hartwig.hmftools.common.serve.actionability.util.ActionableFileFunctions.FIELD_DELIMITER;
 
 import java.io.File;
 import java.io.IOException;

@@ -7,6 +7,7 @@ import java.util.Set;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.datamodel.fusion.FusionPair;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

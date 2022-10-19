@@ -228,11 +228,6 @@
                 <artifactId>vicc-importer</artifactId>
                 <version>${vicc-importer.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>serve</artifactId>
-                <version>${serve.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>com.github.samtools</groupId>

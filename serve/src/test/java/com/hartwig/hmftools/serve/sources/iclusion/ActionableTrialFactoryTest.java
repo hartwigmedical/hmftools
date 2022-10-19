@@ -7,11 +7,11 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.cancertype.CancerTypeConstants;
+import com.hartwig.hmftools.common.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTumorLocation;
 import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionTumorLocation;
-import com.hartwig.hmftools.serve.cancertype.CancerTypeConstants;
-import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 
 import org.apache.logging.log4j.util.Strings;

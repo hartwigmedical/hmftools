@@ -12,26 +12,26 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
-import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
-import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
+import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.purple.loader.GainLossTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.serve.ServeTestFactory;
+import com.hartwig.hmftools.common.serve.actionability.gene.ActionableGene;
+import com.hartwig.hmftools.common.serve.actionability.gene.ImmutableActionableGene;
+import com.hartwig.hmftools.common.serve.datamodel.gene.GeneLevelEvent;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
 import com.hartwig.hmftools.common.wildtype.WildTypeFactoryTest;
-import com.hartwig.hmftools.serve.ServeTestFactory;
-import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
-import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +41,6 @@ public class WildTypeEvidenceTest {
 
     @Test
     public void canDetermineWildType() {
-
         ReportableVariant variantGermline = ImmutableReportableVariant.builder()
                 .from(ReportableVariantTestFactory.create())
                 .gene("BRCA1")

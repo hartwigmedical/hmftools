@@ -3,12 +3,12 @@ package com.hartwig.hmftools.serve.extraction;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
-import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
-import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
-import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
-import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
+import com.hartwig.hmftools.common.serve.actionability.characteristic.ActionableCharacteristic;
+import com.hartwig.hmftools.common.serve.actionability.fusion.ActionableFusion;
+import com.hartwig.hmftools.common.serve.actionability.gene.ActionableGene;
+import com.hartwig.hmftools.common.serve.actionability.hotspot.ActionableHotspot;
+import com.hartwig.hmftools.common.serve.actionability.immuno.ActionableHLA;
+import com.hartwig.hmftools.common.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;

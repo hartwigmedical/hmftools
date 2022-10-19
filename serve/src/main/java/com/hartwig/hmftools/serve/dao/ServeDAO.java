@@ -1,5 +1,18 @@
 package com.hartwig.hmftools.serve.dao;
 
+import static com.hartwig.hmftools.serve.database.tables.Actionablecharacteristic.ACTIONABLECHARACTERISTIC;
+import static com.hartwig.hmftools.serve.database.tables.Actionablefusion.ACTIONABLEFUSION;
+import static com.hartwig.hmftools.serve.database.tables.Actionablegene.ACTIONABLEGENE;
+import static com.hartwig.hmftools.serve.database.tables.Actionablehla.ACTIONABLEHLA;
+import static com.hartwig.hmftools.serve.database.tables.Actionablehotspot.ACTIONABLEHOTSPOT;
+import static com.hartwig.hmftools.serve.database.tables.Actionablerange.ACTIONABLERANGE;
+import static com.hartwig.hmftools.serve.database.tables.Eventinterpretation.EVENTINTERPRETATION;
+import static com.hartwig.hmftools.serve.database.tables.Knowncodon.KNOWNCODON;
+import static com.hartwig.hmftools.serve.database.tables.Knowncopynumber.KNOWNCOPYNUMBER;
+import static com.hartwig.hmftools.serve.database.tables.Knownexon.KNOWNEXON;
+import static com.hartwig.hmftools.serve.database.tables.Knownfusionpair.KNOWNFUSIONPAIR;
+import static com.hartwig.hmftools.serve.database.tables.Knownhotspot.KNOWNHOTSPOT;
+
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -7,15 +20,15 @@ import java.util.Set;
 
 import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.serve.actionability.ActionableEvents;
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
-import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
-import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
-import com.hartwig.hmftools.serve.actionability.immuno.ActionableHLA;
-import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
-import com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions;
-import com.hartwig.hmftools.serve.cancertype.CancerTypeFactory;
+import com.hartwig.hmftools.common.serve.actionability.ActionableEvents;
+import com.hartwig.hmftools.common.serve.actionability.characteristic.ActionableCharacteristic;
+import com.hartwig.hmftools.common.serve.actionability.fusion.ActionableFusion;
+import com.hartwig.hmftools.common.serve.actionability.gene.ActionableGene;
+import com.hartwig.hmftools.common.serve.actionability.hotspot.ActionableHotspot;
+import com.hartwig.hmftools.common.serve.actionability.immuno.ActionableHLA;
+import com.hartwig.hmftools.common.serve.actionability.range.ActionableRange;
+import com.hartwig.hmftools.common.serve.actionability.util.ActionableFileFunctions;
+import com.hartwig.hmftools.common.serve.cancertype.CancerTypeFactory;
 import com.hartwig.hmftools.serve.extraction.KnownEvents;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
@@ -23,19 +36,6 @@ import com.hartwig.hmftools.serve.extraction.events.EventInterpretation;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
-
-import static com.hartwig.hmftools.serve.database.tables.Actionablehotspot.ACTIONABLEHOTSPOT;
-import static com.hartwig.hmftools.serve.database.tables.Actionablerange.ACTIONABLERANGE;
-import static com.hartwig.hmftools.serve.database.tables.Actionablegene.ACTIONABLEGENE;
-import static com.hartwig.hmftools.serve.database.tables.Actionablefusion.ACTIONABLEFUSION;
-import static com.hartwig.hmftools.serve.database.tables.Actionablecharacteristic.ACTIONABLECHARACTERISTIC;
-import static com.hartwig.hmftools.serve.database.tables.Actionablehla.ACTIONABLEHLA;
-import static com.hartwig.hmftools.serve.database.tables.Knownhotspot.KNOWNHOTSPOT;
-import static com.hartwig.hmftools.serve.database.tables.Knowncodon.KNOWNCODON;
-import static com.hartwig.hmftools.serve.database.tables.Knownexon.KNOWNEXON;
-import static com.hartwig.hmftools.serve.database.tables.Knowncopynumber.KNOWNCOPYNUMBER;
-import static com.hartwig.hmftools.serve.database.tables.Knownfusionpair.KNOWNFUSIONPAIR;
-import static com.hartwig.hmftools.serve.database.tables.Eventinterpretation.EVENTINTERPRETATION;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

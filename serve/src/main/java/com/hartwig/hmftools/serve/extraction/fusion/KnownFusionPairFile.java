@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.extraction.fusion;
 
-import static com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions.FIELD_DELIMITER;
+import static com.hartwig.hmftools.common.serve.actionability.util.ActionableFileFunctions.FIELD_DELIMITER;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,9 +12,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberType;
-import com.hartwig.hmftools.serve.extraction.copynumber.ImmutableKnownCopyNumber;
-import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.common.serve.datamodel.fusion.FusionPairComparator;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.protect.algo;
 
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
-
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
@@ -13,14 +11,12 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.doid.DoidEdge;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.doid.DoidParentsTest;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.serve.actionability.ActionableEvents;
+import com.hartwig.hmftools.common.serve.actionability.ActionableEventsLoader;
 import com.hartwig.hmftools.protect.ImmutableProtectConfig;
 import com.hartwig.hmftools.protect.ProtectApplication;
 import com.hartwig.hmftools.protect.ProtectConfig;
-import com.hartwig.hmftools.serve.actionability.ActionableEvents;
-import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;

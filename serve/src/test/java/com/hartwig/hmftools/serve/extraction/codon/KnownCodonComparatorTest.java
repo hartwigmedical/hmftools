@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
+import com.hartwig.hmftools.common.serve.datamodel.MutationTypeFilter;
 
 import org.junit.Test;
 

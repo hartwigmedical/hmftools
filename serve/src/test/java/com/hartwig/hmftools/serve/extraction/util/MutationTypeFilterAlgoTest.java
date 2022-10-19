@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.extraction.util;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.common.serve.datamodel.MutationTypeFilter;
 import com.hartwig.hmftools.serve.DriverGenesTestFactory;
 
 import org.junit.Test;

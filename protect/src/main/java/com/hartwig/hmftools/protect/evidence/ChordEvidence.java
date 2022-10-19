@@ -7,9 +7,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.serve.actionability.characteristic.ActionableCharacteristic;
+import com.hartwig.hmftools.common.serve.datamodel.characteristic.TumorCharacteristicAnnotation;
 import com.hartwig.hmftools.protect.characteristic.CharacteristicsFunctions;
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 

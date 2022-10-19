@@ -9,11 +9,11 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
+import com.hartwig.hmftools.common.serve.cancertype.CancerType;
+import com.hartwig.hmftools.common.serve.cancertype.CancerTypeConstants;
+import com.hartwig.hmftools.common.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTumorLocation;
-import com.hartwig.hmftools.serve.cancertype.CancerType;
-import com.hartwig.hmftools.serve.cancertype.CancerTypeConstants;
-import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 
 import org.apache.commons.compress.utils.Lists;

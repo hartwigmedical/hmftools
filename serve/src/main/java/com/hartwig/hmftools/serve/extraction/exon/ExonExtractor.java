@@ -8,13 +8,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.serve.extraction.util.HmfExonRegion;
-import com.hartwig.hmftools.serve.extraction.util.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.common.serve.datamodel.MutationTypeFilter;
 import com.hartwig.hmftools.serve.extraction.util.DriverInconsistencyMode;
 import com.hartwig.hmftools.serve.extraction.util.EnsemblFunctions;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
-import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
+import com.hartwig.hmftools.serve.extraction.util.HmfExonRegion;
+import com.hartwig.hmftools.serve.extraction.util.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
 
 import org.apache.logging.log4j.LogManager;

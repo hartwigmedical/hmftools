@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.extraction.fusion;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.serve.datamodel.fusion.ExonicDelDupType;
 
 import org.jetbrains.annotations.NotNull;
 

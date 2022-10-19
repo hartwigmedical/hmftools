@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
-import com.hartwig.hmftools.serve.actionability.ActionableEvent;
+import com.hartwig.hmftools.common.serve.actionability.ActionableEvent;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

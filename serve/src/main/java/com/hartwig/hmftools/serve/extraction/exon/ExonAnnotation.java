@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.extraction.exon;
 
-import com.hartwig.hmftools.serve.extraction.range.RangeAnnotation;
+import com.hartwig.hmftools.common.serve.datamodel.range.RangeAnnotation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

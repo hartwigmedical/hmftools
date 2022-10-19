@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.loader.PurpleData;
 import com.hartwig.hmftools.common.purple.loader.PurpleDataLoader;
+import com.hartwig.hmftools.common.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.protect.ProtectConfig;
@@ -29,7 +30,6 @@ import com.hartwig.hmftools.protect.evidence.PurpleSignatureEvidence;
 import com.hartwig.hmftools.protect.evidence.VariantEvidence;
 import com.hartwig.hmftools.protect.evidence.VirusEvidence;
 import com.hartwig.hmftools.protect.evidence.WildTypeEvidence;
-import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

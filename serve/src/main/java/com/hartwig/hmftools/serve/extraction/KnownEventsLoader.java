@@ -4,11 +4,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.serve.actionability.ImmutableActionableEvents;
-import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
-import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
-import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
-import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodonFile;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
@@ -20,11 +15,9 @@ import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPairFile;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspotFile;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class KnownEventsLoader {
 
