@@ -58,18 +58,19 @@ The cardinality of `tumor` must match `tumor_bam`. At least one tumor must be su
 
 ## Optional Arguments
 Argument | Default | Description 
----|---|---
-reference | NA | Comma separated names of the reference sample
-reference_bam | NA | Comma separated paths to indexed reference BAM file
-ref_sample_count | 1 | Controls the set of ref samples used for tumor-normal soft-filtering. Zero means none will be used.)
-resource_dir | None | Path to all resource files, in which case specify the file names only for ref_genome, hotspots, panel_bed and high_confidence_bed  
-threads | 2 | Number of threads to use
-max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
+---|---------|---
+reference | NA      | Comma separated names of the reference sample
+reference_bam | NA      | Comma separated paths to indexed reference BAM file
+ref_sample_count | 1       | Controls the set of ref samples used for tumor-normal soft-filtering. Zero means none will be used.)
+resource_dir | None    | Path to all resource files, in which case specify the file names only for ref_genome, hotspots, panel_bed and high_confidence_bed  
+threads | 2       | Number of threads to use
+max_read_depth | 1000    | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
 max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
-min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
-coverage_bed | NA | Write file with counts of depth of each base of the supplied bed file
-validation_stringency | STRICT | SAM validation strategy: STRICT, SILENT, LENIENT
-include_mt | NA | By default the mitochondrial DNA is not read but will be if this config is included
+min_map_quality | 10      | Min mapping quality to apply to non-hotspot variants
+min_avg_base_qual | 22 | Min average base quality hard filter
+coverage_bed | NA      | Write file with counts of depth of each base of the supplied bed file
+validation_stringency | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT
+include_mt | NA      | By default the mitochondrial DNA is not read but will be if this config is included
 
 The cardinality of `reference` must match `reference_bam`.
 
@@ -96,12 +97,11 @@ Argument | Default | Description
 jitter_penalty | 0.25 | Penalty to apply to qual score when read context matches with jitter
 jitter_min_repeat_count | 3 | Minimum repeat count before applying jitter penalty
 base_qual_fixed_penalty | 12 | Fixed penalty to apply to base quality
-map_qual_fixed_penalty | 15 | Fixed penalty to apply to map quality
-map_qual_improper_pair_penalty | 15 | Penalty to apply to map qual when SAM record does not have the ProperPair flag
-map_qual_read_events_penalty | 8 | Penalty to apply to map qual for additional events in read
+fixed_qual_penalty | 15 | Fixed penalty to apply to map quality
+mproper_pair_qual_penalty | 15 | Penalty to apply to map qual when SAM record does not have the ProperPair flag
+read_events_qual_penalty | 8 | Penalty to apply to map qual for additional events in read
 
 ## Debug and logging Arguments
-
 
 Argument | Default | Description 
 ---|---|---

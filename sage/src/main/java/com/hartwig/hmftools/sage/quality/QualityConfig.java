@@ -1,22 +1,12 @@
 package com.hartwig.hmftools.sage.quality;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.compress.utils.Lists;
-import org.jetbrains.annotations.NotNull;
 
 public class QualityConfig
 {
@@ -24,17 +14,17 @@ public class QualityConfig
     public final int JitterMinRepeatCount;
     public final int BaseQualityFixedPenalty;
     public final int DistanceFromReadEdgeFixedPenalty;
-    public final int MapQualityFixedPenalty;
-    public final int MapQualityReadEventsPenalty;
-    public final int MapQualityImproperPairPenalty;
+    public final int FixedPenalty;
+    public final double ReadEventsPenalty;
+    public final int ImproperPairPenalty;
 
     private static final String JITTER_PENALTY = "jitter_penalty";
     private static final String JITTER_MIN_REPEAT_COUNT = "jitter_min_repeat_count";
     private static final String BASE_QUAL_FIXED_PENALTY = "base_qual_fixed_penalty";
     private static final String READ_EDGE_FIXED_PENALTY = "read_edge_fixed_penalty";
-    private static final String MAP_QUAL_FIXED_PENALTY = "map_qual_fixed_penalty";
-    private static final String MAP_QUAL_IMPROPER_PAIR_PENALTY = "map_qual_improper_pair_penalty";
-    private static final String MAP_QUAL_READ_EVENTS_PENALTY = "map_qual_read_events_penalty";
+    private static final String MAP_QUAL_FIXED_PENALTY = "fixed_qual_penalty";
+    private static final String MAP_QUAL_IMPROPER_PAIR_PENALTY = "improper_pair_qual_penalty";
+    private static final String MAP_QUAL_READ_EVENTS_PENALTY = "read_events_qual_penalty";
 
     private static final double DEFAULT_JITTER_PENALTY = 0.25;
     private static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
@@ -42,7 +32,7 @@ public class QualityConfig
     private static final int DEFAULT_READ_EDGE_FIXED_PENALTY = 0;
     private static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
     private static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
-    private static final int DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
+    private static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
 
     public QualityConfig(final CommandLine cmd)
     {
@@ -50,9 +40,9 @@ public class QualityConfig
         JitterMinRepeatCount = getConfigValue(cmd, JITTER_MIN_REPEAT_COUNT, DEFAULT_JITTER_MIN_REPEAT_COUNT);
         BaseQualityFixedPenalty = getConfigValue(cmd, BASE_QUAL_FIXED_PENALTY, DEFAULT_BASE_QUAL_FIXED_PENALTY);
         DistanceFromReadEdgeFixedPenalty = getConfigValue(cmd, READ_EDGE_FIXED_PENALTY, DEFAULT_READ_EDGE_FIXED_PENALTY);
-        MapQualityFixedPenalty = getConfigValue(cmd, MAP_QUAL_FIXED_PENALTY, DEFAULT_MAP_QUAL_FIXED_PENALTY);
-        MapQualityReadEventsPenalty = getConfigValue(cmd, MAP_QUAL_READ_EVENTS_PENALTY, DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY);
-        MapQualityImproperPairPenalty = getConfigValue(cmd, MAP_QUAL_IMPROPER_PAIR_PENALTY, DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY);
+        FixedPenalty = getConfigValue(cmd, MAP_QUAL_FIXED_PENALTY, DEFAULT_MAP_QUAL_FIXED_PENALTY);
+        ReadEventsPenalty = getConfigValue(cmd, MAP_QUAL_READ_EVENTS_PENALTY, DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY);
+        ImproperPairPenalty = getConfigValue(cmd, MAP_QUAL_IMPROPER_PAIR_PENALTY, DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY);
     }
 
     public QualityConfig()
@@ -61,9 +51,9 @@ public class QualityConfig
         JitterMinRepeatCount = DEFAULT_JITTER_MIN_REPEAT_COUNT;
         BaseQualityFixedPenalty = DEFAULT_BASE_QUAL_FIXED_PENALTY;
         DistanceFromReadEdgeFixedPenalty = DEFAULT_READ_EDGE_FIXED_PENALTY;
-        MapQualityFixedPenalty = DEFAULT_MAP_QUAL_FIXED_PENALTY;
-        MapQualityReadEventsPenalty = DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
-        MapQualityImproperPairPenalty = DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
+        FixedPenalty = DEFAULT_MAP_QUAL_FIXED_PENALTY;
+        ReadEventsPenalty = DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
+        ImproperPairPenalty = DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
     }
 
     public boolean isHighlyPolymorphic(final GenomePosition position)

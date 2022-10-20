@@ -29,12 +29,12 @@ public class QualityCalculator
     {
         if(config.isHighlyPolymorphic(position))
         {
-            return Math.min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - config.MapQualityFixedPenalty);
+            return Math.min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - config.FixedPenalty);
         }
 
-        int improperPairPenalty = config.MapQualityImproperPairPenalty * (properPairFlag ? 0 : 1);
-        int distancePenalty = (int)round(Math.max(0, readEvents - 1) * config.MapQualityReadEventsPenalty);
-        return mapQuality - config.MapQualityFixedPenalty - improperPairPenalty - distancePenalty;
+        int improperPairPenalty = config.ImproperPairPenalty * (properPairFlag ? 0 : 1);
+        int eventPenalty = (int)round(Math.max(0, readEvents - 1) * config.ReadEventsPenalty);
+        return mapQuality - config.FixedPenalty - improperPairPenalty - eventPenalty;
     }
 
     public static double modifiedBaseQuality(final QualityConfig config, double baseQuality, int distanceFromReadEdge)

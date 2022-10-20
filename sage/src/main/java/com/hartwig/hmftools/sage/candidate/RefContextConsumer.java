@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.candidate;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
@@ -95,7 +96,7 @@ public class RefContextConsumer
         if(!readExceedsQuality && !readCoversHotspot)
             return;
 
-        int scAdjustedMapQual = adjustedMapQual - scEvents * mConfig.Quality.MapQualityReadEventsPenalty;
+        int scAdjustedMapQual = (int)round(adjustedMapQual - scEvents * mConfig.Quality.ReadEventsPenalty);
         boolean readExceedsScAdjustedQuality = scAdjustedMapQual > 0;
 
         final List<AltRead> altReads = Lists.newArrayList();
@@ -238,12 +239,12 @@ public class RefContextConsumer
         if(HlaCommon.overlaps(record.getContig(), record.getStart(), record.getEnd()))
             return record.getMappingQuality();
 
-        int eventsPenalty = (numberOfEvents - 1) * mConfig.Quality.MapQualityReadEventsPenalty;
+        int eventPenalty = (int)round((numberOfEvents - 1) * mConfig.Quality.ReadEventsPenalty);
 
         int improperPenalty = !record.getReadPairedFlag() || !record.getProperPairFlag() || record.getSupplementaryAlignmentFlag() ?
-                mConfig.Quality.MapQualityImproperPairPenalty : 0;
+                mConfig.Quality.ImproperPairPenalty : 0;
 
-        return record.getMappingQuality() - mConfig.Quality.MapQualityFixedPenalty - eventsPenalty - improperPenalty;
+        return record.getMappingQuality() - mConfig.Quality.FixedPenalty - eventPenalty - improperPenalty;
     }
 
     private boolean isHotspotPosition(int position) { return mHotspotPositions.contains(position); }

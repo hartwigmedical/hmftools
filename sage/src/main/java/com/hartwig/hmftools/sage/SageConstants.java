@@ -52,7 +52,7 @@ public class SageConstants
     public static final int HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL = 8;
     public static final int HOTSPOT_MIN_RAW_ALT_BASE_QUAL = 150;
 
-    public static final int MIN_AVG_BASE_QUALITY = 22;
+    public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 22;
 
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(70, 0.005,
             0, 0, 0, 0,

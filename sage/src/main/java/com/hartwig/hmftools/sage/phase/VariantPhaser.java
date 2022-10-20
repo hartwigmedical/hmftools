@@ -39,8 +39,6 @@ public class VariantPhaser
     private static final int FINAL_MIN_READ_COUNT = 2;
     private static final double SUBSET_READ_COUNT_LIMIT = 0.25;
 
-    public static final int PC_PHASE_READS = 0;
-
     public VariantPhaser(final PhaseSetCounter phaseSetCounter)
     {
         mPhaseSetCounter = phaseSetCounter;
@@ -206,7 +204,7 @@ public class VariantPhaser
 
             if(readCountThreshold >= 3)
             {
-                SG_LOGGER.debug("region({}) phasing group collection({}) sets min read count to {}",
+                SG_LOGGER.trace("region({}) phasing group collection({}) sets min read count to {}",
                         mRegion, collection, readCountThreshold);
             }
 

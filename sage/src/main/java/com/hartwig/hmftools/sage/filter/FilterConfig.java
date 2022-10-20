@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HARD_MIN_TUMOR_VAF
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_CONFIDENCE_FILTER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HOTSPOT_FILTER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_LOW_CONFIDENCE_FILTER;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_AVG_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_PANEL_FILTER;
 
 import org.apache.commons.cli.CommandLine;
@@ -24,6 +25,7 @@ public class FilterConfig
     public final int HardMinTumorRawAltSupport;
     public final int HardMinTumorRawBaseQuality;
     public final int FilteredMaxNormalAltSupport;
+    public final int MinAvgBaseQual;
     public final int ReferenceSampleCount;
 
     public final SoftFilterConfig SoftHotspotFilter;
@@ -40,6 +42,7 @@ public class FilterConfig
     private static final String HARD_MIN_TUMOR_RAW_ALT_SUPPORT = "hard_min_tumor_raw_alt_support";
     private static final String HARD_MIN_TUMOR_RAW_BASE_QUALITY = "hard_min_tumor_raw_base_quality";
     private static final String FILTERED_MAX_NORMAL_ALT_SUPPORT = "filtered_max_normal_alt_support";
+    private static final String MIN_AVG_BASE_QUAL = "min_avg_base_qual";
     private static final String REF_SAMPLE_COUNT = "ref_sample_count";
 
     private static final boolean DEFAULT_SOFT_FILTER_ENABLED = true;
@@ -56,6 +59,7 @@ public class FilterConfig
         HardMinTumorVaf = getConfigValue(cmd, HARD_MIN_TUMOR_VAF, DEFAULT_HARD_MIN_TUMOR_VAF);
         HardMinTumorRawAltSupport = getConfigValue(cmd, HARD_MIN_TUMOR_RAW_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT);
         HardMinTumorRawBaseQuality = getConfigValue(cmd, HARD_MIN_TUMOR_RAW_BASE_QUALITY, DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY);
+        MinAvgBaseQual = getConfigValue(cmd, MIN_AVG_BASE_QUAL, DEFAULT_MIN_AVG_BASE_QUALITY);
         SoftHotspotFilter = new SoftFilterConfig(cmd, "hotspot", DEFAULT_HOTSPOT_FILTER);
         SoftPanelFilter = new SoftFilterConfig(cmd, "panel", DEFAULT_PANEL_FILTER);
         SoftHighConfidenceFilter = new SoftFilterConfig(cmd, "high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER);
@@ -77,6 +81,7 @@ public class FilterConfig
         SoftHighConfidenceFilter = DEFAULT_HIGH_CONFIDENCE_FILTER;
         SoftLowConfidenceFilter = DEFAULT_LOW_CONFIDENCE_FILTER;
         FilteredMaxNormalAltSupport = DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT;
+        MinAvgBaseQual = DEFAULT_MIN_AVG_BASE_QUALITY;
         ReferenceSampleCount = 1;
     }
 
@@ -93,6 +98,7 @@ public class FilterConfig
                 "Hard minimum tumor raw alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
         options.addOption(HARD_MIN_TUMOR_RAW_BASE_QUALITY, true,
                 "Hard minimum tumor raw base quality [" + DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY + "]");
+        options.addOption(MIN_AVG_BASE_QUAL, true, "Min average base qual [" + DEFAULT_MIN_AVG_BASE_QUALITY + "]");
         options.addOption(REF_SAMPLE_COUNT, true, "Number of reference samples for applying tumor-reference filters (default=1)");
 
         SoftFilterConfig.createOptions("hotspot", DEFAULT_HOTSPOT_FILTER).getOptions().forEach(options::addOption);
