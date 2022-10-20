@@ -2,7 +2,7 @@ package com.hartwig.hmftools.svprep.reads;
 
 public class ReadIdTrimmer
 {
-    private final boolean mEnabled;
+    private boolean mEnabled;
     private int mReadIdTrimIndex;
 
     public ReadIdTrimmer(boolean enabled)
@@ -11,15 +11,33 @@ public class ReadIdTrimmer
         mReadIdTrimIndex = -1;
     }
 
+    public boolean enabled() { return mEnabled; }
+
     public String trim(final String readId)
     {
         if(!mEnabled)
             return readId;
 
         if(mReadIdTrimIndex < 0)
+        {
             mReadIdTrimIndex = findReadIdTrimIndex(readId);
 
-        return mReadIdTrimIndex > 0 ? readId.substring(mReadIdTrimIndex) : readId;
+            if(mReadIdTrimIndex < 0)
+            {
+                // disable if the first read doesn't match the established pattern
+                mEnabled = false;
+                return readId;
+            }
+        }
+
+        if(mReadIdTrimIndex >= readId.length() || readId.charAt(mReadIdTrimIndex - 1) != READ_ID_DELIM)
+        {
+            // disable if any reads don't match the established pattern
+            mEnabled = false;
+            return readId;
+        }
+
+        return readId.substring(mReadIdTrimIndex);
     }
 
     private static final char READ_ID_DELIM = ':';
