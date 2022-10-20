@@ -7,12 +7,12 @@ import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.purple.loader.ImmutablePurpleData;
 import com.hartwig.hmftools.common.purple.loader.PurpleData;
-import com.hartwig.hmftools.common.serve.ServeTestFactory;
 import com.hartwig.hmftools.common.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.common.serve.actionability.characteristic.ImmutableActionableCharacteristic;
 import com.hartwig.hmftools.common.serve.datamodel.characteristic.TumorCharacteristicAnnotation;
 import com.hartwig.hmftools.common.serve.datamodel.characteristic.TumorCharacteristicsComparator;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.protect.ServeTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

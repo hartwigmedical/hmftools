@@ -10,9 +10,9 @@ import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.serve.ServeTestFactory;
 import com.hartwig.hmftools.common.serve.actionability.immuno.ActionableHLA;
 import com.hartwig.hmftools.common.serve.actionability.immuno.ImmutableActionableHLA;
+import com.hartwig.hmftools.protect.ServeTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

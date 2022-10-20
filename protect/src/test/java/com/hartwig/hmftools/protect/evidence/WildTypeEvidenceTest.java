@@ -24,7 +24,6 @@ import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.purple.loader.GainLossTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.ServeTestFactory;
 import com.hartwig.hmftools.common.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.common.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.common.serve.datamodel.gene.GeneLevelEvent;
@@ -32,6 +31,7 @@ import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
 import com.hartwig.hmftools.common.wildtype.WildTypeFactoryTest;
+import com.hartwig.hmftools.protect.ServeTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.EvidenceType;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.ServeTestFactory;
 import com.hartwig.hmftools.common.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.common.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.common.serve.actionability.hotspot.ActionableHotspot;
@@ -25,6 +24,7 @@ import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.protect.ServeTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

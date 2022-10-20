@@ -11,11 +11,11 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.chord.ImmutableChordData;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.serve.ServeTestFactory;
 import com.hartwig.hmftools.common.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.common.serve.actionability.characteristic.ImmutableActionableCharacteristic;
 import com.hartwig.hmftools.common.serve.datamodel.characteristic.TumorCharacteristicAnnotation;
 import com.hartwig.hmftools.common.serve.datamodel.characteristic.TumorCharacteristicsComparator;
+import com.hartwig.hmftools.protect.ServeTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

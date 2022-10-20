@@ -24,13 +24,13 @@ import com.hartwig.hmftools.common.protect.EvidenceType;
 import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.ServeTestFactory;
 import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
 import com.hartwig.hmftools.common.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.common.serve.actionability.fusion.ImmutableActionableFusion;
 import com.hartwig.hmftools.common.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.common.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.common.serve.datamodel.gene.GeneLevelEvent;
+import com.hartwig.hmftools.protect.ServeTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

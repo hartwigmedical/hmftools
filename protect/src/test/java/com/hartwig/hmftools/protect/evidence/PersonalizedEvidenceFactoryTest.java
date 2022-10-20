@@ -11,8 +11,6 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.EvidenceType;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.ServeTestFactory;
-import com.hartwig.hmftools.common.serve.actionability.ActionabilityTestUtil;
 import com.hartwig.hmftools.common.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -30,6 +28,7 @@ import com.hartwig.hmftools.common.serve.cancertype.CancerType;
 import com.hartwig.hmftools.common.serve.cancertype.ImmutableCancerType;
 import com.hartwig.hmftools.common.serve.datamodel.characteristic.TumorCharacteristicAnnotation;
 import com.hartwig.hmftools.common.serve.datamodel.gene.GeneLevelEvent;
+import com.hartwig.hmftools.protect.ServeTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -157,7 +156,7 @@ public class PersonalizedEvidenceFactoryTest {
             blacklist.add(ImmutableCancerType.builder().name(blacklistCancerType).doid(blacklistDoid).build());
         }
 
-        ActionableEvent event = ActionabilityTestUtil.create(Knowledgebase.CKB,
+        ActionableEvent event = ServeTestFactory.create(Knowledgebase.CKB,
                 "amp",
                 Sets.newHashSet(),
                 ImmutableTreatment.builder()

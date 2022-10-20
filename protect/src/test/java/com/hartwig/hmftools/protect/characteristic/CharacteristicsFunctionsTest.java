@@ -3,10 +3,10 @@ package com.hartwig.hmftools.protect.characteristic;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.serve.ServeTestFactory;
 import com.hartwig.hmftools.common.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.common.serve.actionability.characteristic.ImmutableActionableCharacteristic;
 import com.hartwig.hmftools.common.serve.datamodel.characteristic.TumorCharacteristicsComparator;
+import com.hartwig.hmftools.protect.ServeTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
