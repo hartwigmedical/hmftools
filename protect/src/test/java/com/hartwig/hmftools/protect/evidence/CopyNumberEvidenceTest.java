@@ -13,11 +13,11 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.purple.loader.GainLossTestFactory;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.common.serve.actionability.gene.ImmutableActionableGene;
-import com.hartwig.hmftools.common.serve.datamodel.gene.GeneLevelEvent;
 import com.hartwig.hmftools.protect.ServeTestFactory;
+import com.hartwig.serve.datamodel.Knowledgebase;
+import com.hartwig.serve.datamodel.gene.ActionableGene;
+import com.hartwig.serve.datamodel.gene.GeneLevelEvent;
+import com.hartwig.serve.datamodel.gene.ImmutableActionableGene;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

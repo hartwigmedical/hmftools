@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.serve.actionability.immuno.ActionableHLA;
+import com.hartwig.serve.datamodel.immuno.ActionableHLA;
 
 import org.jetbrains.annotations.NotNull;
 

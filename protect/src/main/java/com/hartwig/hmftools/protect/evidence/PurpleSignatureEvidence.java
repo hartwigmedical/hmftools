@@ -11,10 +11,10 @@ import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.purple.loader.PurpleData;
-import com.hartwig.hmftools.common.serve.actionability.characteristic.ActionableCharacteristic;
-import com.hartwig.hmftools.common.serve.datamodel.characteristic.TumorCharacteristicAnnotation;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.protect.characteristic.CharacteristicsFunctions;
+import com.hartwig.serve.datamodel.characteristic.ActionableCharacteristic;
+import com.hartwig.serve.datamodel.characteristic.TumorCharacteristicAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

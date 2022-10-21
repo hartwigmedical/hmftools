@@ -12,11 +12,11 @@ import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.EvidenceType;
 import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.common.serve.actionability.gene.ImmutableActionableGene;
-import com.hartwig.hmftools.common.serve.datamodel.gene.GeneLevelEvent;
 import com.hartwig.hmftools.protect.ServeTestFactory;
+import com.hartwig.serve.datamodel.Knowledgebase;
+import com.hartwig.serve.datamodel.gene.ActionableGene;
+import com.hartwig.serve.datamodel.gene.GeneLevelEvent;
+import com.hartwig.serve.datamodel.gene.ImmutableActionableGene;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

@@ -10,7 +10,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.serve.datamodel.Knowledgebase;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

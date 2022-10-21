@@ -11,9 +11,9 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
-import com.hartwig.hmftools.common.serve.actionability.ActionableEvents;
-import com.hartwig.hmftools.common.serve.actionability.ActionableEventsLoader;
 import com.hartwig.hmftools.protect.algo.ProtectAlgo;
+import com.hartwig.serve.datamodel.ActionableEvents;
+import com.hartwig.serve.datamodel.ActionableEventsLoader;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;

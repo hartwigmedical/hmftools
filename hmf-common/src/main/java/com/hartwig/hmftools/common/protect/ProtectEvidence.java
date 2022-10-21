@@ -2,9 +2,9 @@ package com.hartwig.hmftools.common.protect;
 
 import java.util.Set;
 
-import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.common.serve.actionability.Treatment;
+import com.hartwig.serve.datamodel.EvidenceDirection;
+import com.hartwig.serve.datamodel.EvidenceLevel;
+import com.hartwig.serve.datamodel.Treatment;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

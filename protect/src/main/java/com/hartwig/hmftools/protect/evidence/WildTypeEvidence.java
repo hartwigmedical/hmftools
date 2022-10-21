@@ -12,11 +12,11 @@ import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
-import com.hartwig.hmftools.common.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.common.serve.datamodel.gene.GeneLevelEvent;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.wildtype.WildTypeFactory;
 import com.hartwig.hmftools.common.wildtype.WildTypeGene;
+import com.hartwig.serve.datamodel.gene.ActionableGene;
+import com.hartwig.serve.datamodel.gene.GeneLevelEvent;
 
 import org.jetbrains.annotations.NotNull;
 

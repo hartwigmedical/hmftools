@@ -8,8 +8,8 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.serve.datamodel.EvidenceLevel;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;

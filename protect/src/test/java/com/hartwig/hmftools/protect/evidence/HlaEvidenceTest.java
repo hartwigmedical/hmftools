@@ -10,9 +10,9 @@ import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.serve.actionability.immuno.ActionableHLA;
-import com.hartwig.hmftools.common.serve.actionability.immuno.ImmutableActionableHLA;
 import com.hartwig.hmftools.protect.ServeTestFactory;
+import com.hartwig.serve.datamodel.immuno.ActionableHLA;
+import com.hartwig.serve.datamodel.immuno.ImmutableActionableHLA;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -21,7 +21,6 @@ public class HlaEvidenceTest {
 
     @Test
     public void canDetermineEvidenceForHLA() {
-
         ActionableHLA hla = ImmutableActionableHLA.builder()
                 .from(ServeTestFactory.createTestActionableHLA())
                 .hlaType("Allele 1")

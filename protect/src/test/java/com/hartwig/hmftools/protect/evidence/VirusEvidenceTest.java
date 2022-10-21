@@ -8,9 +8,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.serve.actionability.characteristic.ActionableCharacteristic;
-import com.hartwig.hmftools.common.serve.actionability.characteristic.ImmutableActionableCharacteristic;
-import com.hartwig.hmftools.common.serve.datamodel.characteristic.TumorCharacteristicAnnotation;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusConstants;
@@ -18,6 +15,9 @@ import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.protect.ServeTestFactory;
+import com.hartwig.serve.datamodel.characteristic.ActionableCharacteristic;
+import com.hartwig.serve.datamodel.characteristic.ImmutableActionableCharacteristic;
+import com.hartwig.serve.datamodel.characteristic.TumorCharacteristicAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

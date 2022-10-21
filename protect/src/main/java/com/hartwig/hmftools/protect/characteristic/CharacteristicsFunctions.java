@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.protect.characteristic;
 
-import com.hartwig.hmftools.common.serve.actionability.characteristic.ActionableCharacteristic;
+import com.hartwig.serve.datamodel.characteristic.ActionableCharacteristic;
 
 import org.jetbrains.annotations.NotNull;
 

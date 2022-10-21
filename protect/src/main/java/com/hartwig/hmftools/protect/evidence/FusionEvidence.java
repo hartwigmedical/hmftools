@@ -8,10 +8,10 @@ import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.common.serve.actionability.fusion.ActionableFusion;
-import com.hartwig.hmftools.common.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.common.serve.datamodel.gene.GeneLevelEvent;
+import com.hartwig.serve.datamodel.ActionableEvent;
+import com.hartwig.serve.datamodel.fusion.ActionableFusion;
+import com.hartwig.serve.datamodel.gene.ActionableGene;
+import com.hartwig.serve.datamodel.gene.GeneLevelEvent;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
