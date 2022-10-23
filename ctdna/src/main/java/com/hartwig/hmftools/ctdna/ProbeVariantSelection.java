@@ -30,14 +30,14 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class PrimerVariantSelection
+public class ProbeVariantSelection
 {
     private final PvConfig mConfig;
     private final List<Variant> mCommonVariants;
     private final RefGenomeInterface mRefGenome;
     private final BufferedWriter mWriter;
 
-    public PrimerVariantSelection(final CommandLine cmd)
+    public ProbeVariantSelection(final CommandLine cmd)
     {
         mConfig = new PvConfig(cmd);
         mRefGenome = loadRefGenome(mConfig.RefGenomeFile);
@@ -53,13 +53,18 @@ public class PrimerVariantSelection
             System.exit(1);
 
         if(mConfig.isMultiSample())
-            PV_LOGGER.info("running primer variant selection for {} samples", mConfig.SampleIds.size());
+            PV_LOGGER.info("running probe variant selection for {} samples", mConfig.SampleIds.size());
         else
-            PV_LOGGER.info("sample({}) running primer variant selection", mConfig.sample());
+            PV_LOGGER.info("sample({}) running probe variant selection", mConfig.sample());
 
-        if(mConfig.ActionableVariantsFile != null)
+        if(mConfig.ReferenceVariantsFile != null)
         {
-            mCommonVariants.addAll(KnownMutation.loadKnownMutations(mConfig.ActionableVariantsFile));
+            List<Variant> referenceVariants = ReferenceMutation.loadKnownMutations(mConfig.ReferenceVariantsFile);
+
+            if(referenceVariants == null)
+                System.exit(1);
+
+            mCommonVariants.addAll(referenceVariants);
         }
 
         List<SampleTask> sampleTasks = Lists.newArrayList();
@@ -95,7 +100,7 @@ public class PrimerVariantSelection
 
         closeBufferedWriter(mWriter);
 
-        PV_LOGGER.info("Primer variation selection complete");
+        PV_LOGGER.info("Probe variation selection complete");
     }
 
     private class SampleTask implements Callable
@@ -159,9 +164,9 @@ public class PrimerVariantSelection
             String filename = mConfig.OutputDir;
 
             if(mConfig.isMultiSample())
-                filename += "cohort_primer_variants.csv";
+                filename += "cohort_probe_variants.csv";
             else
-                filename += mConfig.sample() + ".primer_variants.csv";
+                filename += mConfig.sample() + ".probe_variants.csv";
 
             BufferedWriter writer = createBufferedWriter(filename, false);
 
@@ -195,7 +200,7 @@ public class PrimerVariantSelection
                         variant.categoryType(), variant.description(), variant.copyNumber(), variant.vaf(),
                         variant.tumorFragments(), variant.hasPhaseVariants(), variant.gene());
 
-                mWriter.write(format("%s,%s,%s,%.2f", variantInfo, "ALT", variant.sequence(), calcGcPercent(variant.sequence())));
+                mWriter.write(format("%s,%s,%s,%.2f", variantInfo, "ALT", variant.sequence(), variant.gc()));
                 mWriter.newLine();
 
                 for(String refSequence : variant.refSequences())
@@ -214,7 +219,7 @@ public class PrimerVariantSelection
     public static void main(@NotNull final String[] args)
     {
         final VersionInfo version = new VersionInfo("ctdna.version");
-        PV_LOGGER.info("PrimerVariantSelection version: {}", version.version());
+        PV_LOGGER.info("ProbeVariantSelection version: {}", version.version());
 
         final Options options = createCmdLineOptions();
 
@@ -224,7 +229,7 @@ public class PrimerVariantSelection
 
             setLogLevel(cmd);
 
-            PrimerVariantSelection application = new PrimerVariantSelection(cmd);
+            ProbeVariantSelection application = new ProbeVariantSelection(cmd);
             application.run();
         }
         catch(ParseException e)
@@ -242,5 +247,4 @@ public class PrimerVariantSelection
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
 }

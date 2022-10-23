@@ -5,6 +5,11 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_SV;
 import static com.hartwig.hmftools.ctdna.CategoryType.REPORTABLE_MUTATION;
+import static com.hartwig.hmftools.ctdna.CategoryType.SUBCLONAL_MUTATION;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_MAPPABILITY_MIN;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_REPEAT_COUNT_MAX;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
 
 import java.util.Collections;
@@ -15,7 +20,6 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.VectorUtils;
 
 public final class VariantSelection
 {
@@ -43,16 +47,24 @@ public final class VariantSelection
             {
                 canAdd = true;
             }
-            else if(variant.categoryType() == OTHER_SV)
+            else
             {
-                if(typeCounts[OTHER_SV.ordinal()] < config.NonReportableSvCount)
+                if(variant.categoryType() == OTHER_SV && typeCounts[OTHER_SV.ordinal()] >= config.NonReportableSvCount)
+                {
+                    canAdd = false;
+                }
+                else if(variant.categoryType() == SUBCLONAL_MUTATION && typeCounts[SUBCLONAL_MUTATION.ordinal()] >= config.SubclonalCount)
+                {
+                    canAdd = false;
+                }
+                else if(!passNonReportableFilters(variant, config))
+                {
+                    canAdd = false;
+                }
+                else
                 {
                     canAdd = true;
                 }
-            }
-            else
-            {
-                canAdd = true;
             }
 
             if(canAdd)
@@ -79,6 +91,38 @@ public final class VariantSelection
         PV_LOGGER.info("selected variant type counts: {}", sj.toString());
 
         return selectedVariants;
+    }
+
+    public static boolean passNonReportableFilters(final Variant variant, final PvConfig config)
+    {
+        if(variant.gc() < DEFAULT_GC_THRESHOLD_MIN || variant.gc() > DEFAULT_GC_THRESHOLD_MAX)
+            return false;
+
+        for(String refSequence : variant.refSequences())
+        {
+            double gcRatio = VariantUtils.calcGcPercent(refSequence);
+
+            if(gcRatio < DEFAULT_GC_THRESHOLD_MIN || gcRatio > DEFAULT_GC_THRESHOLD_MAX)
+                return false;
+        }
+
+        if(variant.categoryType() != SUBCLONAL_MUTATION && variant.vaf() < config.VafMin)
+            return false;
+
+        if(variant.tumorFragments() < config.FragmentCountMin)
+            return false;
+
+        if(variant.categoryType().isMutation())
+        {
+            PointMutation mutation = (PointMutation)variant;
+            if(mutation.variantDecorator().mappability() < DEFAULT_MAPPABILITY_MIN)
+                return false;
+
+            if(mutation.variantDecorator().repeatCount() > DEFAULT_REPEAT_COUNT_MAX)
+                return false;
+        }
+
+        return true;
     }
 
     public static final int NEAR_DISTANCE = 50;
@@ -146,5 +190,4 @@ public final class VariantSelection
             return 0;
         }
     }
-
 }

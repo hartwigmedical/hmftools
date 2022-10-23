@@ -3,7 +3,7 @@ package com.hartwig.hmftools.ctdna;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.ctdna.CategoryType.KNOWN_MUTATION;
+import static com.hartwig.hmftools.ctdna.CategoryType.REFERENCE;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
 import static com.hartwig.hmftools.ctdna.VariantSelection.addRegisteredLocation;
 
@@ -15,7 +15,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
-public class KnownMutation implements Variant
+public class ReferenceMutation implements Variant
 {
     private final String mChromosome;
     private final int mPosition;
@@ -26,7 +26,7 @@ public class KnownMutation implements Variant
 
     private String mSequence;
 
-    public KnownMutation(
+    public ReferenceMutation(
             final String chromosome, final int position, final String ref, final String alt, final String source, final String gene)
     {
         mChromosome = chromosome;
@@ -41,13 +41,16 @@ public class KnownMutation implements Variant
     @Override
     public CategoryType categoryType()
     {
-        return KNOWN_MUTATION;
+        return REFERENCE;
     }
 
     @Override
     public String description()
     {
-        return format("%s:%s %s>%s %s", mChromosome, mPosition, mRef, mAlt, mSource);
+        if(!mRef.isEmpty() && !mAlt.isEmpty())
+            return format("%s:%s %s>%s %s", mChromosome, mPosition, mRef, mAlt, mSource);
+        else
+            return format("%s:%s %s", mChromosome, mPosition, mSource);
     }
 
     @Override
@@ -66,6 +69,9 @@ public class KnownMutation implements Variant
     public double vaf() { return 0; }
 
     @Override
+    public double gc() { return VariantUtils.calcGcPercent(mSequence); }
+
+    @Override
     public int tumorFragments() { return 0; }
 
     @Override
@@ -80,6 +86,15 @@ public class KnownMutation implements Variant
     @Override
     public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
     {
+        if(mAlt.isEmpty())
+        {
+            int startLength = config.ProbeLength / 2;
+            int startPos = mPosition - startLength;
+
+            mSequence = refGenome.getBaseString(mChromosome, startPos, startPos + config.ProbeLength - 1);
+            return;
+        }
+
         int altLength = mAlt.length();
         int refLength = mRef.length();
         int startLength = config.ProbeLength / 2 - altLength / 2;
@@ -108,10 +123,10 @@ public class KnownMutation implements Variant
 
     public String toString()
     {
-        return String.format("%s:%s %s>%s %s", mChromosome, mPosition, mRef, mAlt);
+        return description();
     }
 
-    private static final String DELIM = ",";
+    private static final String DELIM = "\t";
 
     public static List<Variant> loadKnownMutations(final String filename)
     {
@@ -129,7 +144,7 @@ public class KnownMutation implements Variant
             int refIndex = fieldsIndexMap.get("Ref");
             int altIndex = fieldsIndexMap.get("Alt");
             int sourceIndex = fieldsIndexMap.get("Source");
-            int geneIndex = fieldsIndexMap.get("Gene");
+            // int geneIndex = fieldsIndexMap.get("Gene");
 
             lines.remove(0);
 
@@ -137,16 +152,17 @@ public class KnownMutation implements Variant
             {
                 String[] values = line.split(DELIM, -1);
 
-                variants.add(new KnownMutation(
+                variants.add(new ReferenceMutation(
                         values[chrIndex], Integer.parseInt(values[posIndex]), values[refIndex], values[altIndex], values[sourceIndex],
-                        values[geneIndex]));
+                        ""));
             }
 
-            PV_LOGGER.info("load {} known mutations from file({})", variants.size(), filename);
+            PV_LOGGER.info("loaded {} reference variants from file({})", variants.size(), filename);
         }
         catch(Exception e)
         {
-            PV_LOGGER.error("failed to load known mutation file({}): {}", filename, e.toString());
+            PV_LOGGER.error("failed to load reference variants file({}): {}", filename, e.toString());
+            return null;
         }
 
         return variants;

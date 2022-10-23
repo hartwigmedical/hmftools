@@ -22,6 +22,8 @@ public interface Variant
 
     double vaf();
 
+    double gc();
+
     int tumorFragments();
 
     default boolean hasPhaseVariants() { return false; }

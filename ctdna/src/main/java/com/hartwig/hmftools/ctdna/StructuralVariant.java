@@ -201,8 +201,12 @@ public class StructuralVariant implements Variant
         if(mSequence.length() != probeLength)
         {
             PV_LOGGER.error("variant({}) invalid sequenceLength({}): {}", description(), mSequence.length(), mSequence);
+            return;
         }
     }
+
+    @Override
+    public double gc() { return VariantUtils.calcGcPercent(mSequence); }
 
     @Override
     public boolean checkAndRegisterLocation(final Map<String,List<Integer>> registeredLocations)
@@ -242,8 +246,7 @@ public class StructuralVariant implements Variant
             List<LinxSvAnnotation> annotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(linxDir, sampleId));
             List<LinxFusion> fusions = LinxFusion.read(LinxFusion.generateFilename(linxDir, sampleId));
 
-            List<LinxCluster> clusters = LinxCluster.read(LinxCluster.generateFilename(linxDir, sampleId)).stream()
-                    .filter(x -> !x.category().equals(LinxCommonTypes.SUPER_TYPE_ARTIFACT)).collect(Collectors.toList());
+            List<LinxCluster> clusters = LinxCluster.read(LinxCluster.generateFilename(linxDir, sampleId));
 
             for(EnrichedStructuralVariant variant : enrichedVariants)
             {
@@ -272,6 +275,9 @@ public class StructuralVariant implements Variant
                         .collect(Collectors.toList());
 
                 LinxCluster cluster = clusters.stream().filter(x -> x.clusterId() == annotation.clusterId()).findFirst().orElse(null);
+
+                if(cluster == null || cluster.category().equals(LinxCommonTypes.SUPER_TYPE_ARTIFACT))
+                    continue;
 
                 StructuralVariantData variantData = convertSvData(variant, annotation.svId());
 

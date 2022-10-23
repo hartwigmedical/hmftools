@@ -2,9 +2,12 @@ package com.hartwig.hmftools.ctdna;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_CODING_MUTATION;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.ctdna.CategoryType.REPORTABLE_MUTATION;
+import static com.hartwig.hmftools.ctdna.CategoryType.SUBCLONAL_MUTATION;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_SUBCLONAL_LIKELIHOOD_MIN;
 import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
 import static com.hartwig.hmftools.ctdna.VariantSelection.addRegisteredLocation;
@@ -48,14 +51,20 @@ public class PointMutation implements Variant
             mTumorDepth = genotype.getAD()[1];
         else
             mTumorDepth = 0;
+
         mSequence = "";
     }
+
+    public VariantContextDecorator variantDecorator() { return mVariantDecorator; }
 
     @Override
     public CategoryType categoryType()
     {
         if(mVariantDecorator.reported())
             return REPORTABLE_MUTATION;
+
+        if(mVariantDecorator.context().getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0) >= DEFAULT_SUBCLONAL_LIKELIHOOD_MIN)
+            return SUBCLONAL_MUTATION;
 
         if(mVariantDecorator.variantImpact().CanonicalCodingEffect != CodingEffect.NONE)
             return OTHER_CODING_MUTATION;
@@ -84,6 +93,9 @@ public class PointMutation implements Variant
 
     @Override
     public double vaf() { return mVariantDecorator.adjustedVaf(); }
+
+    @Override
+    public double gc() { return VariantUtils.calcGcPercent(mSequence); }
 
     @Override
     public int tumorFragments() { return mTumorDepth; }
