@@ -3,10 +3,10 @@ package com.hartwig.hmftools.common.protect;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.purple.loader.GainLossTestFactory;
-import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
@@ -40,7 +40,10 @@ public class ProtectEventGeneratorTest {
         assertNotNull(EventGenerator.variantEvent(nonCanonical));
     }
 
-    private static String createAltTranscriptInfo() { return "trans|coding|impact|effect|MISSENSE"; }
+    private static String createAltTranscriptInfo() {
+        return "trans|coding|impact|effect|MISSENSE";
+    }
+
     @Test
     public void canGenerateEventForVariant() {
         Variant base = SomaticVariantTestFactory.builder().canonicalEffect("some effect").build();

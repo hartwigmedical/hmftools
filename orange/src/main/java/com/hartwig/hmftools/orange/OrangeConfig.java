@@ -9,10 +9,10 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.orange.report.ImmutableReportConfig;
 import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.util.Config;
+import com.hartwig.serve.datamodel.EvidenceLevel;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;

@@ -68,7 +68,7 @@ A tsv file used for COBALT targeted CN normalisation can be prepared from a set 
 
 For each depth window in targetRegions, calculate relativeEnrichment across the n samples as:
 ```
-relativeEnrichment = median[tumorGCRatio(Targeted(i))/tumorGRatio(WGS(i)) / targetEnrichmenTRate(i)] 
+relativeEnrichment = median[tumorGCRatio(Targeted(i))/tumorGCRatio(WGS(i)) / targetEnrichmentRate(i)] 
 
 If relativeEnrichment < 0.1 then the region is masked.
 ```

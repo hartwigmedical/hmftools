@@ -15,6 +15,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.hartwig.serve</groupId>
+            <artifactId>datamodel</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
         </dependency>

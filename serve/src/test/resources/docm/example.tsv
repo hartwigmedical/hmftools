@@ -1,3 +1,0 @@
-hgvs	chromosome	start	stop	read	variant	reference_version	gene	mutation_type	amino_acid	diseases	pubmed_sources
-ENST00000361445:c.7514G>C	1	11169361	11169361	C	G	GRCh37	MTOR		p.R2505P		24631838
-ENST00000372880:c.121G>A	X	100630152	100630152	C	T	GRCh37	BTK		p.E41K		10352268

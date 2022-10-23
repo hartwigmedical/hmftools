@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.report;
 
-import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.serve.datamodel.EvidenceLevel;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
