@@ -60,7 +60,7 @@ public class GermlineSv implements Variant
     @Override
     public String description()
     {
-        return format("%s %s:%d%d - %s:%d:%d",
+        return format("%s %s:%d:%d - %s:%d:%d",
                 mVariant.Type, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
                 mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd);
     }
