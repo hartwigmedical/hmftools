@@ -143,8 +143,9 @@ public class ProbeVariantSelection
             List<Variant> variants = Lists.newArrayList();
             variants.addAll(mCommonVariants);
             variants.addAll(PointMutation.loadSomatics(sampleId, mConfig));
-
+            variants.addAll(GermlineMutation.loadGermlineMutations(sampleId, mConfig));
             variants.addAll(StructuralVariant.loadStructuralVariants(sampleId, mConfig));
+            variants.addAll(GermlineSv.loadGermlineStructuralVariants(sampleId, mConfig));
 
             variants.forEach(x -> x.generateSequences(mRefGenome, mConfig));
 

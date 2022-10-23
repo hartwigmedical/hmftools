@@ -112,25 +112,35 @@ public class PointMutation implements Variant
     @Override
     public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
     {
-        int variantPosition = mVariantDecorator.position();
-        String alt = mVariantDecorator.alt();
-        int altLength = alt.length();
-        int refLength = mVariantDecorator.ref().length();
-        int startLength = config.ProbeLength / 2 - altLength / 2;
-        int startPos = mVariantDecorator.position() - startLength;
+        mSequence = generateMutationSequence(
+                refGenome, config, mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(),
+                mVariantDecorator.alt());
+    }
 
-        String basesStart = refGenome.getBaseString(mVariantDecorator.chromosome(), startPos, variantPosition - 1);
+    protected static String generateMutationSequence(
+            final RefGenomeInterface refGenome, final PvConfig config,
+            final String chromosome, final int position, final String ref, final String alt)
+    {
+        int altLength = alt.length();
+        int refLength = ref.length();
+        int startLength = config.ProbeLength / 2 - altLength / 2;
+        int startPos = position - startLength;
+
+        String basesStart = refGenome.getBaseString(chromosome, startPos, position - 1);
         int endBaseLength = config.ProbeLength - basesStart.length() - altLength;
 
-        int postPosition = variantPosition + refLength;
-        String basesEnd = refGenome.getBaseString(mVariantDecorator.chromosome(), postPosition, postPosition + endBaseLength - 1);
+        int postPosition = position + refLength;
+        String basesEnd = refGenome.getBaseString(chromosome, postPosition, postPosition + endBaseLength - 1);
 
-        mSequence = basesStart + alt + basesEnd;
+        String sequence = basesStart + alt + basesEnd;
 
-        if(mSequence.length() != config.ProbeLength)
+        if(sequence.length() != config.ProbeLength)
         {
-            PV_LOGGER.error("variant({}) invalid sequenceLength({}): {}", description(), mSequence.length(), mSequence);
+            PV_LOGGER.error("variant({}:{} {}->{}) invalid sequenceLength({}): {}",
+                    chromosome, position, ref, alt, sequence.length(), sequence);
         }
+
+        return sequence;
     }
 
     @Override

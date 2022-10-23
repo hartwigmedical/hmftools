@@ -4,6 +4,8 @@ public enum CategoryType
 {
     REFERENCE,
     FUSION,
+    GERMLINE_SV,
+    GERMLINE_MUTATION,
     REPORTABLE_MUTATION,
     OTHER_SV,
     SUBCLONAL_MUTATION,

@@ -28,6 +28,7 @@ public class PvConfig
 {
     public final List<String> SampleIds;
     public final String LinxDir;
+    public final String LinxGermlineDir;
     public final String PurpleDir;
 
     public final String ReferenceVariantsFile;
@@ -51,6 +52,7 @@ public class PvConfig
     // config strings
     public static final String SAMPLE = "sample";
     private static final String LINX_DIR = "linx_dir";
+    private static final String LINX_GERMLINE_DIR = "linx_germline_dir";
     private static final String PURPLE_DIR = "purple_dir";
     private static final String REFERENCE_VARIANTS_FILE = "ref_variants";
     private static final String VAF_THRESHOLD = "vaf_min";
@@ -89,6 +91,7 @@ public class PvConfig
 
         PurpleDir = cmd.getOptionValue(PURPLE_DIR);
         LinxDir = cmd.getOptionValue(LINX_DIR);
+        LinxGermlineDir = cmd.getOptionValue(LINX_GERMLINE_DIR);
         RefGenomeFile = cmd.getOptionValue(REF_GENOME);
         OutputDir = parseOutputDir(cmd);
         ReferenceVariantsFile = cmd.getOptionValue(REFERENCE_VARIANTS_FILE);
@@ -123,7 +126,7 @@ public class PvConfig
             if(!checkFilePath(PURPLE_DIR, PurpleDir, true))
                 return false;
 
-            if(!checkFilePath(LINX_DIR, LinxDir, true))
+            if(!checkFilePath(LINX_DIR, LinxDir, true) || !checkFilePath(LINX_GERMLINE_DIR, LinxDir, true))
                 return false;
         }
 
@@ -175,6 +178,7 @@ public class PvConfig
         SampleIds = Lists.newArrayList();
         PurpleDir = "";
         LinxDir = "";
+        LinxGermlineDir = "";
         RefGenomeFile = "";
         OutputDir = "";
         ReferenceVariantsFile = "";
@@ -190,6 +194,7 @@ public class PvConfig
         options.addOption(SAMPLE, true, "Tumor sample ID");
         addSampleIdFile(options);
         options.addOption(LINX_DIR, true, "Linx directory");
+        options.addOption(LINX_GERMLINE_DIR, true, "Linx germlin directory");
         options.addOption(PURPLE_DIR, true, "Purple directory");
         addRefGenomeConfig(options);
         options.addOption(REFERENCE_VARIANTS_FILE, true, "Reference variants file");

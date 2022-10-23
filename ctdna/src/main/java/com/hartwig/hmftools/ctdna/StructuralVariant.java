@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
 import static com.hartwig.hmftools.ctdna.VariantSelection.addRegisteredLocation;
 import static com.hartwig.hmftools.ctdna.VariantSelection.isNearRegisteredLocation;
 
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -120,16 +121,11 @@ public class StructuralVariant implements Variant
         return false;
     }
 
-    @Override
-    public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
+    protected static List<String> generateSvReferenceSequences(
+            final RefGenomeInterface refGenome, final PvConfig config,
+            final String chrStart, final int positionStart, final String chrEnd, final int positionEnd)
     {
-        int positionStart = mVariant.startPosition();
-        byte orientStart = mVariant.startOrientation();
-        String chrStart = mVariant.startChromosome();
-
-        int positionEnd = mVariant.endPosition();
-        byte orientEnd = mVariant.endOrientation();
-        String chrEnd = mVariant.endChromosome();
+        List<String> refSequences = Lists.newArrayList();
 
         int probeLength = config.ProbeLength;
         int halfProbeLength = probeLength / 2;
@@ -140,10 +136,19 @@ public class StructuralVariant implements Variant
             int position = se == SE_START ? positionStart : positionEnd;
             int probeStart = position - halfProbeLength;
 
-            mRefSequences.add(refGenome.getBaseString(chromosome, probeStart, probeStart + probeLength - 1));
+            refSequences.add(refGenome.getBaseString(chromosome, probeStart, probeStart + probeLength - 1));
         }
 
-        String insertSequence = mVariant.insertSequence();
+        return refSequences;
+    }
+
+    protected static String generateSvSequence(
+            final RefGenomeInterface refGenome, final PvConfig config,
+            final String chrStart, final int positionStart, final byte orientStart,
+            final String chrEnd, final int positionEnd, final byte orientEnd, final String insertSequence)
+    {
+        int probeLength = config.ProbeLength;
+        int halfProbeLength = probeLength / 2;
         int insSeqLength = insertSequence.length();
         int halfInsSeqLength = insSeqLength / 2;
         int halfNonInsSeqLength = halfProbeLength - halfInsSeqLength;
@@ -196,13 +201,26 @@ public class StructuralVariant implements Variant
             }
         }
 
-        mSequence = basesStart + insertSequence + basesEnd;
+        String sequence = basesStart + insertSequence + basesEnd;
 
-        if(mSequence.length() != probeLength)
+        if(sequence.length() != probeLength)
         {
-            PV_LOGGER.error("variant({}) invalid sequenceLength({}): {}", description(), mSequence.length(), mSequence);
-            return;
+            PV_LOGGER.error("variant({}:{} - {}:{}) invalid sequenceLength({}): {}",
+                    chrStart, positionStart, chrEnd, positionEnd, sequence.length(), sequence);
         }
+
+        return sequence;
+    }
+
+    @Override
+    public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
+    {
+        mRefSequences.addAll(generateSvReferenceSequences(
+                refGenome, config, mVariant.startChromosome(), mVariant.startPosition(), mVariant.endChromosome(), mVariant.endPosition()));
+
+        mSequence = generateSvSequence(
+                refGenome, config, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
+                mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence());
     }
 
     @Override
@@ -264,7 +282,8 @@ public class StructuralVariant implements Variant
                 if(annotation == null)
                 {
                     PV_LOGGER.error("sample({}) vcfId({}) Linx annotation not found", sampleId, variant.id());
-                    return Lists.newArrayList();
+                    // return Lists.newArrayList();
+                    continue;
                 }
 
                 List<LinxBreakend> svBreakends = breakends.stream().filter(x -> x.svId() == annotation.svId()).collect(Collectors.toList());
