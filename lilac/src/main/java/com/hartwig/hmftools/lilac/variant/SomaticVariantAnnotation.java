@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.LilacConfig;
+import com.hartwig.hmftools.lilac.LilacConstants;
 import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
@@ -212,19 +213,18 @@ public class SomaticVariantAnnotation
 
         if(!mConfig.SomaticVariantsFile.isEmpty())
         {
-            int minPosition = mHlaTranscriptData.values().stream().mapToInt(x -> x.TransStart).min().orElse(0);
-            int maxPosition = mHlaTranscriptData.values().stream().mapToInt(x -> x.TransEnd).max().orElse(0);
-
             VCFFileReader fileReader = new VCFFileReader(new File(mConfig.SomaticVariantsFile), false);
 
-            final CloseableIterator<VariantContext> variantIter = fileReader.isQueryable() ?
-                    fileReader.query(HLA_CHR, minPosition, maxPosition) : fileReader.iterator();
+            final CloseableIterator<VariantContext> variantIter = fileReader.iterator();
 
             while(variantIter.hasNext())
             {
                 VariantContext variant = variantIter.next();
 
                 if(variant.isFiltered() && !variant.getFilters().contains(SomaticVariantFactory.PASS_FILTER))
+                    continue;
+
+                if(!variant.getContig().equals(LilacConstants.HLA_CHR))
                     continue;
 
                 if(mHlaTranscriptData.values().stream().anyMatch(x -> positionWithin(variant.getStart(), x.TransStart, x.TransEnd)))
