@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.utils.Strings;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantVcfTags;
@@ -41,6 +42,7 @@ public class PointMutation extends Variant
     private final VariantContextDecorator mVariantDecorator;
     private final int mTumorDepth;
     private String mSequence;
+    private int mLocationHash;
 
     public PointMutation(final VariantContext variantContext, final String sampleId)
     {
@@ -53,10 +55,13 @@ public class PointMutation extends Variant
         else
             mTumorDepth = 0;
 
+        mLocationHash = Integer.parseInt(Strings.reverseString(String.valueOf(variantContext.getStart())));
+
         mSequence = "";
     }
 
     public VariantContextDecorator variantDecorator() { return mVariantDecorator; }
+    public int locationHash() { return mLocationHash; }
 
     @Override
     public CategoryType categoryType()
