@@ -15,7 +15,7 @@ import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import kotlin.math.roundToInt
 
-class TargetedRatioBuilder(
+class TargetedRatioBuilderKotlin(
     targetRegions: List<GenomePosition>,
     targetEnrichmentRatios: Map<GenomePosition, Double>,
     rawRatios: ListMultimap<Chromosome, ReadRatio>) : RatioBuilder
@@ -208,7 +208,7 @@ class TargetedRatioBuilder(
 
     companion object
     {
-        private val sLogger = LogManager.getLogger(TargetedRatioBuilder::class.java)
+        private val sLogger = LogManager.getLogger(TargetedRatioBuilderKotlin::class.java)
         private fun unnormalizedOffTargetRatio(offTargetWindowSize: Int,
                                                chromosome: String,
                                                windowStart: Int,

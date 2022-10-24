@@ -9,7 +9,7 @@ import java.io.IOException
 import java.util.*
 
 
-class TargetRegionEnrichment
+class TargetRegionEnrichmentKotlin
 {
     private val mTargetedRegions: MutableList<GenomePosition> = ArrayList()
     private val mTargetRelativeEnrichment: MutableMap<GenomePosition, Double> = TreeMap(GenomePosition::compare)
@@ -24,9 +24,9 @@ class TargetRegionEnrichment
 
         @JvmStatic
         @Throws(IOException::class)
-        fun fromTsv(fileName: String): TargetRegionEnrichment
+        fun fromTsv(fileName: String): TargetRegionEnrichmentKotlin
         {
-            val targetRegionEnrichment = TargetRegionEnrichment()
+            val targetRegionEnrichment = TargetRegionEnrichmentKotlin()
 
             FileWriterUtils.createBufferedReader(fileName).use { reader ->
 

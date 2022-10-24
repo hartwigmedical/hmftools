@@ -67,8 +67,7 @@ public class RatioSupplier
             if (targetRegionEnrichment != null)
             {
                 ratioBuilder = new TargetedRatioBuilder(
-                        targetRegionEnrichment.getTargetedRegions(), targetRegionEnrichment.getTargetRelativeEnrichment(),
-                        gcNormalizedRatioBuilder.ratios());
+                        targetRegionEnrichment.regions(), targetRegionEnrichment.regionEnrichment(), gcNormalizedRatioBuilder.ratios());
             }
             else
             {
