@@ -140,7 +140,10 @@ public class FusionCohortData
         output.add(String.valueOf(fusion.sampleCount()));
         output.add(String.valueOf(fusion.fragmentCount()));
         output.add(String.valueOf(fusion.maxFragmentCount()));
-        output.add(appendStrList(fusion.sampleIds(), ';'));
+
+        StringJoiner sj = new StringJoiner(";");
+        fusion.sampleIds().forEach(x -> sj.add(x));
+        output.add(sj.toString());
 
         return output.toString();
     }

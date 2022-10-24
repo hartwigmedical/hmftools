@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
@@ -174,7 +175,7 @@ public class CategoryCountsData
         }
     }
 
-    private static final char DELIM = '-';
+    private static final String DELIM = "-";
 
     private String formTranscriptIds()
     {
@@ -204,7 +205,9 @@ public class CategoryCountsData
 
         items.addAll(mUnsplicedGenes);
 
-        return appendStrList(items, DELIM);
+        StringJoiner sj = new StringJoiner(DELIM);
+        items.forEach(x -> sj.add(x));
+        return sj.toString();
     }
 
     private static final String GENE_INDENTIFIER = "ENSG";

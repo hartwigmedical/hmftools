@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.MIXED;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.CIRCULAR;
 
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -119,17 +120,17 @@ public class AltSpliceJunction
 
     private String generateTranscriptNames(final List<RegionReadData> regions)
     {
-        List<String> transNames = Lists.newArrayList();
         List<Integer> validTransIds = candidateTransIds();
+        StringJoiner transNames = new StringJoiner(";");
 
         for(RegionReadData region: regions)
         {
-            transNames.addAll(region.getTransExonRefs().stream()
+            region.getTransExonRefs().stream()
                     .filter(x -> validTransIds.contains(x.TransId))
-                    .map(x -> x.TransName).collect(Collectors.toList()));
+                    .forEach(x -> transNames.add(x.TransName));
         }
 
-        return appendStrList(transNames, ';');
+        return transNames.toString();
     }
 
     public int calcNearestExonBoundary(int seIndex, final GeneReadData gene)
