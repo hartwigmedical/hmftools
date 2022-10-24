@@ -151,7 +151,7 @@ public class ProbeVariantSelection
 
             List<Variant> selectedVariants = VariantSelection.selectVariants(variants, mConfig);
 
-            writeSelectedVariants(sampleId, selectedVariants);
+            writeVariants(sampleId, selectedVariants);
         }
     }
 
@@ -174,8 +174,8 @@ public class ProbeVariantSelection
             if(mConfig.isMultiSample())
                 writer.write("SampleId,");
 
-            writer.write("Category,Variant,CopyNumber,Vaf,TumorFrags,PhasedVariants,Gene");
-            writer.write(",Type,Sequence,GcPercent");
+            writer.write("Category,Status,Variant,CopyNumber,Vaf,TumorFrags,PhasedVariants,Gene");
+            writer.write(",Type,Sequence,GcPercent,OtherData");
             writer.newLine();
             return writer;
         }
@@ -186,7 +186,7 @@ public class ProbeVariantSelection
         }
     }
 
-    private synchronized void writeSelectedVariants(final String sampleId, final List<Variant> selectedVariants)
+    private synchronized void writeVariants(final String sampleId, final List<Variant> selectedVariants)
     {
         if(mWriter == null)
             return;
@@ -195,13 +195,16 @@ public class ProbeVariantSelection
         {
             for(Variant variant : selectedVariants)
             {
+                if(!mConfig.WriteAll && !variant.isSelected())
+                    continue;
+
                 String variantInfo = mConfig.isMultiSample() ? format("%s,", sampleId) : "";
 
-                variantInfo += format("%s,%s,%.2f,%.2f,%d,%s,%s",
-                        variant.categoryType(), variant.description(), variant.copyNumber(), variant.vaf(),
+                variantInfo += format("%s,%s,%s,%.2f,%.2f,%d,%s,%s",
+                        variant.categoryType(), variant.selectionStatus(), variant.description(), variant.copyNumber(), variant.vaf(),
                         variant.tumorFragments(), variant.hasPhaseVariants(), variant.gene());
 
-                mWriter.write(format("%s,%s,%s,%.2f", variantInfo, "ALT", variant.sequence(), variant.gc()));
+                mWriter.write(format("%s,%s,%s,%.2f,%s", variantInfo, "ALT", variant.sequence(), variant.gc(), variant.otherData()));
                 mWriter.newLine();
 
                 for(String refSequence : variant.refSequences())

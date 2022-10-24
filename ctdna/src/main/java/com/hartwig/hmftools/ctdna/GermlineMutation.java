@@ -11,26 +11,22 @@ import static com.hartwig.hmftools.ctdna.VariantSelection.isNearRegisteredLocati
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
 
-import org.apache.commons.compress.utils.Lists;
-
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
-public class GermlineMutation implements Variant
+public class GermlineMutation extends Variant
 {
     private final GermlineVariant mVariant;
-    private String mSequence;
 
     public GermlineMutation(final GermlineVariant variant)
     {
         mVariant = variant;
-
-        mSequence = "";
     }
 
     @Override
@@ -49,16 +45,10 @@ public class GermlineMutation implements Variant
     }
 
     @Override
-    public String sequence() { return mSequence; }
-
-    @Override
     public double copyNumber() { return mVariant.adjustedCopyNumber(); }
 
     @Override
     public double vaf() { return mVariant.adjustedVAF(); }
-
-    @Override
-    public double gc() { return VariantUtils.calcGcPercent(mSequence); }
 
     @Override
     public int tumorFragments() { return mVariant.alleleReadCount(); }
@@ -75,8 +65,9 @@ public class GermlineMutation implements Variant
     @Override
     public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
     {
-        mSequence = generateMutationSequence(
+        String sequence = generateMutationSequence(
                 refGenome, config, mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
+        setSequence(sequence);
     }
 
     @Override

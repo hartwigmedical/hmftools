@@ -39,24 +39,20 @@ import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 
-public class StructuralVariant implements Variant
+public class StructuralVariant extends Variant
 {
     private final StructuralVariantData mVariant;
     private final List<LinxBreakend> mBreakends;
     private final List<LinxFusion> mFusions;
-    private final LinxCluster mCluster;
 
-    private String mSequence;
     private List<String> mRefSequences;
 
     public StructuralVariant(
-            final StructuralVariantData variant, final List<LinxBreakend> breakends, final List<LinxFusion> fusions, final LinxCluster cluster)
+            final StructuralVariantData variant, final List<LinxBreakend> breakends, final List<LinxFusion> fusions)
     {
         mVariant = variant;
         mBreakends = breakends;
         mFusions = fusions;
-        mCluster = cluster;
-        mSequence = "";
         mRefSequences = Lists.newArrayListWithExpectedSize(2);
     }
 
@@ -100,9 +96,6 @@ public class StructuralVariant implements Variant
     }
 
     @Override
-    public String sequence() { return mSequence; }
-
-    @Override
     public List<String> refSequences() { return mRefSequences; }
 
     @Override
@@ -127,6 +120,14 @@ public class StructuralVariant implements Variant
             return true;
 
         return false;
+    }
+
+    @Override
+    public String otherData()
+    {
+        return format("GcRefMin=%.2f GcRefMax=%.2f",
+                mRefSequences.stream().mapToDouble(x -> VariantUtils.calcGcPercent(x)).min().orElse(0),
+                mRefSequences.stream().mapToDouble(x -> VariantUtils.calcGcPercent(x)).max().orElse(0));
     }
 
     protected static List<String> generateSvReferenceSequences(
@@ -268,21 +269,22 @@ public class StructuralVariant implements Variant
         mRefSequences.addAll(generateSvReferenceSequences(
                 refGenome, config, mVariant.startChromosome(), mVariant.startPosition(), mVariant.endChromosome(), mVariant.endPosition()));
 
+        String sequence;
+
         if(mVariant.type() == SGL)
         {
-            mSequence = generateSglSequence(
+            sequence = generateSglSequence(
                     refGenome, config, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.insertSequence());
         }
         else
         {
-            mSequence = generateSvSequence(
+            sequence = generateSvSequence(
                     refGenome, config, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
                     mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence());
         }
-    }
 
-    @Override
-    public double gc() { return VariantUtils.calcGcPercent(mSequence); }
+        setSequence(sequence);
+    }
 
     @Override
     public boolean checkAndRegisterLocation(final Map<String,List<Integer>> registeredLocations)
@@ -363,7 +365,7 @@ public class StructuralVariant implements Variant
 
                 StructuralVariantData variantData = convertSvData(variant, annotation.svId());
 
-                variants.add(new StructuralVariant(variantData, svBreakends, svFusions, cluster));
+                variants.add(new StructuralVariant(variantData, svBreakends, svFusions));
             }
 
             PV_LOGGER.info("loaded {} structural variants from vcf({})", variants.size(), vcfFile);

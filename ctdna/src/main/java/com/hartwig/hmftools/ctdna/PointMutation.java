@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ctdna;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_CODING_MUTATION;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_MUTATION;
@@ -35,7 +36,7 @@ import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class PointMutation implements Variant
+public class PointMutation extends Variant
 {
     private final VariantContextDecorator mVariantDecorator;
     private final int mTumorDepth;
@@ -63,10 +64,11 @@ public class PointMutation implements Variant
         if(mVariantDecorator.reported())
             return REPORTABLE_MUTATION;
 
-        if(mVariantDecorator.context().getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0) >= DEFAULT_SUBCLONAL_LIKELIHOOD_MIN)
+        if(subclonalLikelihood() >= DEFAULT_SUBCLONAL_LIKELIHOOD_MIN)
             return SUBCLONAL_MUTATION;
 
-        if(mVariantDecorator.variantImpact().CanonicalCodingEffect != CodingEffect.NONE)
+        if(mVariantDecorator.variantImpact().CanonicalCodingEffect != CodingEffect.NONE
+        && mVariantDecorator.variantImpact().CanonicalCodingEffect != CodingEffect.UNDEFINED)
             return OTHER_CODING_MUTATION;
 
         return OTHER_MUTATION;
@@ -96,6 +98,13 @@ public class PointMutation implements Variant
 
     @Override
     public double gc() { return VariantUtils.calcGcPercent(mSequence); }
+
+    @Override
+    public String otherData()
+    {
+        return format("Map=%.2f Repeats=%d SubClonal=%.2f",
+            mVariantDecorator.mappability(), mVariantDecorator.repeatCount(), subclonalLikelihood());
+    }
 
     @Override
     public int tumorFragments() { return mTumorDepth; }
@@ -141,6 +150,11 @@ public class PointMutation implements Variant
         }
 
         return sequence;
+    }
+
+    private double subclonalLikelihood()
+    {
+        return mVariantDecorator.context().getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0);
     }
 
     @Override

@@ -15,7 +15,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
-public class ReferenceMutation implements Variant
+public class ReferenceMutation extends Variant
 {
     private final String mChromosome;
     private final int mPosition;
@@ -23,8 +23,6 @@ public class ReferenceMutation implements Variant
     private final String mAlt;
     private final String mSource;
     private final String mGene;
-
-    private String mSequence;
 
     public ReferenceMutation(
             final String chromosome, final int position, final String ref, final String alt, final String source, final String gene)
@@ -35,7 +33,6 @@ public class ReferenceMutation implements Variant
         mAlt = alt;
         mSource = source;
         mGene = gene;
-        mSequence = "";
     }
 
     @Override
@@ -60,16 +57,10 @@ public class ReferenceMutation implements Variant
     }
 
     @Override
-    public String sequence() { return mSequence; }
-
-    @Override
     public double copyNumber() { return 0; }
 
     @Override
     public double vaf() { return 0; }
-
-    @Override
-    public double gc() { return VariantUtils.calcGcPercent(mSequence); }
 
     @Override
     public int tumorFragments() { return 0; }
@@ -91,7 +82,7 @@ public class ReferenceMutation implements Variant
             int startLength = config.ProbeLength / 2;
             int startPos = mPosition - startLength;
 
-            mSequence = refGenome.getBaseString(mChromosome, startPos, startPos + config.ProbeLength - 1);
+            setSequence(refGenome.getBaseString(mChromosome, startPos, startPos + config.ProbeLength - 1));
             return;
         }
 
@@ -106,12 +97,7 @@ public class ReferenceMutation implements Variant
         int postPosition = mPosition + refLength;
         String basesEnd = refGenome.getBaseString(mChromosome, postPosition, postPosition + endBaseLength - 1);
 
-        mSequence = basesStart + mAlt + basesEnd;
-
-        if(mSequence.length() != config.ProbeLength)
-        {
-            PV_LOGGER.error("variant({}) invalid sequenceLength({}): {}", description(), mSequence.length(), mSequence);
-        }
+        setSequence(basesStart + mAlt + basesEnd);
     }
 
     @Override

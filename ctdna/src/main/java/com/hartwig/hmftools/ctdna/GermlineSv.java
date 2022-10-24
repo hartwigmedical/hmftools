@@ -40,17 +40,15 @@ import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 
-public class GermlineSv implements Variant
+public class GermlineSv extends Variant
 {
     private final LinxGermlineSv mVariant;
 
-    private String mSequence;
     private List<String> mRefSequences;
 
     public GermlineSv(final LinxGermlineSv variant)
     {
         mVariant = variant;
-        mSequence = "";
         mRefSequences = Lists.newArrayListWithExpectedSize(2);
     }
 
@@ -67,9 +65,6 @@ public class GermlineSv implements Variant
 
     @Override
     public String gene() { return mVariant.GeneName; }
-
-    @Override
-    public String sequence() { return mSequence; }
 
     @Override
     public List<String> refSequences() { return mRefSequences; }
@@ -99,13 +94,12 @@ public class GermlineSv implements Variant
         mRefSequences.addAll(generateSvReferenceSequences(
                 refGenome, config, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.ChromosomeEnd, mVariant.PositionEnd));
 
-        mSequence = generateSvSequence(
+        String sequence = generateSvSequence(
                 refGenome, config, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
                 mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd, mVariant.InsertSequence);
-    }
 
-    @Override
-    public double gc() { return VariantUtils.calcGcPercent(mSequence); }
+        setSequence(sequence);
+    }
 
     @Override
     public boolean checkAndRegisterLocation(final Map<String,List<Integer>> registeredLocations)

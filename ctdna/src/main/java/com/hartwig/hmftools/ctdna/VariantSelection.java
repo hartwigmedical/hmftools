@@ -11,6 +11,10 @@ import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
 import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_MAPPABILITY_MIN;
 import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_REPEAT_COUNT_MAX;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
+import static com.hartwig.hmftools.ctdna.SelectionStatus.EXCEEDS_COUNT;
+import static com.hartwig.hmftools.ctdna.SelectionStatus.FILTERED;
+import static com.hartwig.hmftools.ctdna.SelectionStatus.PROXIMATE;
+import static com.hartwig.hmftools.ctdna.SelectionStatus.SELECTED;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,9 +30,6 @@ public final class VariantSelection
     public static List<Variant> selectVariants(final List<Variant> variants, final PvConfig config)
     {
         Collections.sort(variants, new VariantComparator());
-
-        if(config.WriteAll)
-            return variants;
 
         List<Variant> selectedVariants = Lists.newArrayList();
 
@@ -52,13 +53,16 @@ public final class VariantSelection
                 if(variant.categoryType() == OTHER_SV && typeCounts[OTHER_SV.ordinal()] >= config.NonReportableSvCount)
                 {
                     canAdd = false;
+                    variant.setSelectionStatus(EXCEEDS_COUNT);
                 }
                 else if(variant.categoryType() == SUBCLONAL_MUTATION && typeCounts[SUBCLONAL_MUTATION.ordinal()] >= config.SubclonalCount)
                 {
+                    variant.setSelectionStatus(EXCEEDS_COUNT);
                     canAdd = false;
                 }
                 else if(!passNonReportableFilters(variant, config))
                 {
+                    variant.setSelectionStatus(FILTERED);
                     canAdd = false;
                 }
                 else
@@ -73,9 +77,16 @@ public final class VariantSelection
                 {
                     addVariant(variant, selectedVariants, typeCounts);
                 }
+                else
+                {
+                    variant.setSelectionStatus(PROXIMATE);
+                }
             }
 
-            int variantSequences = selectedVariants.stream().mapToInt(x -> x.sequenceCount()).sum();
+            if(!variant.isSelected() && config.WriteAll)
+                selectedVariants.add(variant);
+
+            int variantSequences = selectedVariants.stream().filter(x -> x.isSelected()).mapToInt(x -> x.sequenceCount()).sum();
             if(variantSequences >= config.ProbeCount)
                 break;
 
@@ -164,6 +175,7 @@ public final class VariantSelection
     private static void addVariant(final Variant variant, final List<Variant> selectedVariants, final int[] typeCounts)
     {
         selectedVariants.add(variant);
+        variant.setSelectionStatus(SELECTED);
         ++typeCounts[variant.categoryType().ordinal()];
     }
 
