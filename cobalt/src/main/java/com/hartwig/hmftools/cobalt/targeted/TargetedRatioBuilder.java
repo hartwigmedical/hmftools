@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cobalt.targeted;
 
 import static java.lang.Math.round;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 
@@ -119,12 +120,6 @@ public class TargetedRatioBuilder implements RatioBuilder
 
         List<Double> targetRegionsGcRatios = Lists.newArrayList();
 
-        /*
-        rawRatios.entries().stream()
-                .filter(x -> x.getValue().ratio() > 0 && targetRelativeEnrichment.containsKey(x.getValue()))
-                .forEach(x -> targetRegionsGcRatios.add(x.getValue().ratio()));
-        */
-
         for(Map.Entry<Chromosome,ReadRatio> entry : rawRatios.entries())
         {
             ReadRatio readRatio = entry.getValue();
@@ -164,8 +159,8 @@ public class TargetedRatioBuilder implements RatioBuilder
 
             double enrichmentAdjRatio = readRatio.ratio() / targetRegionGcRatioMedian / relativeEnrichment;
 
-            CB_LOGGER.debug("{}:{} relative enrichment: {}, on target ratio: {}",
-                    readRatio.chromosome(), readRatio.position(), relativeEnrichment, enrichmentAdjRatio);
+            CB_LOGGER.debug(format("%s:%d relative enrichment: %.3f, on target ratio: %.3f",
+                    readRatio.chromosome(), readRatio.position(), relativeEnrichment, enrichmentAdjRatio));
 
             mOnTargetRatios.put(entry.getKey(), ImmutableReadRatio.builder().from(readRatio).ratio(enrichmentAdjRatio).build());
         }
@@ -264,10 +259,10 @@ public class TargetedRatioBuilder implements RatioBuilder
         // check that this window does not contain any target regions
         for(GenomePosition targetRegion : targetRegions)
         {
-            if(targetRegion.chromosome() == chromosome && windowStart <= targetRegion.position() && windowEnd > targetRegion.position())
+            if(targetRegion.chromosome().equals(chromosome) && windowStart <= targetRegion.position() && windowEnd > targetRegion.position())
             {
                 // this window contains a target region
-                CB_LOGGER.trace("off target window: {}:{} ({} - {}), contains target region ",
+                CB_LOGGER.trace("off target window: {}:{} ({} - {}), contains target region",
                     chromosome, windowMid, windowStart, windowEnd);
                 return null;
             }
@@ -276,7 +271,7 @@ public class TargetedRatioBuilder implements RatioBuilder
         double median = Doubles.median(windowGcRatios);
 
         CB_LOGGER.debug("off target window: {}:{} ({} - {}), num sub windows: {}, median: {}",
-                chromosome, windowMid, windowStart, windowEnd, windowGcRatios.size(), median);
+                chromosome, windowMid, windowStart, windowEnd, windowGcRatios.size(), format("%.4f", median));
 
         return !Double.isNaN(median) ? ImmutableReadRatio.builder().chromosome(chromosome).position(windowMid).ratio(median).build() : null;
     }

@@ -44,7 +44,8 @@ public class TargetRegionEnrichment
             lines.remove(0);
 
             List<GenomePosition> targetedRegions = Lists.newArrayList();
-            Map<GenomePosition, Double> targetRelativeEnrichment = Maps.newHashMap();
+            Map<GenomePosition,Double> targetRelativeEnrichment = Maps.newTreeMap(GenomePosition::compare);
+            // Map<GenomePosition, Double> targetRelativeEnrichment = Maps.newHashMap();
 
             for(String line : lines)
             {

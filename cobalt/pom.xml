@@ -77,36 +77,6 @@
                     </descriptorRefs>
                 </configuration>
             </plugin>
-
-            <plugin>
-                <artifactId>kotlin-maven-plugin</artifactId>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <executions>
-                    <execution>
-                        <id>compile</id>
-                        <phase>process-sources</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>test-compile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>test-compile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                </configuration>
-            </plugin>
-
         </plugins>
     </build>
 
