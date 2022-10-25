@@ -305,75 +305,68 @@ public class StructuralVariant extends Variant
         return format("variant(%s) category(%s) fusion(%d) breakends(%d)", description(), categoryType(), mFusions.size(), mBreakends.size());
     }
 
-    public static List<Variant> loadStructuralVariants(final String sampleId, final PvConfig config)
+    public static List<Variant> loadStructuralVariants(final String sampleId, final PvConfig config) throws Exception
     {
         List<Variant> variants = Lists.newArrayList();
 
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
-        try
+        String purpleDir = PvConfig.getSampleFilePath(sampleId, config.PurpleDir);
+        String linxDir = PvConfig.getSampleFilePath(sampleId, config.LinxDir);
+
+        String vcfFile = PurpleCommon.purpleSvFile(purpleDir, sampleId);
+
+        List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(
+                StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter()));
+
+        List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(linxDir, sampleId));
+        List<LinxSvAnnotation> annotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(linxDir, sampleId));
+        List<LinxFusion> fusions = LinxFusion.read(LinxFusion.generateFilename(linxDir, sampleId));
+
+        List<LinxCluster> clusters = LinxCluster.read(LinxCluster.generateFilename(linxDir, sampleId));
+
+        for(EnrichedStructuralVariant variant : enrichedVariants)
         {
-            String purpleDir = PvConfig.getSampleFilePath(sampleId, config.PurpleDir);
-            String linxDir = PvConfig.getSampleFilePath(sampleId, config.LinxDir);
+            if(variant.type() == StructuralVariantType.INF)
+                continue;
 
-            String vcfFile = PurpleCommon.purpleSvFile(purpleDir, sampleId);
+            if(!variant.filter().equals(PASS))
+                continue;
 
-            List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(
-                    StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter()));
+            if(variant.insertSequence().length() >= MAX_INSERT_BASES && variant.type() != SGL)
+                continue;
 
-            List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(linxDir, sampleId));
-            List<LinxSvAnnotation> annotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(linxDir, sampleId));
-            List<LinxFusion> fusions = LinxFusion.read(LinxFusion.generateFilename(linxDir, sampleId));
+            LinxSvAnnotation annotation = annotations.stream().filter(x -> x.vcfId().equals(variant.id())).findFirst().orElse(null);
 
-            List<LinxCluster> clusters = LinxCluster.read(LinxCluster.generateFilename(linxDir, sampleId));
-
-            for(EnrichedStructuralVariant variant : enrichedVariants)
+            if(annotation == null)
             {
-                if(variant.type() == StructuralVariantType.INF)
-                    continue;
-
-                if(!variant.filter().equals(PASS))
-                    continue;
-
-                if(variant.insertSequence().length() >= MAX_INSERT_BASES && variant.type() != SGL)
-                    continue;
-
-                LinxSvAnnotation annotation = annotations.stream().filter(x -> x.vcfId().equals(variant.id())).findFirst().orElse(null);
-
-                if(annotation == null)
-                {
-                    PV_LOGGER.error("sample({}) vcfId({}) Linx annotation not found", sampleId, variant.id());
-                    // return Lists.newArrayList();
-                    continue;
-                }
-
-                List<LinxBreakend> svBreakends = breakends.stream().filter(x -> x.svId() == annotation.svId()).collect(Collectors.toList());
-
-                List<LinxFusion> svFusions = fusions.stream()
-                        .filter(x -> x.reported())
-                        .filter(x -> x.chainLinks() == 0)
-                        .filter(x -> svBreakends.stream().anyMatch(y -> y.id() == x.fivePrimeBreakendId()))
-                        .collect(Collectors.toList());
-
-                // only use SGLs if in a reportable fusion
-                if(variant.type() == SGL && svFusions.isEmpty())
-                     continue;
-
-                LinxCluster cluster = clusters.stream().filter(x -> x.clusterId() == annotation.clusterId()).findFirst().orElse(null);
-
-                if(cluster == null || cluster.category().equals(LinxCommonTypes.SUPER_TYPE_ARTIFACT))
-                    continue;
-
-                StructuralVariantData variantData = convertSvData(variant, annotation.svId());
-
-                variants.add(new StructuralVariant(variantData, svBreakends, svFusions));
+                PV_LOGGER.error("sample({}) vcfId({}) Linx annotation not found", sampleId, variant.id());
+                // return Lists.newArrayList();
+                continue;
             }
 
-            PV_LOGGER.info("loaded {} structural variants from vcf({})", variants.size(), vcfFile);
+            List<LinxBreakend> svBreakends = breakends.stream().filter(x -> x.svId() == annotation.svId()).collect(Collectors.toList());
+
+            List<LinxFusion> svFusions = fusions.stream()
+                    .filter(x -> x.reported())
+                    .filter(x -> x.chainLinks() == 0)
+                    .filter(x -> svBreakends.stream().anyMatch(y -> y.id() == x.fivePrimeBreakendId()))
+                    .collect(Collectors.toList());
+
+            // only use SGLs if in a reportable fusion
+            if(variant.type() == SGL && svFusions.isEmpty())
+                 continue;
+
+            LinxCluster cluster = clusters.stream().filter(x -> x.clusterId() == annotation.clusterId()).findFirst().orElse(null);
+
+            if(cluster == null || cluster.category().equals(LinxCommonTypes.SUPER_TYPE_ARTIFACT))
+                continue;
+
+            StructuralVariantData variantData = convertSvData(variant, annotation.svId());
+
+            variants.add(new StructuralVariant(variantData, svBreakends, svFusions));
         }
-        catch(Exception e)
-        {
-            PV_LOGGER.error("sample({}) failed to load Purple or Linx SV files: {}", sampleId, e.toString());
-        }
+
+        PV_LOGGER.info("loaded {} structural variants from vcf({})", variants.size(), vcfFile);
 
         return variants;
     }

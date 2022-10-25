@@ -140,18 +140,27 @@ public class ProbeVariantSelection
 
         private void processSample(final String sampleId)
         {
-            List<Variant> variants = Lists.newArrayList();
-            variants.addAll(mCommonVariants);
-            variants.addAll(PointMutation.loadSomatics(sampleId, mConfig));
-            variants.addAll(GermlineMutation.loadGermlineMutations(sampleId, mConfig));
-            variants.addAll(StructuralVariant.loadStructuralVariants(sampleId, mConfig));
-            variants.addAll(GermlineSv.loadGermlineStructuralVariants(sampleId, mConfig));
+            try
+            {
+                List<Variant> variants = Lists.newArrayList();
+                variants.addAll(mCommonVariants);
+                variants.addAll(PointMutation.loadSomatics(sampleId, mConfig));
+                variants.addAll(GermlineMutation.loadGermlineMutations(sampleId, mConfig));
+                variants.addAll(StructuralVariant.loadStructuralVariants(sampleId, mConfig));
+                variants.addAll(GermlineSv.loadGermlineStructuralVariants(sampleId, mConfig));
 
-            variants.forEach(x -> x.generateSequences(mRefGenome, mConfig));
+                variants.forEach(x -> x.generateSequences(mRefGenome, mConfig));
 
-            List<Variant> selectedVariants = VariantSelection.selectVariants(variants, mConfig);
+                List<Variant> selectedVariants = VariantSelection.selectVariants(variants, mConfig);
 
-            writeVariants(sampleId, selectedVariants);
+                writeVariants(sampleId, selectedVariants);
+            }
+            catch(Exception e)
+            {
+                PV_LOGGER.error("sample data loading error: {}", e.toString());
+                PV_LOGGER.error("failed loading sample data, exiting");
+                System.exit(1);
+            }
         }
     }
 

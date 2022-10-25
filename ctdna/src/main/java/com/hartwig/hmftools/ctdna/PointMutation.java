@@ -177,36 +177,28 @@ public class PointMutation extends Variant
         return format("variant(%s) category(%s)", description(), categoryType());
     }
 
-    public static List<Variant> loadSomatics(final String sampleId, final PvConfig config)
+    public static List<Variant> loadSomatics(final String sampleId, final PvConfig config) throws Exception
     {
         String purpleDir = PvConfig.getSampleFilePath(sampleId, config.PurpleDir);
         String vcfFile = PurpleCommon.purpleSomaticVcfFile(purpleDir, sampleId);
 
         List<Variant> variants = Lists.newArrayList();
 
-        try
+        final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
+
+        CompoundFilter filter = new CompoundFilter(true);
+        filter.add(new PassingVariantFilter());
+
+        for(VariantContext variantContext : reader.iterator())
         {
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
+            if(!filter.test(variantContext))
+                continue;
 
-            CompoundFilter filter = new CompoundFilter(true);
-            filter.add(new PassingVariantFilter());
+            String alt = VariantContextDecorator.getAlt(variantContext);
+            if(alt.length() >= MAX_INSERT_BASES)
+                continue;
 
-            for(VariantContext variantContext : reader.iterator())
-            {
-                if(!filter.test(variantContext))
-                    continue;
-
-                String alt = VariantContextDecorator.getAlt(variantContext);
-                if(alt.length() >= MAX_INSERT_BASES)
-                    continue;
-
-                variants.add(new PointMutation(variantContext, sampleId));
-            }
-        }
-        catch(IOException e)
-        {
-            PV_LOGGER.error("failed to read somatic VCF file({}): {}", vcfFile, e.toString());
-            return variants;
+            variants.add(new PointMutation(variantContext, sampleId));
         }
 
         PV_LOGGER.info("loaded {} somatic variants from vcf({})", variants.size(), vcfFile);

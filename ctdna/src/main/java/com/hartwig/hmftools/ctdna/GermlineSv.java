@@ -120,24 +120,17 @@ public class GermlineSv extends Variant
         return format("variant(%s) category(%s)", description(), categoryType());
     }
 
-    public static List<Variant> loadGermlineStructuralVariants(final String sampleId, final PvConfig config)
+    public static List<Variant> loadGermlineStructuralVariants(final String sampleId, final PvConfig config) throws Exception
     {
         List<Variant> variants = Lists.newArrayList();
 
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
-        try
-        {
-            String filename = LinxGermlineSv.generateFilename(config.LinxDir, sampleId);
-            final List<LinxGermlineSv> germlineSvs = LinxGermlineSv.read(filename);
+        String filename = LinxGermlineSv.generateFilename(config.LinxDir, sampleId);
+        final List<LinxGermlineSv> germlineSvs = LinxGermlineSv.read(filename);
 
-            germlineSvs.stream().filter(x -> x.Reported).forEach(x -> variants.add(new GermlineSv(x)));
+        germlineSvs.stream().filter(x -> x.Reported).forEach(x -> variants.add(new GermlineSv(x)));
 
-            PV_LOGGER.info("loaded {} germline SVs from vcf({})", variants.size(), filename);
-        }
-        catch(Exception e)
-        {
-            PV_LOGGER.error("sample({}) failed to load germline SV file: {}", sampleId, e.toString());
-        }
+        PV_LOGGER.info("loaded {} germline SVs from vcf({})", variants.size(), filename);
 
         return variants;
     }

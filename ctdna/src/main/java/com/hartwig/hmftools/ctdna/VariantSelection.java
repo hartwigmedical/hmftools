@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ctdna;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_CODING_MUTATION;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_SV;
 import static com.hartwig.hmftools.ctdna.CategoryType.REPORTABLE_MUTATION;
@@ -197,9 +198,10 @@ public final class VariantSelection
                 return first.reported() ? -1 : 1;
             }
 
-            if(first.categoryType() == OTHER_MUTATION)
+            if(first.categoryType() == OTHER_MUTATION || first.categoryType() == OTHER_CODING_MUTATION || first.categoryType() == SUBCLONAL_MUTATION)
             {
-                // an attempt at random selection
+                // to randomise selection of the lowest priority variants (and avoid multiple selections from highly amplified regions)
+                // use the inverse of position as the final comparison
                 int locationHash1 = ((PointMutation)first).locationHash();
                 int locationHash2 = ((PointMutation)second).locationHash();
 

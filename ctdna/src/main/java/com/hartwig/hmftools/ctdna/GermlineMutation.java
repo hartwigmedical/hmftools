@@ -85,7 +85,7 @@ public class GermlineMutation extends Variant
         return format("variant(%s) category(%s)", description(), categoryType());
     }
 
-    public static List<Variant> loadGermlineMutations(final String sampleId, final PvConfig config)
+    public static List<Variant> loadGermlineMutations(final String sampleId, final PvConfig config) throws Exception
     {
         List<Variant> variants = Lists.newArrayList();
 
@@ -94,18 +94,11 @@ public class GermlineMutation extends Variant
 
         String vcfFile = PurpleCommon.purpleGermlineVcfFile(config.PurpleDir, sampleId);
 
-        try
-        {
-            List<GermlineVariant> germlineVariants = GermlineVariantFactory.fromVCFFile(sampleId, vcfFile);
+        List<GermlineVariant> germlineVariants = GermlineVariantFactory.fromVCFFile(sampleId, vcfFile);
 
-            germlineVariants.stream().filter(x -> x.reported()).forEach(x -> variants.add(new GermlineMutation(x)));
+        germlineVariants.stream().filter(x -> x.reported()).forEach(x -> variants.add(new GermlineMutation(x)));
 
-            PV_LOGGER.debug("sample({}) loaded {} germline variants", sampleId, variants.size());
-        }
-        catch(Exception e)
-        {
-            PV_LOGGER.error("failed to read germline VCF file({}): {}", vcfFile, e.toString());
-        }
+        PV_LOGGER.debug("sample({}) loaded {} germline variants", sampleId, variants.size());
 
         return variants;
     }
