@@ -1,5 +1,12 @@
 package com.hartwig.hmftools.cider
 
+import htsjdk.samtools.Cigar
+import htsjdk.samtools.CigarElement
+import htsjdk.samtools.CigarOperator
+import java.util.*
+
+data class AlignmentBlock(val readStart: Int, val length: Int)
+
 object CiderUtils
 {
     fun conservedAA(vjGeneType: VJGeneType): Char
@@ -66,6 +73,48 @@ object CiderUtils
         }
 
         return stringBuilder.toString()
+    }
+
+    // similar to SAMUtils.getAlignmentBlocks
+    // but matched sections separated by I, D, P are merged together
+    fun getAdjustedAlignmentBlocks(cigar: Cigar) : List<AlignmentBlock>
+    {
+        val alignmentBlocks: MutableList<AlignmentBlock> = ArrayList()
+        var readBase = 1
+        var currentBlockReadStart = -1
+        for (e: CigarElement in cigar)
+        {
+            when (e.operator!!)
+            {
+                CigarOperator.P, CigarOperator.D ->
+                {
+                }
+                CigarOperator.I -> readBase += e.length
+                CigarOperator.M, CigarOperator.EQ, CigarOperator.X ->
+                {
+                    if (currentBlockReadStart == -1)
+                    {
+                        currentBlockReadStart = readBase
+                    }
+                    readBase += e.length
+                }
+                CigarOperator.S, CigarOperator.H, CigarOperator.N ->
+                {
+                    if (currentBlockReadStart != -1)
+                    {
+                        alignmentBlocks.add(AlignmentBlock(currentBlockReadStart, readBase - currentBlockReadStart))
+                        currentBlockReadStart = -1
+                    }
+                    if (e.operator == CigarOperator.S)
+                        readBase += e.length
+                }
+            }
+        }
+        if (currentBlockReadStart != -1)
+        {
+            alignmentBlocks.add(AlignmentBlock(currentBlockReadStart, readBase - currentBlockReadStart))
+        }
+        return Collections.unmodifiableList(alignmentBlocks)
     }
 
     fun safeSubstring(str: String, start: Int, end: Int): String

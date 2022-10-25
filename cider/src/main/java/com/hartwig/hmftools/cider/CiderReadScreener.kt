@@ -36,7 +36,7 @@ class CiderReadScreener(// collect the reads and sort by types
     private val mVjReadCandidates = Collections.synchronizedList(ArrayList<VJReadCandidate>())
     private val mAllMatchedReads = Collections.synchronizedList(ArrayList<SAMRecord>())
 
-    val vJReadCandidates: List<VJReadCandidate>
+    val vjReadCandidates: List<VJReadCandidate>
         get() = mVjReadCandidates
     val allMatchedReads: List<SAMRecord>
         get() = mAllMatchedReads

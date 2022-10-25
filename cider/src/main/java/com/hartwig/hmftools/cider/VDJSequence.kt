@@ -169,8 +169,6 @@ class VDJSequence(
         return CiderUtils.countsToString(supportCounts)
     }
 
-    val supportMin: Int get() = supportCounts.minOrNull() ?: 0
-
     val cdr3SupportMin: Int get()
     {
         return supportCounts.slice(cdr3Start until cdr3End).minOrNull() ?: 0

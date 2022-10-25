@@ -70,9 +70,10 @@ class CiderApplication
             mParams.approxMaxFragmentLength)
 
         readBamFile(readProcessor, ciderGeneDatastore)
+        writeCiderBam(readProcessor.allMatchedReads)
 
         val vjReadLayoutAdaptor = VJReadLayoutAdaptor(mParams.numBasesToTrim)
-        val layoutMap = buildLayouts(vjReadLayoutAdaptor, readProcessor.vJReadCandidates)
+        val layoutMap = buildLayouts(vjReadLayoutAdaptor, readProcessor.vjReadCandidates)
 
         val vdjBuilderBlosumSearcher = AnchorBlosumSearcher(
             ciderGeneDatastore,
@@ -87,7 +88,6 @@ class CiderApplication
 
         val vdjSequences = vdjSeqBuilder.buildVDJSequences(layoutMap)
         writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjSequences, vjReadLayoutAdaptor, mParams.reportPartialSeq)
-        writeCdr3Bam(readProcessor.allMatchedReads)
         val finish = Instant.now()
         val seconds = Duration.between(start, finish).seconds
         sLogger.info("CIDER run complete, time taken: {}m {}s", seconds / 60, seconds % 60)
@@ -98,7 +98,7 @@ class CiderApplication
     fun readBamFile(readProcessor: CiderReadScreener, ciderGeneDatastore: ICiderGeneDatastore)
     {
         val readerFactory = readerFactory(mParams)
-        val lociBamRecordHander: (SAMRecord) -> Unit = { samRecord: SAMRecord ->
+        val asyncBamRecordHander: (SAMRecord) -> Unit = { samRecord: SAMRecord ->
             readProcessor.asyncProcessSamRecord(samRecord)
         }
 
@@ -121,7 +121,7 @@ class CiderApplication
                 constantRegion.genomeLocation.posStart - mParams.approxMaxFragmentLength,
                 constantRegion.genomeLocation.posEnd + mParams.approxMaxFragmentLength))
         }
-        processBam(mParams.bamPath, readerFactory, genomeRegions, lociBamRecordHander, mParams.threadCount)
+        processBam(mParams.bamPath, readerFactory, genomeRegions, asyncBamRecordHander, mParams.threadCount)
         sLogger.info("found {} VJ read records", readProcessor.allMatchedReads.size)
     }
 
@@ -172,7 +172,7 @@ class CiderApplication
     }
 
     @Throws(IOException::class)
-    fun writeCdr3Bam(samRecords: Collection<SAMRecord?>)
+    fun writeCiderBam(samRecords: Collection<SAMRecord?>)
     {
         if (!mParams.writeFilteredBam) return
         val outBamPath = mParams.outputDir + "/" + mParams.sampleId + ".cider.bam"

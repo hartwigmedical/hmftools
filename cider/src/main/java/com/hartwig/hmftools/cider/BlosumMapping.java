@@ -97,7 +97,7 @@ public class BlosumMapping
         mMappings[getMappingArrayIndex(aa1Index, aa2Index)] = val;
     }
 
-    // we store only half of the matrix, so each row is smaller than previous
+    // we store only half of the matrix, so each row is larger than the next one by 1
     // i.e. for the n x n where n = 4 matrix:
     //             row index(i)    row array index        check (i + 1) * i / 2
     //    0            0              0 = 0                 (0 + 1) * 0 / 2 = 0

@@ -71,7 +71,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         }
 
         // sort them by support min
-        vdjList.sortByDescending({ vdj -> vdj.supportMin })
+        vdjList.sortByDescending({ vdj -> vdj.cdr3SupportMin })
 
         sLogger.info("found {} vdj sequences before merge", vdjList.size)
 
@@ -105,7 +105,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         }
 
         // sort again
-        vdjList.sortByDescending({ vdj -> vdj.supportMin })
+        vdjList.sortByDescending({ vdj -> vdj.cdr3SupportMin })
 
         sLogger.info("{} vdj sequences after merge", vdjList.size)
 
@@ -566,7 +566,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
             val jAnchorLength: Int = Math.max(vdj1.jAnchorLength, vdj2.jAnchorLength)
 
-            if (vdj1.supportMin > vdj2.supportMin)
+            if (vdj1.cdr3SupportMin > vdj2.cdr3SupportMin)
             {
                 vdjPrimary = vdj1
                 vdjSecondary = vdj2

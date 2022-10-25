@@ -4,7 +4,6 @@ import com.hartwig.hmftools.cider.CiderConstants.MIN_NON_SPLIT_READ_STRADDLE_LEN
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.utils.FileWriterUtils
 import com.hartwig.hmftools.common.utils.IntPair
-import htsjdk.samtools.AlignmentBlock
 import htsjdk.samtools.SAMRecord
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
@@ -88,20 +87,32 @@ object VDJSequenceTsvWriter
             sortedVdj = sortedVdj.filter({ seq: VDJSequence -> seq.isFullyRearranged })
         }
 
-        // in order to work out which ones are duplicate, we create a map of all VDJ sequences,
-        // and the one with highest support count
-        val cdr3SupportMap = HashMap<String, Int>()
+        // we create a set of all VDJs that are NOT duplicates
+        val notDuplicateVdjs = HashMap<String, VDJSequence>()
 
         for (vdjSeq in sortedVdj)
         {
             val cdr3 = vdjSeq.cdr3Sequence
-            cdr3SupportMap[cdr3] = Math.max(cdr3SupportMap.getOrDefault(cdr3, 0), vdjSeq.supportMin)
+
+            val vdjWithMoreSupport : VDJSequence? = notDuplicateVdjs.get(cdr3)
+
+            if (vdjWithMoreSupport == null)
+            {
+                notDuplicateVdjs[cdr3] = vdjSeq
+            }
+            else
+            {
+                // just make sure it has more support
+                require(vdjWithMoreSupport.cdr3SupportMin >= vdjSeq.cdr3SupportMin)
+            }
         }
 
         csvFormat.print(FileWriterUtils.createBufferedWriter(filePath)).use { printer: CSVPrinter ->
             for (vdj in sortedVdj)
             {
-                val isDuplicate: Boolean = cdr3SupportMap.getOrDefault(vdj.cdr3Sequence, 0) > vdj.supportMin
+                val vdjWithMoreSupport : VDJSequence? = notDuplicateVdjs.get(vdj.cdr3Sequence)
+                assert(vdjWithMoreSupport != null)
+                val isDuplicate: Boolean = vdjWithMoreSupport !== vdj
                 writeVDJSequence(printer, vdj, isDuplicate, adaptor)
             }
         }
@@ -264,7 +275,7 @@ object VDJSequenceTsvWriter
             // work out where in the VDJ sequence is this read mapped
             if (!samRecord.readUnmappedFlag)
             {
-                for (alignBlock in samRecord.alignmentBlocks)
+                for (alignBlock in CiderUtils.getAdjustedAlignmentBlocks(samRecord.cigar))
                 {
                     // now get those positions in terms of read slice
                     val alignRangeInReadSlice: IntPair = layoutReadSlice.readRangeToSliceRange(
@@ -280,7 +291,7 @@ object VDJSequenceTsvWriter
                         ++nonSplitReadCount
 
                         // this read straddles a v anchor boundary
-                        sLogger.info("read({}) cigar({}) revcomp({}), straddles {} boundary, align offset({}:{}), boundary offset({})",
+                        sLogger.debug("read({}) cigar({}) revcomp({}), straddles {} boundary, align offset({}:{}), boundary offset({})",
                             samRecord, samRecord.cigarString, layoutReadSlice.reverseComplement, vj,
                             alignRangeInReadSlice.left, alignRangeInReadSlice.right, readSliceAnchorBoundary)
                     }
@@ -288,31 +299,5 @@ object VDJSequenceTsvWriter
             }
         }
         return nonSplitReadCount
-    }
-
-    // merge blocks that are very close by
-    fun getSimplifiedAlignBlocks(samRecord: SAMRecord) : List<AlignmentBlock>
-    {
-        val simplifiedAlignBlocks = ArrayList<AlignmentBlock>()
-
-        var currentAlignmentBlock: AlignmentBlock? = null
-
-        for (alignBlock in samRecord.alignmentBlocks)
-        {
-            if (currentAlignmentBlock == null)
-            {
-                currentAlignmentBlock = alignBlock
-                continue
-            }
-
-            // compare with previous block end
-            //if (alignBlock.readStart - currentAlignmentBlock.readStart )
-
-        }
-
-        if (currentAlignmentBlock != null)
-            simplifiedAlignBlocks.add(currentAlignmentBlock)
-
-        return simplifiedAlignBlocks
     }
 }

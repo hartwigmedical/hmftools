@@ -15,6 +15,11 @@ class ReadSlice(
     val sliceStart: Int,
     val sliceEnd: Int)
 {
+    init
+    {
+        require(sliceEnd > sliceStart, { "slice End <= sliceStart" })
+    }
+
     val readName: String get()
     {
         return read.readName

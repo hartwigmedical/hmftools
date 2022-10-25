@@ -150,7 +150,8 @@ class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
             val numGs = numTrailingPolyG(read.readString, sliceEnd)
             if (numGs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
             {
-                sLogger.info("read: {}, poly G tail found: {}", read, read.readString)
+                sLogger.debug("read({}) strand(+) poly G tail of length({}) found({})",
+                    read, numGs, read.readString)
                 sliceEnd -= numGs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
             }
         }
@@ -159,7 +160,8 @@ class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
             val numCs = numLeadingPolyC(read.readString, sliceStart)
             if (numCs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
             {
-                sLogger.info("read: {}, poly G tail found: {}", read, read.readString)
+                sLogger.debug("read({}) strand(-) poly G tail of length({}) found({})",
+                    read, numCs, read.readString)
                 sliceStart += numCs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
             }
         }
@@ -184,6 +186,12 @@ class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
             // for J, we layout from the anchor last, right to left
             // we are only interested in what comes before anchor end
             sliceEnd = Math.min(anchorOffsetEnd, sliceEnd)
+        }
+
+        if ((sliceEnd - sliceStart) < 5)
+        {
+            // if too little left don't bother
+            return null
         }
 
         return ReadSlice(read, useReverseComplement, sliceStart, sliceEnd)
