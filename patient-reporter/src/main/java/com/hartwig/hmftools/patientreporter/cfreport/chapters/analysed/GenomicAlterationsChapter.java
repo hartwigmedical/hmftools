@@ -343,11 +343,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(GeneFusions.name(fusion)));
             contentTable.addCell(TableUtil.createContentCell(GeneFusions.displayStr(fusion.reportedType()))
                     .setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(fusion.geneTranscriptStart()))
-                    .addStyle(ReportResources.dataHighlightLinksStyle())
-                    .setAction(PdfAction.createURI(GeneFusions.transcriptUrl(fusion.geneTranscriptStart()))));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(fusion.geneTranscriptEnd()).addStyle(ReportResources.dataHighlightLinksStyle())
-                    .setAction(PdfAction.createURI(GeneFusions.transcriptUrl(fusion.geneTranscriptEnd())))));
+            contentTable.addCell(GeneFusions.fusionContentType(fusion.reportedType(), fusion.geneTranscriptStart()));
+            contentTable.addCell(GeneFusions.fusionContentType(fusion.reportedType(), fusion.geneTranscriptEnd()));
             contentTable.addCell(TableUtil.createContentCell(fusion.geneContextStart()));
             contentTable.addCell(TableUtil.createContentCell(fusion.geneContextEnd()));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.copyNumberToString(fusion.junctionCopyNumber(), hasReliablePurity))
