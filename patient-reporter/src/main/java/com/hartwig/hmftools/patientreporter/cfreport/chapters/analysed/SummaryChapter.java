@@ -217,9 +217,8 @@ public class SummaryChapter implements ReportChapter {
             if (patientReport.cuppaReporting().interpretLikelihood() == null) {
                 cuppaPrediction = patientReport.cuppaReporting().interpretCancerType();
             } else {
-                cuppaPrediction =
-                        patientReport.cuppaReporting().interpretCancerType() + " (" + patientReport.cuppaReporting().interpretLikelihood()
-                                + ")";
+                cuppaPrediction = patientReport.cuppaReporting().interpretCancerType() + " ("
+                        + DataUtil.formatPercentageDigit(patientReport.cuppaReporting().interpretLikelihood()) + ")";
             }
         }
 
