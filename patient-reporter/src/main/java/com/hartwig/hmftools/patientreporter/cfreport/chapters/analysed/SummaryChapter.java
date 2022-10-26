@@ -373,55 +373,79 @@ public class SummaryChapter implements ReportChapter {
         Div div = createSectionStartDiv(contentWidth());
         String title = "Pharmacogenetics";
 
-        Table contentTable = TableUtil.createReportContentTableSummary(new float[] { 10, 10, 10 },
-                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Number haplotypes"),
-                        TableUtil.createHeaderCell("Function") });
+        if (patientReport.sampleReport().reportPharmogenetics()) {
+            if (patientReport.peachGenotypes().isEmpty()) {
+                div.add(TableUtil.createNoneReportTable(title,
+                        null,
+                        TableUtil.TABLE_BOTTOM_MARGIN_SUMMARY,
+                        ReportResources.CONTENT_WIDTH_WIDE_SUMMARY));
+            } else {
+                Table contentTable = TableUtil.createReportContentTable(new float[] { 10, 10, 10 },
+                        new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Number haplotypes"),
+                                TableUtil.createHeaderCell("Function") },
+                        ReportResources.CONTENT_WIDTH_WIDE_SUMMARY);
 
-        Set<String> sortedPeach = Sets.newTreeSet(patientReport.peachGenotypes().keySet().stream().collect(Collectors.toSet()));
-        for (String sortPeach : sortedPeach) {
-            List<PeachGenotype> peachGenotypeList = patientReport.peachGenotypes().get(sortPeach);
+                Set<String> sortedPeach = Sets.newTreeSet(patientReport.peachGenotypes().keySet().stream().collect(Collectors.toSet()));
+                for (String sortPeach : sortedPeach) {
+                    List<PeachGenotype> peachGenotypeList = patientReport.peachGenotypes().get(sortPeach);
 
-            Set<String> function = Sets.newHashSet();
-            int count = peachGenotypeList.size();
+                    Set<String> function = Sets.newHashSet();
+                    int count = peachGenotypeList.size();
 
-            for (PeachGenotype peachGenotype : peachGenotypeList) {
-                function.add(peachGenotype.function());
+                    for (PeachGenotype peachGenotype : peachGenotypeList) {
+                        function.add(peachGenotype.function());
+                    }
+
+                    contentTable.addCell(TableUtil.createContentCell(sortPeach));
+                    contentTable.addCell(TableUtil.createContentCell(Integer.toString(count)));
+                    contentTable.addCell(TableUtil.createContentCell(concat(function)));
+                }
+                div.add(TableUtil.createWrappingReportTable(title, null, contentTable, TableUtil.TABLE_BOTTOM_MARGIN_SUMMARY));
             }
-
-            contentTable.addCell(TableUtil.createContentCell(sortPeach));
-            contentTable.addCell(TableUtil.createContentCell(Integer.toString(count)));
-            contentTable.addCell(TableUtil.createContentCell(concat(function)));
+        } else {
+            String noConsent = "This patient did not give his/her permission for reporting of pharmacogenomics results.";
+            div.add(TableUtil.createNoConsentReportTable(title,
+                    noConsent,
+                    TableUtil.TABLE_BOTTOM_MARGIN_SUMMARY,
+                    ReportResources.CONTENT_WIDTH_WIDE_SUMMARY));
         }
-        div.add(TableUtil.createWrappingReportTableSummary(title, contentTable));
         report.add(div);
     }
 
     private void renderHla(@NotNull Document report) {
         Div div = createSectionStartDiv(contentWidth());
         String title = "HLA Alleles";
+        if (!patientReport.genomicAnalysis().lilac().lilacQc().equals("PASS")) {
+            String noConsent = "The QC of the HLA types do not meet the QC cut-offs";
+            div.add(TableUtil.createNoConsentReportTable(title,
+                    noConsent,
+                    TableUtil.TABLE_BOTTOM_MARGIN_SUMMARY,
+                    ReportResources.CONTENT_WIDTH_WIDE_SUMMARY));
+        } else {
+            Table table = TableUtil.createReportContentTable(new float[] { 15, 15, 15 },
+                    new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Germline allele"),
+                            TableUtil.createHeaderCell("Interpretation: presence in tumor") },
+                    ReportResources.CONTENT_WIDTH_WIDE_SUMMARY);
 
-        Table table = TableUtil.createReportContentTableSummary(new float[] { 15, 15, 15 },
-                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Germline allele"),
-                        TableUtil.createHeaderCell("Interpretation: presence in tumor") });
+            Set<String> sortedAlleles =
+                    Sets.newTreeSet(patientReport.genomicAnalysis().lilac().lilacReporting().keySet().stream().collect(Collectors.toSet()));
+            for (String sortAllele : sortedAlleles) {
+                List<LilacReporting> allele = patientReport.genomicAnalysis().lilac().lilacReporting().get(sortAllele);
 
-        Set<String> sortedAlleles =
-                Sets.newTreeSet(patientReport.genomicAnalysis().lilac().lilacReporting().keySet().stream().collect(Collectors.toSet()));
-        for (String sortAllele : sortedAlleles) {
-            List<LilacReporting> allele = patientReport.genomicAnalysis().lilac().lilacReporting().get(sortAllele);
+                Set<String> germlineAllele = Sets.newHashSet();
+                Set<String> interpretation = Sets.newHashSet();
 
-            Set<String> germlineAllele = Sets.newHashSet();
-            Set<String> interpretation = Sets.newHashSet();
-
-            for (LilacReporting allele1 : HLAAllele.sort(allele)) {
-                germlineAllele.add(allele1.lilacGermlineAllele().germlineAllele());
-                interpretation.add(allele1.interpretation());
+                for (LilacReporting allele1 : HLAAllele.sort(allele)) {
+                    germlineAllele.add(allele1.lilacGermlineAllele().germlineAllele());
+                    interpretation.add(allele1.interpretation());
+                }
+                table.addCell(TableUtil.createContentCell(sortAllele));
+                table.addCell(TableUtil.createContentCell(concat(germlineAllele)));
+                table.addCell(TableUtil.createContentCell(conclusionInterpretation(concat(interpretation))));
             }
-            table.addCell(TableUtil.createContentCell(sortAllele));
-            table.addCell(TableUtil.createContentCell(concat(germlineAllele)));
-            table.addCell(TableUtil.createContentCell(conclusionInterpretation(concat(interpretation))));
-        }
 
-        div.add(TableUtil.createWrappingReportTableSummary(title, table));
+            div.add(TableUtil.createWrappingReportTable(title, null, table, TableUtil.TABLE_BOTTOM_MARGIN_SUMMARY));
+        }
         report.add(div);
     }
 

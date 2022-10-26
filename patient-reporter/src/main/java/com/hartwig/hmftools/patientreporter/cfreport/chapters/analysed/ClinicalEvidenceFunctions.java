@@ -84,11 +84,11 @@ public class ClinicalEvidenceFunctions {
     @NotNull
     public static Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             float contentWidth) {
-        Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
-                new float[] { 25, 120, 80, 25, 40, 120, 60 },
+        Table treatmentTable = TableUtil.createReportContentTable(new float[] { 25, 120, 80, 25, 40, 120, 60 },
                 new Cell[] { TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Match", 1),
                         TableUtil.createHeaderCell("Level", 1), TableUtil.createHeaderCell("Response", 1),
-                        TableUtil.createHeaderCell("Genomic event", 1), TableUtil.createHeaderCell("Evidence links", 1) });
+                        TableUtil.createHeaderCell("Genomic event", 1), TableUtil.createHeaderCell("Evidence links", 1) },
+                contentWidth);
 
         treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "evidence");
         return treatmentTable;
@@ -97,10 +97,10 @@ public class ClinicalEvidenceFunctions {
     @NotNull
     public static Table createTrialTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             float contentWidth) {
-        Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
-                new float[] { 20, 170, 80, 170 },
+        Table treatmentTable = TableUtil.createReportContentTable(new float[] { 20, 170, 80, 170 },
                 new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Match", 1),
-                        TableUtil.createHeaderCell("Genomic event", 1) });
+                        TableUtil.createHeaderCell("Genomic event", 1) },
+                contentWidth);
 
         treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "trial");
         return treatmentTable;
@@ -117,9 +117,9 @@ public class ClinicalEvidenceFunctions {
         }
 
         if (hasEvidence) {
-            return TableUtil.createWrappingReportTable(title, null, treatmentTable);
+            return TableUtil.createWrappingReportTable(title, null, treatmentTable, TableUtil.TABLE_BOTTOM_MARGIN);
         } else {
-            return TableUtil.createNoneReportTable(title, null);
+            return TableUtil.createNoneReportTable(title, null, TableUtil.TABLE_BOTTOM_MARGIN, ReportResources.CONTENT_WIDTH_WIDE);
         }
     }
 
