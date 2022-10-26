@@ -22,10 +22,8 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
@@ -65,6 +63,7 @@ public class PeachApplication
 
         PCH_LOGGER.info("read haplotypes TSV");
         List<Haplotype> haplotypes = loadHaplotypes(config.haplotypesTsv);
+        Map<Chromosome, Set<Integer>> relevantVariantPositions = getRelevantVariantPositions(haplotypes);
 
         if (config.doLiftOver)
         {
@@ -88,6 +87,8 @@ public class PeachApplication
             }
             //TODO: handle unlifted relevant variants properly
             //TODO: handle reference sequence differences V37 vs V38 properly
+
+            //TODO: validation of haplotype list making sense (try to do this in place where it fails early, but don't have to redo it during actual haplotype calling.)
         }
 
         PCH_LOGGER.info("finished running PEACH");
@@ -272,6 +273,22 @@ public class PeachApplication
     {
         return Arrays.stream(haplotypeEventsString.split(HAPLOTYPE_EVENT_DELIMITER))
                 .map(HaplotypeEventFactory::fromId).collect(ImmutableSet.toImmutableSet());
+    }
+
+    private static Map<Chromosome, Set<Integer>> getRelevantVariantPositions(List<Haplotype> haplotypes)
+    {
+        Stream<VariantHaplotypeEvent> variantHaplotypeEvents = haplotypes.stream()
+                .filter(h -> ! h.wildType) // Ignore variants configured for wild type haplotypes, since they should be ignored anyway
+                .map(h -> h.events)
+                .flatMap(Collection::stream)
+                .filter(e -> e instanceof VariantHaplotypeEvent)
+                .map(VariantHaplotypeEvent.class::cast);
+        return variantHaplotypeEvents.collect(
+                Collectors.groupingBy(
+                        e -> e.chromosome,
+                        Collectors.mapping(e -> e.position, Collectors.toSet())
+                )
+        );
     }
 
     private Map<Chromosome, List<BaseRegion>> loadBedFile(final String filename)
