@@ -85,20 +85,20 @@ public class QCFailReporter {
 
         LOGGER.info("  QC status: {}", purpleQc.toString());
 
-        List<PeachGenotype> peachGenotypesOverrule = Lists.newArrayList();
+        List<PeachGenotype> pharmacogeneticsGenotypesOverrule = Lists.newArrayList();
         if (reason.isDeepWGSDataAvailable() && !purpleQc.contains(PurpleQCStatus.FAIL_CONTAMINATION)) {
-            List<PeachGenotype> peachGenotypes = loadPeachData(config.peachGenotypeTsv());
-            peachGenotypesOverrule = sampleReport.reportPharmogenetics() ? peachGenotypes : Lists.newArrayList();
+            List<PeachGenotype> pharmacogeneticsGenotypes = loadPeachData(config.peachGenotypeTsv());
+            pharmacogeneticsGenotypesOverrule = sampleReport.reportPharmogenetics() ? pharmacogeneticsGenotypes : Lists.newArrayList();
         }
 
-        Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
-        for (PeachGenotype peach : peachGenotypesOverrule) {
-            if (peachMap.containsKey(peach.gene())) {
-                List<PeachGenotype> curent = peachMap.get(peach.gene());
-                curent.add(peach);
-                peachMap.put(peach.gene(), curent);
+        Map<String, List<PeachGenotype>> pharmacogeneticsMap = Maps.newHashMap();
+        for (PeachGenotype pharmacogenetics : pharmacogeneticsGenotypesOverrule) {
+            if (pharmacogeneticsMap.containsKey(pharmacogenetics.gene())) {
+                List<PeachGenotype> curent = pharmacogeneticsMap.get(pharmacogenetics.gene());
+                curent.add(pharmacogenetics);
+                pharmacogeneticsMap.put(pharmacogenetics.gene(), curent);
             } else {
-                peachMap.put(peach.gene(), com.google.common.collect.Lists.newArrayList(peach));
+                pharmacogeneticsMap.put(pharmacogenetics.gene(), com.google.common.collect.Lists.newArrayList(pharmacogenetics));
             }
         }
 
@@ -114,7 +114,7 @@ public class QCFailReporter {
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .udiDi(reportData.udiDi())
-                .peachGenotypes(peachMap)
+                .pharmacogeneticsGenotypes(pharmacogeneticsMap)
                 .purpleQC(purpleQc)
                 .reportDate(reportDate)
                 .isWGSreport(true)
@@ -124,7 +124,7 @@ public class QCFailReporter {
     @NotNull
     private static List<PeachGenotype> loadPeachData(@NotNull String peachGenotypeTsv) throws IOException {
         if (!peachGenotypeTsv.equals(Strings.EMPTY)) {
-            LOGGER.info("Loading peach genotypes from {}", new File(peachGenotypeTsv).getParent());
+            LOGGER.info("Loading pharmacogenetics genotypes from {}", new File(peachGenotypeTsv).getParent());
             List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
             LOGGER.info(" Loaded {} reportable genotypes from {}", peachGenotypes.size(), peachGenotypeTsv);
             return peachGenotypes;

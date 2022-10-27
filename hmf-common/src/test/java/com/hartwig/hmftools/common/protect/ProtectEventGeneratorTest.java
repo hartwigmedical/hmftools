@@ -23,7 +23,7 @@ public class ProtectEventGeneratorTest {
         assertEquals("p.Gly12Cys", EventGenerator.toVariantEvent("p.Gly12Cys", "c.123A>C", "missense_variant", CodingEffect.MISSENSE));
         assertEquals("c.123A>C splice", EventGenerator.toVariantEvent("p.?", "c.123A>C", "missense_variant", CodingEffect.SPLICE));
         assertEquals("c.123A>C", EventGenerator.toVariantEvent("", "c.123A>C", "missense_variant", CodingEffect.MISSENSE));
-        assertEquals("upstream", EventGenerator.toVariantEvent("", "", "upstream_gene_variant", CodingEffect.SPLICE));
+        assertEquals("splice", EventGenerator.toVariantEvent("", "", "splice", CodingEffect.SPLICE));
         assertEquals("missense_variant", EventGenerator.toVariantEvent("", "", "missense_variant", CodingEffect.MISSENSE));
     }
 

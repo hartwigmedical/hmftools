@@ -60,7 +60,7 @@ public abstract class QCFailReport implements PatientReport {
 
     @NotNull
     @Override
-    public abstract Map<String, List<PeachGenotype>> peachGenotypes();
+    public abstract Map<String, List<PeachGenotype>> pharmacogeneticsGenotypes();
 
     @NotNull
     @Override

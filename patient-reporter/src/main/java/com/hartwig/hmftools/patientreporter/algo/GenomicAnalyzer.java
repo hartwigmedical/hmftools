@@ -12,8 +12,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.hla.LilacReportingData;
-import com.hartwig.hmftools.common.hla.LilacReportingFactory;
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingFactory;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.linx.GeneDisruption;
@@ -106,7 +106,7 @@ public class GenomicAnalyzer {
                 determineNotify(reportableVariants, germlineReportingModel, germlineReportingLevel);
 
         LilacSummaryData lilacSummaryData = LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
-        LilacReportingData lilacReportingData = LilacReportingFactory.convertToReportData(lilacSummaryData, purpleData.hasReliablePurity());
+        HlaAllelesReportingData hlaReportingData = HlaAllelesReportingFactory.convertToReportData(lilacSummaryData, purpleData.hasReliablePurity());
 
         List<ProtectEvidence> reportableEvidenceItems = extractReportableEvidenceItems(config.protectEvidenceTsv());
         List<ProtectEvidence> nonTrialsOnLabel = ReportableEvidenceItemFactory.extractNonTrialsOnLabel(reportableEvidenceItems);
@@ -129,15 +129,15 @@ public class GenomicAnalyzer {
                 .tumorMutationalLoad(purpleData.tumorMutationalLoad())
                 .tumorMutationalLoadStatus(purpleData.tumorMutationalLoadStatus())
                 .tumorMutationalBurden(purpleData.tumorMutationalBurdenPerMb())
-                .chordHrdValue(chordAnalysis.hrdValue())
-                .chordHrdStatus(chordAnalysis.hrStatus())
+                .hrdValue(chordAnalysis.hrdValue())
+                .hrdStatus(chordAnalysis.hrStatus())
                 .gainsAndLosses(purpleData.reportableSomaticGainsLosses())
                 .cnPerChromosome(purpleData.copyNumberPerChromosome())
                 .geneFusions(linxData.reportableFusions())
                 .geneDisruptions(reportableGeneDisruptions)
                 .homozygousDisruptions(linxData.homozygousDisruptions())
                 .reportableViruses(virusInterpreterData.reportableViruses())
-                .lilac(lilacReportingData)
+                .hlaAlleles(hlaReportingData)
                 .suspectGeneCopyNumbersHRDWithLOH(suspectGeneCopyNumbersHRDWithLOH)
                 .suspectGeneCopyNumbersMSIWithLOH(suspectGeneCopyNumbersMSIWithLOH)
                 .build();

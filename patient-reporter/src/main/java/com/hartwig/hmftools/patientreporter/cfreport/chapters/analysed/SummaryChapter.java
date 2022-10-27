@@ -3,17 +3,15 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.hla.LilacReporting;
+import com.hartwig.hmftools.common.hla.HlaReporting;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.utils.DataUtil;
@@ -112,7 +110,7 @@ public class SummaryChapter implements ReportChapter {
         renderTreatmentIndications(reportDocument);
         renderTumorCharacteristics(reportDocument);
         renderGenomicAlterations(reportDocument);
-        renderPeach(reportDocument);
+        renderPharmacogenetics(reportDocument);
         renderHla(reportDocument);
         renderGermlineText(reportDocument);
     }
@@ -213,12 +211,12 @@ public class SummaryChapter implements ReportChapter {
                 table);
 
         String cuppaPrediction = Strings.EMPTY;
-        if (patientReport.cuppaReporting() != null && patientReport.genomicAnalysis().hasReliablePurity()) {
-            if (patientReport.cuppaReporting().interpretLikelihood() == null) {
-                cuppaPrediction = patientReport.cuppaReporting().interpretCancerType();
+        if (patientReport.molecularTissueOriginReporting() != null && patientReport.genomicAnalysis().hasReliablePurity()) {
+            if (patientReport.molecularTissueOriginReporting().interpretLikelihood() == null) {
+                cuppaPrediction = patientReport.molecularTissueOriginReporting().interpretCancerType();
             } else {
-                cuppaPrediction = patientReport.cuppaReporting().interpretCancerType() + " ("
-                        + DataUtil.formatPercentageDigit(patientReport.cuppaReporting().interpretLikelihood()) + ")";
+                cuppaPrediction = patientReport.molecularTissueOriginReporting().interpretCancerType() + " ("
+                        + DataUtil.formatPercentageDigit(patientReport.molecularTissueOriginReporting().interpretLikelihood()) + ")";
             }
         }
 
@@ -246,9 +244,9 @@ public class SummaryChapter implements ReportChapter {
         String hrdString;
         Style hrdStyle;
 
-        if (hasReliablePurity && (ChordStatus.HR_DEFICIENT == analysis().chordHrdStatus()
-                || ChordStatus.HR_PROFICIENT == analysis().chordHrdStatus())) {
-            hrdString = analysis().chordHrdStatus().display() + " (" + DOUBLE_DECIMAL_FORMAT.format(analysis().chordHrdValue()) + ")";
+        if (hasReliablePurity && (ChordStatus.HR_DEFICIENT == analysis().hrdStatus()
+                || ChordStatus.HR_PROFICIENT == analysis().hrdStatus())) {
+            hrdString = analysis().hrdStatus().display() + " (" + DOUBLE_DECIMAL_FORMAT.format(analysis().hrdValue()) + ")";
             hrdStyle = ReportResources.dataHighlightStyle();
         } else {
             hrdString = DataUtil.NA_STRING;
@@ -353,8 +351,8 @@ public class SummaryChapter implements ReportChapter {
             table.addCell(createGeneSetCell(sortGenes(genesDisplay)));
         }
 
-        ChordStatus chordStatus = analysis().hasReliablePurity() ? analysis().chordHrdStatus() : ChordStatus.UNKNOWN;
-        if (chordStatus == ChordStatus.HR_DEFICIENT) {
+        ChordStatus hrdStatus = analysis().hasReliablePurity() ? analysis().hrdStatus() : ChordStatus.UNKNOWN;
+        if (hrdStatus == ChordStatus.HR_DEFICIENT) {
             Set<String> genesDisplay = SomaticVariants.determineHRDgenes(analysis().reportableVariants(),
                     analysis().gainsAndLosses(),
                     analysis().homozygousDisruptions());
@@ -368,12 +366,12 @@ public class SummaryChapter implements ReportChapter {
         report.add(div);
     }
 
-    private void renderPeach(@NotNull Document report) {
+    private void renderPharmacogenetics(@NotNull Document report) {
         Div div = createSectionStartDiv(contentWidth());
         String title = "Pharmacogenetics";
 
         if (patientReport.sampleReport().reportPharmogenetics()) {
-            if (patientReport.peachGenotypes().isEmpty()) {
+            if (patientReport.pharmacogeneticsGenotypes().isEmpty()) {
                 div.add(TableUtil.createNoneReportTable(title,
                         null,
                         TableUtil.TABLE_BOTTOM_MARGIN_SUMMARY,
@@ -384,18 +382,18 @@ public class SummaryChapter implements ReportChapter {
                                 TableUtil.createHeaderCell("Function") },
                         ReportResources.CONTENT_WIDTH_WIDE_SUMMARY);
 
-                Set<String> sortedPeach = Sets.newTreeSet(patientReport.peachGenotypes().keySet().stream().collect(Collectors.toSet()));
-                for (String sortPeach : sortedPeach) {
-                    List<PeachGenotype> peachGenotypeList = patientReport.peachGenotypes().get(sortPeach);
+                Set<String> sortedPharmacogenetics = Sets.newTreeSet(patientReport.pharmacogeneticsGenotypes().keySet().stream().collect(Collectors.toSet()));
+                for (String sortPharmacogenetics : sortedPharmacogenetics) {
+                    List<PeachGenotype> pharmacogeneticsGenotypeList = patientReport.pharmacogeneticsGenotypes().get(sortPharmacogenetics);
 
                     Set<String> function = Sets.newHashSet();
-                    int count = peachGenotypeList.size();
+                    int count = pharmacogeneticsGenotypeList.size();
 
-                    for (PeachGenotype peachGenotype : peachGenotypeList) {
-                        function.add(peachGenotype.function());
+                    for (PeachGenotype pharmacogeneticsGenotype : pharmacogeneticsGenotypeList) {
+                        function.add(pharmacogeneticsGenotype.function());
                     }
 
-                    contentTable.addCell(TableUtil.createContentCell(sortPeach));
+                    contentTable.addCell(TableUtil.createContentCell(sortPharmacogenetics));
                     contentTable.addCell(TableUtil.createContentCell(Integer.toString(count)));
                     contentTable.addCell(TableUtil.createContentCell(concat(function)));
                 }
@@ -414,7 +412,7 @@ public class SummaryChapter implements ReportChapter {
     private void renderHla(@NotNull Document report) {
         Div div = createSectionStartDiv(contentWidth());
         String title = "HLA Alleles";
-        if (!patientReport.genomicAnalysis().lilac().lilacQc().equals("PASS")) {
+        if (!patientReport.genomicAnalysis().hlaAlleles().hlaQC().equals("PASS")) {
             String noConsent = "The QC of the HLA types do not meet the QC cut-offs";
             div.add(TableUtil.createNoConsentReportTable(title,
                     noConsent,
@@ -427,16 +425,16 @@ public class SummaryChapter implements ReportChapter {
                     ReportResources.CONTENT_WIDTH_WIDE_SUMMARY);
 
             Set<String> sortedAlleles =
-                    Sets.newTreeSet(patientReport.genomicAnalysis().lilac().lilacReporting().keySet().stream().collect(Collectors.toSet()));
+                    Sets.newTreeSet(patientReport.genomicAnalysis().hlaAlleles().hlaAllelesReporting().keySet().stream().collect(Collectors.toSet()));
             for (String sortAllele : sortedAlleles) {
-                List<LilacReporting> allele = patientReport.genomicAnalysis().lilac().lilacReporting().get(sortAllele);
+                List<HlaReporting> allele = patientReport.genomicAnalysis().hlaAlleles().hlaAllelesReporting().get(sortAllele);
 
                 Set<String> germlineAllele = Sets.newHashSet();
                 Set<String> interpretation = Sets.newHashSet();
 
-                for (LilacReporting allele1 : HLAAllele.sort(allele)) {
-                    germlineAllele.add(allele1.lilacGermlineAllele().germlineAllele());
-                    interpretation.add(allele1.interpretation());
+                for (HlaReporting hlaReporting : HLAAllele.sort(allele)) {
+                    germlineAllele.add(hlaReporting.hlaAllele().germlineAllele());
+                    interpretation.add(hlaReporting.interpretation());
                 }
                 table.addCell(TableUtil.createContentCell(sortAllele));
                 table.addCell(TableUtil.createContentCell(concat(germlineAllele)));
@@ -512,15 +510,6 @@ public class SummaryChapter implements ReportChapter {
 
     @NotNull
     private static Cell createGeneSetCell(@NotNull Set<String> genes) {
-        String geneString = (genes.size() > 0) ? String.join(", ", genes) : DataUtil.NONE_STRING;
-
-        Style style = (genes.size() > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
-
-        return createMiddleAlignedCell().add(createHighlightParagraph(geneString)).addStyle(style);
-    }
-
-    @NotNull
-    private static Cell createGeneListCell(@NotNull List<String> genes) {
         String geneString = (genes.size() > 0) ? String.join(", ", genes) : DataUtil.NONE_STRING;
 
         Style style = (genes.size() > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();

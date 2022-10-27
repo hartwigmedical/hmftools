@@ -9,11 +9,11 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class LilacReportingData {
+public abstract class HlaAllelesReportingData {
 
     @NotNull
-    public abstract Map<String, List<LilacReporting>> lilacReporting();
+    public abstract Map<String, List<HlaReporting>> hlaAllelesReporting();
 
     @NotNull
-    public abstract String lilacQc();
+    public abstract String hlaQC();
 }

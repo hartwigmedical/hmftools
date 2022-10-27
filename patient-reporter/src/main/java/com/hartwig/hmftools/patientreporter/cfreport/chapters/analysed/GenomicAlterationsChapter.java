@@ -7,8 +7,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.hla.LilacReporting;
-import com.hartwig.hmftools.common.hla.LilacReportingData;
+import com.hartwig.hmftools.common.hla.HlaReporting;
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
@@ -97,7 +97,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 genomicAnalysis.cnPerChromosome()));
         reportDocument.add(createFusionsTable(genomicAnalysis.geneFusions(), hasReliablePurity));
         reportDocument.add(createHomozygousDisruptionsTable(genomicAnalysis.homozygousDisruptions()));
-        if (genomicAnalysis.chordHrdStatus() == ChordStatus.HR_DEFICIENT) {
+        if (genomicAnalysis.hrdStatus() == ChordStatus.HR_DEFICIENT) {
             reportDocument.add(createLOHTable(genomicAnalysis.suspectGeneCopyNumbersHRDWithLOH(), "HRD"));
         }
         if (genomicAnalysis.microsatelliteStatus() == MicrosatelliteStatus.MSI) {
@@ -105,8 +105,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
         }
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
         reportDocument.add(createVirusTable(genomicAnalysis.reportableViruses(), sampleReport.reportViralPresence()));
-        reportDocument.add(createImmunoTable(genomicAnalysis.lilac(), hasReliablePurity));
-        reportDocument.add(createPeachGenotypesTable(patientReport.peachGenotypes(), sampleReport.reportPharmogenetics()));
+        reportDocument.add(createHlaTable(genomicAnalysis.hlaAlleles(), hasReliablePurity));
+        reportDocument.add(createPharmacogeneticsGenotypesTable(patientReport.pharmacogeneticsGenotypes(), sampleReport.reportPharmogenetics()));
     }
 
     @NotNull
@@ -388,7 +388,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createImmunoTable(@NotNull LilacReportingData lilac, boolean hasReliablePurity) {
+    private static Table createHlaTable(@NotNull HlaAllelesReportingData lilac, boolean hasReliablePurity) {
 
         String title = "HLA Alleles";
         Table table = TableUtil.createReportContentTable(new float[] { 10, 10, 10, 10, 10, 10 },
@@ -397,7 +397,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         TableUtil.createHeaderCell("# Somatic mutations*"),
                         TableUtil.createHeaderCell("Interpretation: presence in tumor") },
                 ReportResources.CONTENT_WIDTH_WIDE);
-        if (!lilac.lilacQc().equals("PASS")) {
+        if (!lilac.hlaQC().equals("PASS")) {
             String noConsent = "The QC of the HLA types do not meet the QC cut-offs";
             return TableUtil.createNoConsentReportTable(title,
                     noConsent,
@@ -405,9 +405,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     ReportResources.CONTENT_WIDTH_WIDE);
         } else {
 
-            Set<String> sortedAlleles = Sets.newTreeSet(lilac.lilacReporting().keySet().stream().collect(Collectors.toSet()));
+            Set<String> sortedAlleles = Sets.newTreeSet(lilac.hlaAllelesReporting().keySet().stream().collect(Collectors.toSet()));
             for (String sortAllele : sortedAlleles) {
-                List<LilacReporting> allele = lilac.lilacReporting().get(sortAllele);
+                List<HlaReporting> allele = lilac.hlaAllelesReporting().get(sortAllele);
                 table.addCell(TableUtil.createContentCell(sortAllele));
 
                 Table tableGermlineAllele = new Table(new float[] { 1 });
@@ -416,14 +416,14 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 Table tableSomaticMutations = new Table(new float[] { 1 });
                 Table tablePrecenseIntumor = new Table(new float[] { 1 });
 
-                for (LilacReporting allele1 : HLAAllele.sort(allele)) {
-                    tableGermlineAllele.addCell(TableUtil.createTransparentCell(allele1.lilacGermlineAllele().germlineAllele()));
-                    tableGermlineCopies.addCell(TableUtil.createTransparentCell(HLAAllele.copyNumberStringGermline(allele1.germlineCopies(),
+                for (HlaReporting hlaAlleleReporting : HLAAllele.sort(allele)) {
+                    tableGermlineAllele.addCell(TableUtil.createTransparentCell(hlaAlleleReporting.hlaAllele().germlineAllele()));
+                    tableGermlineCopies.addCell(TableUtil.createTransparentCell(HLAAllele.copyNumberStringGermline(hlaAlleleReporting.germlineCopies(),
                             hasReliablePurity)));
-                    tableTumorCopies.addCell(TableUtil.createTransparentCell(HLAAllele.copyNumberStringTumor(allele1.tumorCopies(),
+                    tableTumorCopies.addCell(TableUtil.createTransparentCell(HLAAllele.copyNumberStringTumor(hlaAlleleReporting.tumorCopies(),
                             hasReliablePurity)));
-                    tableSomaticMutations.addCell(TableUtil.createTransparentCell(allele1.somaticMutations()));
-                    tablePrecenseIntumor.addCell(TableUtil.createTransparentCell(allele1.interpretation()));
+                    tableSomaticMutations.addCell(TableUtil.createTransparentCell(hlaAlleleReporting.somaticMutations()));
+                    tablePrecenseIntumor.addCell(TableUtil.createTransparentCell(hlaAlleleReporting.interpretation()));
                 }
 
                 table.addCell(TableUtil.createContentCell(tableGermlineAllele));
@@ -476,11 +476,11 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createPeachGenotypesTable(@NotNull Map<String, List<PeachGenotype>> peachMap, boolean reportPeach) {
+    private static Table createPharmacogeneticsGenotypesTable(@NotNull Map<String, List<PeachGenotype>> pharmacogeneticsMap, boolean reportPharmacogenetics) {
 
         String title = "Pharmacogenetics";
-        if (reportPeach) {
-            if (peachMap.isEmpty()) {
+        if (reportPharmacogenetics) {
+            if (pharmacogeneticsMap.isEmpty()) {
                 return TableUtil.createNoneReportTable(title, null, TableUtil.TABLE_BOTTOM_MARGIN, ReportResources.CONTENT_WIDTH_WIDE);
             } else {
                 Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
@@ -489,23 +489,23 @@ public class GenomicAlterationsChapter implements ReportChapter {
                                 TableUtil.createHeaderCell("Source") },
                         ReportResources.CONTENT_WIDTH_WIDE);
 
-                Set<String> sortedPeach = Sets.newTreeSet(peachMap.keySet().stream().collect(Collectors.toSet()));
-                for (String sortPeach : sortedPeach) {
-                    List<PeachGenotype> peachGenotypeList = peachMap.get(sortPeach);
-                    contentTable.addCell(TableUtil.createContentCell(sortPeach));
+                Set<String> sortedPharmacogenetics = Sets.newTreeSet(pharmacogeneticsMap.keySet().stream().collect(Collectors.toSet()));
+                for (String sortPharmacogenetics : sortedPharmacogenetics) {
+                    List<PeachGenotype> pharmacogenticsGenotypeList = pharmacogeneticsMap.get(sortPharmacogenetics);
+                    contentTable.addCell(TableUtil.createContentCell(sortPharmacogenetics));
 
                     Table tableGenotype = new Table(new float[] { 1 });
                     Table tableFunction = new Table(new float[] { 1 });
                     Table tableLinkedDrugs = new Table(new float[] { 1 });
                     Table tableSource = new Table(new float[] { 1 });
 
-                    for (PeachGenotype peachGenotype : peachGenotypeList) {
-                        tableGenotype.addCell(TableUtil.createTransparentCell(peachGenotype.haplotype()));
-                        tableFunction.addCell(TableUtil.createTransparentCell(peachGenotype.function()));
-                        tableLinkedDrugs.addCell(TableUtil.createTransparentCell(peachGenotype.linkedDrugs()));
-                        tableSource.addCell(TableUtil.createTransparentCell(new Paragraph(Pharmacogenetics.sourceName(peachGenotype.urlPrescriptionInfo())).addStyle(
+                    for (PeachGenotype pharmacogeneticsGenotype : pharmacogenticsGenotypeList) {
+                        tableGenotype.addCell(TableUtil.createTransparentCell(pharmacogeneticsGenotype.haplotype()));
+                        tableFunction.addCell(TableUtil.createTransparentCell(pharmacogeneticsGenotype.function()));
+                        tableLinkedDrugs.addCell(TableUtil.createTransparentCell(pharmacogeneticsGenotype.linkedDrugs()));
+                        tableSource.addCell(TableUtil.createTransparentCell(new Paragraph(Pharmacogenetics.sourceName(pharmacogeneticsGenotype.urlPrescriptionInfo())).addStyle(
                                         ReportResources.dataHighlightLinksStyle()))
-                                .setAction(PdfAction.createURI(Pharmacogenetics.url(peachGenotype.urlPrescriptionInfo()))));
+                                .setAction(PdfAction.createURI(Pharmacogenetics.url(pharmacogeneticsGenotype.urlPrescriptionInfo()))));
                     }
 
                     contentTable.addCell(TableUtil.createContentCell(tableGenotype));

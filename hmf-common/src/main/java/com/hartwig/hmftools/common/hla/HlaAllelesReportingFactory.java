@@ -16,9 +16,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class LilacReportingFactory {
+public class HlaAllelesReportingFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(LilacReportingFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(HlaAllelesReportingFactory.class);
 
     public static final DecimalFormat SINGLE_DIGIT = new DecimalFormat("#.#", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
 
@@ -39,8 +39,8 @@ public class LilacReportingFactory {
     }
 
     @NotNull
-    public static LilacReportingData convertToReportData(@NotNull LilacSummaryData lilacSummaryData, boolean hasRealiablePurity) {
-        List<LilacReporting> lilacReportingList = Lists.newArrayList();
+    public static HlaAllelesReportingData convertToReportData(@NotNull LilacSummaryData lilacSummaryData, boolean hasRealiablePurity) {
+        List<HlaReporting> lilacReportingList = Lists.newArrayList();
 
         Map<String, List<LilacAllele>> mapLilacReportingAlleles = generateLilacMap(lilacSummaryData);
 
@@ -61,8 +61,8 @@ public class LilacReportingFactory {
                 LOGGER.warn("To many hla alleles of allele '{}'", keyMap.getKey());
             }
 
-            lilacReportingList.add(ImmutableLilacReporting.builder()
-                    .lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+            lilacReportingList.add(ImmutableHlaReporting.builder()
+                    .hlaAllele(ImmutableHlaAllele.builder()
                             .germlineAllele(keyMap.getValue().get(0).allele())
                             .gene(extractHLAGene(keyMap.getValue().get(0)))
                             .build())
@@ -73,21 +73,21 @@ public class LilacReportingFactory {
                     .build());
         }
 
-        Map<String, List<LilacReporting>> lilacAlleleMap = Maps.newHashMap();
+        Map<String, List<HlaReporting>> hlaAlleleMap = Maps.newHashMap();
 
-        for (LilacReporting lilacAllele : lilacReportingList) {
-            if (lilacAlleleMap.containsKey(lilacAllele.lilacGermlineAllele().gene())) {
-                List<LilacReporting> curent = lilacAlleleMap.get(lilacAllele.lilacGermlineAllele().gene());
-                curent.add(lilacAllele);
-                lilacAlleleMap.put(lilacAllele.lilacGermlineAllele().gene(), curent);
+        for (HlaReporting hlaReporting : lilacReportingList) {
+            if (hlaAlleleMap.containsKey(hlaReporting.hlaAllele().gene())) {
+                List<HlaReporting> curent = hlaAlleleMap.get(hlaReporting.hlaAllele().gene());
+                curent.add(hlaReporting);
+                hlaAlleleMap.put(hlaReporting.hlaAllele().gene(), curent);
             } else {
-                lilacAlleleMap.put(lilacAllele.lilacGermlineAllele().gene(), Lists.newArrayList(lilacAllele));
+                hlaAlleleMap.put(hlaReporting.hlaAllele().gene(), Lists.newArrayList(hlaReporting));
             }
         }
 
-        return ImmutableLilacReportingData.builder()
-                .lilacQc(lilacSummaryData.qc())
-                .lilacReporting(lilacAlleleMap)
+        return ImmutableHlaAllelesReportingData.builder()
+                .hlaQC(lilacSummaryData.qc())
+                .hlaAllelesReporting(hlaAlleleMap)
                 .build();
     }
 

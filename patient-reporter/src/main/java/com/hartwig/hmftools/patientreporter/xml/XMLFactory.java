@@ -78,10 +78,10 @@ public class XMLFactory {
                         .build());
 
         String cupAnalyse = Strings.EMPTY;
-        if (report.cuppaReporting().interpretLikelihood() == null) {
-            cupAnalyse = report.cuppaReporting().interpretCancerType();
+        if (report.molecularTissueOriginReporting().interpretLikelihood() == null) {
+            cupAnalyse = report.molecularTissueOriginReporting().interpretCancerType();
         } else {
-            cupAnalyse = report.cuppaReporting().interpretCancerType() + " (" + report.cuppaReporting().interpretLikelihood() + ")";
+            cupAnalyse = report.molecularTissueOriginReporting().interpretCancerType() + " (" + report.molecularTissueOriginReporting().interpretLikelihood() + ")";
         }
         mapXml.put("itemWgsCupAnalyse", ImmutableKeyXML.builder().keyPath("wgsCupAnalyse").valuePath(Map.of("value", cupAnalyse)).build());
 
@@ -130,12 +130,12 @@ public class XMLFactory {
         mapXml.put("importwgs.wgsms.line[1]horesco",
                 ImmutableKeyXML.builder()
                         .keyPath("importwgs.wgsms.line[1]horesco")
-                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().chordHrdValue())))
+                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().hrdValue())))
                         .build());
         mapXml.put("importwgs.wgsms.line[1]horestu",
                 ImmutableKeyXML.builder()
                         .keyPath("importwgs.wgsms.line[1]horestu")
-                        .valuePath(Map.of("value", report.genomicAnalysis().chordHrdStatus().name()))
+                        .valuePath(Map.of("value", report.genomicAnalysis().hrdStatus().name()))
                         .build());
 
         addHomozygousDisruptionsToXML(report.genomicAnalysis().homozygousDisruptions(), mapXml);

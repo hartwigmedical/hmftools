@@ -48,7 +48,7 @@ public class QCFailPGXChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        reportDocument.add(createPeachGenotypesTable(failReport.peachGenotypes(), failReport.sampleReport().reportPharmogenetics()));
+        reportDocument.add(createPharmacogeneticsGenotypesTable(failReport.pharmacogeneticsGenotypes(), failReport.sampleReport().reportPharmogenetics()));
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1 }));
         table.setWidth(contentWidth());
@@ -71,11 +71,11 @@ public class QCFailPGXChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createPeachGenotypesTable(@NotNull Map<String, List<PeachGenotype>> peachGenotypes, boolean reportPeach) {
+    private static Table createPharmacogeneticsGenotypesTable(@NotNull Map<String, List<PeachGenotype>> pharmacogeneticsGenotypes, boolean reportPharmacogenetics) {
         String title = "Pharmacogenetics";
 
-        if (reportPeach) {
-            if (peachGenotypes.isEmpty()) {
+        if (reportPharmacogenetics) {
+            if (pharmacogeneticsGenotypes.isEmpty()) {
                 return TableUtil.createNoneReportTable(title, null, TableUtil.TABLE_BOTTOM_MARGIN, ReportResources.CONTENT_WIDTH_WIDE);
             } else {
                 Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
@@ -84,17 +84,17 @@ public class QCFailPGXChapter implements ReportChapter {
                                 TableUtil.createHeaderCell("Source").setTextAlignment(TextAlignment.CENTER) },
                         ReportResources.CONTENT_WIDTH_WIDE);
 
-                Set<String> sortedPeach = Sets.newTreeSet(peachGenotypes.keySet().stream().collect(Collectors.toSet()));
-                for (String sortPeach : sortedPeach) {
-                    List<PeachGenotype> peachGenotypeList = peachGenotypes.get(sortPeach);
-                    contentTable.addCell(TableUtil.createContentCell(sortPeach));
+                Set<String> sortedPharmacogenetics = Sets.newTreeSet(pharmacogeneticsGenotypes.keySet().stream().collect(Collectors.toSet()));
+                for (String sortPharmacogenetics : sortedPharmacogenetics) {
+                    List<PeachGenotype> pharmacogeneticsGenotypeList = pharmacogeneticsGenotypes.get(sortPharmacogenetics);
+                    contentTable.addCell(TableUtil.createContentCell(sortPharmacogenetics));
 
                     Table tableGenotype = new Table(new float[] { 1 });
                     Table tableFunction = new Table(new float[] { 1 });
                     Table tableLinkedDrugs = new Table(new float[] { 1 });
                     Table tableSource = new Table(new float[] { 1 });
 
-                    for (PeachGenotype peachGenotype : peachGenotypeList) {
+                    for (PeachGenotype peachGenotype : pharmacogeneticsGenotypeList) {
                         tableGenotype.addCell(TableUtil.createTransparentCell(peachGenotype.haplotype()));
                         tableFunction.addCell(TableUtil.createTransparentCell(peachGenotype.function()));
                         tableLinkedDrugs.addCell(TableUtil.createTransparentCell(peachGenotype.linkedDrugs()));

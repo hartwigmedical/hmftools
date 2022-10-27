@@ -3,9 +3,9 @@ package com.hartwig.hmftools.common.cuppa.interpretation;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class CuppaReportingFactory {
+public class MolecularTissueOriginReportingFactory {
 
-    private CuppaReportingFactory() {
+    private MolecularTissueOriginReportingFactory() {
     }
 
     private static final String RESULTS_INCONCLUSIVE = "results inconclusive";
@@ -33,13 +33,13 @@ public class CuppaReportingFactory {
     }
 
     @NotNull
-    public static CuppaReporting createCuppaReportingData(@NotNull CuppaPrediction bestPrediction) {
+    public static MolecularTissueOriginReporting createMolecularTissueOriginReportingData(@NotNull CuppaPrediction bestPrediction) {
         double likelihood = bestPrediction.likelihood();
         String cancerType = curatedTumorLocation(bestPrediction.cancerType());
         String interpretCancerType = interpretTumorLocation(likelihood, cancerType);
-        Double interpretLikelihood = likelihood >= 0.5 ? likelihood : null;
+        Double interpretLikelihood = likelihood >= 0.8 ? likelihood : null;
 
-        return ImmutableCuppaReporting.builder()
+        return ImmutableMolecularTissueOriginReporting.builder()
                 .bestCancerType(cancerType)
                 .bestLikelihood(likelihood)
                 .interpretCancerType(interpretCancerType)
