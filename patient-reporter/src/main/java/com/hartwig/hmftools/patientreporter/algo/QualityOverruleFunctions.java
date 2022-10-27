@@ -12,6 +12,8 @@ import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
 import com.hartwig.hmftools.common.hla.HlaReporting;
 import com.hartwig.hmftools.common.hla.ImmutableHlaAllelesReportingData;
 import com.hartwig.hmftools.common.hla.ImmutableHlaReporting;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -55,7 +57,24 @@ public final class QualityOverruleFunctions {
                 .notifyGermlineStatusPerVariant(newNotifyPerVariant)
                 .cnPerChromosome(cnPerChromosomeDataSort)
                 .hlaAlleles(hlaAllelesReportingData)
+                .suspectGeneCopyNumbersHRDWithLOH(overruleSuspectedLOH(genomicAnalysis.suspectGeneCopyNumbersHRDWithLOH(),
+                        genomicAnalysis.hasReliablePurity()))
+                .suspectGeneCopyNumbersMSIWithLOH(overruleSuspectedLOH(genomicAnalysis.suspectGeneCopyNumbersMSIWithLOH(),
+                        genomicAnalysis.hasReliablePurity()))
                 .build();
+    }
+
+    @NotNull
+    public static List<GeneCopyNumber> overruleSuspectedLOH(@NotNull List<GeneCopyNumber> suspectedGenes, boolean hasReliablePurity) {
+        List<GeneCopyNumber> suspectedGenesCurated = Lists.newArrayList();
+
+        for (GeneCopyNumber copyNumber : suspectedGenes) {
+            suspectedGenesCurated.add(ImmutableGeneCopyNumber.builder()
+                    .minMinorAlleleCopyNumber(hasReliablePurity ? copyNumber.minMinorAlleleCopyNumber() : Double.NaN)
+                    .minCopyNumber(hasReliablePurity ? copyNumber.minCopyNumber() : Double.NaN)
+                    .build());
+        }
+        return suspectedGenesCurated;
     }
 
     @NotNull
@@ -77,7 +96,8 @@ public final class QualityOverruleFunctions {
 
         Map<String, List<HlaReporting>> alleles = Maps.newHashMap();
 
-        Set<String> hlaAlleles = Sets.newTreeSet(hlaAllelesReportingData.hlaAllelesReporting().keySet().stream().collect(Collectors.toSet()));
+        Set<String> hlaAlleles =
+                Sets.newTreeSet(hlaAllelesReportingData.hlaAllelesReporting().keySet().stream().collect(Collectors.toSet()));
         for (String allele : hlaAlleles) {
             List<HlaReporting> hlaReportingList = hlaAllelesReportingData.hlaAllelesReporting().get(allele);
             List<HlaReporting> hlaReportingListCurated = Lists.newArrayList();
@@ -86,6 +106,7 @@ public final class QualityOverruleFunctions {
                         .from(hlaReporting)
                         .germlineCopies(hasReliablePurity ? hlaReporting.germlineCopies() : Double.NaN)
                         .tumorCopies(hasReliablePurity ? hlaReporting.tumorCopies() : Double.NaN)
+                        .interpretation("Unknown")
                         .build());
             }
             alleles.put(allele, hlaReportingListCurated);
