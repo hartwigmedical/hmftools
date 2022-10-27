@@ -65,7 +65,7 @@ public class GenomicAnalyzer {
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
-                null,
+                config.purpleGeneCopyNumberTsv(),
                 config.purpleSomaticCopyNumberTsv(),
                 null,
                 config.refGenomeVersion());
@@ -95,7 +95,7 @@ public class GenomicAnalyzer {
         List<GeneCopyNumber> suspectGeneCopyNumbersMSIWithLOH =
                 LossOfHeterozygositySelector.selectMSIGenesWithLOH(purpleData.allSomaticGeneCopyNumbers(),
                         purpleData.microsatelliteStatus());
-        LOGGER.info(" Found an additional {} suspect gene copy numbers HRD with LOH", suspectGeneCopyNumbersMSIWithLOH.size());
+        LOGGER.info(" Found an additional {} suspect gene copy numbers MSI with LOH", suspectGeneCopyNumbersMSIWithLOH.size());
 
         VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(config.annotatedVirusTsv());
 

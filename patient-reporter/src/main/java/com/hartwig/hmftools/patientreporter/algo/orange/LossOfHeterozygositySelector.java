@@ -8,7 +8,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-
 import org.jetbrains.annotations.NotNull;
 
 public class LossOfHeterozygositySelector {
