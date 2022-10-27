@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.compar;
 
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.LINX_SOMATIC_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.CommonUtils.SUB_ITEM_DELIM;
-import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
 
