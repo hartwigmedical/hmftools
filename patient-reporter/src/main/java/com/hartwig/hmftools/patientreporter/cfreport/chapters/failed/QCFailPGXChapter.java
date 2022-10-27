@@ -56,8 +56,8 @@ public class QCFailPGXChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported pharmacogenetics")));
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDivWithLinkThree(
-                        "The details on the panel and for more links to advice on treatment adjustments " + "can be ",
-                        "downloaded",
+                        "The details on the pharmacogenetics haplotypes and advice on related treatment adjustments can be downloaded from ",
+                        "https://storage.googleapis.com/hmf-public/OncoAct-Resources/latest_oncoact.zip",
                         ".",
                         "https://storage.googleapis.com/hmf-public/OncoAct-Resources/latest_oncoact.zip"))
                 .add(createContentDiv(new String[] {
