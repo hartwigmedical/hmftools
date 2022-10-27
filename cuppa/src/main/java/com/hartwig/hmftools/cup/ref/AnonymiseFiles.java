@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
@@ -17,6 +18,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_END;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_START;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -71,6 +73,8 @@ public class AnonymiseFiles
             CUP_LOGGER.error("invalid config");
             return;
         }
+
+        CUP_LOGGER.info("writing anonymised ref data to {}", mConfig.OutputDir);
 
         for(int sampleIndex = 0; sampleIndex < mSampleDataCache.RefSampleDataList.size(); ++sampleIndex)
         {
@@ -169,10 +173,9 @@ public class AnonymiseFiles
         {
             BufferedWriter writer = createBufferedWriter(mConfig.OutputDir + outputFilename, false);
 
-            final List<String> fileData = Files.readAllLines(new File(refFilename).toPath());
+            BufferedReader fileReader = createBufferedReader(refFilename);
 
-            final String header = fileData.get(0);
-            fileData.remove(0);
+            String header = fileReader.readLine();
 
             // convert any sampleIds in the column names
             final String[] itemData = header.split(DATA_DELIM, -1);
@@ -197,7 +200,9 @@ public class AnonymiseFiles
             writer.write(sj.toString());
             writer.newLine();
 
-            for(final String line : fileData)
+            String line = null;
+
+            while((line = fileReader.readLine()) != null)
             {
                 writer.write(line);
                 writer.newLine();
