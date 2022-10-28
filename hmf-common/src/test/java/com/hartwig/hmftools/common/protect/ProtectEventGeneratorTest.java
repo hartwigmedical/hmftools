@@ -23,7 +23,7 @@ public class ProtectEventGeneratorTest {
         assertEquals("p.Gly12Cys", EventGenerator.toVariantEvent("p.Gly12Cys", "c.123A>C", "missense_variant", CodingEffect.MISSENSE));
         assertEquals("c.123A>C splice", EventGenerator.toVariantEvent("p.?", "c.123A>C", "missense_variant", CodingEffect.SPLICE));
         assertEquals("c.123A>C", EventGenerator.toVariantEvent("", "c.123A>C", "missense_variant", CodingEffect.MISSENSE));
-        assertEquals("upstream", EventGenerator.toVariantEvent("", "", "upstream_gene_variant", CodingEffect.SPLICE));
+        assertEquals("splice", EventGenerator.toVariantEvent("", "", "splice", CodingEffect.SPLICE));
         assertEquals("missense_variant", EventGenerator.toVariantEvent("", "", "missense_variant", CodingEffect.MISSENSE));
     }
 
@@ -49,14 +49,10 @@ public class ProtectEventGeneratorTest {
         Variant base = SomaticVariantTestFactory.builder().canonicalEffect("some effect").build();
         assertEquals("some effect", EventGenerator.variantEvent(base));
 
-        String upstreamEffect = EventGenerator.UPSTREAM_GENE_VARIANT;
-        Variant upstream = ImmutableSomaticVariantImpl.builder().from(base).canonicalEffect(upstreamEffect).build();
-        assertEquals("upstream", EventGenerator.variantEvent(upstream));
-
-        Variant coding = ImmutableSomaticVariantImpl.builder().from(upstream).canonicalHgvsCodingImpact("coding impact").build();
+        Variant coding = ImmutableSomaticVariantImpl.builder().from(base).canonicalHgvsCodingImpact("coding impact").build();
         assertEquals("coding impact", EventGenerator.variantEvent(coding));
 
-        Variant protein = ImmutableSomaticVariantImpl.builder().from(coding).canonicalHgvsProteinImpact("protein impact").build();
+        Variant protein = ImmutableSomaticVariantImpl.builder().from(base).canonicalHgvsProteinImpact("protein impact").build();
         assertEquals("protein impact", EventGenerator.variantEvent(protein));
     }
 

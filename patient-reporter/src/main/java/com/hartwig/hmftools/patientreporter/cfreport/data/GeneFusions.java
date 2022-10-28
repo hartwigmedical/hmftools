@@ -8,12 +8,28 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
+import com.itextpdf.kernel.pdf.action.PdfAction;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Paragraph;
 
 import org.jetbrains.annotations.NotNull;
 
 public final class GeneFusions {
 
     private GeneFusions() {
+    }
+
+    @NotNull
+    public static Cell fusionContentType(@NotNull String reportType, @NotNull String transcript) {
+        if (reportType.equals(KnownFusionType.IG_PROMISCUOUS.name()) || reportType.equals(KnownFusionType.IG_KNOWN_PAIR.name())) {
+            return TableUtil.createContentCell(new Paragraph(transcript));
+        } else {
+            return TableUtil.createContentCell(new Paragraph(transcript))
+                    .addStyle(ReportResources.dataHighlightLinksStyle())
+                    .setAction(PdfAction.createURI(GeneFusions.transcriptUrl(transcript)));
+        }
     }
 
     @NotNull
@@ -51,25 +67,25 @@ public final class GeneFusions {
     }
 
     @NotNull
-    public static String displayStr(final String knownTypeStr)
-    {
-        if(knownTypeStr.equals(KnownFusionType.NONE.toString()))
+    public static String displayStr(final String knownTypeStr) {
+        if (knownTypeStr.equals(KnownFusionType.NONE.toString())) {
             return "None";
-        else if(knownTypeStr.equals(KnownFusionType.KNOWN_PAIR.toString()))
+        } else if (knownTypeStr.equals(KnownFusionType.KNOWN_PAIR.toString())) {
             return "Known pair";
-        else if(knownTypeStr.equals(KnownFusionType.PROMISCUOUS_5.toString()))
+        } else if (knownTypeStr.equals(KnownFusionType.PROMISCUOUS_5.toString())) {
             return "5' Promiscuous";
-        else if(knownTypeStr.equals(KnownFusionType.PROMISCUOUS_3.toString()))
+        } else if (knownTypeStr.equals(KnownFusionType.PROMISCUOUS_3.toString())) {
             return "3' Promiscuous";
-        else if(knownTypeStr.equals(KnownFusionType.IG_KNOWN_PAIR.toString()))
+        } else if (knownTypeStr.equals(KnownFusionType.IG_KNOWN_PAIR.toString())) {
             return "IG known pair";
-        else if(knownTypeStr.equals(KnownFusionType.IG_PROMISCUOUS.toString()))
+        } else if (knownTypeStr.equals(KnownFusionType.IG_PROMISCUOUS.toString())) {
             return "IG promiscuous";
-        else if(knownTypeStr.equals(KnownFusionType.EXON_DEL_DUP.toString()))
+        } else if (knownTypeStr.equals(KnownFusionType.EXON_DEL_DUP.toString())) {
             return "Exon del dup";
-        else if(knownTypeStr.equals(KnownFusionType.PROMISCUOUS_BOTH))
+        } else if (knownTypeStr.equals(KnownFusionType.PROMISCUOUS_BOTH)) {
             return "5' and 3' Promiscuous";
-        else
+        } else {
             return knownTypeStr;
+        }
     }
 }

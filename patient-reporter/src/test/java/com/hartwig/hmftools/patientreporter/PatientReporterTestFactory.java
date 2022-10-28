@@ -32,6 +32,7 @@ public final class PatientReporterTestFactory {
     private static final String PURPLE_SOMATIC_VARIANT_VCF = RUN_DIRECTORY + "/purple/sample.purple.somatic.vcf";
     private static final String PURPLE_GERMLINE_VARIANT_VCF = RUN_DIRECTORY + "/purple/sample.purple.germline.vcf";
     private static final String PURPLE_SOMATIC_COPYNUMBER_TSV = RUN_DIRECTORY + "/purple/sample.purple.cnv.somatic.tsv";
+    private static final String PURPLE_GENE_COPYNUMBER_TSV = RUN_DIRECTORY + "/purple/sample.purple.cnv.gene.tsv";
     private static final String PURPLE_CIRCOS_FILE = RUN_DIRECTORY + "/purple/plot/sample.circos.png";
     private static final String LINX_FUSIONS_TSV = RUN_DIRECTORY + "/linx/sample.linx.fusion.tsv";
     private static final String LINX_BREAKEND_TSV = RUN_DIRECTORY + "/linx/sample.linx.breakend.tsv";
@@ -82,6 +83,7 @@ public final class PatientReporterTestFactory {
                 .purpleSomaticVariantVcf(PURPLE_SOMATIC_VARIANT_VCF)
                 .purpleGermlineVariantVcf(PURPLE_GERMLINE_VARIANT_VCF)
                 .purpleSomaticCopyNumberTsv(PURPLE_SOMATIC_COPYNUMBER_TSV)
+                .purpleGeneCopyNumberTsv(PURPLE_GENE_COPYNUMBER_TSV)
                 .purpleCircosPlot(PURPLE_CIRCOS_FILE)
                 .linxFusionTsv(LINX_FUSIONS_TSV)
                 .linxBreakendTsv(LINX_BREAKEND_TSV)

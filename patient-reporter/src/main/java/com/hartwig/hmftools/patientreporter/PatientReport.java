@@ -23,9 +23,6 @@ public interface PatientReport {
         if (systemUser.equals("lieke") || systemUser.equals("liekeschoenmaker") || systemUser.equals("lschoenmaker")) {
             userName = "Lieke Schoenmaker";
             combinedUserName = userName + trainedEmployee;
-        } else if (systemUser.equals("korneel") || systemUser.equals("korneelduyvesteyn") || systemUser.equals("kduyvesteyn")) {
-            userName = "Korneel Duyvesteyn";
-            combinedUserName = userName + trainedEmployee;
         } else if (systemUser.equals("sandra") || systemUser.equals("sandravandenbroek") || systemUser.equals("sandravdbroek")
                 || systemUser.equals("s_vandenbroek") || systemUser.equals("svandenbroek")) {
             userName = "Sandra van den Broek";
@@ -72,7 +69,7 @@ public interface PatientReport {
     String udiDi();
 
     @NotNull
-    Map<String, List<PeachGenotype>> peachGenotypes();
+    Map<String, List<PeachGenotype>> pharmacogeneticsGenotypes();
 
     @NotNull
     String reportDate();

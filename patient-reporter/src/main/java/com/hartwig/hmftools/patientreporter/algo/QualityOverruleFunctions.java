@@ -8,11 +8,12 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.hla.ImmutableLilacReporting;
-import com.hartwig.hmftools.common.hla.ImmutableLilacReportingData;
-import com.hartwig.hmftools.common.hla.LilacReporting;
-import com.hartwig.hmftools.common.hla.LilacReportingData;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
+import com.hartwig.hmftools.common.hla.HlaReporting;
+import com.hartwig.hmftools.common.hla.ImmutableHlaAllelesReportingData;
+import com.hartwig.hmftools.common.hla.ImmutableHlaReporting;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -48,15 +49,32 @@ public final class QualityOverruleFunctions {
             newNotifyPerVariant.put(overruled.variant(), overruled.notifyVariant());
         }
 
-        LilacReportingData lilacSummaryData = overuleImmuno(genomicAnalysis.lilac(), genomicAnalysis.hasReliablePurity());
+        HlaAllelesReportingData hlaAllelesReportingData = overuleHla(genomicAnalysis.hlaAlleles(), genomicAnalysis.hasReliablePurity());
 
         return ImmutableGenomicAnalysis.builder()
                 .from(genomicAnalysis)
                 .reportableVariants(overruledVariants)
                 .notifyGermlineStatusPerVariant(newNotifyPerVariant)
                 .cnPerChromosome(cnPerChromosomeDataSort)
-                .lilac(lilacSummaryData)
+                .hlaAlleles(hlaAllelesReportingData)
+                .suspectGeneCopyNumbersHRDWithLOH(overruleSuspectedLOH(genomicAnalysis.suspectGeneCopyNumbersHRDWithLOH(),
+                        genomicAnalysis.hasReliablePurity()))
+                .suspectGeneCopyNumbersMSIWithLOH(overruleSuspectedLOH(genomicAnalysis.suspectGeneCopyNumbersMSIWithLOH(),
+                        genomicAnalysis.hasReliablePurity()))
                 .build();
+    }
+
+    @NotNull
+    public static List<GeneCopyNumber> overruleSuspectedLOH(@NotNull List<GeneCopyNumber> suspectedGenes, boolean hasReliablePurity) {
+        List<GeneCopyNumber> suspectedGenesCurated = Lists.newArrayList();
+
+        for (GeneCopyNumber copyNumber : suspectedGenes) {
+            suspectedGenesCurated.add(ImmutableGeneCopyNumber.builder()
+                    .minMinorAlleleCopyNumber(hasReliablePurity ? copyNumber.minMinorAlleleCopyNumber() : Double.NaN)
+                    .minCopyNumber(hasReliablePurity ? copyNumber.minCopyNumber() : Double.NaN)
+                    .build());
+        }
+        return suspectedGenesCurated;
     }
 
     @NotNull
@@ -74,24 +92,26 @@ public final class QualityOverruleFunctions {
     }
 
     @NotNull
-    private static LilacReportingData overuleImmuno(@NotNull LilacReportingData lilacreportingData, boolean hasReliablePurity) {
+    private static HlaAllelesReportingData overuleHla(@NotNull HlaAllelesReportingData hlaAllelesReportingData, boolean hasReliablePurity) {
 
-        Map<String, List<LilacReporting>> alleles = Maps.newHashMap();
+        Map<String, List<HlaReporting>> alleles = Maps.newHashMap();
 
-        Set<String> lilacAlleles = Sets.newTreeSet(lilacreportingData.lilacReporting().keySet().stream().collect(Collectors.toSet()));
-        for (String allele : lilacAlleles) {
-            List<LilacReporting> lilacReportingList = lilacreportingData.lilacReporting().get(allele);
-            List<LilacReporting> lilacReportingListCurated = Lists.newArrayList();
-            for (LilacReporting reporting : lilacReportingList) {
-                lilacReportingListCurated.add(ImmutableLilacReporting.builder()
-                        .from(reporting)
-                        .germlineCopies(hasReliablePurity ? reporting.germlineCopies() : Double.NaN)
-                        .tumorCopies(hasReliablePurity ? reporting.tumorCopies() : Double.NaN)
+        Set<String> hlaAlleles =
+                Sets.newTreeSet(hlaAllelesReportingData.hlaAllelesReporting().keySet().stream().collect(Collectors.toSet()));
+        for (String allele : hlaAlleles) {
+            List<HlaReporting> hlaReportingList = hlaAllelesReportingData.hlaAllelesReporting().get(allele);
+            List<HlaReporting> hlaReportingListCurated = Lists.newArrayList();
+            for (HlaReporting hlaReporting : hlaReportingList) {
+                hlaReportingListCurated.add(ImmutableHlaReporting.builder()
+                        .from(hlaReporting)
+                        .germlineCopies(hasReliablePurity ? hlaReporting.germlineCopies() : Double.NaN)
+                        .tumorCopies(hasReliablePurity ? hlaReporting.tumorCopies() : Double.NaN)
+                        .interpretation("Unknown")
                         .build());
             }
-            alleles.put(allele, lilacReportingListCurated);
+            alleles.put(allele, hlaReportingListCurated);
         }
-        return ImmutableLilacReportingData.builder().from(lilacreportingData).lilacReporting(alleles).build();
+        return ImmutableHlaAllelesReportingData.builder().from(hlaAllelesReportingData).hlaAllelesReporting(alleles).build();
     }
 
     @NotNull

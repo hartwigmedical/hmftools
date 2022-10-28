@@ -13,16 +13,16 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaReporting;
-import com.hartwig.hmftools.common.cuppa.interpretation.ImmutableCuppaReporting;
+import com.hartwig.hmftools.common.cuppa.interpretation.ImmutableMolecularTissueOriginReporting;
+import com.hartwig.hmftools.common.cuppa.interpretation.MolecularTissueOriginReporting;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
-import com.hartwig.hmftools.common.hla.ImmutableLilacGermlineAllele;
-import com.hartwig.hmftools.common.hla.ImmutableLilacReporting;
-import com.hartwig.hmftools.common.hla.ImmutableLilacReportingData;
-import com.hartwig.hmftools.common.hla.LilacReporting;
-import com.hartwig.hmftools.common.hla.LilacReportingData;
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
+import com.hartwig.hmftools.common.hla.HlaReporting;
+import com.hartwig.hmftools.common.hla.ImmutableHlaAllele;
+import com.hartwig.hmftools.common.hla.ImmutableHlaAllelesReportingData;
+import com.hartwig.hmftools.common.hla.ImmutableHlaReporting;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
@@ -90,11 +90,6 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport createTestReport() {
-        return createWithCOLO829Data(new ExampleAnalysisConfig.Builder().build(), PurpleQCStatus.PASS);
-    }
-
-    @NotNull
     public static AnalysedPatientReport createWithCOLO829Data(@NotNull ExampleAnalysisConfig config,
             @NotNull PurpleQCStatus purpleQCStatus) {
         String pipelineVersion = "5.31";
@@ -102,8 +97,8 @@ public final class ExampleAnalysisTestFactory {
         int tumorMutationalLoad = 185;
         double tumorMutationalBurden = 13.7205;
         double microsatelliteIndelsPerMb = 0.1203;
-        double chordHrdValue = 0D;
-        ChordStatus chordStatus = ChordStatus.HR_PROFICIENT;
+        double hrdValue = 0D;
+        ChordStatus hrdStatus = ChordStatus.HR_PROFICIENT;
         String reportDate = DataUtil.formatDate(LocalDate.now());
         double impliedPurityPercentage = MathUtil.mapPercentage(config.impliedTumorPurity(), TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
 
@@ -119,8 +114,8 @@ public final class ExampleAnalysisTestFactory {
         List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<GeneDisruption> disruptions = createCOLO829Disruptions();
         List<AnnotatedVirus> viruses = Lists.newArrayList();
-        Map<String, List<PeachGenotype>> peachGenotypes = createTestPeachGenotypes();
-        LilacReportingData lilac = createTestLilacData();
+        Map<String, List<PeachGenotype>> pharmacogeneticsGenotypes = createTestPharmacogeneticsGenotypes();
+        HlaAllelesReportingData hlaData = createTestHlaData();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), config.reportGermline(), config.limsCohortConfig());
 
@@ -184,20 +179,20 @@ public final class ExampleAnalysisTestFactory {
                 .tumorMutationalLoad(tumorMutationalLoad)
                 .tumorMutationalLoadStatus(TumorMutationalStatus.fromLoad(tumorMutationalLoad))
                 .tumorMutationalBurden(tumorMutationalBurden)
-                .chordHrdValue(chordHrdValue)
-                .chordHrdStatus(chordStatus)
+                .hrdValue(hrdValue)
+                .hrdStatus(hrdStatus)
                 .gainsAndLosses(gainsAndLosses)
                 .cnPerChromosome(extractCnPerChromosome())
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .reportableViruses(viruses)
-                .lilac(lilac)
+                .hlaAlleles(hlaData)
                 .suspectGeneCopyNumbersMSIWithLOH(MSILOHGenes())
                 .suspectGeneCopyNumbersHRDWithLOH(HRDLOHGenes())
                 .build();
 
-        CuppaReporting cuppaReporting = ImmutableCuppaReporting.builder()
+        MolecularTissueOriginReporting molecularTissueOriginReporting = ImmutableMolecularTissueOriginReporting.builder()
                 .bestCancerType("Melanoma")
                 .bestLikelihood(0.996)
                 .interpretCancerType("Melanoma")
@@ -210,9 +205,9 @@ public final class ExampleAnalysisTestFactory {
                 .clinicalSummary(clinicalSummary)
                 .specialRemark(specialremark)
                 .genomicAnalysis(analysis)
-                .circosPath(REPORTER_CONFIG.purpleCircosPlot())
-                .cuppaReporting(cuppaReporting)
-                .cuppaPlot(REPORTER_CONFIG.cuppaPlot())
+                .circosPlotPath(REPORTER_CONFIG.purpleCircosPlot())
+                .molecularTissueOriginReporting(molecularTissueOriginReporting)
+                .molecularTissueOriginPlotPath(REPORTER_CONFIG.cuppaPlot())
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectionReport())
                 .isCorrectedReportExtern(config.isCorrectionReportExtern())
@@ -221,7 +216,7 @@ public final class ExampleAnalysisTestFactory {
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .pipelineVersion(pipelineVersion)
-                .peachGenotypes(peachGenotypes)
+                .pharmacogeneticsGenotypes(pharmacogeneticsGenotypes)
                 .reportDate(reportDate)
                 .isWGSreport(true)
                 .build();
@@ -1422,9 +1417,9 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static Map<String, List<PeachGenotype>> createTestPeachGenotypes() {
-        Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
-        peachMap.put("UGT1A1",
+    private static Map<String, List<PeachGenotype>> createTestPharmacogeneticsGenotypes() {
+        Map<String, List<PeachGenotype>> pharmacogeneticsMap = Maps.newHashMap();
+        pharmacogeneticsMap.put("UGT1A1",
                 Lists.newArrayList(ImmutablePeachGenotype.builder()
                         .gene("UGT1A1")
                         .haplotype("*1_HOM")
@@ -1434,7 +1429,7 @@ public final class ExampleAnalysisTestFactory {
                         .panelVersion("peach_prod_v1.3")
                         .repoVersion("1.7")
                         .build()));
-        peachMap.put("DPYD",
+        pharmacogeneticsMap.put("DPYD",
                 Lists.newArrayList(ImmutablePeachGenotype.builder()
                         .gene("DPYD")
                         .haplotype("*1_HOM")
@@ -1446,43 +1441,43 @@ public final class ExampleAnalysisTestFactory {
                         .panelVersion("peach_prod_v1.3")
                         .repoVersion("1.7")
                         .build()));
-        return peachMap;
+        return pharmacogeneticsMap;
     }
 
     @NotNull
-    private static LilacReportingData createTestLilacData() {
-        Map<String, List<LilacReporting>> alleles = Maps.newHashMap();
+    private static HlaAllelesReportingData createTestHlaData() {
+        Map<String, List<HlaReporting>> alleles = Maps.newHashMap();
 
         alleles.put("HLA-A",
-                Lists.newArrayList(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                Lists.newArrayList(createHlaReporting().hlaAllele(ImmutableHlaAllele.builder()
                         .gene("HLA-A")
                         .germlineAllele("A*01:01")
                         .build()).germlineCopies(2.0).tumorCopies(3.83).somaticMutations("No").interpretation("Yes").build()));
         alleles.put("HLA-B",
-                Lists.newArrayList(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                Lists.newArrayList(createHlaReporting().hlaAllele(ImmutableHlaAllele.builder()
                                 .gene("HLA-B")
                                 .germlineAllele("B*40:02")
                                 .build()).germlineCopies(1.0).tumorCopies(2D).somaticMutations("No").interpretation("Yes").build(),
-                        createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                        createHlaReporting().hlaAllele(ImmutableHlaAllele.builder()
                                 .gene("HLA-B")
                                 .germlineAllele("B*08:01")
                                 .build()).germlineCopies(1D).tumorCopies(1.83).somaticMutations("No").interpretation("Yes").build()));
         alleles.put("HLA-C",
-                Lists.newArrayList(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                Lists.newArrayList(createHlaReporting().hlaAllele(ImmutableHlaAllele.builder()
                                 .gene("HLA-C")
                                 .germlineAllele("C*07:01")
                                 .build()).germlineCopies(1D).tumorCopies(1.83).somaticMutations("No").interpretation("yes").build(),
-                        createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                        createHlaReporting().hlaAllele(ImmutableHlaAllele.builder()
                                 .gene("HLA-C")
                                 .germlineAllele("C*03:04")
                                 .build()).germlineCopies(1D).tumorCopies(2.0).somaticMutations("No").interpretation("Yes").build()));
-        return ImmutableLilacReportingData.builder().lilacQc("WARN_UNMATCHED_SOMATIC_VARIANT").lilacReporting(alleles).build();
+        return ImmutableHlaAllelesReportingData.builder().hlaQC("WARN_UNMATCHED_SOMATIC_VARIANT").hlaAllelesReporting(alleles).build();
     }
 
     @NotNull
-    private static ImmutableLilacReporting.Builder createLilacReporting() {
-        return ImmutableLilacReporting.builder()
-                .lilacGermlineAllele(ImmutableLilacGermlineAllele.builder().gene(Strings.EMPTY).germlineAllele(Strings.EMPTY).build())
+    private static ImmutableHlaReporting.Builder createHlaReporting() {
+        return ImmutableHlaReporting.builder()
+                .hlaAllele(ImmutableHlaAllele.builder().gene(Strings.EMPTY).germlineAllele(Strings.EMPTY).build())
                 .germlineCopies(0)
                 .tumorCopies(0)
                 .somaticMutations(Strings.EMPTY)

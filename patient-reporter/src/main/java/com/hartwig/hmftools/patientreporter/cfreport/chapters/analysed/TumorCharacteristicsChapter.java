@@ -71,8 +71,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
     private void renderHrdCharacteristic(@NotNull Document reportDocument) {
         GenomicAnalysis genomicAnalysis = patientReport.genomicAnalysis();
-        double hrdValue = genomicAnalysis.chordHrdValue();
-        ChordStatus hrdStatus = genomicAnalysis.chordHrdStatus();
+        double hrdValue = genomicAnalysis.hrdValue();
+        ChordStatus hrdStatus = genomicAnalysis.hrdStatus();
 
         boolean hasReliablePurity = genomicAnalysis.hasReliablePurity();
         String hrDeficiencyLabel =
@@ -81,8 +81,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         String hrdUnreliableFootnote = "* HRD score can not be determined reliably when a tumor is microsatellite unstable "
                 + "(MSI) or has insufficient number of mutations and is therefore not reported for this sample.";
         boolean displayFootNote = false;
-        boolean isHrdReliable = genomicAnalysis.chordHrdStatus() == ChordStatus.HR_PROFICIENT
-                || genomicAnalysis.chordHrdStatus() == ChordStatus.HR_DEFICIENT;
+        boolean isHrdReliable = genomicAnalysis.hrdStatus() == ChordStatus.HR_PROFICIENT
+                || genomicAnalysis.hrdStatus() == ChordStatus.HR_DEFICIENT;
         if (!isHrdReliable) {
             displayFootNote = true;
             hrDeficiencyLabel = DataUtil.NA_STRING + "*";
@@ -201,9 +201,9 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         reportDocument.add(createCharacteristicDiv("Molecular tissue of origin prediction"));
         Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10 }));
         table.setWidth(contentWidth());
-        if (patientReport.cuppaPlot() != null && patientReport.genomicAnalysis().hasReliablePurity()) {
+        if (patientReport.molecularTissueOriginPlotPath() != null && patientReport.genomicAnalysis().hasReliablePurity()) {
 
-            String cuppaPlot = patientReport.cuppaPlot();
+            String cuppaPlot = patientReport.molecularTissueOriginPlotPath();
             if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_209.display()) || patientReport.qsFormNumber()
                     .equals(QsFormNumber.FOR_080.display())) {
                 if (patientReport.genomicAnalysis().impliedPurity() < ReportResources.PURITY_CUTOFF) {

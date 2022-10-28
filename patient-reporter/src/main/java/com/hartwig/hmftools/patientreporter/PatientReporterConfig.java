@@ -58,6 +58,7 @@ public interface PatientReporterConfig {
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
     String PURPLE_SOMATIC_COPYNUMBER_TSV = "purple_somatic_copynumber_tsv";
+    String PURPLE_GENE_COPY_NUMBER_TSV = "purple_gene_copy_number_tsv";
     String PURPLE_CIRCOS_PLOT = "purple_circos_plot";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
@@ -127,6 +128,7 @@ public interface PatientReporterConfig {
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
         options.addOption(PURPLE_SOMATIC_COPYNUMBER_TSV, true, "Path towards the purple somatic copynumber TSV.");
+        options.addOption(PURPLE_GENE_COPY_NUMBER_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(PURPLE_CIRCOS_PLOT, true, "Path towards the purple circos plot.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the linx breakend TSV.");
@@ -233,6 +235,9 @@ public interface PatientReporterConfig {
     String purpleSomaticCopyNumberTsv();
 
     @NotNull
+    String purpleGeneCopyNumberTsv();
+
+    @NotNull
     String purpleCircosPlot();
 
     @NotNull
@@ -332,6 +337,7 @@ public interface PatientReporterConfig {
         String purpleSomaticVariantVcf = Strings.EMPTY;
         String purpleGermlineVariantVcf = Strings.EMPTY;
         String purpleSomaticCopyNumberTsv = Strings.EMPTY;
+        String purpleGeneCopyNumberTsv = Strings.EMPTY;
         String purpleCircosPlot = Strings.EMPTY;
         String linxFusionTsv = Strings.EMPTY;
         String linxBreakendTsv = Strings.EMPTY;
@@ -371,6 +377,7 @@ public interface PatientReporterConfig {
             purpleSomaticVariantVcf = nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF);
             purpleGermlineVariantVcf = nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF);
             purpleSomaticCopyNumberTsv = nonOptionalFile(cmd, PURPLE_SOMATIC_COPYNUMBER_TSV);
+            purpleGeneCopyNumberTsv = nonOptionalFile(cmd, PURPLE_GENE_COPY_NUMBER_TSV);
             purpleCircosPlot = nonOptionalFile(cmd, PURPLE_CIRCOS_PLOT);
             linxFusionTsv = nonOptionalFile(cmd, LINX_FUSION_TSV);
             linxBreakendTsv = nonOptionalFile(cmd, LINX_BREAKEND_TSV);
@@ -417,6 +424,7 @@ public interface PatientReporterConfig {
                 .purpleSomaticVariantVcf(purpleSomaticVariantVcf)
                 .purpleGermlineVariantVcf(purpleGermlineVariantVcf)
                 .purpleSomaticCopyNumberTsv(purpleSomaticCopyNumberTsv)
+                .purpleGeneCopyNumberTsv(purpleGeneCopyNumberTsv)
                 .purpleCircosPlot(purpleCircosPlot)
                 .linxFusionTsv(linxFusionTsv)
                 .linxBreakendTsv(linxBreakendTsv)

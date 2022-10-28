@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.xml.stream.XMLStreamException;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -529,7 +527,7 @@ public class CFReportWriterTest {
                 .logoRVAPath(testReportData.logoRVAPath())
                 .logoCompanyPath(testReportData.logoCompanyPath())
                 .udiDi(UDI_DI)
-                .peachGenotypes(createTestPeachGenotypes())
+                .pharmacogeneticsGenotypes(createTestPharmacogeneticsGenotypes())
                 .purpleQC(Sets.newHashSet(purpleQCStatus))
                 .reportDate(DataUtil.formatDate(LocalDate.now()))
                 .isWGSreport(true)
@@ -543,9 +541,9 @@ public class CFReportWriterTest {
     }
 
     @NotNull
-    private static Map<String, List<PeachGenotype>> createTestPeachGenotypes() {
-        Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
-        peachMap.put("DPYD",
+    private static Map<String, List<PeachGenotype>> createTestPharmacogeneticsGenotypes() {
+        Map<String, List<PeachGenotype>> pharmacogeneticsMap = Maps.newHashMap();
+        pharmacogeneticsMap.put("DPYD",
                 Lists.newArrayList(ImmutablePeachGenotype.builder()
                                 .gene("DPYD")
                                 .haplotype("*1_HOM")
@@ -568,7 +566,7 @@ public class CFReportWriterTest {
                                 .panelVersion("PGx_min_DPYD_v1.2")
                                 .repoVersion("1.6")
                                 .build()));
-        return peachMap;
+        return pharmacogeneticsMap;
     }
 
     @NotNull

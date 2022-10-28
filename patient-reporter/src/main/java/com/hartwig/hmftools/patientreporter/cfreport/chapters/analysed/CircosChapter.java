@@ -44,15 +44,15 @@ public class CircosChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) throws IOException {
-        String circosPath = patientReport.circosPath();
+        String circosPlotPath = patientReport.circosPlotPath();
         try {
-            Image circosImage = new Image(ImageDataFactory.create(circosPath));
+            Image circosImage = new Image(ImageDataFactory.create(circosPlotPath));
             circosImage.setMaxHeight(400);
             circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
             circosImage.setMarginBottom(8);
             reportDocument.add(circosImage);
         } catch (MalformedURLException e) {
-            throw new IOException("Failed to read circos plot image at " + circosPath);
+            throw new IOException("Failed to read circos plot image at " + circosPlotPath);
         }
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10 }));
