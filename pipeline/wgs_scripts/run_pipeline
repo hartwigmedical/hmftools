@@ -37,7 +37,6 @@ reference_bam=${sample_dir}/${reference_id}.bam
 echo "Sample output dir: ${sample_dir}"
 
 # set resource files
-#  | [ "${ref_genome_version}" == "37" ]
 if [ "${ref_genome_version}" == "V37" ]; then
   echo "Reference genome version GRCh37"
 

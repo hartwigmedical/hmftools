@@ -211,7 +211,7 @@ ${scripts_dir}/run_cobalt ${cobalt_jar} \
 
 # Sage somatic
 
-if [ ! "${reference_id}" == "" ]; then
+if [ "${reference_id}" != "none" ]; then
   sage_somatic_dir=${sample_dir}/sage_somatic
   sage_vcf=${sage_somatic_dir}/${tumor_id}.sage.somatic.vcf.gz
 else
@@ -228,7 +228,7 @@ ${scripts_dir}/run_sage_somatic ${sage_jar} \
 
 
 # Pave somatic
-if [ ! "${reference_id}" == "" ]; then
+if [ "${reference_id}" != "none" ]; then
   pave_somatic_dir=${sample_dir}/pave_somatic
   pave_vcf=${pave_somatic_dir}/${tumor_id}.sage.somatic.pave.vcf.gz
 else
@@ -244,8 +244,8 @@ ${scripts_dir}/run_pave_somatic ${pave_jar} \
 
 
 # Sage germline
-pave_germline_vcf=""
-if [ ! "${reference_id}" == "" ]; then
+pave_germline_vcf="none"
+if [ "${reference_id}" != "none" ]; then
   
   sage_germline_dir=${sample_dir}/sage_germline
 
@@ -283,7 +283,7 @@ ${scripts_dir}/run_gridss ${tools_dir} \
 
 
 # Gripss somatic
-if [ ! "${reference_id}" == "" ]; then
+if [ "${reference_id}" != "none" ]; then
   gripss_somatic_dir=${sample_dir}/gripss_somatic
 else
   gripss_somatic_dir=${sample_dir}/gripss
@@ -296,7 +296,7 @@ ${scripts_dir}/run_gripss_somatic ${gripss_jar} \
   ${sv_hotspot_file} ${sv_pon_file} ${sgl_pon_file} ${repeat_mask_file} \
 
 
-if [ ! "${reference_id}" == "" ]; then
+if [ "${reference_id}" != "none" ]; then
 
   # Gripss germline
   gripss_germline_dir=${sample_dir}/gripss_germline
@@ -317,8 +317,8 @@ sv_unfiltered_vcf=${gripss_somatic_dir}/${tumor_id}.gripss.somatic.vcf.gz
 
 ${scripts_dir}/run_purple ${purple_jar} \
   ${tumor_id} ${reference_id} \
-  ${sv_vcf} ${sv_unfiltered_vcf} ${pave_vcf} ${pave_germline_vcf} ${amber_dir} ${cobalt_dir}  ${purple_dir} \
-  ${run_mode}  ${ref_genome_version} ${ref_genome} \
+  ${sv_vcf} ${sv_unfiltered_vcf} ${pave_vcf} ${pave_germline_vcf} ${amber_dir} ${cobalt_dir} ${purple_dir} \
+  ${run_mode} ${ref_genome_version} ${ref_genome} \
   ${gc_profile} ${sage_somatic_hotspots} ${sage_germline_hotspots} \
   ${driver_gene_panel} ${ensembl_dir} ${germline_del_freq_file} \
   ${target_regions_definition} ${target_regions_ratios} ${target_regions_msi_indels} \
@@ -326,7 +326,7 @@ ${scripts_dir}/run_purple ${purple_jar} \
 
 
 # Linx somatic
-if [ ! "${reference_id}" == "" ]; then
+if [ "${reference_id}" != "none" ]; then
   linx_somatic_dir=${sample_dir}/linx_somatic
 else
   linx_somatic_dir=${sample_dir}/linx
@@ -342,7 +342,7 @@ ${scripts_dir}/run_linx_somatic ${linx_jar} \
   ${circos} \
 
 
-if [ ! "${reference_id}" == "" ]; then
+if [ "${reference_id}" != "none" ]; then
 
   # Linx germline
   linx_germline_dir=${sample_dir}/linx_germline
