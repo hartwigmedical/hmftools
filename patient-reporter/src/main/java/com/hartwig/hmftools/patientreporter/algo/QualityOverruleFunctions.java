@@ -70,6 +70,7 @@ public final class QualityOverruleFunctions {
 
         for (GeneCopyNumber copyNumber : suspectedGenes) {
             suspectedGenesCurated.add(ImmutableGeneCopyNumber.builder()
+                    .from(copyNumber)
                     .minMinorAlleleCopyNumber(hasReliablePurity ? copyNumber.minMinorAlleleCopyNumber() : Double.NaN)
                     .minCopyNumber(hasReliablePurity ? copyNumber.minCopyNumber() : Double.NaN)
                     .build());
