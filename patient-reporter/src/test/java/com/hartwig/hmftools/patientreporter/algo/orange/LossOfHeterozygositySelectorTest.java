@@ -10,21 +10,20 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.patientreporter.util.Genes;
 
 import org.junit.Test;
-
-import junit.framework.TestCase;
 
 public class LossOfHeterozygositySelectorTest {
     @Test
     public void canSelectGenesForLOH() {
-        String hrdGene = LossOfHeterozygositySelector.HRD_GENES.iterator().next();
+        String hrdGene = Genes.HRD_GENES.iterator().next();
         GeneCopyNumber hrdGeneWithLOH =
                 GeneCopyNumberTestFactory.builder().geneName(hrdGene).minMinorAlleleCopyNumber(0D).minCopyNumber(2D).build();
         GeneCopyNumber hrdGeneWithoutLOH =
                 GeneCopyNumberTestFactory.builder().geneName(hrdGene).minMinorAlleleCopyNumber(2D).minCopyNumber(2D).build();
 
-        String msiGene = LossOfHeterozygositySelector.MSI_GENES.iterator().next();
+        String msiGene = Genes.MSI_GENES.iterator().next();
         GeneCopyNumber msiGeneWithLOH =
                 GeneCopyNumberTestFactory.builder().geneName(msiGene).minMinorAlleleCopyNumber(0D).minCopyNumber(2D).build();
         GeneCopyNumber msiGeneWithoutLOH =
