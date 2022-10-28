@@ -1,0 +1,51 @@
+#!/bin/bash
+
+lilac_jar=$1 && shift
+tumor_id=$1 && shift
+tumor_bam=$1 && shift
+reference_id=$1 && shift
+reference_bam=$1 && shift
+gene_copy_number_file=$1 && shift
+somatic_vcf=$1 && shift
+output_dir=$1 && shift
+ref_genome_version=$1 && shift
+ref_genome=$1 && shift
+resource_dir=$1 && shift
+threads=$1 && shift
+
+if [[ ! -d "${output_dir}" ]]; then
+  mkdir ${output_dir}
+fi
+
+lilac_tsv=${output_dir}/${tumor_id}.lilac.csv
+
+if [[ -f "${lilac_tsv}" ]]; then
+  echo "Skipping Lilac for ${tumor_id}, since results file ${lilac_tsv} exists"
+  exit
+fi
+
+if [[ ! -f "${somatic_vcf}" ]]; then
+  echo "Missing Purple somatic VCF, not running Lilac for ${tumor_id}"
+  exit
+fi
+
+args="-sample ${tumor_id}"
+
+if [ "${reference_bam}" != "none" ]; then
+  args="${args} -reference_bam ${reference_bam} -tumor_bam ${tumor_bam}"
+else
+  args="${args} -reference_bam ${tumor_bam}"
+fi  
+
+args="${args} -ref_genome_version ${ref_genome_version} \
+  -ref_genome ${ref_genome} \
+  -resource_dir ${resource_dir} \
+  -gene_copy_number ${gene_copy_number_file} \
+  -somatic_vcf ${somatic_vcf} \
+  -threads ${threads} \
+  -output_dir ${output_dir}"
+
+
+echo "Running Lilac with args ${args}"
+
+java -jar ${lilac_jar} ${args}

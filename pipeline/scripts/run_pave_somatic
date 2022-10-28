@@ -1,0 +1,61 @@
+#!/bin/bash
+
+pave_jar=$1 && shift
+sample_id=$1 && shift
+sage_vcf=$1 && shift
+output_dir=$1 && shift
+pave_vcf=$1 && shift
+run_mode=$1 && shift
+ref_genome_version=$1 && shift
+ref_genome=$1 && shift
+ensembl_dir=$1 && shift
+driver_gene_panel=$1 && shift
+pon_file=$1 && shift
+mappability_bed=$1 && shift
+gnomad_path=$1 && shift
+
+if [[ ! -d "${output_dir}" ]]; then
+  mkdir ${output_dir}
+fi
+
+if [[ -f "${pave_vcf}" ]]; then
+  echo "Skipping Pave somatic for ${sample_id}, since VCF ${pave_vcf} exists"
+  exit
+fi
+
+if [[ ! -f "${sage_vcf}" ]]; then
+  echo "Missing Sage somatic VCF, not running Pave somatic for ${sample_id}"
+  exit
+fi
+
+if [ "${ref_genome_version}" == "V37" ]; then
+  pon_filters="HOTSPOT:10:5;PANEL:6:5;UNKNOWN:6:0"
+else
+  pon_filters="HOTSPOT:5:5;PANEL:2:5;UNKNOWN:2:0"
+fi
+
+args="-sample ${sample_id} \
+  -ensembl_data_dir ${ensembl_dir} \
+  -driver_gene_panel ${driver_gene_panel} \
+  -ref_genome_version ${ref_genome_version} \
+  -ref_genome ${ref_genome} \
+  -pon_file ${pon_file} \
+  -pon_filters ${pon_filters} \
+  -mappability_bed ${mappability_bed} \
+  -vcf_file ${sage_vcf} \
+  -read_pass_only \
+  -output_vcf_file ${pave_vcf}"
+
+
+if [ "${ref_genome_version}" == "V37" ]; then
+  if [ "${run_mode}" == "PANEL" ]; then
+    args="${args} -gnomad_freq_file ${gnomad_path}"
+  fi
+else
+  args="${args} -gnomad_freq_dir ${gnomad_path} -gnomad_load_chr_on_demand"
+
+fi
+
+echo "Running Pave somatic with args: ${args}"
+
+java -jar ${pave_jar} ${args}

@@ -48,7 +48,7 @@ public class GnomadCacheBuilder
         mOutputDir = parseOutputDir(cmd);
         mInputVcf = cmd.getOptionValue(GNOMAD_FILE);
         mOutputId = cmd.getOptionValue(OUTPUT_ID);
-        mSpecificChromosome = cmd.getOptionValue(SPECIFIC_CHROMOSOME);
+        mSpecificChromosome = cmd.getOptionValue(SPECIFIC_CHROMOSOME, "");
         mFreqThreshold = Double.parseDouble(cmd.getOptionValue(FREQ_THRESHOLD, "0"));
     }
 
@@ -56,7 +56,7 @@ public class GnomadCacheBuilder
     {
         String outputFile = dir + GNOMAD_FILE_ID;
 
-        if(chromosome != null)
+        if(chromosome != null && !chromosome.isEmpty())
             outputFile += "_chr" + chromosome;
 
         if(outputId != null)

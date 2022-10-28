@@ -1,0 +1,44 @@
+#!/bin/bash
+
+amber_jar=$1 && shift
+tumor_id=$1 && shift
+tumor_bam=$1 && shift
+reference_id=$1 && shift
+reference_bam=$1 && shift
+output_dir=$1 && shift
+run_mode=$1 && shift
+ref_genome_version=$1 && shift
+ref_genome=$1 && shift
+loci_vcf=$1 && shift
+threads=$1 && shift
+
+output_tsv=${output_dir}/${tumor_id}.amber.baf.tsv.gz
+
+if [[ -f "${output_tsv}" ]]; then
+  echo "Skipping Amber for ${tumor_id}, since output ${output_tsv} exists"
+  exit
+fi
+
+if [[ ! -d "${output_dir}" ]]; then
+  mkdir ${output_dir}
+fi
+
+args="-tumor ${tumor_id} -tumor_bam ${tumor_bam}"
+
+if [ "${reference_id}" != "none" ]; then
+  args="${args} -reference ${reference_id} -reference_bam ${reference_bam}"
+fi  
+
+args="${args} -ref_genome ${ref_genome} \
+  -ref_genome_version ${ref_genome_version} \
+  -loci ${loci_vcf} \
+  -threads ${threads} \
+  -output_dir ${output_dir}"
+
+if [ "${run_mode}" == "PANEL" ]; then
+  args="${args} -tumor_only_min_depth 80"
+fi
+
+echo "Running Amber with args: ${args}"
+
+java -jar ${amber_jar} ${args}

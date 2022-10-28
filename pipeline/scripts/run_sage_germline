@@ -1,0 +1,47 @@
+#!/bin/bash
+
+sage_jar=$1 && shift
+tumor_id=$1 && shift
+tumor_bam=$1 && shift
+reference_id=$1 && shift
+reference_bam=$1 && shift
+output_dir=$1 && shift
+ref_genome_version=$1 && shift
+ref_genome=$1 && shift
+ensembl_dir=$1 && shift
+hotspots=$1 && shift
+panel_bed=$1 && shift
+high_confidence_bed=$1 && shift
+threads=$1 && shift
+
+if [[ ! -d "${output_dir}" ]]; then
+  mkdir ${output_dir}
+fi
+
+output_vcf=${output_dir}/${tumor_id}.sage.germline.vcf.gz
+
+if [[ -f "${output_vcf}" ]]; then
+  echo "Skipping Sage germline for ${tumor_id}, since VCF ${output_vcf} exists"
+  exit
+fi
+
+args="-tumor ${reference_id} \
+  -tumor_bam ${reference_bam} \
+  -reference ${tumor_id} \
+  -reference_bam ${tumor_bam} \
+  -hotspots ${hotspots} \
+  -panel_bed ${panel_bed} \
+  -high_confidence_bed ${high_confidence_bed} \
+  -ref_genome ${ref_genome} \
+  -ref_genome_version ${ref_genome_version} \
+  -ensembl_data_dir ${ensembl_dir} \
+  -hotspot_min_tumor_qual 50 -hotspot_max_germline_vaf 100 -hotspot_max_germline_rel_raw_base_qual 100 \
+  -panel_min_tumor_qual 75 -panel_max_germline_vaf 100 -panel_max_germline_rel_raw_base_qual 100 \
+  -mnv_filter_enabled false -panel_only \
+  -threads ${threads} \
+  -out ${output_vcf}"
+
+
+echo "Running Sage germline with args: ${args}"
+
+java -jar ${sage_jar} ${args}
