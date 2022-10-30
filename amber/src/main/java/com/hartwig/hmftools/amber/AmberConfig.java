@@ -8,14 +8,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.beust.jcommander.IStringConverter;
-import com.google.common.collect.Lists;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.beust.jcommander.Parameter;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.RefGenomeVersionConverter;
 
 import htsjdk.samtools.ValidationStringency;
 
@@ -107,8 +105,7 @@ public class AmberConfig
 
     public List<String> allSamples()
     {
-        List<String> samples = Lists.newArrayList();
-        samples.addAll(ReferenceIds);
+        List<String> samples = new ArrayList<>(ReferenceIds);
         samples.add(TumorId);
         return samples;
     }
@@ -167,15 +164,5 @@ public class AmberConfig
         }
 
         return true;
-    }
-
-    // we need to define a converter for ref genome version
-    static class RefGenomeVersionConverter implements IStringConverter<RefGenomeVersion>
-    {
-        @Override
-        public RefGenomeVersion convert(String value)
-        {
-            return RefGenomeVersion.from(value);
-        }
     }
 }
