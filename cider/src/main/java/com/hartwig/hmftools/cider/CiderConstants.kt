@@ -17,4 +17,18 @@ object CiderConstants
     const val MIN_CDR3_LENGTH_BASES: Int = 9
 
     const val MIN_NON_SPLIT_READ_STRADDLE_LENGTH: Int = 30
+
+    enum class VjAnchorTemplateTsvColumn {
+        gene,
+        allele,
+        chr,
+        posStart,
+        posEnd,
+        strand,
+        anchorStart,
+        anchorEnd,
+        anchorSequence,
+        anchorAA,
+        sequence
+    }
 }

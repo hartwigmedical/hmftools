@@ -13,6 +13,8 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.util.stream.Collectors
 
+typealias Column = CiderConstants.VjAnchorTemplateTsvColumn
+
 object CiderGeneDataLoader
 {
     private val sLogger = LogManager.getLogger(CiderGeneDataLoader::class.java)
@@ -37,11 +39,11 @@ object CiderGeneDataLoader
         {
             if (geneData.GeneName.length <= 4) continue
             val geneNamePrefix = geneData.GeneName.substring(0, 4)
-            var igConstantRegionType: IgTcrConstantRegion.Type
-            igConstantRegionType = try
+            val igConstantRegionType: IgTcrConstantRegion.Type = try
             {
                 IgTcrConstantRegion.Type.valueOf(geneNamePrefix)
-            } catch (ignored: IllegalArgumentException)
+            }
+            catch (ignored: IllegalArgumentException)
             {
                 continue
             }
@@ -89,22 +91,21 @@ object CiderGeneDataLoader
             val records: Iterable<CSVRecord> = format.parse(reader)
             for (record in records)
             {
-                val id = record["id"]
-                val name = record["gene"]
-                val allele = record["allele"]
-                val posStart = record["posStart"].toInt()
-                val posEnd = record["posEnd"].toInt()
-                val anchorSequence = record["anchorSequence"]
-                var chromosome = record["chr"]
-                val strandStr = record["strand"]
+                val geneName = record[Column.gene]
+                val allele = record[Column.allele]
+                val posStart = record[Column.posStart].toInt()
+                val posEnd = record[Column.posEnd].toInt()
+                val anchorSequence = record[Column.anchorSequence]
+                var chromosome = record[Column.chr]
+                val strandStr = record[Column.strand]
                 var strand: Strand? = null
                 if (strandStr == "+") strand = Strand.FORWARD else if (strandStr == "-") strand = Strand.REVERSE
-                val anchorStart = record["anchorStart"].toInt()
-                val anchorEnd = record["anchorEnd"].toInt()
-                val sequence = record["sequence"]
+                val anchorStart = record[Column.anchorStart].toInt()
+                val anchorEnd = record[Column.anchorEnd].toInt()
+                val sequence = record[Column.sequence]
                 var genomeRegionStrand: GenomeRegionStrand? = null
                 var anchorLocation: GenomeRegionStrand? = null
-                if (!chromosome.isEmpty())
+                if (chromosome.isNotEmpty())
                 {
                     chromosome = refGenomeVersion.versionedChromosome(chromosome)
                     if (posStart <= 0 || posEnd <= 0)
@@ -116,12 +117,16 @@ object CiderGeneDataLoader
                         throw RuntimeException("chromosome exist but strand invalid")
                     }
                     genomeRegionStrand = GenomeRegionStrand(chromosome, posStart, posEnd, strand)
-                    if (anchorStart >= 0 && anchorEnd >= 0) anchorLocation =
-                        GenomeRegionStrand(chromosome, anchorStart, anchorEnd, strand)
+                    if (anchorStart >= 0 && anchorEnd >= 0)
+                    {
+                        anchorLocation = GenomeRegionStrand(chromosome, anchorStart, anchorEnd, strand)
+                    }
                 }
+
+                val geneType = if (geneName == "IGKKDE") VJGeneType.IGKKDE else VJGeneType.valueOf(geneName.substring(0, 4))
+
                 val vjAnchorTemplate = VJAnchorTemplate(
-                    id, name, allele, genomeRegionStrand, sequence, anchorSequence, anchorLocation
-                )
+                    geneType, geneName, allele, genomeRegionStrand, sequence, anchorSequence, anchorLocation)
                 vjAnchorTemplateList.add(vjAnchorTemplate)
             }
         }

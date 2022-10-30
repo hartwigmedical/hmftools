@@ -21,22 +21,20 @@ data class GenomeRegionStrand(val chromosome: String, val posStart: Int, val pos
 
 data class VJAnchorTemplate
     (
-    val id: String,
-    val name: String,
-    val allele: String,
+    val type: VJGeneType,
+    val geneName: String, // IGHV1-45
+    val allele: String, // 01
     val geneLocation: GenomeRegionStrand?,
     val sequence: String,
     val anchorSequence: String,
     val anchorLocation: GenomeRegionStrand?
 )
 {
-    val type: VJGeneType = VJGeneType.valueOf(name.take(4))
-
     val vj: VJ get() { return type.vj }
     val anchorAminoAcidSequence: String = Codons.aminoAcidFromBases(anchorSequence)
     val chromosome: String? get() { return geneLocation?.chromosome() }
-    val startPosition: Int get() { return geneLocation?.start() ?: -1 }
-    val endPosition: Int get() { return geneLocation?.end() ?: -1 }
+    //val startPosition: Int get() { return geneLocation?.start() ?: -1 }
+    //val endPosition: Int get() { return geneLocation?.end() ?: -1 }
     val strand: Strand? get() { return geneLocation?.strand }
 }
 

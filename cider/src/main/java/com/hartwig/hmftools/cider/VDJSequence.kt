@@ -141,12 +141,32 @@ class VDJSequence(
     // does not include the C and W
     val cdr3SequenceShort: String get()
     {
-        return sequence.substring(vAnchorBoundary ?: 0, jAnchorBoundary ?: length)
+        if (vAnchorBoundary != null)
+        {
+            return sequence.substring(vAnchorBoundary ?: 0, jAnchorBoundary ?: length)
+        }
+        if (jAnchorBoundary != null)
+        {
+            // we need to aligned it to the jAnchor boundary, avoid it being out of frame
+            return sequence.substring(jAnchorBoundary!! % 3, jAnchorBoundary!!)
+        }
+        // shouldn't get here
+        return sequence
     }
 
     private val cdr3Start: Int get()
     {
-        return Math.max((vAnchorBoundary ?: return 0) - 3, 0)
+        if (vAnchorBoundary != null)
+        {
+            return Math.max(vAnchorBoundary!! - 3, 0)
+        }
+        if (jAnchorBoundary != null)
+        {
+            // we need to aligned it to the jAnchor boundary, avoid it being out of frame
+            return jAnchorBoundary!! % 3
+        }
+        // shouldn't get here
+        return 0
     }
 
     private val cdr3End: Int get()

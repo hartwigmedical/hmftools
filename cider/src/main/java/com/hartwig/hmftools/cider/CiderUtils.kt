@@ -36,6 +36,7 @@ object CiderUtils
             VJGeneType.TRDJ -> VJGeneType.TRDV
             VJGeneType.TRGV -> VJGeneType.TRGJ
             VJGeneType.TRGJ -> VJGeneType.TRGV
+            VJGeneType.IGKKDE -> VJGeneType.IGKV
         }
     }
 

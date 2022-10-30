@@ -44,7 +44,7 @@ class CiderApplication
     {
         mLoggingOptions.setLogLevel()
         val versionInfo = VersionInfo("cider.version")
-        sLogger.info("Cider version: {}, build timestamp: {}", versionInfo.version(), versionInfo.buildTime().toLocalTime())
+        sLogger.info("Cider version: {}, build timestamp: {}", versionInfo.version(), versionInfo.buildTime()!!.toLocalTime())
 
         if (!mParams.isValid)
         {

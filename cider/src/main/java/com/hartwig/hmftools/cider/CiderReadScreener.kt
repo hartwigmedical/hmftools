@@ -110,8 +110,8 @@ class CiderReadScreener(// collect the reads and sort by types
             }
         }
 
-        val leftSoftClip = CigarUtils.leftSoftClip(samRecord)
-        val rightSoftClip = CigarUtils.rightSoftClip(samRecord)
+        val leftSoftClip = CigarUtils.leftSoftClipLength(samRecord)
+        val rightSoftClip = CigarUtils.rightSoftClipLength(samRecord)
         if (leftSoftClip != 0 || rightSoftClip != 0)
         {
             for (igTcrConstantRegion in mCiderGeneDatastore.getIgConstantRegions())
@@ -330,7 +330,7 @@ class CiderReadScreener(// collect the reads and sort by types
 
             if (strand == Strand.FORWARD)
             {
-                val leftSoftClip = CigarUtils.leftSoftClip(samRecord)
+                val leftSoftClip = CigarUtils.leftSoftClipLength(samRecord)
                 if (leftSoftClip == 0) return null
 
                 // now try to find an anchor here
@@ -343,7 +343,7 @@ class CiderReadScreener(// collect the reads and sort by types
             else
             {
                 // reverse strand
-                val rightSoftClip = CigarUtils.rightSoftClip(samRecord)
+                val rightSoftClip = CigarUtils.rightSoftClipLength(samRecord)
                 if (rightSoftClip == 0) return null
 
                 val reverseCompSeq = SequenceUtil.reverseComplement(samRecord.readString)
@@ -396,8 +396,8 @@ class CiderReadScreener(// collect the reads and sort by types
 
         // since we don't actually know whether the aligned part is the anchor sequence, we have to use
         // the soft clip that we think make sense
-        val leftSoftClip = CigarUtils.leftSoftClip(samRecord)
-        val rightSoftClip = CigarUtils.rightSoftClip(samRecord)
+        val leftSoftClip = CigarUtils.leftSoftClipLength(samRecord)
+        val rightSoftClip = CigarUtils.rightSoftClipLength(samRecord)
 
         val readMatch = VJReadCandidate(
             samRecord, vjAnchorTemplates, geneType,
@@ -409,7 +409,7 @@ class CiderReadScreener(// collect the reads and sort by types
         readMatch.similarityScore = BlosumSimilarityCalc.calcSimilarityScore(
             geneType.vj, readMatch.templateAnchorSequence, readMatch.anchorSequence)
 
-        val geneNames = vjAnchorTemplates.map({ o: VJAnchorTemplate -> o.name }).distinct().toList()
+        val geneNames = vjAnchorTemplates.map({ o: VJAnchorTemplate -> o.geneName }).distinct().toList()
         sLogger.debug(
             "genes: {} read({}) method({}) anchor range({}-{}) template loc({}) "
                     + "anchor AA({}) template AA({}) similarity({})",

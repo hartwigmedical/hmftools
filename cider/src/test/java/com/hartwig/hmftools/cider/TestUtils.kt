@@ -33,7 +33,7 @@ object TestUtils
 
     // some genes we can use for testing
     val ighJ1 = VJAnchorTemplate(
-        "IGHJ1*01",
+        VJGeneType.IGHJ,
         "IGHJ1",
         "01",
         null,
@@ -42,13 +42,13 @@ object TestUtils
         null)
 
     val ighJ6 = VJAnchorTemplate(
-        "IGHJ6*01", "IGHJ6","01", null,
+        VJGeneType.IGHJ, "IGHJ6","01", null,
         "ATTACTACTACTACTACGGTATGGACGTCTGGGGGCAAGGGACCACGGTCACCGTCTCCTCAG",
         "TGGGGGCAAGGGACCACGGTCACCGTCTCC",
         null)
 
     val ighV1_18 = VJAnchorTemplate(
-        "IGHV1-18*01",
+        VJGeneType.IGHV,
         "IGHV1-18",
         "01",
         null,
@@ -57,7 +57,7 @@ object TestUtils
         null)
 
     val ighV3_7 = VJAnchorTemplate(
-        "IGHV3-7*01", "IGHV3-7", "01", null,
+        VJGeneType.IGHV, "IGHV3-7", "01", null,
         "GAGGTGCAGCTGGTGGAGTCTGGGGGAGGCTTGGTCCAGCCTGGGGGGTCCCTGAGACTCTCCTGTGCAGCCTCTGGATTCACCTTTAGTAGCTATTGGATGAGCTGGGTCCGCCAGGCTCCAGGGAAGGGGCTGGAGTGGGTGGCCAACATAAAGCAAGATGGAAGTGAGAAATACTATGTGGACTCTGTGAAGGGCCGATTCACCATCTCCAGAGACAACGCCAAGAACTCACTGTATCTGCAAATGAACAGCCTGAGAGCCGAGGACACGGCTGTGTATTACTGTGCGAGAGA",
         "AGAGCCGAGGACACGGCTGTGTATTACTGT",
         null)

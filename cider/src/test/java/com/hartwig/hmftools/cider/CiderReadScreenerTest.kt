@@ -242,7 +242,7 @@ class CiderReadScreenerTest
         record.firstOfPairFlag = true
         record.readPairedFlag = true
         val ighJ1 = VJAnchorTemplate(
-            "IGHJ1*01",
+            VJGeneType.IGHJ,
             "IGHJ1",
             "01",
             GenomeRegionStrand("14", 106330701, 106330840, Strand.REVERSE),

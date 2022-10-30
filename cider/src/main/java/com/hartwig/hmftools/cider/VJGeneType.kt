@@ -23,6 +23,7 @@ enum class VJ
 // make this a inner type of VJGene
 // create a new type called IgLocus to house IGH, TRA, TRB etc
 // note: IGH, TRA etc are locus, IGHV, TRAJ etc are gene segments
+// this also include KDE, for simplicity we treat it just like a J anchor
 //
 enum class VJGeneType
 {
@@ -39,8 +40,9 @@ enum class VJGeneType
     TRDV,
     TRDJ,
     TRGV,
-    TRGJ;
+    TRGJ,
+    IGKKDE;
 
-    val locus: IgTcrLocus = IgTcrLocus.valueOf(name.take(3))
-    val vj: VJ = VJ.valueOf(name[3].toString())
+    //val locus: IgTcrLocus = IgTcrLocus.valueOf(name.take(3))
+    val vj: VJ = if (name == "IGKKDE") VJ.J else VJ.valueOf(name[3].toString())
 }

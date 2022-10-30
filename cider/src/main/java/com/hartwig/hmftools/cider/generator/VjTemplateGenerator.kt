@@ -20,16 +20,20 @@ import org.apache.commons.csv.CSVFormat
 import org.apache.logging.log4j.LogManager
 import java.io.File
 import java.io.IOException
+import java.util.regex.Pattern
 import kotlin.system.exitProcess
 
-// should rename to VjAnchorTemplateGenerator
-// simple utility to find the anchor sequence for each gene
+const val ANCHOR_DNA_LENGTH: Int = 30
+typealias Column = CiderConstants.VjAnchorTemplateTsvColumn
+
+// simple utility to find the anchor sequence for each gene from IMGT fasta data
 // example usage:
 // java -cp VjTemplateGeneWriter
 // -imgt IMGT_genes.fasta
 // -ref_genome_version 37
 // -ref_genome /data/resources/bucket/reference_genome/37/Homo_sapiens.GRCh37.GATK.illumina.fasta
 // -ensembl_data_dir /data/resources/public/ensembl_data_cache/37
+// -kde_region 2:89131735-89132285(-)
 // -output igtcr_anchor.37.tsv
 class VjTemplateGeneWriter
 {
@@ -48,6 +52,9 @@ class VjTemplateGeneWriter
 
     @Parameter(names = ["-" + EnsemblDataCache.ENSEMBL_DATA_DIR], required = true, description = EnsemblDataCache.ENSEMBL_DATA_DIR_CFG)
     lateinit var ensemblDataDir: String
+
+    @Parameter(names = ["-kde_region"], required = true, description = "KDE genome region, format is ch:start-end(strand) e.g. 2:89131735-89132285(-)")
+    lateinit var kdeRegion: String
 
     @Parameter(names = ["-output"], required = true, description = "Output TSV file")
     lateinit var outputTsv: String
@@ -96,7 +103,7 @@ class VjTemplateGeneWriter
 
             try
             {
-                vjGeneType = VJGeneType.valueOf(geneName.take(4))
+                vjGeneType = if (geneName == "IGKKDE") VJGeneType.IGKKDE else VJGeneType.valueOf(geneName.take(4))
             }
             catch (e: IllegalArgumentException)
             {
@@ -124,9 +131,7 @@ class VjTemplateGeneWriter
                 geneLoc = correctGeneLocation(seqString, refSeq, geneLoc, 20, 30)
             }
 
-            var VJAnchorTemplate: VJAnchorTemplate? = null
-
-            // if (geneLoc != null)
+            var vjAnchorTemplate: VJAnchorTemplate? = null
 
             if (vjGeneType.vj == VJ.V)
             {
@@ -152,7 +157,7 @@ class VjTemplateGeneWriter
 
                 // if the anchor is < 30 bases long, we fill it in with the last C which is TGT
                 // it is missing in some
-                if (anchor.length < 30)
+                if (anchor.length < ANCHOR_DNA_LENGTH)
                 {
                     anchor = anchor.take(27) + "TGT"
                 }
@@ -185,7 +190,7 @@ class VjTemplateGeneWriter
                 // v gene
                 sLogger.info("IGHV gene: {}, anchor: {}, offset from end: {}, anchor AA: {}", geneName, anchor, anchorOffsetFromEnd, aaSeq)
 
-                VJAnchorTemplate = VJAnchorTemplate(geneAllele, geneName, allele, geneLoc, seqString, anchor, anchorLocation)
+                vjAnchorTemplate = VJAnchorTemplate(vjGeneType, geneName, allele, geneLoc, seqString, anchor, anchorLocation)
             }
 
             if (vjGeneType.vj == VJ.J)
@@ -203,7 +208,7 @@ class VjTemplateGeneWriter
                 else
                 {
                     // some sequences are longer
-                    anchor = seqString.substring(anchorIndex).take(30)
+                    anchor = seqString.substring(anchorIndex).take(ANCHOR_DNA_LENGTH)
 
                     // anchor needs to be at least 28 bases long
                     //if (anchor.length < 28)
@@ -237,19 +242,22 @@ class VjTemplateGeneWriter
                     }
                 }
 
-                VJAnchorTemplate = VJAnchorTemplate(geneAllele, geneName, allele, geneLoc, seqString, anchor, anchorLocation)
+                vjAnchorTemplate = VJAnchorTemplate(vjGeneType, geneAllele, allele, geneLoc, seqString, anchor, anchorLocation)
             }
 
-            if (VJAnchorTemplate != null)
+            if (vjAnchorTemplate != null)
             {
-                if (VJAnchorTemplate.anchorLocation != null)
+                if (vjAnchorTemplate.anchorLocation != null)
                 {
                     // validate the anchor sequence
-                    validateAgainstRefGenome(VJAnchorTemplate.anchorSequence, VJAnchorTemplate.anchorLocation!!, refGenomeFile)
+                    validateAgainstRefGenome(vjAnchorTemplate.anchorSequence, vjAnchorTemplate.anchorLocation!!, refGenomeFile)
                 }
-                VJAnchorTemplateList.add(VJAnchorTemplate)
+                VJAnchorTemplateList.add(vjAnchorTemplate)
             }
         }
+
+        // also add the KDE
+        VJAnchorTemplateList.add(createKdeRegionTemplate(kdeRegion, refGenomeFile))
 
         writeOutput(outputTsv, VJAnchorTemplateList)
 
@@ -286,21 +294,6 @@ class VjTemplateGeneWriter
             }
         }
 
-        enum class Column {
-            id,
-            gene,
-            allele,
-            chr,
-            posStart,
-            posEnd,
-            strand,
-            anchorStart,
-            anchorEnd,
-            anchorSequence,
-            anchorAA,
-            sequence
-        }
-
         @Throws(IOException::class)
         fun writeOutput(filename: String, VJAnchorTemplateList: List<VJAnchorTemplate>)
         {
@@ -316,8 +309,7 @@ class VjTemplateGeneWriter
                     {
                         when (col)
                         {
-                            Column.id -> csvPrinter.print(gene.id)
-                            Column.gene -> csvPrinter.print(gene.name)
+                            Column.gene -> csvPrinter.print(gene.geneName)
                             Column.allele -> csvPrinter.print(gene.allele)
                             Column.chr -> csvPrinter.print(if (gene.geneLocation != null) gene.geneLocation.chromosome else "")
                             Column.posStart -> csvPrinter.print(if (gene.geneLocation != null) gene.geneLocation.posStart else -1)
@@ -439,7 +431,7 @@ class VjTemplateGeneWriter
             if (!refGenome.index.hasIndexEntry(chromosome))
             {
                 // maybe need to try removing chr
-                chromosome = chromosome.replace("chr", "");
+                chromosome = chromosome.replace("chr", "")
             }
 
             val forwardSeq = refGenome.getSubsequenceAt(chromosome,
@@ -448,6 +440,39 @@ class VjTemplateGeneWriter
                 return forwardSeq
             else
                 return reverseComplement(forwardSeq)
+        }
+
+        fun createKdeRegionTemplate(kdeRegion: String, refGenome: IndexedFastaSequenceFile) : VJAnchorTemplate
+        {
+            // format of kde region string is 2:89131735-89132285(-)
+            val genomeRegionPattern = Pattern.compile("""(.+):(\d+)-(\d+)\((.)\)""")
+            val matcher = genomeRegionPattern.matcher(kdeRegion)
+            if (!matcher.matches())
+            {
+                sLogger.error("input KDE region string: {} parse failed", kdeRegion)
+                throw RuntimeException("input KDE region string: ${kdeRegion} parse failed")
+            }
+
+            val chr = matcher.group(1)
+            val start = matcher.group(2).toInt()
+            val end = matcher.group(3).toInt()
+            val strand = matcher.group(4)[0]
+
+            val genomeRegionStrand = GenomeRegionStrand(chr, start, end, Strand.valueOf(strand))
+            val kdeSeq = queryRefSequence(refGenome, genomeRegionStrand)
+
+            // first 30 base is the "anchor", in reality does not really matter
+            val anchorSeq = kdeSeq.take(ANCHOR_DNA_LENGTH)
+            val anchorGenomeRegionStrand =
+            // now the anchor genome region, depends on the strand
+            if (genomeRegionStrand.strand == Strand.FORWARD)
+                genomeRegionStrand.copy(posEnd = genomeRegionStrand.posStart + ANCHOR_DNA_LENGTH - 1)
+            else
+                genomeRegionStrand.copy(posStart = genomeRegionStrand.posEnd - ANCHOR_DNA_LENGTH + 1)
+
+            // now we can create the template
+            return VJAnchorTemplate(VJGeneType.IGKKDE, "IGKKDE", "01",
+                genomeRegionStrand, kdeSeq, anchorSeq, anchorGenomeRegionStrand)
         }
     }
 }
