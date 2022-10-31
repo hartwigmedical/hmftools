@@ -177,9 +177,6 @@ public final class BreakendGenePrep
 
             BreakendGeneData geneAnnotation = new BreakendGeneData(svId, isStart, altGeneData);
 
-            // not sure why the orientation of the transcript breakend ignores the SGL mapping in favour of the ref gene orientation
-            // byte downstreamOrient = altGeneData.Strand == POS_ORIENT ? NEG_ORIENT : POS_ORIENT;
-            // geneAnnotation.setPositionalData(chromosome, position, downstreamOrient);
             geneAnnotation.setPositionalData(chromosome, position, orientation);
 
             if(trans != null)
