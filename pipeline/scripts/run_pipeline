@@ -165,7 +165,7 @@ else
   germline_del_freq_file=${resources_dir}/copy_number/cohort_germline_del_freq.38.csv
 
   target_region_normalisation=${resources_dir}/copy_number/target_regions_normalisation.38.tsv
-  target_regions_definition=${resources_dir}/variants/CoverageCodingPanel.38.bed.gz
+  target_regions_definition=${resources_dir}/copy_number/target_regions_definition.38.bed
   target_regions_ratios=${resources_dir}/copy_number/target_regions_ratios.38.tsv
   target_regions_msi_indels=${resources_dir}/copy_number/target_regions_msi_indels.38.tsv
 
