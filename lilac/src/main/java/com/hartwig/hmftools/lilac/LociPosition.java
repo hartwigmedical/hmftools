@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
@@ -23,7 +24,7 @@ public class LociPosition
     {
         for(TranscriptData transData : mTranscripts)
         {
-            if(position < transData.CodingStart || position > transData.CodingEnd)
+            if(!positionWithin(position, transData.CodingStart, transData.CodingEnd))
                 continue;
 
             // locus is a zero-based index, so the first coding base has locus of 0
@@ -39,9 +40,9 @@ public class LociPosition
         int codingStart = transcript.CodingStart;
         int codingEnd = transcript.CodingEnd;
 
-        for (ExonData exon : transcript.exons())
+        for(ExonData exon : transcript.exons())
         {
-            if (codingStart <= exon.End && codingEnd >= exon.Start)
+            if(codingStart <= exon.End && codingEnd >= exon.Start)
             {
                 result.add(ImmutableNamedBed.builder()
                         .chromosome(chromosome)

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.variant;
 
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
@@ -203,6 +204,26 @@ public class SomaticVariantAnnotation
         }
     }
 
+    private boolean inHlaCodingRegion(final VariantContextDecorator variant)
+    {
+        if(!variant.chromosome().equals(LilacConstants.HLA_CHR))
+            return false;
+
+        int posStart = variant.position();
+        int posEnd = posStart + variant.ref().length() - 1;
+
+        for(TranscriptData transData : mHlaTranscriptData.values())
+        {
+            if(!positionsOverlap(posStart, posEnd, transData.CodingStart, transData.CodingEnd))
+                continue;
+
+            // check that the variant covers any exon
+            if(transData.exons().stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x.Start, x.End)))
+                return true;
+        }
+
+        return false;
+    }
 
     private List<SomaticVariant> loadSomaticVariants()
     {
@@ -219,20 +240,19 @@ public class SomaticVariantAnnotation
 
             while(variantIter.hasNext())
             {
-                VariantContext variant = variantIter.next();
+                VariantContext variantContext = variantIter.next();
 
-                if(variant.isFiltered() && !variant.getFilters().contains(SomaticVariantFactory.PASS_FILTER))
+                if(variantContext.isFiltered() && !variantContext.getFilters().contains(SomaticVariantFactory.PASS_FILTER))
                     continue;
 
-                if(!variant.getContig().equals(LilacConstants.HLA_CHR))
-                    continue;
+                VariantContextDecorator variant = new VariantContextDecorator(variantContext);
 
-                if(mHlaTranscriptData.values().stream().anyMatch(x -> positionWithin(variant.getStart(), x.TransStart, x.TransEnd)))
+                if(inHlaCodingRegion(variant))
                 {
-                    VariantContextDecorator enriched = new VariantContextDecorator(variant);
                     variants.add(new SomaticVariant(
-                            enriched.gene(), enriched.chromosome(), (int)enriched.position(), enriched.ref(), enriched.alt(),
-                            enriched.filter(), enriched.canonicalCodingEffect(), enriched.context()));                }
+                            variant.gene(), variant.chromosome(), variant.position(), variant.ref(), variant.alt(),
+                            variant.filter(), variant.canonicalCodingEffect(), variant.context()));
+                }
             }
 
             LL_LOGGER.info("loaded {} HLA variants from file: {}", variants.size(), mConfig.SomaticVariantsFile);
