@@ -85,6 +85,7 @@ public class FittedRegionFactory
     }
 
     private static final double MIN_CN_THRESHOLD = 0.1;
+    // private static final double MIN_CN_THRESHOLD = 1;
 
     private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
             final double observedBAF)

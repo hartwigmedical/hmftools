@@ -473,10 +473,18 @@ public class PurpleApplication
         {
             PPL_LOGGER.info("generating charts");
 
-            mCharts.write(
-                    referenceId, tumorSample, !sampleDataFiles.SomaticVcfFile.isEmpty(),
-                    gender, copyNumbers, somaticStream.downsampledVariants(), sampleData.SvCache.variants(),
-                    fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
+            try
+            {
+                mCharts.write(
+                        referenceId, tumorSample, !sampleDataFiles.SomaticVcfFile.isEmpty(),
+                        gender, copyNumbers, somaticStream.downsampledVariants(), sampleData.SvCache.variants(),
+                        fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
+            }
+            catch(Exception e)
+            {
+                PPL_LOGGER.error("charting error: {}", e.toString());
+                System.exit(1);
+            }
         }
 
         if(mConfig.RunDrivers)
