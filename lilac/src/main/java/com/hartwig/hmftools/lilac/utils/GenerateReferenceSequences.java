@@ -64,7 +64,6 @@ public class GenerateReferenceSequences
 
         mNucleotideSequences = Lists.newArrayList();
         mAminoAcidSequences = Lists.newArrayList();
-
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
@@ -408,5 +407,4 @@ public class GenerateReferenceSequences
 
         return newStr;
     }
-
 }
