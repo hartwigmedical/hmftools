@@ -305,7 +305,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title, null, TableUtil.TABLE_BOTTOM_MARGIN, ReportResources.CONTENT_WIDTH_WIDE);
         }
 
-        Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1, 3 },
+        Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1},
                 new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
                         TableUtil.createHeaderCell("Tumor minor allele copies"), TableUtil.createHeaderCell("Tumor copies")},
                 ReportResources.CONTENT_WIDTH_WIDE);

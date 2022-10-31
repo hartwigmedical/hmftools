@@ -107,7 +107,7 @@ public final class QualityOverruleFunctions {
                         .from(hlaReporting)
                         .germlineCopies(hasReliablePurity ? hlaReporting.germlineCopies() : Double.NaN)
                         .tumorCopies(hasReliablePurity ? hlaReporting.tumorCopies() : Double.NaN)
-                        .interpretation("Unknown")
+                        .interpretation(hasReliablePurity ? hlaReporting.interpretation() : "Unknown")
                         .build());
             }
             alleles.put(allele, hlaReportingListCurated);
