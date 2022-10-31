@@ -22,8 +22,22 @@ public enum Strand
                 return Strand.REVERSE;
         }
 
-        throw new IllegalArgumentException("Invalid direction " + direction);
+        throw new IllegalArgumentException("Invalid direction: " + direction);
+    }
+
+    public static Strand valueOf(char strand)
+    {
+        switch(strand)
+        {
+            case '+':
+                return Strand.FORWARD;
+            case '-':
+                return Strand.REVERSE;
+        }
+
+        throw new IllegalArgumentException("Invalid strand: " + strand);
     }
 
     public byte asByte() { return this == FORWARD ? POS_STRAND : NEG_STRAND; }
+    public char asChar() { return this == FORWARD ? '+' : '-'; }
 }

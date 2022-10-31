@@ -2,8 +2,6 @@ package com.hartwig.hmftools.common.sequence;
 
 import static junit.framework.TestCase.assertEquals;
 
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -18,55 +16,111 @@ public class SequenceAlignerTest
     @Test
     public void testAlignSequenceSimple()
     {
+        String seq;
+        String refSeq;
+
         testAlignSequenceHelper("TTAGGGTTAGGGTTAGGG", "TTAGGGTTAGGGTTAGGG", "MMMMMMMMMMMMMMMMMM");
         testAlignSequenceHelper("TTAGGTTAGCGTTAGGG", "TTAGGGTTAGGGTTAGGG", "MMM-MMMMMMSMMMMMMM");
 
-        testAlignSequenceHelper("TTAGGTTAGCGTTAGTG", "TTAGGTTAGGGTTAGGGTTAGGGTTAGGG", "-----MMM-MMMMMMSMMMM--M-M---M");
+        seq =         "TTAGGTTAGCGTTAGTG";
+        refSeq = "TTAGGTTAGGGTTAGGGTTAGGGTTAGGG";
+        testAlignSequenceHelper(seq, refSeq, "MMM-MMMMMMSMMMM--M-M---M", 0, seq.length(), 5, refSeq.length());
 
+        seq = "TTAGACGTC";
+        refSeq = "TTAGTTAGACGTCCGTC";
+        testAlignSequenceHelper(seq, refSeq, "MMMMM----MMMM", 0, seq.length(), 4, refSeq.length());
 
-        testAlignSequenceHelper("TTAGACGTC", "TTAGTTAGACGTCCGTC", "----MMMMM----MMMM");
+        seq = "TT";
+        refSeq = "TTA";
+        testAlignSequenceHelper(seq, refSeq, "MM", 0, seq.length(), 0, 2);
 
-        testAlignSequenceHelper("TT", "TTA", "MM-");
+        seq = "TAG";
+        refSeq = "TG";
+        testAlignSequenceHelper(seq, refSeq, "M+M", 0, seq.length(), 0, refSeq.length());
 
-        testAlignSequenceHelper("TAG", "TG", "M+M");
+        seq =    "TG";
+        refSeq = "TAG";
+        testAlignSequenceHelper(seq, refSeq, "M-M", 0, seq.length(), 0, refSeq.length());
+        seq =   "TTAGG";
+        refSeq = "TAGG";
+        testAlignSequenceHelper(seq, refSeq, "MMMM", 1, seq.length(), 0, refSeq.length());
 
-        testAlignSequenceHelper("TG", "TAG", "M-M");
-        testAlignSequenceHelper("TTAGG", "TAGG", "+MMMM");
-
-        testAlignSequenceHelper("TTAGGG", "CCCTAACCC", "---MSMSSS");
+        seq =       "TTAGGG";
+        refSeq = "CCCTAACCC";
+        testAlignSequenceHelper(seq, refSeq, "MSMSSS", 3, seq.length(), 0, refSeq.length());
     }
 
     @Test
     public void testAlignSubsequenceSimple()
     {
-        testAlignSubsequenceHelper("TTAGGGTTAGGGTTAGGG", "TTAGGGTTAGGGTTAGGG", "MMMMMMMMMMMMMMMMMM");
-        testAlignSubsequenceHelper("TTAGGTTAGCGTTAGGG", "TTAGGGTTAGGGTTAGGG", "MMM-MMMMMMSMMMMMMM");
+        String seq;
+        String refSeq;
+        seq = "TTAGGGTTAGGGTTAGGG";
+        refSeq = "TTAGGGTTAGGGTTAGGG";
+        testAlignSubsequenceHelper(seq, refSeq, "MMMMMMMMMMMMMMMMMM", 0, seq.length(), 0, refSeq.length());
+        seq = "TTAGGTTAGCGTTAGGG";
+        refSeq = "TTAGGGTTAGGGTTAGGG";
+        testAlignSubsequenceHelper(seq, refSeq, "MMM-MMMMMMSMMMMMMM", 0, seq.length(), 0, refSeq.length());
 
-        testAlignSubsequenceHelper("TTAGGTTAGCGTTAGTG", "TTAGGTTAGGGTTAGGGTTAGGGTTAGGG", "MMMMMMMMMSMMMMMSM------------");
+        seq =    "TTAGGTTAGCGTTAGTG";
+        refSeq = "TTAGGTTAGGGTTAGGGTTAGGGTTAGGG";
+        testAlignSubsequenceHelper(seq, refSeq, "MMMMMMMMMSMMMMMSM", 0, seq.length(), 0, seq.length());
 
+        // only match middle
+        seq =        "TTAGACGTC";
+        refSeq = "TTAGTTAGACGTCCGTC";
+        testAlignSubsequenceHelper(seq, refSeq, "MMMMMMMMM", 0, seq.length(), 4, refSeq.length() - 4);
 
-        testAlignSubsequenceHelper("TTAGACGTC", "TTAGTTAGACGTCCGTC", "----MMMMMMMMM----");
+        seq =    "TT";
+        refSeq = "TTA";
+        testAlignSubsequenceHelper(seq, refSeq, "MM", 0, seq.length(), 0, 2);
 
-        testAlignSubsequenceHelper("TT", "TTA", "MM-");
+        seq =    "TAG";
+        refSeq = "TG";
+        testAlignSubsequenceHelper(seq, refSeq, "M+M", 0, seq.length(), 0, refSeq.length());
 
-        testAlignSubsequenceHelper("TAG", "TG", "M+M");
+        seq =    "TG";
+        refSeq = "TAG";
+        testAlignSubsequenceHelper(seq, refSeq, "M-M", 0, seq.length(), 0, refSeq.length());
+        seq =   "TTAGG";
+        refSeq = "TAGG";
+        testAlignSubsequenceHelper(seq, refSeq, "MMMM", 1, seq.length(), 0, refSeq.length());
 
-        testAlignSubsequenceHelper("TG", "TAG", "M-M");
-        testAlignSubsequenceHelper("TTAGG", "TAGG", "+MMMM");
+        seq =       "TTAGGG";
+        refSeq = "CCCTAACCC";
+        testAlignSubsequenceHelper(seq, refSeq, "MSMSSS", 0, seq.length(), 3, refSeq.length());
+    }
 
-        testAlignSubsequenceHelper("TTAGGG", "CCCTAACCC", "---MSMSSS");
+    @Test
+    public void testAlignOverlapSimple()
+    {
+        String leftSeq;
+        String rightSeq;
+        leftSeq = "ATTCCAAGAATGCGCTGTATCTGCAA";
+        rightSeq =          "TGCGCTGTATCTGCAAATGGACAGTTT";
+        testAlignSubsequenceHelper(leftSeq, rightSeq, "MMMMMMMMMMMMMMMM", 10, leftSeq.length(), 0, 16);
     }
 
     private void testAlignSequenceHelper(String seq, String refSeq, String expectedAlignOps)
     {
-        List<SequenceAligner.AlignOp> alignOps = SequenceAligner.alignSequence(seq, refSeq);
-        assertEquals(expectedAlignOps, SequenceAligner.AlignOp.toString(alignOps));
+        testAlignSequenceHelper(seq, refSeq, expectedAlignOps, 0, seq.length(), 0, refSeq.length());
     }
 
-    private void testAlignSubsequenceHelper(String seq, String refSeq, String expectedAlignOps)
+    private void testAlignSequenceHelper(String seq, String refSeq, String expectedAlignOps, int seqAlignStart, int seqAlignEnd, int refSeqAlignStart, int refSeqAlignEnd)
     {
-        List<SequenceAligner.AlignOp> alignOps = SequenceAligner.alignSubsequence(seq, refSeq);
-        assertEquals(expectedAlignOps, SequenceAligner.AlignOp.toString(alignOps));
+        SequenceAligner.Alignment alignment = SequenceAligner.alignSequence(seq, refSeq);
+        assertEquals(expectedAlignOps, alignment.getAlignOpsString());
+    }
+
+    private void testAlignSubsequenceHelper(String seq, String refSeq, String expectedAlignOps, int seqAlignStart, int seqAlignEnd, int refSeqAlignStart, int refSeqAlignEnd)
+    {
+        SequenceAligner.Alignment alignment = SequenceAligner.alignSubsequence(seq, refSeq);
+        assertEquals(expectedAlignOps, alignment.getAlignOpsString());
+    }
+
+    private void testAlignOverlapHelper(String leftSeq, String rightSeq, String expectedAlignOps, int seqAlignStart, int seqAlignEnd, int refSeqAlignStart, int refSeqAlignEnd)
+    {
+        SequenceAligner.Alignment alignment = SequenceAligner.alignOverlap(leftSeq, rightSeq);
+        assertEquals(expectedAlignOps, alignment.getAlignOpsString());
     }
 }
-

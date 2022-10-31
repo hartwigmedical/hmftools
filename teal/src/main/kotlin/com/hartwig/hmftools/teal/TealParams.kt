@@ -4,6 +4,7 @@ import com.beust.jcommander.*
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.utils.FileWriterUtils
+import com.hartwig.hmftools.common.utils.config.RefGenomeVersionConverter
 
 // only options that needed to be shown in validation are put here
 private const val REF_SAMPLE = "-reference"
@@ -54,15 +55,6 @@ data class TealCommonParams
     fun getRefGenomeVersionStr() : String
     {
         return refGenomeVersion.identifier()
-    }
-
-    // we need to define a converter for ref genome version
-    class RefGenomeVersionConverter : IStringConverter<RefGenomeVersion>
-    {
-        override fun convert(value: String): RefGenomeVersion
-        {
-            return RefGenomeVersion.from(value)
-        }
     }
 
     fun referenceOnly() : Boolean
