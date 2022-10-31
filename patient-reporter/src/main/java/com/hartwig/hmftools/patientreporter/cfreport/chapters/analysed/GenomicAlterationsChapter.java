@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.linx.LinxFusion;
@@ -24,6 +23,7 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
+import com.hartwig.hmftools.patientreporter.algo.LohGenesReporting;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
@@ -293,7 +293,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createLOHTable(@NotNull List<GeneCopyNumber> lohGenes, @NotNull String signature) {
+    private static Table createLOHTable(@NotNull List<LohGenesReporting> lohGenes, @NotNull String signature) {
         String title = Strings.EMPTY;
         if (signature.equals("HRD")) {
             title = "Interesting LOH events in case of HRD";
@@ -307,16 +307,14 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1, 3 },
                 new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
-                        TableUtil.createHeaderCell("Tumor minor allele copies"), TableUtil.createHeaderCell("Tumor copies"),
-                        TableUtil.createHeaderCell(Strings.EMPTY) },
+                        TableUtil.createHeaderCell("Tumor minor allele copies"), TableUtil.createHeaderCell("Tumor copies")},
                 ReportResources.CONTENT_WIDTH_WIDE);
 
-        for (GeneCopyNumber lohGene : LohGenes.sort(lohGenes)) {
-            table.addCell(TableUtil.createContentCell(lohGene.chromosome() + lohGene.chromosomeBand()));
-            table.addCell(TableUtil.createContentCell(lohGene.geneName()));
-            table.addCell(TableUtil.createContentCell(String.valueOf(LohGenes.round(lohGene.minMinorAlleleCopyNumber()))));
-            table.addCell(TableUtil.createContentCell(String.valueOf(LohGenes.round(lohGene.minCopyNumber()))));
-            table.addCell(TableUtil.createContentCell(Strings.EMPTY));
+        for (LohGenesReporting lohGene : LohGenes.sort(lohGenes)) {
+            table.addCell(TableUtil.createContentCell(lohGene.location()));
+            table.addCell(TableUtil.createContentCell(lohGene.gene()));
+            table.addCell(TableUtil.createContentCell(String.valueOf(lohGene.minorAlleleCopies())));
+            table.addCell(TableUtil.createContentCell(String.valueOf(lohGene.tumorCopies())));
         }
 
         return TableUtil.createWrappingReportTable(title, null, table, TableUtil.TABLE_BOTTOM_MARGIN);

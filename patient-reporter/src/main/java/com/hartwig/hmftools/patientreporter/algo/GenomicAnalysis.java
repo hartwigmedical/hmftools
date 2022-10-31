@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
 import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
@@ -92,8 +91,8 @@ public abstract class GenomicAnalysis {
     public abstract HlaAllelesReportingData hlaAlleles();
 
     @NotNull
-    public abstract List<GeneCopyNumber> suspectGeneCopyNumbersHRDWithLOH();
+    public abstract List<LohGenesReporting> suspectGeneCopyNumbersHRDWithLOH();
 
     @NotNull
-    public abstract List<GeneCopyNumber> suspectGeneCopyNumbersMSIWithLOH();
+    public abstract List<LohGenesReporting> suspectGeneCopyNumbersMSIWithLOH();
 }

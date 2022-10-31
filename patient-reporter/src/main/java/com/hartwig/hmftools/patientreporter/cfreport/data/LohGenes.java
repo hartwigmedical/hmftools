@@ -1,27 +1,20 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.patientreporter.algo.LohGenesReporting;
 
 import org.jetbrains.annotations.NotNull;
 
 public class LohGenes {
 
-    public static long round(double copyNumber) {
-        return Math.round(Math.max(0, copyNumber));
-    }
-
     @NotNull
-    public static List<GeneCopyNumber> sort(@NotNull List<GeneCopyNumber> lohGenes) {
-        return lohGenes.stream().sorted((geneCopyNumber1, geneCopyNumber2) -> {
-            if (geneCopyNumber1.geneName().equals(geneCopyNumber2.geneName())) {
-                return geneCopyNumber1.geneName().compareTo(geneCopyNumber2.geneName());
-            } else {
-                return geneCopyNumber1.compareTo(geneCopyNumber2);
-            }
-        }).collect(Collectors.toList());
+    public static List<LohGenesReporting> sort(@NotNull List<LohGenesReporting> lohGenes) {
+        return lohGenes.stream()
+                .sorted(Comparator.comparing((LohGenesReporting lohGenesReporting) -> lohGenesReporting.gene()))
+                .collect(Collectors.toList());
     }
 
     @NotNull
