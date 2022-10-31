@@ -16,13 +16,10 @@ public class LohGenes {
     @NotNull
     public static List<GeneCopyNumber> sort(@NotNull List<GeneCopyNumber> lohGenes) {
         return lohGenes.stream().sorted((geneCopyNumber1, geneCopyNumber2) -> {
-            String location1 = zeroPrefixed(geneCopyNumber1.chromosome() + geneCopyNumber1.chromosomeBand());
-            String location2 = zeroPrefixed(geneCopyNumber2.chromosome() + geneCopyNumber2.chromosomeBand());
-
-            if (location1.equals(location2)) {
+            if (geneCopyNumber1.geneName().equals(geneCopyNumber2.geneName())) {
                 return geneCopyNumber1.geneName().compareTo(geneCopyNumber2.geneName());
             } else {
-                return location1.compareTo(location2);
+                return geneCopyNumber1.compareTo(geneCopyNumber2);
             }
         }).collect(Collectors.toList());
     }
