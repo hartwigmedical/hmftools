@@ -22,9 +22,15 @@ public final class GeneFusions {
     }
 
     @NotNull
-    public static Cell fusionContentType(@NotNull String reportType, @NotNull String transcript) {
+    public static Cell fusionContentType(@NotNull String reportType, @NotNull String geneName, @NotNull String transcript) {
         if (reportType.equals(KnownFusionType.IG_PROMISCUOUS.name()) || reportType.equals(KnownFusionType.IG_KNOWN_PAIR.name())) {
-            return TableUtil.createContentCell(new Paragraph(transcript));
+            if (geneName.startsWith("IG")) {
+                return TableUtil.createContentCell(new Paragraph(transcript));
+            } else {
+                return TableUtil.createContentCell(new Paragraph(transcript))
+                        .addStyle(ReportResources.dataHighlightLinksStyle())
+                        .setAction(PdfAction.createURI(GeneFusions.transcriptUrl(transcript)));
+            }
         } else {
             return TableUtil.createContentCell(new Paragraph(transcript))
                     .addStyle(ReportResources.dataHighlightLinksStyle())

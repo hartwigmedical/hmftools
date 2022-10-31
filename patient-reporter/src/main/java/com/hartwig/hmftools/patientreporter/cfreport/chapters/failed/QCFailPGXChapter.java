@@ -48,7 +48,8 @@ public class QCFailPGXChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        reportDocument.add(createPharmacogeneticsGenotypesTable(failReport.pharmacogeneticsGenotypes(), failReport.sampleReport().reportPharmogenetics()));
+        reportDocument.add(createPharmacogeneticsGenotypesTable(failReport.pharmacogeneticsGenotypes(),
+                failReport.sampleReport().reportPharmogenetics()));
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1 }));
         table.setWidth(contentWidth());
@@ -71,7 +72,8 @@ public class QCFailPGXChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createPharmacogeneticsGenotypesTable(@NotNull Map<String, List<PeachGenotype>> pharmacogeneticsGenotypes, boolean reportPharmacogenetics) {
+    private static Table createPharmacogeneticsGenotypesTable(@NotNull Map<String, List<PeachGenotype>> pharmacogeneticsGenotypes,
+            boolean reportPharmacogenetics) {
         String title = "Pharmacogenetics";
 
         if (reportPharmacogenetics) {
@@ -81,10 +83,11 @@ public class QCFailPGXChapter implements ReportChapter {
                 Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
                         new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
                                 TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
-                                TableUtil.createHeaderCell("Source").setTextAlignment(TextAlignment.CENTER) },
+                                TableUtil.createHeaderCell("Source") },
                         ReportResources.CONTENT_WIDTH_WIDE);
 
-                Set<String> sortedPharmacogenetics = Sets.newTreeSet(pharmacogeneticsGenotypes.keySet().stream().collect(Collectors.toSet()));
+                Set<String> sortedPharmacogenetics =
+                        Sets.newTreeSet(pharmacogeneticsGenotypes.keySet().stream().collect(Collectors.toSet()));
                 for (String sortPharmacogenetics : sortedPharmacogenetics) {
                     List<PeachGenotype> pharmacogeneticsGenotypeList = pharmacogeneticsGenotypes.get(sortPharmacogenetics);
                     contentTable.addCell(TableUtil.createContentCell(sortPharmacogenetics));
