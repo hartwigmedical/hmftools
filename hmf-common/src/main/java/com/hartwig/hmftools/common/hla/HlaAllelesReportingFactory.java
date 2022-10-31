@@ -135,26 +135,24 @@ public class HlaAllelesReportingFactory {
     @NotNull
     public static String HLApresenceInTumor(@NotNull LilacAllele allele, @NotNull String mutationString, boolean hasReliablePurity) {
         double tumorCopies = Double.parseDouble(SINGLE_DIGIT.format(allele.tumorCopyNumber()));
-        String presenceInTumor = Strings.EMPTY;
         boolean mutation = mutationString.contains("missense") || mutationString.contains("nonsense or frameshift")
                 || mutationString.contains("splice") || mutationString.contains("synonymous") || mutationString.contains("inframe indel");
         if (hasReliablePurity) {
             if (tumorCopies == 0) {
                 if (mutation) {
-                    presenceInTumor = "Unknown";
+                    return "Unknown";
                 } else {
-                    presenceInTumor = "No";
+                    return "No";
                 }
             } else {
                 if (!mutation) {
-                    presenceInTumor = "Yes";
+                    return "Yes";
                 } else {
-                    presenceInTumor = "Yes, but mutation(s) detected";
+                    return "Yes, but mutation(s) detected";
                 }
             }
         } else {
-            presenceInTumor = "Unknown";
+            return "Unknown";
         }
-        return presenceInTumor;
     }
 }

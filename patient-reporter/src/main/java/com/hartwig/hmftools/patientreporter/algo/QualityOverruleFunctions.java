@@ -65,14 +65,14 @@ public final class QualityOverruleFunctions {
     }
 
     @NotNull
-    public static List<GeneCopyNumber> overruleSuspectedLOH(@NotNull List<GeneCopyNumber> suspectedGenes, boolean hasReliablePurity) {
-        List<GeneCopyNumber> suspectedGenesCurated = Lists.newArrayList();
+    public static List<LohGenesReporting> overruleSuspectedLOH(@NotNull List<LohGenesReporting> suspectedGenes, boolean hasReliablePurity) {
+        List<LohGenesReporting> suspectedGenesCurated = Lists.newArrayList();
 
-        for (GeneCopyNumber copyNumber : suspectedGenes) {
-            suspectedGenesCurated.add(ImmutableGeneCopyNumber.builder()
-                    .from(copyNumber)
-                    .minMinorAlleleCopyNumber(hasReliablePurity ? copyNumber.minMinorAlleleCopyNumber() : Double.NaN)
-                    .minCopyNumber(hasReliablePurity ? copyNumber.minCopyNumber() : Double.NaN)
+        for (LohGenesReporting lohGenesReporting : suspectedGenes) {
+            suspectedGenesCurated.add(ImmutableLohGenesReporting.builder()
+                    .from(lohGenesReporting)
+                    .minorAlleleCopies(hasReliablePurity ? lohGenesReporting.minorAlleleCopies() : Double.NaN)
+                    .tumorCopies(hasReliablePurity ? lohGenesReporting.tumorCopies() : Double.NaN)
                     .build());
         }
         return suspectedGenesCurated;
@@ -107,7 +107,7 @@ public final class QualityOverruleFunctions {
                         .from(hlaReporting)
                         .germlineCopies(hasReliablePurity ? hlaReporting.germlineCopies() : Double.NaN)
                         .tumorCopies(hasReliablePurity ? hlaReporting.tumorCopies() : Double.NaN)
-                        .interpretation("Unknown")
+                        .interpretation(hasReliablePurity ? hlaReporting.interpretation() : "Unknown")
                         .build());
             }
             alleles.put(allele, hlaReportingListCurated);

@@ -68,6 +68,8 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
+import com.hartwig.hmftools.patientreporter.algo.ImmutableLohGenesReporting;
+import com.hartwig.hmftools.patientreporter.algo.LohGenesReporting;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.hartwig.serve.datamodel.EvidenceDirection;
@@ -223,20 +225,20 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<GeneCopyNumber> HRDLOHGenes() {
-        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
-        geneCopyNumbers.add(createTestCopyNumberBuilder("BRCA2").minCopyNumber(0.1).maxCopyNumber(7).build());
-        geneCopyNumbers.add(createTestCopyNumberBuilder("BRCA1").minCopyNumber(0.1).maxCopyNumber(7).build());
-        return geneCopyNumbers;
+    private static List<LohGenesReporting> HRDLOHGenes() {
+        List<LohGenesReporting> lohGenesReporting = Lists.newArrayList();
+        lohGenesReporting.add(ImmutableLohGenesReporting.builder().location("1p").gene("BRCA1").minorAlleleCopies(0.1).tumorCopies(7D).build());
+        lohGenesReporting.add(ImmutableLohGenesReporting.builder().location("1p").gene("BRCA2").minorAlleleCopies(0.1).tumorCopies(7D).build());
+        return lohGenesReporting;
 
     }
 
     @NotNull
-    private static List<GeneCopyNumber> MSILOHGenes() {
-        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
-        geneCopyNumbers.add(createTestCopyNumberBuilder("MLH1").minCopyNumber(0.1).maxCopyNumber(7).build());
-        geneCopyNumbers.add(createTestCopyNumberBuilder("MLH2").minCopyNumber(0.1).maxCopyNumber(7).build());
-        return geneCopyNumbers;
+    private static List<LohGenesReporting> MSILOHGenes() {
+        List<LohGenesReporting> lohGenesReporting = Lists.newArrayList();
+        lohGenesReporting.add(ImmutableLohGenesReporting.builder().location("1p").gene("MLH1").minorAlleleCopies(0.1).tumorCopies(7D).build());
+        lohGenesReporting.add(ImmutableLohGenesReporting.builder().location("1p").gene("MLH12").minorAlleleCopies(0.1).tumorCopies(7D).build());
+        return lohGenesReporting;
     }
 
     @NotNull
