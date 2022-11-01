@@ -63,7 +63,8 @@ public class DriverComparer implements ItemComparer
 
         for(DriverCatalog driver : drivers)
         {
-            driverDataList.add(new DriverData(driver));
+            boolean checkTranscript = mConfig.AlternateTranscriptDriverGenes.contains(driver.gene());
+            driverDataList.add(new DriverData(driver, checkTranscript));
         }
 
         return driverDataList;
@@ -91,7 +92,8 @@ public class DriverComparer implements ItemComparer
 
             for(DriverCatalog driver : drivers)
             {
-                comparableItems.add(new DriverData(driver));
+                boolean checkTranscript = mConfig.AlternateTranscriptDriverGenes.contains(driver.gene());
+                comparableItems.add(new DriverData(driver, checkTranscript));
             }
         }
         catch(IOException e)

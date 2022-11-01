@@ -35,12 +35,12 @@ public class DriverTest
         List<ComparableItem> refItems = Lists.newArrayList();
         List<ComparableItem> newItems = Lists.newArrayList();
 
-        refItems.add(new DriverData(createDriverCatalog("AR", DriverType.AMP, 1.0, 6)));
+        refItems.add(new DriverData(createDriverCatalog("AR", DriverType.AMP, 1.0, 6), false));
 
-        newItems.add(new DriverData(createDriverCatalog("TP53", DriverType.DEL, 1.0, 0.2)));
+        newItems.add(new DriverData(createDriverCatalog("TP53", DriverType.DEL, 1.0, 0.2), false));
 
-        refItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.7, 2)));
-        newItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.5, 2)));
+        refItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.7, 2), false));
+        newItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.5, 2), false));
 
         CommonUtils.compareItems(mismatches, MatchLevel.REPORTABLE, config.Thresholds, refItems, newItems);
 

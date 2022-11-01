@@ -37,6 +37,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -57,6 +58,7 @@ public class ComparConfig
     public final Map<String,FileSources> FileSources; // directories per type and keyed by source
 
     public final Set<String> DriverGenes;
+    public final Set<String> AlternateTranscriptDriverGenes;
 
     public final DiffThresholds Thresholds;
 
@@ -168,12 +170,21 @@ public class ComparConfig
         Thresholds.loadConfig(cmd.getOptionValue(THRESHOLDS, ""));
 
         DriverGenes = Sets.newHashSet();
+        AlternateTranscriptDriverGenes = Sets.newHashSet();
 
         if(cmd.hasOption(DRIVER_GENE_PANEL_OPTION))
         {
             try
             {
-                DriverGeneFile.read(cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION)).forEach(x -> DriverGenes.add(x.gene()));
+                List<DriverGene> driverGenes = DriverGeneFile.read(cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION));
+
+                for(DriverGene driverGene : driverGenes)
+                {
+                    DriverGenes.add(driverGene.gene());
+
+                    if(!driverGene.additionalReportedTranscripts().isEmpty())
+                        AlternateTranscriptDriverGenes.add(driverGene.gene());
+                }
             }
             catch(IOException e)
             {
@@ -376,6 +387,7 @@ public class ComparConfig
 
         Thresholds = new DiffThresholds();
         DriverGenes = Sets.newHashSet();
+        AlternateTranscriptDriverGenes = Sets.newHashSet();
         mSampleIdMappings = Maps.newHashMap();
     }
 }
