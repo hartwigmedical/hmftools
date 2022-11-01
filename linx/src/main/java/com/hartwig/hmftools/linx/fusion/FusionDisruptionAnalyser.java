@@ -517,7 +517,7 @@ public class FusionDisruptionAnalyser
 
         // given a chain sAe - sBe - sCe - sDe, where As and De are the open ends of the chain, the following fusions need to be tested:
         // a) each SV in isolation, ie as a single SV
-        // b) the left-most / lower breakend of each SV with with right-most / upper breakend of SVs higher up in the chain
+        // b) the left-most / lower breakend of each SV with the right-most / upper breakend of SVs higher up in the chain
 
         // whenever a linked pair is traversed by a fusion, it cannot touch or traverse genic regions without disrupting the fusion
         final List<LinkedPair> linkedPairs = chain.getLinkedPairs();
@@ -582,6 +582,13 @@ public class FusionDisruptionAnalyser
                     LinkedPair pair = linkedPairs.get(lpIndex2);
                     upperSV = pair.first();
                     upperBreakend = pair.firstBreakend();
+                }
+                else if(chain.isClosedLoop())
+                {
+                    // take the breakend that loops around to the start
+                    LinkedPair pair = linkedPairs.get(lpIndex2 - 1);
+                    upperSV = pair.second();
+                    upperBreakend = pair.secondBreakend().getOtherBreakend();
                 }
                 else
                 {
