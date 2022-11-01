@@ -71,8 +71,8 @@ public final class QualityOverruleFunctions {
         for (LohGenesReporting lohGenesReporting : suspectedGenes) {
             suspectedGenesCurated.add(ImmutableLohGenesReporting.builder()
                     .from(lohGenesReporting)
-                    .minorAlleleCopies(hasReliablePurity ? lohGenesReporting.minorAlleleCopies() : Double.NaN)
-                    .tumorCopies(hasReliablePurity ? lohGenesReporting.tumorCopies() : Double.NaN)
+                    .minorAlleleCopies(hasReliablePurity ? lohGenesReporting.minorAlleleCopies() : null)
+                    .tumorCopies(hasReliablePurity ? lohGenesReporting.tumorCopies() : null)
                     .build());
         }
         return suspectedGenesCurated;

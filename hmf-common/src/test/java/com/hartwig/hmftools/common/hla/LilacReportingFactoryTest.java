@@ -21,7 +21,7 @@ public class LilacReportingFactoryTest {
         alleles.add(LilacTestFactory.builder().allele("B*18:02").somaticSplice(1D).tumorCopyNumber(1.2).somaticNonsenseOrFrameshift(1D).build());
         alleles.add(LilacTestFactory.builder().allele("B*35:02").tumorCopyNumber(1.1).build());
         alleles.add(LilacTestFactory.builder().allele("C*10:12").somaticSynonymous(1D).tumorCopyNumber(0).build());
-        alleles.add(LilacTestFactory.builder().allele("C*16:02").tumorCopyNumber(0).build());
+        alleles.add(LilacTestFactory.builder().allele("C*16:02").tumorCopyNumber(0).somaticMissense(1D).build());
 
         return ImmutableLilacSummaryData.builder().qc("PASS").alleles(alleles).build();
     }
@@ -42,8 +42,8 @@ public class LilacReportingFactoryTest {
         assertEquals(HlaAllelesReportingFactory.mutationString(mapLilac.get("A*03:01").get(0)), "2 missense");
         assertEquals(HlaAllelesReportingFactory.mutationString(mapLilac.get("B*18:02").get(0)), "1 nonsense or frameshift, 1 splice");
         assertEquals(HlaAllelesReportingFactory.mutationString(mapLilac.get("B*35:02").get(0)), "No");
-        assertEquals(HlaAllelesReportingFactory.mutationString(mapLilac.get("C*10:12").get(0)), "1 synonymous");
-        assertEquals(HlaAllelesReportingFactory.mutationString(mapLilac.get("C*16:02").get(0)), "No");
+        assertEquals(HlaAllelesReportingFactory.mutationString(mapLilac.get("C*10:12").get(0)), "No");
+        assertEquals(HlaAllelesReportingFactory.mutationString(mapLilac.get("C*16:02").get(0)), "1 missense");
     }
 
     @Test
@@ -60,10 +60,10 @@ public class LilacReportingFactoryTest {
                 true), "Yes");
         assertEquals(HlaAllelesReportingFactory.HLApresenceInTumor(mapLilac.get("C*10:12").get(0),
                 HlaAllelesReportingFactory.mutationString(mapLilac.get("C*10:12").get(0)),
-                true), "Unknown");
+                true), "No");
         assertEquals(HlaAllelesReportingFactory.HLApresenceInTumor(mapLilac.get("C*16:02").get(0),
                 HlaAllelesReportingFactory.mutationString(mapLilac.get("C*16:02").get(0)),
-                true), "No");
+                true), "Unknown");
     }
 
     @Test
@@ -118,16 +118,16 @@ public class LilacReportingFactoryTest {
         HlaReporting lilacReporting4 = extractHlaReporting("C*10:12", lilacReporting.get("HLA-C"));
         assertEquals(lilacReporting4.hlaAllele().gene(), "HLA-C");
         assertEquals(lilacReporting4.hlaAllele().germlineAllele(), "C*10:12");
-        assertEquals(lilacReporting4.somaticMutations(), "1 synonymous");
-        assertEquals(lilacReporting4.interpretation(), "Unknown");
+        assertEquals(lilacReporting4.somaticMutations(), "No");
+        assertEquals(lilacReporting4.interpretation(), "No");
         assertEquals(lilacReporting4.tumorCopies(), 0D);
         assertEquals(lilacReporting4.germlineCopies(), 1D);
 
         HlaReporting lilacReporting5 = extractHlaReporting("C*16:02", lilacReporting.get("HLA-C"));
         assertEquals(lilacReporting5.hlaAllele().gene(), "HLA-C");
         assertEquals(lilacReporting5.hlaAllele().germlineAllele(), "C*16:02");
-        assertEquals(lilacReporting5.somaticMutations(), "No");
-        assertEquals(lilacReporting5.interpretation(), "No");
+        assertEquals(lilacReporting5.somaticMutations(), "1 missense");
+        assertEquals(lilacReporting5.interpretation(), "Unknown");
         assertEquals(lilacReporting5.tumorCopies(), 0D);
         assertEquals(lilacReporting5.germlineCopies(), 1D);
     }

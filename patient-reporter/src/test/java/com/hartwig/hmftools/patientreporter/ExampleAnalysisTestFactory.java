@@ -227,8 +227,8 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static List<LohGenesReporting> HRDLOHGenes() {
         List<LohGenesReporting> lohGenesReporting = Lists.newArrayList();
-        lohGenesReporting.add(ImmutableLohGenesReporting.builder().location("1p").gene("BRCA1").minorAlleleCopies(0.1).tumorCopies(7D).build());
-        lohGenesReporting.add(ImmutableLohGenesReporting.builder().location("1p").gene("BRCA2").minorAlleleCopies(0.1).tumorCopies(7D).build());
+        lohGenesReporting.add(ImmutableLohGenesReporting.builder().location("1p").gene("BRCA1").minorAlleleCopies(0L).tumorCopies(1L).build());
+        lohGenesReporting.add(ImmutableLohGenesReporting.builder().location("1p").gene("BRCA2").minorAlleleCopies(0L).tumorCopies(7L).build());
         return lohGenesReporting;
 
     }
@@ -236,8 +236,8 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static List<LohGenesReporting> MSILOHGenes() {
         List<LohGenesReporting> lohGenesReporting = Lists.newArrayList();
-        lohGenesReporting.add(ImmutableLohGenesReporting.builder().location("1p").gene("MLH1").minorAlleleCopies(0.1).tumorCopies(7D).build());
-        lohGenesReporting.add(ImmutableLohGenesReporting.builder().location("1p").gene("MLH12").minorAlleleCopies(0.1).tumorCopies(7D).build());
+        lohGenesReporting.add(ImmutableLohGenesReporting.builder().location("1p").gene("MLH1").minorAlleleCopies(0L).tumorCopies(7L).build());
+        lohGenesReporting.add(ImmutableLohGenesReporting.builder().location("1p").gene("MLH12").minorAlleleCopies(0L).tumorCopies(7L).build());
         return lohGenesReporting;
     }
 

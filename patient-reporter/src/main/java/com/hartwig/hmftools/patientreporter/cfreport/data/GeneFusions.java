@@ -24,7 +24,7 @@ public final class GeneFusions {
     @NotNull
     public static Cell fusionContentType(@NotNull String reportType, @NotNull String geneName, @NotNull String transcript) {
         if (reportType.equals(KnownFusionType.IG_PROMISCUOUS.name()) || reportType.equals(KnownFusionType.IG_KNOWN_PAIR.name())) {
-            if (geneName.startsWith("IG")) {
+            if (geneName.startsWith("@IG")) {
                 return TableUtil.createContentCell(new Paragraph(transcript));
             } else {
                 return TableUtil.createContentCell(new Paragraph(transcript))
