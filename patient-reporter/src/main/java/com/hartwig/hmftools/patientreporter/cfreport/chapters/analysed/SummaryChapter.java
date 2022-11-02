@@ -469,6 +469,8 @@ public class SummaryChapter implements ReportChapter {
             return "Present in tumor";
         } else if (interpretation.contains("No")) {
             return "Not present in tumor";
+        } else if (interpretation.contains("Unknown")) {
+            return "Unknown";
         } else {
             return Strings.EMPTY;
         }
