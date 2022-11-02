@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermline
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.NONE;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.VARIANT_NOT_LOST;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.WILDTYPE_LOST;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.REPORTED_DESC;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_DESC;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 
 import java.util.Collections;
 import java.util.List;

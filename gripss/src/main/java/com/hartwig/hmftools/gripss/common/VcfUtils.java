@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.gripss.common;
 
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.HOTSPOT;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IHOMPOS;
@@ -15,7 +13,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LIN
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.TAF;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 
 import java.util.List;

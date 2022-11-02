@@ -3,10 +3,9 @@ package com.hartwig.hmftools.purple.somatic;
 import static com.hartwig.hmftools.purple.config.SomaticFitConfig.CLONALITY_BIN_WIDTH;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
@@ -58,7 +57,7 @@ public class SomaticVariantEnrichment
 
     public VCFHeader populateHeader(final VCFHeader template)
     {
-        VCFHeader header = SomaticRefContextEnrichment.addHeader(template);
+        VCFHeader header = SageVcfTags.addRefContextHeader(template);
         header = KataegisEnrichment.enrichHeader(header);
         header = SubclonalLikelihoodEnrichment.enrichHeader(header);
         header = HotspotEnrichment.enrichHeader(header);

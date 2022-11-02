@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.sv;
 
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_INFO;
+
 import static htsjdk.variant.vcf.VCFHeaderLineCount.UNBOUNDED;
 
 import org.jetbrains.annotations.NotNull;
@@ -13,8 +16,6 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class StructuralVariantHeader {
 
-    public static final String PURPLE_AF_INFO = "PURPLE_AF";
-    public static final String PURPLE_CN_INFO = "PURPLE_CN";
     public static final String PURPLE_JUNCTION_COPY_NUMBER_INFO = "PURPLE_JCN";
     public static final String PURPLE_PLOIDY_INFO = "PURPLE_PLOIDY";
     public static final String PURPLE_CN_CHANGE_INFO = "PURPLE_CN_CHANGE";

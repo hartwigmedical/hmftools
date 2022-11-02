@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 

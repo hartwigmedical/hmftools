@@ -1,18 +1,16 @@
 package com.hartwig.hmftools.common.variant;
 
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_FLAG;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStr;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_AF_INFO;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_VARIANT_CN_INFO;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.REPORTED_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.TRINUCLEOTIDE_FLAG;
-import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -83,7 +81,6 @@ public class VariantContextDecorator implements GenomePosition
         return mFilter.equals(SomaticVariantFactory.PASS_FILTER);
     }
 
-    @NotNull
     public PathogenicSummary clinvarPathogenicSummary()
     {
         if(mClinvarPathogenicSummary == null)
@@ -94,19 +91,24 @@ public class VariantContextDecorator implements GenomePosition
         return mClinvarPathogenicSummary;
     }
 
-    @NotNull
     public VariantContext context()
     {
         return mContext;
     }
-
-    @NotNull
     public String filter()
     {
         return mFilter;
     }
+    public VariantType type() { return mType; }
+    public String ref()
+    {
+        return mRef;
+    }
+    public String alt()
+    {
+        return mAlt;
+    }
 
-    @NotNull
     @Override
     public String chromosome()
     {
@@ -119,25 +121,6 @@ public class VariantContextDecorator implements GenomePosition
         return mContext.getStart();
     }
 
-    @NotNull
-    public VariantType type()
-    {
-        return mType;
-    }
-
-    @NotNull
-    public String ref()
-    {
-        return mRef;
-    }
-
-    @NotNull
-    public String alt()
-    {
-        return mAlt;
-    }
-
-    @NotNull
     public VariantImpact variantImpact()
     {
         if(mVariantImpact == null)
@@ -148,13 +131,11 @@ public class VariantContextDecorator implements GenomePosition
         return mVariantImpact;
     }
 
-    @NotNull
     public String gene()
     {
         return variantImpact().CanonicalGeneName;
     }
 
-    @NotNull
     public DriverImpact impact()
     {
         if(mDriverImpact == null)
@@ -165,7 +146,6 @@ public class VariantContextDecorator implements GenomePosition
         return mDriverImpact;
     }
 
-    @NotNull
     public CodingEffect canonicalCodingEffect()
     {
         return variantImpact().CanonicalCodingEffect;
@@ -192,17 +172,17 @@ public class VariantContextDecorator implements GenomePosition
     @Nullable
     public String localPhaseSetsToString()
     {
-        List<Integer> localPhaseSets = mContext.getAttributeAsIntList(VariantVcfTags.LOCAL_PHASE_SET, 0);
+        List<Integer> localPhaseSets = mContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0);
         return localPhaseSetsStr(localPhaseSets);
     }
 
     @Nullable
     public Integer localPhaseSet()
     {
-        if(!mContext.hasAttribute(VariantVcfTags.LOCAL_PHASE_SET))
+        if(!mContext.hasAttribute(LOCAL_PHASE_SET))
             return null;
 
-        List<Integer> localPhaseSets = mContext.getAttributeAsIntList(VariantVcfTags.LOCAL_PHASE_SET, 0);
+        List<Integer> localPhaseSets = mContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0);
         return !localPhaseSets.isEmpty() ? localPhaseSets.get(0) : null;
     }
 
@@ -220,41 +200,32 @@ public class VariantContextDecorator implements GenomePosition
         return genotype != null ? GenotypeStatus.fromGenotype(genotype) : GenotypeStatus.UNKNOWN;
     }
 
-    @NotNull
     public VariantTier tier()
     {
         return mTier;
     }
 
-    @NotNull
     public PathogenicSummary pathogenicSummary()
     {
         return PathogenicSummaryFactory.fromContext(mContext);
     }
 
-    public int repeatCount()
-    {
-        return mContext.getAttributeAsInt(REPEAT_COUNT_FLAG, 0);
-    }
+    public int repeatCount() { return mContext.getAttributeAsInt(SageVcfTags.REPEAT_COUNT_FLAG, 0); }
 
-    @NotNull
     public String repeatSequence()
     {
-        return mContext.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY);
+        return mContext.getAttributeAsString(SageVcfTags.REPEAT_SEQUENCE_FLAG, Strings.EMPTY);
     }
 
-    @NotNull
     public Hotspot hotspot()
     {
         return Hotspot.fromVariant(mContext);
     }
-
     public boolean isHotspot()
     {
         return hotspot() == Hotspot.HOTSPOT;
     }
 
-    @NotNull
     public String trinucleotideContext()
     {
         return mContext.getAttributeAsString(TRINUCLEOTIDE_FLAG, Strings.EMPTY);
@@ -270,7 +241,6 @@ public class VariantContextDecorator implements GenomePosition
         return mContext.getAttributeAsBoolean(REPORTED_FLAG, false);
     }
 
-    @NotNull
     public String microhomology()
     {
         return mContext.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY);

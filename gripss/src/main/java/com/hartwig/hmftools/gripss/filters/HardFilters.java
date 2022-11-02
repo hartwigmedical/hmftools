@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.gripss.filters;
 
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsDouble;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.sglFragmentCount;
 
 import com.hartwig.hmftools.gripss.common.VariantAltInsertCoords;
-import com.hartwig.hmftools.gripss.common.VcfUtils;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
 
 import htsjdk.variant.variantcontext.Genotype;

@@ -1,9 +1,15 @@
 package com.hartwig.hmftools.common.variant.enrich;
 
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_FLAG;
+
 import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.variant.Microhomology;
+import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
 
@@ -11,29 +17,16 @@ import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class SomaticRefContextEnrichment implements VariantContextEnrichment
 {
     private static final Logger LOGGER = LogManager.getLogger(SomaticRefContextEnrichment.class);
-
-    public static final String MICROHOMOLOGY_FLAG = "MH";
-    public static final String TRINUCLEOTIDE_FLAG = "TNC";
-    public static final String REPEAT_COUNT_FLAG = "REP_C";
-    public static final String REPEAT_SEQUENCE_FLAG = "REP_S";
-
-    private static final String REPEAT_FLAG_DESCRIPTION = "Repeat sequence";
-    private static final String MICROHOMOLOGY_FLAG_DESCRIPTION = "Microhomology";
-    private static final String REPEAT_COUNT_DESCRIPTION = "Repeat sequence count";
-    private static final String TRINUCLEOTIDE_FLAG_DESCRIPTION = "Tri-nucleotide context";
 
     private final IndexedFastaSequenceFile mRefGenome;
 
@@ -47,8 +40,9 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment
     }
 
     @Override
-    public VCFHeader enrichHeader(final VCFHeader template) { return addHeader(template); }
+    public VCFHeader enrichHeader(final VCFHeader template) { return SageVcfTags.addRefContextHeader(template); }
 
+    /*
     public static VCFHeader addHeader(final VCFHeader template)
     {
         template.addMetaDataLine(new VCFInfoHeaderLine(TRINUCLEOTIDE_FLAG, 1, VCFHeaderLineType.String, TRINUCLEOTIDE_FLAG_DESCRIPTION));
@@ -58,6 +52,7 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment
 
         return template;
     }
+    */
 
     @Override
     public void accept(final VariantContext context)

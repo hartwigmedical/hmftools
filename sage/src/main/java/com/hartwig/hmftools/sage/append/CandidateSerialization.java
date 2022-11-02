@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.sage.append;
 
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.TIER;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_EVENTS;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_INDEX;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_LEFT_FLANK;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_MICRO_HOMOLOGY;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_RIGHT_FLANK;
 

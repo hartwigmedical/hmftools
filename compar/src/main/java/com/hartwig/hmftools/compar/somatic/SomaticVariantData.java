@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.compar.somatic;
 
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.SUBCLONAL_LIKELIHOOD_FLAG;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
@@ -26,7 +27,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.VariantVcfTags;
+import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -198,7 +199,7 @@ public class SomaticVariantData implements ComparableItem
                 variantImpact.CanonicalHgvsCoding,
                 variantImpact.CanonicalHgvsProtein,
                 variantImpact.OtherReportableEffects,
-                context.hasAttribute(VariantVcfTags.LOCAL_PHASE_SET),
+                context.hasAttribute(LOCAL_PHASE_SET),
                 (int)context.getPhredScaledQual(),
                 context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0),
                 context.getFilters());

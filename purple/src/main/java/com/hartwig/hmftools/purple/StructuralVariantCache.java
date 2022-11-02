@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SVTYPE;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_INFO;
 
 import java.io.File;
 import java.util.Collection;
@@ -236,12 +238,12 @@ public class StructuralVariantCache
         VariantContextBuilder builder = new VariantContextBuilder(template);
         if(!purpleAF.isEmpty())
         {
-            builder.attribute(StructuralVariantHeader.PURPLE_AF_INFO, purpleAF);
+            builder.attribute(PURPLE_AF_INFO, purpleAF);
         }
 
         if(!purpleCN.isEmpty())
         {
-            builder.attribute(StructuralVariantHeader.PURPLE_CN_INFO, purpleCN);
+            builder.attribute(PURPLE_CN_INFO, purpleCN);
         }
 
         if(!purpleCNChange.isEmpty())
