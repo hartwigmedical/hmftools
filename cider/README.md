@@ -112,7 +112,7 @@ cohortFrequency | TO DO
 ## Limitations / Future improvements
   
 ### Bam extraction:
-- *Reads mapped to other locations* - We only use reads where the alignment overlaps a known V or J anchor sequence coordinate which means the program is fast. We could also look for more reads with sequences that precisely or partially match known anchors but which have not been mapped to the expected locations.    
+- #Reads mapped to other locations# - We only use reads where the alignment overlaps a known V or J anchor sequence coordinate which means the program is fast. We could also look for more reads with sequences that precisely or partially match known anchors but which have not been mapped to the expected locations.    
 - *Mate overlap* - Where fragment lengths are short the reads may overlap (particularly relevant for RNA). For each extracted read pair test for overlap by searching for an exact match for the innermost 10 bases of each read (allowing for differences if base quality < 25). If a match is found then check that the full overlapped region is identical (again allowing for base quality trimming). Create a consensus sequence for the 2 reads, using the highest base quality where the sequences differ.  
 - *Fragments with both reads unmapped reads* - these are not queried and extracted. 
 
