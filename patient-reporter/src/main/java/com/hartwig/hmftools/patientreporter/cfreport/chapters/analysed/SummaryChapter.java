@@ -211,7 +211,9 @@ public class SummaryChapter implements ReportChapter {
                 table);
 
         String cuppaPrediction = Strings.EMPTY;
-        if (patientReport.molecularTissueOriginReporting() != null && patientReport.genomicAnalysis().hasReliablePurity()) {
+        if (patientReport.molecularTissueOriginReporting() != null) {
+            cuppaPrediction = DataUtil.NA_STRING;
+        } else if (patientReport.molecularTissueOriginReporting() != null && patientReport.genomicAnalysis().hasReliablePurity()) {
             if (patientReport.molecularTissueOriginReporting().interpretLikelihood() == null) {
                 cuppaPrediction = patientReport.molecularTissueOriginReporting().interpretCancerType();
             } else {

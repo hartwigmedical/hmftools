@@ -77,13 +77,20 @@ public class XMLFactory {
                         .valuePath(Map.of("value", String.valueOf(report.genomicAnalysis().averageTumorPloidy())))
                         .build());
 
-        String cupAnalyse = Strings.EMPTY;
-        if (report.molecularTissueOriginReporting().interpretLikelihood() == null) {
+        String cupAnalyse = null;
+        if (report.molecularTissueOriginReporting() == null) {
+            cupAnalyse = null;
+        } else if (report.molecularTissueOriginReporting().interpretLikelihood() == null) {
             cupAnalyse = report.molecularTissueOriginReporting().interpretCancerType();
         } else {
-            cupAnalyse = report.molecularTissueOriginReporting().interpretCancerType() + " (" + report.molecularTissueOriginReporting().interpretLikelihood() + ")";
+            cupAnalyse = report.molecularTissueOriginReporting().interpretCancerType() + " (" + report.molecularTissueOriginReporting()
+                    .interpretLikelihood() + ")";
         }
-        mapXml.put("itemWgsCupAnalyse", ImmutableKeyXML.builder().keyPath("wgsCupAnalyse").valuePath(Map.of("value", cupAnalyse)).build());
+        mapXml.put("itemWgsCupAnalyse",
+                ImmutableKeyXML.builder()
+                        .keyPath("wgsCupAnalyse")
+                        .valuePath(cupAnalyse == null ? null : Map.of("value", cupAnalyse))
+                        .build());
 
         String disclaimer = Strings.EMPTY;
         disclaimer += report.genomicAnalysis().hasReliablePurity() ? Strings.EMPTY : "Disclaimer. ";

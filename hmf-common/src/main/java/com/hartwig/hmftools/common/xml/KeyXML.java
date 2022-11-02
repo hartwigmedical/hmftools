@@ -18,6 +18,6 @@ public abstract class KeyXML {
     public abstract String keyPath();
 
     @JacksonXmlProperty(localName = "values")
-    @NotNull
+    @Nullable
     public abstract Map<String, String> valuePath();
 }
