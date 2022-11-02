@@ -205,7 +205,7 @@ public class VariantFilters
         }
 
         // MNV Tests
-        if(aboveMaxMnvIndelNormalAltSupport(tier, normal, mConfig.MnvFilter))
+        if(aboveMaxMnvIndelNormalAltSupport(tier, normal))
         {
             filters.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.filterName());
         }
@@ -233,8 +233,8 @@ public class VariantFilters
         if(!primaryTumor.isIndel() && normal.rawAltBaseQuality() > 0 && normal.rawAltBaseQuality() < NORMAL_RAW_ALT_BQ_MAX
         && normal.rawAltSupport() == normal.altSupport())
         {
-            double normalRawBqVcf = normal.rawAltBaseQuality() / (double)(normal.rawAltBaseQuality() + normal.rawRefBaseQuality());
-            normalVaf = min(normalVaf, normalRawBqVcf);
+            double normalRawBqVaf = normal.rawAltBaseQuality() / (double)(normal.rawAltBaseQuality() + normal.rawRefBaseQuality());
+            normalVaf = min(normalVaf, normalRawBqVaf);
         }
 
         return Doubles.greaterThan(normalVaf, config.MaxGermlineVaf);
@@ -250,14 +250,14 @@ public class VariantFilters
         return Doubles.positive(tumorQual) && Doubles.greaterThan(germlineQual / tumorQual, config.MaxGermlineRelativeQual);
     }
 
-    private static boolean aboveMaxMnvIndelNormalAltSupport(final VariantTier tier, final ReadContextCounter normal, boolean applyMnvFilter)
+    private static boolean aboveMaxMnvIndelNormalAltSupport(final VariantTier tier, final ReadContextCounter normal)
     {
         if(tier == VariantTier.HOTSPOT)
             return false;
 
-        if((applyMnvFilter && normal.variant().isMNV()) || (normal.variant().isInsert() && normal.variant().indelLength() >= LONG_GERMLINE_INSERT_LENGTH))
+        if(normal.variant().isMNV() || (normal.variant().isInsert() && normal.variant().indelLength() >= LONG_GERMLINE_INSERT_LENGTH))
         {
-            double depth = (double)normal.depth();
+            double depth = normal.depth();
             double altSupportPerc = depth > 0 ? normal.altSupport() / depth : 0;
             return altSupportPerc >= MAX_INDEL_GERMLINE_ALT_SUPPORT;
         }
@@ -281,7 +281,7 @@ public class VariantFilters
         if(variant.tier() == VariantTier.HOTSPOT)
             return true;
 
-        // Its not always 100% transparent whats happening with the mixed germline dedup logic unless we keep all the associated records
+        // Its not always 100% transparent what's happening with the mixed germline dedup logic unless we keep all the associated records
         if(variant.mixedGermlineImpact() > 0)
             return true;
 

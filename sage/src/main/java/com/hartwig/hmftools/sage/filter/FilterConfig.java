@@ -19,7 +19,6 @@ public class FilterConfig
 {
     public final boolean HardFilter;
     public final boolean SoftFilter;
-    public final boolean MnvFilter;
     public final int HardMinTumorQual;
     public final double HardMinTumorVaf;
     public final int HardMinTumorRawAltSupport;
@@ -35,7 +34,6 @@ public class FilterConfig
 
     private static final String SOFT_FILTER = "soft_filter_enabled";
     private static final String HARD_FILTER = "hard_filter_enabled";
-    private static final String MNV_FILTER = "mnv_filter_enabled";
 
     private static final String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
     private static final String HARD_MIN_TUMOR_VAF = "hard_min_tumor_vaf";
@@ -53,7 +51,6 @@ public class FilterConfig
     {
         SoftFilter = getConfigValue(cmd, SOFT_FILTER, DEFAULT_SOFT_FILTER_ENABLED);
         HardFilter = getConfigValue(cmd, HARD_FILTER, DEFAULT_HARD_FILTER_ENABLED);
-        MnvFilter = getConfigValue(cmd, MNV_FILTER, DEFAULT_MNV_FILTER_ENABLED);
         FilteredMaxNormalAltSupport = getConfigValue(cmd, FILTERED_MAX_NORMAL_ALT_SUPPORT, DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT);
         HardMinTumorQual = getConfigValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL);
         HardMinTumorVaf = getConfigValue(cmd, HARD_MIN_TUMOR_VAF, DEFAULT_HARD_MIN_TUMOR_VAF);
@@ -71,7 +68,6 @@ public class FilterConfig
     {
         HardFilter = false;
         SoftFilter = true;
-        MnvFilter = true;
         HardMinTumorQual = DEFAULT_HARD_MIN_TUMOR_QUAL;
         HardMinTumorVaf = DEFAULT_HARD_MIN_TUMOR_VAF;
         HardMinTumorRawAltSupport = DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT;
@@ -91,7 +87,6 @@ public class FilterConfig
 
         options.addOption(SOFT_FILTER, false, "Enable soft filters [" + DEFAULT_SOFT_FILTER_ENABLED + "]");
         options.addOption(HARD_FILTER, false, "All filters are hard [" + DEFAULT_HARD_FILTER_ENABLED + "]");
-        options.addOption(MNV_FILTER, false, "Enable max_germline_alt_support mnv filter [" + DEFAULT_MNV_FILTER_ENABLED + "]");
         options.addOption(HARD_MIN_TUMOR_QUAL, true, "Hard minimum tumor quality [" + DEFAULT_HARD_MIN_TUMOR_QUAL + "]");
         options.addOption(HARD_MIN_TUMOR_VAF, true, "Hard minimum tumor VAF [" + DEFAULT_HARD_MIN_TUMOR_VAF + "]");
         options.addOption(HARD_MIN_TUMOR_RAW_ALT_SUPPORT, true,
