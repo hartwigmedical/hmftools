@@ -121,7 +121,7 @@ java -jar lilac.jar \
 
 
 ## Algorithm
-The starting point for the LILAC algorithm is the complete set of possible 4 digit alleles and all the fragments aligned to HLA-A, HLA-B and HLA-C. Where multiple 6 digit or 8 digit types are present in the IMGT/HLA database, LILAC uses the numerically lowest type for all calculations. Note that 2 HLA-A alleles {A*31:135, A*33:191} have been removed from the database due to it frequently being found as a low level artefact (likely due to the high similarity to closely related genes and pseudogenes such as HLA-H). 
+The starting point for the LILAC algorithm is the complete set of possible 4 digit alleles and all the fragments aligned to HLA-A, HLA-B and HLA-C. Where multiple 6 digit or 8 digit types are present in the IMGT/HLA database, LILAC uses the numerically lowest type for all calculations. Note that 3 HLA-A alleles {A*31:135, A*33:191,A*02:783} and 1 HLA-B gene {B*08:282} have been removed from the database due to it frequently being found as a low level artefact (likely due to the high similarity to closely related genes and pseudogenes such as HLA-H). 
 
 LILAC algorithm begins with collecting all fragments which are not duplicates and have:
 - At least one read with an alignment overlapping a coding base of HLA-A, HLA-B or HLA-C; and
