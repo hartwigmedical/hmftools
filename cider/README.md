@@ -22,7 +22,8 @@ Gene component | Anchor region ( from the human_IMGT+C.fa, must be at least 25 b
 IGHV | Base 283-312.  
 IGHJ | 30 base sequence starting with TGGGG (J-TRP) 
 IGKV | Base 283-312. 
-IGKJ | Sequence starting with “TTTG” or “TTCG” starting between 27 and 33 
+IGKJ | Sequence starting with “TTTG” or “TTCG” starting between 27 and 33. 
+IGK-KDE | Specific anchor coordinates rom the K Del region are checked so that we can detect IGK deletion type rearrangements
 IGLV | Base 283-312.  
 IGLJ | Sequence starting with “TTTG” or “TTCG” starting between 27 and 33 
 TRAV | Base 283-312.  
@@ -62,3 +63,62 @@ A sequence is collapsed into another sequence if it is identical at all bases wi
 
 Each V only anchored read is also checked for partial overlap with each J only anchored read. If they exactly match with more than 15 nucleotides of exact match (allowing for low quality bases) then they are also collapsed into a single sequence. 
 
+### Filter and output VDJ sequences 
+Each collapsed sequence is either marked as PASS or one or more of the following filters 
+- NO_V_ANCHOR - No candidate V anchor found 
+- NO_J_ANCHOR - No candidate J anchor found 
+- POOR_V_ANCHOR - No V anchor found with similarity score >=0 
+- POOR_J_ANCHOR - No J anchor found with similarity score >=0 
+- DUPLICATE - CDR3 nt sequence is identical to another sequence with more support (different anchors) 
+- MAX_LENGTH - CDR3 nt sequence must be less than 40 AA in length 
+- MIN_LENGTH - CDR3 nt sequence must be at least 4 AA in length
+- MATCHES_REF - NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0.
+
+Sequences with poor or no anchor may represent partial rearrangements.
+ 
+The full set of fields output are:
+
+Field | Explanation 
+--|--
+CDR3Seq|CDR3 nucleotide sequence 
+CDR3aa |CDR3 aa sequence 
+Filter | PASS if viable CDR3 sequence or one or more filter reasons 
+minHighQualBaseReads|number of reads in the least supported base in the CDR3 region 
+assignedReads|Total reads assigned to candidate sequence. 
+JAlignedReads |# of reads initially aligned to J gene 
+VAlignedReads |# of reads initially aligned to V gene 
+inFrame | CDR3 sequence is inframe {T/F} 
+containsStop | CDR3 contains stop codon {T/F} 
+vType | {IGKV;IGLV;IGHV;TRAV;TRBV;TRDV;TRGV} 
+vAnchorEnd | Position of V anchor end in nt sequence 
+vAnchorNT | V anchor sequence in nt 
+vAnchorTemplateSeq | Best scoring V template anchor in nt (or null if read aligned to V anchor) 
+vAnchorAA |V anchor sequence in AA 
+vAnchorTemplateAA | Best scoring V template Anchor in AA (or null if read aligned to V anchor) 
+vSimilarityScore  | Blosum similarity score for template anchor (or null if read aligned to V anchor) 
+vNonSplitReads | Count of reads supporting sequence with at least 30 aligned bases either side of last base of conserved C 
+jType | {IGHJ;IGKJ;IGK-KDE,IGLJ;TRAJ;TRBJ;TRDJ;TRGJ} 
+jAnchorEnd | Position of J anchor end in nt sequence 
+jAnchorSeq | J anchor sequence in nt 
+jAnchorTemplateSeq | Best scoring J template anchor in nt (or null if read aligned to J anchor) 
+jAnchorAA | J anchor sequence in AA 
+jAnchorTemplateAA | Best scoring J template Anchor in AA (or null if read aligned to J anchor) 
+jSimilarityScore | Blosum62 similarity score for template anchor (or null if read aligned to J anchor) 
+vNonSplitReads | Count of reads supporting sequence with at least 30 aligned bases either side of first base of conserved W/F 
+vdjSeq | Full consensus sequence in nucleotides 
+support | Counts of high quality base support at each nucleotide (radix-36 ASCII encoded) 
+cohortFrequency | TO DO 
+
+### Limitations / Future improvements
+  
+Bam extraction:
+- *Reads mapped to other locations* - We only use reads where the alignment overlaps a known V or J anchor sequence coordinate which means the program is fast. We could also look for more reads with sequences that precisely or partially match known anchors but which have not been mapped to the expected locations.    
+- *Mate overlap* - Where fragment lengths are short the reads may overlap (particularly relevant for RNA). For each extracted read pair test for overlap by searching for an exact match for the innermost 10 bases of each read (allowing for differences if base quality < 25). If a match is found then check that the full overlapped region is identical (again allowing for base quality trimming). Create a consensus sequence for the 2 reads, using the highest base quality where the sequences differ.  
+- *Fragments with both reads unmapped reads* - these are not queried and extracted. 
+
+CDR3 calling:
+- *Full receptor sequence* - We could assemble outwards from the CDR3 to predict the full receptor sequence.  
+- *PON* - We should filter sequences found in a large number of samples 
+- *Error tolerance in collapsing* - We collapse sequences with up to 1 high quality sequencing difference across the anchors + CDR3 sequence. We still see a small number of artefacts from very highly supported sequences which could be cleaned up further. 
+- *Extension of incomplete TCR* - For TCR regions it may be possible to predict a full CDR3 sequence from the germline using a parital frgament.  For IG this is likely dangerous due to hypermutation 
+- *Multiple CDR3s in consensus sequence* - A single consensus sequence may have 2 anchor locations that lead to plausible high scoring CDR3 sequences. Currently we choose the highest scoring, but both could be functional. 
