@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.tools;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
@@ -38,7 +39,6 @@ public class GenerateGermlineDeletionFrequency
     public static final String COHORT_DEL_FREQ_FILE = "germline_del_freq_file";
 
     private static final String MIN_FREQUENCY = "min_frequency";
-    private static final String SAMPLE_ID_FILE = "sample_ids_file";
     private static final String COHORT_DEL_FILE = "cohort_germline_del_file";
 
     public GenerateGermlineDeletionFrequency(final CommandLine cmd)
@@ -49,16 +49,22 @@ public class GenerateGermlineDeletionFrequency
 
         mChrRegionMap = Maps.newHashMap();
 
-        mSampleIds = loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE));
-
-        PPL_LOGGER.info("loaded {} reference samples", mSampleIds.size());
+        if(cmd.hasOption(SAMPLE_ID_FILE))
+        {
+            mSampleIds = loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE));
+            PPL_LOGGER.info("loaded {} reference samples", mSampleIds.size());
+        }
+        else
+        {
+            mSampleIds = Lists.newArrayList();
+        }
     }
 
     public void buildCohortFrequencies()
     {
         if(mCohortDeletionsFile == null || mCohortFrequencyFile == null)
         {
-            PPL_LOGGER.error("missing germline deletion file or frequency output file  not configured");
+            PPL_LOGGER.error("missing germline deletion file or frequency output file not configured");
             return;
         }
 

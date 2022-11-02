@@ -4,12 +4,14 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.tools.GermlineGeneAnalyser.writeGeneOverlapData;
+import static com.hartwig.hmftools.purple.tools.GermlineGeneAnalyser.writeGeneDeletionData;
+import static com.hartwig.hmftools.purple.tools.GermlineGeneAnalyser.writeGeneDeletionDetails;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -33,14 +35,16 @@ public class SampleGermlineGeneTask implements Callable
     private final String mPurpleDir;
 
     private final List<String> mSampleIds;
+    private final boolean mWriteVerbose;
 
     public SampleGermlineGeneTask(
-            int taskId, final BufferedWriter writer, final EnsemblDataCache geneDataCache, final String purpleDir)
+            int taskId, final BufferedWriter writer, final EnsemblDataCache geneDataCache, final String purpleDir, final boolean writeVerbose)
     {
         mTaskId = taskId;
         mGeneDataCache = geneDataCache;
         mWriter = writer;
         mPurpleDir = purpleDir;
+        mWriteVerbose = writeVerbose;
 
         mSampleIds = Lists.newArrayList();
     }
@@ -101,13 +105,15 @@ public class SampleGermlineGeneTask implements Callable
                     continue;
                 }
 
-                int regionLowerPos = (int)region.start() - 500;
-                int regionHighPos = (int)region.end() + 500;
+                int regionLowerPos = region.start() - 500;
+                int regionHighPos = region.end() + 500;
 
                 // now find genes
                 List<GeneData> overlappingGenes = geneDataList.stream()
                         .filter(x -> positionsOverlap(x.GeneStart, x.GeneEnd, regionLowerPos, regionHighPos))
                         .collect(Collectors.toList());
+
+                StringJoiner geneNames = new StringJoiner(";");
 
                 for(GeneData geneData : overlappingGenes)
                 {
@@ -123,10 +129,20 @@ public class SampleGermlineGeneTask implements Callable
                     if(overlappedExons.isEmpty())
                         continue;
 
+                    geneNames.add(geneData.GeneName);
+
                     PPL_LOGGER.trace("sample({}) region({}: {}-{}) overlaps gene({}) exons({})",
                             sampleId, region.chromosome(), region.start(), region.end(), geneData.GeneName, overlappedExons.size());
 
-                    writeGeneOverlapData(mWriter, sampleId, region, matchedCopyNumber, geneData, transData, overlappedExons);
+                    if(mWriteVerbose)
+                    {
+                        writeGeneDeletionDetails(mWriter, sampleId, region, matchedCopyNumber, geneData, transData, overlappedExons);
+                    }
+                }
+
+                if(!mWriteVerbose)
+                {
+                    writeGeneDeletionData(mWriter, sampleId, region, geneNames.toString());
                 }
             }
         }
