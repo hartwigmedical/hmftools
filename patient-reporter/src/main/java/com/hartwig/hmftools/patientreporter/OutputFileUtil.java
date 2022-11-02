@@ -84,7 +84,7 @@ public final class OutputFileUtil {
     public static String generateOutputFileNameForJsonPanel(@NotNull com.hartwig.hmftools.patientreporter.PanelReport report) {
         String filePrefix =
                 report.sampleReport().sampleNameForReport() + "_" + report.sampleReport().tumorSampleBarcode() + "_oncopanel";
-        String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
+        String failPrefix = report instanceof PanelFailReport ? "_failed" : Strings.EMPTY;
         String fileSuffix;
         if (report.isCorrectedReport()) {
             if (report.isCorrectedReportExtern()) {
