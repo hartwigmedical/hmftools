@@ -35,7 +35,7 @@ public final class VariantSelection
 
         List<Variant> selectedVariants = Lists.newArrayList();
 
-        Map<String,List<Integer>> registeredLocations = Maps.newHashMap();
+        ProximateLocations registeredLocations = new ProximateLocations();
 
         int index = 0;
         int[] typeCounts = new int[CategoryType.values().length];
@@ -62,7 +62,7 @@ public final class VariantSelection
                     variant.setSelectionStatus(EXCEEDS_COUNT);
                     canAdd = false;
                 }
-                else if(!passNonReportableFilters(variant, config))
+                else if(!variant.passNonReportableFilters(config))
                 {
                     variant.setSelectionStatus(FILTERED);
                     canAdd = false;
@@ -104,38 +104,6 @@ public final class VariantSelection
         PV_LOGGER.info("selected variant type counts: {}", sj.toString());
 
         return selectedVariants;
-    }
-
-    public static boolean passNonReportableFilters(final Variant variant, final PvConfig config)
-    {
-        if(variant.gc() < DEFAULT_GC_THRESHOLD_MIN || variant.gc() > DEFAULT_GC_THRESHOLD_MAX)
-            return false;
-
-        for(String refSequence : variant.refSequences())
-        {
-            double gcRatio = VariantUtils.calcGcPercent(refSequence);
-
-            if(gcRatio < DEFAULT_GC_THRESHOLD_MIN || gcRatio > DEFAULT_GC_THRESHOLD_MAX)
-                return false;
-        }
-
-        if(variant.categoryType() != SUBCLONAL_MUTATION && variant.vaf() < config.VafMin)
-            return false;
-
-        if(variant.tumorFragments() < config.FragmentCountMin)
-            return false;
-
-        if(variant.categoryType().isMutation())
-        {
-            PointMutation mutation = (PointMutation)variant;
-            if(mutation.variantDecorator().mappability() < DEFAULT_MAPPABILITY_MIN)
-                return false;
-
-            if(mutation.variantDecorator().repeatCount() > DEFAULT_REPEAT_COUNT_MAX)
-                return false;
-        }
-
-        return true;
     }
 
     public static final int NEAR_DISTANCE = 50;

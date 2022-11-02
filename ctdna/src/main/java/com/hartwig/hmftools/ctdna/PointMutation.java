@@ -1,14 +1,22 @@
 package com.hartwig.hmftools.ctdna;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_CODING_MUTATION;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.ctdna.CategoryType.REPORTABLE_MUTATION;
 import static com.hartwig.hmftools.ctdna.CategoryType.SUBCLONAL_MUTATION;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_MAPPABILITY_MIN;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_REPEAT_COUNT_MAX;
 import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_SUBCLONAL_LIKELIHOOD_MIN;
+import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INDEL_LENGTH;
 import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
 import static com.hartwig.hmftools.ctdna.VariantSelection.addRegisteredLocation;
@@ -16,16 +24,17 @@ import static com.hartwig.hmftools.ctdna.VariantSelection.isNearRegisteredLocati
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.Strings;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.common.variant.VariantVcfTags;
+import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.CommonVcfTags;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -107,8 +116,11 @@ public class PointMutation extends Variant
     @Override
     public String otherData()
     {
-        return format("Map=%.2f Repeats=%d SubClonal=%.2f",
-            mVariantDecorator.mappability(), mVariantDecorator.repeatCount(), subclonalLikelihood());
+        return format("Map=%.2f Repeats=%d/%d SubClonal=%.2f GermlineStatus=%s",
+            mVariantDecorator.mappability(), mVariantDecorator.repeatCount(),
+                mVariantDecorator.context().getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0),
+                subclonalLikelihood(),
+                mVariantDecorator.context().getAttributeAsString(PURPLE_GERMLINE_INFO, ""));
     }
 
     @Override
@@ -117,7 +129,7 @@ public class PointMutation extends Variant
     @Override
     public boolean hasPhaseVariants()
     {
-        return mVariantDecorator.context().hasAttribute(VariantVcfTags.LOCAL_PHASE_SET);
+        return mVariantDecorator.context().hasAttribute(LOCAL_PHASE_SET);
     }
 
     @Override
@@ -163,12 +175,49 @@ public class PointMutation extends Variant
     }
 
     @Override
-    public boolean checkAndRegisterLocation(final Map<String,List<Integer>> registeredLocations)
+    public boolean passNonReportableFilters(final PvConfig config)
     {
-        if(isNearRegisteredLocation(registeredLocations, mVariantDecorator.chromosome(), mVariantDecorator.position()))
+        if(gc() < DEFAULT_GC_THRESHOLD_MIN || gc() > DEFAULT_GC_THRESHOLD_MAX)
             return false;
 
-        addRegisteredLocation(registeredLocations, mVariantDecorator.chromosome(), mVariantDecorator.position());
+        if(categoryType() != SUBCLONAL_MUTATION && vaf() < config.VafMin)
+            return false;
+
+        if(tumorFragments() < config.FragmentCountMin)
+            return false;
+
+        if(mVariantDecorator.mappability() < DEFAULT_MAPPABILITY_MIN)
+            return false;
+
+        int repeatCountMax = max(
+                mVariantDecorator.repeatCount(), mVariantDecorator.context().getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0));
+
+        if(repeatCountMax > DEFAULT_REPEAT_COUNT_MAX)
+            return false;
+
+        if(mVariantDecorator.type() == VariantType.INDEL)
+        {
+            if(max(mVariantDecorator.alt().length(), mVariantDecorator.ref().length()) > MAX_INDEL_LENGTH)
+                return false;
+        }
+
+        GermlineStatus germlineStatus = GermlineStatus.valueOf(
+                mVariantDecorator.context().getAttributeAsString(PURPLE_GERMLINE_INFO, GermlineStatus.UNKNOWN.toString()));
+
+        if(germlineStatus == GermlineStatus.AMPLIFICATION || germlineStatus == GermlineStatus.NOISE)
+            return false;
+
+        return true;
+    }
+
+
+    @Override
+    public boolean checkAndRegisterLocation(final ProximateLocations registeredLocations)
+    {
+        if(registeredLocations.isNearRegisteredLocation(mVariantDecorator.chromosome(), mVariantDecorator.position()))
+            return false;
+
+        registeredLocations.addRegisteredLocation(mVariantDecorator.chromosome(), mVariantDecorator.position());
         return true;
     }
 

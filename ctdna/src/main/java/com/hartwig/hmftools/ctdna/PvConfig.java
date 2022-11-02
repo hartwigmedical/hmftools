@@ -75,6 +75,7 @@ public class PvConfig
     public static final double DEFAULT_SUBCLONAL_LIKELIHOOD_MIN = 0.95;
 
     public static final int MAX_INSERT_BASES = 60;
+    public static final int MAX_INDEL_LENGTH = 32;
 
     public PvConfig(final CommandLine cmd)
     {

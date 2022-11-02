@@ -101,9 +101,9 @@ public class ReferenceMutation extends Variant
     }
 
     @Override
-    public boolean checkAndRegisterLocation(final Map<String,List<Integer>> registeredLocations)
+    public boolean checkAndRegisterLocation(final ProximateLocations registeredLocations)
     {
-        addRegisteredLocation(registeredLocations, mChromosome, mPosition);
+        registeredLocations.addRegisteredLocation(mChromosome, mPosition);
         return true;
     }
 

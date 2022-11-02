@@ -47,7 +47,9 @@ public abstract class Variant
 
     abstract void generateSequences(final RefGenomeInterface refGenome, final PvConfig config);
 
-    abstract boolean checkAndRegisterLocation(final Map<String,List<Integer>> registeredLocations);
+    abstract boolean checkAndRegisterLocation(final ProximateLocations registeredLocations);
+
+    boolean passNonReportableFilters(final PvConfig config) { return true; }
 
     int sequenceCount() { return 1 + refSequences().size(); }
 

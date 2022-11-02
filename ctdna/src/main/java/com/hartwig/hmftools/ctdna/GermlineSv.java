@@ -102,16 +102,16 @@ public class GermlineSv extends Variant
     }
 
     @Override
-    public boolean checkAndRegisterLocation(final Map<String,List<Integer>> registeredLocations)
+    public boolean checkAndRegisterLocation(final ProximateLocations registeredLocations)
     {
-        if(isNearRegisteredLocation(registeredLocations, mVariant.ChromosomeStart, mVariant.PositionStart)
-        || isNearRegisteredLocation(registeredLocations, mVariant.ChromosomeEnd, mVariant.PositionEnd))
+        if(registeredLocations.isNearRegisteredLocation(mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart)
+        || registeredLocations.isNearRegisteredLocation(mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd))
         {
             return false;
         }
 
-        addRegisteredLocation(registeredLocations, mVariant.ChromosomeStart, mVariant.PositionStart);
-        addRegisteredLocation(registeredLocations, mVariant.ChromosomeEnd, mVariant.PositionEnd);
+        registeredLocations.addRegisteredLocation(mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart);
+        registeredLocations.addRegisteredLocation(mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd);
         return true;
     }
 

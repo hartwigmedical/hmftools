@@ -13,6 +13,11 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.ctdna.CategoryType.FUSION;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_SV;
+import static com.hartwig.hmftools.ctdna.CategoryType.SUBCLONAL_MUTATION;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_MAPPABILITY_MIN;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_REPEAT_COUNT_MAX;
 import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
 import static com.hartwig.hmftools.ctdna.VariantSelection.addRegisteredLocation;
@@ -287,16 +292,39 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    public boolean checkAndRegisterLocation(final Map<String,List<Integer>> registeredLocations)
+    public boolean passNonReportableFilters(final PvConfig config)
     {
-        if(isNearRegisteredLocation(registeredLocations, mVariant.startChromosome(), mVariant.startPosition())
-        || isNearRegisteredLocation(registeredLocations, mVariant.endChromosome(), mVariant.endPosition()))
+        if(gc() < DEFAULT_GC_THRESHOLD_MIN || gc() > DEFAULT_GC_THRESHOLD_MAX)
+            return false;
+
+        for(String refSequence : mRefSequences)
+        {
+            double gcRatio = VariantUtils.calcGcPercent(refSequence);
+
+            if(gcRatio < DEFAULT_GC_THRESHOLD_MIN || gcRatio > DEFAULT_GC_THRESHOLD_MAX)
+                return false;
+        }
+
+        if(vaf() < config.VafMin)
+            return false;
+
+        if(tumorFragments() < config.FragmentCountMin)
+            return false;
+
+        return true;
+    }
+
+    @Override
+    public boolean checkAndRegisterLocation(final ProximateLocations registeredLocations)
+    {
+        if(registeredLocations.isNearRegisteredLocation(mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation())
+        || registeredLocations.isNearRegisteredLocation(mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation()))
         {
             return false;
         }
 
-        addRegisteredLocation(registeredLocations, mVariant.startChromosome(), mVariant.startPosition());
-        addRegisteredLocation(registeredLocations, mVariant.endChromosome(), mVariant.endPosition());
+        registeredLocations.addRegisteredLocation(mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation());
+        registeredLocations.addRegisteredLocation(mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation());
         return true;
     }
 
