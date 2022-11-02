@@ -11,6 +11,7 @@
     <modules>
         <module>amber</module>
         <module>bam-metrics</module>
+        <module>cider</module>
         <module>cobalt</module>
         <module>compar</module>
         <module>ctdna</module>
@@ -59,6 +60,7 @@
 
         <amber.version>3.9</amber.version>
         <bam-metrics.version>1.0</bam-metrics.version>
+        <cider.version>0.3</cider.version>
         <cobalt.version>1.13</cobalt.version>
         <compar.version>1.1</compar.version>
         <ctdna.version>1.0</ctdna.version>

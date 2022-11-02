@@ -575,6 +575,7 @@ Variant calling Improvements
 - **Germline filtering for very long core regions** - If the core is very long we may have insufficient coverage in the germline to filter.
 - **Low VAF FP in high depth regions for samples with high C>A DNA damage** - Some samples may have severe degradation of C>A in certain mutation contexts sometimes affecting greater than 1% of all fragments.  Whilst we do adjust against this with BQR, for very high depth regions we may still call FP mutations with very low VAF
 - **Low MAPQ** - Sage penalises low MAPQ reads harshly.   No truth set is available in these regions, so it is unclear whether this behaviour is the correct decision.
+- **Rel Raw Base Qual Filter** - Base qual from matching soft clipped bases does not count to rel raw base qual and can lead to germline variants passing as somatic, if all supporting reads in the germline are only found in soft clipping.  We have observed this in HLA genes (where alignments are frequently soft clipped)
 
 Phasing improvements
 - **Only first tumor sample is currently phased** - Reference and additional tumor samples are not utilised for phasing
