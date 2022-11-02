@@ -466,7 +466,7 @@ strandBias|0.0005 |0.0005|0.0005 |0.0005| SBLikelihood<sup>4</sup>
 
 2. Even if tumor qual score cutoff is not met, hotspots are also called so long as tumor vaf >= 0.08 and  allelic depth in tumor supporting the ALT >= 8 reads and tumorRawBQ1 > 150.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
 
-3. If 0<Normal `RABQ[1]`<25 and Normal `RawAD[1]`==`normalAD[1]` then we instead require `min[normalAF,normalRawBQ1/(normalRawBQ1+normalRawBQ0)] < max_germline_vaf`. This allows us to tolerate low quality base qual errors in the normal.  A special filter (max_germline_alt_support) is also applied for MNVs such that it is filtered if 1 or more read in the germline contains evidence of the variant.
+3. If 0<Normal `RABQ[1]`<25 and Normal `RawAD[1]`==`normalAD[1]` then we instead require `min[normalAF,normalRawBQ1/(normalRawBQ1+normalRawBQ0)] < max_germline_vaf`. This allows us to tolerate low quality base qual errors in the normal.  A special filter (max_germline_alt_support) is also applied for MNV and INS of > 10 bases such that it is filtered if 1% or more of the reads in the germline contains evidence of the variant.
 
 4. StrandBiasLikelihood =  `binomial(min(SB,1-SB)*AD,AD,0.5,TRUE)`  If 0.1<SB<0.9 we never filter
 
