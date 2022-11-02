@@ -23,7 +23,7 @@ IGHV | Base 283-312.
 IGHJ | 30 base sequence starting with TGGGG (J-TRP) 
 IGKV | Base 283-312. 
 IGKJ | Sequence starting with “TTTG” or “TTCG” starting between 27 and 33. 
-IGK-KDE | Specific anchor coordinates rom the K Del region are checked so that we can detect IGK deletion type rearrangements
+IGK-KDE | Specific anchor coordinates (2:88832743-88832772 in hg38) rom the K Del region are checked so that we can detect IGK deletion type rearrangements
 IGLV | Base 283-312.  
 IGLJ | Sequence starting with “TTTG” or “TTCG” starting between 27 and 33 
 TRAV | Base 283-312.  
