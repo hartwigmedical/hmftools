@@ -37,7 +37,7 @@ To run SAGE in germline mode we use the following parameters:
 -hotspot_max_germline_rel_raw_base_qual 100
 -panel_max_germline_vaf 100
 -panel_max_germline_rel_raw_base_qual 100
--mnv_filter_enabled false
+-ref_sample_count 0
 -panel_only
 -panel_bed /opt/resources/sage/37/ActionableCodingPanel.germline.37.bed.gz
 -coverage_bed /opt/resources/sage/37/CoverageCodingPanel.germline.37.bed.gz 
@@ -51,7 +51,7 @@ To run SAGE in germline mode we use the following parameters:
 
 Note that the tumor and reference labels/bams are switched. 
 
-These changes disable the germline filters (which is actually the tumor).
+These changes (specifically ref_sample_count=0) disable the germline filters (which is actually the tumor).
 
 ## Post Process
 
