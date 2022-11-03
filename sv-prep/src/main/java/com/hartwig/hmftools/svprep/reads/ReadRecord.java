@@ -65,7 +65,7 @@ public class ReadRecord
             Positions = new int[] { 0, 0 };
         }
 
-        if(properPair(record) && !mateUnmapped(record))
+        if(!mateUnmapped(record) && record.getMateAlignmentStart() > 0)
         {
             MateChromosome = record.getMateReferenceName();
             MatePosStart = record.getMateAlignmentStart();
