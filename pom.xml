@@ -66,24 +66,24 @@
         <ctdna.version>1.0</ctdna.version>
         <cuppa.version>1.8</cuppa.version>
         <gene-utils.version>1.0</gene-utils.version>
-        <gripss.version>2.3.1</gripss.version>
+        <gripss.version>2.3.2</gripss.version>
         <health-checker.version>3.3</health-checker.version>
         <hmf-id-generator.version>3.0</hmf-id-generator.version>
         <isofox.version>1.6</isofox.version>
-        <lilac.version>1.4.2</lilac.version>
-        <linx.version>1.23</linx.version>
+        <lilac.version>1.4.3</lilac.version>
+        <linx.version>1.22.1</linx.version>
         <neo.version>1.0</neo.version>
         <orange.version>1.10.2</orange.version>
         <paddle.version>1.0</paddle.version>
         <patient-db.version>3.71.1</patient-db.version>
         <patient-reporter.version>7.26</patient-reporter.version>
-        <pave.version>1.4.1</pave.version>
+        <pave.version>1.4.2</pave.version>
         <protect.version>2.3</protect.version>
-        <purple.version>3.8</purple.version>
+        <purple.version>3.7.2</purple.version>
         <rose.version>1.3</rose.version>
-        <sage.version>3.4</sage.version>
+        <sage.version>3.2.1</sage.version>
         <sigs.version>1.2</sigs.version>
-        <sv-prep.version>1.1</sv-prep.version>
+        <sv-prep.version>1.0.1</sv-prep.version>
         <sv-tools.version>1.0</sv-tools.version>
         <teal.version>1.0.1</teal.version>
         <virus-interpreter.version>1.2</virus-interpreter.version>
