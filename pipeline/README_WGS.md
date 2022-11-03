@@ -18,16 +18,11 @@ They match the current tool version, configuration and resource files as used in
 - all required tools in a tools directory
 - all required resource files in a resource files directory
 - the reference genome version - either 'V37' or 'V38'
+- whole-genome mode 'WGS' (instead of 'PANEL')
 - number of threads used for each component
 
 ```
-./scripts/run_pipeline ./scripts \
-  /sample_data/ \
-  /ref_data_dir/ \
-  /tools_dir/ \
-  "COLO829T,COLO829R" \
-  V37 \
-  10 \
+./scripts/run_pipeline ./scripts /sample_data/ /ref_data_dir/ /tools_dir/ "COLO829T,COLO829R" V37 WGS 10
 ```  
 
 

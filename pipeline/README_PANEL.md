@@ -22,15 +22,13 @@ They match the current tool version, configuration and resource files as used in
 - tumor BAM and BAM index files in the sample's directory, named as tumorId.bam
 - all required tools in a tools directory
 - all required resource files in a resource files directory
+- the reference genome version - either 'V37' or 'V38'
+- panel mode 'PANEL' (instead of 'WGS')
+
 - number of threads used for each component
 
 ```
-./scripts/run_panel_pipeline ./scripts \
-  /sample_data/ \
-  /ref_data_dir/ \
-  /tools_dir/ \
-  COLO829T \
-  10 \
+./scripts/run_pipeline ./scripts /sample_data/ /ref_data_dir/ /tools_dir/ COLO829T V38 PANEL 10 \
 ```  
 
 
