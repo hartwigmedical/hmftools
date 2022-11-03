@@ -414,18 +414,18 @@ public class SummaryChapter implements ReportChapter {
     private void renderHla(@NotNull Document report) {
         Div div = createSectionStartDiv(contentWidth());
         String title = "HLA Alleles";
-        if (patientReport.genomicAnalysis().hlaAlleles().hlaAllelesReporting().isEmpty()) {
-            div.add(TableUtil.createNoneReportTable(title,
-                    null,
-                    TableUtil.TABLE_BOTTOM_MARGIN_SUMMARY,
-                    ReportResources.CONTENT_WIDTH_WIDE_SUMMARY));
-        } else if (!patientReport.genomicAnalysis().hlaAlleles().hlaQC().equals("PASS")) {
+        if (!patientReport.genomicAnalysis().hlaAlleles().hlaQC().equals("PASS")) {
             String noConsent = "The QC of the HLA types do not meet the QC cut-offs";
             div.add(TableUtil.createNoConsentReportTable(title,
                     noConsent,
                     TableUtil.TABLE_BOTTOM_MARGIN_SUMMARY,
                     ReportResources.CONTENT_WIDTH_WIDE_SUMMARY));
-        } else {
+        } else if (patientReport.genomicAnalysis().hlaAlleles().hlaAllelesReporting().isEmpty()) {
+            div.add(TableUtil.createNoneReportTable(title,
+                    null,
+                    TableUtil.TABLE_BOTTOM_MARGIN_SUMMARY,
+                    ReportResources.CONTENT_WIDTH_WIDE_SUMMARY));
+        }else {
             Table table = TableUtil.createReportContentTable(new float[] { 15, 15, 15 },
                     new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Germline allele"),
                             TableUtil.createHeaderCell("Interpretation: presence in tumor") },
