@@ -93,7 +93,9 @@ public class XMLFactory {
                         .build());
 
         String disclaimer = Strings.EMPTY;
-        disclaimer += report.genomicAnalysis().hasReliablePurity() ? Strings.EMPTY : "Disclaimer. ";
+        disclaimer += report.genomicAnalysis().hasReliablePurity() ? Strings.EMPTY : "Due to the lower tumor purity potential "
+                + "(subclonal) DNA aberrations might not have been detected using this test. This result should therefore be "
+                + "considered with caution.";
         disclaimer += !report.specialRemark().isEmpty() ? report.specialRemark() : Strings.EMPTY;
         mapXml.put("itemWgsDisclaimerTonen",
                 ImmutableKeyXML.builder().keyPath("WgsDisclaimerTonen").valuePath(Map.of("value", disclaimer)).build());
