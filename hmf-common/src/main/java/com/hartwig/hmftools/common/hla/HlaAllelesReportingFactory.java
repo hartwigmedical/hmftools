@@ -120,10 +120,6 @@ public class HlaAllelesReportingFactory {
             joiner.add(SINGLE_DIGIT.format(allele.somaticSplice()) + " splice");
         }
 
-        if (Doubles.positive(allele.somaticSynonymous())) {
-            joiner.add(SINGLE_DIGIT.format(allele.somaticSynonymous()) + " synonymous");
-        }
-
         if (Doubles.positive(allele.somaticInframeIndel())) {
             joiner.add(SINGLE_DIGIT.format(allele.somaticInframeIndel()) + " inframe indel");
         }
@@ -136,7 +132,7 @@ public class HlaAllelesReportingFactory {
     public static String HLApresenceInTumor(@NotNull LilacAllele allele, @NotNull String mutationString, boolean hasReliablePurity) {
         double tumorCopies = Double.parseDouble(SINGLE_DIGIT.format(allele.tumorCopyNumber()));
         boolean mutation = mutationString.contains("missense") || mutationString.contains("nonsense or frameshift")
-                || mutationString.contains("splice") || mutationString.contains("synonymous") || mutationString.contains("inframe indel");
+                || mutationString.contains("splice") || mutationString.contains("inframe indel");
         if (hasReliablePurity) {
             if (tumorCopies == 0) {
                 if (mutation) {
