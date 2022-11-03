@@ -106,7 +106,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
         reportDocument.add(createVirusTable(genomicAnalysis.reportableViruses(), sampleReport.reportViralPresence()));
         reportDocument.add(createHlaTable(genomicAnalysis.hlaAlleles(), hasReliablePurity));
-        reportDocument.add(createPharmacogeneticsGenotypesTable(patientReport.pharmacogeneticsGenotypes(), sampleReport.reportPharmogenetics()));
+        reportDocument.add(createPharmacogeneticsGenotypesTable(patientReport.pharmacogeneticsGenotypes(),
+                sampleReport.reportPharmogenetics()));
     }
 
     @NotNull
@@ -305,16 +306,17 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title, null, TableUtil.TABLE_BOTTOM_MARGIN, ReportResources.CONTENT_WIDTH_WIDE);
         }
 
-        Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1},
+        Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
-                        TableUtil.createHeaderCell("Tumor minor allele copies"), TableUtil.createHeaderCell("Tumor copies")},
+                        TableUtil.createHeaderCell("Tumor minor allele copies").setTextAlignment(TextAlignment.CENTER),
+                        TableUtil.createHeaderCell("Tumor copies").setTextAlignment(TextAlignment.CENTER) },
                 ReportResources.CONTENT_WIDTH_WIDE);
 
         for (LohGenesReporting lohGene : LohGenes.sort(lohGenes)) {
             table.addCell(TableUtil.createContentCell(lohGene.location()));
             table.addCell(TableUtil.createContentCell(lohGene.gene()));
-            table.addCell(TableUtil.createContentCell(String.valueOf(lohGene.minorAlleleCopies())));
-            table.addCell(TableUtil.createContentCell(String.valueOf(lohGene.tumorCopies())));
+            table.addCell(TableUtil.createContentCell(String.valueOf(lohGene.minorAlleleCopies())).setTextAlignment(TextAlignment.CENTER));
+            table.addCell(TableUtil.createContentCell(String.valueOf(lohGene.tumorCopies())).setTextAlignment(TextAlignment.CENTER));
         }
 
         return TableUtil.createWrappingReportTable(title, null, table, TableUtil.TABLE_BOTTOM_MARGIN);
@@ -474,7 +476,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createPharmacogeneticsGenotypesTable(@NotNull Map<String, List<PeachGenotype>> pharmacogeneticsMap, boolean reportPharmacogenetics) {
+    private static Table createPharmacogeneticsGenotypesTable(@NotNull Map<String, List<PeachGenotype>> pharmacogeneticsMap,
+            boolean reportPharmacogenetics) {
 
         String title = "Pharmacogenetics";
         if (reportPharmacogenetics) {
@@ -501,8 +504,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         tableGenotype.addCell(TableUtil.createTransparentCell(pharmacogeneticsGenotype.haplotype()));
                         tableFunction.addCell(TableUtil.createTransparentCell(pharmacogeneticsGenotype.function()));
                         tableLinkedDrugs.addCell(TableUtil.createTransparentCell(pharmacogeneticsGenotype.linkedDrugs()));
-                        tableSource.addCell(TableUtil.createTransparentCell(new Paragraph(Pharmacogenetics.sourceName(pharmacogeneticsGenotype.urlPrescriptionInfo())).addStyle(
-                                        ReportResources.dataHighlightLinksStyle()))
+                        tableSource.addCell(TableUtil.createTransparentCell(new Paragraph(Pharmacogenetics.sourceName(
+                                        pharmacogeneticsGenotype.urlPrescriptionInfo())).addStyle(ReportResources.dataHighlightLinksStyle()))
                                 .setAction(PdfAction.createURI(Pharmacogenetics.url(pharmacogeneticsGenotype.urlPrescriptionInfo()))));
                     }
 
