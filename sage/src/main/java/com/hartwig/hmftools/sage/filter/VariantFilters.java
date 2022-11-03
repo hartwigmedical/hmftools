@@ -93,6 +93,8 @@ public class VariantFilters
         final Set<String> variantFilters = variant.filters();
 
         final List<ReadContextCounter> normalReadCounters = variant.normalReadCounters();
+
+        // setting ref sample count to zero disables the tumor-normal filters
         int maxNormalSamples = min(normalReadCounters.size(), mConfig.ReferenceSampleCount);
 
         // where there are multiple tumor samples, if any of them pass then clear any filters from the others

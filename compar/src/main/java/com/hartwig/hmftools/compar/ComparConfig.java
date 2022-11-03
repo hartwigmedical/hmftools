@@ -195,10 +195,16 @@ public class ComparConfig
 
     public String sourceSampleId(final String source, final String sampleId)
     {
+        if(mSampleIdMappings.isEmpty())
+            return sampleId;
+
         SampleIdMapping mapping = mSampleIdMappings.get(sampleId);
 
         if(mapping == null || !mapping.SourceMapping.containsKey(source))
+        {
+            CMP_LOGGER.warn("sample({}) source({}) missed mapping", sampleId, source);
             return sampleId;
+        }
 
         return mapping.SourceMapping.get(source);
     }

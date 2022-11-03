@@ -45,7 +45,6 @@ public class FilterConfig
 
     private static final boolean DEFAULT_SOFT_FILTER_ENABLED = true;
     private static final boolean DEFAULT_HARD_FILTER_ENABLED = false;
-    private static final boolean DEFAULT_MNV_FILTER_ENABLED = true;
 
     public FilterConfig(final CommandLine cmd)
     {
@@ -94,7 +93,10 @@ public class FilterConfig
         options.addOption(HARD_MIN_TUMOR_RAW_BASE_QUALITY, true,
                 "Hard minimum tumor raw base quality [" + DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY + "]");
         options.addOption(MIN_AVG_BASE_QUAL, true, "Min average base qual [" + DEFAULT_MIN_AVG_BASE_QUALITY + "]");
-        options.addOption(REF_SAMPLE_COUNT, true, "Number of reference samples for applying tumor-reference filters (default=1)");
+
+        options.addOption(
+                REF_SAMPLE_COUNT, true,
+                "Number of reference samples for applying tumor-reference filters (default=1), use 0 in 'germline' mode");
 
         SoftFilterConfig.createOptions("hotspot", DEFAULT_HOTSPOT_FILTER).getOptions().forEach(options::addOption);
         SoftFilterConfig.createOptions("panel", DEFAULT_PANEL_FILTER).getOptions().forEach(options::addOption);
