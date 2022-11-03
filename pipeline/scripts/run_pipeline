@@ -273,7 +273,7 @@ fi
 gridss_dir=${sample_dir}/gridss
 gridss_vcf=${gridss_dir}/${tumor_id}.gridss.unfiltered.vcf.gz
 
-${scripts_dir}/run_gridss ${tools_dir} \
+${scripts_dir}/run_sv_calling ${tools_dir} \
   ${tumor_id} ${tumor_bam} ${reference_id} ${reference_bam} \
   ${gridss_dir} ${gridss_vcf} \
   ${ref_genome_version} ${ref_genome} \

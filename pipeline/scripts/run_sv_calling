@@ -114,6 +114,14 @@ args="--steps all \
 if [[ ! -f "${gridss_raw_vcf}" ]]; then
   echo "Running Gridss with args: ${args}"
   ${gridss_script} --jar ${gridss_jar} ${args}
+
+  # log the gridss error file to standard-out if Gridss fails
+  if [[ ! -f "${gridss_raw_vcf}" ]]; then
+    echo "Gridss failed - see error log:"
+    cat ${output_dir}/gridss/gridss.full*.log
+    exit
+  fi
+
 else
   echo "Skipping Gridss process"
 fi
