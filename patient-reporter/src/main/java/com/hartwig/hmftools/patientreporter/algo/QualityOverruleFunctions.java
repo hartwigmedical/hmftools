@@ -112,7 +112,10 @@ public final class QualityOverruleFunctions {
             }
             alleles.put(allele, hlaReportingListCurated);
         }
-        return ImmutableHlaAllelesReportingData.builder().from(hlaAllelesReportingData).hlaAllelesReporting(alleles).build();
+        return ImmutableHlaAllelesReportingData.builder()
+                .from(hlaAllelesReportingData)
+                .hlaAllelesReporting(hlaAllelesReportingData.hlaQC().equals("PASS") ? alleles : Maps.newHashMap())
+                .build();
     }
 
     @NotNull

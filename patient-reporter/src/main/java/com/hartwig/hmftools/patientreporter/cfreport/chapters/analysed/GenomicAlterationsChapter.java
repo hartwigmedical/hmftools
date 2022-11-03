@@ -397,7 +397,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         TableUtil.createHeaderCell("# Somatic mutations*"),
                         TableUtil.createHeaderCell("Interpretation: presence in tumor") },
                 ReportResources.CONTENT_WIDTH_WIDE);
-        if (!lilac.hlaQC().equals("PASS")) {
+        if (lilac.hlaAllelesReporting().isEmpty()) {
+            return TableUtil.createNoneReportTable(title, null, TableUtil.TABLE_BOTTOM_MARGIN, ReportResources.CONTENT_WIDTH_WIDE);
+        } else if (!lilac.hlaQC().equals("PASS")) {
             String noConsent = "The QC of the HLA types do not meet the QC cut-offs";
             return TableUtil.createNoConsentReportTable(title,
                     noConsent,
