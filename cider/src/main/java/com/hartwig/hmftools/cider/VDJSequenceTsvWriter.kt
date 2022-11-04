@@ -17,6 +17,7 @@ object VDJSequenceTsvWriter
 {
     const val CDR3_FILTER_AA_MIN_LENGTH = 4
     const val CDR3_FILTER_AA_MAX_LENGTH = 40
+    const val MAX_NONSPLIT_READS = 2
 
     private enum class Column
     {
@@ -122,6 +123,11 @@ object VDJSequenceTsvWriter
     {
         val vAnchorByReadMatch: VJAnchorByReadMatch? = vdj.vAnchor as? VJAnchorByReadMatch
         val jAnchorByReadMatch: VJAnchorByReadMatch? = vdj.jAnchor as? VJAnchorByReadMatch
+        val vAlignedReads: Int = vAnchorByReadMatch?.numReads ?: 0
+        val jAlignedReads: Int = jAnchorByReadMatch?.numReads ?: 0
+        val vNonSplitReads: Int = countNonSplitReads(vdj, VJ.V, adaptor)
+        val jNonSplitReads: Int = countNonSplitReads(vdj, VJ.J, adaptor)
+        val filter: String = filterString(vdj, isDuplicate, vAlignedReads, jAlignedReads, vNonSplitReads, jNonSplitReads)
 
         for (c in Column.values())
         {
@@ -129,11 +135,11 @@ object VDJSequenceTsvWriter
             {
                 Column.cdr3Seq -> csvPrinter.print(vdj.cdr3Sequence)
                 Column.cdr3AA -> csvPrinter.print(cdr3AminoAcidFs(vdj))
-                Column.filter -> csvPrinter.print(filterString(vdj, isDuplicate))
+                Column.filter -> csvPrinter.print(filter)
                 Column.minHighQualBaseReads -> csvPrinter.print(vdj.cdr3SupportMin)
                 Column.assignedReads -> csvPrinter.print(vdj.numReads)
-                Column.vAlignedReads -> csvPrinter.print(vAnchorByReadMatch?.numReads ?: 0)
-                Column.jAlignedReads -> csvPrinter.print(jAnchorByReadMatch?.numReads ?: 0)
+                Column.vAlignedReads -> csvPrinter.print(vAlignedReads)
+                Column.jAlignedReads -> csvPrinter.print(jAlignedReads)
                 Column.inFrame -> csvPrinter.print(vdj.isInFrame)
                 Column.containsStop -> csvPrinter.print(vdj.aminoAcidSequence.contains(Codons.STOP_AMINO_ACID))
                 Column.vType -> csvPrinter.print(vdj.vAnchor?.geneType)
@@ -144,7 +150,7 @@ object VDJSequenceTsvWriter
                 Column.vAnchorTemplateAA -> csvPrinter.print(if (vdj.vAnchor != null) aminoAcidFromBases(vdj.vAnchor.templateAnchorSeq) else null)
                 Column.vMatchMethod -> csvPrinter.print(vdj.vAnchor?.matchMethod)
                 Column.vSimilarityScore -> csvPrinter.print(if (vdj.vAnchor != null) calcAnchorSimilarity(vdj, vdj.vAnchor) else null)
-                Column.vNonSplitReads -> csvPrinter.print(countNonSplitReads(vdj, VJ.V, adaptor))
+                Column.vNonSplitReads -> csvPrinter.print(vNonSplitReads)
                 Column.jType -> csvPrinter.print(vdj.jAnchor?.geneType)
                 Column.jAnchorStart -> csvPrinter.print(vdj.jAnchor?.anchorBoundary)
                 Column.jAnchorSeq -> csvPrinter.print(vdj.jAnchorSequence)
@@ -153,7 +159,7 @@ object VDJSequenceTsvWriter
                 Column.jAnchorTemplateAA -> csvPrinter.print(if (vdj.jAnchor != null) aminoAcidFromBases(vdj.jAnchor.templateAnchorSeq) else null)
                 Column.jMatchMethod -> csvPrinter.print(vdj.jAnchor?.matchMethod)
                 Column.jSimilarityScore -> csvPrinter.print(if (vdj.jAnchor != null) calcAnchorSimilarity(vdj, vdj.jAnchor) else null)
-                Column.jNonSplitReads -> csvPrinter.print(countNonSplitReads(vdj, VJ.J, adaptor))
+                Column.jNonSplitReads -> csvPrinter.print(jNonSplitReads)
                 Column.layoutId -> csvPrinter.print(vdj.layout.id)
                 Column.vdjSeq -> csvPrinter.print(vdj.sequence)
                 Column.support -> csvPrinter.print(CiderUtils.countsToString(vdj.supportCounts))
@@ -199,7 +205,9 @@ object VDJSequenceTsvWriter
         }
     }
 
-    fun filterString(vdj: VDJSequence, isDuplicate: Boolean): String
+    fun filterString(vdj: VDJSequence, isDuplicate: Boolean,
+                     vAlignedReads: Int, jAlignedReads: Int,
+                     vNonSplitReads: Int, jNonSplitReads: Int): String
     {
         val filters = ArrayList<String>()
 
@@ -230,6 +238,11 @@ object VDJSequenceTsvWriter
         if (vdj.cdr3Sequence.length > CDR3_FILTER_AA_MAX_LENGTH * 3)
         {
             filters.add("MAX_LENGTH")
+        }
+        if ((vAlignedReads == 0 || jAlignedReads == 0) &&
+            (jNonSplitReads + vNonSplitReads) >= MAX_NONSPLIT_READS)
+        {
+            filters.add("MATHCES_REF")
         }
         if (filters.isEmpty())
             filters.add("PASS")
