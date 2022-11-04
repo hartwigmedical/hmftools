@@ -9,9 +9,9 @@ They match the current tool version, configuration and resource files as used in
 1. Download the latest release JAR for each tool as listed [here](https://github.com/hartwigmedical/hmftools#current-versions).
 - also ensure that samtools (1.10 or higher) and bwa (0.7.17 or higher) are on the path
 
-2. Download the resources files for either GRCh37 or GRCh38 from [HMFTools-Resources > DNA-Resources](https://storage.googleapis.com/hmf-public/HMFtools-Resources/dna_pipeline/). 
+2. Download the resources files for either GRCh37 or GRCh38 from [HMFTools-Resources > DNA-Resources](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/). 
 The latest resource files version is v5.31. 
-The reference genome files are available separately [HMFTools-Resources > Ref-Genome](https://storage.googleapis.com/hmf-public/HMFtools-Resources/ref_genome/).
+The reference genome files are available separately [HMFTools-Resources > Ref-Genome](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/ref_genome/).
 
 3. Call the pipeline with the following arguments:
 - a sample tumorId and referenceId (eg 'COLO829T' and 'COLO829R' below)

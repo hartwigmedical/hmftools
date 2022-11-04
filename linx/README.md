@@ -46,7 +46,7 @@ fragile_site_file | List of known fragile sites  {Chromosome,PosStart,PosEnd}
 line_element_file | List of known LINE source regions {Chromosome,PosStart,PosEnd}
 ensembl_data_dir | Directory for Ensembl reference files
 
-Reference files are available for ref genome 37 and 38 [HMFTools-Resources > DNA Pipeline](https://storage.googleapis.com/hmf-public/HMFtools-Resources/dna_pipeline/):
+Reference files are available for ref genome 37 and 38 [HMFTools-Resources > DNA Pipeline](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/):
 - DriverGenePanel: HMF driver genes (in resources 'common')
 - KnownFusions: HMF known fusion data (in resources 'sv')
 - Linx: fragile sites and LINE source regions (in resources 'sv')

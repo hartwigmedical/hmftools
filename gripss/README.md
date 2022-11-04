@@ -25,7 +25,7 @@ This will write 2 files:
 
 These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
 
-The bed and bedpe files are available to download from [HMFTools-Resources > DNA Pipeline > sv](https://storage.googleapis.com/hmf-public/HMFtools-Resources/dna_pipeline/). 
+The bed and bedpe files are available to download from [HMFTools-Resources > DNA Pipeline > sv](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/). 
 Both files need to be sorted by chromosome and start breakend start position.
 
 ### Mandatory Arguments

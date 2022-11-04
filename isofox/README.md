@@ -66,9 +66,9 @@ drop_dups | Default is false. By default duplicate fragments will be counted tow
 
 ### Reference Files
 Reference files are available for GRCh37 and GRCh38:
-- Isofox: expected transcript expression and GC Bias [HMFTools-Resources > RNA Pipeline](https://storage.googleapis.com/hmf-public/HMFtools-Resources/rna_pipeline/)
-- KnownFusions: HMF known fusion data [HMFTools-Resources > DNA Pipeline > sv](https://storage.googleapis.com/hmf-public/HMFtools-Resources/dna_pipeline/)
-- Ensembl: cached Ensembl files [HMFTools-Resources > DNA Pipeline > common](https://storage.googleapis.com/hmf-public/HMFtools-Resources/dna_pipeline/)
+- Isofox: expected transcript expression and GC Bias [HMFTools-Resources > RNA Pipeline](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/rna_pipeline/)
+- KnownFusions: HMF known fusion data [HMFTools-Resources > DNA Pipeline > sv](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/)
+- Ensembl: cached Ensembl files [HMFTools-Resources > DNA Pipeline > common](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/)
 
 Note that the Ensembl gene cache currently generates for standard autosomes and sex chromosomes only (alt contigs and MT chromosomes are excluded).
 

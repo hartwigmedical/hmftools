@@ -46,7 +46,7 @@ PURPLE may also be run on targeted data. For more info please see [here](https:/
 ## Installation
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
-PURPLE also requires the same GC profile as used in COBALT (available from [HMFTools-Resources > DNA Pipeline](https://storage.googleapis.com/hmf-public/HMFtools-Resources/dna_pipeline/) and a reference genome.
+PURPLE also requires the same GC profile as used in COBALT (available from [HMFTools-Resources > DNA Pipeline](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/) and a reference genome.
 While these are sufficient to run PURPLE there are a number of optional dependencies that provide additional functionality.
 
 To generate [output charts](#charts), PURPLE depends on a number of [bioconductor](http://www.bioconductor.org) packages. After installing [R](https://www.r-project.org/) 

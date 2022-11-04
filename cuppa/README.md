@@ -26,7 +26,7 @@ Each classifier is optional and run if enabled by config.
 ## Reference Data
 Cuppa can be used to produce reference data files itself - see instructions below.
 
-A publically available reference data set is available from the HMF Tools resource page [here](https://storage.googleapis.com/hmf-public/HMFtools-Resources/cuppa_ref_data/37/cuppa_ref_data.v16.gz)
+A publically available reference data set is available from the HMF Tools resource page [here](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/cuppa_ref_data/37/cuppa_ref_data.v16.gz)
 
 Cuppa will attempt to load these files from a reference directory supplied in its command-line arguments. The files are:
 
