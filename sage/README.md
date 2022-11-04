@@ -33,10 +33,9 @@ Converting them first up front saves significant CPU time overall.
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
 
-37 and 38 resources are available to download from [HMFTools-Resources > DNA Resources](https://resources.hartwigmedicalfoundation.nl/). 
+37 and 38 resources are available to download from [HMFTools-Resources > DNA Resources](https://storage.googleapis.com/hmf-public/HMFtools-Resources/dna_pipeline/). 
 
 R is used to generate the base quality recalibration charts, which is done if the config 'write_bqr_plot' is included. Required packages include `ggplot2`,`tidyr` and `dplyr`. 
-
 
 # Usage
 

@@ -36,7 +36,7 @@ An example WGS pipeline which runs each of these components in turn is detailed 
 An example targeted-panel pipeline, including support for the HMF and TSO-500 panels, is detailed [here](./pipeline/README_PANEL.md).
 
 ## Resource files
-Resource files for each component (GRCh37 and GRCh38) are available to download from [HMFTools-Resources > DNA-Resources](https://resources.hartwigmedicalfoundation.nl/). 
+Resource files for each component (GRCh37 and GRCh38) are available to download from [HMFTools-Resources > DNA-Resources](https://storage.googleapis.com/hmf-public/HMFtools-Resources/dna_pipeline/). 
 
 ## Actionability and Clinical Reporting Tools
 

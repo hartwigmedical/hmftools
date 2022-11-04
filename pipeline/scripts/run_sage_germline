@@ -35,9 +35,7 @@ args="-tumor ${reference_id} \
   -ref_genome ${ref_genome} \
   -ref_genome_version ${ref_genome_version} \
   -ensembl_data_dir ${ensembl_dir} \
-  -hotspot_min_tumor_qual 50 -hotspot_max_germline_vaf 100 -hotspot_max_germline_rel_raw_base_qual 100 \
-  -panel_min_tumor_qual 75 -panel_max_germline_vaf 100 -panel_max_germline_rel_raw_base_qual 100 \
-  -mnv_filter_enabled false -panel_only \
+  -hotspot_min_tumor_qual 50 -panel_min_tumor_qual 75 -ref_sample_count 0 -panel_only \
   -threads ${threads} \
   -out ${output_vcf}"
 

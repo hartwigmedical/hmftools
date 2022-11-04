@@ -7,7 +7,7 @@ To install, download the latest compiled jar file from the [download links](#ver
 
 ### Resource Files
 Sigs requires a signature definition file, for example the COSMIC 30 SNV signatures. 
-These can be downloaded here [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
+These can be downloaded here  [HMFTools-Resources > DNA Pipeline](https://storage.googleapis.com/hmf-public/HMFtools-Resources/dna_pipeline/):
 
 ### Mandatory Arguments
 
