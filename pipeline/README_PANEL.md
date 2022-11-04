@@ -24,11 +24,11 @@ They match the current tool version, configuration and resource files as used in
 - all required resource files in a resource files directory
 - the reference genome version - either 'V37' or 'V38'
 - panel mode 'PANEL' (instead of 'WGS')
-
 - number of threads used for each component
+- maximum memory allocated to each component (default=12GB)
 
 ```
-./scripts/run_pipeline ./scripts /sample_data/ /ref_data_dir/ /tools_dir/ COLO829T V38 PANEL 10 \
+./scripts/run_pipeline ./scripts /sample_data/ /ref_data_dir/ /tools_dir/ COLO829T V38 PANEL 10 16 \
 ```  
 
 

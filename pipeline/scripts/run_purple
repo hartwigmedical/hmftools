@@ -24,6 +24,7 @@ target_regions_ratios=$1 && shift
 target_regions_msi_indels=$1 && shift
 threads=$1 && shift
 circos=$1 && shift
+max_memory=$1 && shift
 
 if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
@@ -75,7 +76,7 @@ fi
 
 echo "Running Purple with args: ${args}"
 
-java -jar ${purple_jar} ${args}
+java -Xmx${max_memory}G -jar ${purple_jar} ${args}
 
 
   

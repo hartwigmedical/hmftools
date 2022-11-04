@@ -22,9 +22,10 @@ The reference genome files are available separately [HMFTools-Resources > Ref-Ge
 - the reference genome version - either 'V37' or 'V38'
 - whole-genome mode 'WGS' (instead of 'PANEL')
 - number of threads used for each component
+- maximum memory allocated to each component (default=12GB)
 
 ```
-./scripts/run_pipeline ./scripts /sample_data/ /ref_data_dir/ /tools_dir/ "COLO829T,COLO829R" V37 WGS 10
+./scripts/run_pipeline ./scripts /sample_data/ /ref_data_dir/ /tools_dir/ "COLO829T,COLO829R" V37 WGS 10 16
 ```  
 
 

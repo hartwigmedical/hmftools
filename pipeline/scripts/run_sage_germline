@@ -13,6 +13,7 @@ hotspots=$1 && shift
 panel_bed=$1 && shift
 high_confidence_bed=$1 && shift
 threads=$1 && shift
+max_memory=$1 && shift
 
 if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
@@ -42,4 +43,4 @@ args="-tumor ${reference_id} \
 
 echo "Running Sage germline with args: ${args}"
 
-java -jar ${sage_jar} ${args}
+java -Xmx${max_memory}G -jar ${sage_jar} ${args}

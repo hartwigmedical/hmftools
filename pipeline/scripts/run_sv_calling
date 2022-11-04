@@ -44,7 +44,7 @@ args="-sample ${tumor_id} \
 
 echo "Running SvPrep on tumor with args: ${args}"
 
-java -jar ${sv_prep_jar} ${args}
+java -Xmx${max_memory}G -jar ${sv_prep_jar} ${args}
 
 #echo ${args}
 #java -jar ${sv_prep_jar} ${args}
@@ -73,7 +73,7 @@ if [ "${reference_id}" != "none" ]; then
 
   echo "Running SvPrep on reference with args: ${args}"
 
-  java -jar ${sv_prep_jar} ${args}
+  java -Xmx${max_memory}G -jar ${sv_prep_jar} ${args}
 
   sv_prep_ref_bam=${output_dir}/${reference_id}.sv_prep.bam
   sv_prep_ref_sorted_bam=${output_dir}/${reference_id}.sv_prep.sorted.bam
@@ -138,6 +138,6 @@ args="-input_vcf ${gridss_raw_vcf} \
 
 echo "Running SvPrep reference depth with args: ${args}"
 
-java -cp ${sv_prep_jar} com.hartwig.hmftools.svprep.depth.DepthAnnotator ${args}
+java -Xmx${max_memory}G -cp ${sv_prep_jar} com.hartwig.hmftools.svprep.depth.DepthAnnotator ${args}
 
 

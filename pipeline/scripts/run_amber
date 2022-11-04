@@ -11,6 +11,7 @@ ref_genome_version=$1 && shift
 ref_genome=$1 && shift
 loci_vcf=$1 && shift
 threads=$1 && shift
+max_memory=$1 && shift
 
 output_tsv=${output_dir}/${tumor_id}.amber.baf.tsv.gz
 
@@ -41,4 +42,4 @@ fi
 
 echo "Running Amber with args: ${args}"
 
-java -jar ${amber_jar} ${args}
+java -Xmx${max_memory}G -jar ${amber_jar} ${args}
