@@ -34,8 +34,8 @@ public class LossOfHeterozygositySelector {
                     suspectGeneCopyNumbersWithLOH.add(ImmutableLohGenesReporting.builder()
                             .location(geneCopyNumber.chromosome() + geneCopyNumber.chromosomeBand())
                             .gene(geneCopyNumber.geneName())
-                            .minorAlleleCopies(Double.valueOf(round(geneCopyNumber.minMinorAlleleCopyNumber())))
-                            .tumorCopies(Double.valueOf(round(geneCopyNumber.minCopyNumber())))
+                            .minorAlleleCopies(round(geneCopyNumber.minMinorAlleleCopyNumber()))
+                            .tumorCopies(round(geneCopyNumber.minCopyNumber()))
                             .build());
                 }
             }
@@ -55,8 +55,8 @@ public class LossOfHeterozygositySelector {
                     suspectGeneCopyNumbersWithLOH.add(ImmutableLohGenesReporting.builder()
                             .location(geneCopyNumber.chromosome() + geneCopyNumber.chromosomeBand())
                             .gene(geneCopyNumber.geneName())
-                            .minorAlleleCopies(Double.valueOf(round(geneCopyNumber.minMinorAlleleCopyNumber())))
-                            .tumorCopies(Double.valueOf(round(geneCopyNumber.minCopyNumber())))
+                            .minorAlleleCopies(round(geneCopyNumber.minMinorAlleleCopyNumber()))
+                            .tumorCopies(round(geneCopyNumber.minCopyNumber()))
                             .build());
                 }
             }

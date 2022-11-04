@@ -211,7 +211,9 @@ public class SummaryChapter implements ReportChapter {
                 table);
 
         String cuppaPrediction = Strings.EMPTY;
-        if (patientReport.molecularTissueOriginReporting() != null && patientReport.genomicAnalysis().hasReliablePurity()) {
+        if (patientReport.molecularTissueOriginReporting() == null) {
+            cuppaPrediction = DataUtil.NA_STRING;
+        } else if (patientReport.molecularTissueOriginReporting() != null && patientReport.genomicAnalysis().hasReliablePurity()) {
             if (patientReport.molecularTissueOriginReporting().interpretLikelihood() == null) {
                 cuppaPrediction = patientReport.molecularTissueOriginReporting().interpretCancerType();
             } else {
@@ -418,7 +420,12 @@ public class SummaryChapter implements ReportChapter {
                     noConsent,
                     TableUtil.TABLE_BOTTOM_MARGIN_SUMMARY,
                     ReportResources.CONTENT_WIDTH_WIDE_SUMMARY));
-        } else {
+        } else if (patientReport.genomicAnalysis().hlaAlleles().hlaAllelesReporting().isEmpty()) {
+            div.add(TableUtil.createNoneReportTable(title,
+                    null,
+                    TableUtil.TABLE_BOTTOM_MARGIN_SUMMARY,
+                    ReportResources.CONTENT_WIDTH_WIDE_SUMMARY));
+        }else {
             Table table = TableUtil.createReportContentTable(new float[] { 15, 15, 15 },
                     new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Germline allele"),
                             TableUtil.createHeaderCell("Interpretation: presence in tumor") },
@@ -467,6 +474,8 @@ public class SummaryChapter implements ReportChapter {
             return "Present in tumor";
         } else if (interpretation.contains("No")) {
             return "Not present in tumor";
+        } else if (interpretation.contains("Unknown")) {
+            return "Unknown";
         } else {
             return Strings.EMPTY;
         }

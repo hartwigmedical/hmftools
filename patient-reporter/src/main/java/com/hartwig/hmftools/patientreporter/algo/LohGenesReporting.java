@@ -15,8 +15,10 @@ public abstract class LohGenesReporting {
     @NotNull
     public abstract String gene();
 
-    public abstract Double minorAlleleCopies();
+    @Nullable
+    public abstract Long minorAlleleCopies();
 
-    public abstract Double tumorCopies();
+    @Nullable
+    public abstract Long tumorCopies();
 
 }

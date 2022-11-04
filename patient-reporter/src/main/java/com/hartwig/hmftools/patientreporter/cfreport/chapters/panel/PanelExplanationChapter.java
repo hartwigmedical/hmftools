@@ -52,7 +52,7 @@ public class PanelExplanationChapter implements ReportChapter {
         div.add(new Paragraph("Details on the VCF file").addStyle(ReportResources.smallBodyHeadingStyle()));
         div.add(createContentDivWithLinkThree("A short description of the headers present in the VCF file can be downloaded from ",
                 " https://storage.googleapis.com/hmf-public/OncoPanel-Resources/latest_oncopanel.zip",
-                ".."));
+                "."));
         return div;
     }
 
