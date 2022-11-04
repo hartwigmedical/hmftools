@@ -92,17 +92,32 @@ class VDJSequence(
 
     val aminoAcidSequenceFormatted: String get()
     {
-        // we print the pre J anchor part first then the J anchor. This ensures that if J anchor is not aligned to codon
-        // it will still get printed the way we want it
-        var codonAlignedSeqBeforeJ = if (jAnchor != null) sequence.substring(0, jAnchor.anchorBoundary) else sequence
-
-        if (vAnchor != null)
+        if (vAnchor == null)
         {
-            // codon align
-            codonAlignedSeqBeforeJ = codonAlignedSeqBeforeJ.drop(vAnchor.anchorBoundary % 3)
+            if (jAnchor == null)
+                return String()
+
+            // if there is no v anchor, we have to align to j anchor
+            // also align to codon boundary for the J anchor
+            val codonAlignedSeq = sequence.substring(jAnchor.anchorBoundary % 3)
+            val dashPos = jAnchor.anchorBoundary / 3
+            return CiderUtils.insertDashes(Codons.aminoAcidFromBases(codonAlignedSeq), dashPos)
+        }
+        else if (jAnchor == null)
+        {
+            // if no j anchor, we just need to align to V anchor
+            val codonAlignedSeq = sequence.substring(vAnchor.anchorBoundary % 3)
+            val dashPos = vAnchor.anchorBoundary / 3
+            return CiderUtils.insertDashes(Codons.aminoAcidFromBases(codonAlignedSeq), dashPos)
         }
 
-        return CiderUtils.insertDashes(Codons.aminoAcidFromBases(codonAlignedSeqBeforeJ), (vAnchorBoundary ?: 0) / 3) + '-' +
+        // we print the pre J anchor part first then the J anchor. This ensures that if J anchor is not aligned to codon
+        // it will still get printed the way we want it
+        val codonAlignedSeqBeforeJ = sequence.substring(vAnchor.anchorBoundary % 3, jAnchor.anchorBoundary)
+        val dashPos = vAnchor.anchorBoundary / 3
+
+        return CiderUtils.insertDashes(Codons.aminoAcidFromBases(codonAlignedSeqBeforeJ), dashPos) +
+                '-' +
                 Codons.aminoAcidFromBases(jAnchorSequence)
     }
 
@@ -124,18 +139,6 @@ class VDJSequence(
     val jAnchorSequence: String get()
     {
         return if (jAnchor == null) String() else sequence.substring(jAnchorBoundary!!)
-    }
-
-    val vAnchorAA: String get()
-    {
-        val vAnchorSeq = vAnchorSequence
-        // codon align
-        return Codons.aminoAcidFromBases(vAnchorSeq.drop(vAnchorSeq.length % 3))
-    }
-
-    val jAnchorAA: String get()
-    {
-        return Codons.aminoAcidFromBases(jAnchorSequence)
     }
 
     // does not include the C and W

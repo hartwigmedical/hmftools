@@ -45,4 +45,26 @@ enum class VJGeneType
 
     //val locus: IgTcrLocus = IgTcrLocus.valueOf(name.take(3))
     val vj: VJ = if (name == "IGKKDE") VJ.J else VJ.valueOf(name[3].toString())
+
+    fun pairedVjGeneType() : VJGeneType
+    {
+        return when (this)
+        {
+            IGHV -> IGHJ
+            IGHJ -> IGHV
+            IGKV -> IGKJ
+            IGKJ -> IGKV
+            IGLV -> IGLJ
+            IGLJ -> IGLV
+            TRAV -> TRAJ
+            TRAJ -> TRAV
+            TRBV -> TRBJ
+            TRBJ -> TRBV
+            TRDV -> TRDJ
+            TRDJ -> TRDV
+            TRGV -> TRGJ
+            TRGJ -> TRGV
+            IGKKDE -> IGKV
+        }
+    }
 }

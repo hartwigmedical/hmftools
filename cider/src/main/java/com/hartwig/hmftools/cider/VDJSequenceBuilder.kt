@@ -40,7 +40,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         // try to join together the orphaned layouts
         for (vGeneType: VJGeneType in oneSidedLayouts.keySet().filter({ vjGeneType -> vjGeneType.vj == VJ.V }))
         {
-            val jGeneType: VJGeneType = CiderUtils.getPairedVjGeneType(vGeneType)
+            val jGeneType: VJGeneType = vGeneType.pairedVjGeneType()
             val vLayoutList: MutableList<ReadLayout> = oneSidedLayouts[vGeneType]
             val jLayoutList: MutableList<ReadLayout> = oneSidedLayouts[jGeneType]
 
@@ -121,7 +121,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     {
         sLogger.debug("try complete {} layout: {}", layoutGeneType, layout.consensusSequence())
 
-        val targetAnchorType = CiderUtils.getPairedVjGeneType(layoutGeneType)
+        val targetAnchorType = layoutGeneType.pairedVjGeneType()
 
         // we want to use the indices to work where things are
         val layoutSeq: String = layout.consensusSequence()
@@ -146,8 +146,10 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         }
 
         // find all the homolog sequences
-        val anchorBlosumMatch: AnchorBlosumMatch? =
-            anchorBlosumSearcher.searchForAnchor(layoutSeq, targetAnchorType, searchStart, searchEnd)
+        val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(
+                layoutSeq, targetAnchorType,
+                IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY,
+                searchStart, searchEnd)
 
         if (anchorBlosumMatch == null)
             return null
@@ -230,7 +232,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         assert(vLayoutGeneType.vj == VJ.V)
         assert(jLayoutGeneType.vj == VJ.J)
 
-        if (vLayoutGeneType != CiderUtils.getPairedVjGeneType(jLayoutGeneType))
+        if (vLayoutGeneType != jLayoutGeneType.pairedVjGeneType())
         {
             // mismatched type, i.e. IGHV must pair with IGHJ
             return null

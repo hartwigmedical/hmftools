@@ -29,7 +29,7 @@ interface IVJReadLayoutAdaptor
 //                                                          |___________________|
 //                                                                 J anchor
 // Most functions here rely on this.
-class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
+class VJReadLayoutAdaptor(private val trimBases: Int, private val minBaseQuality: Int) : IVJReadLayoutAdaptor
 {
     private class VjLayoutRead private constructor(
         val layoutReadSlice: ReadSlice,
@@ -59,30 +59,6 @@ class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
     companion object
     {
         private val sLogger = LogManager.getLogger(VJReadLayoutAdaptor::class.java)
-
-        private fun numTrailingPolyG(seq: String, sliceEnd: Int) : Int
-        {
-            for (i in 0 until sliceEnd)
-            {
-                if (seq[sliceEnd - i - 1] != 'G')
-                {
-                    return i
-                }
-            }
-            return sliceEnd
-        }
-
-        private fun numLeadingPolyC(seq: String, sliceStart: Int) : Int
-        {
-            for (i in sliceStart until seq.length)
-            {
-                if (seq[i] != 'C')
-                {
-                    return i
-                }
-            }
-            return seq.length - sliceStart
-        }
     }
 
     fun readCandidateToLayoutRead(readCandidate: VJReadCandidate) : ReadLayout.Read?
@@ -147,7 +123,7 @@ class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
         if (!read.readNegativeStrandFlag)
         {
             // ends with poly G, but take trim bases into account
-            val numGs = numTrailingPolyG(read.readString, sliceEnd)
+            val numGs = CiderUtils.numTrailingPolyG(read.readString, sliceEnd)
             if (numGs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
             {
                 sLogger.debug("read({}) strand(+) poly G tail of length({}) found({})",
@@ -157,7 +133,7 @@ class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
         }
         else
         {
-            val numCs = numLeadingPolyC(read.readString, sliceStart)
+            val numCs = CiderUtils.numLeadingPolyC(read.readString, sliceStart)
             if (numCs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
             {
                 sLogger.debug("read({}) strand(-) poly G tail of length({}) found({})",
@@ -249,57 +225,8 @@ class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
         return getAnchorRange(geneType.vj, layout)
     }
 
-    // we also make sure they are aligned to codons
-    fun getCdr3Range(geneType: VJGeneType, layout: ReadLayout) : IntRange?
-    {
-        val anchorRange = getAnchorRange(geneType, layout)
-
-        if (anchorRange == null)
-            return null
-
-        // for V it is the sequence after the aligned position
-        // for J it is the sequence before
-        if (geneType.vj == VJ.V)
-            return anchorRange.last + 1 until layout.consensusSequence().length
-        else if (geneType.vj == VJ.J)
-            return 0 until anchorRange.first
-        return null
-    }
-
-    fun getAnchorSequence(geneType: VJGeneType, layout: ReadLayout) : String
-    {
-        val range = getAnchorRange(geneType, layout)
-        return if (range != null)
-            layout.consensusSequence().substring(range)
-        else String()
-    }
-
-    fun getAnchorSupport(geneType: VJGeneType, layout: ReadLayout) : String
-    {
-        val range = getAnchorRange(geneType, layout)
-        return if (range != null)
-            layout.highQualSupportString().substring(range)
-        else String()
-    }
-
-    fun getCdr3Sequence(geneType: VJGeneType, layout: ReadLayout) : String
-    {
-        val range = getCdr3Range(geneType, layout)
-        return if (range != null)
-            layout.consensusSequence().substring(range)
-        else String()
-    }
-
-    fun getCdr3Support(geneType: VJGeneType, layout: ReadLayout) : String
-    {
-        val range = getCdr3Range(geneType, layout)
-        return if (range != null)
-            layout.highQualSupportString().substring(range)
-        else String()
-    }
-
     fun buildLayouts(geneType: VJGeneType, readCandidates: List<VJReadCandidate>,
-                     minBaseQuality: Int, minMatchedBases: Int, minMatchRatio: Double)
+                     minMatchedBases: Int, minMatchRatio: Double)
     : List<ReadLayout>
     {
         sLogger.info("building {} layouts from {} reads", geneType, readCandidates.size)
@@ -322,5 +249,32 @@ class VJReadLayoutAdaptor(private val trimBases: Int) : IVJReadLayoutAdaptor
         )
         val readLayouts = layoutBuilder.build()
         return readLayouts
+    }
+
+    // the layout that we normally build have anchor truncated
+    // this function build it back out
+    fun buildFullLayout(layout: ReadLayout) : ReadLayout
+    {
+        val fullLayout = ReadLayout()
+
+        // get all the reads, and also read slices, and then rebuild them
+        for (r in layout.reads)
+        {
+            val readCandidate = toReadCandidate(r)
+            val anchorTrimmedReadSlice = toLayoutReadSlice(r)
+
+            // now we want to create a read slice without the anchor trimming
+            val fullReadSlice: ReadSlice? = CiderUtils.determineReadSlice(readCandidate.read, readCandidate.useReverseComplement, trimBases)
+
+            requireNotNull(fullReadSlice)
+
+            // now we want to make sure align position is the same
+            val alignPosition: Int = r.alignedPosition + anchorTrimmedReadSlice.sliceStart - fullReadSlice.sliceStart
+
+            // we need to make sure we put the aligned location correctly
+            fullLayout.addRead(VjLayoutRead(fullReadSlice, readCandidate, alignPosition), minBaseQuality.toByte())
+        }
+
+        return fullLayout
     }
 }

@@ -58,10 +58,13 @@ class CiderParams
     var writeFilteredBam = false
 
     @Parameter(names = ["-report_partial_seq"], description = "Report partially rearranged sequences (V only or J only)")
-    var reportPartialSeq = false
+    var reportPartialSeq = true
 
     @Parameter(names = ["-num_trim_bases"], description = "Number of bases to trim on each side of reads")
     var numBasesToTrim = 0
+
+    @Parameter(names = ["-primer_csv"], description = "Path to csv file containing primers")
+    var primerCsv: String? = null
 
     val isValid: Boolean get() = true
 

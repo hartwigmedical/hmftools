@@ -232,11 +232,12 @@ class CiderReadScreener(// collect the reads and sort by types
             }
             // we need to match both the V and J side after an anchor region match
             // i.e. if we match a V gene type, we want to also check for the J gene type, and vice versa
-            for (vjGeneType in arrayOf(relaventVjGeneType, CiderUtils.getPairedVjGeneType(relaventVjGeneType)))
+            for (vjGeneType in arrayOf(relaventVjGeneType, relaventVjGeneType.pairedVjGeneType()))
             {
                 val anchorBlosumMatch: AnchorBlosumMatch? = mAnchorBlosumSearcher.searchForAnchor(
                     readString,
                     vjGeneType,
+                    IAnchorBlosumSearcher.Mode.DISALLOW_NEG_SIMILARITY,
                     0,
                     read.readLength
                 )
@@ -285,7 +286,8 @@ class CiderReadScreener(// collect the reads and sort by types
             var readString = samRecord.readString
             if (strand == Strand.REVERSE) readString = SequenceUtil.reverseComplement(readString)
 
-            val anchorBlosumMatch: AnchorBlosumMatch? = mAnchorBlosumSearcher.searchForAnchor(readString)
+            val anchorBlosumMatch: AnchorBlosumMatch? =
+                mAnchorBlosumSearcher.searchForAnchor(readString, IAnchorBlosumSearcher.Mode.DISALLOW_NEG_SIMILARITY)
 
             if (anchorBlosumMatch != null && anchorBlosumMatch.similarityScore > 0)
             {
@@ -337,6 +339,7 @@ class CiderReadScreener(// collect the reads and sort by types
                 anchorBlosumMatch = mAnchorBlosumSearcher.searchForAnchor(
                     samRecord.readString,
                     igTcrConstantRegion.getCorrespondingJ(),
+                    IAnchorBlosumSearcher.Mode.DISALLOW_NEG_SIMILARITY,
                     0,
                     leftSoftClip)
             }
@@ -350,7 +353,9 @@ class CiderReadScreener(// collect the reads and sort by types
 
                 anchorBlosumMatch =  mAnchorBlosumSearcher.searchForAnchor(
                     reverseCompSeq,
-                    igTcrConstantRegion.getCorrespondingJ(), 0, rightSoftClip)
+                    igTcrConstantRegion.getCorrespondingJ(),
+                    IAnchorBlosumSearcher.Mode.DISALLOW_NEG_SIMILARITY,
+                    0, rightSoftClip)
             }
             if (anchorBlosumMatch != null && anchorBlosumMatch.similarityScore > 0)
             {

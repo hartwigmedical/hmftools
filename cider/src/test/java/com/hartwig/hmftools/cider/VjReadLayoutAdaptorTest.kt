@@ -11,7 +11,7 @@ class VjReadLayoutAdaptorTest
     @Test
     fun testReadCandidateToLayoutReadPosStrand()
     {
-        val layoutAdaptor = VJReadLayoutAdaptor(0)
+        val layoutAdaptor = VJReadLayoutAdaptor(0, 30)
         val seq = "AAGACACGGC" // 10 bases long
 
         // test V read
@@ -41,7 +41,7 @@ class VjReadLayoutAdaptorTest
     @Test
     fun testReadCandidateToLayoutReadNegStrand()
     {
-        val layoutAdaptor = VJReadLayoutAdaptor(0)
+        val layoutAdaptor = VJReadLayoutAdaptor(0, 30)
         val seq = "GCCGTGTCTT" // 10 bases long, reverse comp of AAGACACGGC
 
         // test V read
@@ -71,7 +71,7 @@ class VjReadLayoutAdaptorTest
     @Test
     fun testReadCandidateToLayoutReadPolyG()
     {
-        val layoutAdaptor = VJReadLayoutAdaptor(0)
+        val layoutAdaptor = VJReadLayoutAdaptor(0, 30)
         val seq = "AAGACACGGC" + "GTACT" + "G".repeat(8) // 10 bases long + 5 bases + 8 Gs
 
         // test V read
@@ -101,7 +101,7 @@ class VjReadLayoutAdaptorTest
     @Test
     fun testReadCandidateToLayoutReadPolyC()
     {
-        val layoutAdaptor = VJReadLayoutAdaptor(0)
+        val layoutAdaptor = VJReadLayoutAdaptor(0, 30)
         val seq = "C".repeat(8) + "GTACT" + "AAGACACGGC" //  8 Cs + 5 bases + 10 bases long
 
         // test V read
@@ -131,7 +131,7 @@ class VjReadLayoutAdaptorTest
     @Test
     fun testReadCandidateToLayoutReadTrimBasesPolyG()
     {
-        val layoutAdaptor = VJReadLayoutAdaptor(1)
+        val layoutAdaptor = VJReadLayoutAdaptor(1, 30)
         var seq = "AAGACACGGC" + "GTACT" + "G".repeat(8) // 10 bases long + 5 bases + 8 Gs
 
         // add 1 base around for trim

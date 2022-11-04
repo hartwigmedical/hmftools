@@ -8,6 +8,7 @@ import com.hartwig.hmftools.cider.AsyncBamReader.processBam
 import com.hartwig.hmftools.cider.VDJSequenceTsvWriter.writeVDJSequences
 import com.hartwig.hmftools.cider.VJReadLayoutFile.writeLayouts
 import com.hartwig.hmftools.cider.layout.ReadLayout
+import com.hartwig.hmftools.cider.primer.*
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.utils.FileWriterUtils
@@ -60,8 +61,7 @@ class CiderApplication
 
         val candidateBlosumSearcher = AnchorBlosumSearcher(
             ciderGeneDatastore,
-            CiderConstants.CANDIDATE_MIN_PARTIAL_ANCHOR_AA_LENGTH,
-            false)
+            CiderConstants.CANDIDATE_MIN_PARTIAL_ANCHOR_AA_LENGTH)
 
         val readProcessor = CiderReadScreener(
             ciderGeneDatastore,
@@ -72,13 +72,12 @@ class CiderApplication
         readBamFile(readProcessor, ciderGeneDatastore)
         writeCiderBam(readProcessor.allMatchedReads)
 
-        val vjReadLayoutAdaptor = VJReadLayoutAdaptor(mParams.numBasesToTrim)
+        val vjReadLayoutAdaptor = VJReadLayoutAdaptor(mParams.numBasesToTrim, mParams.minBaseQuality)
         val layoutMap = buildLayouts(vjReadLayoutAdaptor, readProcessor.vjReadCandidates)
 
         val vdjBuilderBlosumSearcher = AnchorBlosumSearcher(
             ciderGeneDatastore,
-            CiderConstants.VDJ_MIN_PARTIAL_ANCHOR_AA_LENGTH,
-            true
+            CiderConstants.VDJ_MIN_PARTIAL_ANCHOR_AA_LENGTH
         )
 
         val vdjSeqBuilder = VDJSequenceBuilder(
@@ -86,8 +85,29 @@ class CiderApplication
             CiderConstants.MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES
         )
 
-        val vdjSequences = vdjSeqBuilder.buildVDJSequences(layoutMap)
-        writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjSequences, vjReadLayoutAdaptor, mParams.reportPartialSeq)
+        val vdjSequences: List<VDJSequence> = vdjSeqBuilder.buildVDJSequences(layoutMap)
+
+        // also write a full sequence layout file
+        FullSequenceLayoutFile.writeLayouts(mParams.outputDir, mParams.sampleId, vdjSequences, vjReadLayoutAdaptor)
+
+        var primerMatchList: List<VdjPrimerMatch> = emptyList()
+
+        if (mParams.primerCsv != null)
+        {
+            val primerList = PrimerTsvFile.load(mParams.primerCsv!!)
+            // if we are provided a list of primers, match those against the input
+            val vdjPrimerMatcher = VdjPrimerMatcher(vjReadLayoutAdaptor, 1)
+            primerMatchList = vdjPrimerMatcher.matchVdjPrimer(vdjSequences, primerList)
+
+            // write out the primer matches
+            VdjPrimerMatchTsv.writePrimerMatches(mParams.outputDir, mParams.sampleId, primerMatchList)
+        }
+
+        val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher)
+        val vdjAnnotations: List<VdjAnnotation> = vdjAnnotator.sortAndAnnotateVdjs(vdjSequences, primerMatchList)
+
+        writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjAnnotations, mParams.reportPartialSeq)
+
         val finish = Instant.now()
         val seconds = Duration.between(start, finish).seconds
         sLogger.info("CIDER run complete, time taken: {}m {}s", seconds / 60, seconds % 60)
@@ -148,8 +168,7 @@ class CiderApplication
                 }
             }
             val readLayouts = vjReadLayoutAdaptor.buildLayouts(
-                geneType, readsOfGeneType,
-                mParams.minBaseQuality, 20, 1.0
+                geneType, readsOfGeneType, 20, 1.0
             )
 
             layoutMap[geneType] = readLayouts
