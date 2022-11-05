@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.purple.FittedPurityMethod.NORMAL;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
@@ -695,7 +696,8 @@ public class PurpleApplication
         final Options options = new Options();
         PurpleConfig.addOptions(options);
 
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        addLoggingOptions(options);
+        addThreadOptions(options);
         addThreadOptions(options);
         options.addOption(VERSION, false, "Exit after displaying version info.");
 
