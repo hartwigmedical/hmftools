@@ -159,7 +159,7 @@ public class PaveApplication
                 processVariant(variantContext);
                 ++variantCount;
 
-                if(variantCount > 0 && (variantCount % 10000) == 0)
+                if(variantCount > 0 && (variantCount % 100000) == 0)
                 {
                     PV_LOGGER.info("processed {} variants", variantCount);
                 }
