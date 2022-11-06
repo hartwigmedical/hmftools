@@ -12,6 +12,8 @@ import java.util.Map;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.gene.TranscriptCodingType;
+import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
@@ -97,7 +99,7 @@ public class StructuralVariantFusionDAO
                     breakend.reportedDisruption(),
                     DatabaseUtil.decimal(breakend.undisruptedCopyNumber()),
                     breakend.regionType(),
-                    breakend.codingContext(),
+                    breakend.codingType(),
                     breakend.biotype(),
                     breakend.exonicBasePhase(),
                     breakend.nextSpliceExonRank(),
@@ -245,8 +247,8 @@ public class StructuralVariantFusionDAO
                     .disruptive(record.getValue(SVBREAKEND.DISRUPTIVE) == 1)
                     .reportedDisruption(record.getValue(SVBREAKEND.REPORTEDDISRUPTION) == 1)
                     .undisruptedCopyNumber(record.getValue(SVBREAKEND.UNDISRUPTEDCOPYNUMBER))
-                    .regionType(record.getValue(SVBREAKEND.REGIONTYPE))
-                    .codingContext(record.getValue(SVBREAKEND.CODINGCONTEXT))
+                    .regionType(TranscriptRegionType.valueOf(record.getValue(SVBREAKEND.REGIONTYPE)))
+                    .codingType(TranscriptCodingType.valueOf(record.getValue(SVBREAKEND.CODINGCONTEXT)))
                     .biotype(record.getValue(SVBREAKEND.BIOTYPE))
                     .exonicBasePhase(record.getValue(SVBREAKEND.EXONICBASEPHASE))
                     .nextSpliceExonRank(record.getValue(SVBREAKEND.NEXTSPLICEEXONRANK) == null ?

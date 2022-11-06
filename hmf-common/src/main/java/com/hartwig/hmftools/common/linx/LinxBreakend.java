@@ -11,7 +11,8 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
+import com.hartwig.hmftools.common.gene.TranscriptCodingType;
+import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 
 import org.immutables.value.Value;
 
@@ -28,8 +29,8 @@ public abstract class LinxBreakend
     public abstract boolean disruptive();
     public abstract boolean reportedDisruption();
     public abstract double undisruptedCopyNumber();
-    public abstract String regionType();
-    public abstract String codingContext();
+    public abstract TranscriptRegionType regionType();
+    public abstract TranscriptCodingType codingType();
     public abstract String biotype();
     public abstract int exonicBasePhase();
     public abstract int nextSpliceExonRank();
@@ -80,6 +81,10 @@ public abstract class LinxBreakend
 
         List<LinxBreakend> breakends = Lists.newArrayList();
 
+        // backwards compatibility on old column name
+        Integer codingTypeIndex = fieldsIndexMap.containsValue("codingType") ?
+                fieldsIndexMap.get("codingType") : fieldsIndexMap.get("codingContext");
+
         for(int i = 0; i < lines.size(); ++i)
         {
             String[] values = lines.get(i).split(DELIMITER);
@@ -95,8 +100,8 @@ public abstract class LinxBreakend
                     .disruptive(Boolean.parseBoolean(values[fieldsIndexMap.get("disruptive")]))
                     .reportedDisruption(Boolean.parseBoolean(values[fieldsIndexMap.get("reportedDisruption")]))
                     .undisruptedCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("undisruptedCopyNumber")]))
-                    .regionType(values[fieldsIndexMap.get("regionType")])
-                    .codingContext(values[fieldsIndexMap.get("codingContext")])
+                    .regionType(TranscriptRegionType.valueOf(values[fieldsIndexMap.get("regionType")]))
+                    .codingType(TranscriptCodingType.valueOf(values[codingTypeIndex]))
                     .biotype(values[fieldsIndexMap.get("biotype")])
                     .exonicBasePhase(Integer.parseInt(values[fieldsIndexMap.get("exonicBasePhase")]))
                     .nextSpliceExonRank(Integer.parseInt(values[fieldsIndexMap.get("nextSpliceExonRank")]))
@@ -131,7 +136,7 @@ public abstract class LinxBreakend
                 .add("reportedDisruption")
                 .add("undisruptedCopyNumber")
                 .add("regionType")
-                .add("codingContext")
+                .add("codingType")
                 .add("biotype")
                 .add("exonicBasePhase")
                 .add("nextSpliceExonRank")
@@ -163,7 +168,7 @@ public abstract class LinxBreakend
                 .add(String.valueOf(breakend.reportedDisruption()))
                 .add(String.format("%.4f", breakend.undisruptedCopyNumber()))
                 .add(String.valueOf(breakend.regionType()))
-                .add(String.valueOf(breakend.codingContext()))
+                .add(String.valueOf(breakend.codingType()))
                 .add(String.valueOf(breakend.biotype()))
                 .add(String.valueOf(breakend.exonicBasePhase()))
                 .add(String.valueOf(breakend.nextSpliceExonRank()))
