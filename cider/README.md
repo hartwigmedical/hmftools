@@ -71,7 +71,7 @@ Each collapsed sequence is either marked as PASS or one or more of the following
 - **POOR_J_ANCHOR** - No J anchor found with similarity score >=0 
 - **DUPLICATE** - CDR3 nt sequence is identical to another sequence with more support (different anchors) 
 - **MAX_LENGTH** - CDR3 nt sequence must be less than 40 AA in length 
-- **MIN_LENGTH** - CDR3 nt sequence must be at least 4 AA in length
+- **MIN_LENGTH** - CDR3 nt sequence must be at least 5 AA in length (including anchor C & W/F)
 - **MATCHES_REF** - NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0.
 
 Sequences with poor or no anchor may represent partial rearrangements.
@@ -83,7 +83,7 @@ Field | Explanation
 CDR3Seq|CDR3 nucleotide sequence 
 CDR3aa |CDR3 aa sequence 
 Filter | PASS if viable CDR3 sequence or one or more filter reasons 
-minHighQualBaseReads|number of reads in the least supported base in the CDR3 region 
+minHighQualBaseReads|number of reads in the least supported base in the CDR3 region or for the first 60 bases of the candidate CDR3 sequence if only one  anchor is found
 assignedReads|Total reads assigned to candidate sequence. 
 JAlignedReads |# of reads initially aligned to J gene 
 VAlignedReads |# of reads initially aligned to V gene 
