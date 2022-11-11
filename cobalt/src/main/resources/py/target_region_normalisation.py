@@ -10,7 +10,8 @@ def isY(chromosome: str):
 
 def load_exon_region_df(csv_path, region_size):
     # for each position we also want to add the name of the exon it belongs to, if any
-    exons_df = pd.read_csv(csv_path, names=['chromosome', 'start', 'end', 'exon'], header=None, sep='\t')
+    exons_df = pd.read_csv(csv_path, names=['chromosome', 'start', 'end', 'exon'], header=None, sep='\t',
+                           dtype={"chromosome": str})
 
     # in order to merge with the regions, we need to cut open the regions to smaller ones
     def exon_to_regions(exon_row):
@@ -37,15 +38,15 @@ def load_cobalt_ratio_df(sample_cfg, assume_diploid):
     try:
         for sample in samples:
             sample_id = sample["sample_id"]
-            gender = sample["gender"]
             targeted_cobalt_ratios = sample["targeted_cobalt_ratios"]
 
             cols_to_drop = ['referenceReadCount', 'referenceGCRatio', 'referenceGCDiploidRatio']
 
-            panel_df = pd.read_csv(targeted_cobalt_ratios, sep="\t").drop(columns=cols_to_drop)
+            panel_df = pd.read_csv(targeted_cobalt_ratios, sep="\t", dtype={"chromosome": str}).drop(columns=cols_to_drop)
             panel_df = panel_df.loc[panel_df['tumorGCRatio'] >= 0]
 
             if assume_diploid:
+                gender = sample["gender"]
                 # here we do not have the WGS data to check against. We have to assume the tumorGCRatio is
                 # mostly 1.0
                 # except in the sex chromosome, where we assume it to be 0.5 for X/Y for male, and nan for
@@ -66,7 +67,7 @@ def load_cobalt_ratio_df(sample_cfg, assume_diploid):
                     raise RuntimeError(f"unknown gender: {gender}")
             else:
                 wgs_cobalt_ratios = sample["wgs_cobalt_ratios"]
-                wgs_df = pd.read_csv(wgs_cobalt_ratios, sep="\t").drop(columns=cols_to_drop)
+                wgs_df = pd.read_csv(wgs_cobalt_ratios, sep="\t", dtype={"chromosome": str}).drop(columns=cols_to_drop)
                 wgs_df = wgs_df.loc[wgs_df['tumorGCRatio'] >= 0]
 
             # merge them together
@@ -85,16 +86,17 @@ def load_cobalt_ratio_df(sample_cfg, assume_diploid):
     cobalt_ratio_df = pd.concat(cobalt_ratio_dfs).reset_index(drop=True)
     return cobalt_ratio_df
 
-def chromosome_rank(chr):
-    chr = chr.replace('chr', '').upper()
-    if chr == 'X':
+def chromosome_rank(chromosome):
+    if chromosome is str:
+        chromosome = chromosome.replace('chr', '').upper()
+    if chromosome == 'X':
         return 23
-    if chr == 'Y':
+    if chromosome == 'Y':
         return 24
-    if chr == 'MT':
+    if chromosome == 'MT':
         return 25
     try:
-        return int(chr)
+        return int(chromosome)
     except:
         return 1000
 
@@ -139,8 +141,8 @@ of bam files generated using the same target enrichment process.''',
                         help='Cobalt genome region window size [default=1000]')
     parser.add_argument('--assume_diploid', type=bool, default=False,
                         help='Assume the genome is diploid instead of using the WGS ratios')
-    parser.add_argument('--min_enrichment_ratio', type=float, default=0.05,
-                        help='Minimum enrichment ratio')
+    parser.add_argument('--min_enrichment_ratio', type=float, default=0.1,
+                        help='Minimum enrichment ratio, window with enrichment ratios < this will be masked')
     args = parser.parse_args()
 
     if args.assume_diploid:
@@ -180,8 +182,8 @@ of bam files generated using the same target enrichment process.''',
     enrichment_file = enrichment_df[['chromosome', 'position', 'median']].reset_index(drop=True)
     enrichment_file.columns = ['chromosome', 'position', 'relativeEnrichment']
 
-    # set a minimum relative enrichment
-    enrichment_file['relativeEnrichment'] = enrichment_file['relativeEnrichment'].clip(lower=args.min_enrichment_ratio)
+    # set a minimum relative enrichment, enrichment ratio below this will be removed
+    enrichment_file['relativeEnrichment'] = enrichment_file['relativeEnrichment'].apply(lambda x: x if x >= args.min_enrichment_ratio else float('nan'))
 
     # merge in the exons again. We must do this cause some regions might be missing from the cobalt data
     enrichment_file = enrichment_file.merge(exon_region_df, on=['chromosome', 'position'], how='outer')

@@ -15,12 +15,12 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
-import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
-import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
-import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
-import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
+import com.hartwig.serve.datamodel.ActionableEvent;
+import com.hartwig.serve.datamodel.MutationTypeFilter;
+import com.hartwig.serve.datamodel.gene.ActionableGene;
+import com.hartwig.serve.datamodel.gene.GeneLevelEvent;
+import com.hartwig.serve.datamodel.hotspot.ActionableHotspot;
+import com.hartwig.serve.datamodel.range.ActionableRange;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

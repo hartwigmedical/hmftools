@@ -14,10 +14,10 @@ import com.hartwig.hmftools.common.virus.VirusConstants;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
-import com.hartwig.hmftools.serve.ServeTestFactory;
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
-import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableCharacteristic;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
+import com.hartwig.hmftools.protect.ServeTestFactory;
+import com.hartwig.serve.datamodel.characteristic.ActionableCharacteristic;
+import com.hartwig.serve.datamodel.characteristic.ImmutableActionableCharacteristic;
+import com.hartwig.serve.datamodel.characteristic.TumorCharacteristicAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

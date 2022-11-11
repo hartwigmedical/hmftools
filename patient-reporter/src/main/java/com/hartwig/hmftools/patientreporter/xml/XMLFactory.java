@@ -77,16 +77,25 @@ public class XMLFactory {
                         .valuePath(Map.of("value", String.valueOf(report.genomicAnalysis().averageTumorPloidy())))
                         .build());
 
-        String cupAnalyse = Strings.EMPTY;
-        if (report.cuppaReporting().interpretLikelihood() == null) {
-            cupAnalyse = report.cuppaReporting().interpretCancerType();
+        String cupAnalyse = null;
+        if (report.molecularTissueOriginReporting() == null) {
+            cupAnalyse = null;
+        } else if (report.molecularTissueOriginReporting().interpretLikelihood() == null) {
+            cupAnalyse = report.molecularTissueOriginReporting().interpretCancerType();
         } else {
-            cupAnalyse = report.cuppaReporting().interpretCancerType() + " (" + report.cuppaReporting().interpretLikelihood() + ")";
+            cupAnalyse = report.molecularTissueOriginReporting().interpretCancerType() + " (" + report.molecularTissueOriginReporting()
+                    .interpretLikelihood() + ")";
         }
-        mapXml.put("itemWgsCupAnalyse", ImmutableKeyXML.builder().keyPath("wgsCupAnalyse").valuePath(Map.of("value", cupAnalyse)).build());
+        mapXml.put("itemWgsCupAnalyse",
+                ImmutableKeyXML.builder()
+                        .keyPath("wgsCupAnalyse")
+                        .valuePath(cupAnalyse == null ? null : Map.of("value", cupAnalyse))
+                        .build());
 
         String disclaimer = Strings.EMPTY;
-        disclaimer += report.genomicAnalysis().hasReliablePurity() ? Strings.EMPTY : "Disclaimer. ";
+        disclaimer += report.genomicAnalysis().hasReliablePurity() ? Strings.EMPTY : "Due to the lower tumor purity potential "
+                + "(subclonal) DNA aberrations might not have been detected using this test. This result should therefore be "
+                + "considered with caution.";
         disclaimer += !report.specialRemark().isEmpty() ? report.specialRemark() : Strings.EMPTY;
         mapXml.put("itemWgsDisclaimerTonen",
                 ImmutableKeyXML.builder().keyPath("WgsDisclaimerTonen").valuePath(Map.of("value", disclaimer)).build());
@@ -130,12 +139,12 @@ public class XMLFactory {
         mapXml.put("importwgs.wgsms.line[1]horesco",
                 ImmutableKeyXML.builder()
                         .keyPath("importwgs.wgsms.line[1]horesco")
-                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().chordHrdValue())))
+                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().hrdValue())))
                         .build());
         mapXml.put("importwgs.wgsms.line[1]horestu",
                 ImmutableKeyXML.builder()
                         .keyPath("importwgs.wgsms.line[1]horestu")
-                        .valuePath(Map.of("value", report.genomicAnalysis().chordHrdStatus().name()))
+                        .valuePath(Map.of("value", report.genomicAnalysis().hrdStatus().name()))
                         .build());
 
         addHomozygousDisruptionsToXML(report.genomicAnalysis().homozygousDisruptions(), mapXml);

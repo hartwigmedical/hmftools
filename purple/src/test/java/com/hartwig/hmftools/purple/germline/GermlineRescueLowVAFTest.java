@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PASS;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN_INFO;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.test.VariantContextFromString;

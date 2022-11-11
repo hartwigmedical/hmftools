@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cobalt;
 
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
 
@@ -36,8 +37,7 @@ public class CobaltConfig
     private static final String MIN_MAPPING_QUALITY = "-min_quality";
     private static final String VALIDATION_STRINGENCY = "-validation_stringency";
 
-    @Parameter(names = "-threads",
-               description = "Number of threads")
+    @Parameter(names = "-threads", description = "Number of threads")
     public int ThreadCount = DEFAULT_THREADS;
 
     @Parameter(names = MIN_MAPPING_QUALITY, description = "Min quality")
@@ -55,8 +55,7 @@ public class CobaltConfig
     @Parameter(names = TUMOR_BAM, description = "Path to tumor bam file")
     public String TumorBamPath;
 
-    @Parameter(names = "-" + REF_GENOME,
-               description = "Path to the reference genome fasta file. Required only when using CRAM files.")
+    @Parameter(names = "-" + REF_GENOME, description = REF_GENOME_CFG_DESC)
     public String RefGenomePath;
 
     @Parameter(names = GC_PROFILE,
@@ -66,8 +65,7 @@ public class CobaltConfig
 
     @Parameter(names = "-" + OUTPUT_DIR,
                required = true,
-               description = "Path to the output directory. "
-                       + "This directory will be created if it does not already exist.")
+               description = "Path to the output directory. This directory will be created if it does not already exist.")
     public String OutputDir;
 
     @Parameter(names = VALIDATION_STRINGENCY,

@@ -9,7 +9,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.common.variant.VariantVcfTags;
+import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 
@@ -61,7 +61,7 @@ public class GermlineVariants
 
         for(VariantContext context : vcfReader)
         {
-            boolean isReported = context.getAttributeAsBoolean(VariantVcfTags.REPORTED_FLAG, false);
+            boolean isReported = context.getAttributeAsBoolean(CommonVcfTags.REPORTED_FLAG, false);
 
             if(checkReported && !isReported)
                 continue;
@@ -121,7 +121,7 @@ public class GermlineVariants
         {
             VariantContext newContext = new VariantContextBuilder(variant.context()).filters(variant.filters()).make();
 
-            if(newContext.getAttributeAsBoolean(VariantVcfTags.REPORTED_FLAG, false))
+            if(newContext.getAttributeAsBoolean(CommonVcfTags.REPORTED_FLAG, false))
                 mReportableVariants.add(variant);
 
             writer.add(newContext);

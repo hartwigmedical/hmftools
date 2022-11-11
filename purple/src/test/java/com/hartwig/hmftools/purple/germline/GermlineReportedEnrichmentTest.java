@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN_INFO;
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.toVcfData;
 
@@ -20,7 +21,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
-import com.hartwig.hmftools.common.variant.VariantVcfTags;
+import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.test.VariantContextFromString;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
@@ -249,7 +250,7 @@ public class GermlineReportedEnrichmentTest
         String line2 =
                 "11\t1000\tCOSM123;COSM456\tG\tA\t100\t" + filter + "\t" + PURPLE_BIALLELIC_FLAG + "=" + biallelic + ";" + hotspotFlag
                         + ";" + VAR_IMPACT + "=" + impactToString(impact) + ";CLNSIG=" + clinSig + ";"
-                        + PURPLE_VARIANT_CN_INFO + "=" + variantCopyNumber + ";" + VariantVcfTags.LOCAL_PHASE_SET + "=" + localPhaseSet
+                        + PURPLE_VARIANT_CN_INFO + "=" + variantCopyNumber + ";" + LOCAL_PHASE_SET + "=" + localPhaseSet
                         + "\tGT:AD:DP\t0/1:73,17:91";
 
         return new GermlineVariant(VariantContextFromString.decode(line2));

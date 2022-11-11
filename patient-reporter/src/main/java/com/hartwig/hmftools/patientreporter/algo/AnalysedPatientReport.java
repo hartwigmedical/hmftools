@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaReporting;
+import com.hartwig.hmftools.common.cuppa.interpretation.MolecularTissueOriginReporting;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
@@ -39,17 +39,17 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract GenomicAnalysis genomicAnalysis();
 
     @Nullable
-    public abstract CuppaReporting cuppaReporting();
+    public abstract MolecularTissueOriginReporting molecularTissueOriginReporting();
 
     @Nullable
-    public abstract String cuppaPlot();
+    public abstract String molecularTissueOriginPlotPath();
 
     @NotNull
-    public abstract String circosPath();
+    public abstract String circosPlotPath();
 
     @NotNull
     @Override
-    public abstract Map<String, List<PeachGenotype>> peachGenotypes();
+    public abstract Map<String, List<PeachGenotype>> pharmacogeneticsGenotypes();
 
     @Override
     @NotNull

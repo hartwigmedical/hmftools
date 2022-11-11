@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.serve.datamodel.Knowledgebase;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -47,7 +47,8 @@ final class EvidenceSelector {
             if (!evidence.reported() && !hasTrialSource(evidence.sources())) {
                 filtered.add(evidence);
             }
-        } return filtered;
+        }
+        return filtered;
     }
 
     @NotNull

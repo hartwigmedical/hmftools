@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-prefix=$(dirname $(readlink $0 || echo $0))
-sql=${prefix}/generate_ckb_db.sql
-
-echo "[INFO] Regenerating CKB database using ${sql}"
-mysql --defaults-file=~/mysql.login -u build -pbuild ckb_test < ${sql}

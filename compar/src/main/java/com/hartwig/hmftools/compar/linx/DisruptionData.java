@@ -49,7 +49,7 @@ public class DisruptionData implements ComparableItem
         List<String> values = Lists.newArrayList();
         values.add(String.format("%s", Breakend.reportedDisruption()));
         values.add(String.format("%s", Breakend.regionType()));
-        values.add(String.format("%s", Breakend.codingContext()));
+        values.add(String.format("%s", Breakend.codingType()));
         values.add(String.format("%s", Breakend.geneOrientation()));
         values.add(String.format("%d", Breakend.nextSpliceExonRank()));
         return values;
@@ -88,8 +88,8 @@ public class DisruptionData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_REGION_TYPE, Breakend.regionType(), otherBreakend.Breakend.regionType());
-        checkDiff(diffs, FLD_CODING_CONTEXT, Breakend.codingContext(), otherBreakend.Breakend.codingContext());
+        checkDiff(diffs, FLD_REGION_TYPE, Breakend.regionType().toString(), otherBreakend.Breakend.regionType().toString());
+        checkDiff(diffs, FLD_CODING_CONTEXT, Breakend.codingType().toString(), otherBreakend.Breakend.codingType().toString());
         checkDiff(diffs, FLD_REPORTED, reportable(), otherBreakend.reportable());
         checkDiff(diffs, FLD_GENE_ORIENT, Breakend.geneOrientation(), otherBreakend.Breakend.geneOrientation());
         checkDiff(diffs, FLD_NEXT_SPLICE, Breakend.nextSpliceExonRank(), otherBreakend.Breakend.nextSpliceExonRank());

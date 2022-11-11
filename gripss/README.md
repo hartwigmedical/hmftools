@@ -25,7 +25,8 @@ This will write 2 files:
 
 These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
 
-The bed and bedpe files are available to download from [HMFTools-Resources > DNA Resources](https://resources.hartwigmedicalfoundation.nl/). Both files need to be sorted by chromosome and start breakend start position.
+The bed and bedpe files are available to download from [HMFTools-Resources > DNA Pipeline > sv](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/). 
+Both files need to be sorted by chromosome and start breakend start position.
 
 ### Mandatory Arguments
 
@@ -50,13 +51,17 @@ filter_sgls | Filter SGLs from output VCF entirely
 pon_distance | Buffer distance for matching PON entries
 min_qual_rescue_mobile_element_insertion | Min QUAL to rescue a mobile LINE insertion, default = 500
 repeat_mask_file | Resource file for repeat masker annotation (avaialable from resources), eg. 38.fa.out.gz
+germline | See below - will write out the tumor genotype info to the VCF but not use it for filtering in any way
 
 ### Filtering Arguments
 See config for filters in the Hard and Soft filters sections below.
 
 
 ## Tumor-only / Germline mode
-The `reference` argument is optional and if not supplied, GRIPSS will run in 'tumor-only' mode in which case  all filters that require the normal sample are de-activated. This includes `minNormalCoverage`, `minRelativeCoverage`, `maxNormalSupport`, `shortSRNormalSupport`.   Single breakends are not called in tumor only mode as there are many germline artefacts. GRIPSS can be run in a germline mode by setting the 'sample' to the germline and not supplying a 'reference' argument.   In the hartwig pipeline we use the same filter settings for tumor and germline structural variants in GRIDSS (see below). 
+The `reference` argument is optional and if not supplied, GRIPSS will run in 'tumor-only' mode in which case  all filters that require the normal sample are de-activated. 
+This includes `minNormalCoverage`, `minRelativeCoverage`, `maxNormalSupport`, `shortSRNormalSupport`.
+Single breakends are not called in tumor only mode as there are many germline artefacts. GRIPSS can be run in a germline mode by setting the 'sample' to the germline and not supplying a 'reference' argument.
+In the hartwig pipeline we use the same filter settings for tumor and germline structural variants in GRIDSS (see below). 
  
 # Algorithm
 
@@ -110,7 +115,7 @@ Filter | Config | Default | Scope | Description
 ---|---|---|---|---
 minLength | min_length | 32 | DEL, DUP & INS | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called. 
 minSingleInsertLength | N/A | 16 | SGL | Minimum insert sequence length for a single breakend
-singleStrandBias | max_short_strand_bias | 0.05<SB<0.95 | SGL (excluding polyA tails) | Minimum/maximum proportion of reads from the forward strand supporting the single breakend
+singleStrandBias | max_short_strand_bias | 0.05<SB<0.95 | SGL (excluding polyA tails) | Minimum/maximum proportion of reads from the forward strand supporting the single breakend.   PMS2 is excluded from this rule due to the poor mappability and high homology
 maxHomLengthShortInv | max_hom_length_short_inv | 6 | INV(<50b) | Very short INV with high homology are a common sequencer artefact
 discordantPairSupport | N/A | TRUE | INV(<50b) | Breakpoints must have at least 1 read mapped at each end.  Filters if ASRP=RP=0.
 shortStrandBias | N/A | TRUE | INS,DEL & DUP(<1kb) | Short DEL and DUP must be strand balanced

@@ -12,8 +12,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.hla.LilacReportingData;
-import com.hartwig.hmftools.common.hla.LilacReportingFactory;
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingFactory;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.linx.GeneDisruption;
@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.loader.PurpleData;
 import com.hartwig.hmftools.common.purple.loader.PurpleDataLoader;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -65,7 +64,7 @@ public class GenomicAnalyzer {
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
-                null,
+                config.purpleGeneCopyNumberTsv(),
                 config.purpleSomaticCopyNumberTsv(),
                 null,
                 config.refGenomeVersion());
@@ -88,14 +87,14 @@ public class GenomicAnalyzer {
 
         ChordData chordAnalysis = ChordDataFile.read(config.chordPredictionTxt(), true);
 
-        List<GeneCopyNumber> suspectGeneCopyNumbersHRDWithLOH =
+        List<LohGenesReporting> suspectGeneCopyNumbersHRDWithLOH =
                 LossOfHeterozygositySelector.selectHRDGenesWithLOH(purpleData.allSomaticGeneCopyNumbers(), chordAnalysis.hrStatus());
         LOGGER.info(" Found an additional {} suspect gene copy numbers HRD with LOH", suspectGeneCopyNumbersHRDWithLOH.size());
 
-        List<GeneCopyNumber> suspectGeneCopyNumbersMSIWithLOH =
+        List<LohGenesReporting> suspectGeneCopyNumbersMSIWithLOH =
                 LossOfHeterozygositySelector.selectMSIGenesWithLOH(purpleData.allSomaticGeneCopyNumbers(),
                         purpleData.microsatelliteStatus());
-        LOGGER.info(" Found an additional {} suspect gene copy numbers HRD with LOH", suspectGeneCopyNumbersMSIWithLOH.size());
+        LOGGER.info(" Found an additional {} suspect gene copy numbers MSI with LOH", suspectGeneCopyNumbersMSIWithLOH.size());
 
         VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(config.annotatedVirusTsv());
 
@@ -106,7 +105,7 @@ public class GenomicAnalyzer {
                 determineNotify(reportableVariants, germlineReportingModel, germlineReportingLevel);
 
         LilacSummaryData lilacSummaryData = LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
-        LilacReportingData lilacReportingData = LilacReportingFactory.convertToReportData(lilacSummaryData, purpleData.hasReliablePurity());
+        HlaAllelesReportingData hlaReportingData = HlaAllelesReportingFactory.convertToReportData(lilacSummaryData, purpleData.hasReliablePurity());
 
         List<ProtectEvidence> reportableEvidenceItems = extractReportableEvidenceItems(config.protectEvidenceTsv());
         List<ProtectEvidence> nonTrialsOnLabel = ReportableEvidenceItemFactory.extractNonTrialsOnLabel(reportableEvidenceItems);
@@ -129,15 +128,15 @@ public class GenomicAnalyzer {
                 .tumorMutationalLoad(purpleData.tumorMutationalLoad())
                 .tumorMutationalLoadStatus(purpleData.tumorMutationalLoadStatus())
                 .tumorMutationalBurden(purpleData.tumorMutationalBurdenPerMb())
-                .chordHrdValue(chordAnalysis.hrdValue())
-                .chordHrdStatus(chordAnalysis.hrStatus())
+                .hrdValue(chordAnalysis.hrdValue())
+                .hrdStatus(chordAnalysis.hrStatus())
                 .gainsAndLosses(purpleData.reportableSomaticGainsLosses())
                 .cnPerChromosome(purpleData.copyNumberPerChromosome())
                 .geneFusions(linxData.reportableFusions())
                 .geneDisruptions(reportableGeneDisruptions)
                 .homozygousDisruptions(linxData.homozygousDisruptions())
                 .reportableViruses(virusInterpreterData.reportableViruses())
-                .lilac(lilacReportingData)
+                .hlaAlleles(hlaReportingData)
                 .suspectGeneCopyNumbersHRDWithLOH(suspectGeneCopyNumbersHRDWithLOH)
                 .suspectGeneCopyNumbersMSIWithLOH(suspectGeneCopyNumbersMSIWithLOH)
                 .build();

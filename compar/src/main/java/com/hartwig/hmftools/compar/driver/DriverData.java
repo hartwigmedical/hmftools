@@ -21,13 +21,15 @@ public class DriverData implements ComparableItem
 {
     public final DriverCatalog DriverCatalog;
     private final String mKey;
+    private final boolean mCheckTranscript;
 
     protected static final String FLD_LIKELIHOOD = "Likelihood";
     protected static final String FLD_LIKE_METHOD = "LikelihoodMethod";
 
-    public DriverData(final DriverCatalog driverCatalog)
+    public DriverData(final DriverCatalog driverCatalog, boolean checkTranscript)
     {
         DriverCatalog = driverCatalog;
+        mCheckTranscript = checkTranscript;
 
         String key = format("%s_%s", driverCatalog.driver(), driverCatalog.gene());
         mKey = driverCatalog.isCanonical() ? key : key + "_" + driverCatalog.transcript();
@@ -75,7 +77,7 @@ public class DriverData implements ComparableItem
             }
         }
 
-        if(!DriverCatalog.transcript().equals(otherDriver.DriverCatalog.transcript()))
+        if(mCheckTranscript && !DriverCatalog.transcript().equals(otherDriver.DriverCatalog.transcript()))
             return false;
 
         return true;

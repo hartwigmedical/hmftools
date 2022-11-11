@@ -151,13 +151,13 @@ disclaimer1Height = 12
 disclaimer2Height = 14
 
 if (featureCount > featureLimit)
-  {
+{
   separateFeaturePlot = T
   print(sprintf('Features(%d) print separately', featureCount))
   plotHeights = c(summaryHeight, genderHeight, sigHeight, percHeight)
   plotHeightsDisclaimer = c(titleHeight, disclaimer1Height, disclaimer2Height, summaryHeight, genderHeight, sigHeight, percHeight)
 } else
-  {
+{
   separateFeaturePlot = F
   featureHeight = 45 + (featureCount - 1) * 10
   plotHeights = c(summaryHeight, genderHeight, sigHeight, percHeight, featureHeight)
@@ -167,7 +167,7 @@ if (featureCount > featureLimit)
 # Generating PNG files
 outputFileSummary = paste0(cuppaDir, sampleId, '.cup.report.summary.png')
 if (separateFeaturePlot)
-  {
+{
   outputFileFeatures = paste0(cuppaDir, sampleId, '.cup.report.features.png')
   print(paste0("Writing output to png file: ", outputFileSummary))
   png(file = outputFileSummary, res = 140, height = 2200, width = 4000)
@@ -181,7 +181,7 @@ if (separateFeaturePlot)
     theme(axis.text.x.top = element_text(angle = 90, hjust = 0, size = 10, face = 'bold', family = font))
   grid.arrange(plot_grid(featurePlot, ncol = 1, nrow = 1), newpage = T)
 } else
-  {
+{
   print(paste0("Writing output to png file: ", outputFileSummary))
   png(file = outputFileSummary, res = 140, height = 2200, width = 4000)
   plot_grid(summaryPlot, genderPlot, sigPlot, svTraitsPlot, featurePlot,
@@ -209,7 +209,7 @@ if (separateFeaturePlot)
 
   grid.arrange(plot_grid(featurePlot, ncol = 1, nrow = 1), newpage = T)
 } else
-  {
+{
   plot_grid(title, disclaimer1, disclaimer2, summaryPlot, genderPlot, sigPlot, svTraitsPlot, featurePlot,
             ncol = 1, nrow = 8, rel_heights = plotHeightsDisclaimer, align = 'v', axis = 'l')
 }

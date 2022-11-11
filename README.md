@@ -36,13 +36,12 @@ An example WGS pipeline which runs each of these components in turn is detailed 
 An example targeted-panel pipeline, including support for the HMF and TSO-500 panels, is detailed [here](./pipeline/README_PANEL.md).
 
 ## Resource files
-Resource files for each component (GRCh37 and GRCh38) are available to download from [HMFTools-Resources > DNA-Resources](https://resources.hartwigmedicalfoundation.nl/). 
+Resource files for each component (GRCh37 and GRCh38) are available to download from [HMFTools-Resources > DNA-Resources](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/). 
 
 ## Actionability and Clinical Reporting Tools
 
 Component | Description                                                          | Current Version
----|----------------------------------------------------------------------|---
-[Serve](./serve/README.md) | Harmonisation of evidence from clinical annotation databases         | [1.12](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.12) 
+---|----------------------------------------------------------------------|--- 
 [Protect](./protect/README.md) | Matching of molecular results to treatments and clinical trials      | [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.3)
 [Rose](./rose/README.md) | Actionability of clinically relevant molecular findings              | [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/rose-v1.3)
 [Virus Interpreter](./virus-interpreter/README.md) | Filtering, annotation and interpretation of virus breakend data      | [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.2)

@@ -10,26 +10,25 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.EvidenceType;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
-import com.hartwig.hmftools.serve.ServeTestFactory;
-import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
-import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
-import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableCharacteristic;
-import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
-import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
-import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
-import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
-import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
-import com.hartwig.hmftools.serve.actionability.range.RangeType;
-import com.hartwig.hmftools.serve.cancertype.CancerType;
-import com.hartwig.hmftools.serve.cancertype.ImmutableCancerType;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
-import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
+import com.hartwig.hmftools.protect.ServeTestFactory;
+import com.hartwig.serve.datamodel.ActionableEvent;
+import com.hartwig.serve.datamodel.EvidenceDirection;
+import com.hartwig.serve.datamodel.EvidenceLevel;
+import com.hartwig.serve.datamodel.ImmutableTreatment;
+import com.hartwig.serve.datamodel.Knowledgebase;
+import com.hartwig.serve.datamodel.cancertype.CancerType;
+import com.hartwig.serve.datamodel.cancertype.ImmutableCancerType;
+import com.hartwig.serve.datamodel.characteristic.ActionableCharacteristic;
+import com.hartwig.serve.datamodel.characteristic.ImmutableActionableCharacteristic;
+import com.hartwig.serve.datamodel.characteristic.TumorCharacteristicAnnotation;
+import com.hartwig.serve.datamodel.gene.ActionableGene;
+import com.hartwig.serve.datamodel.gene.GeneLevelEvent;
+import com.hartwig.serve.datamodel.gene.ImmutableActionableGene;
+import com.hartwig.serve.datamodel.hotspot.ActionableHotspot;
+import com.hartwig.serve.datamodel.hotspot.ImmutableActionableHotspot;
+import com.hartwig.serve.datamodel.range.ActionableRange;
+import com.hartwig.serve.datamodel.range.ImmutableActionableRange;
+import com.hartwig.serve.datamodel.range.RangeType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -157,7 +156,7 @@ public class PersonalizedEvidenceFactoryTest {
             blacklist.add(ImmutableCancerType.builder().name(blacklistCancerType).doid(blacklistDoid).build());
         }
 
-        ActionableEvent event = ActionabilityTestUtil.create(Knowledgebase.CKB,
+        ActionableEvent event = ServeTestFactory.create(Knowledgebase.CKB,
                 "amp",
                 Sets.newHashSet(),
                 ImmutableTreatment.builder()

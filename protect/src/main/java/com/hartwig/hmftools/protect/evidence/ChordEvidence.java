@@ -8,8 +8,8 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.protect.characteristic.CharacteristicsFunctions;
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
+import com.hartwig.serve.datamodel.characteristic.ActionableCharacteristic;
+import com.hartwig.serve.datamodel.characteristic.TumorCharacteristicAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -26,35 +26,37 @@ Each classifier is optional and run if enabled by config.
 ## Reference Data
 Cuppa can be used to produce reference data files itself - see instructions below.
 
-Otherwise they can be obtained from the HMF Resources page: [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/).
+A publically available reference data set is available from the HMF Tools resource page [here](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/cuppa_ref_data/37/cuppa_ref_data.v16.gz)
 
 Cuppa will attempt to load these files from a reference directory supplied in its command-line arguments. The files are:
 
-Data Type | Source | Filename | Description 
----|---|---|---
-Sample Set | ALL | cup_ref_sample_data | List of the reference samples - SampleId and CancerType
-Features | DNA | cup_ref_feature_prev.csv | Prevalence of fusions, viral insertions, drivers and known INDELs per cancer type
-Features | DNA | cup_ref_driver_avg.csv | Average driver counts per cancer types 
-Sample Traits | DNA | cup_ref_sample_trait_percentiles.csv | Percentiles for purity, ploidy and MS Indels per cancer type
-Sample Traits | DNA | cup_ref_sample_trait_rates.csv | Whole genome duplicate and gender rates per cancer type
-Sample Traits | DNA | cup_ref_gender_rates.csv | Optional overrides for expected rates of gender per cancer type 
-SNVs | DNA | cup_ref_snv_counts.csv | Matrix of trinucleotide buckets (in rows) for each sample (columns)
-SNVs | DNA | cup_ref_sample_pos_freq_counts.csv | Matrix of genomic position frequency counts (in rows) for each sample (columns) 
-SNVs | DNA | cup_ref_sig_percentiles.csv | Percentiles of each signature per cancer type
-SVs | DNA | cup_ref_sv_percentiles.csv | Percentiles of key structural variant characteristics per cancer type
+Data Type | Source | Filename                             | Description 
+---|--------|--------------------------------------|---
+Sample Set | ALL    | cup_ref_sample_data                  | List of the reference samples - SampleId and CancerType
+Features | DNA    | cup_ref_feature_prev.csv             | Prevalence of fusions, viral insertions, drivers and known INDELs per cancer type
+Features | DNA    | cup_ref_driver_avg.csv               | Average driver counts per cancer types 
+Sample Traits | DNA    | cup_ref_sample_trait_percentiles.csv | Percentiles for purity, ploidy and MS Indels per cancer type
+Sample Traits | DNA    | cup_ref_sample_trait_rates.csv       | Whole genome duplicate and gender rates per cancer type
+Sample Traits | DNA    | cup_ref_gender_rates.csv             | Optional overrides for expected rates of gender per cancer type 
+SNVs | DNA    | cup_ref_snv_counts.csv               | Matrix of trinucleotide buckets (in rows) for each sample (columns)
+SNVs | DNA    | cup_ref_sample_pos_freq_counts.csv   | Matrix of genomic position frequency counts (in rows) for each sample (columns) 
+SNVs | DNA    | cup_ref_sig_percentiles.csv          | Percentiles of each signature per cancer type
+SVs | DNA    | cup_ref_sv_percentiles.csv           | Percentiles of key structural variant characteristics per cancer type
+Gene Expression Sample Matrix | RNA | cup_ref_gene_exp_sample.csv.gz       | Log TPM per sample and gene
+Alt Splice Junctions Cancer-Type Matrix | RNA | cup_ref_alt_sj_cancer.csv            | Log of cohort counts per cancer type and alt splice site
 
 
 ## Data Sources
 Sample data for both the reference data and the samples being evaluated can be sourced from any of 3 different inputs:
 - a MySQL HMF Patients database
-- flat-files from a HMF pipeline run (Purple, Linx, Isofox, Sage and GRIDSS)
+- flat-files from a HMF pipeline run (Purple, Linx, Isofox)
 - generic flat files
 
 ### Database
 
 Data Type | Table 
 ---|---
-Features | svFusion, viralInsertion, driverCatalog and somaticVariant (for known INDELs)
+Features | svFusion, viralAnnotation, driverCatalog and somaticVariant (for known INDELs)
 SNVs | somaticVariant
 Traits | purity
 
@@ -62,7 +64,7 @@ Traits | purity
 
 Data Type | File Details 
 ---|---
-Features | Linx fusion, viral insert and driver catalog files, Purple somatic VCF
+Features | Linx fusion, viral annotations and driver catalog files, Purple somatic VCF
 SNVs | Purple somatic VCF
 Traits | Purple purity file
 
@@ -87,9 +89,7 @@ Argument | Description
 ---|---
 sample_data | Sample ID
 ref_data_dir | Reference data directory
-sample_data_dir | Sample data directory containing Linx and Purple files
-sample_sv_file | Sample structural variant VCF
-sample_somatic_file | Sample somatic variant VCF
+sample_data_dir | Sample data directory containing Linx, Purple and Isofox (if available) files
 output_dir | Path to write sample Cuppa output
 
 ### Optional Arguments
@@ -97,6 +97,8 @@ output_dir | Path to write sample Cuppa output
 Argument | Description 
 ---|---
 categories | By default Cuppa will run all DNA categories. A subset can be specified as a ';' list from SNV, SV, SAMPLE_TRAIT, FEATURE
+write_condensed | Write a single line of output for each sample showing top scores and classifications by category
+linx_dir, purple_dir, isofox_fir | Specify these tool directories instead of 'sample_data_dir' as required (eg for pipeline output)     
 write_similarities | Write the top-20 cosine similarities for SNVs
 
 ### Example using pipeline files
@@ -106,8 +108,6 @@ java -jar cuppa_jar \
     -ref_data_dir /reference_data_dir/ \
     -sample_data SAMPLE_ID \
     -sample_data_dir /sample_pipeline_files_dir/ \
-    -sample_sv_file /sample_sv_vcf_file/ \
-    -sample_somatic_vcf /sample_snv_vcf_file/ \
     -output_dir /output_dir/ \
 ```
 

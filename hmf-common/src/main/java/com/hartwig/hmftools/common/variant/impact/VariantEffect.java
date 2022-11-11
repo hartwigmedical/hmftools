@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.common.variant.impact;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
@@ -65,11 +67,10 @@ public enum VariantEffect
         return effect == FRAMESHIFT || effect == STOP_GAINED || effect == STOP_LOST || effect == START_LOST;
     }
 
-    public static List<VariantEffect> convertFromEffects(@NotNull final List<String> effects)
+    public static List<VariantEffect> effectsToList(@NotNull final String effects)
     {
-        final List<VariantEffect> variantEffects = Lists.newArrayList();
-        effects.forEach(x -> variantEffects.add(fromEffect(x)));
-        return variantEffects;
+        String[] variantEffectStrings = effects.split(VARIANT_EFFECTS_DELIM, -1);
+        return Arrays.stream(variantEffectStrings).map(x -> fromEffect(x)).collect(Collectors.toList());
     }
 
     public static VariantEffect fromEffect(@NotNull final String name)

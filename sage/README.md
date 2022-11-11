@@ -33,10 +33,9 @@ Converting them first up front saves significant CPU time overall.
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
 
-37 and 38 resources are available to download from [HMFTools-Resources > DNA Resources](https://resources.hartwigmedicalfoundation.nl/). 
+37 and 38 resources are available to download from [HMFTools-Resources > DNA Resources](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/). 
 
 R is used to generate the base quality recalibration charts, which is done if the config 'write_bqr_plot' is included. Required packages include `ggplot2`,`tidyr` and `dplyr`. 
-
 
 # Usage
 
@@ -58,18 +57,19 @@ The cardinality of `tumor` must match `tumor_bam`. At least one tumor must be su
 
 ## Optional Arguments
 Argument | Default | Description 
----|---|---
-reference | NA | Comma separated names of the reference sample
-reference_bam | NA | Comma separated paths to indexed reference BAM file
-ref_sample_count | 1 | Controls the set of ref samples used for tumor-normal soft-filtering. Zero means none will be used.)
-resource_dir | None | Path to all resource files, in which case specify the file names only for ref_genome, hotspots, panel_bed and high_confidence_bed  
-threads | 2 | Number of threads to use
-max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
+---|---------|---
+reference | NA      | Comma separated names of the reference sample
+reference_bam | NA      | Comma separated paths to indexed reference BAM file
+ref_sample_count | 1       | Controls the set of ref samples used for tumor-normal soft-filtering. Zero means none will be used.)
+resource_dir | None    | Path to all resource files, in which case specify the file names only for ref_genome, hotspots, panel_bed and high_confidence_bed  
+threads | 2       | Number of threads to use
+max_read_depth | 1000    | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
 max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
-min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
-coverage_bed | NA | Write file with counts of depth of each base of the supplied bed file
-validation_stringency | STRICT | SAM validation strategy: STRICT, SILENT, LENIENT
-include_mt | NA | By default the mitochondrial DNA is not read but will be if this config is included
+min_map_quality | 10      | Min mapping quality to apply to non-hotspot variants
+min_avg_base_qual | 22 | Min average base quality hard filter
+coverage_bed | NA      | Write file with counts of depth of each base of the supplied bed file
+validation_stringency | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT
+include_mt | NA      | By default the mitochondrial DNA is not read but will be if this config is included
 
 The cardinality of `reference` must match `reference_bam`.
 
@@ -96,12 +96,11 @@ Argument | Default | Description
 jitter_penalty | 0.25 | Penalty to apply to qual score when read context matches with jitter
 jitter_min_repeat_count | 3 | Minimum repeat count before applying jitter penalty
 base_qual_fixed_penalty | 12 | Fixed penalty to apply to base quality
-map_qual_fixed_penalty | 15 | Fixed penalty to apply to map quality
-map_qual_improper_pair_penalty | 15 | Penalty to apply to map qual when SAM record does not have the ProperPair flag
-map_qual_read_events_penalty | 8 | Penalty to apply to map qual for additional events in read
+fixed_qual_penalty | 15 | Fixed penalty to apply to map quality
+mproper_pair_qual_penalty | 15 | Penalty to apply to map qual when SAM record does not have the ProperPair flag
+read_events_qual_penalty | 8 | Penalty to apply to map qual for additional events in read
 
 ## Debug and logging Arguments
-
 
 Argument | Default | Description 
 ---|---|---
@@ -466,7 +465,7 @@ strandBias|0.0005 |0.0005|0.0005 |0.0005| SBLikelihood<sup>4</sup>
 
 2. Even if tumor qual score cutoff is not met, hotspots are also called so long as tumor vaf >= 0.08 and  allelic depth in tumor supporting the ALT >= 8 reads and tumorRawBQ1 > 150.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
 
-3. If 0<Normal `RABQ[1]`<25 and Normal `RawAD[1]`==`normalAD[1]` then we instead require `min[normalAF,normalRawBQ1/(normalRawBQ1+normalRawBQ0)] < max_germline_vaf`. This allows us to tolerate low quality base qual errors in the normal.  A special filter (max_germline_alt_support) is also applied for MNVs such that it is filtered if 1 or more read in the germline contains evidence of the variant.
+3. If 0<Normal `RABQ[1]`<25 and Normal `RawAD[1]`==`normalAD[1]` then we instead require `min[normalAF,normalRawBQ1/(normalRawBQ1+normalRawBQ0)] < max_germline_vaf`. This allows us to tolerate low quality base qual errors in the normal.  A special filter (max_germline_alt_support) is also applied for MNV and INS of > 10 bases such that it is filtered if 1% or more of the reads in the germline contains evidence of the variant.
 
 4. StrandBiasLikelihood =  `binomial(min(SB,1-SB)*AD,AD,0.5,TRUE)`  If 0.1<SB<0.9 we never filter
 
@@ -575,6 +574,7 @@ Variant calling Improvements
 - **Germline filtering for very long core regions** - If the core is very long we may have insufficient coverage in the germline to filter.
 - **Low VAF FP in high depth regions for samples with high C>A DNA damage** - Some samples may have severe degradation of C>A in certain mutation contexts sometimes affecting greater than 1% of all fragments.  Whilst we do adjust against this with BQR, for very high depth regions we may still call FP mutations with very low VAF
 - **Low MAPQ** - Sage penalises low MAPQ reads harshly.   No truth set is available in these regions, so it is unclear whether this behaviour is the correct decision.
+- **Rel Raw Base Qual Filter** - Base qual from matching soft clipped bases does not count to rel raw base qual and can lead to germline variants passing as somatic, if all supporting reads in the germline are only found in soft clipping.  We have observed this in HLA genes (where alignments are frequently soft clipped)
 
 Phasing improvements
 - **Only first tumor sample is currently phased** - Reference and additional tumor samples are not utilised for phasing

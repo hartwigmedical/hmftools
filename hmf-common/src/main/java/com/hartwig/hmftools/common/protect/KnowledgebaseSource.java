@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.protect;
 
 import java.util.Set;
 
-import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.serve.datamodel.Knowledgebase;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

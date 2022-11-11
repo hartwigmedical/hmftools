@@ -46,11 +46,11 @@ fragile_site_file | List of known fragile sites  {Chromosome,PosStart,PosEnd}
 line_element_file | List of known LINE source regions {Chromosome,PosStart,PosEnd}
 ensembl_data_dir | Directory for Ensembl reference files
 
-Reference files are available for ref genome 19/37 and 38 [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
-- GenePanel: HMF driver genes
-- KnownFusions: HMF known fusion data
-- Linx: fragile sites, LINE source regions and replication origins
-- Ensembl: cached Ensembl files.   Instructions for how to generate can be found [here](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils#generating-cached-ensembl-data-files)
+Reference files are available for ref genome 37 and 38 [HMFTools-Resources > DNA Pipeline](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/):
+- DriverGenePanel: HMF driver genes (in resources 'common')
+- KnownFusions: HMF known fusion data (in resources 'sv')
+- Linx: fragile sites and LINE source regions (in resources 'sv')
+- Ensembl: cached Ensembl files (in resources 'common')
  
 ### Example Usage
 This is a typical command to run LINX for a single sample from PURPLE output.

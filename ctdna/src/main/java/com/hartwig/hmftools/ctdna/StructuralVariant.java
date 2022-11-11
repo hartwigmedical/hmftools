@@ -1,20 +1,28 @@
 package com.hartwig.hmftools.ctdna;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.ctdna.CategoryType.FUSION;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_SV;
+import static com.hartwig.hmftools.ctdna.CategoryType.SUBCLONAL_MUTATION;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_MAPPABILITY_MIN;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_REPEAT_COUNT_MAX;
 import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
 import static com.hartwig.hmftools.ctdna.VariantSelection.addRegisteredLocation;
 import static com.hartwig.hmftools.ctdna.VariantSelection.isNearRegisteredLocation;
+
 
 import java.util.List;
 import java.util.Map;
@@ -36,31 +44,27 @@ import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 
-public class StructuralVariant implements Variant
+public class StructuralVariant extends Variant
 {
     private final StructuralVariantData mVariant;
     private final List<LinxBreakend> mBreakends;
     private final List<LinxFusion> mFusions;
-    private final LinxCluster mCluster;
 
-    private String mSequence;
     private List<String> mRefSequences;
 
     public StructuralVariant(
-            final StructuralVariantData variant, final List<LinxBreakend> breakends, final List<LinxFusion> fusions, final LinxCluster cluster)
+            final StructuralVariantData variant, final List<LinxBreakend> breakends, final List<LinxFusion> fusions)
     {
         mVariant = variant;
         mBreakends = breakends;
         mFusions = fusions;
-        mCluster = cluster;
-        mSequence = "";
         mRefSequences = Lists.newArrayListWithExpectedSize(2);
     }
 
     @Override
     public CategoryType categoryType()
     {
-        if(mFusions.stream().anyMatch(x -> x.reported()))
+        if(!mFusions.isEmpty())
             return FUSION;
 
         return OTHER_SV;
@@ -69,18 +73,24 @@ public class StructuralVariant implements Variant
     @Override
     public String description()
     {
-        return format("%s %s:%d%d - %s:%d:%d",
-                mVariant.type(), mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
-                mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation());
+        if(mVariant.type() == SGL)
+        {
+            return format("%s %s:%d:%d",
+                    mVariant.type(), mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation());
+        }
+        else
+        {
+            return format("%s %s:%d:%d - %s:%d:%d",
+                    mVariant.type(), mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
+                    mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation());
+        }
     }
 
     @Override
     public String gene()
     {
-        LinxFusion fusion = mFusions.stream().filter(x -> x.reported()).findFirst().orElse(null);
-
-        if(fusion != null)
-            return fusion.name();
+        if(!mFusions.isEmpty())
+            return mFusions.get(0).name();
 
         LinxBreakend breakend = mBreakends.stream().filter(x -> x.reportedDisruption()).findFirst().orElse(null);
 
@@ -89,9 +99,6 @@ public class StructuralVariant implements Variant
 
         return !mBreakends.isEmpty() ? mBreakends.get(0).gene() : "";
     }
-
-    @Override
-    public String sequence() { return mSequence; }
 
     @Override
     public List<String> refSequences() { return mRefSequences; }
@@ -111,7 +118,7 @@ public class StructuralVariant implements Variant
     @Override
     public boolean reported()
     {
-        if(mFusions.stream().anyMatch(x -> x.reported()))
+        if(!mFusions.isEmpty())
             return true;
 
         if(mBreakends.stream().anyMatch(x -> x.reportedDisruption()))
@@ -121,15 +128,18 @@ public class StructuralVariant implements Variant
     }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
+    public String otherData()
     {
-        int positionStart = mVariant.startPosition();
-        byte orientStart = mVariant.startOrientation();
-        String chrStart = mVariant.startChromosome();
+        return format("GcRefMin=%.2f GcRefMax=%.2f",
+                mRefSequences.stream().mapToDouble(x -> VariantUtils.calcGcPercent(x)).min().orElse(0),
+                mRefSequences.stream().mapToDouble(x -> VariantUtils.calcGcPercent(x)).max().orElse(0));
+    }
 
-        int positionEnd = mVariant.endPosition();
-        byte orientEnd = mVariant.endOrientation();
-        String chrEnd = mVariant.endChromosome();
+    protected static List<String> generateSvReferenceSequences(
+            final RefGenomeInterface refGenome, final PvConfig config,
+            final String chrStart, final int positionStart, final String chrEnd, final int positionEnd)
+    {
+        List<String> refSequences = Lists.newArrayList();
 
         int probeLength = config.ProbeLength;
         int halfProbeLength = probeLength / 2;
@@ -138,12 +148,63 @@ public class StructuralVariant implements Variant
         {
             String chromosome = se == SE_START ? chrStart : chrEnd;
             int position = se == SE_START ? positionStart : positionEnd;
+
+            if(position <= 0) // ie SGLs
+                continue;
+
             int probeStart = position - halfProbeLength;
 
-            mRefSequences.add(refGenome.getBaseString(chromosome, probeStart, probeStart + probeLength - 1));
+            refSequences.add(refGenome.getBaseString(chromosome, probeStart, probeStart + probeLength - 1));
         }
 
-        String insertSequence = mVariant.insertSequence();
+        return refSequences;
+    }
+
+    private static String generateSglSequence(
+            final RefGenomeInterface refGenome, final PvConfig config,
+            final String chromosome, final int position, final byte orientation, final String insertSequence)
+    {
+        int probeLength = config.ProbeLength;
+        int halfProbeLength = probeLength / 2;
+        int insSeqLength = min(insertSequence.length(), halfProbeLength);
+        int refBaseLength = probeLength - insSeqLength;
+
+        // +1 take as-is
+        // -1 to +1 - a DUP
+
+        // +1 to +1 - start normal, add insert and then reverse compliment of the other side
+        // -1 to -1 - alt insert sequence then ref
+
+        String sequence;
+
+        if(orientation == POS_ORIENT)
+        {
+            int probeStart = position - refBaseLength + 1;
+            String refBases = refGenome.getBaseString(chromosome, probeStart, position);
+            sequence = refBases + insertSequence.substring(0, insSeqLength);
+        }
+        else
+        {
+            String refBases = refGenome.getBaseString(chromosome, position, position + refBaseLength - 1);
+            sequence = insertSequence.substring(insertSequence.length() - insSeqLength) + refBases;
+        }
+
+        if(sequence.length() != probeLength)
+        {
+            PV_LOGGER.error("variant({}:{}) invalid sequenceLength({}): {}",
+                    chromosome, position, sequence.length(), sequence);
+        }
+
+        return sequence;
+    }
+
+    protected static String generateSvSequence(
+            final RefGenomeInterface refGenome, final PvConfig config,
+            final String chrStart, final int positionStart, final byte orientStart,
+            final String chrEnd, final int positionEnd, final byte orientEnd, final String insertSequence)
+    {
+        int probeLength = config.ProbeLength;
+        int halfProbeLength = probeLength / 2;
         int insSeqLength = insertSequence.length();
         int halfInsSeqLength = insSeqLength / 2;
         int halfNonInsSeqLength = halfProbeLength - halfInsSeqLength;
@@ -196,25 +257,74 @@ public class StructuralVariant implements Variant
             }
         }
 
-        mSequence = basesStart + insertSequence + basesEnd;
+        String sequence = basesStart + insertSequence + basesEnd;
 
-        if(mSequence.length() != probeLength)
+        if(sequence.length() != probeLength)
         {
-            PV_LOGGER.error("variant({}) invalid sequenceLength({}): {}", description(), mSequence.length(), mSequence);
+            PV_LOGGER.error("variant({}:{} - {}:{}) invalid sequenceLength({}): {}",
+                    chrStart, positionStart, chrEnd, positionEnd, sequence.length(), sequence);
         }
+
+        return sequence;
     }
 
     @Override
-    public boolean checkAndRegisterLocation(final Map<String,List<Integer>> registeredLocations)
+    public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
     {
-        if(isNearRegisteredLocation(registeredLocations, mVariant.startChromosome(), mVariant.startPosition())
-        || isNearRegisteredLocation(registeredLocations, mVariant.endChromosome(), mVariant.endPosition()))
+        mRefSequences.addAll(generateSvReferenceSequences(
+                refGenome, config, mVariant.startChromosome(), mVariant.startPosition(), mVariant.endChromosome(), mVariant.endPosition()));
+
+        String sequence;
+
+        if(mVariant.type() == SGL)
+        {
+            sequence = generateSglSequence(
+                    refGenome, config, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.insertSequence());
+        }
+        else
+        {
+            sequence = generateSvSequence(
+                    refGenome, config, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
+                    mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence());
+        }
+
+        setSequence(sequence);
+    }
+
+    @Override
+    public boolean passNonReportableFilters(final PvConfig config)
+    {
+        if(gc() < DEFAULT_GC_THRESHOLD_MIN || gc() > DEFAULT_GC_THRESHOLD_MAX)
+            return false;
+
+        for(String refSequence : mRefSequences)
+        {
+            double gcRatio = VariantUtils.calcGcPercent(refSequence);
+
+            if(gcRatio < DEFAULT_GC_THRESHOLD_MIN || gcRatio > DEFAULT_GC_THRESHOLD_MAX)
+                return false;
+        }
+
+        if(vaf() < config.VafMin)
+            return false;
+
+        if(tumorFragments() < config.FragmentCountMin)
+            return false;
+
+        return true;
+    }
+
+    @Override
+    public boolean checkAndRegisterLocation(final ProximateLocations registeredLocations)
+    {
+        if(registeredLocations.isNearRegisteredLocation(mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation())
+        || registeredLocations.isNearRegisteredLocation(mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation()))
         {
             return false;
         }
 
-        addRegisteredLocation(registeredLocations, mVariant.startChromosome(), mVariant.startPosition());
-        addRegisteredLocation(registeredLocations, mVariant.endChromosome(), mVariant.endPosition());
+        registeredLocations.addRegisteredLocation(mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation());
+        registeredLocations.addRegisteredLocation(mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation());
         return true;
     }
 
@@ -223,67 +333,68 @@ public class StructuralVariant implements Variant
         return format("variant(%s) category(%s) fusion(%d) breakends(%d)", description(), categoryType(), mFusions.size(), mBreakends.size());
     }
 
-    public static List<Variant> loadStructuralVariants(final String sampleId, final PvConfig config)
+    public static List<Variant> loadStructuralVariants(final String sampleId, final PvConfig config) throws Exception
     {
         List<Variant> variants = Lists.newArrayList();
 
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
-        try
+        String purpleDir = PvConfig.getSampleFilePath(sampleId, config.PurpleDir);
+        String linxDir = PvConfig.getSampleFilePath(sampleId, config.LinxDir);
+
+        String vcfFile = PurpleCommon.purpleSvFile(purpleDir, sampleId);
+
+        List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(
+                StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter()));
+
+        List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(linxDir, sampleId));
+        List<LinxSvAnnotation> annotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(linxDir, sampleId));
+        List<LinxFusion> fusions = LinxFusion.read(LinxFusion.generateFilename(linxDir, sampleId));
+
+        List<LinxCluster> clusters = LinxCluster.read(LinxCluster.generateFilename(linxDir, sampleId));
+
+        for(EnrichedStructuralVariant variant : enrichedVariants)
         {
-            String purpleDir = PvConfig.getSampleFilePath(sampleId, config.PurpleDir);
-            String linxDir = PvConfig.getSampleFilePath(sampleId, config.LinxDir);
+            if(variant.type() == StructuralVariantType.INF)
+                continue;
 
-            String vcfFile = PurpleCommon.purpleSvFile(purpleDir, sampleId);
+            if(!variant.filter().equals(PASS))
+                continue;
 
-            List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(
-                    StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter()));
+            if(variant.insertSequence().length() >= MAX_INSERT_BASES && variant.type() != SGL)
+                continue;
 
-            List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(linxDir, sampleId));
-            List<LinxSvAnnotation> annotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(linxDir, sampleId));
-            List<LinxFusion> fusions = LinxFusion.read(LinxFusion.generateFilename(linxDir, sampleId));
+            LinxSvAnnotation annotation = annotations.stream().filter(x -> x.vcfId().equals(variant.id())).findFirst().orElse(null);
 
-            List<LinxCluster> clusters = LinxCluster.read(LinxCluster.generateFilename(linxDir, sampleId)).stream()
-                    .filter(x -> !x.category().equals(LinxCommonTypes.SUPER_TYPE_ARTIFACT)).collect(Collectors.toList());
-
-            for(EnrichedStructuralVariant variant : enrichedVariants)
+            if(annotation == null)
             {
-                if(variant.type() == StructuralVariantType.INF || variant.type() == StructuralVariantType.SGL)
-                    continue;
-
-                if(!variant.filter().equals(PASS))
-                    continue;
-
-                if(variant.insertSequence().length() >= MAX_INSERT_BASES)
-                    continue;
-
-                LinxSvAnnotation annotation = annotations.stream().filter(x -> x.vcfId().equals(variant.id())).findFirst().orElse(null);
-
-                if(annotation == null)
-                {
-                    PV_LOGGER.error("sample({}) vcfId({}) Linx annotation not found", sampleId, variant.id());
-                    return Lists.newArrayList();
-                }
-
-                List<LinxBreakend> svBreakends = breakends.stream().filter(x -> x.svId() == annotation.svId()).collect(Collectors.toList());
-
-                List<LinxFusion> svFusions = fusions.stream()
-                        .filter(x -> x.chainLinks() == 0)
-                        .filter(x -> svBreakends.stream().anyMatch(y -> y.id() == x.fivePrimeBreakendId()))
-                        .collect(Collectors.toList());
-
-                LinxCluster cluster = clusters.stream().filter(x -> x.clusterId() == annotation.clusterId()).findFirst().orElse(null);
-
-                StructuralVariantData variantData = convertSvData(variant, annotation.svId());
-
-                variants.add(new StructuralVariant(variantData, svBreakends, svFusions, cluster));
+                PV_LOGGER.error("sample({}) vcfId({}) Linx annotation not found", sampleId, variant.id());
+                // return Lists.newArrayList();
+                continue;
             }
 
-            PV_LOGGER.info("loaded {} structural variants from vcf({})", variants.size(), vcfFile);
+            List<LinxBreakend> svBreakends = breakends.stream().filter(x -> x.svId() == annotation.svId()).collect(Collectors.toList());
+
+            List<LinxFusion> svFusions = fusions.stream()
+                    .filter(x -> x.reported())
+                    .filter(x -> x.chainLinks() == 0)
+                    .filter(x -> svBreakends.stream().anyMatch(y -> y.id() == x.fivePrimeBreakendId()))
+                    .collect(Collectors.toList());
+
+            // only use SGLs if in a reportable fusion
+            if(variant.type() == SGL && svFusions.isEmpty())
+                 continue;
+
+            LinxCluster cluster = clusters.stream().filter(x -> x.clusterId() == annotation.clusterId()).findFirst().orElse(null);
+
+            if(cluster == null || cluster.category().equals(LinxCommonTypes.SUPER_TYPE_ARTIFACT))
+                continue;
+
+            StructuralVariantData variantData = convertSvData(variant, annotation.svId());
+
+            variants.add(new StructuralVariant(variantData, svBreakends, svFusions));
         }
-        catch(Exception e)
-        {
-            PV_LOGGER.error("sample({}) failed to load Purple or Linx SV files: {}", sampleId, e.toString());
-        }
+
+        PV_LOGGER.info("loaded {} structural variants from vcf({})", variants.size(), vcfFile);
 
         return variants;
     }

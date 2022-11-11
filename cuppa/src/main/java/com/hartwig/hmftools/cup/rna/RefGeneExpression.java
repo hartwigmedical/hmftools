@@ -319,44 +319,4 @@ public class RefGeneExpression implements RefClassifier
             CUP_LOGGER.error("failed to write ref RNA gene expression output: {}", e.toString());
         }
     }
-
-
-    private void writeCohortExpressionMatrix(final Matrix tpmMatrix, final List<String> headers, final String fileId)
-    {
-        try
-        {
-            final String filename = mConfig.OutputDir + fileId;
-            BufferedWriter writer = createBufferedWriter(filename, false);
-
-            writer.write("GeneId,GeneName");
-
-            for(final String header : headers)
-            {
-                writer.write(format(",%s", header));
-            }
-
-            writer.newLine();
-
-            final double[][] matrixData = tpmMatrix.getData();
-
-            for(int b = 0; b < tpmMatrix.Rows; ++b)
-            {
-                writer.write(format("%s,%s", mGeneIds.get(b), mGeneNames.get(b)));
-
-                for(int i = 0; i < tpmMatrix.Cols; ++i)
-                {
-                    writer.write(format(",%.3f", matrixData[b][i]));
-                }
-
-                writer.newLine();
-            }
-
-            closeBufferedWriter(writer);
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write ref RNA gene expression output: {}", e.toString());
-        }
-    }
-
 }

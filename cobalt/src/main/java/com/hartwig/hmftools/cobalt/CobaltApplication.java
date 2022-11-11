@@ -116,9 +116,9 @@ public class CobaltApplication implements AutoCloseable
             final RatioSupplier ratioSupplier = new RatioSupplier(mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir,
                     gcProfiles, chromosomes, countSupplier.getReferenceCounts(), countSupplier.getTumorCounts());
 
-            if (mConfig.TargetRegionPath != null)
+            if(mConfig.TargetRegionPath != null)
             {
-                var targetRegionEnrichment = TargetRegionEnrichment.fromTsv(mConfig.TargetRegionPath);
+                TargetRegionEnrichment targetRegionEnrichment = TargetRegionEnrichment.load(mConfig.TargetRegionPath);
                 ratioSupplier.setTargetRegionEnrichment(targetRegionEnrichment);
             }
 

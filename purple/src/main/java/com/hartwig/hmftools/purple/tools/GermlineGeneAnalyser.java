@@ -46,8 +46,10 @@ public class GermlineGeneAnalyser
     private final int mThreads;
 
     private final BufferedWriter mWriter;
+    private final boolean mWriteVerbose;
 
     private static final String PURPLE_DATA_DIR = "purple_data_dir";
+    private static final String WRITE_VERBOSE = "write_verbose";
 
     public GermlineGeneAnalyser(final CommandLine cmd)
     {
@@ -60,6 +62,7 @@ public class GermlineGeneAnalyser
         mPurpleDataDir = cmd.getOptionValue(PURPLE_DATA_DIR);
         mThreads = parseThreads(cmd);
 
+        mWriteVerbose = cmd.hasOption(WRITE_VERBOSE);
         mWriter = initialiseWriter(cmd.getOptionValue(OUTPUT_DIR));
     }
 
@@ -79,7 +82,7 @@ public class GermlineGeneAnalyser
         {
             for(int i = 0; i < min(mSampleIds.size(), mThreads); ++i)
             {
-                sampleTasks.add(new SampleGermlineGeneTask(i, mWriter, mGeneDataCache, mPurpleDataDir));
+                sampleTasks.add(new SampleGermlineGeneTask(i, mWriter, mGeneDataCache, mPurpleDataDir, mWriteVerbose));
             }
 
             int taskIndex = 0;
@@ -98,7 +101,8 @@ public class GermlineGeneAnalyser
         }
         else
         {
-            SampleGermlineGeneTask sampleTask = new SampleGermlineGeneTask(0, mWriter, mGeneDataCache, mPurpleDataDir);
+            SampleGermlineGeneTask sampleTask = new SampleGermlineGeneTask(
+                    0, mWriter, mGeneDataCache, mPurpleDataDir, mWriteVerbose);
 
             sampleTask.getSampleIds().addAll(mSampleIds);
 
@@ -124,8 +128,17 @@ public class GermlineGeneAnalyser
 
             writer.write("SampleId,Chromosome,RegionStart,RegionEnd,GermlineStatus,RegionBafCount,RegionDWC");
             writer.write(",RegionObsTumorRatio,RegionObsNormalRatio,RegionRefNormalisedCN");
-            writer.write(",PurpleCN,PurpleDWC,GcContent,MajorAlleleCN,MinorAlleleCN");
-            writer.write(",GeneName,TransName,TransStart,TransEnd,ExonCount,ExonRankStart,ExonRankEnd");
+
+            if(mWriteVerbose)
+            {
+                writer.write(",PurpleCN,PurpleDWC,GcContent,MajorAlleleCN,MinorAlleleCN");
+                writer.write(",GeneName,TransName,TransStart,TransEnd,ExonCount,ExonRankStart,ExonRankEnd");
+            }
+            else
+            {
+                writer.write(",GeneNames");
+            }
+
             writer.newLine();
 
             return writer;
@@ -137,7 +150,25 @@ public class GermlineGeneAnalyser
         }
     }
 
-    public synchronized static void writeGeneOverlapData(
+    public synchronized static void writeGeneDeletionData(
+            final BufferedWriter writer, final String sampleId, final ObservedRegion region, final String geneNames)
+    {
+        try
+        {
+            writer.write(String.format("%s,%s,%d,%d,%s,%d,%d,%.3f,%.3f,%.3f,%s",
+                    sampleId, region.chromosome(), region.start(), region.end(), region.germlineStatus(),
+                    region.bafCount(), region.depthWindowCount(), region.observedTumorRatio(), region.observedNormalRatio(),
+                    region.refNormalisedCopyNumber(), geneNames));
+
+            writer.newLine();
+        }
+        catch(IOException e)
+        {
+            PPL_LOGGER.error("failed to write germline gene deletion file output: {}", e.toString());
+        }
+    }
+
+    public synchronized static void writeGeneDeletionDetails(
             final BufferedWriter writer, final String sampleId, final ObservedRegion region, final PurpleCopyNumber copyNumber,
             final GeneData geneData, final TranscriptData transData, final List<ExonData> overlappedExons)
     {
@@ -174,6 +205,8 @@ public class GermlineGeneAnalyser
         addThreadOptions(options);
 
         options.addOption(PURPLE_DATA_DIR, true, "Directory pattern for sample purple directory");
+        options.addOption(WRITE_VERBOSE, false, "Write transcript and exon details for each deleted gene segment");
+
         addEnsemblDir(options);
         addLoggingOptions(options);
         addOutputOptions(options);

@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASSR;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
@@ -50,7 +50,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.gripss.FilterCache;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
-import com.hartwig.hmftools.gripss.common.VcfUtils;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;

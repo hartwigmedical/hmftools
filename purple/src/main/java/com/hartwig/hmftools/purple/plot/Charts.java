@@ -47,33 +47,26 @@ public class Charts
             final String referenceId, final String sampleId, boolean plotSomatics,
             final Gender gender, final List<PurpleCopyNumber> copyNumbers,
             final List<VariantContextDecorator> somaticVariants, final List<StructuralVariant> structuralVariants,
-            final List<ObservedRegion> regions, final List<AmberBAF> bafs)
+            final List<ObservedRegion> regions, final List<AmberBAF> bafs) throws Exception
     {
         final ChartConfig chartConfig = mConfig.Charting;
 
-        try
+        mCircosCharts.write(referenceId, sampleId, gender, copyNumbers, somaticVariants, structuralVariants, regions, bafs);
+        final List<Future<Integer>> futures = mCircosCharts.chartFutures();
+
+        if(chartConfig.Enabled)
         {
-            mCircosCharts.write(referenceId, sampleId, gender, copyNumbers, somaticVariants, structuralVariants, regions, bafs);
-            final List<Future<Integer>> futures = mCircosCharts.chartFutures();
-
-            if(chartConfig.Enabled)
-            {
-                futures.addAll(mRCharts.chartFutures(sampleId, plotSomatics));
-            }
-
-            for(final Future<Integer> future : futures)
-            {
-                // This (intentionally) has side effect of alerting users to any exceptions
-                int result = future.get();
-                if(result != 0)
-                {
-                    PPL_LOGGER.warn("Error generating charts");
-                }
-            }
+            futures.addAll(mRCharts.chartFutures(sampleId, plotSomatics));
         }
-        catch(Exception e)
+
+        for(final Future<Integer> future : futures)
         {
-            PPL_LOGGER.error("charting error: {}", e.toString());
+            // This (intentionally) has side effect of alerting users to any exceptions
+            int result = future.get();
+            if(result != 0)
+            {
+                PPL_LOGGER.warn("Error generating charts");
+            }
         }
     }
 

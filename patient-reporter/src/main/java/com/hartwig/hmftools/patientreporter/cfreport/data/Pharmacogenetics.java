@@ -54,26 +54,6 @@ public final class Pharmacogenetics {
         return urlPrescriptionInfo.split(";")[0];
     }
 
-    @NotNull
-    public static Set<String> phenotypesFunctions(@NotNull List<PeachGenotype> peachGenotypes) {
-        Set<String> phenotypes = Sets.newHashSet();
-        for (PeachGenotype peachGenotype : peachGenotypes) {
-            phenotypes.add(peachGenotype.function());
-
-        }
-        return phenotypes;
-    }
-
-    @NotNull
-    public static Set<String> phenotypesGenes(@NotNull List<PeachGenotype> peachGenotypes) {
-        Set<String> genes = Sets.newHashSet();
-        for (PeachGenotype peachGenotype : peachGenotypes) {
-            genes.add(peachGenotype.gene());
-
-        }
-        return genes;
-    }
-
     public static int countPhenotypes(@NotNull List<PeachGenotype> peachGenotypes) {
         return peachGenotypes.size();
     }

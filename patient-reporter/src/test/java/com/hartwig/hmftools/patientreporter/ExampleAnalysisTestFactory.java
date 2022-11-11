@@ -13,68 +13,69 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaReporting;
-import com.hartwig.hmftools.common.cuppa.interpretation.ImmutableCuppaReporting;
+import com.hartwig.hmftools.common.cuppa.interpretation.ImmutableMolecularTissueOriginReporting;
+import com.hartwig.hmftools.common.cuppa.interpretation.MolecularTissueOriginReporting;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
-import com.hartwig.hmftools.common.hla.ImmutableLilacGermlineAllele;
-import com.hartwig.hmftools.common.hla.ImmutableLilacReporting;
-import com.hartwig.hmftools.common.hla.ImmutableLilacReportingData;
-import com.hartwig.hmftools.common.hla.LilacReporting;
-import com.hartwig.hmftools.common.hla.LilacReportingData;
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
+import com.hartwig.hmftools.common.hla.HlaReporting;
+import com.hartwig.hmftools.common.hla.ImmutableHlaAllele;
+import com.hartwig.hmftools.common.hla.ImmutableHlaAllelesReportingData;
+import com.hartwig.hmftools.common.hla.ImmutableHlaReporting;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
+import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.linx.ImmutableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
-import com.hartwig.hmftools.common.protect.ImmutableKnowledgebaseSource;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.EvidenceType;
+import com.hartwig.hmftools.common.protect.ImmutableKnowledgebaseSource;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.ChromosomeArm;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
 import com.hartwig.hmftools.common.purple.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.purple.loader.ImmutableCnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.loader.ImmutableGainLoss;
-import com.hartwig.hmftools.common.purple.ChromosomeArm;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
-import com.hartwig.hmftools.common.linx.FusionPhasedType;
-import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.serve.actionability.ImmutableTreatment;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
+import com.hartwig.hmftools.patientreporter.algo.ImmutableLohGenesReporting;
+import com.hartwig.hmftools.patientreporter.algo.LohGenesReporting;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
+import com.hartwig.serve.datamodel.EvidenceDirection;
+import com.hartwig.serve.datamodel.EvidenceLevel;
+import com.hartwig.serve.datamodel.ImmutableTreatment;
+import com.hartwig.serve.datamodel.Knowledgebase;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -91,20 +92,15 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport createTestReport() {
-        return createWithCOLO829Data(new ExampleAnalysisConfig.Builder().build(), PurpleQCStatus.PASS);
-    }
-
-    @NotNull
     public static AnalysedPatientReport createWithCOLO829Data(@NotNull ExampleAnalysisConfig config,
             @NotNull PurpleQCStatus purpleQCStatus) {
         String pipelineVersion = "5.31";
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 185;
-        double tumorMutationalBurden = 13.7205;
+        double tumorMutationalBurden = 13.73;
         double microsatelliteIndelsPerMb = 0.1203;
-        double chordHrdValue = 0D;
-        ChordStatus chordStatus = ChordStatus.HR_PROFICIENT;
+        double hrdValue = 0D;
+        ChordStatus hrdStatus = ChordStatus.HR_PROFICIENT;
         String reportDate = DataUtil.formatDate(LocalDate.now());
         double impliedPurityPercentage = MathUtil.mapPercentage(config.impliedTumorPurity(), TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
 
@@ -120,8 +116,8 @@ public final class ExampleAnalysisTestFactory {
         List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<GeneDisruption> disruptions = createCOLO829Disruptions();
         List<AnnotatedVirus> viruses = Lists.newArrayList();
-        Map<String, List<PeachGenotype>> peachGenotypes = createTestPeachGenotypes();
-        LilacReportingData lilac = createTestLilacData();
+        Map<String, List<PeachGenotype>> pharmacogeneticsGenotypes = createTestPharmacogeneticsGenotypes();
+        HlaAllelesReportingData hlaData = createTestHlaData();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), config.reportGermline(), config.limsCohortConfig());
 
@@ -185,20 +181,20 @@ public final class ExampleAnalysisTestFactory {
                 .tumorMutationalLoad(tumorMutationalLoad)
                 .tumorMutationalLoadStatus(TumorMutationalStatus.fromLoad(tumorMutationalLoad))
                 .tumorMutationalBurden(tumorMutationalBurden)
-                .chordHrdValue(chordHrdValue)
-                .chordHrdStatus(chordStatus)
+                .hrdValue(hrdValue)
+                .hrdStatus(hrdStatus)
                 .gainsAndLosses(gainsAndLosses)
                 .cnPerChromosome(extractCnPerChromosome())
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .reportableViruses(viruses)
-                .lilac(lilac)
+                .hlaAlleles(hlaData)
                 .suspectGeneCopyNumbersMSIWithLOH(MSILOHGenes())
                 .suspectGeneCopyNumbersHRDWithLOH(HRDLOHGenes())
                 .build();
 
-        CuppaReporting cuppaReporting = ImmutableCuppaReporting.builder()
+        MolecularTissueOriginReporting molecularTissueOriginReporting = ImmutableMolecularTissueOriginReporting.builder()
                 .bestCancerType("Melanoma")
                 .bestLikelihood(0.996)
                 .interpretCancerType("Melanoma")
@@ -211,9 +207,9 @@ public final class ExampleAnalysisTestFactory {
                 .clinicalSummary(clinicalSummary)
                 .specialRemark(specialremark)
                 .genomicAnalysis(analysis)
-                .circosPath(REPORTER_CONFIG.purpleCircosPlot())
-                .cuppaReporting(cuppaReporting)
-                .cuppaPlot(REPORTER_CONFIG.cuppaPlot())
+                .circosPlotPath(REPORTER_CONFIG.purpleCircosPlot())
+                .molecularTissueOriginReporting(molecularTissueOriginReporting)
+                .molecularTissueOriginPlotPath(REPORTER_CONFIG.cuppaPlot())
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectionReport())
                 .isCorrectedReportExtern(config.isCorrectionReportExtern())
@@ -222,32 +218,21 @@ public final class ExampleAnalysisTestFactory {
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .pipelineVersion(pipelineVersion)
-                .peachGenotypes(peachGenotypes)
+                .pharmacogeneticsGenotypes(pharmacogeneticsGenotypes)
                 .reportDate(reportDate)
                 .isWGSreport(true)
                 .build();
     }
 
     @NotNull
-    private static List<GeneCopyNumber> HRDLOHGenes() {
-        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
-        geneCopyNumbers.add(createTestCopyNumberBuilder("BRCA2").minCopyNumber(0.1).maxCopyNumber(7).build());
-        geneCopyNumbers.add(createTestCopyNumberBuilder("BRCA1").minCopyNumber(0.1).maxCopyNumber(7).build());
-        return geneCopyNumbers;
+    private static List<LohGenesReporting> HRDLOHGenes() {
+        return Lists.newArrayList();
 
     }
 
     @NotNull
-    private static List<GeneCopyNumber> MSILOHGenes() {
-        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
-        geneCopyNumbers.add(createTestCopyNumberBuilder("MLH1").minCopyNumber(0.1).maxCopyNumber(7).build());
-        geneCopyNumbers.add(createTestCopyNumberBuilder("MLH2").minCopyNumber(0.1).maxCopyNumber(7).build());
-        return geneCopyNumbers;
-    }
-
-    @NotNull
-    private static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(@NotNull String gene) {
-        return GeneCopyNumberTestFactory.builder().geneName(gene);
+    private static List<LohGenesReporting> MSILOHGenes() {
+        return Lists.newArrayList();
     }
 
     @NotNull
@@ -300,7 +285,7 @@ public final class ExampleAnalysisTestFactory {
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("6"), ChromosomeArm.P_ARM, 3.847943829939073));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("6"), ChromosomeArm.Q_ARM, 2.913192227059896));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("7"), ChromosomeArm.P_ARM, 4.0246200936217384));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("7"), ChromosomeArm.Q_ARM, 4.17271256763564));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("7"), ChromosomeArm.Q_ARM, 4.172712568077476));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("8"), ChromosomeArm.P_ARM, 3.3325999264957695));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("8"), ChromosomeArm.Q_ARM, 3.3429530044399343));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("9"), ChromosomeArm.P_ARM, 2.7291755500808623));
@@ -320,14 +305,14 @@ public final class ExampleAnalysisTestFactory {
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("16"), ChromosomeArm.P_ARM, 3.191969293780255));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("16"), ChromosomeArm.Q_ARM, 1.989521251230779));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("17"), ChromosomeArm.P_ARM, 2.9938998740100473));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("17"), ChromosomeArm.Q_ARM, 3.0513148194434603));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("17"), ChromosomeArm.Q_ARM, 3.0477000530660465));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("18"), ChromosomeArm.P_ARM, 2.370931614063123));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("18"), ChromosomeArm.Q_ARM, 2.8490432529511334));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("19"), ChromosomeArm.P_ARM, 2.8890213317794795));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("19"), ChromosomeArm.Q_ARM, 2.934100089054606));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("20"), ChromosomeArm.P_ARM, 4.013880853952209));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("20"), ChromosomeArm.Q_ARM, 4.0086125804931285));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("21"), ChromosomeArm.P_ARM, 2.9919997660330138));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("21"), ChromosomeArm.P_ARM, 2.991999766033014));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("21"), ChromosomeArm.Q_ARM, 2.9982181161009325));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("22"), ChromosomeArm.P_ARM, 3.9915997247172412));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("22"), ChromosomeArm.Q_ARM, 3.983474946385728));
@@ -419,36 +404,17 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Cobimetinib + Vemurafenib")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(true)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
-                        "BRAF BRAF:V600E",
-                        Sets.newHashSet(),
-                        EvidenceType.HOTSPOT_MUTATION,
-                        null,
-                        Sets.newHashSet("ttps://www.google.com/#q=FDA"))))
-                .build());
-
-        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
-                .transcript("ENST00000288602")
-                .isCanonical(true)
-                .event("p.Val600Glu")
-                .eventIsHighDriver(true)
-                .germline(false)
-                .treatment(ImmutableTreatment.builder()
-                        .treament("Dabrafenib")
-                        .sourceRelevantTreatmentApproaches(Sets.newHashSet())
-                        .relevantTreatmentApproaches(Sets.newHashSet())
-                        .build())
-                .level(EvidenceLevel.A)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
-                        "BRAF BRAF:V600E",
+                        "BRAF:V600E",
                         Sets.newHashSet(),
                         EvidenceType.HOTSPOT_MUTATION,
                         null,
@@ -461,11 +427,36 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
+                .treatment(ImmutableTreatment.builder()
+                        .treament("Dabrafenib")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet())
+                        .relevantTreatmentApproaches(Sets.newHashSet())
+                        .build())
+                .onLabel(true)
+                .level(EvidenceLevel.A)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
+                        "BRAF:V600E",
+                        Sets.newHashSet(),
+                        EvidenceType.HOTSPOT_MUTATION,
+                        null,
+                        Sets.newHashSet("https://www.google.com/#q=FDA"))))
+                .build());
+
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Dabrafenib + Trametinib")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(true)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -475,7 +466,7 @@ public final class ExampleAnalysisTestFactory {
                                 null,
                                 Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/25399551")),
                         createTestProtectSource(Knowledgebase.VICC_CGI,
-                                "BRAF BRAF:V600E",
+                                "BRAF:V600E",
                                 Sets.newHashSet(),
                                 EvidenceType.HOTSPOT_MUTATION,
                                 null,
@@ -488,15 +479,17 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Trametinib")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(true)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
-                        "BRAF BRAF:V600E",
+                        "BRAF:V600E",
                         Sets.newHashSet(),
                         EvidenceType.HOTSPOT_MUTATION,
                         null,
@@ -509,21 +502,17 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Vemurafenib")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .reported(true)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
-                                "BRAF BRAF:V600G",
-                                Sets.newHashSet(),
-                                EvidenceType.HOTSPOT_MUTATION,
-                                null,
-                                Sets.newHashSet("https://www.google.com/#q=NCCN")),
-                        createTestProtectSource(Knowledgebase.VICC_CGI,
-                                "BRAF BRAF:V600E",
+                                "BRAF:V600E",
                                 Sets.newHashSet(),
                                 EvidenceType.HOTSPOT_MUTATION,
                                 null,
@@ -542,11 +531,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("RO4987655")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -563,11 +554,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("partial loss")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Buparlisib + Carboplatin + Paclitaxel")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -587,15 +580,17 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(trialBuilder.gene(null)
                 .transcript(null)
-                .isCanonical(false)
-                .event("High tumor mutation load")
+                .isCanonical(null)
+                .event("High tumor mutational load")
                 .eventIsHighDriver(null)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("BASKET OF BASKETS (VHIO17002)")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
@@ -608,15 +603,40 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(trialBuilder.gene(null)
                 .transcript(null)
-                .isCanonical(false)
-                .event("High tumor mutation load")
+                .isCanonical(null)
+                .event("High tumor mutational load")
                 .eventIsHighDriver(null)
                 .germline(false)
+                .reported(true)
+                .treatment(ImmutableTreatment.builder()
+                        .treament("CheckMate 848")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet())
+                        .relevantTreatmentApproaches(Sets.newHashSet())
+                        .build())
+                .onLabel(true)
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
+                        "TumMutLoad_HIGH",
+                        Sets.newHashSet("https://trial-eye.com/hmf/10560"),
+                        EvidenceType.SIGNATURE,
+                        null,
+                        Sets.newHashSet())))
+                .build());
+
+        trialsOnLabel.add(trialBuilder.gene(null)
+                .transcript(null)
+                .isCanonical(null)
+                .event("High tumor mutational load")
+                .eventIsHighDriver(null)
+                .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("DRUP")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
@@ -629,15 +649,17 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(trialBuilder.gene(null)
                 .transcript(null)
-                .isCanonical(false)
-                .event("High tumor mutation load")
+                .isCanonical(null)
+                .event("High tumor mutational load")
                 .eventIsHighDriver(null)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("KEYNOTE-158")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
@@ -654,18 +676,20 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
-                        .treament("Array 818-103")
+                        .treament("COLUMBUS-AD")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
-                        "BRAF V600",
-                        Sets.newHashSet("https://trial-eye.com/hmf/13054"),
-                        EvidenceType.CODON_MUTATION,
-                        600,
+                        "BRAF V600E",
+                        Sets.newHashSet("https://trial-eye.com/hmf/15589"),
+                        EvidenceType.HOTSPOT_MUTATION,
+                        null,
                         Sets.newHashSet())))
                 .build());
 
@@ -675,11 +699,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("DRUP")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
@@ -702,11 +728,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("EBIN (EORTC-1612-MG)")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
@@ -723,11 +751,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("NASAM")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
@@ -744,16 +774,18 @@ public final class ExampleAnalysisTestFactory {
                 .event("partial loss")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("DRUP")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.ICLUSION,
                                 "PTEN LOSS",
-                                Sets.newHashSet("https://trial-eye.com/hmf/10299\""),
+                                Sets.newHashSet("https://trial-eye.com/hmf/10299"),
                                 EvidenceType.DELETION,
                                 null,
                                 Sets.newHashSet()),
@@ -779,11 +811,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Bevacizumab")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -800,11 +834,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("CI-1040")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -821,15 +857,17 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Cetuximab")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
-                                "BRAF BRAF:V600E",
+                                "BRAF:V600E",
                                 Sets.newHashSet(),
                                 EvidenceType.HOTSPOT_MUTATION,
                                 null,
@@ -853,11 +891,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Cetuximab + Irinotecan + Vemurafenib")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -874,11 +914,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Fluorouracil")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -895,11 +937,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Irinotecan")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -916,11 +960,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Oxaliplatin")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -937,15 +983,17 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Panitumumab")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
-                                "BRAF BRAF:V600E",
+                                "BRAF:V600E",
                                 Sets.newHashSet(),
                                 EvidenceType.HOTSPOT_MUTATION,
                                 null,
@@ -972,11 +1020,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Selumetinib")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -993,11 +1043,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("p.Val600Glu")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Sorafenib")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -1008,27 +1060,52 @@ public final class ExampleAnalysisTestFactory {
                         Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/21882184", "http://www.ncbi.nlm.nih.gov/pubmed/18682506"))))
                 .build());
 
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .transcript("ENST00000288602")
+                .isCanonical(true)
+                .event("p.Val600Glu")
+                .eventIsHighDriver(true)
+                .germline(false)
+                .reported(true)
+                .treatment(ImmutableTreatment.builder()
+                        .treament("Vemurafenib")
+                        .sourceRelevantTreatmentApproaches(Sets.newHashSet())
+                        .relevantTreatmentApproaches(Sets.newHashSet())
+                        .build())
+                .onLabel(false)
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESISTANT)
+                .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
+                        "BRAF V600",
+                        Sets.newHashSet(),
+                        EvidenceType.CODON_MUTATION,
+                        600,
+                        Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/26287849"))))
+                .build());
+
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .transcript("ENST00000371953")
                 .isCanonical(true)
                 .event("partial loss")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Anti-EGFR monoclonal antibody")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CGI,
-                                "PTEN PTEN oncogenic mutation",
+                                "PTEN oncogenic mutation",
                                 Sets.newHashSet(),
-                                EvidenceType.INACTIVATION,
+                                EvidenceType.ANY_MUTATION,
                                 null,
                                 Sets.newHashSet("http://www.ncbi.nlm.nih.gov/pubmed/21163703", "http://www.ncbi.nlm.nih.gov/pubmed/19398573")),
                         createTestProtectSource(Knowledgebase.VICC_CGI,
-                                "PTEN PTEN deletion",
+                                "PTEN deletion",
                                 Sets.newHashSet(),
                                 EvidenceType.DELETION,
                                 null,
@@ -1042,11 +1119,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("partial loss")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Cetuximab")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -1063,11 +1142,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("partial loss")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Everolimus")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -1084,11 +1165,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("partial loss")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Lapatinib + Trastuzumab")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -1105,11 +1188,13 @@ public final class ExampleAnalysisTestFactory {
                 .event("partial loss")
                 .eventIsHighDriver(true)
                 .germline(false)
+                .reported(true)
                 .treatment(ImmutableTreatment.builder()
                         .treament("Trastuzumab")
                         .sourceRelevantTreatmentApproaches(Sets.newHashSet())
                         .relevantTreatmentApproaches(Sets.newHashSet())
                         .build())
+                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Lists.newArrayList(createTestProtectSource(Knowledgebase.VICC_CIVIC,
@@ -1204,8 +1289,8 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalTranscript("ENST00000498124")
                 .canonicalEffect("frameshift_variant")
                 .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
-                .canonicalHgvsCodingImpact("c.203_204delCG")
-                .canonicalHgvsProteinImpact("p.Ala68fs")
+                .canonicalHgvsCodingImpact("c.246_247delCG")
+                .canonicalHgvsProteinImpact("p.Gly83fs")
                 .otherReportedEffects("ENST00000579755|c.246_247delCG|p.Gly83fs|frameshift_variant|NONSENSE_OR_FRAMESHIFT")
                 .alleleReadCount(99)
                 .totalReadCount(99)
@@ -1398,14 +1483,14 @@ public final class ExampleAnalysisTestFactory {
         GeneDisruption disruption1 = ImmutableGeneDisruption.builder()
                 .location("10q23.31")
                 .gene("PTEN")
+                .transcriptId("ENST00000371953")
+                .isCanonical(true)
                 .range("Intron 5 -> Intron 6")
                 .type("DEL")
                 .junctionCopyNumber(2.005)
                 .undisruptedCopyNumber(0.0)
                 .firstAffectedExon(5)
-                .clusterId(70)
-                .transcriptId("ENST00000371953")
-                .isCanonical(true)
+                .clusterId(69)
                 .build();
 
         return Lists.newArrayList(disruption1);
@@ -1423,9 +1508,9 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static Map<String, List<PeachGenotype>> createTestPeachGenotypes() {
-        Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
-        peachMap.put("UGT1A1",
+    private static Map<String, List<PeachGenotype>> createTestPharmacogeneticsGenotypes() {
+        Map<String, List<PeachGenotype>> pharmacogeneticsMap = Maps.newHashMap();
+        pharmacogeneticsMap.put("UGT1A1",
                 Lists.newArrayList(ImmutablePeachGenotype.builder()
                         .gene("UGT1A1")
                         .haplotype("*1_HOM")
@@ -1435,7 +1520,7 @@ public final class ExampleAnalysisTestFactory {
                         .panelVersion("peach_prod_v1.3")
                         .repoVersion("1.7")
                         .build()));
-        peachMap.put("DPYD",
+        pharmacogeneticsMap.put("DPYD",
                 Lists.newArrayList(ImmutablePeachGenotype.builder()
                         .gene("DPYD")
                         .haplotype("*1_HOM")
@@ -1447,43 +1532,47 @@ public final class ExampleAnalysisTestFactory {
                         .panelVersion("peach_prod_v1.3")
                         .repoVersion("1.7")
                         .build()));
-        return peachMap;
+        return pharmacogeneticsMap;
     }
 
     @NotNull
-    private static LilacReportingData createTestLilacData() {
-        Map<String, List<LilacReporting>> alleles = Maps.newHashMap();
+    private static HlaAllelesReportingData createTestHlaData() {
+        Map<String, List<HlaReporting>> alleles = Maps.newHashMap();
 
         alleles.put("HLA-A",
-                Lists.newArrayList(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                Lists.newArrayList(createHlaReporting().hlaAllele(ImmutableHlaAllele.builder()
                         .gene("HLA-A")
                         .germlineAllele("A*01:01")
                         .build()).germlineCopies(2.0).tumorCopies(3.83).somaticMutations("No").interpretation("Yes").build()));
         alleles.put("HLA-B",
-                Lists.newArrayList(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                Lists.newArrayList(createHlaReporting().hlaAllele(ImmutableHlaAllele.builder()
                                 .gene("HLA-B")
                                 .germlineAllele("B*40:02")
-                                .build()).germlineCopies(1.0).tumorCopies(2D).somaticMutations("No").interpretation("Yes").build(),
-                        createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
-                                .gene("HLA-B")
-                                .germlineAllele("B*08:01")
-                                .build()).germlineCopies(1D).tumorCopies(1.83).somaticMutations("No").interpretation("Yes").build()));
+                                .build()).germlineCopies(1.0).tumorCopies(2.0).somaticMutations("No").interpretation("Yes").build(),
+                        createHlaReporting().hlaAllele(ImmutableHlaAllele.builder().gene("HLA-B").germlineAllele("B*08:01").build())
+                                .germlineCopies(1.0)
+                                .tumorCopies(1.83)
+                                .somaticMutations("No")
+                                .interpretation("Yes")
+                                .build()));
         alleles.put("HLA-C",
-                Lists.newArrayList(createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
+                Lists.newArrayList(createHlaReporting().hlaAllele(ImmutableHlaAllele.builder()
                                 .gene("HLA-C")
                                 .germlineAllele("C*07:01")
-                                .build()).germlineCopies(1D).tumorCopies(1.83).somaticMutations("No").interpretation("yes").build(),
-                        createLilacReporting().lilacGermlineAllele(ImmutableLilacGermlineAllele.builder()
-                                .gene("HLA-C")
-                                .germlineAllele("C*03:04")
-                                .build()).germlineCopies(1D).tumorCopies(2.0).somaticMutations("No").interpretation("Yes").build()));
-        return ImmutableLilacReportingData.builder().lilacQc("WARN_UNMATCHED_SOMATIC_VARIANT").lilacReporting(alleles).build();
+                                .build()).germlineCopies(1.0).tumorCopies(1.83).somaticMutations("No").interpretation("yes").build(),
+                        createHlaReporting().hlaAllele(ImmutableHlaAllele.builder().gene("HLA-C").germlineAllele("C*03:04").build())
+                                .germlineCopies(1.0)
+                                .tumorCopies(2.0)
+                                .somaticMutations("No")
+                                .interpretation("Yes")
+                                .build()));
+        return ImmutableHlaAllelesReportingData.builder().hlaQC("PASS").hlaAllelesReporting(alleles).build();
     }
 
     @NotNull
-    private static ImmutableLilacReporting.Builder createLilacReporting() {
-        return ImmutableLilacReporting.builder()
-                .lilacGermlineAllele(ImmutableLilacGermlineAllele.builder().gene(Strings.EMPTY).germlineAllele(Strings.EMPTY).build())
+    private static ImmutableHlaReporting.Builder createHlaReporting() {
+        return ImmutableHlaReporting.builder()
+                .hlaAllele(ImmutableHlaAllele.builder().gene(Strings.EMPTY).germlineAllele(Strings.EMPTY).build())
                 .germlineCopies(0)
                 .tumorCopies(0)
                 .somaticMutations(Strings.EMPTY)

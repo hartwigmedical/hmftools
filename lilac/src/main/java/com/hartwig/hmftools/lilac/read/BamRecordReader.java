@@ -134,7 +134,7 @@ public class BamRecordReader implements BamReader
         return FragmentUtils.mergeFragmentsById(readFragments);
     }
 
-    private final List<NamedBed> codingRegions(final String geneName, final TranscriptData transcript)
+    private List<NamedBed> codingRegions(final String geneName, final TranscriptData transcript)
     {
         final List<NamedBed> regions = LociPosition.codingRegions(geneName, HLA_CHR, transcript);
 

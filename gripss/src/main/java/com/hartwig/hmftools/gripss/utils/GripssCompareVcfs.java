@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsDouble;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.gripss.GripssConfig.SAMPLE;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;

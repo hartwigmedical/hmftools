@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -25,8 +25,6 @@ public final class GermlineVariantFactory
 
         final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
 
-        // final VCFHeader header = (VCFHeader) reader.getHeader();
-
         for(VariantContext variantContext : reader.iterator())
         {
             GermlineVariant variant = createVariant(tumor, "", variantContext);
@@ -38,24 +36,10 @@ public final class GermlineVariantFactory
 
     public static GermlineVariant createVariant(final String sample, final String reference, final VariantContext context)
     {
-        // final Genotype genotype = context.getGenotype(sample);
-
         final VariantContextDecorator decorator = new VariantContextDecorator(context);
         final GenotypeStatus genotypeStatus = reference != null ? decorator.genotypeStatus(reference) : null;
 
         final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
-
-        /*
-        final Optional<AllelicDepth> referenceDepth = Optional.ofNullable(reference)
-                .flatMap(x -> Optional.ofNullable(context.getGenotype(x)))
-                .filter(AllelicDepth::containsAllelicDepth)
-                .map(AllelicDepth::fromGenotype);
-
-        final Optional<AllelicDepth> rnaDepth = Optional.ofNullable(rna)
-                .flatMap(x -> Optional.ofNullable(context.getGenotype(x)))
-                .filter(AllelicDepth::containsAllelicDepth)
-                .map(AllelicDepth::fromGenotype);
-        */
 
         final VariantImpact variantImpact = decorator.variantImpact();
 

@@ -16,22 +16,10 @@ import org.jetbrains.annotations.Nullable;
 
 public final class TableUtil {
 
-    private static final float TABLE_BOTTOM_MARGIN = 20;
-    private static final float TABLE_BOTTOM_MARGIN_SUMMARY = 0;
+    public static final float TABLE_BOTTOM_MARGIN = 20;
+    public static final float TABLE_BOTTOM_MARGIN_SUMMARY = 0;
 
     private TableUtil() {
-    }
-
-    @NotNull
-    public static Table createEmptyTable(@NotNull String title, float width) {
-        Cell headerCell = new Cell().setBorder(Border.NO_BORDER).add(new Paragraph(title).addStyle(ReportResources.sectionTitleStyle()));
-
-        Table table = TableUtil.createReportContentTable(width, new float[] { 1 }, new Cell[] { headerCell });
-        table.setKeepTogether(true);
-        table.setMarginBottom(TABLE_BOTTOM_MARGIN);
-        table.addCell(TableUtil.createContentCell(new Paragraph(DataUtil.NONE_STRING)));
-
-        return table;
     }
 
     @NotNull
@@ -51,8 +39,8 @@ public final class TableUtil {
     }
 
     @NotNull
-    public static Table createReportContentTable(float width, @NotNull float[] columnPercentageWidths, @NotNull Cell[] headerCells) {
-        Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths)).setWidth(width);
+    public static Table createReportContentTable(@NotNull float[] columnPercentageWidths, @NotNull Cell[] headerCells, float contentWidth) {
+        Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths)).setWidth(contentWidth);
         table.setFixedLayout();
 
         for (Cell headerCell : headerCells) {
@@ -63,40 +51,18 @@ public final class TableUtil {
     }
 
     @NotNull
-    public static Table createReportContentTable(@NotNull float[] columnPercentageWidths, @NotNull Cell[] headerCells) {
-        Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths)).setWidth(ReportResources.CONTENT_WIDTH_WIDE);
-        table.setFixedLayout();
-
-        for (Cell headerCell : headerCells) {
-            table.addHeaderCell(headerCell);
-        }
-
-        return table;
-    }
-
-    @NotNull
-    public static Table createReportContentSmallTable(@NotNull float[] columnPercentageWidths, @NotNull Cell[] headerCells) {
-        Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths)).setWidth(ReportResources.CONTENT_WIDTH_WIDE_SMALL);
-        table.setFixedLayout();
-
-        for (Cell headerCell : headerCells) {
-            table.addHeaderCell(headerCell);
-        }
-
-        return table;
-    }
-
-    @NotNull
-    public static Table createNoConsentReportTable(@NotNull String tableTitle, @NotNull String peachUnreliable) {
-        Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] {});
+    public static Table createNoConsentReportTable(@NotNull String tableTitle, @NotNull String peachUnreliable, float tableBottomMargin,
+            float contentWide) {
+        Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] {}, contentWide);
         table.setKeepTogether(true);
-        table.setMarginBottom(TABLE_BOTTOM_MARGIN);
+        table.setMarginBottom(tableBottomMargin);
         table.addCell(TableUtil.createContentCell(new Paragraph(peachUnreliable)));
-        return createWrappingReportTable(tableTitle, null, table);
+        return createWrappingReportTable(tableTitle, null, table, tableBottomMargin);
     }
 
     @NotNull
-    public static Table createNoneReportTable(@NotNull String tableTitle, @Nullable String subTableTitle) {
+    public static Table createNoneReportTable(@NotNull String tableTitle, @Nullable String subTableTitle, float tableBottomMargin,
+            float contentWide) {
         Cell headerCell;
         if (subTableTitle == null) {
             headerCell = new Cell().setBorder(Border.NO_BORDER)
@@ -110,29 +76,17 @@ public final class TableUtil {
                             .setFontColor(ReportResources.PALETTE_LIGHT_GREY)));
         }
 
-        Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] { headerCell });
+        Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] { headerCell }, contentWide);
         table.setKeepTogether(true);
-        table.setMarginBottom(TABLE_BOTTOM_MARGIN);
+        table.setMarginBottom(tableBottomMargin);
         table.addCell(TableUtil.createDisabledContentCell(new Paragraph(DataUtil.NONE_STRING)));
 
         return table;
     }
 
     @NotNull
-    public static Table createNAReportTable(@NotNull String tableTitle) {
-        Cell headerCell = new Cell().setBorder(Border.NO_BORDER)
-                .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle()
-                        .setFontColor(ReportResources.PALETTE_LIGHT_GREY)));
-
-        Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] { headerCell });
-        table.setKeepTogether(true);
-        table.setMarginBottom(TABLE_BOTTOM_MARGIN);
-        table.addCell(TableUtil.createDisabledContentCell(new Paragraph(DataUtil.NA_STRING)));
-        return table;
-    }
-
-    @NotNull
-    public static Table createWrappingReportTable(@NotNull String tableTitle, @Nullable String subtitle, @NotNull Table contentTable) {
+    public static Table createWrappingReportTable(@NotNull String tableTitle, @Nullable String subtitle, @NotNull Table contentTable,
+            float tableBottomMargin) {
         contentTable.addFooterCell(new Cell(1, contentTable.getNumberOfColumns()).setBorder(Border.NO_BORDER)
                         .setPaddingTop(5)
                         .setPaddingBottom(5)
@@ -147,54 +101,20 @@ public final class TableUtil {
 
         if (subtitle == null) {
             return new Table(1).setMinWidth(contentTable.getWidth())
-                    .setMarginBottom(TABLE_BOTTOM_MARGIN)
+                    .setMarginBottom(tableBottomMargin)
                     .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
                             .setPadding(0)
                             .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle())))
                     .addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));
         } else {
             return new Table(1).setMinWidth(contentTable.getWidth())
-                    .setMarginBottom(TABLE_BOTTOM_MARGIN)
+                    .setMarginBottom(tableBottomMargin)
                     .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
                             .setPadding(0)
                             .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle()))
                             .add(new Paragraph(subtitle).addStyle(ReportResources.sectionSubTitleStyle())))
                     .addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));
         }
-    }
-
-    @NotNull
-    public static Table createReportContentTableSummary(@NotNull float[] columnPercentageWidths, @NotNull Cell[] headerCells) {
-        Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths)).setWidth(ReportResources.CONTENT_WIDTH_WIDE_SUMMARY);
-        table.setFixedLayout();
-
-        for (Cell headerCell : headerCells) {
-            table.addHeaderCell(headerCell);
-        }
-
-        return table;
-    }
-
-    @NotNull
-    public static Table createWrappingReportTableSummary(@NotNull String tableTitle, @NotNull Table contentTable) {
-        contentTable.addFooterCell(new Cell(1, contentTable.getNumberOfColumns()).setBorder(Border.NO_BORDER)
-                        .setPaddingTop(5)
-                        .setPaddingBottom(5)
-                        .add(new Paragraph("The table continues on the next page".toUpperCase()).addStyle(ReportResources.subTextStyle())))
-                .setSkipLastFooter(true);
-
-        Table continuedWrapTable = new Table(1).setMinWidth(contentTable.getWidth())
-                .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
-                        .add(new Paragraph("Continued from the previous page".toUpperCase()).addStyle(ReportResources.subTextStyle())))
-                .setSkipFirstHeader(true)
-                .addCell(new Cell().add(contentTable).setPadding(0).setBorder(Border.NO_BORDER));
-
-        return new Table(1).setMinWidth(contentTable.getWidth())
-                .setMarginBottom(TABLE_BOTTOM_MARGIN_SUMMARY)
-                .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
-                        .setPadding(0)
-                        .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle())))
-                .addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));
     }
 
     @NotNull

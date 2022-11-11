@@ -1,10 +1,6 @@
 package com.hartwig.hmftools.teal.util
 
 import kotlin.test.*
-import org.apache.logging.log4j.Level
-import org.apache.logging.log4j.core.config.Configurator
-
-const val EPS = 1e-5
 
 internal class TelomereMatcherTest
 {
@@ -80,6 +76,24 @@ internal class TelomereMatcherTest
         assertEquals(telomereMatch.matchStart, 0)
         assertEquals(telomereMatch.matchEnd, 120)
         assertEquals(telomereMatch.matchedSequence, seq)
+
+        assertTrue(TelomereMatcher.matchesGTelomere(seq, 0.9, 12))
+    }
+
+
+    @Test
+    fun testCalcTelomereMatch4()
+    {
+        setUp()
+
+        val seq = "GTACTATTAGGGCTTAGGGACTA"
+
+        val telomereMatch = TelomereMatcher.findGTelomereSegment(seq, 0.9)
+        assertNotNull(telomereMatch)
+        assertEquals(telomereMatch.numMatchedBases, 12)
+        assertEquals(telomereMatch.matchStart, 6)
+        assertEquals(telomereMatch.matchEnd, 19)
+        assertEquals(telomereMatch.matchedSequence, "TTAGGGCTTAGGG")
 
         assertTrue(TelomereMatcher.matchesGTelomere(seq, 0.9, 12))
     }

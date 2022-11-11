@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.isofox.novel;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
@@ -31,17 +34,17 @@ public class RetainedIntron
 
         mPosition = isStart ? regions.get(0).start() : regions.get(0).end();
 
-        List<String> trancriptInfo = Lists.newArrayList();
+        StringJoiner trancriptInfo = new StringJoiner(";");
 
         for(RegionReadData region : mRegions)
         {
             for (final TransExonRef transRef : region.getTransExonRefs())
             {
-                trancriptInfo.add(String.format("%s-%s", transRef.TransName, transRef.ExonRank));
+                trancriptInfo.add(format("%s-%s", transRef.TransName, transRef.ExonRank));
             }
         }
 
-        mTranscriptInfo = appendStrList(trancriptInfo, ';');
+        mTranscriptInfo = trancriptInfo.toString();
     }
 
     public final List<RegionReadData> regions() { return mRegions; }
@@ -74,6 +77,6 @@ public class RetainedIntron
 
     public String toString()
     {
-        return String.format("pos(%s @ %s) regions(%d)", mPosition, mIsStart ? "start" : "end", mRegions.size());
+        return format("pos(%s @ %s) regions(%d)", mPosition, mIsStart ? "start" : "end", mRegions.size());
     }
 }

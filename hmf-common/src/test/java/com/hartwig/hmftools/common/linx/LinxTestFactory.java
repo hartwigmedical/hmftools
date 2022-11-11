@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.linx;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
+import com.hartwig.hmftools.common.gene.TranscriptCodingType;
+import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -56,8 +58,8 @@ public final class LinxTestFactory {
                 .disruptive(false)
                 .reportedDisruption(false)
                 .undisruptedCopyNumber(0D)
-                .regionType(Strings.EMPTY)
-                .codingContext(Strings.EMPTY)
+                .regionType(TranscriptRegionType.UNKNOWN)
+                .codingType(TranscriptCodingType.UNKNOWN)
                 .biotype(Strings.EMPTY)
                 .exonicBasePhase(0)
                 .nextSpliceExonRank(0)

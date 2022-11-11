@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 
 import java.util.List;
 

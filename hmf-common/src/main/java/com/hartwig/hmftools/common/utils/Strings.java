@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.utils;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 public final class Strings
 {
@@ -14,14 +15,9 @@ public final class Strings
         if(sourceList.isEmpty())
             return "";
 
-        final StringBuilder combinedStr = new StringBuilder(sourceList.get(0));
-
-        for(int i = 1; i < sourceList.size(); ++i)
-        {
-            combinedStr.append(delim + sourceList.get(i));
-        }
-
-        return combinedStr.toString();
+        final StringJoiner combinedStr = new StringJoiner(String.valueOf(delim));
+        sourceList.forEach(x -> combinedStr.add(x));
+        return sourceList.toString();
     }
 
     public static String reverseString(final String str)

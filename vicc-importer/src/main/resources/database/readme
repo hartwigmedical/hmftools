@@ -1,7 +1,0 @@
-Run the following commands as root (admin) on mysql prior to building
-
-mysql> CREATE DATABASE vicc_test;
-Query OK, 1 row affected (0.00 sec)
-
-mysql> GRANT ALL on vicc_test.* TO 'build'@'localhost';
-Query OK, 0 row affected (0.00 sec)

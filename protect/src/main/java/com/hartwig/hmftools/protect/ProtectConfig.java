@@ -6,7 +6,7 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.serve.datamodel.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -28,6 +28,7 @@ public interface ProtectConfig {
     String REFERENCE_SAMPLE_ID = "reference_sample_id";
     String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
     String OUTPUT_DIRECTORY = "output_dir";
+    String REF_GENOME_VERSION = "ref_genome_version";
 
     // Input files used by the algorithm
     String SERVE_ACTIONABILITY_DIRECTORY = "serve_actionability_dir";
@@ -61,7 +62,7 @@ public interface ProtectConfig {
         options.addOption(REFERENCE_SAMPLE_ID, true, "(Optional) The reference sample of the tumor sample for which PROTECT will run.");
         options.addOption(PRIMARY_TUMOR_DOIDS, true, "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PROTECT output data will be written to.");
-        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to use (either '37' or '38')");
+        options.addOption(REF_GENOME_VERSION, true, "Ref genome version to use (either '37' or '38')");
 
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
@@ -164,7 +165,7 @@ public interface ProtectConfig {
                 .referenceSampleId(optionalValue(cmd, REFERENCE_SAMPLE_ID))
                 .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
-                .refGenomeVersion(RefGenomeVersion.from(nonOptionalValue(cmd, RefGenomeVersion.REF_GENOME_VERSION)))
+                .refGenomeVersion(RefGenomeVersion.from(nonOptionalValue(cmd, REF_GENOME_VERSION)))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
                 .driverGeneTsv(nonOptionalFile(cmd, DRIVER_GENE_TSV))

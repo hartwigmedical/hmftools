@@ -1,0 +1,82 @@
+#!/bin/bash
+
+purple_jar=$1 && shift
+tumor_id=$1 && shift
+reference_id=$1 && shift
+sv_vcf=$1 && shift
+sv_unfiltered_vcf=$1 && shift
+somatic_vcf=$1 && shift
+germline_vcf=$1 && shift
+amber_dir=$1 && shift
+cobalt_dir=$1 && shift
+output_dir=$1 && shift
+run_mode=$1 && shift
+ref_genome_version=$1 && shift
+ref_genome=$1 && shift
+gc_profile=$1 && shift
+somatic_hotspots=$1 && shift
+germline_hotspots=$1 && shift
+driver_gene_panel=$1 && shift
+ensembl_data_dir=$1 && shift
+germline_del_freq_file=$1 && shift
+target_regions_definition=$1 && shift
+target_regions_ratios=$1 && shift
+target_regions_msi_indels=$1 && shift
+threads=$1 && shift
+circos=$1 && shift
+max_memory=$1 && shift
+
+if [[ ! -d "${output_dir}" ]]; then
+  mkdir ${output_dir}
+fi
+
+purity_tsv=${output_dir}/${tumor_id}.purple.purity.tsv
+
+if [[ -f "${purity_tsv}" ]]; then
+  echo "Skipping Purple for ${tumor_id}, since purity file ${purity_tsv} exists"
+  exit
+fi
+
+if [[ ! -f "${sv_vcf}" ]]; then
+  echo "Missing Gripss VCF, not running Purple for ${tumor_id}"
+  exit
+fi
+
+args="-tumor ${tumor_id} \
+  -ref_genome ${ref_genome} \
+  -ref_genome_version ${ref_genome_version} \
+  -gc_profile ${gc_profile} \
+  -somatic_hotspots ${somatic_hotspots} \
+  -driver_gene_panel ${driver_gene_panel} \
+  -ensembl_data_dir ${ensembl_data_dir} \
+  -amber ${amber_dir} \
+  -cobalt ${cobalt_dir} \
+  -structural_vcf ${sv_vcf} \
+  -somatic_vcf ${somatic_vcf} \
+  -run_drivers \
+  -circos ${circos} \
+  -threads ${threads} \
+  -output_dir ${output_dir}"
+
+if [ "${reference_id}" != "none" ]; then
+  args="${args} -reference ${reference_id} 
+    -germline_hotspots ${germline_hotspots} 
+    -germline_vcf ${germline_vcf}
+    -germline_del_freq_file ${germline_del_freq_file}"
+fi  
+
+if [ "${run_mode}" == "PANEL" ]; then
+  args="${args} -target_regions_bed ${target_regions_definition} \
+    -target_regions_ratios ${target_regions_ratios} \
+    -target_regions_msi_indels ${target_regions_msi_indels}
+    -min_diploid_tumor_ratio_count 3 -min_diploid_tumor_ratio_count_centromere 3"
+else
+  args="${args} -sv_recovery_vcf ${sv_unfiltered_vcf}"
+fi
+
+echo "Running Purple with args: ${args}"
+
+java -Xmx${max_memory}G -jar ${purple_jar} ${args}
+
+
+  

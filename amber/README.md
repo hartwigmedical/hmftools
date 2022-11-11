@@ -15,7 +15,7 @@ When using paired reference/tumor data, AMBER is also able to:
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
 
-Ref genome versions 37 and 38 of the likely heterozygous sites are available to download from [HMFTools-Resources > DNA Resources](https://resources.hartwigmedicalfoundation.nl/).
+Ref genome versions 37 and 38 of the likely heterozygous sites are available to download from [HMFTools-Resources > DNA Pipeline > copy_number](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/).
 
 The Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package is required for segmentation.
 After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.com/), the copy number package can be added with the following R commands:
@@ -175,7 +175,7 @@ java -cp amber.jar com.hartwig.hmftools.patientdb.LoadAmberData \
     -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
 ```
 
-The Amber.snpcheck.37.vcf (and 38 equivalent) are available to download from [HMFTools-Resources > Amber](https://resources.hartwigmedicalfoundation.nl/).
+The Amber.snpcheck.37.vcf (and 38 equivalent) are available to download from [HMFTools-Resources > Amber](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/).
 
 An example query to check if a sample is one of many for a patient is:
 ```

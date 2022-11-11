@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.patientreporter.util.Genes;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -209,24 +210,23 @@ public final class SomaticVariants {
     @NotNull
     public static Set<String> determineMSIgenes(@NotNull List<ReportableVariant> reportableVariants, @NotNull List<GainLoss> gainsAndLosses,
             @NotNull List<HomozygousDisruption> homozygousDisruptions) {
-        Set<String> MSI_genes = Sets.newHashSet("MLH1", "MSH2", "MSH6", "PMS2", "EPCAM");
         Set<String> genesDisplay = Sets.newHashSet();
 
         for (ReportableVariant variant : reportableVariants) {
-            if (MSI_genes.contains(variant.gene())) {
+            if (Genes.MSI_GENES.contains(variant.gene())) {
                 genesDisplay.add(variant.gene());
             }
         }
 
         for (GainLoss gainLoss : gainsAndLosses) {
-            if (MSI_genes.contains(gainLoss.gene()) && (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
+            if (Genes.MSI_GENES.contains(gainLoss.gene()) && (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
                     || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)) {
                 genesDisplay.add(gainLoss.gene());
             }
         }
 
         for (HomozygousDisruption homozygousDisruption : homozygousDisruptions) {
-            if (MSI_genes.contains(homozygousDisruption.gene())) {
+            if (Genes.MSI_GENES.contains(homozygousDisruption.gene())) {
                 genesDisplay.add(homozygousDisruption.gene());
             }
         }
@@ -236,24 +236,23 @@ public final class SomaticVariants {
     @NotNull
     public static Set<String> determineHRDgenes(@NotNull List<ReportableVariant> reportableVariants,
             @NotNull List<GainLoss> gainsAndLosses, @NotNull List<HomozygousDisruption> homozygousDisruptions) {
-        Set<String> HRD_genes = Sets.newHashSet("BRCA1", "BRCA2", "PALB2", "RAD51B", "RAD51C");
         Set<String> genesDisplay = Sets.newHashSet();
 
         for (ReportableVariant variant : reportableVariants) {
-            if (HRD_genes.contains(variant.gene())) {
+            if (Genes.HRD_GENES.contains(variant.gene())) {
                 genesDisplay.add(variant.gene());
             }
         }
 
         for (GainLoss gainLoss : gainsAndLosses) {
-            if (HRD_genes.contains(gainLoss.gene()) && (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
+            if (Genes.HRD_GENES.contains(gainLoss.gene()) && (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
                     || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)) {
                 genesDisplay.add(gainLoss.gene());
             }
         }
 
         for (HomozygousDisruption homozygousDisruption : homozygousDisruptions) {
-            if (HRD_genes.contains(homozygousDisruption.gene())) {
+            if (Genes.HRD_GENES.contains(homozygousDisruption.gene())) {
                 genesDisplay.add(homozygousDisruption.gene());
             }
         }

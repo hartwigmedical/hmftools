@@ -41,7 +41,9 @@ java -jar sv-prep.jar
   -output_dir /sample_data/output/ 
 ```
 
-The bed file resources can be downloaded from [HMFTools-Resources > DNA-Resources](https://resources.hartwigmedicalfoundation.nl/).
+The bed file resources can be downloaded from [HMFTools-Resources > DNA Pipeline](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/):
+- know fusion pair locations BED (see resources 'sv')
+- blacklist locations BED (see resources 'sv')
 
 ## Overview and algorithm
 

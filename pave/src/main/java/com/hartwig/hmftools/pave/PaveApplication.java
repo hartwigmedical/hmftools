@@ -159,7 +159,7 @@ public class PaveApplication
                 processVariant(variantContext);
                 ++variantCount;
 
-                if(variantCount > 0 && (variantCount % 10000) == 0)
+                if(variantCount > 0 && (variantCount % 100000) == 0)
                 {
                     PV_LOGGER.info("processed {} variants", variantCount);
                 }
@@ -312,6 +312,9 @@ public class PaveApplication
             String filename = fileItems[fileItems.length - 1];
             int extensionIndex = filename.indexOf(".vcf");
             outputVcfFilename = mConfig.OutputDir + filename.substring(0, extensionIndex) + ".pave" + filename.substring(extensionIndex);
+
+            if(!outputVcfFilename.endsWith(".gz")) // always writes zipped VCF even if input VCF isn't zipped
+                outputVcfFilename += ".gz";
         }
 
         PV_LOGGER.info("writing VCF file({})", outputVcfFilename);

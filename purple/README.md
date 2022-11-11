@@ -41,13 +41,12 @@ PURPLE may also be run on targeted data. For more info please see [here](https:/
   + [VCF](#VCF)
   + [CIRCOS](#circos)
   + [Charts](#charts)
-* [Performance Characteristics](#performance-characteristics)
 * [Version History / Download Links](#version-history-and-download-links)
 
 ## Installation
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
-PURPLE also requires the same GC profile as used in COBALT (available from [HMFTools-Resources > DNA resources](https://resources.hartwigmedicalfoundation.nl/) and a reference genome.
+PURPLE also requires the same GC profile as used in COBALT (available from [HMFTools-Resources > DNA Pipeline](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/) and a reference genome.
 While these are sufficient to run PURPLE there are a number of optional dependencies that provide additional functionality.
 
 To generate [output charts](#charts), PURPLE depends on a number of [bioconductor](http://www.bioconductor.org) packages. After installing [R](https://www.r-project.org/) 
@@ -565,7 +564,9 @@ Following the successful recovery any structural variants we will rerun the segm
 
 ### 8. Identify germline gene deletions
 
-PURPLE searches for candidate germline gene deletions based on the combined tumor normal raw segmented copy number files.  For the purposes of purity and ploidy fitting and copy number smoothing each segment  is already annotated according to its genotype in the germline based on its observedNormal ratio, ie, one of DIPLOID ( = 0.85-1.15), HET_DELETION (0.1-0.85), HOM_DELETION (<0.1), AMPLIFICATION (1.15-2.2) or NOISE.    Any driver gene panel gene with a  HET_DELETION or HOM_DELETION segment overlapping (within +/- 500 bases to allow for depth window resolution) an exonic region is marked as a germline gene deletion.    
+PURPLE searches for candidate germline gene deletions based on the combined tumor normal raw segmented copy number files.  
+For the purposes of purity and ploidy fitting and copy number smoothing each segment is already annotated according to its genotype in the germline based on its observedNormal ratio, ie, one of DIPLOID ( = 0.85-1.15), HET_DELETION (0.1-0.85), HOM_DELETION (<0.1), AMPLIFICATION (1.15-2.2) or NOISE. 
+Any driver gene panel gene with a HET_DELETION or HOM_DELETION segment overlapping (within +/- 500 bases to allow for depth window resolution) an exonic region is marked as a germline gene deletion.    
 
 Deletions  are filtered with the following criteria
 Filter|Description
@@ -965,20 +966,6 @@ We can determine the likelihood of a variant being subclonal at any given varian
   <img src="src/main/resources/readme/COLO829T.somatic.clonality.png" width="500" alt="Somatic clonality">
 </p>
 
-
-## Performance Characteristics
-Performance numbers were taken from a 72 core machine using COLO829 data including generation of CIRCOS diagram but excluding database writing.
-Elapsed time is measured in minutes. 
-CPU time is minutes spent in user mode. 
-Peak memory is measure in gigabytes.
-
-PURPLE has the following characteristics:
-
-Threads | Elapsed Time| CPU Time | Peak Mem
----|---|---|---
-1 | 1.5 | 3 | 4.13
-2 | 1 | 3 | 4.18
-4 | 1 | 3 | 4.38
 
 
 ## Version History and Download Links

@@ -32,7 +32,7 @@ public class StructuralVariantTest
         StructuralVariant var = new StructuralVariant(
                 createSv(0, "001", CHR_1, CHR_1, 20, 30, POS_ORIENT, NEG_ORIENT, StructuralVariantType.DEL,
                         2, 2, ""),
-                Lists.newArrayList(), Lists.newArrayList(), null);
+                Lists.newArrayList(), Lists.newArrayList());
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
         String sequence = REF_BASES_CHR_1.substring(11, 21) + REF_BASES_CHR_1.substring(30, 40);
@@ -45,7 +45,7 @@ public class StructuralVariantTest
         var = new StructuralVariant(
                 createSv(0, "001", CHR_1, CHR_1, 20, 40, NEG_ORIENT, POS_ORIENT, StructuralVariantType.DUP,
                         2, 2, insertSeq),
-                Lists.newArrayList(), Lists.newArrayList(), null);
+                Lists.newArrayList(), Lists.newArrayList());
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
         sequence = REF_BASES_CHR_1.substring(33, 41) + insertSeq + REF_BASES_CHR_1.substring(20, 27);
@@ -56,13 +56,47 @@ public class StructuralVariantTest
         var = new StructuralVariant(
                 createSv(0, "001", CHR_1, CHR_2, 20, 40, NEG_ORIENT, NEG_ORIENT, StructuralVariantType.BND,
                         2, 2, insertSeq),
-                Lists.newArrayList(), Lists.newArrayList(), null);
+                Lists.newArrayList(), Lists.newArrayList());
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
         sequence = Nucleotides.reverseStrandBases(REF_BASES_CHR_2.substring(40, 47)) + insertSeq + REF_BASES_CHR_1.substring(20, 27);
         assertEquals(sequence, var.sequence());
-    }
 
+        // SGL with positive orientation
+        insertSeq = "AAAAA";
+        var = new StructuralVariant(
+                createSv(0, "001", CHR_1, "-1", 20, 0, POS_ORIENT, 0, StructuralVariantType.SGL,
+                        2, 0, insertSeq),
+                Lists.newArrayList(), Lists.newArrayList());
+
+        var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
+        sequence = REF_BASES_CHR_1.substring(6, 21) + insertSeq;
+        assertEquals(sequence, var.sequence());
+        assertEquals(REF_BASES_CHR_1.substring(10, 10 + TEST_CONFIG.ProbeLength), var.refSequences().get(0));
+
+        // with a longer insert sequence - will only allocate half the probe length
+        insertSeq = "AAAAAGGGGGCCCCCTTTTT";
+        var = new StructuralVariant(
+                createSv(0, "001", CHR_1, "-1", 20, 0, POS_ORIENT, 0, StructuralVariantType.SGL,
+                        2, 0, insertSeq),
+                Lists.newArrayList(), Lists.newArrayList());
+
+        var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
+        sequence = REF_BASES_CHR_1.substring(11, 21) + insertSeq.substring(0, 10);
+        assertEquals(sequence, var.sequence());
+        assertEquals(REF_BASES_CHR_1.substring(10, 10 + TEST_CONFIG.ProbeLength), var.refSequences().get(0));
+
+        // negative orientation
+        var = new StructuralVariant(
+                createSv(0, "001", CHR_1, "-1", 20, 0, NEG_ORIENT, 0, StructuralVariantType.SGL,
+                        2, 0, insertSeq),
+                Lists.newArrayList(), Lists.newArrayList());
+
+        var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
+        sequence = insertSeq.substring(insertSeq.length() - 10) + REF_BASES_CHR_1.substring(20, 30);
+        assertEquals(sequence, var.sequence());
+        assertEquals(REF_BASES_CHR_1.substring(10, 10 + TEST_CONFIG.ProbeLength), var.refSequences().get(0));
+    }
 
     public static StructuralVariantData createSv(
             final int varId, final String vcfId, final String chrStart, final String chrEnd,

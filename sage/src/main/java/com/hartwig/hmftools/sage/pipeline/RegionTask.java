@@ -105,6 +105,12 @@ public class RegionTask
                     String.format("%.3f", mPerfCounters.get(PC_CANDIDATES).getLastTime()));
         }
 
+        if(initialCandidates.isEmpty())
+        {
+            SG_LOGGER.trace("{}: region({}) complete with no candidates", mTaskId, mRegion);
+            return;
+        }
+
         SG_LOGGER.trace("{}: region({}) building evidence for {} candidates", mTaskId, mRegion, initialCandidates.size());
 
         mPerfCounters.get(PC_EVIDENCE).start();
@@ -130,47 +136,50 @@ public class RegionTask
 
         variantPhaser.signalPhaseReadsEnd();
 
-        mPerfCounters.get(PC_VARIANTS).start();
-
-        VariantFilters filters = new VariantFilters(mConfig.Filter);
-
-        // combine normal and tumor together to create variants, then apply soft filters
-        Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
-        Set<ReadContextCounter> validTumorReadCounters = Sets.newHashSet(); // those not hard-filtered
-
-        for(int candidateIndex = 0; candidateIndex < finalCandidates.size(); ++candidateIndex)
+        if(!finalCandidates.isEmpty())
         {
-            Candidate candidate = finalCandidates.get(candidateIndex);
+            mPerfCounters.get(PC_VARIANTS).start();
 
-            final List<ReadContextCounter> normalReadCounters = !mConfig.ReferenceIds.isEmpty() ?
-                    normalEvidence.getReadCounters(candidateIndex) : Lists.newArrayList();
+            VariantFilters filters = new VariantFilters(mConfig.Filter);
 
-            final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
+            // combine normal and tumor together to create variants, then apply soft filters
+            Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
+            Set<ReadContextCounter> validTumorReadCounters = Sets.newHashSet(); // those not hard-filtered
 
-            SageVariant sageVariant = new SageVariant(candidate, normalReadCounters, tumorReadCounters);
-            mSageVariants.add(sageVariant);
+            for(int candidateIndex = 0; candidateIndex < finalCandidates.size(); ++candidateIndex)
+            {
+                Candidate candidate = finalCandidates.get(candidateIndex);
 
-            // apply filters
-            if(filters.enabled())
-                filters.applySoftFilters(sageVariant);
+                final List<ReadContextCounter> normalReadCounters = !mConfig.ReferenceIds.isEmpty() ?
+                        normalEvidence.getReadCounters(candidateIndex) : Lists.newArrayList();
 
-            if(sageVariant.isPassing())
-                passingTumorReadCounters.add(tumorReadCounters.get(0));
+                final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
 
-            validTumorReadCounters.add(tumorReadCounters.get(0));
+                SageVariant sageVariant = new SageVariant(candidate, normalReadCounters, tumorReadCounters);
+                mSageVariants.add(sageVariant);
+
+                // apply filters
+                if(filters.enabled())
+                    filters.applySoftFilters(sageVariant);
+
+                if(sageVariant.isPassing())
+                    passingTumorReadCounters.add(tumorReadCounters.get(0));
+
+                validTumorReadCounters.add(tumorReadCounters.get(0));
+            }
+
+            // phase variants now all evidence has been collected and filters applied
+            variantPhaser.assignLocalPhaseSets(passingTumorReadCounters, validTumorReadCounters);
+            variantPhaser.clearAll();
+
+            SG_LOGGER.trace("region({}) phasing {} variants", mRegion, mSageVariants.size());
+
+            mVariantDeduper.processVariants(mSageVariants);
+
+            mPerfCounters.get(PC_VARIANTS).stop();
+
+            finaliseResults();
         }
-
-        // phase variants now all evidence has been collected and filters applied
-        variantPhaser.assignLocalPhaseSets(passingTumorReadCounters, validTumorReadCounters);
-        variantPhaser.clearAll();
-
-        SG_LOGGER.trace("phasing {} variants", mSageVariants.size());
-
-        mVariantDeduper.processVariants(mSageVariants);
-
-        mPerfCounters.get(PC_VARIANTS).stop();
-
-        finaliseResults();
 
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
     }

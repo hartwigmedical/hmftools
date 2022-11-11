@@ -29,11 +29,11 @@ object TelomereMatcher
         val telomereTemplateLength = (seq.length * 1.2).toInt() + 6
 
         // we provide a template that is 1.5x as long as the original sequence
-        val alignOps = SequenceAligner.alignSubsequence(seq, generateTelomereTemplate(telomereTemplateLength, gRich))
+        val alignment: SequenceAligner.Alignment = SequenceAligner.alignSubsequence(seq, generateTelomereTemplate(telomereTemplateLength, gRich))
 
         // we work out longest stretch of telomere which satisfy our matching threshold
 
-        val scoreSeq = alignOps.map { op -> if (op == SequenceAligner.AlignOp.MATCH) 1.0 else 0.0 }.toDoubleArray()
+        val scoreSeq = alignment.alignOps.map { op -> if (op == SequenceAligner.AlignOp.MATCH) 1.0 else 0.0 }.toDoubleArray()
 
         val longestMatchRange = LongestSegment.longestSegmentAverage(scoreSeq, matchThreshold)
 
@@ -46,12 +46,12 @@ object TelomereMatcher
         var alignOpEnd = longestMatchRange.maximum + 1
 
         // we want to trim the ends, cause the longest stretch could well include some mismatches at either ends
-        while (alignOpStart < alignOpEnd && alignOps[alignOpStart] != SequenceAligner.AlignOp.MATCH)
+        while (alignOpStart < alignOpEnd && alignment.alignOps[alignOpStart] != SequenceAligner.AlignOp.MATCH)
         {
             ++alignOpStart
         }
 
-        while (alignOpStart < alignOpEnd && alignOps[alignOpEnd - 1] != SequenceAligner.AlignOp.MATCH)
+        while (alignOpStart < alignOpEnd && alignment.alignOps[alignOpEnd - 1] != SequenceAligner.AlignOp.MATCH)
         {
             --alignOpEnd
         }
@@ -69,9 +69,9 @@ object TelomereMatcher
         var seqIndex = -1
         var matchStart = -1
         var matchEnd = 0
-        for (i in alignOps.indices)
+        for (i in alignment.alignOps.indices)
         {
-            val alignOp = alignOps[i]
+            val alignOp = alignment.alignOps[i]
 
             if (alignOp != SequenceAligner.AlignOp.DELETION)
             {

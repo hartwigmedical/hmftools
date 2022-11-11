@@ -215,13 +215,9 @@ public class KnownFusionCache
 
         StringJoiner refDataStr = new StringJoiner(", ");
 
-        for(Map.Entry<KnownFusionType,List<KnownFusionData>> entry : mDataByType.entrySet())
-        {
-            if(!entry.getValue().isEmpty())
-            {
-                refDataStr.add(String.format("%s(%d)", entry.getKey(), entry.getValue().size()));
-            }
-        }
+        Arrays.stream(KnownFusionType.values())
+                .filter(x -> mDataByType.containsKey(x))
+                .forEach(x -> refDataStr.add(String.format("%s(%d)", x, mDataByType.get(x).size())));
 
         KF_LOGGER.info("loaded known fusion data: {}", refDataStr.toString());
         return true;

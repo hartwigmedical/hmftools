@@ -2,7 +2,8 @@ package com.hartwig.hmftools.purple.somatic;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.variant.VariantVcfTags;
+import com.hartwig.hmftools.common.variant.CommonVcfTags;
+import com.hartwig.hmftools.common.variant.PurpleVcfTags;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
@@ -27,7 +28,8 @@ public class SomaticPurityEnrichment
         mFactory.enrich(context);
     }
 
-    public VCFHeader enrichHeader(final VCFHeader template) {
-        return VariantVcfTags.purpleSomaticHeader(mPurpleVersion, template);
+    public VCFHeader enrichHeader(final VCFHeader template)
+    {
+        return PurpleVcfTags.addSomaticHeader(mPurpleVersion, template);
     }
 }

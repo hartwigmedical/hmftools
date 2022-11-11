@@ -37,6 +37,9 @@ import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 import static com.hartwig.hmftools.svprep.reads.ReadType.SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.RemoteJunction.addRemoteJunction;
 
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.S;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +56,8 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.BlacklistLocations;
 import com.hartwig.hmftools.svprep.HotspotCache;
 import com.hartwig.hmftools.svprep.SvConfig;
+
+import htsjdk.samtools.CigarElement;
 
 public class JunctionTracker
 {
@@ -814,6 +819,8 @@ public class JunctionTracker
 
         final ReadRecord juncRead = junctionData.topJunctionRead();
 
+        int readLength = read.readBases().length();
+
         if(junctionData.Orientation == POS_ORIENT)
         {
             if(!rightSoftClipped)
@@ -831,13 +838,28 @@ public class JunctionTracker
             if(abs(readRightPos - junctionData.Position) > filterConfig.MinSupportingReadDistance)
                 return false;
 
-            // must also overlap the junction
-            int scLength = rightSoftClipLength(read.record());
+            int scLength = 0;
+            int firstMatchLength = 0;
 
+            for(int i = read.cigar().getCigarElements().size() - 1 ; i >= 0; --i)
+            {
+                CigarElement element = read.cigar().getCigarElements().get(i);
+
+                if(element.getOperator() == S)
+                {
+                    scLength = element.getLength();
+                }
+                else if(element.getOperator() == M)
+                {
+                    firstMatchLength = element.getLength();
+                    break;
+                }
+            }
+
+            // must also overlap the junction
             if(read.start() > junctionData.Position || readRightPos + scLength < junctionData.Position)
                 return false;
 
-            int readLength = read.readBases().length();
             int readEndPosIndex = readLength - scLength - 1;
 
             int juncReadLength = juncRead.readBases().length();
@@ -848,7 +870,7 @@ public class JunctionTracker
             int junctionReadOffset = juncReadEndPosIndex - readEndPosIndex - endPosDiff;
 
             // test all overlapping bases - either from ref or soft-clip bases
-            int startIndex = readLength - scLength - max(read.end() - junctionData.Position, 0);
+            int startIndex = readLength - scLength - min(max(read.end() - junctionData.Position, 0), firstMatchLength);
 
             if(startIndex < 0)
                 return false;
@@ -885,6 +907,7 @@ public class JunctionTracker
         }
         else
         {
+            // negative orientation
             if(!leftSoftClipped)
                 return false;
 
@@ -906,7 +929,21 @@ public class JunctionTracker
             // junc: SC length -> start position
             // junc read index = sc length diff - position diff
 
-            int scLength = leftSoftClipLength(read.record());
+            int scLength = 0;
+            int firstMatchLength = 0;
+
+            for(CigarElement element : read.cigar().getCigarElements())
+            {
+                if(element.getOperator() == S)
+                {
+                    scLength = element.getLength();
+                }
+                else if(element.getOperator() == M)
+                {
+                    firstMatchLength = element.getLength();
+                    break;
+                }
+            }
 
             if(read.end() < junctionData.Position || readLeftPos - scLength > junctionData.Position)
                 return false;
@@ -917,7 +954,8 @@ public class JunctionTracker
             int junctionReadOffset = softClipDiff - posOffset;
             int juncReadLength = juncRead.readBases().length();
 
-            int endIndex = scLength + max(junctionData.Position - read.start(), 0);
+            // check matches from the SC bases up until the end of the first match element or junction/read diff
+            int endIndex = scLength + min(max(junctionData.Position - read.start(), 0), firstMatchLength);
 
             int highQualMismatches = 0;
             int baseMatches = 0;

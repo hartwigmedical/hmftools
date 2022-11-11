@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.vcf;
 
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 
 import java.util.Collections;
 import java.util.List;
@@ -10,7 +10,8 @@ import java.util.function.Consumer;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.variant.VariantVcfTags;
+import com.hartwig.hmftools.common.variant.CommonVcfTags;
+import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
@@ -55,8 +56,6 @@ public class VariantVCF implements AutoCloseable
     public static final String READ_CONTEXT_COUNT = "RC_CNT";
     private static final String READ_CONTEXT_COUNT_DESCRIPTION =
             "Read context counts [Full, Partial, Core, Realigned, Alt, Reference, Total]";
-    public static final String READ_CONTEXT_REPEAT_COUNT = "RC_REPC";
-    private static final String READ_CONTEXT_REPEAT_COUNT_DESCRIPTION = "Repeat count at read context";
     public static final String READ_CONTEXT_REPEAT_SEQUENCE = "RC_REPS";
     private static final String READ_CONTEXT_REPEAT_SEQUENCE_DESCRIPTION = "Repeat sequence at read context";
     public static final String READ_CONTEXT_MICRO_HOMOLOGY = "RC_MH";
@@ -148,7 +147,7 @@ public class VariantVCF implements AutoCloseable
 
     private static VCFHeader header(final String version, final List<String> allSamples)
     {
-        VCFHeader header = VariantVcfTags.addSageMetaData(new VCFHeader(Collections.emptySet(), allSamples));
+        VCFHeader header = SageVcfTags.addMetaData(new VCFHeader(Collections.emptySet(), allSamples));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 LOCAL_PHASE_SET_READ_COUNT, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, LPS_READ_COUNT_DESCRIPTION));
@@ -179,8 +178,6 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_INDEX, 1, VCFHeaderLineType.Integer, "Read context index"));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_LEFT_FLANK, 1, VCFHeaderLineType.String, "Read context left flank"));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_RIGHT_FLANK, 1, VCFHeaderLineType.String, "Read context right flank"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                READ_CONTEXT_REPEAT_COUNT,1, VCFHeaderLineType.Integer, READ_CONTEXT_REPEAT_COUNT_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 READ_CONTEXT_REPEAT_SEQUENCE, 1, VCFHeaderLineType.String, READ_CONTEXT_REPEAT_SEQUENCE_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(

@@ -1,5 +1,0 @@
-CurationType	treatment	treatmentApproach	matchEvent	direction	curatedTreatmentApproach
-TREATMENT_APPROACH_CURATION	Trastuzumab	A	BRAF amplification	RESPONSIVE	AA
-TREATMENT_APPROACH_CURATION	Trastuzumab	B	BRAF amplification	RESPONSIVE	BB
-TREATMENT_APPROACH_CURATION	Trastuzumab	C	BRAF amplification	RESPONSIVE	CC
-EVENT_TREATMENT_APPROACH_CURATION_IGNORE	Tras	C	BRAF amplification	RESPONSIVE

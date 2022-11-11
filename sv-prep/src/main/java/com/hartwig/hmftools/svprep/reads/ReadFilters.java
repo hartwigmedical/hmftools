@@ -168,9 +168,9 @@ public class ReadFilters
         if(mateUnmapped(record))
             return true;
 
-        if(properPair(record))
+        if(record.getReadPairedFlag())
         {
-            // interchromosomal
+            // inter-chromosomal
             if(!record.getReferenceName().equals(record.getMateReferenceName()))
                 return true;
 

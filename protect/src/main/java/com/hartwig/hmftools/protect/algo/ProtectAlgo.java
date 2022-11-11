@@ -29,7 +29,7 @@ import com.hartwig.hmftools.protect.evidence.PurpleSignatureEvidence;
 import com.hartwig.hmftools.protect.evidence.VariantEvidence;
 import com.hartwig.hmftools.protect.evidence.VirusEvidence;
 import com.hartwig.hmftools.protect.evidence.WildTypeEvidence;
-import com.hartwig.hmftools.serve.actionability.ActionableEvents;
+import com.hartwig.serve.datamodel.ActionableEvents;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

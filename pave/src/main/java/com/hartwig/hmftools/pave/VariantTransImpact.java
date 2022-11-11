@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.OTHER;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.effectsToString;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.variant;
 
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
@@ -12,6 +13,7 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.LilacConfig;
+import com.hartwig.hmftools.lilac.LilacConstants;
 import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
@@ -202,6 +204,26 @@ public class SomaticVariantAnnotation
         }
     }
 
+    private boolean inHlaCodingRegion(final VariantContextDecorator variant)
+    {
+        if(!variant.chromosome().equals(LilacConstants.HLA_CHR))
+            return false;
+
+        int posStart = variant.position();
+        int posEnd = posStart + variant.ref().length() - 1;
+
+        for(TranscriptData transData : mHlaTranscriptData.values())
+        {
+            if(!positionsOverlap(posStart, posEnd, transData.CodingStart, transData.CodingEnd))
+                continue;
+
+            // check that the variant covers any exon
+            if(transData.exons().stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x.Start, x.End)))
+                return true;
+        }
+
+        return false;
+    }
 
     private List<SomaticVariant> loadSomaticVariants()
     {
@@ -212,27 +234,25 @@ public class SomaticVariantAnnotation
 
         if(!mConfig.SomaticVariantsFile.isEmpty())
         {
-            int minPosition = mHlaTranscriptData.values().stream().mapToInt(x -> x.TransStart).min().orElse(0);
-            int maxPosition = mHlaTranscriptData.values().stream().mapToInt(x -> x.TransEnd).max().orElse(0);
-
             VCFFileReader fileReader = new VCFFileReader(new File(mConfig.SomaticVariantsFile), false);
 
-            final CloseableIterator<VariantContext> variantIter = fileReader.isQueryable() ?
-                    fileReader.query(HLA_CHR, minPosition, maxPosition) : fileReader.iterator();
+            final CloseableIterator<VariantContext> variantIter = fileReader.iterator();
 
             while(variantIter.hasNext())
             {
-                VariantContext variant = variantIter.next();
+                VariantContext variantContext = variantIter.next();
 
-                if(variant.isFiltered() && !variant.getFilters().contains(SomaticVariantFactory.PASS_FILTER))
+                if(variantContext.isFiltered() && !variantContext.getFilters().contains(SomaticVariantFactory.PASS_FILTER))
                     continue;
 
-                if(mHlaTranscriptData.values().stream().anyMatch(x -> positionWithin(variant.getStart(), x.TransStart, x.TransEnd)))
+                VariantContextDecorator variant = new VariantContextDecorator(variantContext);
+
+                if(inHlaCodingRegion(variant))
                 {
-                    VariantContextDecorator enriched = new VariantContextDecorator(variant);
                     variants.add(new SomaticVariant(
-                            enriched.gene(), enriched.chromosome(), (int)enriched.position(), enriched.ref(), enriched.alt(),
-                            enriched.filter(), enriched.canonicalCodingEffect(), enriched.context()));                }
+                            variant.gene(), variant.chromosome(), variant.position(), variant.ref(), variant.alt(),
+                            variant.filter(), variant.canonicalCodingEffect(), variant.context()));
+                }
             }
 
             LL_LOGGER.info("loaded {} HLA variants from file: {}", variants.size(), mConfig.SomaticVariantsFile);

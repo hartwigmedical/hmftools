@@ -48,6 +48,50 @@ public class SequenceAligner
         }
     }
 
+    private enum Mode
+    {
+        FULL,
+        SUBSEQUENCE,
+        OVERLAP
+    }
+
+    public static class Alignment
+    {
+        private final int mSeq1AlignStart;
+        private final int mSeq1AlignEnd;
+        private final int mSeq2AlignStart;
+        private final int mSeq2AlignEnd;
+
+        private final List<AlignOp> mAlignOps;
+        private final int mScore;
+
+        public Alignment(
+                int seq1AlignStart, int seq1AlignEnd,
+                int seq2AlignStart, int seq2AlignEnd,
+                List<AlignOp> alignOps, int score)
+        {
+            mSeq1AlignStart = seq1AlignStart;
+            mSeq1AlignEnd = seq1AlignEnd;
+            mSeq2AlignStart = seq2AlignStart;
+            mSeq2AlignEnd = seq2AlignEnd;
+            mAlignOps = alignOps;
+            mScore = score;
+        }
+
+        public int getSeq1AlignStart() { return mSeq1AlignStart; }
+        public int getSeq1AlignEnd() { return mSeq1AlignEnd; }
+        public int getSeq2AlignStart() { return mSeq2AlignStart; }
+        public int getSeq2AlignEnd() { return mSeq2AlignEnd; }
+
+        public int getSeq1AlignLength() { return mSeq1AlignEnd - mSeq1AlignStart; }
+        public int getSeq2AlignLength() { return mSeq2AlignEnd - mSeq2AlignStart; }
+
+        public List<AlignOp> getAlignOps() { return mAlignOps; }
+        public int getScore() { return mScore; }
+
+        public String getAlignOpsString() { return AlignOp.toString(mAlignOps); }
+    }
+
     public interface IScorer
     {
         // only allow using int, this is for speed optimisation
@@ -110,12 +154,12 @@ public class SequenceAligner
     // this speeds up the algorithm by more than 100%
     private static final class Matrix
     {
-        private int mNumRows;
-        private int mNumCols;
+        private final int mNumRows;
+        private final int mNumCols;
 
         // we use a int matrix with bit shift to make it fast
         // the first 30 bits is the score, the last 2 bits is the traceback move
-        private int[] mEntries;
+        private final int[] mEntries;
 
         public Matrix(int numRows, int numCols)
         {
@@ -149,31 +193,41 @@ public class SequenceAligner
     }
 
     @NotNull
-    public static List<AlignOp> alignSequence(@NotNull String seq, @NotNull String refSeq)
+    public static Alignment alignSequence(@NotNull String seq, @NotNull String refSeq)
     {
-        return alignSequenceImpl(seq, refSeq, false, new DefaultScorer());
+        return alignSequenceImpl(seq, refSeq, Mode.FULL, new DefaultScorer());
     }
 
     @NotNull
-    public static List<AlignOp> alignSequence(@NotNull String seq, @NotNull String refSeq, @NotNull IScorer scorer)
+    public static Alignment alignSequence(@NotNull String seq, @NotNull String refSeq, @NotNull IScorer scorer)
     {
-        return alignSequenceImpl(seq, refSeq, false, scorer);
+        return alignSequenceImpl(seq, refSeq, Mode.FULL, scorer);
     }
 
     @NotNull
-    public static List<AlignOp> alignSubsequence(@NotNull String seq, @NotNull String refSeq)
+    public static Alignment alignSubsequence(@NotNull String seq, @NotNull String refSeq)
     {
-        return alignSequenceImpl(seq, refSeq, true, new DefaultScorer());
+        return alignSequenceImpl(seq, refSeq, Mode.SUBSEQUENCE, new DefaultScorer());
     }
 
     @NotNull
-    public static List<AlignOp> alignSubsequence(@NotNull String seq, @NotNull String refSeq, @NotNull IScorer scorer)
+    public static Alignment alignSubsequence(@NotNull String seq, @NotNull String refSeq, @NotNull IScorer scorer)
     {
-        return alignSequenceImpl(seq, refSeq, true, scorer);
+        return alignSequenceImpl(seq, refSeq, Mode.SUBSEQUENCE, scorer);
+    }
+
+    public static Alignment alignOverlap(@NotNull String leftSeq, @NotNull String rightSeq)
+    {
+        return alignSequenceImpl(leftSeq, rightSeq, Mode.OVERLAP, new DefaultScorer());
+    }
+
+    public static Alignment alignOverlap(@NotNull String leftSeq, @NotNull String rightSeq, @NotNull IScorer scorer)
+    {
+        return alignSequenceImpl(leftSeq, rightSeq, Mode.OVERLAP, scorer);
     }
 
     @NotNull
-    private static List<AlignOp> alignSequenceImpl(@NotNull String seq, @NotNull String refSeq, boolean isSubsequence, @NotNull IScorer scorer)
+    private static Alignment alignSequenceImpl(@NotNull String seq, @NotNull String refSeq, Mode mode, @NotNull IScorer scorer)
     {
         int nRows = seq.length() + 1;
         int nCols = refSeq.length() + 1;
@@ -188,7 +242,7 @@ public class SequenceAligner
         {
             // Matrix.Entry e = matrix.at(0, y);
 
-            if (isSubsequence)
+            if (mode == Mode.SUBSEQUENCE)
             {
                 // NOTE: special case:
                 // we want to match it such that the ref seq end can extend beyond the end at no cost
@@ -209,7 +263,15 @@ public class SequenceAligner
         // first column, this corresponds to inserts at the start
         for (int x = 1; x < nRows; ++x)
         {
-            matrix.setEntry(x, 0, matrix.getScore(x - 1, 0) + scorer.scoreInsert(x - 1, 0), TRACEBACK_UP);
+            if (mode == Mode.OVERLAP)
+            {
+                // for overlap, insert is ok at the start for left sequence
+                matrix.setEntry(x, 0, matrix.getScore(x - 1, 0), TRACEBACK_UP);
+            }
+            else
+            {
+                matrix.setEntry(x, 0, matrix.getScore(x - 1, 0) + scorer.scoreInsert(x - 1, 0), TRACEBACK_UP);
+            }
         }
 
         // now we can fill up the rest of the matrix as required
@@ -226,10 +288,10 @@ public class SequenceAligner
                 i = x;
                 j = y - 1;
                 int leftScore;
-                if (isSubsequence && i == (nRows - 1))
+                if ((mode == Mode.SUBSEQUENCE || mode == Mode.OVERLAP) && i == (nRows - 1))
                 {
                     // NOTE: special case:
-                    // we want to match it such that the ref seq end can extend beyond the end at no cost
+                    // we want to match it such that the ref seq (or right seq) end can extend beyond the end at no cost
                     // i.e.
                     // TTAGACGTC----
                     // |||||||||
@@ -278,9 +340,16 @@ public class SequenceAligner
         }
 
         List<AlignOp> alignOps = new ArrayList<>();
+        int score = matrix.getScore(nRows - 1, nCols - 1);
+
+        int seq1AlignStart = -1;
+        int seq1AlignEnd = -1;
+        int seq2AlignStart = -1;
+        int seq2AlignEnd = -1;
 
         // now we apply trace back, we start from the last cell and go backwards
-        for (int x = nRows - 1, y = nCols - 1; x > 0 || y > 0;)
+        int x, y;
+        for (x = nRows - 1, y = nCols - 1; x > 0 && y > 0;)
         {
             switch (matrix.getTraceback(x, y))
             {
@@ -289,27 +358,40 @@ public class SequenceAligner
                     if (seq.charAt(x - 1) == refSeq.charAt(y - 1))
                     {
                         alignOps.add(AlignOp.MATCH);
-                    } else
+                    }
+                    else
                     {
                         alignOps.add(AlignOp.SUBSTITUTION);
                     }
+
+                    if (seq1AlignEnd == -1)
+                    {
+                        seq1AlignEnd = x;
+                        seq2AlignEnd = y;
+                    }
+
                     x--;
                     y--;
                     break;
                 case TRACEBACK_LEFT:
                     // deletion
                     y--;
-                    alignOps.add(AlignOp.DELETION);
+                    if (seq1AlignEnd != -1)
+                        alignOps.add(AlignOp.DELETION);
                     break;
                 case TRACEBACK_UP:
                     // insertion
                     x--;
-                    alignOps.add(AlignOp.INSERTION);
+                    if (seq1AlignEnd != -1)
+                        alignOps.add(AlignOp.INSERTION);
                     break;
                 case TRACEBACK_END:
                     break;
             }
         }
+
+        seq1AlignStart = x;
+        seq2AlignStart = y;
 
         Collections.reverse(alignOps);
 
@@ -324,7 +406,7 @@ public class SequenceAligner
             logAlignment(Level.TRACE, seq, refSeq, alignOps);
         }
 
-        return alignOps;
+        return new Alignment(seq1AlignStart, seq1AlignEnd, seq2AlignStart, seq2AlignEnd, alignOps, score);
     }
 
     public static void logWorkMatrix(@NotNull Level logLevel, @NotNull String seq, @NotNull String refSeq, @NotNull Matrix matrix)

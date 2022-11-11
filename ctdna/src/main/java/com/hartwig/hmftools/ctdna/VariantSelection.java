@@ -3,9 +3,20 @@ package com.hartwig.hmftools.ctdna;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_CODING_MUTATION;
+import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_SV;
 import static com.hartwig.hmftools.ctdna.CategoryType.REPORTABLE_MUTATION;
+import static com.hartwig.hmftools.ctdna.CategoryType.SUBCLONAL_MUTATION;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_MAPPABILITY_MIN;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_REPEAT_COUNT_MAX;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
+import static com.hartwig.hmftools.ctdna.SelectionStatus.EXCEEDS_COUNT;
+import static com.hartwig.hmftools.ctdna.SelectionStatus.FILTERED;
+import static com.hartwig.hmftools.ctdna.SelectionStatus.PROXIMATE;
+import static com.hartwig.hmftools.ctdna.SelectionStatus.SELECTED;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -15,7 +26,6 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.VectorUtils;
 
 public final class VariantSelection
 {
@@ -23,12 +33,9 @@ public final class VariantSelection
     {
         Collections.sort(variants, new VariantComparator());
 
-        if(config.WriteAll)
-            return variants;
-
         List<Variant> selectedVariants = Lists.newArrayList();
 
-        Map<String,List<Integer>> registeredLocations = Maps.newHashMap();
+        ProximateLocations registeredLocations = new ProximateLocations();
 
         int index = 0;
         int[] typeCounts = new int[CategoryType.values().length];
@@ -43,16 +50,27 @@ public final class VariantSelection
             {
                 canAdd = true;
             }
-            else if(variant.categoryType() == OTHER_SV)
+            else
             {
-                if(typeCounts[OTHER_SV.ordinal()] < config.NonReportableSvCount)
+                if(variant.categoryType() == OTHER_SV && typeCounts[OTHER_SV.ordinal()] >= config.NonReportableSvCount)
+                {
+                    canAdd = false;
+                    variant.setSelectionStatus(EXCEEDS_COUNT);
+                }
+                else if(variant.categoryType() == SUBCLONAL_MUTATION && typeCounts[SUBCLONAL_MUTATION.ordinal()] >= config.SubclonalCount)
+                {
+                    variant.setSelectionStatus(EXCEEDS_COUNT);
+                    canAdd = false;
+                }
+                else if(!variant.passNonReportableFilters(config))
+                {
+                    variant.setSelectionStatus(FILTERED);
+                    canAdd = false;
+                }
+                else
                 {
                     canAdd = true;
                 }
-            }
-            else
-            {
-                canAdd = true;
             }
 
             if(canAdd)
@@ -61,9 +79,16 @@ public final class VariantSelection
                 {
                     addVariant(variant, selectedVariants, typeCounts);
                 }
+                else
+                {
+                    variant.setSelectionStatus(PROXIMATE);
+                }
             }
 
-            int variantSequences = selectedVariants.stream().mapToInt(x -> x.sequenceCount()).sum();
+            if(!variant.isSelected() && config.WriteAll)
+                selectedVariants.add(variant);
+
+            int variantSequences = selectedVariants.stream().filter(x -> x.isSelected()).mapToInt(x -> x.sequenceCount()).sum();
             if(variantSequences >= config.ProbeCount)
                 break;
 
@@ -120,6 +145,7 @@ public final class VariantSelection
     private static void addVariant(final Variant variant, final List<Variant> selectedVariants, final int[] typeCounts)
     {
         selectedVariants.add(variant);
+        variant.setSelectionStatus(SELECTED);
         ++typeCounts[variant.categoryType().ordinal()];
     }
 
@@ -140,11 +166,23 @@ public final class VariantSelection
                 return first.reported() ? -1 : 1;
             }
 
-            if(first.copyNumber() != second.copyNumber())
-                return first.copyNumber() > second.copyNumber() ? -1 : 1;
+            if(first.categoryType() == OTHER_MUTATION || first.categoryType() == OTHER_CODING_MUTATION || first.categoryType() == SUBCLONAL_MUTATION)
+            {
+                // to randomise selection of the lowest priority variants (and avoid multiple selections from highly amplified regions)
+                // use the inverse of position as the final comparison
+                int locationHash1 = ((PointMutation)first).locationHash();
+                int locationHash2 = ((PointMutation)second).locationHash();
+
+                if(locationHash1 != locationHash2)
+                    return locationHash1 < locationHash2 ? -1 : 1;
+            }
+            else
+            {
+                if(first.copyNumber() != second.copyNumber())
+                    return first.copyNumber() > second.copyNumber() ? -1 : 1;
+            }
 
             return 0;
         }
     }
-
 }

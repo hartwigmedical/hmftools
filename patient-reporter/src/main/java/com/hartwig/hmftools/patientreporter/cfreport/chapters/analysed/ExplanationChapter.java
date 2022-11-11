@@ -45,8 +45,9 @@ public class ExplanationChapter implements ReportChapter {
 
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] { "The analysis is based on reference genome version GRCh37." }))
-                .add(createContentDivWithLinkThree("Transcripts used for reporting can be ", "downloaded",
-                        " and are generally the canonical transcripts as defined by Ensembl.",
+                .add(createContentDivWithLinkThree("The gene transcripts used for reporting can be downloaded from ",
+                        "https://storage.googleapis.com/hmf-public/OncoAct-Resources/latest_oncoact.zip",
+                        ". In general the used transcripts are the canonical transcripts as defined by Ensembl.",
                         "https://storage.googleapis.com/hmf-public/OncoAct-Resources/latest_oncoact.zip"))
                 .add(createContentDiv(new String[] {
                         "Variant detection in samples with lower tumor content is less sensitive. In case of a low tumor "
@@ -55,15 +56,19 @@ public class ExplanationChapter implements ReportChapter {
                                 + "whole genome data." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDivWithLinkFour("The Clinical Knowledgebase (CKB) ", "(https://ckbhome.jax.org/)",
+                .add(createContentDivWithLinkFour("The Clinical Knowledgebase (CKB) ",
+                        "(https://ckbhome.jax.org/)",
                         " is used to annotate "
                                 + "variants of all types with clinical evidence, with a hyperlink to the specific evidence items when "
                                 + "available. The evidence is gathered from CKB without further checks or interpretation. "
                                 + "This also means that if a certain evidence item or drug- biomarker is missing from the knowledgebase "
                                 + "it will also not be included in this report.\n More details about CKB can be found in their Glossary "
-                                + "Of Terms.", "(https://ckbhome.jax.org/about/glossaryOfTerms)", ""
-                                + "https://ckbhome.jax.org/", "https://ckbhome.jax.org/about/glossaryOfTerms"))
-                .add(createContentDivWithLinkThree("Clinical trials are matched against the iClusion database ", "https://iclusion.org",
+                                + "Of Terms.",
+                        "(https://ckbhome.jax.org/about/glossaryOfTerms)",
+                        "" + "https://ckbhome.jax.org/",
+                        "https://ckbhome.jax.org/about/glossaryOfTerms"))
+                .add(createContentDivWithLinkThree("Clinical trials are matched against the iClusion database ",
+                        "https://iclusion.org",
                         " including a link to the specific trial.\n",
                         "https://iclusion.org"))
                 .add(createContentDiv(new String[] {
@@ -74,15 +79,15 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] {
-                "The 'Read Depth' displays the raw number of reads supporting the variant versus the total "
-                        + "number of reads on the mutated position.",
-                "The 'Copies' field indicates the number of alleles present in the tumor on this particular mutated position.",
-                "The 'tVAF' field displays the variant allele frequency corrected for tumor purity.",
-                "The 'Biallelic' field indicates whether the variant is present across all alleles in the tumor "
-                        + "(and is including variants with loss-of-heterozygosity).",
-                "The 'Driver' field represents the driver probability on gene level and is calculated based on the HMF database. A "
-                        + "variant in a gene with High driver likelihood is likely to be positively selected  "
-                        + "during the oncogenic process." })));
+                        "The 'Read Depth' displays the raw number of reads supporting the variant versus the total "
+                                + "number of reads on the mutated position.",
+                        "The 'Copies' field indicates the number of alleles present in the tumor on this particular mutated position.",
+                        "The 'tVAF' field displays the variant allele frequency corrected for tumor purity.",
+                        "The 'Biallelic' field indicates whether the variant is present across all alleles in the tumor "
+                                + "(and is including variants with loss-of-heterozygosity).",
+                        "The 'Driver' field represents the driver probability on gene level and is calculated based on the HMF database. A "
+                                + "variant in a gene with High driver likelihood is likely to be positively selected  "
+                                + "during the oncogenic process." })));
 
         table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
 
@@ -106,9 +111,11 @@ public class ExplanationChapter implements ReportChapter {
                                 + "is reported as a partial gain.", })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDiv(new String[] { "The canonical, or otherwise longest transcript validly fused is reported." }))
-                .add(createContentDivWithLinkThree("Fusions are restricted to those in the HMF known fusion list and can be ",
-                        "downloaded", ". ",
+                .add(createContentDiv(new String[] {
+                        "The canonical, or otherwise longest transcript that is validly fused, is reported. " }))
+                .add(createContentDivWithLinkThree("Fusions are restricted to a selection of known fusions and can be downloaded from ",
+                        "https://storage.googleapis.com/hmf-public/OncoAct-Resources/latest_oncoact.zip ",
+                        ".",
                         "https://storage.googleapis.com/hmf-public/OncoAct-Resources/latest_oncoact.zip"))
                 .add(createContentDiv(new String[] {
                         "We additionally select fusions where one partner is promiscuous in either 5' or 3' position.",
@@ -143,12 +150,14 @@ public class ExplanationChapter implements ReportChapter {
                         + "- Percentage covered of the viral genome is >90%\n"
                         + "- Coverage of the virus DNA is higher than expected tumor mean coverage\n",
                         "Reporting of EBV is independent of tumor integration. This means that to be reportable, the viral EBV"
-                        + " genome must be covered >90% and the coverage of the virus must be higher than the expected clonal "
-                        + "mean coverage."})));
+                                + " genome must be covered >90% and the coverage of the virus must be higher than the expected clonal "
+                                + "mean coverage." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDivWithLinkThree("The details on the panel and for more links to advice on treatment adjustments "
-                                + "can be ", "downloaded", ".",
+                .add(createContentDivWithLinkThree(
+                        "The details on the pharmacogenetics haplotypes and advice on related treatment adjustments can be downloaded from ",
+                        "https://storage.googleapis.com/hmf-public/OncoAct-Resources/latest_oncoact.zip",
+                        ".",
                         "https://storage.googleapis.com/hmf-public/OncoAct-Resources/latest_oncoact.zip"))
                 .add(createContentDiv(new String[] {
                         "The called haplotypes for a gene are the simplest combination of haplotypes that perfectly explains all of the "
@@ -156,14 +165,18 @@ public class ExplanationChapter implements ReportChapter {
                                 + "observed variants, then 'Unresolved Haplotype' is called.",
                         "Wild type is assumed when no variants are observed." })));
         table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "HLA Class I types (HLA-A, HLA-B and HLA-C) are "
-                + "reported based on blood analysis, and also includes the tumor status of each of those alleles (somatic mutations, "
-                + "complete loss, and/or allelic imbalance)\n"})
+        table.addCell(TableUtil.createLayoutCell()
+                .add(createContentDiv(new String[] { "HLA Class I types (HLA-A, HLA-B and HLA-C) are "
+                        + "reported based on blood analysis, and also includes the tumor status of each of those alleles (somatic mutations, "
+                        + "complete loss, and/or allelic imbalance)\n" })
 
-                .add(createContentDivWithLinkThree("The IMGT/HLA database ", "https://www.ebi.ac.uk/ipd/imgt/hla/", " is used as a "
-                        + "reference set of Human MHC class I alleles. HLA typing is done to 4-digits, which means it uniquely "
-                        + "identifies a specific protein, but ignores synonymous variants (6 digits) and intronic differences "
-                        + "(8 digits).", "https://www.ebi.ac.uk/ipd/imgt/hla/"))));
+                        .add(createContentDivWithLinkThree("The IMGT/HLA database ",
+                                "https://www.ebi.ac.uk/ipd/imgt/hla/",
+                                " is used as a "
+                                        + "reference set of Human MHC class I alleles. HLA typing is done to 4-digits, which means it uniquely "
+                                        + "identifies a specific protein, but ignores synonymous variants (6 digits) and intronic differences "
+                                        + "(8 digits).",
+                                "https://www.ebi.ac.uk/ipd/imgt/hla/"))));
 
         reportDocument.add(table);
     }
@@ -175,11 +188,11 @@ public class ExplanationChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph createParaGraphWithLinkFour(@NotNull String string1, @NotNull String string2, @NotNull String string3,
-            @NotNull String string4,
-            @NotNull String link1, @NotNull String link2) {
-        return new Paragraph(string1).addStyle(ReportResources.subTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING)
-                .add(new Text(string2).addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(link1))).setFixedLeading(
-                        ReportResources.BODY_TEXT_LEADING)
+            @NotNull String string4, @NotNull String link1, @NotNull String link2) {
+        return new Paragraph(string1).addStyle(ReportResources.subTextStyle())
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
+                .add(new Text(string2).addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(link1)))
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add(new Text(string3).addStyle(ReportResources.subTextStyle()))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add(new Text(string4).addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(link2)))
@@ -207,8 +220,8 @@ public class ExplanationChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Div createContentDivWithLinkFour(@NotNull String string1, @NotNull String string2, @NotNull String string3, @NotNull String string4,
-            @NotNull String link1, @NotNull String link2) {
+    private static Div createContentDivWithLinkFour(@NotNull String string1, @NotNull String string2, @NotNull String string3,
+            @NotNull String string4, @NotNull String link1, @NotNull String link2) {
         Div div = new Div();
         div.add(createParaGraphWithLinkFour(string1, string2, string3, string4, link1, link2));
         return div;

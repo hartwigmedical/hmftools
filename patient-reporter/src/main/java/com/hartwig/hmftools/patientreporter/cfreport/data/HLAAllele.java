@@ -4,7 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.hla.LilacReporting;
+import com.hartwig.hmftools.common.hla.HlaReporting;
 import com.hartwig.hmftools.common.utils.DataUtil;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,10 +15,10 @@ public final class HLAAllele {
     }
 
     @NotNull
-    public static List<LilacReporting> sort(@NotNull List<LilacReporting> alleles) {
+    public static List<HlaReporting> sort(@NotNull List<HlaReporting> alleles) {
         return alleles.stream()
-                .sorted(Comparator.comparing((LilacReporting germlineAllele) -> germlineAllele.lilacGermlineAllele().gene())
-                        .thenComparing(germlineAllele -> germlineAllele.lilacGermlineAllele().germlineAllele()))
+                .sorted(Comparator.comparing((HlaReporting lilacReporting) -> lilacReporting.hlaAllele().gene())
+                        .thenComparing(germlineAllele -> germlineAllele.hlaAllele().germlineAllele()))
                 .collect(Collectors.toList());
     }
 

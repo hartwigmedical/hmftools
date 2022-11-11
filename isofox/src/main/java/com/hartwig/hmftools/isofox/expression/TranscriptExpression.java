@@ -22,6 +22,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -288,7 +289,9 @@ public class TranscriptExpression
 
         if(geneSetCountsData == null)
         {
-            ISF_LOGGER.warn("genes({}: {}) expected counts data not loaded", chrId, appendStrList(geneIds, ';'));
+            StringJoiner sj = new StringJoiner(";");
+            geneIds.forEach(x -> sj.add(x));
+            ISF_LOGGER.warn("genes({}: {}) expected counts data not loaded", chrId, sj);
             return;
         }
 

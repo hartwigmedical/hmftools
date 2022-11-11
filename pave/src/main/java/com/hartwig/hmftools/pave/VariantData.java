@@ -3,12 +3,13 @@ package com.hartwig.hmftools.pave;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE_FLAG;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.VariantType.MNP;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
-import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.variant.VariantVcfTags;
+import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -174,7 +175,7 @@ public class VariantData
         VariantData variant = new VariantData(chromosome, variantPosition, ref, alt);
         variant.setContext(variantContext);
 
-        List<Integer> localPhaseSets = variantContext.getAttributeAsIntList(VariantVcfTags.LOCAL_PHASE_SET, NO_LOCAL_PHASE_SET);
+        List<Integer> localPhaseSets = variantContext.getAttributeAsIntList(LOCAL_PHASE_SET, NO_LOCAL_PHASE_SET);
 
         variant.setVariantDetails(
                 !localPhaseSets.isEmpty() ? localPhaseSets.get(0) : NO_LOCAL_PHASE_SET,

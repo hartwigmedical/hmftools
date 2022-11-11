@@ -16,8 +16,8 @@ import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
 import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPredictionFactory;
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaReporting;
-import com.hartwig.hmftools.common.cuppa.interpretation.CuppaReportingFactory;
+import com.hartwig.hmftools.common.cuppa.interpretation.MolecularTissueOriginReporting;
+import com.hartwig.hmftools.common.cuppa.interpretation.MolecularTissueOriginReportingFactory;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
@@ -64,8 +64,8 @@ public class AnalysedPatientReporter {
                 patientPrimaryTumor,
                 config.allowDefaultCohortConfig());
 
-        String roseTcvFile = config.roseTsv();
-        String clinicalSummary = config.addRose() && roseTcvFile != null ? RoseConclusionFile.read(roseTcvFile) : Strings.EMPTY;
+        String roseTsvFile = config.roseTsv();
+        String clinicalSummary = config.addRose() && roseTsvFile != null ? RoseConclusionFile.read(roseTsvFile) : Strings.EMPTY;
 
         String specialRemark = reportData.specialRemarkModel().findSpecialRemarkForSample(sampleMetadata.tumorSampleId());
 
@@ -98,24 +98,24 @@ public class AnalysedPatientReporter {
 
         List<CuppaPrediction> predictions = CuppaPredictionFactory.create(cuppaEntries);
         CuppaPrediction best = predictions.get(0);
-        CuppaReporting cuppaReporting = CuppaReportingFactory.createCuppaReportingData(best);
-
+        MolecularTissueOriginReporting molecularTissueOriginReporting =
+                MolecularTissueOriginReportingFactory.createMolecularTissueOriginReportingData(best);
         LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
 
-        List<PeachGenotype> peachGenotypes = curateGeneName.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION)
+        List<PeachGenotype> pharmacogeneticsGenotypes = curateGeneName.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION)
                 ? Lists.newArrayList()
                 : loadPeachData(config.peachGenotypeTsv());
 
-        List<PeachGenotype> peachGenotypesOverrule = sampleReport.reportPharmogenetics() ? peachGenotypes : Lists.newArrayList();
+        List<PeachGenotype> pharmacogeneticsGenotypesOverrule = sampleReport.reportPharmogenetics() ? pharmacogeneticsGenotypes : Lists.newArrayList();
 
-        Map<String, List<PeachGenotype>> peachMap = Maps.newHashMap();
-        for (PeachGenotype peach : peachGenotypesOverrule) {
-            if (peachMap.containsKey(peach.gene())) {
-                List<PeachGenotype> curent = peachMap.get(peach.gene());
-                curent.add(peach);
-                peachMap.put(peach.gene(), curent);
+        Map<String, List<PeachGenotype>> pharmacogeneticsGenotypesMap = Maps.newHashMap();
+        for (PeachGenotype pharmacogeneticsGenotype : pharmacogeneticsGenotypesOverrule) {
+            if (pharmacogeneticsGenotypesMap.containsKey(pharmacogeneticsGenotype.gene())) {
+                List<PeachGenotype> curent = pharmacogeneticsGenotypesMap.get(pharmacogeneticsGenotype.gene());
+                curent.add(pharmacogeneticsGenotype);
+                pharmacogeneticsGenotypesMap.put(pharmacogeneticsGenotype.gene(), curent);
             } else {
-                peachMap.put(peach.gene(), Lists.newArrayList(peach));
+                pharmacogeneticsGenotypesMap.put(pharmacogeneticsGenotype.gene(), Lists.newArrayList(pharmacogeneticsGenotype));
             }
         }
 
@@ -126,12 +126,12 @@ public class AnalysedPatientReporter {
                 .specialRemark(specialRemark)
                 .pipelineVersion(pipelineVersion)
                 .genomicAnalysis(curateGeneName)
-                .cuppaReporting(
+                .molecularTissueOriginReporting(
                         curateGeneName.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION) || !curateGeneName.hasReliablePurity()
                                 ? null
-                                : cuppaReporting)
-                .cuppaPlot(config.cuppaPlot())
-                .circosPath(config.purpleCircosPlot())
+                                : molecularTissueOriginReporting)
+                .molecularTissueOriginPlotPath(config.cuppaPlot())
+                .circosPlotPath(config.purpleCircosPlot())
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectedReport())
                 .isCorrectedReportExtern(config.isCorrectedReportExtern())
@@ -139,7 +139,7 @@ public class AnalysedPatientReporter {
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .udiDi(reportData.udiDi())
-                .peachGenotypes(peachMap)
+                .pharmacogeneticsGenotypes(pharmacogeneticsGenotypesMap)
                 .reportDate(reportDate)
                 .isWGSreport(true)
                 .build();
@@ -188,8 +188,8 @@ public class AnalysedPatientReporter {
         GenomicAnalysis analysis = report.genomicAnalysis();
 
         LOGGER.info("Printing genomic analysis results for {}:", report.sampleReport().tumorSampleId());
-        if (report.cuppaReporting() != null) {
-            LOGGER.info(" Molecular tissue origin conclusion: {}", report.cuppaReporting().interpretCancerType());
+        if (report.molecularTissueOriginReporting() != null) {
+            LOGGER.info(" Molecular tissue origin conclusion: {}", report.molecularTissueOriginReporting().interpretCancerType());
         }
         LOGGER.info(" Somatic variants to report: {}", analysis.reportableVariants().size());
         if (report.sampleReport().germlineReportingLevel() != LimsGermlineReportingLevel.NO_REPORTING) {
@@ -202,9 +202,9 @@ public class AnalysedPatientReporter {
         LOGGER.info(" Homozygous disruptions to report: {}", analysis.homozygousDisruptions().size());
         LOGGER.info(" Gene disruptions to report: {}", analysis.geneDisruptions().size());
         LOGGER.info(" Viruses to report: {}", analysis.reportableViruses().size());
-        LOGGER.info(" Pharmacogenetics to report: {}", report.peachGenotypes().size());
+        LOGGER.info(" Pharmacogenetics to report: {}", report.pharmacogeneticsGenotypes().size());
 
-        LOGGER.info(" CHORD analysis HRD prediction: {} ({})", analysis.chordHrdValue(), analysis.chordHrdStatus());
+        LOGGER.info(" CHORD analysis HRD prediction: {} ({})", analysis.hrdValue(), analysis.hrdStatus());
         LOGGER.info(" Microsatellite indels per Mb: {} ({})", analysis.microsatelliteIndelsPerMb(), analysis.microsatelliteStatus());
         LOGGER.info(" Tumor mutational load: {} ({})", analysis.tumorMutationalLoad(), analysis.tumorMutationalLoadStatus());
         LOGGER.info(" Tumor mutational burden: {}", analysis.tumorMutationalBurden());

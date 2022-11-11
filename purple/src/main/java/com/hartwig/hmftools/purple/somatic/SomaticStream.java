@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
 

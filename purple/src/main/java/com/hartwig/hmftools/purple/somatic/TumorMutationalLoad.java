@@ -1,20 +1,16 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.min;
 import static java.lang.Math.pow;
-import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.GNOMAD_FREQ;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.getGenotypeAttributeAsDouble;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.CODING_BASES_PER_GENOME;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_CN_DIFF;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_CN_PERC_DIFF;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_CODING_BASE_FACTOR;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MAX_AF;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MAX_AF_DIFF;

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.plot;
 
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.VariantVcfTags.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN_INFO;
 
 import java.io.File;
 import java.io.IOException;

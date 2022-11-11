@@ -17,7 +17,6 @@ public final class EvidenceTestFactory {
 
     @NotNull
     public static PersonalizedEvidenceFactory create(@NotNull String doid) {
-
         List<DoidEdge> edges = Lists.newArrayList();
         edges.add(DoidParentsTest.createParent("299", "305"));
         edges.add(DoidParentsTest.createParent("305", "162"));

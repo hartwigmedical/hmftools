@@ -143,7 +143,14 @@ public enum HumanChromosome implements Chromosome
         }
         else
         {
-            return Integer.parseInt(chrTrimmed);
+            try
+            {
+                return Integer.parseInt(chrTrimmed);
+            }
+            catch(NumberFormatException e)
+            {
+                return -1;
+            }
         }
     }
 

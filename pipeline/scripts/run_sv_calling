@@ -1,0 +1,143 @@
+#!/bin/bash
+
+tools_dir=$1 && shift
+tumor_id=$1 && shift
+tumor_bam=$1 && shift
+reference_id=$1 && shift
+reference_bam=$1 && shift
+output_dir=$1 && shift
+gridss_vcf=$1 && shift
+ref_genome_version=$1 && shift
+ref_genome=$1 && shift
+sv_blacklist_bed=$1 && shift
+known_fusion_bed=$1 && shift
+gridss_blacklist_bed=$1 && shift
+gridss_config=$1 && shift
+threads=$1 && shift
+max_memory=$1 && shift
+
+if [[ ! -d "${output_dir}" ]]; then
+  mkdir ${output_dir}
+fi
+
+if [[ -f "${gridss_vcf}" ]]; then
+  echo "Skipping Gridss for ${tumor_id}, since VCF ${gridss_vcf} exists"
+  exit
+fi
+
+sv_prep_jar=${tools_dir}/sv-prep.jar
+gridss_script=${tools_dir}/gridss.run.sh
+gridss_jar=${tools_dir}/gridss.jar
+
+# run SvPrep
+sv_prep_write_types="JUNCTIONS;BAM;FRAGMENT_LENGTH_DIST"
+
+args="-sample ${tumor_id} \
+  -bam_file ${tumor_bam} \
+  -ref_genome ${ref_genome} \
+  -ref_genome_version ${ref_genome_version} \
+  -blacklist_bed ${sv_blacklist_bed} \
+  -known_fusion_bed ${known_fusion_bed} \
+  -write_types ${sv_prep_write_types} \
+  -output_dir ${output_dir} \
+  -threads ${threads}"
+
+echo "Running SvPrep on tumor with args: ${args}"
+
+java -Xmx${max_memory}G -jar ${sv_prep_jar} ${args}
+
+#echo ${args}
+#java -jar ${sv_prep_jar} ${args}
+
+sv_prep_tumor_bam=${output_dir}/${tumor_id}.sv_prep.bam
+sv_prep_tumor_sorted_bam=${output_dir}/${tumor_id}.sv_prep.sorted.bam
+
+samtools sort -O bam ${sv_prep_tumor_bam} -o ${sv_prep_tumor_sorted_bam}
+samtools index ${sv_prep_tumor_sorted_bam}
+# rm ${sv_prep_tumor_bam}
+
+if [ "${reference_id}" != "none" ]; then
+
+  tumor_junction_file=${output_dir}/${tumor_id}.sv_prep.junctions.csv
+
+  args="-sample ${reference_id} \
+    -bam_file ${reference_bam} \
+    -ref_genome ${ref_genome} \
+    -ref_genome_version ${ref_genome_version} \
+    -blacklist_bed ${sv_blacklist_bed} \
+    -known_fusion_bed ${known_fusion_bed} \
+    -existing_junction_file ${tumor_junction_file} \
+    -calc_fragment_length \
+    -output_dir ${output_dir} \
+  -  threads ${threads}"
+
+  echo "Running SvPrep on reference with args: ${args}"
+
+  java -Xmx${max_memory}G -jar ${sv_prep_jar} ${args}
+
+  sv_prep_ref_bam=${output_dir}/${reference_id}.sv_prep.bam
+  sv_prep_ref_sorted_bam=${output_dir}/${reference_id}.sv_prep.sorted.bam
+
+  samtools sort -O bam ${sv_prep_ref_bam} -o ${sv_prep_ref_sorted_bam}
+  samtools index ${sv_prep_ref_sorted_bam}
+  # rm ${sv_prep_ref_bam}
+
+fi
+
+# Next run Gridss
+gridss_raw_vcf=${output_dir}/${tumor_id}.gridss.raw.vcf.gz
+
+if [ "${reference_id}" != "none" ]; then
+  labels_arg="${reference_id},${tumor_id}"
+  bams_arg="${reference_bam},${tumor_bam}"
+  filtered_bams_arg="${sv_prep_ref_sorted_bam},${sv_prep_tumor_sorted_bam}"
+else
+  labels_arg="${tumor_id}"
+  bams_arg="${tumor_bam}"
+  filtered_bams_arg="${sv_prep_tumor_sorted_bam}"
+fi
+
+args="--steps all \
+  --workingdir ${output_dir}/gridss \
+  --reference ${ref_genome} \
+  --blacklist ${gridss_blacklist_bed} \
+  --configuration ${gridss_config} \
+  --labels ${labels_arg} \
+  --bams ${bams_arg} \
+  --filtered_bams ${filtered_bams_arg} \
+  --output ${gridss_raw_vcf} \
+  --jvmheap ${max_memory}G \
+  --threads ${threads}"
+
+
+# testing only: skip Gridss if its VCF exists
+if [[ ! -f "${gridss_raw_vcf}" ]]; then
+  echo "Running Gridss with args: ${args}"
+  ${gridss_script} --jar ${gridss_jar} ${args}
+
+  # log the gridss error file to standard-out if Gridss fails
+  if [[ ! -f "${gridss_raw_vcf}" ]]; then
+    echo "Gridss failed - see error log:"
+    cat ${output_dir}/gridss/gridss.full*.log
+    exit
+  fi
+
+else
+  echo "Skipping Gridss process"
+fi
+
+# Finally run SvPrep to annotate with reference depth
+
+args="-input_vcf ${gridss_raw_vcf} \
+  -output_vcf ${gridss_vcf} \
+  -samples ${labels_arg} \
+  -bam_files ${bams_arg} \
+  -ref_genome ${ref_genome} \
+  -ref_genome_version ${ref_genome_version} \
+  -threads ${threads}"
+
+echo "Running SvPrep reference depth with args: ${args}"
+
+java -Xmx${max_memory}G -cp ${sv_prep_jar} com.hartwig.hmftools.svprep.depth.DepthAnnotator ${args}
+
+

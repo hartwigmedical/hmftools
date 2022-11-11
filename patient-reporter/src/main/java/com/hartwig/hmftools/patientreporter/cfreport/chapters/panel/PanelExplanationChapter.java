@@ -46,14 +46,13 @@ public class PanelExplanationChapter implements ReportChapter {
 
         div.add(new Paragraph("Details on the report general ").addStyle(ReportResources.smallBodyHeadingStyle()));
         div.add(createContentParagraph("The variant calling of the sequencing data is based on reference genome version GRCh38."));
-        div.add(createContentDivWithLinkThree("The gene name list can be downloaded ", " https://storage.googleapis.com/hmf-public/OncoPanel-Resources/latest_oncopanel.zip",
+        div.add(createContentDivWithLinkThree("The gene name list can be downloaded from ", " https://storage.googleapis.com/hmf-public/OncoPanel-Resources/latest_oncopanel.zip",
                 "."));
-
         div.add(new Paragraph("").addStyle(ReportResources.smallBodyHeadingStyle()));
         div.add(new Paragraph("Details on the VCF file").addStyle(ReportResources.smallBodyHeadingStyle()));
-        div.add(createContentDivWithLinkThree("A short description of the headers present in the VCF file can be downloaded ",
+        div.add(createContentDivWithLinkThree("A short description of the headers present in the VCF file can be downloaded from ",
                 " https://storage.googleapis.com/hmf-public/OncoPanel-Resources/latest_oncopanel.zip",
-                ".."));
+                "."));
         return div;
     }
 
