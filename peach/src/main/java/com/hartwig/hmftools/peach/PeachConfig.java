@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 public class PeachConfig
 {
     public final String vcfFile;
+    public final String sampleName;
     public final String haplotypesTsv;
     public final String outputDir;
 
@@ -20,6 +21,7 @@ public class PeachConfig
     public final String targetRefGenome;
 
     private static final String VCF_FILE = "vcf_file";
+    private static final String SAMPLE_NAME = "sample_name";
     private static final String HAPLOTYPES_TSV = "haplotypes_tsv";
 
     private static final String DO_LIFT_OVER = "do_lift_over";
@@ -32,6 +34,7 @@ public class PeachConfig
     {
         vcfFile = cmd.getOptionValue(VCF_FILE);
         haplotypesTsv = cmd.getOptionValue(HAPLOTYPES_TSV);
+        sampleName = cmd.getOptionValue(SAMPLE_NAME);
 
         doLiftOver = cmd.hasOption(DO_LIFT_OVER);
         chainFile = cmd.getOptionValue(CHAIN_FILE);
@@ -44,7 +47,7 @@ public class PeachConfig
 
     public boolean isValid()
     {
-        if (vcfFile == null || haplotypesTsv == null || outputDir == null)
+        if (vcfFile == null || sampleName == null || haplotypesTsv == null || outputDir == null)
             return false;
         if (doLiftOver)
             return !(liftOverBed == null || picardJar == null || chainFile == null || targetRefGenome == null);
@@ -57,6 +60,7 @@ public class PeachConfig
         final Options options = new Options();
         options.addOption(VCF_FILE, true, "VCF input file");
         options.addOption(HAPLOTYPES_TSV, true, "Haplotype config file");
+        options.addOption(SAMPLE_NAME, true, "Name of sample in VCF to call haplotypes for");
 
         options.addOption(DO_LIFT_OVER, false, "Do liftover to 38");
         options.addOption(CHAIN_FILE, true, "USCS chain file for liftover, if liftover is needed");
