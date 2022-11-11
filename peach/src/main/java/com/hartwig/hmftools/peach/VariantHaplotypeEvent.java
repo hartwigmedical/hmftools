@@ -4,6 +4,10 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 public class VariantHaplotypeEvent implements HaplotypeEvent
 {
     public static final String EVENT_TYPE_STRING = "VAR";
@@ -60,5 +64,9 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
     public String id()
     {
         return this.id;
+    }
+
+    public List<Integer> getCoveredPositions(){
+        return IntStream.range(position, position + ref.length()).boxed().collect(Collectors.toList());
     }
 }

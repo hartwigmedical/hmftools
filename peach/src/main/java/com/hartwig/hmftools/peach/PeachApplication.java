@@ -65,11 +65,12 @@ public class PeachApplication
         List<Haplotype> haplotypes = loadHaplotypes(config.haplotypesTsv);
         Map<Chromosome, Set<Integer>> relevantVariantPositions = getRelevantVariantPositions(haplotypes);
 
+        String callInputVcf;
         if (config.doLiftOver)
         {
-            String liftOverVcf = getExtendedFileName(config.vcfFile, "liftover", ".vcf");
+            callInputVcf = getExtendedFileName(config.vcfFile, "liftover", ".vcf");
             String rejectVcf = getExtendedFileName(config.vcfFile, "reject", ".vcf");
-            doLiftover(liftOverVcf, rejectVcf);
+            doLiftover(callInputVcf, rejectVcf);
 
             PCH_LOGGER.info("read bed of important regions");
             Map<Chromosome, List<BaseRegion>> chromosomeToRelevantRegions = loadBedFile(config.liftOverBed);
@@ -89,10 +90,38 @@ public class PeachApplication
             //TODO: handle reference sequence differences V37 vs V38 properly
 
             //TODO: validation of haplotype list making sense (try to do this in place where it fails early, but don't have to redo it during actual haplotype calling.)
+        } else {
+            callInputVcf = config.vcfFile;
         }
+//        loadRelevantVariantHaplotypeEvents(callInputVcf, relevantVariantPositions);
 
         PCH_LOGGER.info("finished running PEACH");
     }
+
+//    private void loadRelevantVariantHaplotypeEvents(String vcf, Map<Chromosome, Set<Integer>> relevantVariantPositions)
+//    {
+//
+//        try(
+//                AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
+//                        vcf, new VCFCodec(), false)
+//        )
+//        {
+//            for(VariantContext variantContext : reader.iterator())
+//            {
+//                if(variantContext.isFiltered())
+//                    continue;
+//                Chromosome chromosome = HumanChromosome.fromString(variantContext.getContig());
+//                if(!relevantVariantPositions.containsKey(chromosome))
+//                    continue;
+//                VariantHaplotypeEvent event = VariantHaplotypeEvent.fromVariantContext
+//            }
+//        }
+//        catch(IOException e)
+//        {
+//            PCH_LOGGER.error("failed to read VCF file({}): {}", vcf, e.toString());
+//            System.exit(1);
+//        }
+//    }
 
     private void doLiftover(String liftOverVcf, String rejectVcf)
     {
@@ -286,7 +315,7 @@ public class PeachApplication
         return variantHaplotypeEvents.collect(
                 Collectors.groupingBy(
                         e -> e.chromosome,
-                        Collectors.mapping(e -> e.position, Collectors.toSet())
+                        Collectors.mapping(VariantHaplotypeEvent::getCoveredPositions, Collectors.flatMapping(Collection::stream, Collectors.toSet()))
                 )
         );
     }
