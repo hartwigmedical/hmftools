@@ -5,6 +5,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -12,8 +13,6 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
 {
     public static final String EVENT_TYPE_STRING = "VAR";
     public static final int ID_FIELD_COUNT = 5;
-    @NotNull
-    private final String id;
     @NotNull
     public final Chromosome chromosome;
     public final int position;
@@ -23,19 +22,12 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
     public final String alt;
 
     public VariantHaplotypeEvent(
-            @NotNull final String id,
             @NotNull final Chromosome chromosome,
             final int position,
             @NotNull final String ref,
             @NotNull final String alt
     )
     {
-        if (!id.startsWith(EVENT_TYPE_STRING))
-        {
-            throw new java.lang.IllegalArgumentException(String.format("Invalid ID for VariantHaplotypeEvent: %s", id));
-        }
-
-        this.id = id;
         this.chromosome = chromosome;
         this.position = position;
         this.ref = ref;
@@ -44,6 +36,12 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
 
     public static VariantHaplotypeEvent fromId(@NotNull String eventId)
     {
+        if (!eventId.startsWith(EVENT_TYPE_STRING))
+        {
+            String error_msg = String.format("Invalid ID for VariantHaplotypeEvent: %s", eventId);
+            throw new java.lang.IllegalArgumentException(error_msg);
+        }
+
         String[] splitEventId = eventId.split(HaplotypeEvent.EVENT_ID_DELIMITER);
         if (splitEventId.length != VariantHaplotypeEvent.ID_FIELD_COUNT)
         {
@@ -57,13 +55,27 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         int position = Integer.parseInt(splitEventId[2]);
         String ref = splitEventId[3];
         String alt = splitEventId[4];
-        return new VariantHaplotypeEvent(eventId, chromosome, position, ref, alt);
+        VariantHaplotypeEvent event = new VariantHaplotypeEvent(chromosome, position, ref, alt);
+        if (!event.id().equals(eventId)){
+            String error_msg = String.format(
+                    "VariantHaplotypeEvent derived from ID ID '%s' has different ID '%s'",
+                    eventId, event.id()
+            );
+            throw new java.lang.IllegalArgumentException(error_msg);
+        }
+        return event;
     }
 
     @NotNull
     public String id()
     {
-        return this.id;
+        return new StringJoiner(HaplotypeEvent.EVENT_ID_DELIMITER)
+                .add(EVENT_TYPE_STRING)
+                .add(chromosome.toString())
+                .add(Integer.toString(position))
+                .add(ref)
+                .add(alt)
+                .toString();
     }
 
     public List<Integer> getCoveredPositions(){
