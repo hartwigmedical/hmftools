@@ -2,6 +2,8 @@ package com.hartwig.hmftools.cider
 
 object CiderConstants
 {
+    const val ASSUMED_ANCHOR_BASE_LENGTH: Int = 30
+
     // following are constants for BLOSUM search
     const val MAX_BLOSUM_DIFF_PER_AA: Int = 3
     const val BLOSUM_SIMILARITY_SCORE_CONSTANT: Int = 6
@@ -18,7 +20,8 @@ object CiderConstants
 
     const val MIN_NON_SPLIT_READ_STRADDLE_LENGTH: Int = 30
 
-    enum class VjAnchorTemplateTsvColumn {
+    enum class VjAnchorTemplateTsvColumn
+    {
         gene,
         allele,
         chr,

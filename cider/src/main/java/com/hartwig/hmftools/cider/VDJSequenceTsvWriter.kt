@@ -85,7 +85,7 @@ object VDJSequenceTsvWriter
                 Column.cdr3Seq -> csvPrinter.print(vdj.cdr3Sequence)
                 Column.cdr3AA -> csvPrinter.print(CiderFormatter.cdr3AminoAcid(vdj))
                 Column.filter -> csvPrinter.print(vdjAnnotation.filters.joinToString(separator = ";"))
-                Column.minHighQualBaseReads -> csvPrinter.print(vdj.cdr3SupportMin)
+                Column.minHighQualBaseReads -> csvPrinter.print(vdjAnnotation.cdr3SupportMin)
                 Column.assignedReads -> csvPrinter.print(vdj.numReads)
                 Column.vAlignedReads -> csvPrinter.print(vdjAnnotation.vAlignedReads)
                 Column.jAlignedReads -> csvPrinter.print(vdjAnnotation.jAlignedReads)

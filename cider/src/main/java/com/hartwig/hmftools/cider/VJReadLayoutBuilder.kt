@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.layout.ReadLayout
-import com.hartwig.hmftools.cider.layout.ReadLayoutBuilder
 import htsjdk.samtools.SAMRecord
 import org.apache.logging.log4j.LogManager
+import java.util.*
+import kotlin.collections.ArrayList
 
 // helper class to convert from the outer VJ classes to the layout classes
 // create an interface to make it easier to test
@@ -29,7 +30,7 @@ interface IVJReadLayoutAdaptor
 //                                                          |___________________|
 //                                                                 J anchor
 // Most functions here rely on this.
-class VJReadLayoutAdaptor(private val trimBases: Int, private val minBaseQuality: Int) : IVJReadLayoutAdaptor
+class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality: Int) : IVJReadLayoutAdaptor
 {
     private class VjLayoutRead private constructor(
         val layoutReadSlice: ReadSlice,
@@ -56,16 +57,9 @@ class VJReadLayoutAdaptor(private val trimBases: Int, private val minBaseQuality
         }
     }
 
-    companion object
-    {
-        private val sLogger = LogManager.getLogger(VJReadLayoutAdaptor::class.java)
-    }
-
     fun readCandidateToLayoutRead(readCandidate: VJReadCandidate) : ReadLayout.Read?
     {
-        val slice = determineReadSlice(readCandidate.read, readCandidate.useReverseComplement,
-                                        readCandidate.vjGeneType.vj, readCandidate.anchorOffsetStart,
-                                        readCandidate.anchorOffsetEnd)
+        val slice = determineReadSlice(readCandidate.read, readCandidate.useReverseComplement)
 
         if (slice == null)
             return null
@@ -109,8 +103,7 @@ class VJReadLayoutAdaptor(private val trimBases: Int, private val minBaseQuality
     }
 
     // apply trim bases and polyG trimming
-    private fun determineReadSlice(read: SAMRecord, useReverseComplement: Boolean, vj: VJ,
-                            anchorOffsetStart: Int, anchorOffsetEnd: Int) : ReadSlice?
+    private fun determineReadSlice(read: SAMRecord, useReverseComplement: Boolean) : ReadSlice?
     {
         // work out the slice start and end
         var sliceStart: Int = trimBases
@@ -149,19 +142,6 @@ class VJReadLayoutAdaptor(private val trimBases: Int, private val minBaseQuality
             val sliceStartTmp = sliceStart
             sliceStart = read.readLength - sliceEnd
             sliceEnd = read.readLength - sliceStartTmp
-        }
-
-        if (vj == VJ.V)
-        {
-            // for V, we layout from the anchor start, left to right
-            // we are only interested in what comes after anchor start
-            sliceStart = Math.max(anchorOffsetStart, sliceStart)
-        }
-        else
-        {
-            // for J, we layout from the anchor last, right to left
-            // we are only interested in what comes before anchor end
-            sliceEnd = Math.min(anchorOffsetEnd, sliceEnd)
         }
 
         if ((sliceEnd - sliceStart) < 5)
@@ -231,50 +211,175 @@ class VJReadLayoutAdaptor(private val trimBases: Int, private val minBaseQuality
     {
         sLogger.info("building {} layouts from {} reads", geneType, readCandidates.size)
 
-        val layoutInputs = ArrayList<ReadLayout.Read>()
+        val layoutReads = ArrayList<ReadLayout.Read>()
 
         for (r in readCandidates)
         {
             val layoutRead = readCandidateToLayoutRead(r)
             if (layoutRead != null)
-                layoutInputs.add(layoutRead)
+                layoutReads.add(layoutRead)
         }
 
-        val layoutBuilder = ReadLayoutBuilder(
-            inputReads = layoutInputs,
-            minBaseQuality = minBaseQuality,
-            minMatchedBases = minMatchedBases,
-            minMatchRatio = minMatchRatio,
-            alignLeft = geneType.vj == VJ.V         // for V type we build from left, J we build from right
-        )
-        val readLayouts = layoutBuilder.build()
+        if (geneType.vj == VJ.V)
+        {
+            // we want to cluster them based on aligned position so the sequence is built up from
+            // longest to shortest, highest quality first
+            layoutReads.sortWith(
+                Collections.reverseOrder(
+                Comparator.comparingInt({ r: ReadLayout.Read -> r.alignedPosition + r.sequence.length })
+                    .thenComparingDouble({ r: ReadLayout.Read -> r.baseQualities.average() }) // handle the highest quality ones first
+                    .thenComparingInt({ r: ReadLayout.Read -> r.alignedPosition })
+                    .thenComparing({ r: ReadLayout.Read -> r.readKey.readName }) // lastly we use read Id just in case
+            ))
+        }
+        else
+        {
+            // start with sequences that are longest, highest quality first
+            layoutReads.sortWith(
+                Collections.reverseOrder(
+                Comparator.comparingInt({ r: ReadLayout.Read -> r.alignedPosition })
+                    .thenComparingDouble({ r: ReadLayout.Read -> r.baseQualities.average() }) // handle the highest quality ones first
+                    .thenComparingInt({ r: ReadLayout.Read -> r.alignedPosition + r.sequence.length })
+                    .thenComparing({ r: ReadLayout.Read -> r.readKey.readName }) // lastly we use read Id just in case
+            ))
+        }
+
+        sLogger.info("building layouts from {} reads", layoutReads.size)
+
+        val maxToCompareBeforeAlignedPos: Int = if (geneType.vj == VJ.V) CiderConstants.ASSUMED_ANCHOR_BASE_LENGTH else -1
+        val maxToCompareAfterAlignedPos: Int = if (geneType.vj == VJ.J) CiderConstants.ASSUMED_ANCHOR_BASE_LENGTH else -1
+
+        val readLayouts: MutableList<ReadLayout> = ArrayList()
+
+        // go through the read data list, and add one by one to the list of clusters
+        // if there are multiple clusters that matches, we choose the highest one
+        for (readData in layoutReads)
+        {
+            var matchedLayout: ReadLayout? = null
+
+            for (i in readLayouts.indices)
+            {
+                val readLayout = readLayouts[i]
+
+                if (matchedLayout != null && matchedLayout.reads.size > readLayout.reads.size)
+                {
+                    // no need to try this one
+                    continue
+                }
+
+                // test the read against this overlay
+                if (readMatchesLayout(readData, readLayout, minMatchedBases, minBaseQuality.toByte(),
+                        maxToCompareBeforeAlignedPos, maxToCompareAfterAlignedPos))
+                {
+                    //sLogger.info("match found")
+                    matchedLayout = readLayout
+                }
+            }
+
+            if (matchedLayout == null)
+            {
+                val layout = ReadLayout()
+                layout.addRead(readData, minBaseQuality.toByte())
+                readLayouts.add(layout)
+            }
+            else
+            {
+                // add to all layouts that match
+                // for (l in matchedLayouts)
+                //addToOverlay(l, readData, minBaseQuality)
+                matchedLayout.addRead(readData, minBaseQuality.toByte())
+            }
+        }
+
+        sLogger.info("built {} layouts from {} reads", readLayouts.size, layoutReads.size)
+
         return readLayouts
     }
 
-    // the layout that we normally build have anchor truncated
-    // this function build it back out
-    fun buildFullLayout(layout: ReadLayout) : ReadLayout
+    companion object
     {
-        val fullLayout = ReadLayout()
+        private val sLogger = LogManager.getLogger(VJReadLayoutBuilder::class.java)
 
-        // get all the reads, and also read slices, and then rebuild them
-        for (r in layout.reads)
+        //
+        fun readMatchesLayout(readData: ReadLayout.Read, layout: ReadLayout,
+                              minMatchedBases: Int, minBaseQuality: Byte,
+                              maxToCompareBeforeAlignedPos: Int, // -1 means compare all
+                              maxToCompareAfterAlignedPos: Int // -1 means compare all
+        ): Boolean
         {
-            val readCandidate = toReadCandidate(r)
-            val anchorTrimmedReadSlice = toLayoutReadSlice(r)
+            require(maxToCompareBeforeAlignedPos >= 0 || maxToCompareBeforeAlignedPos == -1)
+            require(maxToCompareAfterAlignedPos >= 0 || maxToCompareAfterAlignedPos == -1)
 
-            // now we want to create a read slice without the anchor trimming
-            val fullReadSlice: ReadSlice? = CiderUtils.determineReadSlice(readCandidate.read, readCandidate.useReverseComplement, trimBases)
+            // NOTE: alignedPosition is with respect to itself.
+            // i.e. for a layout it is the position from layout start
+            // for a read it is position from the read sequence start
+            // it can actually be negative or larger than the sequence
 
-            requireNotNull(fullReadSlice)
+            var startPosAdj = Math.min(layout.alignedPosition, readData.alignedPosition)
 
-            // now we want to make sure align position is the same
-            val alignPosition: Int = r.alignedPosition + anchorTrimmedReadSlice.sliceStart - fullReadSlice.sliceStart
+            if (maxToCompareBeforeAlignedPos != -1)
+            {
+                startPosAdj = Math.min(startPosAdj, maxToCompareBeforeAlignedPos)
+            }
 
-            // we need to make sure we put the aligned location correctly
-            fullLayout.addRead(VjLayoutRead(fullReadSlice, readCandidate, alignPosition), minBaseQuality.toByte())
+            // this will work also if the position is negative, i.e. before the sequence
+            val layoutOffsetStart: Int = layout.alignedPosition - startPosAdj
+            val readOffsetStart: Int = readData.alignedPosition - startPosAdj
+
+            var layoutEnd: Int = layout.length
+            var readEnd: Int = readData.readLength
+
+            if (maxToCompareAfterAlignedPos != -1)
+            {
+                layoutEnd = Math.min(layoutEnd, layout.alignedPosition + maxToCompareAfterAlignedPos)
+                readEnd = Math.min(readEnd, readData.alignedPosition + maxToCompareAfterAlignedPos)
+            }
+
+            // n is the number of bases overlap
+            val n: Int = Math.min(layoutEnd - layoutOffsetStart, readEnd - readOffsetStart)
+
+            if (n < minMatchedBases)
+                return false
+
+            var i1: Int = layoutOffsetStart
+            var i2: Int = readOffsetStart
+            var comparedCount: Int = 0
+            var matchCount: Int = 0
+
+            if (layoutOffsetStart + n > layout.length)
+            {
+                throw RuntimeException("read1StartOffset + n > read1Seq.length")
+            }
+
+            if (readOffsetStart + n > readData.readLength)
+            {
+                throw RuntimeException("read2StartOffset + n > read2Seq.length")
+            }
+
+            for (i in 0 until n)
+            {
+                val b1: Char = layout.highQualSequence[i1]
+                val b2: Char = readData.sequence[i2]
+
+                if (b1 == b2)
+                {
+                    // TODO: check with Peter
+                    ++comparedCount
+                    ++matchCount
+                }
+                else if ((readData.baseQualities[i2] >= minBaseQuality) &&
+                    b1 != 'N' && b2 != 'N')
+                {
+                    // if both high quality and no N then we say this is a real mismatch
+                    ++comparedCount
+                    return false
+                }
+
+                ++i1
+                ++i2
+            }
+
+            return true
         }
-
-        return fullLayout
     }
 }

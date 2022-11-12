@@ -31,7 +31,7 @@ object VJReadLayoutFile
 
     private fun writeLayouts(writer: BufferedWriter, geneType: VJGeneType, overlayList: List<ReadLayout>)
     {
-        val vjReadLayoutAdaptor = VJReadLayoutAdaptor(0, 0)
+        val vjReadLayoutAdaptor = VJReadLayoutBuilder(0, 0)
 
         // sort the overlays by number of reads
         val sortedOverlayList = overlayList.sortedByDescending({ o -> o.reads.size })
@@ -45,7 +45,7 @@ object VJReadLayoutFile
     private fun writeLayout(
         layout: ReadLayout,
         geneType: VJGeneType,
-        vjReadLayoutAdaptor: VJReadLayoutAdaptor,
+        vjReadLayoutAdaptor: VJReadLayoutBuilder,
         writer: BufferedWriter)
     {
         // count how many split reads

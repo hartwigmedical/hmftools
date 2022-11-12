@@ -72,7 +72,7 @@ class CiderApplication
         readBamFile(readProcessor, ciderGeneDatastore)
         writeCiderBam(readProcessor.allMatchedReads)
 
-        val vjReadLayoutAdaptor = VJReadLayoutAdaptor(mParams.numBasesToTrim, mParams.minBaseQuality)
+        val vjReadLayoutAdaptor = VJReadLayoutBuilder(mParams.numBasesToTrim, mParams.minBaseQuality)
         val layoutMap = buildLayouts(vjReadLayoutAdaptor, readProcessor.vjReadCandidates)
 
         val vdjBuilderBlosumSearcher = AnchorBlosumSearcher(
@@ -106,7 +106,7 @@ class CiderApplication
         val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher)
         val vdjAnnotations: List<VdjAnnotation> = vdjAnnotator.sortAndAnnotateVdjs(vdjSequences, primerMatchList)
 
-        writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjAnnotations, mParams.reportPartialSeq)
+        writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjAnnotations, true)
 
         val finish = Instant.now()
         val seconds = Duration.between(start, finish).seconds
@@ -146,7 +146,7 @@ class CiderApplication
     }
 
     private fun buildLayouts(
-        vjReadLayoutAdaptor: VJReadLayoutAdaptor,
+        vjReadLayoutAdaptor: VJReadLayoutBuilder,
         readCandidates: Collection<VJReadCandidate>
     ): Map<VJGeneType, List<ReadLayout>>
     {

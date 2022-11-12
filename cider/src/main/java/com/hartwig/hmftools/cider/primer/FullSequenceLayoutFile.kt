@@ -2,7 +2,7 @@ package com.hartwig.hmftools.cider.primer
 
 import com.hartwig.hmftools.cider.VDJSequence
 import com.hartwig.hmftools.cider.VJReadCandidate
-import com.hartwig.hmftools.cider.VJReadLayoutAdaptor
+import com.hartwig.hmftools.cider.VJReadLayoutBuilder
 import com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedWriter
 import htsjdk.samtools.SAMUtils
 import java.io.BufferedWriter
@@ -18,7 +18,7 @@ object FullSequenceLayoutFile
     }
 
     @JvmStatic
-    fun writeLayouts(outputDir: String, sampleId: String, vdjs: List<VDJSequence>, vjReadLayoutAdaptor: VJReadLayoutAdaptor)
+    fun writeLayouts(outputDir: String, sampleId: String, vdjs: List<VDJSequence>, vjReadLayoutAdaptor: VJReadLayoutBuilder)
     {
         val filePath = generateFilename(outputDir, sampleId)
 
@@ -33,9 +33,9 @@ object FullSequenceLayoutFile
     private fun writeLayout(
         writer: BufferedWriter,
         vdj: VDJSequence,
-        vjReadLayoutAdaptor: VJReadLayoutAdaptor)
+        vjReadLayoutAdaptor: VJReadLayoutBuilder)
     {
-        val layout = vjReadLayoutAdaptor.buildFullLayout(vdj.layout)
+        val layout = vdj.layout
         var sequence = layout.consensusSequence()
         var support = layout.highQualSupportString()
 

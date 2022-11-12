@@ -57,8 +57,8 @@ class CiderParams
     @Parameter(names = ["-write_filtered_bam"], description = "Write a output BAM file containing all CDR3 reads")
     var writeFilteredBam = false
 
-    @Parameter(names = ["-report_partial_seq"], description = "Report partially rearranged sequences (V only or J only)")
-    var reportPartialSeq = true
+    //@Parameter(names = ["-skip_partial_seq"], description = "Skip partially rearranged sequences (V only or J only)")
+    //var skipPartialSeq = false
 
     @Parameter(names = ["-num_trim_bases"], description = "Number of bases to trim on each side of reads")
     var numBasesToTrim = 0

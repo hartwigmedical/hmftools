@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.cider.primer
 
-import com.hartwig.hmftools.cider.VJReadLayoutAdaptor
+import com.hartwig.hmftools.cider.VJReadLayoutBuilder
 import com.hartwig.hmftools.cider.VDJSequence
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import org.apache.logging.log4j.LogManager
 
 // match the VDJ sequence with the primers
-class VdjPrimerMatcher(private val vjLayoutAdaptor: VJReadLayoutAdaptor, private val maxMismatch: Int)
+class VdjPrimerMatcher(private val vjLayoutAdaptor: VJReadLayoutBuilder, private val maxMismatch: Int)
 {
     fun matchVdjPrimer(vdjList: List<VDJSequence>, primerList: List<Primer>) : List<VdjPrimerMatch>
     {
@@ -15,7 +15,7 @@ class VdjPrimerMatcher(private val vjLayoutAdaptor: VJReadLayoutAdaptor, private
         for (vdj in vdjList)
         {
             // in order to match primer list, we need to build up the layout again
-            val fullLayout: ReadLayout = vjLayoutAdaptor.buildFullLayout(vdj.layout)
+            val fullLayout: ReadLayout = vdj.layout
 
             // now go through each list and see if anything matches
             val sequence = fullLayout.consensusSequence()

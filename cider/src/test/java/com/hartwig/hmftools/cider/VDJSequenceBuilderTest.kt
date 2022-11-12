@@ -75,7 +75,7 @@ class VDJSequenceBuilderTest
             Lists.immutable.of(TestUtils.ighJ1), 10)
 
         // now we should be able to build a VDJ sequence
-        val vdjSeq = vdjSeqBuilder.tryCompleteLayoutWithBlosum(VJGeneType.IGHV, layout, 0)
+        val vdjSeq = vdjSeqBuilder.tryCompleteLayoutWithBlosum(VJGeneType.IGHV, layout)
 
         assertNotNull(vdjSeq)
         assertNotNull(vdjSeq.vAnchor)
@@ -116,7 +116,7 @@ class VDJSequenceBuilderTest
             Lists.immutable.of(TestUtils.ighV1_18), 10)
 
         // now we should be able to build a VDJ sequence
-        val vdjSeq = vdjSeqBuilder.tryCompleteLayoutWithBlosum(VJGeneType.IGHJ, layout, 0)
+        val vdjSeq = vdjSeqBuilder.tryCompleteLayoutWithBlosum(VJGeneType.IGHJ, layout)
 
         assertNotNull(vdjSeq)
         assertNotNull(vdjSeq.vAnchor)
@@ -162,6 +162,136 @@ class VDJSequenceBuilderTest
         assertNotNull(vdjSeq)
         assertNotNull(vdjSeq.vAnchor)
         assertNotNull(vdjSeq.jAnchor)
+        assertEquals(VJGeneType.TRAV, vdjSeq.vAnchor!!.geneType)
+        assertEquals(VJGeneType.TRAJ, vdjSeq.jAnchor!!.geneType)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.jAnchor)
+        assertEquals("GAATACC", vdjSeq.vAnchorSequence)
+        assertEquals("GAGTG", vdjSeq.jAnchorSequence)
+        assertEquals("CACATCCTGA", vdjSeq.cdr3SequenceShort)
+    }
+
+    // building of overlapping layout where the J layout is on the upstream
+    // of V layout
+    @Test
+    fun testBuildVdjFromOverlapLayouts1()
+    {
+        val mockVjReadLayoutAdaptor = MockVJReadLayoutAdaptor()
+        val mockAnchorBlosumSearcher = MockAnchorBlosumSearcher()
+        val vdjSeqBuilder = VDJSequenceBuilder(
+            mockVjReadLayoutAdaptor, mockAnchorBlosumSearcher, MIN_BASE_QUALITY,
+            10)
+
+        // we create two layouts, a V layout and a J layout, and they overlap each other by 25 bases,
+        // and the J layout is actually on the "left" of V layout
+        // v layout:    GC-GAATACC-CACATCCTGA-GAGTG-TCAGA
+        // j layout: GATGC-GAATACC-CACATCCTGA-GAGTG-T
+        //                 |_____|            |___|
+        //            V anchor(align)    J anchor(align)
+        //
+        // V anchor is position 2-9 in the V layout, J anchor is position 22-27 in the J layout.
+        // The final VDJ is 32 bases long, V anchor at position 5-12, J anchor is position 22-27
+
+        val seq = "GATGC-GAATACC-CACATCCTGA-GAGTG-TCAGA".replace("-", "")
+        val vLayout = TestUtils.createLayout(seq.substring(3))
+        val jLayout = TestUtils.createLayout(seq.take(28))
+
+        mockVjReadLayoutAdaptor.anchorRangeMap[vLayout] = 2 until 9
+        mockVjReadLayoutAdaptor.anchorRangeMap[jLayout] = 22 until 27
+
+        // now we should be able to build a VDJ sequence
+        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ)
+
+        assertNotNull(vdjSeq)
+        assertNotNull(vdjSeq.vAnchor)
+        assertNotNull(vdjSeq.jAnchor)
+        assertEquals(seq, vdjSeq.layout.consensusSequence())
+        assertEquals(VJGeneType.TRAV, vdjSeq.vAnchor!!.geneType)
+        assertEquals(VJGeneType.TRAJ, vdjSeq.jAnchor!!.geneType)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.jAnchor)
+        assertEquals("GAATACC", vdjSeq.vAnchorSequence)
+        assertEquals("GAGTG", vdjSeq.jAnchorSequence)
+        assertEquals("CACATCCTGA", vdjSeq.cdr3SequenceShort)
+    }
+
+    // building of overlapping layout where the V layout contains J layout
+    @Test
+    fun testBuildVdjFromOverlapLayouts3()
+    {
+        val mockVjReadLayoutAdaptor = MockVJReadLayoutAdaptor()
+        val mockAnchorBlosumSearcher = MockAnchorBlosumSearcher()
+        val vdjSeqBuilder = VDJSequenceBuilder(
+            mockVjReadLayoutAdaptor, mockAnchorBlosumSearcher, MIN_BASE_QUALITY,
+            10)
+
+        // we create two layouts, a V layout and a J layout, and they overlap each other by 25 bases,
+        // and the J layout is actually on the "left" of V layout
+        // v layout: GATGC-GAATACC-CACATCCTGA-GAGTG-TCAGA
+        // j layout:         ATACC-CACATCCTGA-GAGTG-T
+        //                 |_____|            |___|
+        //            V anchor(align)    J anchor(align)
+        //
+        // V anchor is position 2-9 in the V layout, J anchor is position 22-27 in the J layout.
+        // The final VDJ is 32 bases long, V anchor at position 5-12, J anchor is position 22-27
+
+        val seq = "GATGC-GAATACC-CACATCCTGA-GAGTG-TCAGA".replace("-", "")
+        val vLayout = TestUtils.createLayout(seq)
+        val jLayout = TestUtils.createLayout(seq.substring(7, 28))
+
+        mockVjReadLayoutAdaptor.anchorRangeMap[vLayout] = 5 until 12
+        mockVjReadLayoutAdaptor.anchorRangeMap[jLayout] = 15 until 20
+
+        // now we should be able to build a VDJ sequence
+        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ)
+
+        assertNotNull(vdjSeq)
+        assertNotNull(vdjSeq.vAnchor)
+        assertNotNull(vdjSeq.jAnchor)
+        assertEquals(seq, vdjSeq.layout.consensusSequence())
+        assertEquals(VJGeneType.TRAV, vdjSeq.vAnchor!!.geneType)
+        assertEquals(VJGeneType.TRAJ, vdjSeq.jAnchor!!.geneType)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.jAnchor)
+        assertEquals("GAATACC", vdjSeq.vAnchorSequence)
+        assertEquals("GAGTG", vdjSeq.jAnchorSequence)
+        assertEquals("CACATCCTGA", vdjSeq.cdr3SequenceShort)
+    }
+
+    // building of overlapping layout where the J layout contains V layout
+    @Test
+    fun testBuildVdjFromOverlapLayouts4()
+    {
+        val mockVjReadLayoutAdaptor = MockVJReadLayoutAdaptor()
+        val mockAnchorBlosumSearcher = MockAnchorBlosumSearcher()
+        val vdjSeqBuilder = VDJSequenceBuilder(
+            mockVjReadLayoutAdaptor, mockAnchorBlosumSearcher, MIN_BASE_QUALITY,
+            10)
+
+        // we create two layouts, a V layout and a J layout, and they overlap each other by 25 bases,
+        // and the J layout is actually on the "left" of V layout
+        // v layout:     C-GAATACC-CACATCCTGA-GAG
+        // j layout: GATGC-GAATACC-CACATCCTGA-GAGTG-TCAGA
+        //                 |_____|            |___|
+        //            V anchor(align)    J anchor(align)
+        //
+        // V anchor is position 2-9 in the V layout, J anchor is position 22-27 in the J layout.
+        // The final VDJ is 32 bases long, V anchor at position 5-12, J anchor is position 22-27
+
+        val seq = "GATGC-GAATACC-CACATCCTGA-GAGTG-TCAGA".replace("-", "")
+        val vLayout = TestUtils.createLayout(seq.substring(4, 25))
+        val jLayout = TestUtils.createLayout(seq)
+
+        mockVjReadLayoutAdaptor.anchorRangeMap[vLayout] = 1 until 8
+        mockVjReadLayoutAdaptor.anchorRangeMap[jLayout] = 22 until 27
+
+        // now we should be able to build a VDJ sequence
+        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ)
+
+        assertNotNull(vdjSeq)
+        assertNotNull(vdjSeq.vAnchor)
+        assertNotNull(vdjSeq.jAnchor)
+        assertEquals(seq, vdjSeq.layout.consensusSequence())
         assertEquals(VJGeneType.TRAV, vdjSeq.vAnchor!!.geneType)
         assertEquals(VJGeneType.TRAJ, vdjSeq.jAnchor!!.geneType)
         assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)

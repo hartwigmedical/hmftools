@@ -141,6 +141,19 @@ class VDJSequence(
         return if (jAnchor == null) String() else sequence.substring(jAnchorBoundary!!)
     }
 
+    val vAnchorAA: String get()
+    {
+        val vAnchorSeq = vAnchorSequence
+
+        // codon align
+        return Codons.aminoAcidFromBases(vAnchorSeq.drop(vAnchorSeq.length % 3))
+    }
+
+    val jAnchorAA: String get()
+    {
+        return Codons.aminoAcidFromBases(jAnchorSequence)
+    }
+
     // does not include the C and W
     val cdr3SequenceShort: String get()
     {
@@ -157,7 +170,7 @@ class VDJSequence(
         return sequence
     }
 
-    private val cdr3Start: Int get()
+    val cdr3Start: Int get()
     {
         if (vAnchorBoundary != null)
         {
@@ -172,7 +185,7 @@ class VDJSequence(
         return 0
     }
 
-    private val cdr3End: Int get()
+    val cdr3End: Int get()
     {
         return Math.min((jAnchorBoundary ?: return length) + 3, length)
     }
@@ -192,14 +205,14 @@ class VDJSequence(
         return CiderUtils.countsToString(supportCounts)
     }
 
-    val cdr3SupportMin: Int get()
-    {
-        return supportCounts.slice(cdr3Start until cdr3End).minOrNull() ?: 0
-    }
-
     val isInFrame: Boolean get()
     {
-        return ((jAnchorBoundary ?: 0) % 3) == 0
+        if (vAnchor == null || jAnchor == null)
+        {
+            // must be in frame if either is null
+            return true
+        }
+        return ((jAnchorBoundary!! - vAnchorBoundary!!) % 3) == 0
     }
 
     fun getSupportAt(index: Int) : Map.Entry<Char, Int>

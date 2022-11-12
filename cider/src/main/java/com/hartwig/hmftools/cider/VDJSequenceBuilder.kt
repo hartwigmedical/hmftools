@@ -17,27 +17,15 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         // remember the layouts which are not used
         val oneSidedLayouts: ArrayListMultimap<VJGeneType, ReadLayout> = ArrayListMultimap.create()
 
-        var seqIndex = 0
         for ((geneType, layouts) in layoutMultimap)
         {
             for (l in layouts)
             {
-                val vdj = tryCompleteLayoutWithBlosum(geneType, l, seqIndex)
-
-                if (vdj != null)
-                {
-                    vdjList.add(vdj)
-                }
-                else
-                {
-                    oneSidedLayouts.put(geneType, l)
-                }
-
-                ++seqIndex
+                oneSidedLayouts.put(geneType, l)
             }
         }
 
-        // try to join together the orphaned layouts
+        // try to join together the layouts
         for (vGeneType: VJGeneType in oneSidedLayouts.keySet().filter({ vjGeneType -> vjGeneType.vj == VJ.V }))
         {
             val jGeneType: VJGeneType = vGeneType.pairedVjGeneType()
@@ -70,8 +58,22 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             }
         }
 
+        // for the remaining ones, we try to complete with blousm
+        val itr = oneSidedLayouts.entries().iterator()
+        while (itr.hasNext())
+        {
+            val (geneType, layout) = itr.next()
+            val vdj = tryCompleteLayoutWithBlosum(geneType, layout)
+
+            if (vdj != null)
+            {
+                vdjList.add(vdj)
+                itr.remove()
+            }
+        }
+
         // sort them by support min
-        vdjList.sortByDescending({ vdj -> vdj.cdr3SupportMin })
+        vdjList.sortByDescending({ vdj -> vdj.numReads })
 
         sLogger.info("found {} vdj sequences before merge", vdjList.size)
 
@@ -105,7 +107,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         }
 
         // sort again
-        vdjList.sortByDescending({ vdj -> vdj.cdr3SupportMin })
+        vdjList.sortByDescending({ vdj -> vdj.numReads })
 
         sLogger.info("{} vdj sequences after merge", vdjList.size)
 
@@ -116,7 +118,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     // we already have one side of the anchor
     // use the blosum searcher to find the other side
     // if it is found then build a VDJSequence
-    fun tryCompleteLayoutWithBlosum(layoutGeneType: VJGeneType, layout: ReadLayout, seqIndex: Int)
+    fun tryCompleteLayoutWithBlosum(layoutGeneType: VJGeneType, layout: ReadLayout)
             : VDJSequence?
     {
         sLogger.debug("try complete {} layout: {}", layoutGeneType, layout.consensusSequence())
@@ -148,7 +150,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         // find all the homolog sequences
         val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(
                 layoutSeq, targetAnchorType,
-                IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY,
+                IAnchorBlosumSearcher.Mode.DISALLOW_NEG_SIMILARITY,
                 searchStart, searchEnd)
 
         if (anchorBlosumMatch == null)
@@ -238,96 +240,84 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             return null
         }
 
-        val vLayoutSeq = vLayout.consensusSequence()
-        val jLayoutSeq = jLayout.consensusSequence()
+        val vLayoutSeq = vLayout.highQualSequence
+        val jLayoutSeq = jLayout.highQualSequence
 
-        var overlapBases: Int = -1
-        var matchedBases: Int = 0
+        val vjLayoutOverlap: VdjBuilderUtils.VjLayoutOverlap? = VdjBuilderUtils.findVjOverlap(vLayoutSeq, jLayoutSeq, minOverlappedBases)
 
-        // try multiple location to align them
-        for (i in minOverlappedBases until Math.min(vLayoutSeq.length, jLayoutSeq.length))
-        {
-            var seqMatch = true
-            matchedBases = 0
-
-            // check for overlap
-            for (j in 0 until i)
-            {
-                val vIndex = vLayoutSeq.length - i + j
-                val jIndex = j
-
-                val vBase = vLayoutSeq[vIndex]
-                val jBase = jLayoutSeq[jIndex]
-
-                if (vBase == jBase)
-                {
-                    ++matchedBases
-                }
-                else if (vBase != 'N' && jBase != 'N')
-                {
-                    seqMatch = false
-                    break
-                }
-            }
-
-            if (seqMatch)
-            {
-                // match found! now put them together into a VDJ sequence
-                overlapBases = i
-                break
-            }
-        }
-
-        if (overlapBases == -1)
+        if (vjLayoutOverlap == null)
             return null
 
-        // put the layouts together into one
-        // consider the following, V/J is the layout aligned positions, + are the overlap region:
-        // -----V------+++++++++------J------
-        //      |_____________________|   <---- this is the amount we need to shift the aligned position of the J layout reads
-        // And this amount is vLayoutLength - V + J - overlapBases
-        val alignedPositionShift = -(vLayout.length - vLayout.alignedPosition + jLayout.alignedPosition - overlapBases)
+        // consider the following
+        //                  v aligned pos    j aligned pos
+        //                      |                |
+        //  ---------------VVVVV-------------               v layout
+        //                  +++++++++++++++++----JJJJJ----  j layout
+        //  ---------------VVVVV-----------------JJJJJ----  combine layout
+        //  <--------------><--------------->
+        //   jLayoutOffset       overlap
+        //                      <----------------
+        //                     jAlignedPositionShift
+        //
+        // work out how much j aligned position needs to be shifted so that they are all aligned in the
+        // v aligned position
+        val jAlignedPositionShift = (vjLayoutOverlap.vLayoutOffset + vLayout.alignedPosition) -
+                                    (vjLayoutOverlap.jLayoutOffset + jLayout.alignedPosition)
 
-        val combinedVjLayout: ReadLayout = ReadLayout.merge(vLayout, jLayout, 0, alignedPositionShift, minBaseQuality)
+        val combinedVjLayout: ReadLayout = ReadLayout.merge(jLayout, vLayout, jAlignedPositionShift, 0, minBaseQuality)
         combinedVjLayout.id = "${vLayout.id},${jLayout.id}"
 
+        // next we want to work out where the anchor ranges are in the combined layout
         var vAnchorRange: IntRange? = vjLayoutAdaptor.getAnchorRange(VJ.V, vLayout)
         var jAnchorRange: IntRange? = vjLayoutAdaptor.getAnchorRange(VJ.J, jLayout)
 
         if (vAnchorRange == null || jAnchorRange == null)
             return null
 
-        sLogger.debug("overlap bases: {}, matched bases: {}, vLayout: {}, jLayout: {}, combinedLayout: {}",
-            overlapBases, matchedBases, vLayout.consensusSequence(), jLayout.consensusSequence(), combinedVjLayout.consensusSequence())
+        // now we use the aligned position of the combined layout
+        val vAnchorShift = combinedVjLayout.alignedPosition - vLayout.alignedPosition
+        vAnchorRange = vAnchorRange.first + vAnchorShift .. vAnchorRange.last + vAnchorShift
 
-        val layoutSliceStart = vAnchorRange.first
+        val jAnchorShift = combinedVjLayout.alignedPosition - jLayout.alignedPosition - jAlignedPositionShift
+        jAnchorRange = jAnchorRange.first + jAnchorShift .. jAnchorRange.last + jAnchorShift
 
-        // make sure we shift the anchor ranges as well now we trimmed the left
-        vAnchorRange = vAnchorRange.first - layoutSliceStart .. vAnchorRange.last - layoutSliceStart
+        sLogger.debug("overlap: {}, jAlignShift: {}, vLayout: {}, jLayout: {}, combinedLayout: {}",
+            vjLayoutOverlap, jAlignedPositionShift,
+            vLayout.consensusSequence(), jLayout.consensusSequence(), combinedVjLayout.consensusSequence())
 
-        // we need to shift the jAnchor range to be the range within layout
-        // ---VVVVVV------+++++++++------JJJJJJ---
-        //    |___________|  <---- this is the amount we need to add to the j anchor range
-        // which is vLayout length - layoutSliceStart - overlap bases
-        val jAnchorRangeShift = vLayout.length - layoutSliceStart - overlapBases
-        jAnchorRange = jAnchorRange.first + jAnchorRangeShift .. jAnchorRange.last + jAnchorRangeShift
+        val layoutSliceStart: Int
+        val layoutSliceEnd = jAnchorRange.last + 1 // inclusive to exclusive
 
-        val layoutSliceEnd = layoutSliceStart + jAnchorRange.last + 1 // inclusive to exclusive
-
-        val vAnchorBoundary = vAnchorRange.last + 1
-        val jAnchorBoundary = jAnchorRange.first
-
-        if (jAnchorBoundary - vAnchorBoundary < CiderConstants.MIN_CDR3_LENGTH_BASES)
-            return null
+        var vAnchorBoundary = vAnchorRange.last + 1
+        var jAnchorBoundary = jAnchorRange.first
 
         // construct a VDJ sequence
-        val vAnchor: VJAnchor
+        val vAnchor: VJAnchor?
         val jAnchor: VJAnchor
 
-        vAnchor = createVJAnchorByReadMatch(
-            anchorBoundary = vAnchorBoundary,
-            vjGeneType = vLayoutGeneType,
-            layout = vLayout)
+        if (jAnchorBoundary - vAnchorBoundary >= 0)
+        {
+            layoutSliceStart = vAnchorRange.first
+            vAnchorBoundary -= layoutSliceStart
+            jAnchorBoundary -= layoutSliceStart
+
+            vAnchor = createVJAnchorByReadMatch(
+                anchorBoundary = vAnchorBoundary,
+                vjGeneType = vLayoutGeneType,
+                layout = vLayout)
+        }
+        else
+        {
+            // if the V and J anchor overlap, we remove the V anchor
+            // reason is that J rearrangement happens more. But maybe we should rethink this
+
+            vAnchor = null
+            // we no longer trim to the v anchor start
+            layoutSliceStart = 0
+            sLogger.debug("VDJ vAnchorBoundary({}) < jAnchorBoundary({}), setting v anchor to null",
+                vAnchorBoundary, jAnchorBoundary)
+        }
+
         jAnchor = createVJAnchorByReadMatch(
             anchorBoundary = jAnchorBoundary,
             vjGeneType = jLayoutGeneType,
@@ -568,7 +558,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
             val jAnchorLength: Int = Math.max(vdj1.jAnchorLength, vdj2.jAnchorLength)
 
-            if (vdj1.cdr3SupportMin > vdj2.cdr3SupportMin)
+            if (vdj1.numReads > vdj2.numReads)
             {
                 vdjPrimary = vdj1
                 vdjSecondary = vdj2

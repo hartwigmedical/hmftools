@@ -21,7 +21,10 @@ object CiderFormatter
 
     fun vAnchorAA(vdj: VDJSequence): String
     {
-        return aminoAcidFromBases(vdj.vAnchorSequence)
+        val vAnchorSeq = vdj.vAnchorSequence
+
+        // codon align
+        return aminoAcidFromBases(vAnchorSeq.drop(vAnchorSeq.length % 3))
     }
 
     fun jAnchorAA(vdj: VDJSequence): String

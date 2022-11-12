@@ -15,20 +15,21 @@ data class VdjAnnotation(val vdj: VDJSequence,
                          val jAlignedReads: Int,
                          val vNonSplitReads: Int,
                          val jNonSplitReads: Int,
+                         val cdr3SupportMin: Int,
                          val vSimilarityScore: Int?,
                          val jSimilarityScore: Int?,
                          val vPrimerMatchCount: Int,
                          val jPrimerMatchCount: Int)
 
 // helper object to annotate the VDJ sequences that we found
-class VdjAnnotator(private val adaptor: VJReadLayoutAdaptor,
+class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
                    private val blosumSearcher: AnchorBlosumSearcher)
 {
     fun sortAndAnnotateVdjs(vdjSequences: List<VDJSequence>, primerMatches: List<VdjPrimerMatch>) : List<VdjAnnotation>
     {
         val sortedVdj = vdjSequences.sortedWith(
             Collections.reverseOrder(
-                Comparator.comparingInt({ vdj: VDJSequence -> vdj.cdr3SupportMin })
+                Comparator.comparingInt({ vdj: VDJSequence -> calcCdr3SupportMin(vdj) })
                     .thenComparingInt({ vdj: VDJSequence -> vdj.numReads }) // handle the highest quality ones first
                     .thenComparingInt({ vdj: VDJSequence -> vdj.length })
                     .thenComparing({ vdj: VDJSequence -> vdj.cdr3Sequence })
@@ -52,7 +53,7 @@ class VdjAnnotator(private val adaptor: VJReadLayoutAdaptor,
             {
                 // just make sure it has more support, this should be guaranteed by the
                 // previous sort
-                require(vdjWithMoreSupport.cdr3SupportMin >= vdjSeq.cdr3SupportMin)
+                require(calcCdr3SupportMin(vdjWithMoreSupport) >= calcCdr3SupportMin(vdjSeq))
             }
         }
 
@@ -77,6 +78,7 @@ class VdjAnnotator(private val adaptor: VJReadLayoutAdaptor,
         val jAlignedReads: Int = jAnchorByReadMatch?.numReads ?: 0
         val vNonSplitReads: Int = countNonSplitReads(vdj, VJ.V)
         val jNonSplitReads: Int = countNonSplitReads(vdj, VJ.J)
+        val cdr3SupportMin: Int = calcCdr3SupportMin(vdj)
         val filterReasons = annotateFilterReasons(vdj, isDuplicate, vAlignedReads, jAlignedReads, vNonSplitReads, jNonSplitReads)
 
         val vSimilarityScore: Int? = if (vdj.vAnchor != null) calcAnchorSimilarity(vdj, vdj.vAnchor) else null
@@ -88,10 +90,11 @@ class VdjAnnotator(private val adaptor: VJReadLayoutAdaptor,
         val jPrimerMatchCount = primerMatches.filter({ o -> o.vdj === vdj && o.primer.vj == VJ.J}).size
 
         return VdjAnnotation(vdj, filterReasons,
-            vAlignedReads, jAlignedReads,
-            vNonSplitReads, jNonSplitReads,
-            vSimilarityScore, jSimilarityScore,
-            vPrimerMatchCount, jPrimerMatchCount)
+            vAlignedReads = vAlignedReads, jAlignedReads = jAlignedReads,
+            vNonSplitReads = vNonSplitReads, jNonSplitReads = jNonSplitReads,
+            cdr3SupportMin = cdr3SupportMin,
+            vSimilarityScore = vSimilarityScore, jSimilarityScore = jSimilarityScore,
+            vPrimerMatchCount = vPrimerMatchCount, jPrimerMatchCount = jPrimerMatchCount)
     }
 
     fun findAnchorByBlosum(vdj: VDJSequence, vj: VJ) : AnchorBlosumMatch?
@@ -191,12 +194,30 @@ class VdjAnnotator(private val adaptor: VJReadLayoutAdaptor,
 
     companion object
     {
-        const val CDR3_FILTER_AA_MIN_LENGTH = 4
+        const val CDR3_FILTER_AA_MIN_LENGTH = 5
         const val CDR3_FILTER_AA_MAX_LENGTH = 40
         const val MAX_NONSPLIT_READS = 2
+        const val CDR3_ONE_SIDED_SUPPORT_MAX_LENGTH = 60
 
         private val sLogger = LogManager.getLogger(VdjAnnotator::class.java)
 
+        fun calcCdr3SupportMin(vdj: VDJSequence) : Int
+        {
+            val supportCounts = vdj.supportCounts
+            var supportSliceStart: Int = vdj.cdr3Start
+            var supportSliceEnd: Int = vdj.cdr3End
+
+            // if V or J anchor is missing we want to limit them to just 60 bases
+            if (vdj.vAnchor == null)
+            {
+                supportSliceStart = Math.max(supportSliceEnd - CDR3_ONE_SIDED_SUPPORT_MAX_LENGTH, 0)
+            }
+            else if (vdj.jAnchor == null)
+            {
+                supportSliceEnd = Math.min(supportSliceStart + CDR3_ONE_SIDED_SUPPORT_MAX_LENGTH, supportCounts.size)
+            }
+            return supportCounts.slice(supportSliceStart until supportSliceEnd).minOrNull() ?: 0
+        }
 
         fun calcAnchorSimilarity(vdj: VDJSequence, anchor: VJAnchor) : Int
         {

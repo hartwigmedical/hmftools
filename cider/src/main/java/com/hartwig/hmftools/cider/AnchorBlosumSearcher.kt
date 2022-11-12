@@ -88,8 +88,9 @@ class AnchorBlosumSearcher(
             for (i in startOffset until endOffset - 3)
             {
                 val aa = Codons.codonToAminoAcid(dnaSeq, i)
-                if (aa == CiderUtils.conservedAA(targetAnchorGeneType)) // we might revisit this case later
-                {
+
+                //if (aa == CiderUtils.conservedAA(targetAnchorGeneType)) // we might revisit this case later
+                //{
                     // this is a potential match
                     for (templateAnchorSeq in templateAnchorSequences)
                     {
@@ -105,7 +106,7 @@ class AnchorBlosumSearcher(
                             bestMatch = anchorHomolog
                         }
                     }
-                }
+                //}
             }
         }
         else if (targetAnchorGeneType.vj == VJ.V)
@@ -115,8 +116,8 @@ class AnchorBlosumSearcher(
             for (i in (endOffset - 1) downTo  startOffset + 3)
             {
                 val aa = Codons.codonToAminoAcid(dnaSeq, i - 3)
-                if (aa == CiderUtils.conservedAA(targetAnchorGeneType))
-                {
+                //if (aa == CiderUtils.conservedAA(targetAnchorGeneType))
+                //{
                     // V anchor ends with C
                     for (templateAnchorSeq in templateAnchorSequences)
                     {
@@ -131,7 +132,7 @@ class AnchorBlosumSearcher(
                             bestMatch = anchorHomolog
                         }
                     }
-                }
+                //}
             }
         }
 
