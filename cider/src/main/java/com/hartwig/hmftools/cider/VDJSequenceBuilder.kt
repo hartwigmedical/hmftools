@@ -29,36 +29,31 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         for (vGeneType: VJGeneType in oneSidedLayouts.keySet().filter({ vjGeneType -> vjGeneType.vj == VJ.V }))
         {
             val jGeneType: VJGeneType = vGeneType.pairedVjGeneType()
-            val vLayoutList: MutableList<ReadLayout> = oneSidedLayouts[vGeneType]
-            val jLayoutList: MutableList<ReadLayout> = oneSidedLayouts[jGeneType]
+            val vLayoutItr: MutableIterator<ReadLayout> = oneSidedLayouts[vGeneType].iterator()
 
             // we try each pair see if they can be aligned together
             // we find the best aligned pair and remove them and try again
-            var i = 0
-            while (i < vLayoutList.size)
+            while (vLayoutItr.hasNext())
             {
-                val vLayout: ReadLayout = vLayoutList[i]
-                var j = 0
-                while (j < jLayoutList.size)
+                val vLayout: ReadLayout = vLayoutItr.next()
+                val jLayoutItr: MutableIterator<ReadLayout> = oneSidedLayouts[jGeneType].iterator()
+                while (jLayoutItr.hasNext())
                 {
-                    val jLayout: ReadLayout = jLayoutList[j]
+                    val jLayout: ReadLayout = jLayoutItr.next()
                     val vdj: VDJSequence? = tryOverlapVJ(vLayout, jLayout, vGeneType, jGeneType)
 
                     if (vdj != null)
                     {
                         vdjList.add(vdj)
-                        vLayoutList.removeAt(i)
-                        --i
-                        jLayoutList.removeAt(j)
+                        vLayoutItr.remove()
+                        jLayoutItr.remove()
                         break
                     }
-                    ++j
                 }
-                ++i
             }
         }
 
-        // for the remaining ones, we try to complete with blousm
+        // for the remaining ones, we try to complete with blosum
         val itr = oneSidedLayouts.entries().iterator()
         while (itr.hasNext())
         {
@@ -72,7 +67,17 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             }
         }
 
-        // sort them by support min
+        // add all of the VDJ with only one side
+        for ((geneType, layout) in oneSidedLayouts.entries())
+        {
+            val vdj = tryCreateOneSidedVdj(geneType, layout)
+            if (vdj != null)
+            {
+                vdjList.add(vdj)
+            }
+        }
+
+        // sort them by number of reads
         vdjList.sortByDescending({ vdj -> vdj.numReads })
 
         sLogger.info("found {} vdj sequences before merge", vdjList.size)
@@ -94,16 +99,6 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         for (vjType in vjGeneToVdjMap.keySet())
         {
             vdjList.addAll(mergeIdentical(vjGeneToVdjMap.get(vjType), minBaseQuality))
-        }
-
-        // add all of the VDJ with only one side
-        for ((geneType, layout) in oneSidedLayouts.entries())
-        {
-            val vdj = tryCreateOneSidedVdj(geneType, layout)
-            if (vdj != null)
-            {
-                vdjList.add(vdj)
-            }
         }
 
         // sort again

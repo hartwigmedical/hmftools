@@ -197,7 +197,7 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
         const val CDR3_FILTER_AA_MIN_LENGTH = 5
         const val CDR3_FILTER_AA_MAX_LENGTH = 40
         const val MAX_NONSPLIT_READS = 2
-        const val CDR3_ONE_SIDED_SUPPORT_MAX_LENGTH = 60
+        const val CDR3_ONE_SIDED_SUPPORT_MAX_LENGTH = 45
 
         private val sLogger = LogManager.getLogger(VdjAnnotator::class.java)
 
