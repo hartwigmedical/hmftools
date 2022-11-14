@@ -115,7 +115,7 @@ Filter | Config | Default | Scope | Description
 ---|---|---|---|---
 minLength | min_length | 32 | DEL, DUP & INS | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called. 
 minSingleInsertLength | N/A | 16 | SGL | Minimum insert sequence length for a single breakend
-singleStrandBias | max_short_strand_bias | 0.05<SB<0.95 | SGL (excluding polyA tails) | Minimum/maximum proportion of reads from the forward strand supporting the single breakend
+singleStrandBias | max_short_strand_bias | 0.05<SB<0.95 | SGL (excluding polyA tails) | Minimum/maximum proportion of reads from the forward strand supporting the single breakend.   PMS2 is excluded from this rule due to the poor mappability and high homology
 maxHomLengthShortInv | max_hom_length_short_inv | 6 | INV(<50b) | Very short INV with high homology are a common sequencer artefact
 discordantPairSupport | N/A | TRUE | INV(<50b) | Breakpoints must have at least 1 read mapped at each end.  Filters if ASRP=RP=0.
 shortStrandBias | N/A | TRUE | INS,DEL & DUP(<1kb) | Short DEL and DUP must be strand balanced

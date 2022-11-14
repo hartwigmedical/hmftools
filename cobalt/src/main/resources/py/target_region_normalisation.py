@@ -10,7 +10,8 @@ def isY(chromosome: str):
 
 def load_exon_region_df(csv_path, region_size):
     # for each position we also want to add the name of the exon it belongs to, if any
-    exons_df = pd.read_csv(csv_path, names=['chromosome', 'start', 'end', 'exon'], header=None, sep='\t')
+    exons_df = pd.read_csv(csv_path, names=['chromosome', 'start', 'end', 'exon'], header=None, sep='\t',
+                           dtype={"chromosome": str})
 
     # in order to merge with the regions, we need to cut open the regions to smaller ones
     def exon_to_regions(exon_row):
@@ -41,7 +42,7 @@ def load_cobalt_ratio_df(sample_cfg, assume_diploid):
 
             cols_to_drop = ['referenceReadCount', 'referenceGCRatio', 'referenceGCDiploidRatio']
 
-            panel_df = pd.read_csv(targeted_cobalt_ratios, sep="\t").drop(columns=cols_to_drop)
+            panel_df = pd.read_csv(targeted_cobalt_ratios, sep="\t", dtype={"chromosome": str}).drop(columns=cols_to_drop)
             panel_df = panel_df.loc[panel_df['tumorGCRatio'] >= 0]
 
             if assume_diploid:
@@ -66,7 +67,7 @@ def load_cobalt_ratio_df(sample_cfg, assume_diploid):
                     raise RuntimeError(f"unknown gender: {gender}")
             else:
                 wgs_cobalt_ratios = sample["wgs_cobalt_ratios"]
-                wgs_df = pd.read_csv(wgs_cobalt_ratios, sep="\t").drop(columns=cols_to_drop)
+                wgs_df = pd.read_csv(wgs_cobalt_ratios, sep="\t", dtype={"chromosome": str}).drop(columns=cols_to_drop)
                 wgs_df = wgs_df.loc[wgs_df['tumorGCRatio'] >= 0]
 
             # merge them together
