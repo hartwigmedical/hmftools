@@ -119,7 +119,7 @@ public class TumorMutationalLoad
         if(isUnclearGermline)
             ++mUnclearVariants;
         else
-            mBurden++;
+            ++mBurden;
 
         if(variantImpact.WorstCodingEffect.equals(CodingEffect.MISSENSE))
             mLoad++;
