@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_DESCRIPTION;
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
 
@@ -22,7 +23,6 @@ public class HotspotEnrichment
 {
     // VCF FIELDS
     public static final int HOTSPOT_DISTANCE = 5;
-    private static final String HOTSPOT_DESCRIPTION = "Site is at a known hotspot location";
     private static final String NEAR_HOTSPOT_DESCRIPTION = "Variant within " + HOTSPOT_DISTANCE + " bases of hotspot";
 
     private final Multimap<Chromosome,VariantHotspot> mHotspots;

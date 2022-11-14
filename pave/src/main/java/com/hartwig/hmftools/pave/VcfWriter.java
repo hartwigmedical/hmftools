@@ -41,7 +41,7 @@ public class VcfWriter
 
     public final void writeHeader(
             final String paveVersion, boolean hasGnomadFrequency, boolean hasPon, boolean hasMappability, boolean hasClinvar,
-            boolean hasBlacklistings)
+            boolean hasBlacklistings, boolean hasReportability)
     {
         VCFHeader newHeader = new VCFHeader(mHeader.getFileHeader());
         newHeader.addMetaDataLine(new VCFHeaderLine("PaveVersion", paveVersion));
@@ -73,6 +73,9 @@ public class VcfWriter
         {
             Blacklistings.addHeader(newHeader);
         }
+
+        if(hasReportability)
+            Reportability.addHeader(newHeader);
 
         mWriter.writeHeader(newHeader);
     }

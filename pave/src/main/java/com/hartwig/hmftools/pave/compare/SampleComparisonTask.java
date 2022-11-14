@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.pave.GeneDataCache;
 import com.hartwig.hmftools.pave.ImpactClassifier;
+import com.hartwig.hmftools.pave.Reportability;
 import com.hartwig.hmftools.pave.VariantData;
 import com.hartwig.hmftools.pave.VariantImpactBuilder;
 import com.hartwig.hmftools.pave.VariantTransImpact;
@@ -37,8 +38,7 @@ public class SampleComparisonTask implements Callable
     private final ImpactClassifier mImpactClassifier;
     private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
-    private final ReportablePredicate mReportableOncoGenes;
-    private final ReportablePredicate mReportableTsgGenes;
+    private final Reportability mReportability;
 
     private final DatabaseAccess mDbAccess;
     private final ComparisonWriter mWriter;
@@ -67,8 +67,7 @@ public class SampleComparisonTask implements Callable
         mSampleIds = Lists.newArrayList();
         mImpactClassifier = new ImpactClassifier(refGenome);
         mImpactBuilder = new VariantImpactBuilder(mGeneDataCache);
-        mReportableOncoGenes = new ReportablePredicate(DriverCategory.ONCO, mGeneDataCache.getDriverPanel());
-        mReportableTsgGenes = new ReportablePredicate(DriverCategory.TSG, mGeneDataCache.getDriverPanel());
+        mReportability = new Reportability(mGeneDataCache.getDriverPanel());
 
         mTotalComparisons = 0;
         mMatchedCount = 0;
@@ -230,20 +229,7 @@ public class SampleComparisonTask implements Callable
 
     private boolean isReported(final VariantData variant, final VariantImpact variantImpact, final RefVariantData refVariant)
     {
-        if(variantImpact == null)
-            return false;
-
-        if(mReportableOncoGenes.isReportable(variantImpact, variant.type(), variant.repeatCount(), refVariant.IsHotspot))
-        {
-            return true;
-        }
-
-        if(mReportableTsgGenes.isReportable(variantImpact, variant.type(), variant.repeatCount(), refVariant.IsHotspot))
-        {
-            return true;
-        }
-
-        return false;
+        return mReportability.isReported(variant, variantImpact, refVariant.IsHotspot);
     }
 
     private void logComparison(

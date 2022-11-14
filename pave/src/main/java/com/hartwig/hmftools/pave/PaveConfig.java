@@ -36,6 +36,7 @@ public class PaveConfig
     public final boolean OnlyCanonical;
     public final boolean ReadPassOnly;
     public final boolean WritePassOnly;
+    public final boolean SetReportable;
 
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
@@ -51,6 +52,7 @@ public class PaveConfig
     private static final String WRITE_PASS_ONLY = "write_pass_only";
     private static final String WRITE_DIFFS = "write_diffs";
     private static final String WRITE_TRANSCRIPT_CSV = "write_transcript_csv";
+    private static final String SET_REPORTABLE = "set_reportable";
 
     public static final Logger PV_LOGGER = LogManager.getLogger(PaveConfig.class);
 
@@ -68,6 +70,7 @@ public class PaveConfig
         OnlyCanonical = cmd.hasOption(ONLY_CANONCIAL);
         ReadPassOnly = cmd.hasOption(READ_PASS_ONLY);
         WritePassOnly = cmd.hasOption(WRITE_PASS_ONLY);
+        SetReportable = cmd.hasOption(SET_REPORTABLE);
 
         OutputDir = parseOutputDir(cmd);
     }
@@ -101,6 +104,7 @@ public class PaveConfig
         options.addOption(ONLY_CANONCIAL, false, "Only check canonical transcripts");
         options.addOption(READ_PASS_ONLY, false, "Filter incoming variants to PASS only");
         options.addOption(WRITE_PASS_ONLY, false, "Only annotate passing variants");
+        options.addOption(SET_REPORTABLE, false, "Set reportable and hotspot flags");
 
         GnomadAnnotation.addCmdLineArgs(options);
         Mappability.addCmdLineArgs(options);

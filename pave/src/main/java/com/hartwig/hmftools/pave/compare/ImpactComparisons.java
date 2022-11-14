@@ -41,8 +41,7 @@ public class ImpactComparisons
         mConfig = new ComparisonConfig(cmd);
 
         mGeneDataCache = new GeneDataCache(
-                cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion, cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION),
-                true, false);
+                cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion, cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), false);
 
         mRefGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
         mDbAccess = createDatabaseAccess(cmd);

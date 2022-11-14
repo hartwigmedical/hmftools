@@ -57,6 +57,7 @@ public class PaveApplication
     private final Mappability mMappability;
     private final ClinvarAnnotation mClinvar;
     private final Blacklistings mBlacklistings;
+    private Reportability mReportability;
 
     private VcfWriter mVcfWriter;
     private BufferedWriter mCsvTranscriptWriter;
@@ -70,7 +71,7 @@ public class PaveApplication
 
         mGeneDataCache = new GeneDataCache(
                 cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion,
-                cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), false, true);
+                cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), true);
 
         mGnomadAnnotation = new GnomadAnnotation(cmd);
 
@@ -88,6 +89,8 @@ public class PaveApplication
         RefGenomeInterface refGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
 
         mImpactClassifier = new ImpactClassifier(refGenome);
+
+        mReportability = null;
 
         mVcfWriter = null;
         initialiseVcfWriter();
@@ -111,6 +114,8 @@ public class PaveApplication
             PV_LOGGER.error("gene data cache loading failed, exiting");
             System.exit(1);
         }
+
+        mReportability = new Reportability(mGeneDataCache.getDriverPanel());
 
         if((mPon.isEnabled() && !mPon.hasValidData()) || (mPonArtefacts.isEnabled() && !mPonArtefacts.hasValidData()))
         {
@@ -220,6 +225,9 @@ public class PaveApplication
 
         ponAnnotateAndFilter(variant);
 
+        if(mConfig.SetReportable)
+            mReportability.setReportability(variant, variantImpact);
+
         if(mConfig.WritePassOnly && !variant.filters().isEmpty())
             return;
 
@@ -323,7 +331,7 @@ public class PaveApplication
 
         mVcfWriter.writeHeader(
                 version.version(), mGnomadAnnotation.hasData(), mPon.isEnabled(), mMappability.hasData(),
-                mClinvar.hasData(), mBlacklistings.hasData());
+                mClinvar.hasData(), mBlacklistings.hasData(), mConfig.SetReportable);
     }
 
     private void initialiseTranscriptWriter()

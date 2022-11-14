@@ -41,8 +41,7 @@ public class GeneDataCache
     private int mCurrentNegStrandGeneIndex;
 
     public GeneDataCache(
-            final String ensemblDir, final RefGenomeVersion refGenVersion, final String driverGeneFile,
-            boolean requireMapping, boolean useIndexing)
+            final String ensemblDir, final RefGenomeVersion refGenVersion, final String driverGeneFile, boolean useIndexing)
     {
         mEnsemblDataCache = new EnsemblDataCache(ensemblDir, refGenVersion);
 

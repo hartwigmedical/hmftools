@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT;
 
 import org.jetbrains.annotations.NotNull;
 
