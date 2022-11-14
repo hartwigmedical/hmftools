@@ -306,7 +306,7 @@ if [ "${reference_id}" != "none" ]; then
   gripss_germline_dir=${sample_dir}/gripss_germline
 
   ${scripts_dir}/run_gripss_germline ${gripss_jar} \
-    ${tumor_id} \
+    ${reference_id} \
     ${gripss_germline_dir} ${gridss_vcf} \
     ${ref_genome_version} ${ref_genome} \
     ${sv_hotspot_file} ${sv_pon_file} ${sgl_pon_file}
@@ -351,7 +351,7 @@ if [ "${reference_id}" != "none" ]; then
   # Linx germline
   linx_germline_dir=${sample_dir}/linx_germline
 
-  sv_germline_vcf=${gripss_germline_dir}/${tumor_id}.gripss.filtered.germline.vcf.gz
+  sv_germline_vcf=${gripss_germline_dir}/${reference_id}.gripss.filtered.germline.vcf.gz
 
   ${scripts_dir}/run_linx_germline ${linx_jar} \
     ${tumor_id} \

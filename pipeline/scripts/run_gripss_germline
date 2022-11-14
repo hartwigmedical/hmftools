@@ -1,7 +1,7 @@
 #!/bin/bash
 
 gripss_jar=$1 && shift
-tumor_id=$1 && shift
+reference_id=$1 && shift
 output_dir=$1 && shift
 gridss_vcf=$1 && shift
 ref_genome_version=$1 && shift
@@ -29,7 +29,7 @@ fi
 echo "Running Gripss germline for ${tumor_id}, output dir ${output_dir}"
 
 java -jar ${gripss_jar} \
-  -sample ${tumor_id} \
+  -sample ${reference_id} \
   -ref_genome ${ref_genome} \
   -ref_genome_version ${ref_genome_version} \
   -known_hotspot_file ${known_hotspot_file} \
