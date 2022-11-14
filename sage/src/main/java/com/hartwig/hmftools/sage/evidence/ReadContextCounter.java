@@ -218,7 +218,7 @@ public class ReadContextCounter implements VariantHotspot
     }
 
     public ReadMatchType processRead(
-            final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, int numberOfEvents)
+            final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, int numberOfEvents, final String sampleId)
     {
         if(exceedsMaxCoverage())
             return UNRELATED;
@@ -320,6 +320,8 @@ public class ReadContextCounter implements VariantHotspot
                 double rawBaseQuality = qualityCalc.rawBaseQuality(this, readIndex, record);
                 mSupportAltBaseQualityTotal += rawBaseQuality;
 
+                logReadEvidence(sampleId, record, match.toString(), readIndex);
+
                 /*
                 SG_LOGGER.trace("var({}) readContext({}-{}-{}) support({}) read(idx={} posStart={} cigar={} id={}) readBases({})",
                         varString(), mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
@@ -343,6 +345,8 @@ public class ReadContextCounter implements VariantHotspot
 
             mCounts[RC_TOTAL]++;
             mQualities[RC_TOTAL] += quality;
+
+            logReadEvidence(sampleId, record, "REALIGNED", readIndex);
             return SUPPORT;
         }
 
@@ -384,7 +388,23 @@ public class ReadContextCounter implements VariantHotspot
                 mShortened++;
         }
 
+        String matchStr = rawContext.RefSupport ? "REF" : (rawContext.AltSupport ? "ALT" : "NONE");
+        logReadEvidence(sampleId, record, matchStr, readIndex);
+
         return matchType;
+    }
+
+    private void logReadEvidence(final String sampleId, final SAMRecord record, final String matchType, int readIndex)
+    {
+        if(sampleId == null)
+            return;
+
+        // Variant,MatchType,ReadId,ReadStart,Cigar,LeftCore,Index,RightCore,ReadIndex
+        SG_LOGGER.trace("READ_EV,{},{},{},{},{},{},{},{},{},{},{},{},{}",
+                sampleId, chromosome(), position(), ref(), alt(),
+                matchType, record.getReadName(), record.getAlignmentStart(), record.getCigarString(),
+                mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
+                mReadContext.indexedBases().RightCoreIndex, readIndex);
     }
 
     private RawContext createRawContextFromCoreMatch(final SAMRecord record)

@@ -4,8 +4,6 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsem
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.containsFlag;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
@@ -83,6 +81,7 @@ public class SageConfig
     public final String HighConfidenceBed;
     public final String CoverageBed;
     public final String OutputFile;
+    public final boolean LogEvidenceReads;
 
     public final String Version;
     public final int Threads;
@@ -118,6 +117,7 @@ public class SageConfig
     private static final String EXPECTED_READ_LENGTH = "read_length";
 
     private static final String SPECIFIC_POSITIONS = "specific_positions";
+    private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
     private static final String LOG_LPS_DATA = "log_lps_data";
     private static final String PERF_WARN_TIME = "perf_warn_time";
 
@@ -206,7 +206,13 @@ public class SageConfig
         QualityRecalibration = new QualityRecalibrationConfig(cmd);
 
         PanelOnly = containsFlag(cmd, PANEL_ONLY);
-        LogLpsData = containsFlag(cmd, LOG_LPS_DATA);
+        LogLpsData = cmd.hasOption(LOG_LPS_DATA);
+        LogEvidenceReads = !SpecificRegions.isEmpty() && cmd.hasOption(LOG_EVIDENCE_READS);
+
+        if(LogEvidenceReads)
+        {
+            SG_LOGGER.trace("READ_EV,SampleId,Chromosome,Position,Ref,Alt,MatchType,ReadId,ReadStart,Cigar,LeftCore,Index,RightCore,ReadIndex");
+        }
 
         PerfWarnTime = Double.parseDouble(cmd.getOptionValue(PERF_WARN_TIME, "0"));
 
@@ -326,6 +332,7 @@ public class SageConfig
         options.addOption(COVERAGE_BED, true, "Coverage is calculated for optionally supplied bed");
         options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
         options.addOption(LOG_LPS_DATA, false, "Log local phasing data");
+        options.addOption(LOG_EVIDENCE_READS, false, "Write evidence read data");
         options.addOption(PERF_WARN_TIME, true, "Log details of partitions taking longer than X seconds");
 
         commonOptions().getOptions().forEach(options::addOption);
@@ -398,5 +405,6 @@ public class SageConfig
         RefGenVersion = V37;
         Stringency = ValidationStringency.DEFAULT_STRINGENCY;
         AppendMode = false;
+        LogEvidenceReads = false;
     }
 }

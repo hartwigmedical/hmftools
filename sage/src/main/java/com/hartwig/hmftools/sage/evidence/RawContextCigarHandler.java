@@ -98,8 +98,6 @@ public class RawContextCigarHandler implements CigarHandler
             return;
 
         // check carefully when element is followed by an INDEL
-        //int elementLength = beforeIndel ? element.getLength() + 1 : element.getLength();
-        // int refPositionEnd = refPosition + elementLength - 1;
         int refPositionEnd = refPosition + element.getLength() - 1;
 
         if(refPosition <= mVariant.position() && mVariant.position() <= refPositionEnd)
@@ -110,6 +108,24 @@ public class RawContextCigarHandler implements CigarHandler
             int baseQuality = record.getBaseQualities()[variantReadIndex];
             boolean altSupport = mIsSNV && refPositionEnd >= mVariant.end() && matchesString(record, variantReadIndex, mVariant.alt());
             boolean refSupport = !altSupport && matchesFirstBase(record, variantReadIndex, mVariant.ref());
+
+            /*
+            boolean refSupport = false;
+
+            if(!altSupport)
+            {
+                if(mIsSNV)
+                {
+                    refSupport = matchesFirstBase(record, variantReadIndex, mVariant.ref());
+                }
+                else
+                {
+                    refSupport = matchesFirstBase(record, variantReadIndex, mVariant.ref());
+
+                }
+            }
+            */
+
             mResult = RawContext.alignment(variantReadIndex, altSupport, refSupport, baseQuality);
         }
     }
@@ -137,9 +153,8 @@ public class RawContextCigarHandler implements CigarHandler
         int refPositionEnd = refPosition + e.getLength();
         if(refPosition == mVariant.position())
         {
-            boolean altSupport = mIsDelete && e.getLength() == mVariant.ref().length() - 1 && matchesFirstBase(record,
-                    readIndex,
-                    mVariant.ref());
+            boolean altSupport = mIsDelete && e.getLength() == mVariant.ref().length() - 1
+                    && matchesFirstBase(record, readIndex, mVariant.ref());
             int baseQuality = altSupport ? avgBaseQuality(readIndex, record, 2) : 0;
             mResult = RawContext.indel(readIndex, altSupport, baseQuality);
         }
