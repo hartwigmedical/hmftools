@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
@@ -24,6 +25,7 @@ public class BamSlicer
     private final boolean mKeepDuplicates;
     private final boolean mKeepSupplementaries;
     private final boolean mKeepSecondaries;
+    private boolean mKeepHardClippedSecondaries; // when the -M was historically used in the BWA call
     private boolean mKeepUnmapped;
 
     private volatile boolean mConsumerHalt = false; // allow consumer to halt processing
@@ -40,9 +42,11 @@ public class BamSlicer
         mKeepSupplementaries = keepSupplementaries;
         mKeepSecondaries = keepSecondaries;
         mKeepUnmapped = false;
+        mKeepHardClippedSecondaries = false;
     }
 
     public void setKeepUnmapped() { mKeepUnmapped = true; }
+    public void setKeepHardClippedSecondaries() { mKeepHardClippedSecondaries = true; }
 
     public void haltProcessing() { mConsumerHalt = true; }
 
@@ -240,7 +244,10 @@ public class BamSlicer
             return false;
 
         if(record.isSecondaryAlignment() && !mKeepSecondaries)
-            return false;
+        {
+            if(!mKeepHardClippedSecondaries || !record.getCigar().containsOperator(CigarOperator.H))
+                return false;
+        }
 
         if(record.getSupplementaryAlignmentFlag() && !mKeepSupplementaries)
             return false;

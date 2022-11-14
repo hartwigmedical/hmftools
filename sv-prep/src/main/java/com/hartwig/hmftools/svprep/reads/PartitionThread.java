@@ -48,6 +48,7 @@ public class PartitionThread extends Thread
 
         mBamSlicer = new BamSlicer(0, false, true, false);
         mBamSlicer.setKeepUnmapped();
+        mBamSlicer.setKeepHardClippedSecondaries();
 
         start();
     }
