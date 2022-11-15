@@ -14,8 +14,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class EventGenerator {
 
-    static final String UPSTREAM_GENE_VARIANT = "upstream_gene_variant";
-
     private EventGenerator() {
     }
 
@@ -59,10 +57,6 @@ public final class EventGenerator {
 
         if (!coding.isEmpty()) {
             return codingEffect == SPLICE ? coding + " splice" : coding;
-        }
-
-        if (effect.equals(UPSTREAM_GENE_VARIANT)) {
-            return "upstream";
         }
 
         return effect;

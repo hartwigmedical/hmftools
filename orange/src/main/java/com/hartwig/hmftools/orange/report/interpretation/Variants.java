@@ -1,15 +1,19 @@
 package com.hartwig.hmftools.orange.report.interpretation;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
+
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
-import com.hartwig.hmftools.common.protect.EventGenerator;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.orange.report.ReportResources;
 
@@ -22,6 +26,8 @@ import org.jetbrains.annotations.NotNull;
 public final class Variants {
 
     private static final Logger LOGGER = LogManager.getLogger(Variants.class);
+
+    private static final String UPSTREAM_GENE_VARIANT = "upstream_gene_variant";
 
     private static final Set<String> PHASED_EFFECTS =
             Sets.newHashSet(VariantEffect.PHASED_INFRAME_DELETION.effect(), VariantEffect.PHASED_INFRAME_INSERTION.effect());
@@ -128,9 +134,7 @@ public final class Variants {
             addon = " (alt)";
         }
 
-        // Reuse PROTECT formatting for ORANGE report.
-        String event = EventGenerator.variantEvent(variant);
-        return variant.gene() + addon + " " + AminoAcids.forceSingleLetterProteinAnnotation(event);
+        return variant.gene() + addon + " " + AminoAcids.forceSingleLetterProteinAnnotation(variantEvent(variant));
     }
 
     @NotNull
@@ -161,5 +165,45 @@ public final class Variants {
         }
 
         return rnaAlleleReadCount + "/" + rnaTotalReadCount + vafAddon;
+    }
+
+    @NotNull
+    private static String variantEvent(@NotNull ReportableVariant variant) {
+        return variant.isCanonical() ? canonicalVariantEvent(variant) : nonCanonicalVariantEvent(variant);
+    }
+
+    @NotNull
+    private static String canonicalVariantEvent(@NotNull ReportableVariant variant) {
+        return toVariantEvent(variant.canonicalHgvsProteinImpact(),
+                variant.canonicalHgvsCodingImpact(),
+                variant.canonicalEffect(),
+                variant.canonicalCodingEffect());
+    }
+
+    @NotNull
+    private static String nonCanonicalVariantEvent(@NotNull ReportableVariant variant) {
+        return toVariantEvent(AltTranscriptReportableInfo.firstOtherHgvsProteinImpact(variant.otherReportedEffects()),
+                AltTranscriptReportableInfo.firstOtherHgvsCodingImpact(variant.otherReportedEffects()),
+                AltTranscriptReportableInfo.firstOtherEffects(variant.otherReportedEffects()),
+                AltTranscriptReportableInfo.firstOtherCodingEffect(variant.otherReportedEffects()));
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static String toVariantEvent(@NotNull String protein, @NotNull String coding, @NotNull String effect,
+            @NotNull CodingEffect codingEffect) {
+        if (!protein.isEmpty() && !protein.equals("p.?")) {
+            return protein;
+        }
+
+        if (!coding.isEmpty()) {
+            return codingEffect == SPLICE ? coding + " splice" : coding;
+        }
+
+        if (effect.equals(UPSTREAM_GENE_VARIANT)) {
+            return "upstream";
+        }
+
+        return effect;
     }
 }
