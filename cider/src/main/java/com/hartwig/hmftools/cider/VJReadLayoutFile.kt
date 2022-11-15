@@ -74,8 +74,7 @@ object VJReadLayoutFile
 
         writer.write("${layout.id} type: ${geneType}, read count: ${layout.reads.size}, split(5) read count: ${numSplitReads5Bases}, ")
         writer.write("split(10) read count: ${numSplitReads10Bases}, ")
-        writer.write("AA: ${aa}, ")
-        writer.write("aligned: ${layout.alignedPosition}\n")
+        writer.write("AA: ${aa}\n")
         writer.write("    ${sequence}\n")
         writer.write("    ${support}\n")
 
@@ -85,7 +84,7 @@ object VJReadLayoutFile
             val readPadding = Math.max(layout.alignedPosition - r.alignedPosition, 0)
             val paddedSeq = " ".repeat(readPadding) + r.sequence
             val paddedQual = " ".repeat(readPadding) + SAMUtils.phredToFastq(r.baseQualities)
-            writer.write("    read: ${read.read}, aligned: ${r.alignedPosition}\n")
+            writer.write("    read: ${read.read}\n")
             writer.write("    ${insertDashes(paddedSeq, anchorRange)}\n")
             writer.write("    ${insertDashes(paddedQual, anchorRange)}\n")
         }

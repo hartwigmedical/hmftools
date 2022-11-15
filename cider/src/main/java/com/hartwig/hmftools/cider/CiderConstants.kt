@@ -4,6 +4,10 @@ object CiderConstants
 {
     const val ASSUMED_ANCHOR_BASE_LENGTH: Int = 30
 
+    // for partially rearranged VDJs, we designate that the "interesting"
+    // sequence is 60 bases before the J anchor or 60 bases after the V anchor
+    const val PARTIAL_VDJ_UNANCHORED_LENGTH_BASES: Int = 60
+
     // following are constants for BLOSUM search
     const val MAX_BLOSUM_DIFF_PER_AA: Int = 3
     const val BLOSUM_SIMILARITY_SCORE_CONSTANT: Int = 6

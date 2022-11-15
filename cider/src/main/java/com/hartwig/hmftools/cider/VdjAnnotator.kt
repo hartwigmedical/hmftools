@@ -182,7 +182,7 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
                         ++nonSplitReadCount
 
                         // this read straddles a v anchor boundary
-                        sLogger.debug("read({}) cigar({}) revcomp({}), straddles {} boundary, align offset({}:{}), boundary offset({})",
+                        sLogger.trace("read({}) cigar({}) revcomp({}), straddles {} boundary, align offset({}:{}), boundary offset({})",
                             samRecord, samRecord.cigarString, layoutReadSlice.reverseComplement, vj,
                             alignRangeInReadSlice.left, alignRangeInReadSlice.right, readSliceAnchorBoundary)
                     }
@@ -197,7 +197,6 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
         const val CDR3_FILTER_AA_MIN_LENGTH = 5
         const val CDR3_FILTER_AA_MAX_LENGTH = 40
         const val MAX_NONSPLIT_READS = 2
-        const val CDR3_ONE_SIDED_SUPPORT_MAX_LENGTH = 45
 
         private val sLogger = LogManager.getLogger(VdjAnnotator::class.java)
 
@@ -210,11 +209,11 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
             // if V or J anchor is missing we want to limit them to just 60 bases
             if (vdj.vAnchor == null)
             {
-                supportSliceStart = Math.max(supportSliceEnd - CDR3_ONE_SIDED_SUPPORT_MAX_LENGTH, 0)
+                supportSliceStart = Math.max(supportSliceEnd - CiderConstants.PARTIAL_VDJ_UNANCHORED_LENGTH_BASES, 0)
             }
             else if (vdj.jAnchor == null)
             {
-                supportSliceEnd = Math.min(supportSliceStart + CDR3_ONE_SIDED_SUPPORT_MAX_LENGTH, supportCounts.size)
+                supportSliceEnd = Math.min(supportSliceStart + CiderConstants.PARTIAL_VDJ_UNANCHORED_LENGTH_BASES, supportCounts.size)
             }
             return supportCounts.slice(supportSliceStart until supportSliceEnd).minOrNull() ?: 0
         }
@@ -249,6 +248,12 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
         {
             val filters = ArrayList<String>()
 
+            val maxNonSplitReads = Math.min(MAX_NONSPLIT_READS, Math.max(vdj.numReads / 2, 1))
+            if ((vAlignedReads == 0 || jAlignedReads == 0) &&
+                (jNonSplitReads + vNonSplitReads) >= maxNonSplitReads)
+            {
+                filters.add("MATCHES_REF")
+            }
             if (vdj.vAnchor == null)
             {
                 filters.add("NO_V_ANCHOR")
@@ -276,11 +281,6 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
             if (vdj.cdr3Sequence.length > CDR3_FILTER_AA_MAX_LENGTH * 3)
             {
                 filters.add("MAX_LENGTH")
-            }
-            if ((vAlignedReads == 0 || jAlignedReads == 0) &&
-                (jNonSplitReads + vNonSplitReads) >= MAX_NONSPLIT_READS)
-            {
-                filters.add("MATHCES_REF")
             }
             if (filters.isEmpty())
             {

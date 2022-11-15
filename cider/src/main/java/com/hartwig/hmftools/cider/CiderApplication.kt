@@ -86,17 +86,13 @@ class CiderApplication
         )
 
         val vdjSequences: List<VDJSequence> = vdjSeqBuilder.buildVDJSequences(layoutMap)
-
-        // also write a full sequence layout file
-        FullSequenceLayoutFile.writeLayouts(mParams.outputDir, mParams.sampleId, vdjSequences, vjReadLayoutAdaptor)
-
         var primerMatchList: List<VdjPrimerMatch> = emptyList()
 
         if (mParams.primerCsv != null)
         {
             val primerList = PrimerTsvFile.load(mParams.primerCsv!!)
             // if we are provided a list of primers, match those against the input
-            val vdjPrimerMatcher = VdjPrimerMatcher(vjReadLayoutAdaptor, 1)
+            val vdjPrimerMatcher = VdjPrimerMatcher(1)
             primerMatchList = vdjPrimerMatcher.matchVdjPrimer(vdjSequences, primerList)
 
             // write out the primer matches

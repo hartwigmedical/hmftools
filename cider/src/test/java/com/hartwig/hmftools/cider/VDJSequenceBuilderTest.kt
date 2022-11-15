@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.TestUtils.createVDJ
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.cider.layout.ReadLayoutBuilderTest
 import com.hartwig.hmftools.cider.layout.TestLayoutRead
@@ -46,7 +47,7 @@ class VDJSequenceBuilderTest
         //org.apache.logging.log4j.core.config.Configurator.setRootLevel(Level.TRACE)
     }
 
-    // build a VDJ from a layout with just V anchor
+    // build a VDJ from a layout with just V anchor, J anchor is found using blosum
     @Test
     fun testBuildVdjFromVLayout()
     {
@@ -301,113 +302,74 @@ class VDJSequenceBuilderTest
         assertEquals("CACATCCTGA", vdjSeq.cdr3SequenceShort)
     }
 
+    // build one sided V only VDJ
     @Test
-    fun testMergeVDJsSimple()
+    fun testBuildOneSidedVdjVOnly()
     {
-        // create two VDJs, both simple read match, exactly the same
-        val seq = "ATGCTGGTGT"
+        val mockVjReadLayoutAdaptor = MockVJReadLayoutAdaptor()
+        val mockAnchorBlosumSearcher = MockAnchorBlosumSearcher()
+        val vdjSeqBuilder = VDJSequenceBuilder(
+            mockVjReadLayoutAdaptor, mockAnchorBlosumSearcher, MIN_BASE_QUALITY,
+            CiderConstants.MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES)
 
-        val layout1 = ReadLayout()
+        // we create a layout that has the V anchor but not J anchor
+        // 30 bases long, V anchor is position 3-10:
+        // TGC-GAATACC-CACATCCTGAGAGTGTCAGA
+        //    V anchor
 
-        // we are aligned at the T
-        val baseQual1 = SAMUtils.fastqToPhred("FF:FFFF:FF") // F is 37, : is 25
-        val read1 = TestLayoutRead("read1", ReadKey("read1", true), seq, baseQual1, 4)
-        layout1.addRead(read1, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
+        val seq = "TGC-GAATACC-CACATCCTGAGAGTGTCAGA".replace("-", "")
+        val layout = TestUtils.createLayout(seq)
 
-        val layout2 = ReadLayout()
-        val baseQual2 = SAMUtils.fastqToPhred("FFFF::FFFF") // F is 37, : is 25
-        val read2 = TestLayoutRead("read2", ReadKey("read2", true), seq, baseQual2, 4)
-        layout2.addRead(read2, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
+        mockVjReadLayoutAdaptor.anchorRangeMap[layout] = 3 until 10
 
-        val vdj1 = createVDJ(layout1, 3, 7, 0, 10)
-        val vdj2 = createVDJ(layout2, 3, 7, 0, 10)
+        // create one sided v only VDJ
+        val vdjSeq = vdjSeqBuilder.tryCreateOneSidedVdj(VJGeneType.IGHV, layout)
 
-        val vdjCombine = VDJSequenceBuilder.mergeVDJs(vdj1, vdj2, MIN_BASE_QUALITY)
-
-        assertEquals(seq, vdjCombine.sequence)
-        assertEquals("2212112122", vdjCombine.supportString) // due to low base qual in some reads
+        assertNotNull(vdjSeq)
+        assertNotNull(vdjSeq.vAnchor)
+        assertNull(vdjSeq.jAnchor)
+        assertEquals(VJGeneType.IGHV, vdjSeq.vAnchor!!.geneType)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)
+        assertEquals("GAATACC-CACATCCTGAGAGTGTCAGA", vdjSeq.sequenceFormatted)
+        assertEquals("GAATACC", vdjSeq.vAnchorSequence)
+        assertEquals("CACATCCTGAGAGTGTCAGA", vdjSeq.cdr3SequenceShort)
     }
 
+    // build one sided J only VDJ
     @Test
-    fun testMergeVDJsLongShort()
+    fun testBuildOneSidedVdjJOnly()
     {
-        // want to make a VDJ seq that is  CA-GGT-GAT
-        // by combining two VDJ seq, first CA-GGT-G
-        // second one is                    A-GGT-GAT
+        val mockVjReadLayoutAdaptor = MockVJReadLayoutAdaptor()
+        val mockAnchorBlosumSearcher = MockAnchorBlosumSearcher()
+        val vdjSeqBuilder = VDJSequenceBuilder(
+            mockVjReadLayoutAdaptor, mockAnchorBlosumSearcher, MIN_BASE_QUALITY,
+            CiderConstants.MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES)
 
-        val layout1 = ReadLayout()
-        val seq1 = "CAGGTG"
-        val baseQual1 = SAMUtils.fastqToPhred("FF::FF") // F is 37, : is 25
-        // we are aligned at the T
-        val read1 = TestLayoutRead("read1", ReadKey("read1", true), seq1, baseQual1, 4)
-        layout1.addRead(read1, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
-        val vdj1 = createVDJ(layout1, 2, 5, 0, 6)
+        // we create a layout that has J anchor but no V
+        // TGCGAATACCCACAT-CTGAGTG-TCAGA
+        //                J anchor
 
-        val layout2 = ReadLayout()
-        val seq2 = "AGGTGAT"
-        val baseQual2 = SAMUtils.fastqToPhred("F:FFFF:") // F is 37, : is 25
-        // aligned at the first A
-        val read2 = TestLayoutRead("read2", ReadKey("read2", true), seq2, baseQual2, 0)
-        layout2.addRead(read2, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
-        val vdj2 = createVDJ(layout2, 1, 4, 0, 7)
+        val seq = "TGCGAATACCCACAT-CTGAGTG-TCAGA".replace("-", "")
+        val layout = TestUtils.createLayout(seq)
 
-        var vdjCombine = VDJSequenceBuilder.mergeVDJs(vdj1, vdj2, MIN_BASE_QUALITY)
+        mockVjReadLayoutAdaptor.anchorRangeMap[layout] = 15 until 22
 
-        assertNotNull(vdjCombine.vAnchor)
-        assertNotNull(vdjCombine.jAnchor)
-        assertEquals("CAGGTGAT", vdjCombine.sequence)
-        assertEquals(2, vdjCombine.vAnchor!!.anchorBoundary)
-        assertEquals(5, vdjCombine.jAnchor!!.anchorBoundary)
-        //assertEquals("1133333311", vdjCombine.supportString)
+        // create one sided j only VDJ
+        val vdjSeq = vdjSeqBuilder.tryCreateOneSidedVdj(VJGeneType.IGHJ, layout)
 
-        // try to merge it the other way, result should be the same
-        vdjCombine = VDJSequenceBuilder.mergeVDJs(vdj2, vdj1, MIN_BASE_QUALITY)
-
-        assertNotNull(vdjCombine.vAnchor)
-        assertNotNull(vdjCombine.jAnchor)
-        assertEquals("CAGGTGAT", vdjCombine.sequence)
-        assertEquals(2, vdjCombine.vAnchor!!.anchorBoundary)
-        assertEquals(5, vdjCombine.jAnchor!!.anchorBoundary)
+        assertNotNull(vdjSeq)
+        assertNull(vdjSeq.vAnchor)
+        assertNotNull(vdjSeq.jAnchor)
+        assertEquals(VJGeneType.IGHJ, vdjSeq.jAnchor!!.geneType)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.jAnchor)
+        assertEquals("TGCGAATACCCACAT-CTGAGTG", vdjSeq.sequenceFormatted)
+        assertEquals("CTGAGTG", vdjSeq.jAnchorSequence)
+        assertEquals("TGCGAATACCCACAT", vdjSeq.cdr3SequenceShort)
     }
 
     companion object
     {
         const val MIN_BASE_QUALITY = 30.toByte()
-
-        // a simple function to create VDJ sequence
-        fun createVDJ(layout: ReadLayout, vAnchorBoundary: Int, jAnchorBoundary: Int,
-            layoutStart: Int, layoutEnd: Int) : VDJSequence
-        {
-            assertTrue(layoutEnd <= layout.length)
-            assertTrue(vAnchorBoundary < jAnchorBoundary)
-            assertTrue(layoutStart + vAnchorBoundary < layout.length)
-            assertTrue(layoutStart + jAnchorBoundary <= layout.length)
-
-            val vAnchorSeq = layout.consensusSequence().drop(layoutStart).substring(0, vAnchorBoundary)
-            val jAnchorSeq = layout.consensusSequence().substring(jAnchorBoundary)
-
-            // create VJ anchor
-            val vAnchor = VJAnchorByReadMatch(
-                vj = VJ.V,
-                geneType = VJGeneType.IGHV,
-                anchorBoundary = vAnchorBoundary,
-                matchMethod = "exact",
-                templateAnchorSeq = vAnchorSeq,
-                numReads = layout.reads.size
-            )
-
-            val jAnchor = VJAnchorByReadMatch(
-                vj = VJ.J,
-                geneType = VJGeneType.IGHJ,
-                anchorBoundary = jAnchorBoundary,
-                matchMethod = "exact",
-                templateAnchorSeq = jAnchorSeq,
-                numReads = layout.reads.size
-            )
-
-            val vdj = VDJSequence(layout, layoutStart, layoutEnd, vAnchor, jAnchor)
-            return vdj
-        }
 
         /*
         // a simple function to create VDJ sequence

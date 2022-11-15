@@ -238,7 +238,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         val vLayoutSeq = vLayout.highQualSequence
         val jLayoutSeq = jLayout.highQualSequence
 
-        val vjLayoutOverlap: VdjBuilderUtils.VjLayoutOverlap? = VdjBuilderUtils.findVjOverlap(vLayoutSeq, jLayoutSeq, minOverlappedBases)
+        val vjLayoutOverlap: VdjBuilderUtils.SequenceOverlap? = VdjBuilderUtils.findSequenceOverlap(vLayoutSeq, jLayoutSeq, minOverlappedBases)
 
         if (vjLayoutOverlap == null)
             return null
@@ -256,8 +256,8 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         //
         // work out how much j aligned position needs to be shifted so that they are all aligned in the
         // v aligned position
-        val jAlignedPositionShift = (vjLayoutOverlap.vLayoutOffset + vLayout.alignedPosition) -
-                                    (vjLayoutOverlap.jLayoutOffset + jLayout.alignedPosition)
+        val jAlignedPositionShift = (vjLayoutOverlap.seq1Offset + vLayout.alignedPosition) -
+                                    (vjLayoutOverlap.seq2Offset + jLayout.alignedPosition)
 
         val combinedVjLayout: ReadLayout = ReadLayout.merge(jLayout, vLayout, jAlignedPositionShift, 0, minBaseQuality)
         combinedVjLayout.id = "${vLayout.id},${jLayout.id}"
@@ -352,7 +352,9 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                 return null
 
             val layoutStart = vAnchorRange.first
-            val layoutEnd = layout.length
+
+            // we limit one sided VDJ post V anchor length
+            val layoutEnd = Math.min(layout.length, vAnchorRange.last + 1 + CiderConstants.PARTIAL_VDJ_UNANCHORED_LENGTH_BASES)
 
             vAnchor = createVJAnchorByReadMatch(
                 anchorBoundary = vAnchorRange.last + 1 - layoutStart,
@@ -372,11 +374,12 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             if (jAnchorRange == null)
                 return null
 
-            val layoutStart = 0
+            // we limit one sided VDJ pre J anchor length
+            val layoutStart = Math.max(0, jAnchorRange.first - CiderConstants.PARTIAL_VDJ_UNANCHORED_LENGTH_BASES)
             val layoutEnd = jAnchorRange.last + 1
 
             jAnchor = createVJAnchorByReadMatch(
-                anchorBoundary = jAnchorRange.first,
+                anchorBoundary = jAnchorRange.first - layoutStart,
                 vjGeneType = layoutGeneType,
                 layout = layout
             )
@@ -457,7 +460,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                 // count them as different if one base with one read is different
                 if (vdjSequenceIdentical(vdj1, vdj2))
                 {
-                    val combinedVDJ = mergeVDJs(vdj1, vdj2, minBaseQuality)
+                    val combinedVDJ = VdjBuilderUtils.mergeVDJs(vdj1, vdj2, minBaseQuality)
 
                     outVDJList[i] = combinedVDJ
                     // remove vdj2 from the list
@@ -496,7 +499,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                     (numBaseDiff <= 1 && maxReadsAtDiff < 2)
                 }
 
-                if (vdjSequenceCompare(vdj1, vdj2, diffAccumulator))
+                if (VdjBuilderUtils.vdjSequenceCompare(vdj1, vdj2, diffAccumulator))
                 {
                     sLogger.debug("removing {} as it is similar to {}",
                         vdj2.aminoAcidSequenceFormatted, vdj1.aminoAcidSequenceFormatted)
@@ -518,99 +521,6 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             return outVDJList
         }
 
-        internal fun mergeVDJs(vdj1: VDJSequence, vdj2: VDJSequence, minBaseQuality: Byte): VDJSequence
-        {
-            require(vdj1.vAnchor != null)
-            require(vdj1.jAnchor != null)
-            require(vdj2.vAnchor != null)
-            require(vdj2.jAnchor != null)
-
-            val vdjPrimary: VDJSequence
-            val vdjSecondary: VDJSequence
-
-            if (vdj1.jAnchor.anchorBoundary - vdj1.vAnchor.anchorBoundary != vdj2.jAnchor.anchorBoundary - vdj2.vAnchor.anchorBoundary)
-            {
-                sLogger.error("cannot merge {}(v:{}, j:{}) and {}(v:{}, j:{}), different lengths between anchors",
-                    vdj1.aminoAcidSequenceFormatted, vdj1.vAnchor.matchMethod, vdj1.jAnchor.matchMethod,
-                    vdj2.aminoAcidSequenceFormatted, vdj2.vAnchor.matchMethod, vdj2.jAnchor.matchMethod)
-
-                throw RuntimeException("cannot merge VDJs: different lengths between anchors")
-            }
-
-            sLogger.debug("start merge: {}(v:{}, j:{}, aligned pos:{}, within layout: {}-{}, v: {}, j: {}) and " +
-                    "{}(v:{}, j:{}, aligned pos:{}, within layout: {}-{}, v: {}, j: {})",
-                vdj1.aminoAcidSequenceFormatted, vdj1.vAnchor.matchMethod, vdj1.jAnchor.matchMethod, vdj1.layout.alignedPosition,
-                vdj1.layoutSliceStart, vdj1.layoutSliceEnd, vdj1.vAnchor.anchorBoundary, vdj1.jAnchor.anchorBoundary,
-                vdj2.aminoAcidSequenceFormatted, vdj2.vAnchor.matchMethod, vdj2.jAnchor.matchMethod, vdj2.layout.alignedPosition,
-                vdj2.layoutSliceStart, vdj2.layoutSliceEnd, vdj2.vAnchor.anchorBoundary, vdj2.jAnchor.anchorBoundary)
-
-            val vAnchorBoundary = Math.max(vdj1.vAnchor.anchorBoundary, vdj2.vAnchor.anchorBoundary)
-            val jAnchorBoundary = Math.max(vdj1.jAnchor.anchorBoundary, vdj2.jAnchor.anchorBoundary)
-
-            // merge the anchor objects together
-            val vAnchor: VJAnchor = mergeAnchors(vdj1.vAnchor, vdj2.vAnchor, vdj1.vAnchorLength, vdj2.vAnchorLength, vAnchorBoundary)
-            val jAnchor: VJAnchor = mergeAnchors(vdj1.jAnchor, vdj2.jAnchor, vdj1.jAnchorLength, vdj2.jAnchorLength, jAnchorBoundary)
-
-            val jAnchorLength: Int = Math.max(vdj1.jAnchorLength, vdj2.jAnchorLength)
-
-            if (vdj1.numReads > vdj2.numReads)
-            {
-                vdjPrimary = vdj1
-                vdjSecondary = vdj2
-            }
-            else
-            {
-                vdjPrimary = vdj2
-                vdjSecondary = vdj1
-            }
-
-            require(vdjPrimary.vAnchor != null)
-            require(vdjPrimary.jAnchor != null)
-            require(vdjSecondary.vAnchor != null)
-            require(vdjSecondary.jAnchor != null)
-
-            // we calculate the aligned position for both sequences with respect to the V anchor boundary
-            val primaryAlignedPos = vdjPrimary.layout.alignedPosition - vdjPrimary.layoutSliceStart - vdjPrimary.vAnchor.anchorBoundary
-            val secondaryAlignedPos = vdjSecondary.layout.alignedPosition - vdjSecondary.layoutSliceStart - vdjSecondary.vAnchor.anchorBoundary
-
-            // this would shift them to overlap each other
-            val secondaryLayoutOffsetShift = primaryAlignedPos - secondaryAlignedPos
-            val mergedLayout = ReadLayout.merge(vdjPrimary.layout, vdjSecondary.layout, 0, secondaryLayoutOffsetShift, minBaseQuality)
-            mergedLayout.id = "${vdjPrimary.layout.id};${vdjSecondary.layout.id}"
-
-            // now we have to work out where to place the layout, using the final aligned position
-            val posStartWithinLayout = vdjPrimary.layoutSliceStart +
-                    vdjPrimary.vAnchor.anchorBoundary - vAnchor.anchorBoundary + // adjust for V anchor length
-                    mergedLayout.alignedPosition - vdjPrimary.layout.alignedPosition // adjust for align position difference
-            val posEndWithinLayout = posStartWithinLayout + jAnchor.anchorBoundary + jAnchorLength
-
-            sLogger.debug("primary start: {}, primary v anchor: {}, v anchor: {}, layout aligned pos: {}, primary aligned pos: {}",
-                vdjPrimary.layoutSliceStart, vdjPrimary.vAnchor.anchorBoundary, vAnchor.anchorBoundary,
-                mergedLayout.alignedPosition, vdjPrimary.layout.alignedPosition)
-
-            sLogger.debug("layout: {}, aligned pos: {}, pos within layout: {}-{}, v: {}, j: {}",
-                mergedLayout.consensusSequence(), mergedLayout.alignedPosition, posStartWithinLayout, posEndWithinLayout,
-                vAnchor.anchorBoundary, jAnchor.anchorBoundary)
-
-            /*assert(supports.size > jAnchor.anchorBoundary)
-
-            if (supports.size < jAnchorBoundary)
-                throw RuntimeException()*/
-
-            val combinedVDJ = VDJSequence(mergedLayout, posStartWithinLayout, posEndWithinLayout, vAnchor, jAnchor)
-
-            require(combinedVDJ.vAnchor != null)
-            require(combinedVDJ.jAnchor != null)
-
-            sLogger.debug("merge: {}(v:{}, j:{}, read count: {}) and {}(v:{}, j:{}, read count: {}) together, merged: {}(v:{}, j:{}), 2ndary aligned pos shift: {}",
-                vdj1.aminoAcidSequenceFormatted, vdj1.vAnchor.matchMethod, vdj1.jAnchor.matchMethod, vdj1.numReads,
-                vdj2.aminoAcidSequenceFormatted, vdj2.vAnchor.matchMethod, vdj2.jAnchor.matchMethod, vdj2.numReads,
-                combinedVDJ.aminoAcidSequenceFormatted, combinedVDJ.vAnchor.matchMethod, combinedVDJ.jAnchor.matchMethod,
-                secondaryLayoutOffsetShift)
-
-            return combinedVDJ
-        }
-
         fun vdjSequenceIdentical(vdj1: VDJSequence, vdj2: VDJSequence) : Boolean
         {
             var numBaseDiff = 0
@@ -625,129 +535,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                 // we keep comparing if there is no diff
                 numBaseDiff == 0// return
             }
-            return vdjSequenceCompare(vdj1, vdj2, diffAccumulator)
-        }
-
-        // TODO write unit test
-        private fun vdjSequenceCompare(vdj1: VDJSequence, vdj2: VDJSequence,
-                                       diffAccumulator: (Map.Entry<Char, Int>, Map.Entry<Char, Int>) -> Boolean) : Boolean
-        {
-            require(vdj1.vAnchor != null)
-            require(vdj1.jAnchor != null)
-            require(vdj2.vAnchor != null)
-            require(vdj2.jAnchor != null)
-
-            // the lengths between V and J anchor must be equal
-            if (vdj1.jAnchor.anchorBoundary - vdj1.vAnchor.anchorBoundary !=
-                vdj2.jAnchor.anchorBoundary - vdj2.vAnchor.anchorBoundary)
-            {
-                return false
-            }
-
-            val (range1, range2) = getVdjRanges(vdj1, vdj2)
-
-            // now we work out the ranges we can compare them
-            var i1 = range1.first
-            var i2 = range2.first
-
-            while (i1 <= range1.last && i2 <= range2.last)
-            {
-                val support1 = vdj1.getSupportAt(i1)
-                val support2 = vdj2.getSupportAt(i2)
-
-                if (support1.key != support2.key)
-                {
-                    if (!diffAccumulator(support1, support2))
-                        return false
-                }
-                ++i1
-                ++i2
-            }
-            return true
-        }
-
-        // get the ranges that line up both sequences based on anchor position
-        fun getVdjRanges(vdj1: VDJSequence, vdj2: VDJSequence) : Pair<IntRange, IntRange>
-        {
-            require(vdj1.vAnchor != null)
-            require(vdj1.jAnchor != null)
-            require(vdj2.vAnchor != null)
-            require(vdj2.jAnchor != null)
-
-            var vdj1Start: Int = 0
-            var vdj1End: Int = vdj1.length
-            var vdj2Start: Int = 0
-            var vdj2End: Int = vdj2.length
-
-            if (vdj1.vAnchor.anchorBoundary > vdj2.vAnchor.anchorBoundary)
-            {
-                vdj1Start = vdj1.vAnchor.anchorBoundary - vdj2.vAnchor.anchorBoundary
-            }
-            else if (vdj1.vAnchor.anchorBoundary < vdj2.vAnchor.anchorBoundary)
-            {
-                vdj2Start = vdj2.vAnchor.anchorBoundary - vdj1.vAnchor.anchorBoundary
-            }
-
-            val endDiff = (vdj1.length - vdj1Start) - (vdj2.length - vdj2Start)
-
-            if (endDiff > 0)
-            {
-                vdj1End -= endDiff
-            }
-            else if (endDiff < 0)
-            {
-                vdj2End -= endDiff
-            }
-
-            assert(vdj1Start >= 0)
-            assert(vdj2Start >= 0)
-
-            val range1 = vdj1Start until vdj1End
-            val range2 = vdj2Start until vdj2End
-
-            return Pair(range1, range2)
-        }
-
-        fun mergeAnchors(anchor1: VJAnchor, anchor2: VJAnchor,
-                         anchor1Length: Int, anchor2Length: Int,
-                         newAnchorBoundary: Int) : VJAnchor
-        {
-            if (anchor1 is VJAnchorByReadMatch)
-            {
-                if (anchor2 is VJAnchorByReadMatch)
-                {
-                    // both are by read candidate match
-                    // choose the anchor that has higher number of reads
-                    val anchorWithMoreReads: VJAnchorByReadMatch = maxOf(anchor1, anchor1, Comparator.comparingInt(VJAnchorByReadMatch::numReads))
-
-                    // sum the number of reads together
-                    return anchorWithMoreReads.copy(anchorBoundary = newAnchorBoundary, numReads = anchor1.numReads + anchor2.numReads)
-                }
-                // copy anchor 1
-                return anchor1.copy(anchorBoundary = newAnchorBoundary)
-            }
-            else if (anchor2 is VJAnchorByReadMatch)
-            {
-                // anchor1 is not by Read match
-                // copy anchor 2
-                return anchor2.copy(anchorBoundary = newAnchorBoundary)
-            }
-
-            // neither are by read match, we choose the longer one
-            val anchorTemplate: VJAnchor = if (anchor1Length >= anchor2Length) anchor1 else anchor2
-
-            if (anchorTemplate is VJAnchorByReadMatch)
-            {
-                // smart casted to VJAnchorByReadMatch
-                return anchorTemplate.copy(anchorBoundary = newAnchorBoundary)
-            }
-            else if (anchorTemplate is VJAnchorByBlosum)
-            {
-                // smart casted to VJAnchorByBlosum
-                return anchorTemplate.copy(anchorBoundary = newAnchorBoundary)
-            }
-
-            throw IllegalArgumentException("unknown VJAnchor subtype: ${anchorTemplate::class}")
+            return VdjBuilderUtils.vdjSequenceCompare(vdj1, vdj2, diffAccumulator)
         }
     }
 }
