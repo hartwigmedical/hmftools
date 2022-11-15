@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.variant.Variant;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ProtectEventGeneratorTest {
+public class EventGeneratorTest {
 
     @Test
     public void canTestToVariantEvent() {
