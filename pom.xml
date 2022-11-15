@@ -9,38 +9,38 @@
     <name>HMF Genomics Tools</name>
 
     <modules>
-<!--        <module>amber</module>-->
-<!--        <module>bam-metrics</module>-->
-<!--        <module>cider</module>-->
-<!--        <module>cobalt</module>-->
-<!--        <module>compar</module>-->
-<!--        <module>ctdna</module>-->
-<!--        <module>cuppa</module>-->
-<!--        <module>fastq-stats</module>-->
-<!--        <module>gene-utils</module>-->
-<!--        <module>gripss</module>-->
-<!--        <module>health-checker</module>-->
+        <module>amber</module>
+        <module>bam-metrics</module>
+        <module>cider</module>
+        <module>cobalt</module>
+        <module>compar</module>
+        <module>ctdna</module>
+        <module>cuppa</module>
+        <module>fastq-stats</module>
+        <module>gene-utils</module>
+        <module>gripss</module>
+        <module>health-checker</module>
         <module>hmf-common</module>
-<!--        <module>hmf-id-generator</module>-->
-<!--        <module>isofox</module>-->
-<!--        <module>lilac</module>-->
-<!--        <module>linx</module>-->
-<!--        <module>neo</module>-->
+        <module>hmf-id-generator</module>
+        <module>isofox</module>
+        <module>lilac</module>
+        <module>linx</module>
+        <module>neo</module>
         <module>orange</module>
-<!--        <module>paddle</module>-->
+        <module>paddle</module>
         <module>patient-db</module>
-<!--        <module>patient-reporter</module>-->
-<!--        <module>purple</module>-->
-<!--        <module>rose</module>-->
-<!--        <module>pave</module>-->
-<!--        <module>protect</module>-->
-<!--        <module>sage</module>-->
-<!--        <module>sigs</module>-->
-<!--        <module>stat-calcs</module>-->
-<!--        <module>sv-prep</module>-->
-<!--        <module>sv-tools</module>-->
-<!--        <module>teal</module>-->
-<!--        <module>virus-interpreter</module>-->
+        <module>patient-reporter</module>
+        <module>purple</module>
+        <module>rose</module>
+        <module>pave</module>
+        <module>protect</module>
+        <module>sage</module>
+        <module>sigs</module>
+        <module>stat-calcs</module>
+        <module>sv-prep</module>
+        <module>sv-tools</module>
+        <module>teal</module>
+        <module>virus-interpreter</module>
     </modules>
 
     <properties>
