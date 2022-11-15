@@ -1,18 +1,20 @@
 package com.hartwig.hmftools.common.protect;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
+
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 
-import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
-
 import org.jetbrains.annotations.NotNull;
 
 public final class EventGenerator {
+
+    static final String UPSTREAM_GENE_VARIANT = "upstream_gene_variant";
 
     private EventGenerator() {
     }
@@ -57,6 +59,10 @@ public final class EventGenerator {
 
         if (!coding.isEmpty()) {
             return codingEffect == SPLICE ? coding + " splice" : coding;
+        }
+
+        if (effect.equals(UPSTREAM_GENE_VARIANT)) {
+            return "upstream";
         }
 
         return effect;
