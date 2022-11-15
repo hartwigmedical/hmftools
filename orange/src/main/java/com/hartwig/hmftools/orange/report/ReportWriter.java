@@ -9,7 +9,6 @@ import java.io.IOException;
 import com.google.gson.GsonBuilder;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.util.OrangeReportModifier;
-import com.hartwig.hmftools.orange.report.chapters.ClinicalEvidenceChapter;
 import com.hartwig.hmftools.orange.report.chapters.CohortComparisonChapter;
 import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
 import com.hartwig.hmftools.orange.report.chapters.GermlineFindingsChapter;
@@ -56,7 +55,7 @@ public class ReportWriter {
         ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, reportConfig.reportGermline()),
                 new SomaticFindingsChapter(report, reportConfig), new GermlineFindingsChapter(report, reportConfig.reportGermline()),
                 new ImmunologyChapter(report), new RNAFindingsChapter(report), new CohortComparisonChapter(report),
-                new ClinicalEvidenceChapter(report, reportConfig), new QualityControlChapter(report) };
+                new QualityControlChapter(report) };
 
         String platinumVersion = report.platinumVersion() != null ? report.platinumVersion() : ReportResources.NOT_AVAILABLE;
         writePdfChapters(report.sampleId(), platinumVersion, chapters);

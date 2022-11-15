@@ -9,19 +9,17 @@ import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.ImmutableLilacSummaryData;
-import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
+import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
-import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
@@ -42,8 +40,6 @@ import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretationTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
-import com.hartwig.hmftools.orange.algo.protect.ProtectInterpretationTestFactory;
-import com.hartwig.hmftools.orange.algo.protect.ProtectInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretationTestFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
@@ -73,7 +69,6 @@ public final class OrangeReportTestFactory {
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(ChordTestFactory.createMinimalTestChordAnalysis())
                 .cuppa(CuppaTestFactory.createMinimalCuppaData())
-                .protect(ProtectInterpretationTestFactory.createMinimalTestProtectData())
                 .plots(createMinimalOrangePlots())
                 .build();
     }
@@ -86,7 +81,6 @@ public final class OrangeReportTestFactory {
                 .linx(createTestLinxData())
                 .lilac(createTestLilacData())
                 .isofox(createTestIsofoxData())
-                .protect(createTestProtectData())
                 .virusInterpreter(createTestVirusInterpreterData())
                 .build();
     }
@@ -258,19 +252,6 @@ public final class OrangeReportTestFactory {
                 .addReportableSkippedExons(novelSkippedExon)
                 .addReportableNovelExonsIntrons(novelIntron)
                 .build();
-    }
-
-    @NotNull
-    private static ProtectInterpretedData createTestProtectData() {
-        ProtectEvidence evidence = ProtectTestFactory.builder()
-                .gene("USH2A")
-                .transcript("123")
-                .isCanonical(true)
-                .reported(true)
-                .event("c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
-                .build();
-
-        return ProtectInterpretationTestFactory.builder().addReportableEvidences(evidence).build();
     }
 
     @NotNull

@@ -15,7 +15,6 @@ import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
-import com.hartwig.hmftools.orange.algo.protect.ImmutableProtectInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableEvaluation;
@@ -114,11 +113,6 @@ public class TestReportGenerator {
                         .allBreakends(Lists.newArrayList())
                         .additionalSuspectDisruptions(Lists.newArrayList())
                         .allGermlineDisruptions(Lists.newArrayList())
-                        .build())
-                .protect(ImmutableProtectInterpretedData.builder()
-                        .from(report.protect())
-                        .unreportedEvidences(Lists.newArrayList())
-                        .unreportedTrials(Lists.newArrayList())
                         .build());
 
         if (report.isofox() != null) {

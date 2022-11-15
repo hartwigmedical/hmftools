@@ -28,13 +28,13 @@ SNV/Indel clonality. In addition to this front page, the following chapters are 
 
 ### Optional Configuration
 
-Argument | Description
----|---
-disable_germline  | If set, disables the germline findings chapter and transforms germline variants to somatic variants.
-max_evidence_level | If set, filters evidence down to this level. For example, if "B" is passed as a parameter, only treatments with at least A or B level evidence are displayed in the clinical evidence chapter of the report. Do note that the front page always lists the count of all evidence present, regardless of this filter setting.
-experiment_date | Sets the experiment date to the specified date if set. Expected format is YYMMDD. If omitted, current date is used as experiment date.
-limit_json_output | If set, limits all lists in the JSON output to a single entry to make facilitate manual inspection of the JSON output.
-log_debug | If set, additional DEBUG logging is generated. 
+| Argument           | Description                                                                                                                                                                                                                                                                                                                 |
+|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| disable_germline   | If set, disables the germline findings chapter and transforms germline variants to somatic variants.                                                                                                                                                                                                                        |
+| max_evidence_level | If set, filters evidence down to this level. For example, if "B" is passed as a parameter, only treatments with at least A or B level evidence are displayed in the clinical evidence chapter of the report. Do note that the front page always lists the count of all evidence present, regardless of this filter setting. |
+| experiment_date    | Sets the experiment date to the specified date if set. Expected format is YYMMDD. If omitted, current date is used as experiment date.                                                                                                                                                                                      |
+| limit_json_output  | If set, limits all lists in the JSON output to a single entry to make facilitate manual inspection of the JSON output.                                                                                                                                                                                                      |
+| log_debug          | If set, additional DEBUG logging is generated.                                                                                                                                                                                                                                                                              |
 
 ### Somatic Findings 
 
@@ -140,6 +140,7 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 - Upcoming
+  - Remove PROTECT dependency from ORANGE including clinical evidence chapter and potentially interesting mutation based on evidence
   - Improve formatting of non-duplicate fragments in RNA findings
   - Fix bug with displaying gene disruptions in case of one SVs causing more than 1 disruption across multiple transcripts of the same gene.
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.10)

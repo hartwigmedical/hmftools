@@ -10,35 +10,15 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.linx.LinxTestFactory;
-import com.hartwig.hmftools.common.protect.EventGenerator;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.LinxTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class DNAFusionSelectorTest {
-
-    @Test
-    public void canSelectFusionsWithEvidence() {
-        LinxFusion withEvidence =
-                LinxTestFactory.fusionBuilder().reported(false).name("with evidence").geneStart("gene 1").geneEnd("gene 2").build();
-        LinxFusion noEvidence =
-                LinxTestFactory.fusionBuilder().reported(false).name("no evidence").geneStart("gene 3").geneEnd("gene 4").build();
-
-        ProtectEvidence evidence = ProtectTestFactory.builder().event(EventGenerator.fusionEvent(withEvidence)).build();
-
-        List<LinxFusion> fusions = DNAFusionSelector.selectInterestingUnreportedFusions(Lists.newArrayList(withEvidence, noEvidence),
-                Lists.newArrayList(evidence),
-                Lists.newArrayList());
-
-        assertEquals(1, fusions.size());
-        assertNotNull(findByName(fusions, "with evidence"));
-    }
 
     @Test
     public void canSelectFusionsWithReportedType() {
@@ -55,7 +35,6 @@ public class DNAFusionSelectorTest {
 
         List<LinxFusion> fusions =
                 DNAFusionSelector.selectInterestingUnreportedFusions(Lists.newArrayList(withReportedType, withoutReportedType),
-                        Lists.newArrayList(),
                         Lists.newArrayList());
 
         assertEquals(1, fusions.size());
@@ -109,7 +88,7 @@ public class DNAFusionSelectorTest {
                 withFiveOncogene,
                 withThreeOncogene,
                 withFiveTSG,
-                withThreeTSG), Lists.newArrayList(), Lists.newArrayList(oncogene, tsg));
+                withThreeTSG), Lists.newArrayList(oncogene, tsg));
 
         assertEquals(2, fusions.size());
         assertNotNull(findByName(fusions, "with five onco"));

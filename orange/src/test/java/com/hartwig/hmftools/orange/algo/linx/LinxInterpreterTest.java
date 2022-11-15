@@ -14,7 +14,6 @@ public class LinxInterpreterTest {
     public void canInterpretMinimalLinxData() {
         assertNotNull(LinxInterpreter.interpret(ImmutableLinxData.builder().build(),
                 Lists.newArrayList(),
-                Lists.newArrayList(),
                 new KnownFusionCache()));
     }
 }

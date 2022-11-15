@@ -9,13 +9,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.protect.EventGenerator;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.purple.loader.ImmutableGainLoss;
-import com.hartwig.hmftools.orange.algo.protect.EvidenceEvaluator;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
@@ -61,12 +58,12 @@ final class CopyNumberSelector {
 
     @NotNull
     public static List<GainLoss> selectInterestingUnreportedGainsLosses(@NotNull List<GainLoss> allGainsLosses,
-            @NotNull List<GainLoss> reportableGainsLosses, @NotNull List<ProtectEvidence> evidences) {
+            @NotNull List<GainLoss> reportableGainsLosses) {
         List<GainLoss> unreportedGainLosses = selectUnreportedGainsLosses(allGainsLosses, reportableGainsLosses);
 
         List<GainLoss> interestingUnreportedGainsLosses = Lists.newArrayList();
-        interestingUnreportedGainsLosses.addAll(selectInterestingGains(unreportedGainLosses, evidences));
-        interestingUnreportedGainsLosses.addAll(selectInterestingLosses(unreportedGainLosses, reportableGainsLosses, evidences));
+        interestingUnreportedGainsLosses.addAll(selectInterestingGains(unreportedGainLosses));
+        interestingUnreportedGainsLosses.addAll(selectInterestingLosses(unreportedGainLosses, reportableGainsLosses));
         return interestingUnreportedGainsLosses;
     }
 
@@ -108,8 +105,7 @@ final class CopyNumberSelector {
     }
 
     @NotNull
-    private static List<GainLoss> selectInterestingGains(@NotNull List<GainLoss> unreportedGainLosses,
-            @NotNull List<ProtectEvidence> evidences) {
+    private static List<GainLoss> selectInterestingGains(@NotNull List<GainLoss> unreportedGainLosses) {
         List<GainLoss> unreportedFullGains = unreportedGainLosses.stream()
                 .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN)
                 .collect(Collectors.toList());
@@ -121,17 +117,8 @@ final class CopyNumberSelector {
             if (bestGain == null) {
                 bestGainPerLocation.put(key, gain);
             } else {
-                boolean currentHasEvidence = hasEvidence(evidences, bestGain);
-                boolean newHasEvidence = hasEvidence(evidences, gain);
-                boolean newHasMoreCopies = gain.minCopies() > bestGain.minCopies();
-                if (currentHasEvidence) {
-                    if (newHasEvidence && newHasMoreCopies) {
-                        bestGainPerLocation.put(key, gain);
-                    }
-                } else {
-                    if (newHasEvidence || newHasMoreCopies) {
-                        bestGainPerLocation.put(key, gain);
-                    }
+                if (gain.minCopies() > bestGain.minCopies()) {
+                    bestGainPerLocation.put(key, gain);
                 }
             }
         }
@@ -141,7 +128,7 @@ final class CopyNumberSelector {
 
     @NotNull
     private static List<GainLoss> selectInterestingLosses(@NotNull List<GainLoss> unreportedGainsLosses,
-            @NotNull List<GainLoss> reportableGainsLosses, @NotNull List<ProtectEvidence> evidences) {
+            @NotNull List<GainLoss> reportableGainsLosses) {
         List<GainLoss> unreportedLosses = unreportedGainsLosses.stream()
                 .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
                         || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)
@@ -155,10 +142,7 @@ final class CopyNumberSelector {
         List<GainLoss> lossesAutosomes = Lists.newArrayList();
         for (GainLoss loss : unreportedLosses) {
             if (HumanChromosome.fromString(loss.chromosome()).isAutosome()) {
-                boolean hasReportableLoss = locusPresent(reportableLosses, loss.chromosome(), loss.chromosomeBand());
-                boolean hasEvidence = hasEvidence(evidences, loss);
-
-                if (!hasReportableLoss || hasEvidence) {
+                if (!locusPresent(reportableLosses, loss.chromosome(), loss.chromosomeBand())) {
                     lossesAutosomes.add(loss);
                 }
             }
@@ -171,26 +155,14 @@ final class CopyNumberSelector {
             if (bestLoss == null) {
                 bestLossPerLocation.put(key, loss);
             } else {
-                boolean currentHasEvidence = hasEvidence(evidences, bestLoss);
-                boolean newHasEvidence = hasEvidence(evidences, loss);
-                boolean pickCurrentWhenEqual = bestLoss.gene().compareTo(loss.gene()) > 0;
-                if (currentHasEvidence) {
-                    if (newHasEvidence && !pickCurrentWhenEqual) {
-                        bestLossPerLocation.put(key, loss);
-                    }
-                } else if (newHasEvidence) {
-                    bestLossPerLocation.put(key, loss);
-                } else if (!pickCurrentWhenEqual) {
+                boolean pickOtherWhenEqual = bestLoss.gene().compareTo(loss.gene()) <= 0;
+                if (pickOtherWhenEqual) {
                     bestLossPerLocation.put(key, loss);
                 }
             }
         }
 
         return Lists.newArrayList(bestLossPerLocation.values().iterator());
-    }
-
-    private static boolean hasEvidence(@NotNull List<ProtectEvidence> evidences, @NotNull GainLoss gainLoss) {
-        return EvidenceEvaluator.hasEvidence(evidences, gainLoss.gene(), EventGenerator.copyNumberEvent(gainLoss));
     }
 
     private static boolean locusPresent(@NotNull List<GainLoss> gainsLosses, @NotNull String chromosome, @NotNull String chromosomeBand) {

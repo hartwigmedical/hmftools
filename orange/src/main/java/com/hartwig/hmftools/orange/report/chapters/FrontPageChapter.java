@@ -11,11 +11,10 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
-import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
@@ -24,7 +23,6 @@ import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaData;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.orange.algo.protect.ProtectInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
@@ -156,10 +154,6 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(Cells.createValue(Integer.toString(report.cuppa().telomericSGLs())));
         summary.addCell(Cells.createKey("Number of LINE insertions:"));
         summary.addCell(Cells.createValue(Integer.toString(report.cuppa().LINECount())));
-        summary.addCell(Cells.createKey("On-label treatments:"));
-        summary.addCell(Cells.createValue(onLabelTreatmentString()));
-        summary.addCell(Cells.createKey("Off-label treatments:"));
-        summary.addCell(Cells.createValue(offLabelTreatmentString()));
 
         Image circosImage = Images.build(report.plots().purpleFinalCircosPlot());
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -353,41 +347,6 @@ public class FrontPageChapter implements ReportChapter {
         }
 
         return svTmb + addon;
-    }
-
-    @NotNull
-    private String onLabelTreatmentString() {
-        return treatmentString(report.protect(), true);
-    }
-
-    @NotNull
-    private String offLabelTreatmentString() {
-        return treatmentString(report.protect(), false);
-    }
-
-    @NotNull
-    private static String treatmentString(@NotNull ProtectInterpretedData protect, boolean requireOnLabel) {
-        Set<String> levels = Sets.newTreeSet(Comparator.naturalOrder());
-        Set<String> treatments = Sets.newHashSet();
-        for (ProtectEvidence evidence : protect.reportableEvidences()) {
-            if (evidence.onLabel() == requireOnLabel) {
-                treatments.add(evidence.treatment().treament());
-                levels.add(evidence.level().toString());
-            }
-        }
-
-        for (ProtectEvidence evidence : protect.unreportedEvidences()) {
-            if (evidence.onLabel() == requireOnLabel) {
-                treatments.add(evidence.treatment().treament());
-                levels.add(evidence.level().toString());
-            }
-        }
-
-        if (treatments.isEmpty()) {
-            return NONE;
-        } else {
-            return treatments.size() + " (" + concat(levels) + ")";
-        }
     }
 
     @NotNull
