@@ -65,17 +65,7 @@ public class DriverData implements ComparableItem
             return false;
 
         if(DriverCatalog.driver() != otherDriver.DriverCatalog.driver())
-        {
-            if(DriverType.DRIVERS_LINX_SOMATIC.contains(DriverCatalog.driver())
-            && DriverType.DRIVERS_LINX_SOMATIC.contains(otherDriver.DriverCatalog.driver()))
-            {
-                // matched due to 1.17 type expansion
-            }
-            else
-            {
-                return false;
-            }
-        }
+            return false;
 
         if(mCheckTranscript && !DriverCatalog.transcript().equals(otherDriver.DriverCatalog.transcript()))
             return false;
