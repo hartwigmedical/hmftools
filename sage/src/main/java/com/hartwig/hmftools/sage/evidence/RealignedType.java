@@ -4,6 +4,7 @@ public enum RealignedType
 {
     NONE,
     EXACT,
+    CORE_PARTIAL,
     LENGTHENED,
     SHORTENED
 }

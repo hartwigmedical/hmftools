@@ -14,9 +14,11 @@ import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_S
 import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
+import static com.hartwig.hmftools.sage.evidence.RealignedType.CORE_PARTIAL;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
@@ -249,10 +251,6 @@ public class ReadContextCounter implements VariantHotspot
         boolean baseDeleted = rawContext.ReadIndexInDelete;
 
         mRawDepth += rawContext.DepthSupport ? 1 : 0;
-        mRawAltSupport += rawContext.AltSupport ? 1 : 0;
-        mRawRefSupport += rawContext.RefSupport ? 1 : 0;
-        mRawAltBaseQuality += rawContext.AltQuality;
-        mRawRefBaseQuality += rawContext.RefQuality;
 
         if(rawContext.ReadIndexInSoftClip && rawContext.AltSupport)
             ++mSoftClipInsertSupport;
@@ -294,7 +292,7 @@ public class ReadContextCounter implements VariantHotspot
             final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
                     readBases, record.getBaseQualities(), wildcardMatchInCore, maxCoreMismatches);
 
-            if(!match.equals(ReadContextMatch.NONE))
+            if(match != NONE && match != ReadContextMatch.CORE_PARTIAL)
             {
                 switch(match)
                 {
@@ -320,6 +318,8 @@ public class ReadContextCounter implements VariantHotspot
                 double rawBaseQuality = qualityCalc.rawBaseQuality(this, readIndex, record);
                 mSupportAltBaseQualityTotal += rawBaseQuality;
 
+                rawContext.updateSupport(false, true);
+                registerRawSupport(rawContext);
                 logReadEvidence(sampleId, record, match.toString(), readIndex);
 
                 /*
@@ -333,10 +333,17 @@ public class ReadContextCounter implements VariantHotspot
                 checkImproperCount(record);
                 return SUPPORT;
             }
+            else if(match == ReadContextMatch.CORE_PARTIAL)
+            {
+                // if the core is partly overlapped then back out any attribution to a ref match
+                rawContext.updateSupport(false, false);
+            }
         }
 
         boolean canRealign = abs(mVariant.indelLength()) >= REALIGN_READ_MIN_INDEL_LENGTH || readHasIndelInCore(record);
         RealignedContext realignment = canRealign ? checkRealignment(record) : RealignedContext.NONE;
+
+        String matchStr = "NONE";
 
         if(realignment.Type == EXACT)
         {
@@ -347,8 +354,17 @@ public class ReadContextCounter implements VariantHotspot
             mQualities[RC_TOTAL] += quality;
 
             logReadEvidence(sampleId, record, "REALIGNED", readIndex);
+            rawContext.updateSupport(false, true);
+            registerRawSupport(rawContext);
             return SUPPORT;
         }
+        else if(realignment.Type == CORE_PARTIAL)
+        {
+            matchStr = "CORE_PARTIAL";
+            rawContext.updateSupport(false, false);
+        }
+
+        registerRawSupport(rawContext);
 
         // switch back to the old method to test for jitter
         RealignedContext jitterRealign = Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), getMaxRealignDistance(record));
@@ -361,20 +377,23 @@ public class ReadContextCounter implements VariantHotspot
 
         ReadMatchType matchType = UNRELATED;
 
-        mCounts[RC_TOTAL]++;
-        mQualities[RC_TOTAL] += quality;
+        if(rawContext.RefSupport || rawContext.AltSupport)
+        {
+            mCounts[RC_TOTAL]++;
+            mQualities[RC_TOTAL] += quality;
 
-        if(rawContext.RefSupport)
-        {
-            mCounts[RC_REF]++;
-            mQualities[RC_REF] += quality;
-            matchType = NO_SUPPORT;
-        }
-        else if(rawContext.AltSupport)
-        {
-            mCounts[RC_ALT]++;
-            mQualities[RC_ALT] += quality;
-            countStrandedness(record);
+            if(rawContext.RefSupport)
+            {
+                mCounts[RC_REF]++;
+                mQualities[RC_REF] += quality;
+                matchType = NO_SUPPORT;
+            }
+            else if(rawContext.AltSupport)
+            {
+                mCounts[RC_ALT]++;
+                mQualities[RC_ALT] += quality;
+                countStrandedness(record);
+            }
         }
 
         // add to jitter penalty as a function of the number of repeats found
@@ -388,10 +407,28 @@ public class ReadContextCounter implements VariantHotspot
                 mShortened++;
         }
 
-        String matchStr = rawContext.RefSupport ? "REF" : (rawContext.AltSupport ? "ALT" : "NONE");
+        if(rawContext.RefSupport)
+            matchStr = "REF";
+        else if(rawContext.AltSupport)
+            matchStr = "ALT";
+
         logReadEvidence(sampleId, record, matchStr, readIndex);
 
         return matchType;
+    }
+
+    private void registerRawSupport(final RawContext rawContext)
+    {
+        if(rawContext.AltSupport)
+        {
+            ++mRawAltSupport;
+            mRawAltBaseQuality += rawContext.BaseQuality;
+        }
+        else if(rawContext.RefSupport)
+        {
+            ++mRawRefSupport;
+            mRawRefBaseQuality += rawContext.BaseQuality;
+        }
     }
 
     private void logReadEvidence(final String sampleId, final SAMRecord record, final String matchType, int readIndex)
@@ -459,7 +496,7 @@ public class ReadContextCounter implements VariantHotspot
 
         return new RawContext(
                 readIndex, false, false, true,
-                true, false, true, baseQuality, 0);
+                true, false, true, baseQuality);
     }
 
     private boolean readHasIndelInCore(final SAMRecord record)
@@ -587,6 +624,8 @@ public class ReadContextCounter implements VariantHotspot
 
             if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL)
                 return new RealignedContext(RealignedType.EXACT, mReadContext.indexedBases().length(), realignRightReadIndex);
+            else if(match == ReadContextMatch.CORE_PARTIAL)
+                return new RealignedContext(RealignedType.CORE_PARTIAL, mReadContext.indexedBases().length(), realignRightReadIndex);
         }
 
         // try a simple string search and take it as exact if the matched index is within the expected range

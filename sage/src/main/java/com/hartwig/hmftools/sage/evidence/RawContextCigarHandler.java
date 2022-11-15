@@ -106,26 +106,11 @@ public class RawContextCigarHandler implements CigarHandler
             int variantReadIndex = readIndex + readIndexOffset;
 
             int baseQuality = record.getBaseQualities()[variantReadIndex];
+
+            // this logic is inadequate for INDELs but is handled in the index matching routine instead - ie to reverse any incorrect
+            // ref support here
             boolean altSupport = mIsSNV && refPositionEnd >= mVariant.end() && matchesString(record, variantReadIndex, mVariant.alt());
             boolean refSupport = !altSupport && matchesFirstBase(record, variantReadIndex, mVariant.ref());
-
-            /*
-            boolean refSupport = false;
-
-            if(!altSupport)
-            {
-                if(mIsSNV)
-                {
-                    refSupport = matchesFirstBase(record, variantReadIndex, mVariant.ref());
-                }
-                else
-                {
-                    refSupport = matchesFirstBase(record, variantReadIndex, mVariant.ref());
-
-                }
-            }
-            */
-
             mResult = RawContext.alignment(variantReadIndex, altSupport, refSupport, baseQuality);
         }
     }

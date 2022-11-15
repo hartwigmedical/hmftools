@@ -106,6 +106,13 @@ public final class DedupIndel
         if(!applyFilter)
             return;
 
+        // first check for matching indels, and then take the left-aligned one
+        if(first.alt().length() == second.alt().length())
+        {
+            second.filters().add(DEDUP_INDEL_FILTER);
+            return;
+        }
+
         int firstRcLength = first.readContext().indexedBases().length();
         int secondRcLength = second.readContext().indexedBases().length();
 
