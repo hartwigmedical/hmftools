@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
+import com.hartwig.hmftools.gripss.filters.TargetRegions;
 import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations;
 
 import org.apache.commons.cli.CommandLine;
@@ -130,5 +131,6 @@ public class GripssConfig
         HotspotCache.addCmdLineArgs(options);
         FilterConstants.addCmdLineArgs(options);
         RepeatMaskAnnotations.addCmdLineArgs(options);
+        TargetRegions.addCmdLineArgs(options);
     }
 }

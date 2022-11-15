@@ -36,6 +36,7 @@ import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 import com.hartwig.hmftools.gripss.filters.KnownHotspot;
+import com.hartwig.hmftools.gripss.filters.TargetRegions;
 
 import org.junit.Test;
 
@@ -44,6 +45,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class VariantBuilderTest
 {
     private final HotspotCache mHotspotCache;
+    private final TargetRegions mTargetRegions;
+
     private final VariantBuilder mBuilder;
     private  final VcfIdGenerator mIdGenerator;
     private final GenotypeIds mGenotypeIds;
@@ -51,7 +54,8 @@ public class VariantBuilderTest
     public VariantBuilderTest()
     {
         mHotspotCache = new HotspotCache(null);
-        mBuilder = new VariantBuilder(defaultFilterConstants(), mHotspotCache);
+        mTargetRegions = new TargetRegions(null);
+        mBuilder = new VariantBuilder(defaultFilterConstants(), mHotspotCache, mTargetRegions);
         mIdGenerator = new VcfIdGenerator();
         mGenotypeIds = new GenotypeIds(0, 1, TEST_REF_ID, TEST_SAMPLE_ID, false);
     }
