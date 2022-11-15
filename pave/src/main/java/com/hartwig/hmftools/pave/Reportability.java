@@ -55,7 +55,7 @@ public class Reportability
             variant.context().getCommonInfo().putAttribute(HOTSPOT_FLAG, true);
         }
 
-        if(isReported(variant, variantImpact, isHotspot))
+        if(variant.filters().isEmpty() && isReported(variant, variantImpact, isHotspot))
         {
             variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
         }
