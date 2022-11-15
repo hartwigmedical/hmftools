@@ -70,6 +70,9 @@ public class GripssApplication
     public GripssApplication(
             final GripssConfig config, final FilterConstants filterConstants, final RefGenomeInterface refGenome, final CommandLine cmd)
     {
+        final VersionInfo version = new VersionInfo("gripss.version");
+        GR_LOGGER.info("Gripss version: {}", version.version());
+
         mConfig = config;
         mFilterConstants = filterConstants;
 

@@ -217,7 +217,7 @@ public class SoftFilters
         if(!breakend.isSgl() || breakend.IsLineInsertion)
             return false;
 
-        if(mFilterConstants.matchesPolyGRegion(breakend.Chromosome, breakend.Position))
+        if(mFilterConstants.LowQualRegion.containsPosition(breakend.Chromosome, breakend.Position))
             return false;
 
         double strandBias = calcStrandBias(breakend.Context);
