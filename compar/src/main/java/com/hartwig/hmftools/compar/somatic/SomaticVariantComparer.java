@@ -45,10 +45,12 @@ import htsjdk.variant.vcf.VCFCodec;
 public class SomaticVariantComparer implements ItemComparer
 {
     private final ComparConfig mConfig;
+    private boolean mLimitedComparison;
 
     public SomaticVariantComparer(final ComparConfig config)
     {
         mConfig = config;
+        mLimitedComparison = false;
     }
 
     @Override
@@ -131,7 +133,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                         if(matchLevel != REPORTABLE || eitherReportable)
                         {
-                            Mismatch mismatch = refVariant.findMismatch(newVariant, matchLevel, mConfig.Thresholds);
+                            Mismatch mismatch = refVariant.findMismatch(newVariant, matchLevel, mConfig.Thresholds, mLimitedComparison);
 
                             if(mismatch != null)
                                 mismatches.add(mismatch);
@@ -237,7 +239,16 @@ public class SomaticVariantComparer implements ItemComparer
         filter.add(new PassingVariantFilter());
 
         // use the Purple suffix if not specified
-        String vcfFile = PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId);
+        String vcfFile;
+        if(!fileSources.SomaticVcf.isEmpty())
+        {
+            vcfFile = fileSources.SomaticVcf;
+            mLimitedComparison = true;
+        }
+        else
+        {
+            vcfFile = PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId);
+        }
 
         try
         {

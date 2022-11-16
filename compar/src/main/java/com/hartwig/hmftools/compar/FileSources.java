@@ -12,6 +12,7 @@ public class FileSources
     public final String Linx;
     public final String LinxGermline;
     public final String Purple;
+    public final String SomaticVcf;
     public final String Cuppa;
     public final String Lilac;
     public final String Chord;
@@ -20,12 +21,13 @@ public class FileSources
     public static final String LINX_DIR = "linx_dir";
     public static final String LINX_GERMLINE_DIR = "linx_germline_dir";
     public static final String PURPLE_DIR = "purple_dir";
+    public static final String SOMATIC_VCF = "somatic_vcf";
     public static final String CUPPA_DIR = "cuppa_dir";
     public static final String LILAC_DIR = "lilac_dir";
     public static final String CHORD_DIR = "chord_dir";
 
     public FileSources(final String source, final String linx, final String purple, final String linxGermline, final String cuppa,
-            final String lilac, final String chord)
+            final String lilac, final String chord, final String somaticVcf)
     {
         Source = source;
         Linx = linx;
@@ -34,6 +36,7 @@ public class FileSources
         Cuppa = cuppa;
         Lilac = lilac;
         Chord = chord;
+        SomaticVcf = somaticVcf;
     }
 
     public static FileSources sampleInstance(final FileSources fileSources, final String sampleId)
@@ -45,7 +48,8 @@ public class FileSources
                 fileSources.LinxGermline.replaceAll("\\*", sampleId),
                 fileSources.Cuppa.replaceAll("\\*", sampleId),
                 fileSources.Lilac.replaceAll("\\*", sampleId),
-                fileSources.Chord.replaceAll("\\*", sampleId));
+                fileSources.Chord.replaceAll("\\*", sampleId),
+                fileSources.SomaticVcf.replaceAll("\\*", sampleId));
     }
 
     public static FileSources fromConfig(final String sourceName, final String fileSourceStr)
@@ -69,6 +73,7 @@ public class FileSources
         String cuppaDir = getDirectory(sampleDir, PipelineToolDirectories.CUPPA_DIR);
         String lilacDir = getDirectory(sampleDir, PipelineToolDirectories.LILAC_DIR);
         String chordDir = getDirectory(sampleDir, PipelineToolDirectories.CHORD_DIR);
+        String somaticVcf = "";
 
         for(int i = itemIndex; i < values.length; ++i)
         {
@@ -104,9 +109,13 @@ public class FileSources
             {
                 cuppaDir = value;
             }
+            else if(type.equals(SOMATIC_VCF))
+            {
+                somaticVcf = value;
+            }
         }
 
-        return new FileSources(sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir);
+        return new FileSources(sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, somaticVcf);
     }
 
     private static String getDirectory(final String sampleDir, final String typeDir)

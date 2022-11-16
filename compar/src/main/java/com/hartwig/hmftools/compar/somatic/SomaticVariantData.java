@@ -153,9 +153,19 @@ public class SomaticVariantData implements ComparableItem
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
     {
+        return findMismatch(other, matchLevel, thresholds, false);
+    }
+
+    protected Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, boolean limited)
+    {
         final SomaticVariantData otherVar = (SomaticVariantData) other;
 
         final List<String> diffs = Lists.newArrayList();
+
+        checkDiff(diffs, FLD_QUAL, Qual, otherVar.Qual, thresholds);
+
+        if(limited)
+            return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
 
         checkDiff(diffs, FLD_REPORTED, Reported, otherVar.Reported);
         checkDiff(diffs, FLD_HOTSPOT, HotspotStatus.toString(), otherVar.HotspotStatus.toString());
@@ -168,7 +178,6 @@ public class SomaticVariantData implements ComparableItem
         checkDiff(diffs, FLD_HGVS_PROTEIN, CanonicalHgvsProteinImpact, otherVar.CanonicalHgvsProteinImpact);
         checkDiff(diffs, FLD_OTHER_REPORTED, OtherReportedEffects, otherVar.OtherReportedEffects);
 
-        checkDiff(diffs, FLD_QUAL, Qual, otherVar.Qual, thresholds);
         checkDiff(diffs, FLD_LPS, HasLPS, otherVar.HasLPS);
         checkDiff(diffs, FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, otherVar.SubclonalLikelihood, thresholds);
 
