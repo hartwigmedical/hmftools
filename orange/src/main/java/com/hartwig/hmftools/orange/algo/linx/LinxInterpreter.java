@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.linx.GeneDisruptionFactory;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,10 +22,10 @@ public final class LinxInterpreter {
     }
 
     @NotNull
-    public static LinxInterpretedData interpret(@NotNull LinxData linx, @NotNull List<ProtectEvidence> evidences,
+    public static LinxInterpretedData interpret(@NotNull LinxData linx,
             @NotNull List<DriverGene> driverGenes, @NotNull KnownFusionCache knownFusionCache) {
         List<LinxFusion> additionalSuspectFusions =
-                DNAFusionSelector.selectInterestingUnreportedFusions(linx.allFusions(), evidences, driverGenes);
+                DNAFusionSelector.selectInterestingUnreportedFusions(linx.allFusions(), driverGenes);
         LOGGER.info(" Found an additional {} suspect fusions that are potentially interesting", additionalSuspectFusions.size());
 
         List<LinxBreakend> additionalSuspectBreakends =

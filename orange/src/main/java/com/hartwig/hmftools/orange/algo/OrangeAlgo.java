@@ -25,8 +25,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
+import com.hartwig.hmftools.common.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
@@ -34,8 +34,6 @@ import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.common.purple.loader.PurpleData;
 import com.hartwig.hmftools.common.purple.loader.PurpleDataLoader;
 import com.hartwig.hmftools.common.sage.GeneDepthFile;
@@ -52,7 +50,6 @@ import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
-import com.hartwig.hmftools.orange.algo.protect.ProtectInterpreter;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
@@ -136,12 +133,10 @@ public class OrangeAlgo {
         OrangeSample refSample = loadSampleData(config, false);
         OrangeSample tumorSample = loadSampleData(config, true);
 
-        List<ProtectEvidence> allEvidences = loadProtectData(config);
-
-        LinxInterpretedData linx = LinxInterpreter.interpret(loadLinxData(config), allEvidences, driverGenes, knownFusionCache);
+        LinxInterpretedData linx = LinxInterpreter.interpret(loadLinxData(config), driverGenes, knownFusionCache);
 
         ChordData chord = loadChordAnalysis(config);
-        PurpleInterpretedData purple = PurpleInterpreter.interpret(loadPurpleData(config), allEvidences, driverGenes, chord);
+        PurpleInterpretedData purple = PurpleInterpreter.interpret(loadPurpleData(config), driverGenes, chord);
 
         List<WildTypeGene> wildTypeGenes = WildTypeFactory.filterQCWildTypes(purple.fit().qc().status(),
                 WildTypeFactory.determineWildTypeGenes(purple.reportableGermlineVariants(),
@@ -171,7 +166,6 @@ public class OrangeAlgo {
                 .chord(chord)
                 .cuppa(loadCuppaData(config))
                 .peach(loadPeachData(config))
-                .protect(ProtectInterpreter.interpret(allEvidences))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();
@@ -345,15 +339,6 @@ public class OrangeAlgo {
         LOGGER.info(" Loaded {} PEACH genotypes from {}", peachGenotypes.size(), config.peachGenotypeTsv());
 
         return peachGenotypes;
-    }
-
-    @NotNull
-    private static List<ProtectEvidence> loadProtectData(@NotNull OrangeConfig config) throws IOException {
-        LOGGER.info("Loading PROTECT data from {}", new File(config.protectEvidenceTsv()).getParent());
-        List<ProtectEvidence> evidences = ProtectEvidenceFile.read(config.protectEvidenceTsv());
-        LOGGER.info(" Loaded {} PROTECT evidences from {}", evidences.size(), config.protectEvidenceTsv());
-
-        return evidences;
     }
 
     @NotNull

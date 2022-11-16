@@ -5,11 +5,8 @@ import java.util.List;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.protect.EventGenerator;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.orange.algo.protect.EvidenceEvaluator;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -22,14 +19,13 @@ final class DNAFusionSelector {
 
     @NotNull
     public static List<LinxFusion> selectInterestingUnreportedFusions(@NotNull List<LinxFusion> allFusions,
-            @NotNull List<ProtectEvidence> evidences, @NotNull List<DriverGene> driverGenes) {
+            @NotNull List<DriverGene> driverGenes) {
         List<LinxFusion> filtered = Lists.newArrayList();
         for (LinxFusion fusion : allFusions) {
             if (!fusion.reported()) {
-                boolean hasEvidence = EvidenceEvaluator.hasEvidence(evidences, null, EventGenerator.fusionEvent(fusion));
                 boolean hasReportedType = !fusion.reportedType().equals(KnownFusionType.NONE.toString());
                 boolean isFusionOfOncogene = isInframeFusionWithOncogene(fusion, driverGenes);
-                if (hasReportedType || hasEvidence || isFusionOfOncogene) {
+                if (hasReportedType || isFusionOfOncogene) {
                     filtered.add(fusion);
                 }
             }

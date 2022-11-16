@@ -14,9 +14,10 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
 import com.hartwig.hmftools.common.variant.Variant;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ProtectEventGeneratorTest {
+public class EventGeneratorTest {
 
     @Test
     public void canTestToVariantEvent() {
@@ -40,6 +41,7 @@ public class ProtectEventGeneratorTest {
         assertNotNull(EventGenerator.variantEvent(nonCanonical));
     }
 
+    @NotNull
     private static String createAltTranscriptInfo() {
         return "trans|coding|impact|effect|MISSENSE";
     }

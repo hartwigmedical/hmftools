@@ -10,8 +10,6 @@ import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
-import com.hartwig.hmftools.orange.algo.protect.ImmutableProtectInterpretedData;
-import com.hartwig.hmftools.orange.algo.protect.ProtectInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 
@@ -30,7 +28,6 @@ public final class OrangeReportModifier {
                 .purple(limitPurpleDataToOne(report.purple()))
                 .linx(limitLinxDataToOne(report.linx()))
                 .isofox(limitIsofoxDataToOne(report.isofox()))
-                .protect(limitProtectDataToOne(report.protect()))
                 .build();
     }
 
@@ -96,17 +93,6 @@ public final class OrangeReportModifier {
                 .allNovelSpliceJunctions(max1(isofox.allNovelSpliceJunctions()))
                 .reportableSkippedExons(max1(isofox.reportableSkippedExons()))
                 .reportableNovelExonsIntrons(max1(isofox.reportableNovelExonsIntrons()))
-                .build();
-    }
-
-    @NotNull
-    private static ProtectInterpretedData limitProtectDataToOne(@NotNull ProtectInterpretedData protect) {
-        return ImmutableProtectInterpretedData.builder()
-                .from(protect)
-                .reportableEvidences(max1(protect.reportableEvidences()))
-                .reportableTrials(max1(protect.reportableTrials()))
-                .unreportedEvidences(max1(protect.unreportedEvidences()))
-                .unreportedTrials(max1(protect.unreportedTrials()))
                 .build();
     }
 
