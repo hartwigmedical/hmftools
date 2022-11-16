@@ -107,7 +107,7 @@ public final class DedupIndel
             return;
 
         // first check for matching indels, and then take the left-aligned one
-        if(first.alt().length() == second.alt().length())
+        if(first.alt().length() == second.alt().length() && first.ref().length() == second.ref().length())
         {
             second.filters().add(DEDUP_INDEL_FILTER);
             return;

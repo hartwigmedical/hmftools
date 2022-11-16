@@ -258,7 +258,12 @@ public class ReadContextCounter implements VariantHotspot
         boolean covered = mReadContext.indexedBases().isCoreCovered(readIndex, record.getReadBases().length);
 
         if(!covered)
+        {
+            if(rawContext.AltSupport)
+                registerRawSupport(rawContext);
+
             return UNRELATED;
+        }
 
         final QualityConfig qualityConfig = sageConfig.Quality;
 
@@ -377,23 +382,20 @@ public class ReadContextCounter implements VariantHotspot
 
         ReadMatchType matchType = UNRELATED;
 
-        if(rawContext.RefSupport || rawContext.AltSupport)
-        {
-            mCounts[RC_TOTAL]++;
-            mQualities[RC_TOTAL] += quality;
+        mCounts[RC_TOTAL]++;
+        mQualities[RC_TOTAL] += quality;
 
-            if(rawContext.RefSupport)
-            {
-                mCounts[RC_REF]++;
-                mQualities[RC_REF] += quality;
-                matchType = NO_SUPPORT;
-            }
-            else if(rawContext.AltSupport)
-            {
-                mCounts[RC_ALT]++;
-                mQualities[RC_ALT] += quality;
-                countStrandedness(record);
-            }
+        if(rawContext.RefSupport)
+        {
+            mCounts[RC_REF]++;
+            mQualities[RC_REF] += quality;
+            matchType = NO_SUPPORT;
+        }
+        else if(rawContext.AltSupport)
+        {
+            mCounts[RC_ALT]++;
+            mQualities[RC_ALT] += quality;
+            countStrandedness(record);
         }
 
         // add to jitter penalty as a function of the number of repeats found

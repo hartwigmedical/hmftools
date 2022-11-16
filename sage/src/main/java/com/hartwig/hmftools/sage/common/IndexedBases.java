@@ -221,7 +221,11 @@ public class IndexedBases
             if(otherByteIndex < 0 || otherByteIndex >= otherBases.length)
             {
                 partialCoreOverlap = true;
-                continue;
+
+                if(otherByteIndex >= otherBases.length)
+                    break;
+                else
+                    continue;
             }
 
             byte otherByte = otherBases[otherByteIndex];

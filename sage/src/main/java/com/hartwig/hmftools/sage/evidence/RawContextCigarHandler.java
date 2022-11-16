@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 
 import com.hartwig.hmftools.common.samtools.CigarHandler;
@@ -110,7 +111,7 @@ public class RawContextCigarHandler implements CigarHandler
             // this logic is inadequate for INDELs but is handled in the index matching routine instead - ie to reverse any incorrect
             // ref support here
             boolean altSupport = mIsSNV && refPositionEnd >= mVariant.end() && matchesString(record, variantReadIndex, mVariant.alt());
-            boolean refSupport = !altSupport && matchesFirstBase(record, variantReadIndex, mVariant.ref());
+            boolean refSupport = !altSupport && matchesFirstBase(record, variantReadIndex, mVariant.ref(), true);
             mResult = RawContext.alignment(variantReadIndex, altSupport, refSupport, baseQuality);
         }
     }
@@ -139,7 +140,8 @@ public class RawContextCigarHandler implements CigarHandler
         if(refPosition == mVariant.position())
         {
             boolean altSupport = mIsDelete && e.getLength() == mVariant.ref().length() - 1
-                    && matchesFirstBase(record, readIndex, mVariant.ref());
+                    && matchesFirstBase(record, readIndex, mVariant.ref(), false);
+
             int baseQuality = altSupport ? avgBaseQuality(readIndex, record, 2) : 0;
             mResult = RawContext.indel(readIndex, altSupport, baseQuality);
         }
@@ -167,9 +169,12 @@ public class RawContextCigarHandler implements CigarHandler
         handleDelete(record, e, readIndex, refPosition);
     }
 
-    private static boolean matchesFirstBase(final SAMRecord record, int index, final String expected)
+    private static boolean matchesFirstBase(final SAMRecord record, int index, final String expected, boolean allowLowQual)
     {
-        return expected.charAt(0) == record.getReadBases()[index];
+        if(expected.charAt(0) == record.getReadBases()[index])
+            return true;
+
+        return allowLowQual && record.getBaseQualities()[index] < MATCHING_BASE_QUALITY;
     }
 
     private static boolean matchesString(final SAMRecord record, int index, final String expected)
