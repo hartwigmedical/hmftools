@@ -13,6 +13,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptCodingType;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.immutables.value.Value;
 
@@ -39,7 +40,7 @@ public abstract class LinxBreakend
     public abstract int totalExonCount();
 
     // additional fields for patient report
-    public abstract String type();
+    public abstract StructuralVariantType type();
     public abstract String chromosome();
     public abstract int orientation();
     public abstract int strand();
@@ -108,7 +109,7 @@ public abstract class LinxBreakend
                     .nextSpliceExonPhase(Integer.parseInt(values[fieldsIndexMap.get("nextSpliceExonPhase")]))
                     .nextSpliceDistance(Integer.parseInt(values[fieldsIndexMap.get("nextSpliceDistance")]))
                     .totalExonCount(Integer.parseInt(values[fieldsIndexMap.get("totalExonCount")]))
-                    .type(values[fieldsIndexMap.get("type")])
+                    .type(StructuralVariantType.valueOf(values[fieldsIndexMap.get("type")]))
                     .chromosome(values[fieldsIndexMap.get("chromosome")])
                     .orientation(Integer.parseInt(values[fieldsIndexMap.get("orientation")]))
                     .strand(Integer.parseInt(values[fieldsIndexMap.get("strand")]))
