@@ -107,7 +107,7 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
                 return null
 
             anchorBlosumMatch = blosumSearcher.searchForAnchor(
-                vdj.sequence, vdj.jAnchor.geneType.pairedVjGeneType(),
+                vdj.sequence, vdj.jAnchor.geneType.pairedVjGeneTypes(),
                 IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY,
                 0,
                 vdj.jAnchor.anchorBoundary)
@@ -118,7 +118,7 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
                 return null
 
             anchorBlosumMatch = blosumSearcher.searchForAnchor(
-                vdj.sequence, vdj.vAnchor.geneType.pairedVjGeneType(),
+                vdj.sequence, vdj.vAnchor.geneType.pairedVjGeneTypes(),
                 IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY,
                 vdj.vAnchor.anchorBoundary,
                 vdj.length)
@@ -281,6 +281,11 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
             if (vdj.cdr3Sequence.length > CDR3_FILTER_AA_MAX_LENGTH * 3)
             {
                 filters.add("MAX_LENGTH")
+            }
+            if (vdj.vAnchor != null && vdj.jAnchor != null &&
+                vdj.vAnchorBoundary!! > vdj.jAnchorBoundary!!)
+            {
+                filters.add("CDR3_DELETED")
             }
             if (filters.isEmpty())
             {

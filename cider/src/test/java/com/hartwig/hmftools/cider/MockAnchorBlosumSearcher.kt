@@ -10,7 +10,7 @@ class MockAnchorBlosumSearcher : IAnchorBlosumSearcher
         return anchorBlosumMatch
     }
 
-    override fun searchForAnchor(dnaSeq: String, targetAnchorGeneType: VJGeneType,
+    override fun searchForAnchor(sequence: String, targetAnchorGeneTypes: Collection<VJGeneType>,
                                  mode: IAnchorBlosumSearcher.Mode,
                                  startOffset: Int, endOffset: Int) : AnchorBlosumMatch?
     {

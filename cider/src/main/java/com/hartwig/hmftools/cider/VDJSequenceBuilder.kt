@@ -28,7 +28,6 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         // try to join together the layouts
         for (vGeneType: VJGeneType in oneSidedLayouts.keySet().filter({ vjGeneType -> vjGeneType.vj == VJ.V }))
         {
-            val jGeneType: VJGeneType = vGeneType.pairedVjGeneType()
             val vLayoutItr: MutableIterator<ReadLayout> = oneSidedLayouts[vGeneType].iterator()
 
             // we try each pair see if they can be aligned together
@@ -36,18 +35,22 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             while (vLayoutItr.hasNext())
             {
                 val vLayout: ReadLayout = vLayoutItr.next()
-                val jLayoutItr: MutableIterator<ReadLayout> = oneSidedLayouts[jGeneType].iterator()
-                while (jLayoutItr.hasNext())
+                loop@ for (jGeneType: VJGeneType in vGeneType.pairedVjGeneTypes())
                 {
-                    val jLayout: ReadLayout = jLayoutItr.next()
-                    val vdj: VDJSequence? = tryOverlapVJ(vLayout, jLayout, vGeneType, jGeneType)
-
-                    if (vdj != null)
+                    // try all the layouts that are paired types
+                    val jLayoutItr: MutableIterator<ReadLayout> = oneSidedLayouts[jGeneType].iterator()
+                    while (jLayoutItr.hasNext())
                     {
-                        vdjList.add(vdj)
-                        vLayoutItr.remove()
-                        jLayoutItr.remove()
-                        break
+                        val jLayout: ReadLayout = jLayoutItr.next()
+                        val vdj: VDJSequence? = tryOverlapVJ(vLayout, jLayout, vGeneType, jGeneType)
+
+                        if (vdj != null)
+                        {
+                            vdjList.add(vdj)
+                            vLayoutItr.remove()
+                            jLayoutItr.remove()
+                            break@loop // break out of the outer loop
+                        }
                     }
                 }
             }
@@ -118,7 +121,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     {
         sLogger.debug("try complete {} layout: {}", layoutGeneType, layout.consensusSequence())
 
-        val targetAnchorType = layoutGeneType.pairedVjGeneType()
+        val targetAnchorTypes = layoutGeneType.pairedVjGeneTypes()
 
         // we want to use the indices to work where things are
         val layoutSeq: String = layout.consensusSequence()
@@ -131,20 +134,20 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         val searchStart: Int
         val searchEnd: Int
 
-        if (targetAnchorType.vj == VJ.V)
-        {
-            searchStart = 0
-            searchEnd = layoutAnchorRange.first
-        }
-        else
+        if (layoutGeneType.vj == VJ.V)
         {
             searchStart = layoutAnchorRange.last + 1
             searchEnd = layoutSeq.length
         }
+        else
+        {
+            searchStart = 0
+            searchEnd = layoutAnchorRange.first
+        }
 
         // find all the homolog sequences
         val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(
-                layoutSeq, targetAnchorType,
+                layoutSeq, targetAnchorTypes,
                 IAnchorBlosumSearcher.Mode.DISALLOW_NEG_SIMILARITY,
                 searchStart, searchEnd)
 
@@ -188,7 +191,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             )
             jAnchor = VJAnchorByBlosum(
                 vj = VJ.J,
-                geneType = targetAnchorType,
+                geneType = anchorBlosumMatch.templateGenes.first().type,
                 anchorBoundary = jAnchorRange.first,
                 templateAnchorSeq = anchorBlosumMatch.templateAnchorSeq,
                 templateGenes = anchorBlosumMatch.templateGenes,
@@ -199,7 +202,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         {
             vAnchor = VJAnchorByBlosum(
                 vj = VJ.V,
-                geneType = targetAnchorType,
+                geneType = anchorBlosumMatch.templateGenes.first().type,
                 anchorBoundary = vAnchorRange.last + 1,
                 templateAnchorSeq = anchorBlosumMatch.templateAnchorSeq,
                 templateGenes = anchorBlosumMatch.templateGenes,
@@ -215,10 +218,8 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
         val vdj = VDJSequence(layout, layoutStart, layoutEnd, vAnchor, jAnchor)
 
-        sLogger.debug("built VDJ sequence: {}-{}-{}",
-            Codons.aminoAcidFromBases(vdj.vAnchorSequence),
-            Codons.aminoAcidFromBases(vdj.cdr3SequenceShort),
-            Codons.aminoAcidFromBases(vdj.jAnchorSequence))
+        sLogger.debug("built VDJ sequence: {}, {}",
+            vdj.aminoAcidSequenceFormatted, vdj.sequenceFormatted)
 
         return vdj
     }
@@ -229,7 +230,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         assert(vLayoutGeneType.vj == VJ.V)
         assert(jLayoutGeneType.vj == VJ.J)
 
-        if (vLayoutGeneType != jLayoutGeneType.pairedVjGeneType())
+        if (!vLayoutGeneType.pairedVjGeneTypes().contains(jLayoutGeneType))
         {
             // mismatched type, i.e. IGHV must pair with IGHJ
             return null
@@ -290,7 +291,9 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         val vAnchor: VJAnchor?
         val jAnchor: VJAnchor
 
-        if (jAnchorBoundary - vAnchorBoundary >= 0)
+        //if (jAnchorBoundary - vAnchorBoundary >= 0)
+        if (vAnchorRange.first < jAnchorRange.first &&
+            vAnchorRange.last < jAnchorRange.last)
         {
             layoutSliceStart = vAnchorRange.first
             vAnchorBoundary -= layoutSliceStart
@@ -320,10 +323,8 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
         val vdj = VDJSequence(combinedVjLayout, layoutSliceStart, layoutSliceEnd, vAnchor, jAnchor)
 
-        sLogger.debug("built VDJ sequence: {}-{}-{}, by overlapping V layout({}): {} and J layout({}): {}",
-            Codons.aminoAcidFromBases(vdj.vAnchorSequence),
-            Codons.aminoAcidFromBases(vdj.cdr3SequenceShort),
-            Codons.aminoAcidFromBases(vdj.jAnchorSequence),
+        sLogger.debug("built VDJ sequence: {}, by overlapping V layout({}): {} and J layout({}): {}",
+            vdj.aminoAcidSequenceFormatted,
             vLayout.id, vLayout.consensusSequence(), jLayout.id, jLayout.consensusSequence())
 
         return vdj

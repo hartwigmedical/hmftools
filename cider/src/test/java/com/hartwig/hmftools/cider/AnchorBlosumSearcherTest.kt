@@ -62,7 +62,7 @@ class AnchorBlosumSearcherTest
 
         val testSeq = fullSeq.substring(vAnchorEnd)
         val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(
-            testSeq, VJGeneType.IGHJ, IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY)
+            testSeq, listOf(VJGeneType.IGHJ), IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY)
 
         assertNotNull(anchorBlosumMatch)
         assertEquals(45, anchorBlosumMatch.anchorStart)
@@ -89,7 +89,7 @@ class AnchorBlosumSearcherTest
 
         val testSeq = fullSeq.substring(vAnchorEnd)
         val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(
-            testSeq, VJGeneType.IGHJ, IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY)
+            testSeq, listOf(VJGeneType.IGHJ), IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY)
 
         assertNotNull(anchorBlosumMatch)
         assertEquals(45, anchorBlosumMatch.anchorStart)
@@ -115,7 +115,7 @@ class AnchorBlosumSearcherTest
 
         val testSeq = fullSeq.substring(0, jAnchorStart)
         val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(
-            testSeq, VJGeneType.IGHV, IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY)
+            testSeq, listOf(VJGeneType.IGHV), IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY)
 
         assertNotNull(anchorBlosumMatch)
         assertEquals(27, anchorBlosumMatch.anchorStart)
@@ -139,8 +139,14 @@ class AnchorBlosumSearcherTest
         assertNotEquals(-1, jAnchorStart)
 
         val testSeq = fullSeq.substring(0, jAnchorStart)
+
+        // we use negative start offset, this means that relative to the seq start, the anchor start
+        // could be negative, and would result in a partial match
+        //         ----------------------------------- testSeq
+        // ++++++++++    template anchor
+        // |------|      startOffset
         val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(
-            testSeq, VJGeneType.IGHV, IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY)
+            testSeq, listOf(VJGeneType.IGHV), IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY)
 
         assertNotNull(anchorBlosumMatch)
         assertEquals(1, anchorBlosumMatch.anchorStart)

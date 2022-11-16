@@ -45,6 +45,8 @@ data class VJAnchorByReadMatch(
 {
 }
 
+// NOTE: vAnchorBoundary could be smaller than jAnchorBoundary
+// if the anchors overlap
 class VDJSequence(
     val layout: ReadLayout,
     val layoutSliceStart: Int,
@@ -187,7 +189,8 @@ class VDJSequence(
 
     val cdr3End: Int get()
     {
-        return Math.min((jAnchorBoundary ?: return length) + 3, length)
+        // protect against case where v anchor boundary is actually > j anchor boundary
+        return Math.max(Math.min((jAnchorBoundary ?: return length) + 3, length), cdr3Start)
     }
 
     val cdr3Sequence: String get()
