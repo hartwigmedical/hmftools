@@ -5,24 +5,32 @@ import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
-import org.jetbrains.annotations.Nullable;
+import static htsjdk.samtools.CigarOperator.S;
 
 import htsjdk.samtools.Cigar;
 
-public class SoftClipSide
+public class ClippedSide
 {
     public final int Side;
     public final int Length;
+    public final boolean IsSoft;
 
-    public SoftClipSide(final int side, final int length)
+    public ClippedSide(final int side, final int length, final boolean isSoft)
     {
         Side = side;
         Length = length;
+        IsSoft = isSoft;
     }
 
-    public static SoftClipSide fromCigar(final Cigar cigar) { return from(cigar, leftSoftClipped(cigar), rightSoftClipped(cigar)); }
+    public static ClippedSide fromCigar(final Cigar cigar, boolean allowHardClips)
+    {
+        return from(
+                cigar,
+                allowHardClips ? cigar.isLeftClipped() : leftSoftClipped(cigar),
+                allowHardClips ? cigar.isRightClipped() : rightSoftClipped(cigar));
+    }
 
-    public static SoftClipSide from(final Cigar cigar, boolean isLeftClipped, boolean isRightClipped)
+    public static ClippedSide from(final Cigar cigar, boolean isLeftClipped, boolean isRightClipped)
     {
         int scLeft = isLeftClipped ? cigar.getFirstCigarElement().getLength() : 0;
         int scRight = isRightClipped ? cigar.getLastCigarElement().getLength() : 0;
@@ -33,17 +41,17 @@ public class SoftClipSide
         if(scLeft > 0 && scRight > 0)
         {
             if(scLeft >= scRight)
-                return new SoftClipSide(SE_START, scLeft);
+                return new ClippedSide(SE_START, scLeft, cigar.getFirstCigarElement().getOperator() == S);
             else
-                return new SoftClipSide(SE_END, scRight);
+                return new ClippedSide(SE_END, scRight, cigar.getLastCigarElement().getOperator() == S);
         }
         else if(scLeft > 0)
         {
-            return new SoftClipSide(SE_START, scLeft);
+            return new ClippedSide(SE_START, scLeft, cigar.getFirstCigarElement().getOperator() == S);
         }
         else
         {
-            return new SoftClipSide(SE_END, scRight);
+            return new ClippedSide(SE_END, scRight, cigar.getLastCigarElement().getOperator() == S);
         }
     }
 

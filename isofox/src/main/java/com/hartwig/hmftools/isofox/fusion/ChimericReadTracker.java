@@ -34,7 +34,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.samtools.SoftClipSide;
+import com.hartwig.hmftools.common.samtools.ClippedSide;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
@@ -514,11 +514,11 @@ public class ChimericReadTracker
 
         final int[] junctionPositions = new int[SE_PAIR];
 
-        // type 2: supplementary
+        // type 2: supplementary with clipping
         final ReadRecord suppRead = readGroup.Reads.stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
         if(suppRead != null)
         {
-            SoftClipSide scSide = ReadRecord.softClipSide(suppRead);
+            ClippedSide scSide = ReadRecord.clippedSide(suppRead);
 
             if(scSide != null && scSide.Length >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
             {
@@ -537,7 +537,7 @@ public class ChimericReadTracker
         // select the side with the longest soft-clipping
         ReadRecord read = readGroup.Reads.get(0);
 
-        SoftClipSide scSide = ReadRecord.softClipSide(read);
+        ClippedSide scSide = ReadRecord.clippedSide(read);
 
         if(scSide != null)
         {
