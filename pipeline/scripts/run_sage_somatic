@@ -44,7 +44,7 @@ args="${args} -hotspots ${hotspots} \
   -write_bqr_data \
   -out ${sage_vcf}"
 
-if [ ! "${run_mode}" == "PANEL" ]; then
+if [ "${run_mode}" == "PANEL" ]; then
   args="${args} -hotspot_min_tumor_vaf 0.01 -hotspot_min_tumor_qual 150 -panel_min_tumor_qual 250 -high_confidence_min_tumor_qual 350 -low_confidence_min_tumor_qual 500"
 fi  
 

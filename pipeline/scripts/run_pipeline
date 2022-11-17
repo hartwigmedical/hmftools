@@ -105,6 +105,7 @@ if [ "${ref_genome_version}" == "V37" ]; then
   germline_blacklist_bed=${resources_dir}/variants/KnownBlacklist.germline.37.bed
   germline_blacklist_vcf=${resources_dir}/variants/KnownBlacklist.germline.37.vcf.gz
   gnomad_path=${resources_dir}/variants/gnomad_variants_v37.csv.gz
+  pon_artefact_file=${resources_dir}/variants/PanelArtefacts.37.tsv.gz
 
   # SVs (for Gripss, Linx)
   sv_hotspot_file=${resources_dir}/sv/known_fusions.37.bedpe
@@ -151,6 +152,7 @@ else
   germline_blacklist_bed=${resources_dir}/variants/KnownBlacklist.germline.38.bed
   germline_blacklist_vcf=${resources_dir}/variants/KnownBlacklist.germline.38.vcf.gz
   gnomad_path=${resources_dir}/variants/gnomad/
+  pon_artefact_file=${resources_dir}/variants/PanelArtefacts.38.tsv.gz
 
   # SVs (for Gripss, Linx)
   sv_hotspot_file=${resources_dir}/sv/known_fusions.38.bedpe
@@ -244,7 +246,7 @@ ${scripts_dir}/run_pave_somatic ${pave_jar} \
   ${tumor_id}  \
   ${sage_vcf} ${pave_somatic_dir} ${pave_vcf} \
   ${run_mode} ${ref_genome_version} ${ref_genome} \
-  ${ensembl_dir} ${driver_gene_panel} ${somatic_pon_file} ${mappability_bed} ${gnomad_path} \
+  ${ensembl_dir} ${driver_gene_panel} ${somatic_pon_file} ${pon_artefact_file} ${mappability_bed} ${gnomad_path} \
 
 
 # Sage germline
@@ -297,7 +299,7 @@ ${scripts_dir}/run_gripss_somatic ${gripss_jar} \
   ${tumor_id}  ${reference_id} \
   ${gripss_somatic_dir} ${gridss_vcf} \
   ${run_mode} ${ref_genome_version} ${ref_genome} \
-  ${sv_hotspot_file} ${sv_pon_file} ${sgl_pon_file} ${repeat_mask_file} \
+  ${sv_hotspot_file} ${sv_pon_file} ${sgl_pon_file} ${repeat_mask_file} ${target_regions_definition} \
 
 
 if [ "${reference_id}" != "none" ]; then

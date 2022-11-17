@@ -11,6 +11,7 @@ ref_genome=$1 && shift
 ensembl_dir=$1 && shift
 driver_gene_panel=$1 && shift
 pon_file=$1 && shift
+pon_artefact_file=$1 && shift
 mappability_bed=$1 && shift
 gnomad_path=$1 && shift
 
@@ -46,6 +47,9 @@ args="-sample ${sample_id} \
   -read_pass_only \
   -output_vcf_file ${pave_vcf}"
 
+if [ "${run_mode}" == "PANEL" ]; then
+  args="${args} -pon_artefact_file ${pon_artefact_file}"
+fi
 
 if [ "${ref_genome_version}" == "V37" ]; then
   args="${args} -gnomad_freq_file ${gnomad_path}"

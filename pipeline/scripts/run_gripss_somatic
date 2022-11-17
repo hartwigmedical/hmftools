@@ -12,6 +12,7 @@ known_hotspot_file=$1 && shift
 pon_sv_file=$1 && shift
 pon_sgl_file=$1 && shift
 repeat_mask_file=$1 && shift
+target_regions_bed=$1 && shift
 
 if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
@@ -45,7 +46,7 @@ args="${args} -ref_genome ${ref_genome} \
   -output_dir ${output_dir}"
 
 if [ "${run_mode}" == "PANEL" ]; then
-  args="${args} -filter_sgls
+  args="${args} -target_regions_bed ${target_regions_bed} \
     -hard_min_tumor_qual 200 -min_qual_break_point 1000 -min_qual_break_end 1000"
 fi
 
