@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.common.aminoacid.BlosumMapping
 import com.hartwig.hmftools.common.codon.Codons
 import org.apache.logging.log4j.LogManager
 
