@@ -105,11 +105,11 @@ public class SageApplication implements AutoCloseable
 
         coverage.writeFiles(mConfig.OutputFile);
 
-        long endTime = System.currentTimeMillis();
-        double runTime = (endTime - startTime) / 1000.0;
+        long timeTakenMs = System.currentTimeMillis() - startTime;
+        double timeTakeMins = timeTakenMs / 60000.0;
 
-        SG_LOGGER.info("Sage complete, run time({}s) memory(init={}mb max={}mb)",
-                String.format("%.2f", runTime), initMemory, maxTaskMemory);
+        SG_LOGGER.info("Sage complete, mins({}min)", String.format("%.3f", timeTakeMins));
+        SG_LOGGER.debug("Sage memory init({}mb) max({}mb)", initMemory, maxTaskMemory);
     }
 
     private SAMSequenceDictionary dictionary() throws IOException
