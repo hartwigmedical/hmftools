@@ -191,7 +191,7 @@ The INSRMRC and INSRMRT are used in various clustering rules downstream in LINX.
 
 
 ## Version History and Download Links
-- [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.3)
+- [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.3.2)
 - [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.2)
 - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.1)
 - [2.0](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.0)

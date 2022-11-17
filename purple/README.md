@@ -969,7 +969,7 @@ We can determine the likelihood of a variant being subclonal at any given varian
 
 
 ## Version History and Download Links
-- [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.7)
+- [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.7.2)
 - [3.6](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.6)
 - [3.5](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.5)
 - [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.4)
