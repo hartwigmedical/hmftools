@@ -75,7 +75,7 @@
         <neo.version>1.0</neo.version>
         <orange.version>2.0</orange.version>
         <paddle.version>1.0</paddle.version>
-        <patient-db.version>3.72</patient-db.version>
+        <patient-db.version>3.73</patient-db.version>
         <patient-reporter.version>7.26</patient-reporter.version>
         <pave.version>1.4.1</pave.version>
         <protect.version>2.3</protect.version>

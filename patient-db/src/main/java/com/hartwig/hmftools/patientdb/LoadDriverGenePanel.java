@@ -18,11 +18,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class LoadDriverGenePanel {
+public class LoadDriverGenePanel
+{
 
     private static final Logger LOGGER = LogManager.getLogger(LoadDriverGenePanel.class);
 
-    public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
+    public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException
+    {
         Options options = new Options();
 
         DatabaseAccess.addDatabaseCmdLineArgs(options);

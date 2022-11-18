@@ -450,9 +450,12 @@ CREATE TABLE driverGenePanel
     reportDisruption BOOLEAN NOT NULL,
     reportAmplification BOOLEAN NOT NULL,
     reportSomaticHotspot BOOLEAN NOT NULL,
-    reportGermlineVariant BOOLEAN NOT NULL,
-    reportGermlineHotspot BOOLEAN NOT NULL,
+    reportGermlineVariant varchar(50) NOT NULL,
+    reportGermlineHotspot varchar(50) NOT NULL,
     likelihoodType varchar(255) NOT NULL,
+    reportGermlineDisruption BOOLEAN NOT NULL,
+    additionalReportedTranscripts varchar(255) NOT NULL,
+    reportPGX BOOLEAN NOT NULL,
     PRIMARY KEY (gene)
 );
 
