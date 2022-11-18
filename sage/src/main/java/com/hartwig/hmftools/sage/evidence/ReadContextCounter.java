@@ -259,9 +259,7 @@ public class ReadContextCounter implements VariantHotspot
 
         if(!covered)
         {
-            if(rawContext.AltSupport)
-                registerRawSupport(rawContext);
-
+            registerRawSupport(rawContext);
             return UNRELATED;
         }
 
@@ -323,7 +321,6 @@ public class ReadContextCounter implements VariantHotspot
                 double rawBaseQuality = qualityCalc.rawBaseQuality(this, readIndex, record);
                 mSupportAltBaseQualityTotal += rawBaseQuality;
 
-                rawContext.updateSupport(false, true);
                 registerRawSupport(rawContext);
                 logReadEvidence(sampleId, record, match.toString(), readIndex);
 
@@ -341,7 +338,7 @@ public class ReadContextCounter implements VariantHotspot
             else if(match == ReadContextMatch.CORE_PARTIAL)
             {
                 // if the core is partly overlapped then back out any attribution to a ref match
-                rawContext.updateSupport(false, false);
+                rawContext.updateSupport(false, rawContext.AltSupport);
             }
         }
 
@@ -359,7 +356,7 @@ public class ReadContextCounter implements VariantHotspot
             mQualities[RC_TOTAL] += quality;
 
             logReadEvidence(sampleId, record, "REALIGNED", readIndex);
-            rawContext.updateSupport(false, true);
+            rawContext.updateSupport(false, rawContext.AltSupport);
             registerRawSupport(rawContext);
             return SUPPORT;
         }
