@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bammetrics;
+package com.hartwig.hmftools.bamtools.metrics;
 
 import java.util.List;
 

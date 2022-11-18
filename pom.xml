@@ -10,7 +10,7 @@
 
     <modules>
         <module>amber</module>
-        <module>bam-metrics</module>
+        <module>bam-tools</module>
         <module>cider</module>
         <module>cobalt</module>
         <module>compar</module>
@@ -59,7 +59,7 @@
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
         <amber.version>3.9</amber.version>
-        <bam-metrics.version>1.0</bam-metrics.version>
+        <bam-tools.version>1.0</bam-tools.version>
         <cider.version>0.3</cider.version>
         <cobalt.version>1.13</cobalt.version>
         <compar.version>1.1</compar.version>

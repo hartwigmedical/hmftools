@@ -1,11 +1,9 @@
-package com.hartwig.hmftools.bammetrics;
+package com.hartwig.hmftools.bamtools.metrics;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.bammetrics.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
-import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -69,7 +67,7 @@ public class PartitionSlicer
 
     public void run()
     {
-        BM_LOGGER.debug("processing region({})", mRegion);
+        BmConfig.BM_LOGGER.debug("processing region({})", mRegion);
 
         mPerfCounter.start(mConfig.PerfDebug ? mRegion.toString() : null);
         mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
@@ -108,7 +106,7 @@ public class PartitionSlicer
         if(mLogReadIds) // debugging only
         {
             if(mConfig.LogReadIds.contains(record.getReadName()))
-                BM_LOGGER.debug("specific readId({}) unmapped({})", record.getReadName(), record.getReadUnmappedFlag());
+                BmConfig.BM_LOGGER.debug("specific readId({}) unmapped({})", record.getReadName(), record.getReadUnmappedFlag());
         }
 
         // cache if the mate read overlaps

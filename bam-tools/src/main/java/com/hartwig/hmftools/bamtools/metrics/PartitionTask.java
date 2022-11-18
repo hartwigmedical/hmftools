@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bammetrics;
+package com.hartwig.hmftools.bamtools.metrics;
 
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 

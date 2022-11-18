@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.bammetrics;
+package com.hartwig.hmftools.bamtools.metrics;
 
-import static com.hartwig.hmftools.bammetrics.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.metrics.BmConfig.BM_LOGGER;
 
 import java.io.File;
 import java.io.IOException;

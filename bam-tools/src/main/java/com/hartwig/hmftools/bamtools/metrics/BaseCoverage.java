@@ -1,12 +1,5 @@
-package com.hartwig.hmftools.bammetrics;
+package com.hartwig.hmftools.bamtools.metrics;
 
-import static com.hartwig.hmftools.bammetrics.FilterType.MAX_COVERAGE;
-import static com.hartwig.hmftools.bammetrics.FilterType.OVERLAPPED;
-import static com.hartwig.hmftools.bammetrics.FilterType.UNFILTERED;
-import static com.hartwig.hmftools.bammetrics.FilterType.LOW_BASE_QUAL;
-import static com.hartwig.hmftools.bammetrics.FilterType.LOW_MAP_QUAL;
-import static com.hartwig.hmftools.bammetrics.FilterType.DUPLICATE;
-import static com.hartwig.hmftools.bammetrics.FilterType.MATE_UNMAPPED;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -42,19 +35,19 @@ public class BaseCoverage
 
         if(record.getMappingQuality() < mConfig.MapQualityThreshold)
         {
-            mFilterTypeCounts[LOW_MAP_QUAL.ordinal()] += alignedBases;
+            mFilterTypeCounts[FilterType.LOW_MAP_QUAL.ordinal()] += alignedBases;
             return;
         }
 
         if(record.getDuplicateReadFlag())
         {
-            mFilterTypeCounts[DUPLICATE.ordinal()] += alignedBases;
+            mFilterTypeCounts[FilterType.DUPLICATE.ordinal()] += alignedBases;
             return;
         }
 
         if(mateUnmapped(record))
         {
-            mFilterTypeCounts[MATE_UNMAPPED.ordinal()] += alignedBases;
+            mFilterTypeCounts[FilterType.MATE_UNMAPPED.ordinal()] += alignedBases;
             return;
         }
 
@@ -117,16 +110,16 @@ public class BaseCoverage
             if(passFilters)
             {
                 ++mBaseDepth[baseIndex];
-                ++mFilterTypeCounts[UNFILTERED.ordinal()];
+                ++mFilterTypeCounts[FilterType.UNFILTERED.ordinal()];
             }
             else
             {
                 if(lowBaseQual)
-                    ++mFilterTypeCounts[LOW_BASE_QUAL.ordinal()];
+                    ++mFilterTypeCounts[FilterType.LOW_BASE_QUAL.ordinal()];
                 else if(overlapped)
-                    ++mFilterTypeCounts[OVERLAPPED.ordinal()];
+                    ++mFilterTypeCounts[FilterType.OVERLAPPED.ordinal()];
                 else if(exceedsCoverage)
-                    ++mFilterTypeCounts[MAX_COVERAGE.ordinal()];
+                    ++mFilterTypeCounts[FilterType.MAX_COVERAGE.ordinal()];
             }
         }
     }

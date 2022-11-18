@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.bammetrics;
+package com.hartwig.hmftools.bamtools.metrics;
 
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bammetrics.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.metrics.BmConfig.BM_LOGGER;
 
 import java.util.StringJoiner;
 

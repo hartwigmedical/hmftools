@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bammetrics;
+package com.hartwig.hmftools.bamtools.metrics;
 
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.PCT_EXC_BASEQ_COLUMN;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.PCT_EXC_CAPPED_COLUMN;

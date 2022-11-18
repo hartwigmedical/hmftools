@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.bammetrics;
+package com.hartwig.hmftools.bamtools.metrics;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bammetrics.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.metrics.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.DELIM;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.GENOME_TERRITORY_COLUMN;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.HET_SNP_Q_COLUMN;

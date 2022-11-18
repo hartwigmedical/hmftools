@@ -8,10 +8,10 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <artifactId>bam-metrics</artifactId>
+    <artifactId>bam-tools</artifactId>
     <packaging>jar</packaging>
-    <version>${bam-metrics.version}</version>
-    <name>HMF Tools - BAM Metrics</name>
+    <version>${bam-tools.version}</version>
+    <name>HMF Tools - BAM Tools</name>
 
     <dependencies>
         <dependency>
@@ -54,7 +54,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.bammetrics.BamMetricsApplication
+                            <mainClass>com.hartwig.hmftools.bamtools.metrics.BamMetricsApplication
                             </mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>

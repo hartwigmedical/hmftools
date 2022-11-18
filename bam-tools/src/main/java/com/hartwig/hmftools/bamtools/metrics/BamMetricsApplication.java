@@ -1,17 +1,13 @@
-package com.hartwig.hmftools.bammetrics;
+package com.hartwig.hmftools.bamtools.metrics;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bammetrics.BmConfig.BM_LOGGER;
-import static com.hartwig.hmftools.bammetrics.BmConfig.createCmdLineOptions;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -20,7 +16,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
@@ -46,7 +41,7 @@ public class BamMetricsApplication
         if(!mConfig.isValid())
             System.exit(1);
 
-        BM_LOGGER.info("sample({}) starting bam metrics", mConfig.SampleId);
+        BmConfig.BM_LOGGER.info("sample({}) starting bam metrics", mConfig.SampleId);
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -62,7 +57,7 @@ public class BamMetricsApplication
             allRegions.addAll(partitionChromosome(chromosomeStr));
         }
 
-        BM_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
+        BmConfig.BM_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
 
         Queue<PartitionTask> partitions = new ConcurrentLinkedQueue<>();
 
@@ -89,14 +84,14 @@ public class BamMetricsApplication
             }
             catch(InterruptedException e)
             {
-                BM_LOGGER.error("task execution error: {}", e.toString());
+                BmConfig.BM_LOGGER.error("task execution error: {}", e.toString());
                 e.printStackTrace();
             }
         }
 
         combinedStats.metrics().finalise(mConfig.ExcludeZeroCoverage);
 
-        BM_LOGGER.info("all regions complete, totalReads({}) stats: {}", combinedStats.totalReads(), combinedStats.metrics());
+        BmConfig.BM_LOGGER.info("all regions complete, totalReads({}) stats: {}", combinedStats.totalReads(), combinedStats.metrics());
 
         if(mConfig.PerfDebug)
             combinedStats.perfCounter().logIntervalStats(10);
@@ -108,7 +103,7 @@ public class BamMetricsApplication
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         double timeTakeMins = timeTakenMs / 60000.0;
 
-        BM_LOGGER.info("BamMetrics complete, mins({})", format("%.3f", timeTakeMins));
+        BmConfig.BM_LOGGER.info("BamMetrics complete, mins({})", format("%.3f", timeTakeMins));
     }
 
     private List<ChrBaseRegion> partitionChromosome(final String chromosome)
@@ -154,9 +149,9 @@ public class BamMetricsApplication
     public static void main(@NotNull final String[] args) throws Exception
     {
         final VersionInfo version = new VersionInfo("bam-metrics.version");
-        BM_LOGGER.info("BamMetrics version: {}", version.version());
+        BmConfig.BM_LOGGER.info("BamMetrics version: {}", version.version());
 
-        final Options options = createCmdLineOptions();
+        final Options options = BmConfig.createCmdLineOptions();
 
         try
         {
@@ -169,7 +164,7 @@ public class BamMetricsApplication
         }
         catch(ParseException e)
         {
-            BM_LOGGER.warn(e);
+            BmConfig.BM_LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("BamMetrics", options);
             System.exit(1);
