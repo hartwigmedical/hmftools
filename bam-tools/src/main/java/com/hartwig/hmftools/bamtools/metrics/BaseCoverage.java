@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import static htsjdk.samtools.CigarOperator.M;
 
+import com.hartwig.hmftools.bamtools.BmConfig;
+
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 

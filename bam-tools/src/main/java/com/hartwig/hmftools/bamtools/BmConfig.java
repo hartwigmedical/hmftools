@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.metrics;
+package com.hartwig.hmftools.bamtools;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -41,6 +42,8 @@ public class BmConfig
     public final int MaxCoverage;
 
     public final int PartitionSize;
+
+    // metrics capture config
     public final boolean ExcludeZeroCoverage;
     public final boolean WriteOldStyle;
 
@@ -55,6 +58,7 @@ public class BmConfig
     public final List<ChrBaseRegion> SpecificRegions;
     public final boolean PerfDebug;
 
+    private final List<BamFunction> mFunctions;
     private boolean mIsValid;
 
     public static final Logger BM_LOGGER = LogManager.getLogger(BmConfig.class);
@@ -62,12 +66,15 @@ public class BmConfig
     // config strings
     public static final String SAMPLE = "sample";
     private static final String BAM_FILE = "bam_file";
+    private static final String FUNCTIONS = "functions";
     private static final String PARTITION_SIZE = "partition_size";
     private static final String MAP_QUAL_THRESHOLD = "map_qual_threshold";
     private static final String BASE_QUAL_THRESHOLD = "base_qual_threshold";
     private static final String MAX_COVERAGE = "max_coverage";
     private static final String EXCLUDE_ZERO_COVERAGE = "exclude_zero_coverage";
     private static final String WRITE_OLD_STYLE = "write_old_style";
+    private static final String SLICE_BED = "slice_bed";
+
     private static final String LOG_READ_IDS = "log_read_ids";
     private static final String PERF_DEBUG = "perf_debug";
 
@@ -100,6 +107,19 @@ public class BmConfig
         BM_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         BM_LOGGER.info("output({})", OutputDir);
 
+        mFunctions = Lists.newArrayList();
+
+        if(cmd.hasOption(FUNCTIONS))
+        {
+            Arrays.stream(cmd.getOptionValue(FUNCTIONS).split(ITEM_DELIM)).forEach(x -> mFunctions.add(BamFunction.valueOf(x)));
+        }
+        else
+        {
+            mFunctions.add(BamFunction.METRICS);
+        }
+
+        BM_LOGGER.info("running functions: {}", mFunctions);
+
         PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_CHR_PARTITION_SIZE)));
         MapQualityThreshold = Integer.parseInt(cmd.getOptionValue(MAP_QUAL_THRESHOLD, String.valueOf(DEFAULT_MAP_QUAL_THRESHOLD)));
         BaseQualityThreshold = Integer.parseInt(cmd.getOptionValue(BASE_QUAL_THRESHOLD, String.valueOf(DEFAULT_BASE_QUAL_THRESHOLD)));
@@ -110,12 +130,25 @@ public class BmConfig
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
 
-        try
+        if(runSlicing() && cmd.hasOption(SLICE_BED))
         {
-            loadSpecificChromsomesOrRegions(cmd, SpecificChromosomes, SpecificRegions, BM_LOGGER);
+            loadSliceRegions(cmd.getOptionValue(SLICE_BED));
         }
-        catch(ParseException e)
+        else
         {
+            try
+            {
+                loadSpecificChromsomesOrRegions(cmd, SpecificChromosomes, SpecificRegions, BM_LOGGER);
+            }
+            catch(ParseException e)
+            {
+                mIsValid = false;
+            }
+        }
+
+        if(runSlicing() && SpecificRegions.isEmpty())
+        {
+            BM_LOGGER.error("missing specific regions or slice BED file for slicing");
             mIsValid = false;
         }
 
@@ -126,6 +159,10 @@ public class BmConfig
 
         PerfDebug = cmd.hasOption(PERF_DEBUG);
     }
+
+    public boolean runFunction(final BamFunction function) { return mFunctions.contains(function); }
+    public boolean runSlicing() { return runFunction(BamFunction.BAM_SLICE) || runFunction(BamFunction.BAM_READS); }
+    public boolean runMetrics() { return runFunction(BamFunction.METRICS); }
 
     public boolean isValid()
     {
@@ -158,6 +195,44 @@ public class BmConfig
 
         filename += ".csv";
         return filename;
+    }
+
+    private void loadSliceRegions(final String filename)
+    {
+        if(filename == null)
+            return;
+
+        try
+        {
+            List<String> lines = Files.readAllLines(Paths.get(filename));
+
+            for(String line : lines)
+            {
+                if(line.contains("Chromosome"))
+                    continue;
+
+                final String[] values = line.split("\t", -1);
+
+                if(values.length < 3)
+                {
+                    BM_LOGGER.error("invalid slice BED entry: {}", line);
+                    mIsValid = false;
+                    return;
+                }
+
+                String chromosome = values[0];
+                int posStart = Integer.parseInt(values[1]) + 1;
+                int posEnd = Integer.parseInt(values[2]);
+                SpecificRegions.add(new ChrBaseRegion(chromosome, posStart, posEnd));
+            }
+
+            BM_LOGGER.info("loaded {} slice regions from file", SpecificRegions.size(), filename);
+        }
+        catch(IOException e)
+        {
+            BM_LOGGER.error("failed to load hotspot data file({}): {}", filename, e.toString());
+            mIsValid = false;
+        }
     }
 
     public static Options createCmdLineOptions()

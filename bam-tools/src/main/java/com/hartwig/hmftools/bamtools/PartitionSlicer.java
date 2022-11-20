@@ -1,8 +1,6 @@
-package com.hartwig.hmftools.bamtools.metrics;
+package com.hartwig.hmftools.bamtools;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -12,11 +10,18 @@ import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.bamtools.metrics.BaseCoverage;
+import com.hartwig.hmftools.bamtools.metrics.CombinedStats;
+import com.hartwig.hmftools.bamtools.metrics.Metrics;
+import com.hartwig.hmftools.bamtools.slice.SliceWriter;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
@@ -31,36 +36,50 @@ public class PartitionSlicer
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
 
+    // coverage
+    private final boolean mRunMetrics;
     private final BaseCoverage mBaseCoverage;
     private final Map<String,ReadGroup> mReadGroupMap; // keyed by readId
-
     private final CombinedStats mCombinedStats;
+
+    // slicing
+    private final boolean mRunSlice;
+    private final List<BaseRegion> mSliceRegions;
+    private final SliceWriter mSliceWriter;
+
     private int mTotalReads;
     private final PerformanceCounter mPerfCounter;
-
     private boolean mLogReadIds;
 
     public PartitionSlicer(
             final ChrBaseRegion region, final BmConfig config, final SamReader samReader, final BamSlicer bamSlicer,
-            final CombinedStats combinedStats)
+            final CombinedStats combinedStats, final SliceWriter sliceWriter)
     {
         mConfig = config;
         mRegion = region;
         mCombinedStats = combinedStats;
+        mSliceWriter = sliceWriter;
 
         mSamReader = samReader;
         mBamSlicer = bamSlicer;
 
-        mBaseCoverage = new BaseCoverage(mConfig, mRegion.start(), mRegion.end());
+        mRunMetrics = config.runMetrics();
+        mRunSlice = config.runSlicing();
 
         mReadGroupMap = Maps.newHashMap();
 
-        //ChrBaseRegion excludedRegion = getPolyGRegion(mConfig.RefGenVersion);
-        // mFilterRegion = region.overlaps(excludedRegion) ? excludedRegion : null;
+        mBaseCoverage = mRunMetrics ? new BaseCoverage(mConfig, mRegion.start(), mRegion.end()) : null;
+
+        mSliceRegions = mConfig.SpecificRegions.stream()
+                .filter(x -> mRegion.chromosome().equals(x.chromosome()))
+                .filter(x -> positionsOverlap(mRegion.start(), mRegion.end(), x.start(), x.end()))
+                .map(x -> new BaseRegion(x.start(), x.end()))
+                .collect(Collectors.toList());
+
         mFilterRegion = null;
 
         mTotalReads = 0;
-        mPerfCounter = new PerformanceCounter("Coverage");
+        mPerfCounter = new PerformanceCounter("Slice");
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
     }
@@ -73,16 +92,18 @@ public class PartitionSlicer
         mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
         mPerfCounter.stop();
 
-        // process overlapping groups
-        for(ReadGroup readGroup : mReadGroupMap.values())
+        if(mConfig.runMetrics())
         {
-            // determine overlapping bases and factor this into the coverage calcs
-            processReadGroup(readGroup);
+            // process overlapping groups
+            for(ReadGroup readGroup : mReadGroupMap.values())
+            {
+                // determine overlapping bases and factor this into the coverage calcs
+                processReadGroup(readGroup);
+            }
+
+            Metrics metrics = mBaseCoverage.createMetrics();
+            mCombinedStats.addStats(metrics, mTotalReads, mPerfCounter);
         }
-
-        Metrics metrics = mBaseCoverage.createMetrics();
-
-        mCombinedStats.addStats(metrics, mTotalReads, mPerfCounter);
     }
 
     private void processSamRecord(final SAMRecord record)
@@ -108,6 +129,72 @@ public class PartitionSlicer
             if(mConfig.LogReadIds.contains(record.getReadName()))
                 BmConfig.BM_LOGGER.debug("specific readId({}) unmapped({})", record.getReadName(), record.getReadUnmappedFlag());
         }
+
+        if(mRunSlice)
+            handleSliceRecord(record);
+
+        if(mRunMetrics)
+            handleMetricsRecord(record);
+    }
+
+    private void handleSliceRecord(final SAMRecord record)
+    {
+        // any read which overlaps a slicing region or its mate does, or its supplementary does
+
+        boolean overlapsSliceRegion = false;
+        int readLength = record.getBaseQualities().length - 1;
+        boolean hasRemoteSupplementary = false;
+
+        if(overlapsSliceRegion(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd()))
+        {
+            overlapsSliceRegion = true;
+        }
+        else if(overlapsSliceRegion(
+                record.getMateReferenceName(), record.getMateAlignmentStart(), record.getMateAlignmentStart() + readLength))
+        {
+            overlapsSliceRegion = true;
+        }
+        else if(record.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
+        {
+            SupplementaryReadData suppData = SupplementaryReadData.from(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+
+            if(suppData != null)
+            {
+                if(overlapsSliceRegion(suppData.Chromosome, suppData.Position, suppData.Position + readLength))
+                    overlapsSliceRegion = true;
+                else
+                    hasRemoteSupplementary = true;
+            }
+        }
+
+        if(!overlapsSliceRegion)
+            return;
+
+        if(record.getDuplicateReadFlag())
+        {
+            if(hasRemoteSupplementary)
+                mSliceWriter.registerDuplicateRead(record);
+        }
+        else if(record.getSupplementaryAlignmentFlag())
+        {
+            mSliceWriter.addSupplementary(record);
+        }
+        else
+        {
+            mSliceWriter.writeRecord(record);
+        }
+    }
+
+    private boolean overlapsSliceRegion(final String chromosome, final int posStart, final int posEnd)
+    {
+        if(!mRegion.Chromosome.equals(chromosome))
+            return false;
+
+        return mSliceRegions.stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x.start(), x.end()));
+    }
+
+    private void handleMetricsRecord(final SAMRecord record)
+    {
 
         // cache if the mate read overlaps
         ReadGroup readGroup = mReadGroupMap.get(record.getReadName());

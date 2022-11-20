@@ -2,7 +2,7 @@ package com.hartwig.hmftools.bamtools.metrics;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bamtools.metrics.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.DELIM;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.GENOME_TERRITORY_COLUMN;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.HET_SNP_Q_COLUMN;
@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.bamtools.BmConfig;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 
 public final class MetricsWriter

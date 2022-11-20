@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.metrics;
+package com.hartwig.hmftools.bamtools;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -6,7 +6,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +13,9 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.bamtools.metrics.CombinedStats;
+import com.hartwig.hmftools.bamtools.metrics.MetricsWriter;
+import com.hartwig.hmftools.bamtools.slice.SliceWriter;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -27,11 +29,11 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class BamMetricsApplication
+public class BamToolsApplication
 {
     private final BmConfig mConfig;
 
-    public BamMetricsApplication(final CommandLine cmd)
+    public BamToolsApplication(final CommandLine cmd)
     {
         mConfig = new BmConfig(cmd);
     }
@@ -69,11 +71,13 @@ public class BamMetricsApplication
 
         CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
 
+        SliceWriter sliceWriter = new SliceWriter(mConfig);
+
         List<Thread> workers = new ArrayList<>();
 
         for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
         {
-            workers.add(new PartitionThread(mConfig, partitions, combinedStats));
+            workers.add(new PartitionThread(mConfig, partitions, combinedStats, sliceWriter));
         }
 
         for(Thread worker : workers)
@@ -90,6 +94,7 @@ public class BamMetricsApplication
         }
 
         combinedStats.metrics().finalise(mConfig.ExcludeZeroCoverage);
+        sliceWriter.close();
 
         BmConfig.BM_LOGGER.info("all regions complete, totalReads({}) stats: {}", combinedStats.totalReads(), combinedStats.metrics());
 
@@ -148,7 +153,7 @@ public class BamMetricsApplication
 
     public static void main(@NotNull final String[] args) throws Exception
     {
-        final VersionInfo version = new VersionInfo("bam-metrics.version");
+        final VersionInfo version = new VersionInfo("bam-tools.version");
         BmConfig.BM_LOGGER.info("BamMetrics version: {}", version.version());
 
         final Options options = BmConfig.createCmdLineOptions();
@@ -159,7 +164,7 @@ public class BamMetricsApplication
 
             setLogLevel(cmd);
 
-            BamMetricsApplication bamMetrics = new BamMetricsApplication(cmd);
+            BamToolsApplication bamMetrics = new BamToolsApplication(cmd);
             bamMetrics.run();
         }
         catch(ParseException e)
