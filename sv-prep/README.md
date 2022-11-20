@@ -4,7 +4,7 @@ SV Prep generates a maximally filtered SV BAM file by identifying candidate SV j
 
 In tumor-normal mode, SV Prep may be run first on the tumor and then a 2nd time on the reference sample using the junctions found in the tumor mode, to ensure all potential evidence in the reference sample is collected for candidate tumor junctions. 
 
-Example usage of SV Prep can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/wgs_scripts/run_gridss)
+Example usage of SV Prep can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/scripts/run_sv_calling)
 
 ## Running SvPrep
 
