@@ -52,7 +52,13 @@ public class SliceWriter
     private SAMFileWriter initialiseBam()
     {
         SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
-        mOutputBam = mConfig.formFilename("slice");
+
+        mOutputBam = mConfig.OutputDir + mConfig.SampleId + ".slice";
+
+        if(mConfig.OutputId != null)
+            mOutputBam += "." + mConfig.OutputId;
+
+        mOutputBam += ".bam";
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
         fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);

@@ -93,7 +93,15 @@ public class BamToolsApplication
             }
         }
 
-        combinedStats.metrics().finalise(mConfig.ExcludeZeroCoverage);
+        BmConfig.BM_LOGGER.info("all regions complete, totalReads({})", combinedStats.totalReads());
+
+        if(mConfig.runMetrics())
+        {
+            combinedStats.metrics().finalise(mConfig.ExcludeZeroCoverage);
+            MetricsWriter.writeResults(combinedStats.metrics(), mConfig);
+            BmConfig.BM_LOGGER.info("final stats: {}", combinedStats.metrics());
+        }
+
         sliceWriter.close();
 
         BmConfig.BM_LOGGER.info("all regions complete, totalReads({}) stats: {}", combinedStats.totalReads(), combinedStats.metrics());
@@ -103,8 +111,6 @@ public class BamToolsApplication
         else
             combinedStats.perfCounter().logStats();
 
-        MetricsWriter.writeResults(combinedStats.metrics(), mConfig);
-
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         double timeTakeMins = timeTakenMs / 60000.0;
 
@@ -113,7 +119,7 @@ public class BamToolsApplication
 
     private List<ChrBaseRegion> partitionChromosome(final String chromosome)
     {
-        if(!mConfig.SpecificRegions.isEmpty())
+        if(!mConfig.runSlicing() && !mConfig.SpecificRegions.isEmpty())
         {
             List<ChrBaseRegion> partitions = Lists.newArrayList();
 
@@ -150,11 +156,10 @@ public class BamToolsApplication
         return partitions;
     }
 
-
-    public static void main(@NotNull final String[] args) throws Exception
+    public static void main(@NotNull final String[] args)
     {
         final VersionInfo version = new VersionInfo("bam-tools.version");
-        BmConfig.BM_LOGGER.info("BamMetrics version: {}", version.version());
+        BmConfig.BM_LOGGER.info("BamTools version: {}", version.version());
 
         final Options options = BmConfig.createCmdLineOptions();
 
@@ -164,8 +169,8 @@ public class BamToolsApplication
 
             setLogLevel(cmd);
 
-            BamToolsApplication bamMetrics = new BamToolsApplication(cmd);
-            bamMetrics.run();
+            BamToolsApplication bamTools = new BamToolsApplication(cmd);
+            bamTools.run();
         }
         catch(ParseException e)
         {
