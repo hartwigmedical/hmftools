@@ -153,7 +153,7 @@ public class PurpleApplication
 
         if(!mReferenceData.isValid())
         {
-            PPL_LOGGER.error("initialisation error, exiting");
+            PPL_LOGGER.error("invalid reference data, exiting");
             System.exit(1);
         }
 
