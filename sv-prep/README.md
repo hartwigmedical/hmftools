@@ -89,7 +89,7 @@ Please see the example [script](https://github.com/hartwigmedical/hmftools/blob/
 
 ## SV Prep Blacklist
 
-The blacklist is the combination of the existing encode blacklisted regions and all regions with 200x or greater depth found in 4 out of 11 reference samples (40x mean coverage) used to identify artefacts (and 4 out of 8 for HG38).   Regions that overlap PANEL or fusion KB genes are excluded from the blacklist unless the min coverage is >2000x. These  regions mainly capture long repeat sections of the genome with poorly aligned reads and make up 13M bases of the genome (0.4%).  
+The blacklist is the combination of the existing encode blacklisted regions and all regions with 200x or greater depth found in 4 out of 11 reference samples (40x mean coverage) used to identify artefacts (and 4 out of 8 for HG38).   Regions that overlap PANEL or fusion KB genes are excluded from the blacklist unless the max coverage is >2000x. These  regions mainly capture long repeat sections of the genome with poorly aligned reads and make up 13M bases of the genome (0.4%).  
 
 ## Known issues and future improvements
 
