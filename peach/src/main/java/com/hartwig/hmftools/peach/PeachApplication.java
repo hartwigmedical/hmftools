@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
+import htsjdk.variant.variantcontext.GenotypeType;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 import org.apache.commons.cli.*;
@@ -93,35 +94,73 @@ public class PeachApplication
         } else {
             callInputVcf = config.vcfFile;
         }
-//        loadRelevantVariantHaplotypeEvents(callInputVcf, relevantVariantPositions);
+        Map<VariantHaplotypeEvent, Integer> eventToCount = loadRelevantVariantHaplotypeEvents(callInputVcf, relevantVariantPositions);
+        PCH_LOGGER.info("events found: {}", eventToCount.toString());
 
         PCH_LOGGER.info("finished running PEACH");
     }
 
-//    private void loadRelevantVariantHaplotypeEvents(String vcf, Map<Chromosome, Set<Integer>> relevantVariantPositions)
-//    {
-//
-//        try(
-//                AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
-//                        vcf, new VCFCodec(), false)
-//        )
-//        {
-//            for(VariantContext variantContext : reader.iterator())
-//            {
-//                if(variantContext.isFiltered())
-//                    continue;
-//                Chromosome chromosome = HumanChromosome.fromString(variantContext.getContig());
-//                if(!relevantVariantPositions.containsKey(chromosome))
-//                    continue;
-//                VariantHaplotypeEvent event = VariantHaplotypeEvent.fromVariantContext
-//            }
-//        }
-//        catch(IOException e)
-//        {
-//            PCH_LOGGER.error("failed to read VCF file({}): {}", vcf, e.toString());
-//            System.exit(1);
-//        }
-//    }
+    private Map<VariantHaplotypeEvent, Integer> loadRelevantVariantHaplotypeEvents(String vcf, Map<Chromosome, Set<Integer>> relevantVariantPositions)
+    {
+        Map<VariantHaplotypeEvent, Integer> eventToCount = new HashMap<>();
+        try(
+                AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
+                        vcf, new VCFCodec(), false)
+        )
+        {
+            for(VariantContext variantContext : reader.iterator())
+            {
+                if(variantContext.isFiltered())
+                    continue;
+                Chromosome chromosome = HumanChromosome.fromString(variantContext.getContig());
+                if(!relevantVariantPositions.containsKey(chromosome))
+                    continue;
+                VariantHaplotypeEvent event = VariantHaplotypeEvent.fromVariantContext(variantContext);
+                Set<Integer> relevantPositionsInChromosome = relevantVariantPositions.get(chromosome);
+                if(event.getCoveredPositions().stream().noneMatch(relevantPositionsInChromosome::contains))
+                    continue;
+                Integer count = getEventCount(variantContext, event.id());
+                if(count == 0)
+                    continue;
+                if(eventToCount.containsKey(event))
+                {
+                    PCH_LOGGER.error("encountered event with ID '{}' more than once in VCF '{}'", event.id(), vcf);
+                    System.exit(1);
+                }
+
+                eventToCount.put(event, count);
+            }
+        }
+        catch(IOException e)
+        {
+            PCH_LOGGER.error("failed to read VCF file({}): {}", vcf, e.toString());
+            System.exit(1);
+        }
+        return eventToCount;
+    }
+
+    private Integer getEventCount(VariantContext variantContext, String eventId)
+    {
+        Integer count = null;
+        GenotypeType genotype = variantContext.getGenotype(config.sampleName).getType();
+        switch(genotype)
+        {
+            case NO_CALL:
+            case HOM_REF:
+                count = 0;
+                break;
+            case HET:
+                count = 1;
+                break;
+            case HOM_VAR:
+                count = 2;
+                break;
+            default:
+                PCH_LOGGER.error("cannot get occurrence count for event with ID '{}' with genotype '{}'", eventId, genotype.toString());
+                System.exit(1);
+        }
+        return count;
+    }
 
     private void doLiftover(String liftOverVcf, String rejectVcf)
     {
@@ -178,7 +217,8 @@ public class PeachApplication
         {
             for(VariantContext variantContext : reader.iterator())
             {
-                if (isPotentiallyRelevant(variantContext, chromosomeToRelevantRegions)){
+                if (isPotentiallyRelevant(variantContext, chromosomeToRelevantRegions))
+                {
                     potentiallyMissedVariantCount += 1;
                 }
             }

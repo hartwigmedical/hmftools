@@ -2,6 +2,8 @@ package com.hartwig.hmftools.peach;
 
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.VariantContext;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -56,7 +58,8 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         String ref = splitEventId[3];
         String alt = splitEventId[4];
         VariantHaplotypeEvent event = new VariantHaplotypeEvent(chromosome, position, ref, alt);
-        if (!event.id().equals(eventId)){
+        if (!event.id().equals(eventId))
+        {
             String error_msg = String.format(
                     "VariantHaplotypeEvent derived from ID ID '%s' has different ID '%s'",
                     eventId, event.id()
@@ -64,6 +67,24 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
             throw new java.lang.IllegalArgumentException(error_msg);
         }
         return event;
+    }
+
+    public static VariantHaplotypeEvent fromVariantContext(VariantContext variantContext)
+    {
+        Chromosome chromosome = HumanChromosome.fromString(variantContext.getContig());
+        int position = variantContext.getStart();
+        String ref = variantContext.getReference().getBaseString();
+        List<Allele> alts = variantContext.getAlternateAlleles();
+        if(alts.size() > 1)
+        {
+            String error_msg = String.format(
+                    "Cannot handle variant with multiple alts: %s:%s%s>?",
+                    chromosome, position, ref
+            );
+            throw new IllegalArgumentException(error_msg);
+        }
+        String alt = variantContext.getAlternateAlleles().get(0).toString();
+        return new VariantHaplotypeEvent(chromosome, position, ref, alt);
     }
 
     @NotNull
@@ -78,7 +99,8 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
                 .toString();
     }
 
-    public List<Integer> getCoveredPositions(){
+    public List<Integer> getCoveredPositions()
+    {
         return IntStream.range(position, position + ref.length()).boxed().collect(Collectors.toList());
     }
 }
