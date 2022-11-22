@@ -6,7 +6,6 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.orange.report.ImmutableReportConfig;
 import com.hartwig.hmftools.orange.report.ReportConfig;
-import com.hartwig.serve.datamodel.EvidenceLevel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -70,8 +69,7 @@ public final class OrangeConfigTestFactory {
 
     @NotNull
     public static OrangeConfig createDNAConfig() {
-        ReportConfig reportConfig =
-                ImmutableReportConfig.builder().limitJsonOutput(false).reportGermline(true).maxEvidenceLevel(EvidenceLevel.B).build();
+        ReportConfig reportConfig = ImmutableReportConfig.builder().limitJsonOutput(false).reportGermline(true).build();
 
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(TUMOR_SAMPLE_ID)

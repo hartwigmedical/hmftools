@@ -20,18 +20,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
-import com.hartwig.hmftools.common.peach.PeachCalls;
-import com.hartwig.hmftools.common.peach.PeachGenotype;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.purple.PurpleQC;
-import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
-import com.hartwig.hmftools.common.purple.FittedPurity;
-import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.sigs.SignatureAllocation;
-import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.linx.LinxDriver;
@@ -39,6 +27,17 @@ import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.linx.LinxLink;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
+import com.hartwig.hmftools.common.peach.PeachCalls;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleQC;
+import com.hartwig.hmftools.common.sigs.SignatureAllocation;
+import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
@@ -129,8 +128,6 @@ public class DatabaseAccess implements AutoCloseable {
     private final VirusBreakendDAO virusBreakendDAO;
     @NotNull
     private final VirusInterpreterDAO virusInterpreterDAO;
-    @NotNull
-    private final ProtectDAO protectDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         System.setProperty("org.jooq.no-logo", "true");
@@ -165,7 +162,6 @@ public class DatabaseAccess implements AutoCloseable {
         this.chordDAO = new ChordDAO(context);
         this.virusBreakendDAO = new VirusBreakendDAO(context);
         this.virusInterpreterDAO = new VirusInterpreterDAO(context);
-        this.protectDAO = new ProtectDAO(context);
     }
 
     public static void addDatabaseCmdLineArgs(@NotNull Options options) {
@@ -470,10 +466,6 @@ public class DatabaseAccess implements AutoCloseable {
         virusInterpreterDAO.writeVirusInterpreter(sample, virusAnnotations);
     }
 
-    public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidence> evidence) {
-        protectDAO.write(sample, evidence);
-    }
-
     public void writeChord(@NotNull String sample, @NotNull ChordData chordData) {
         chordDAO.writeChord(sample, chordData);
     }
@@ -588,9 +580,6 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting CUPPA result for sample: {}", sample);
         cuppaDAO.deleteCuppaForSample(sample);
-
-        LOGGER.info("Deleting PROTECT data for sample: {}", sample);
-        protectDAO.deleteEvidenceForSample(sample);
 
         LOGGER.info("All data for sample '{}' has been deleted", sample);
     }
