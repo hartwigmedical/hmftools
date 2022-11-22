@@ -87,6 +87,10 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         return new VariantHaplotypeEvent(chromosome, position, ref, alt);
     }
 
+    public String toString(){
+        return id();
+    }
+
     @NotNull
     public String id()
     {
