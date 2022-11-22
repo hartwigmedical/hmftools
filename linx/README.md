@@ -34,8 +34,8 @@ All values are optional unless otherwise specified.
 Argument | Description
 ---|---
 sample  | Required: Specific sample ID
-sv_vcf | Full path and filename for the SV VCF
 purple_dir | Directory with sample data for structural variant VCF, copy number and purity data files as written by GRIDSS and Purple.
+sv_vcf | Full path and filename for the SV VCF, otherwill will use the Purple SV VCF (ie SAMPLE_ID.purple.vcf.gz) in the configured Purple directory
 output_dir | Required: directory where all output files are written
 ref_genome_version | Defaults to version 37, valid values are 37 or 38 
 check_drivers | Run driver annotation logic
