@@ -1,2 +1,0 @@
-chromosome	start	end	copyNumber	bafCount	observedBAF	baf	segmentStartSupport	segmentEndSupport	method	depthWindowCount	gcContent	minStart	maxStart	minorAlleleCopyNumber	majorAlleleCopyNumber
-1	1	10	9.3333	10	0.343	0.210	TELOMERE	BND	BAF_WEIGHTED	10	0.9876	6	4	2.5469	8.7614

@@ -29,11 +29,8 @@
         <module>orange</module>
         <module>paddle</module>
         <module>patient-db</module>
-        <module>patient-reporter</module>
         <module>purple</module>
-        <module>rose</module>
         <module>pave</module>
-        <module>protect</module>
         <module>sage</module>
         <module>sigs</module>
         <module>stat-calcs</module>
@@ -76,11 +73,8 @@
         <orange.version>2.0</orange.version>
         <paddle.version>1.0</paddle.version>
         <patient-db.version>3.73</patient-db.version>
-        <patient-reporter.version>7.26</patient-reporter.version>
         <pave.version>1.4.1</pave.version>
-        <protect.version>2.3</protect.version>
         <purple.version>3.7.2</purple.version>
-        <rose.version>1.3</rose.version>
         <sage.version>3.2.2</sage.version>
         <sigs.version>1.2</sigs.version>
         <sv-prep.version>1.0.1</sv-prep.version>
