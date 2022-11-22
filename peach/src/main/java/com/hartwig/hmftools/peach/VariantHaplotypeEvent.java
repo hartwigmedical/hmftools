@@ -92,7 +92,7 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
     {
         return new StringJoiner(HaplotypeEvent.EVENT_ID_DELIMITER)
                 .add(EVENT_TYPE_STRING)
-                .add(chromosome.toString())
+                .add(String.format("chr%1$s", chromosome))
                 .add(Integer.toString(position))
                 .add(ref)
                 .add(alt)
