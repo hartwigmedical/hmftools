@@ -95,15 +95,22 @@ public class VariantContextDecorator implements GenomePosition
     {
         return mContext;
     }
+
     public String filter()
     {
         return mFilter;
     }
-    public VariantType type() { return mType; }
+
+    public VariantType type()
+    {
+        return mType;
+    }
+
     public String ref()
     {
         return mRef;
     }
+
     public String alt()
     {
         return mAlt;
@@ -156,18 +163,30 @@ public class VariantContextDecorator implements GenomePosition
         return mContext.getPhredScaledQual();
     }
 
-    public double adjustedCopyNumber() { return mContext.getAttributeAsDouble(PURPLE_CN_INFO, 0); }
+    public double adjustedCopyNumber()
+    {
+        return mContext.getAttributeAsDouble(PURPLE_CN_INFO, 0);
+    }
 
     public double adjustedVaf()
     {
         return mContext.getAttributeAsDouble(PURPLE_AF_INFO, 0);
     }
 
-    public boolean biallelic() { return mContext.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false); }
+    public boolean biallelic()
+    {
+        return mContext.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false);
+    }
 
-    public double minorAlleleCopyNumber() { return mContext.getAttributeAsDouble(PURPLE_MINOR_ALLELE_CN_INFO, 0); }
+    public double minorAlleleCopyNumber()
+    {
+        return mContext.getAttributeAsDouble(PURPLE_MINOR_ALLELE_CN_INFO, 0);
+    }
 
-    public double variantCopyNumber() { return mContext.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, 0); }
+    public double variantCopyNumber()
+    {
+        return mContext.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, 0);
+    }
 
     @Nullable
     public String localPhaseSetsToString()
@@ -180,7 +199,9 @@ public class VariantContextDecorator implements GenomePosition
     public Integer localPhaseSet()
     {
         if(!mContext.hasAttribute(LOCAL_PHASE_SET))
+        {
             return null;
+        }
 
         List<Integer> localPhaseSets = mContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0);
         return !localPhaseSets.isEmpty() ? localPhaseSets.get(0) : null;
@@ -210,7 +231,10 @@ public class VariantContextDecorator implements GenomePosition
         return PathogenicSummaryFactory.fromContext(mContext);
     }
 
-    public int repeatCount() { return mContext.getAttributeAsInt(SageVcfTags.REPEAT_COUNT_FLAG, 0); }
+    public int repeatCount()
+    {
+        return mContext.getAttributeAsInt(SageVcfTags.REPEAT_COUNT_FLAG, 0);
+    }
 
     public String repeatSequence()
     {
@@ -221,6 +245,7 @@ public class VariantContextDecorator implements GenomePosition
     {
         return Hotspot.fromVariant(mContext);
     }
+
     public boolean isHotspot()
     {
         return hotspot() == Hotspot.HOTSPOT;

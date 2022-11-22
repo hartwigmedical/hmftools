@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class },
              visibility = Value.Style.ImplementationVisibility.PUBLIC)
-abstract class AllelicDepthImpl implements AllelicDepth {
+abstract class AllelicDepthImpl implements AllelicDepth
+{
 
 }

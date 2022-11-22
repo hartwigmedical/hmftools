@@ -17,16 +17,18 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class ReportableVariantFactory {
-
+public final class ReportableVariantFactory
+{
     private static final Logger LOGGER = LogManager.getLogger(ReportableVariantFactory.class);
 
-    private ReportableVariantFactory() {
+    private ReportableVariantFactory()
+    {
     }
 
     @NotNull
     public static List<ReportableVariant> toReportableGermlineVariants(@NotNull List<SomaticVariant> variants,
-            @NotNull List<DriverCatalog> germlineDriverCatalog) {
+            @NotNull List<DriverCatalog> germlineDriverCatalog)
+    {
         List<DriverCatalog> germlineMutationCatalog =
                 germlineDriverCatalog.stream().filter(x -> x.driver() == DriverType.GERMLINE_MUTATION).collect(Collectors.toList());
         return toReportableVariants(variants, germlineMutationCatalog, ReportableVariantSource.GERMLINE);
@@ -34,7 +36,8 @@ public final class ReportableVariantFactory {
 
     @NotNull
     public static List<ReportableVariant> toReportableSomaticVariants(@NotNull List<SomaticVariant> variants,
-            @NotNull List<DriverCatalog> somaticDriverCatalog) {
+            @NotNull List<DriverCatalog> somaticDriverCatalog)
+    {
         List<DriverCatalog> somaticMutationCatalog =
                 somaticDriverCatalog.stream().filter(x -> x.driver() == DriverType.MUTATION).collect(Collectors.toList());
         return toReportableVariants(variants, somaticMutationCatalog, ReportableVariantSource.SOMATIC);
@@ -42,16 +45,20 @@ public final class ReportableVariantFactory {
 
     @NotNull
     private static List<ReportableVariant> toReportableVariants(@NotNull List<SomaticVariant> variants,
-            @NotNull List<DriverCatalog> driverCatalog, @NotNull ReportableVariantSource source) {
+            @NotNull List<DriverCatalog> driverCatalog, @NotNull ReportableVariantSource source)
+    {
         Map<DriverCatalogKey, DriverCatalog> driverMap = DriverCatalogMap.toDriverMap(driverCatalog);
         List<ReportableVariant> result = Lists.newArrayList();
 
-        for (SomaticVariant variant : variants) {
-            if (variant.reported()) {
+        for(SomaticVariant variant : variants)
+        {
+            if(variant.reported())
+            {
                 ImmutableReportableVariant.Builder builder = fromVariant(variant, source);
 
                 DriverCatalog canonicalDriver = findCanonicalEntryForVariant(driverMap, variant);
-                if (canonicalDriver != null) {
+                if(canonicalDriver != null)
+                {
                     result.add(builder.driverLikelihood(canonicalDriver.driverLikelihood())
                             .transcript(canonicalDriver.transcript())
                             .isCanonical(canonicalDriver.isCanonical())
@@ -59,7 +66,8 @@ public final class ReportableVariantFactory {
                 }
 
                 DriverCatalog nonCanonicalDriver = findNonCanonicalEntryForVariant(driverMap, variant);
-                if (nonCanonicalDriver != null) {
+                if(nonCanonicalDriver != null)
+                {
                     result.add(builder.driverLikelihood(nonCanonicalDriver.driverLikelihood())
                             .transcript(nonCanonicalDriver.transcript())
                             .isCanonical(nonCanonicalDriver.isCanonical())
@@ -75,14 +83,20 @@ public final class ReportableVariantFactory {
 
     @Nullable
     private static DriverCatalog findCanonicalEntryForVariant(@NotNull Map<DriverCatalogKey, DriverCatalog> entries,
-            @NotNull SomaticVariant variant) {
+            @NotNull SomaticVariant variant)
+    {
         assert variant.reported();
 
-        for (DriverCatalog catalog : entries.values()) {
-            if (variant.gene().equals(catalog.gene()) && catalog.isCanonical()) {
-                if (variant.canonicalTranscript().equals(catalog.transcript())) {
+        for(DriverCatalog catalog : entries.values())
+        {
+            if(variant.gene().equals(catalog.gene()) && catalog.isCanonical())
+            {
+                if(variant.canonicalTranscript().equals(catalog.transcript()))
+                {
                     return entries.get(DriverCatalogKey.create(variant.gene(), variant.canonicalTranscript()));
-                } else {
+                }
+                else
+                {
                     LOGGER.warn("Canonical driver entry on transcript {} does not match canonical transcript {} on variant",
                             catalog.transcript(),
                             variant.canonicalTranscript());
@@ -96,16 +110,22 @@ public final class ReportableVariantFactory {
 
     @Nullable
     private static DriverCatalog findNonCanonicalEntryForVariant(@NotNull Map<DriverCatalogKey, DriverCatalog> entries,
-            @NotNull SomaticVariant variant) {
+            @NotNull SomaticVariant variant)
+    {
         assert variant.reported();
 
         String nonCanonicalTranscript = AltTranscriptReportableInfo.firstOtherTranscript(variant.otherReportedEffects());
 
-        for (DriverCatalog catalog : entries.values()) {
-            if (variant.gene().equals(catalog.gene()) && !catalog.isCanonical()) {
-                if (nonCanonicalTranscript.equals(catalog.transcript())) {
+        for(DriverCatalog catalog : entries.values())
+        {
+            if(variant.gene().equals(catalog.gene()) && !catalog.isCanonical())
+            {
+                if(nonCanonicalTranscript.equals(catalog.transcript()))
+                {
                     return entries.get(DriverCatalogKey.create(variant.gene(), nonCanonicalTranscript));
-                } else {
+                }
+                else
+                {
                     LOGGER.warn("Unexpected transcript {} for gene {} in driver catalog", catalog.transcript(), catalog.gene());
                 }
             }
@@ -116,26 +136,31 @@ public final class ReportableVariantFactory {
 
     @NotNull
     public static List<ReportableVariant> mergeVariantLists(@NotNull List<ReportableVariant> list1,
-            @NotNull List<ReportableVariant> list2) {
+            @NotNull List<ReportableVariant> list2)
+    {
         List<ReportableVariant> result = Lists.newArrayList();
 
         Map<String, Double> maxLikelihoodPerGene = Maps.newHashMap();
-        for (ReportableVariant variant : list1) {
+        for(ReportableVariant variant : list1)
+        {
             maxLikelihoodPerGene.merge(variant.gene(), variant.driverLikelihood(), Math::max);
         }
 
-        for (ReportableVariant variant : list2) {
+        for(ReportableVariant variant : list2)
+        {
             maxLikelihoodPerGene.merge(variant.gene(), variant.driverLikelihood(), Math::max);
         }
 
-        for (ReportableVariant variant : list1) {
+        for(ReportableVariant variant : list1)
+        {
             result.add(ImmutableReportableVariant.builder()
                     .from(variant)
                     .driverLikelihood(maxLikelihoodPerGene.get(variant.gene()))
                     .build());
         }
 
-        for (ReportableVariant variant : list2) {
+        for(ReportableVariant variant : list2)
+        {
             result.add(ImmutableReportableVariant.builder()
                     .from(variant)
                     .driverLikelihood(maxLikelihoodPerGene.get(variant.gene()))
@@ -146,7 +171,8 @@ public final class ReportableVariantFactory {
     }
 
     @NotNull
-    public static ImmutableReportableVariant.Builder fromVariant(@NotNull SomaticVariant variant, @NotNull ReportableVariantSource source) {
+    public static ImmutableReportableVariant.Builder fromVariant(@NotNull SomaticVariant variant, @NotNull ReportableVariantSource source)
+    {
         AllelicDepth rnaDepth = variant.rnaDepth();
         return ImmutableReportableVariant.builder()
                 .type(variant.type())
@@ -176,7 +202,8 @@ public final class ReportableVariantFactory {
                 .localPhaseSet(variant.topLocalPhaseSet());
     }
 
-    private static double calcAlleleCopyNumber(double adjustedCopyNumber, double adjustedVAF) {
+    private static double calcAlleleCopyNumber(double adjustedCopyNumber, double adjustedVAF)
+    {
         return adjustedCopyNumber * Math.max(0, Math.min(1, adjustedVAF));
     }
 }

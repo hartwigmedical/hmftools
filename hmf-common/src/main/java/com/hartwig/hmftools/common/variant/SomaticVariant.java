@@ -8,8 +8,8 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface SomaticVariant extends Variant {
-
+public interface SomaticVariant extends Variant
+{
     double qual();
 
     @NotNull
@@ -30,17 +30,20 @@ public interface SomaticVariant extends Variant {
 
     boolean recovered();
 
-    default boolean isHotspot() {
+    default boolean isHotspot()
+    {
         return hotspot() == Hotspot.HOTSPOT;
     }
 
     double mappability();
 
-    default boolean isFiltered() {
+    default boolean isFiltered()
+    {
         return !filter().equals(SomaticVariantFactory.PASS_FILTER);
     }
 
-    default boolean isSnp() {
+    default boolean isSnp()
+    {
         return type() == VariantType.SNP;
     }
 
@@ -81,7 +84,8 @@ public interface SomaticVariant extends Variant {
 
     double subclonalLikelihood();
 
-    default double clonalLikelihood() {
+    default double clonalLikelihood()
+    {
         return 1 - subclonalLikelihood();
     }
 
@@ -94,11 +98,18 @@ public interface SomaticVariant extends Variant {
     @Nullable
     List<Integer> localPhaseSets();
 
-    default Integer topLocalPhaseSet() { return localPhaseSets() != null && !localPhaseSets().isEmpty() ? localPhaseSets().get(0) : null; }
+    default Integer topLocalPhaseSet()
+    {
+        return localPhaseSets() != null && !localPhaseSets().isEmpty() ? localPhaseSets().get(0) : null;
+    }
 
     default String localPhaseSetsStr()
     {
         return SomaticVariantFactory.localPhaseSetsStr(localPhaseSets());
     }
-    default boolean hasLocalPhaseSets() { return localPhaseSets() != null && !localPhaseSets().isEmpty(); }
+
+    default boolean hasLocalPhaseSets()
+    {
+        return localPhaseSets() != null && !localPhaseSets().isEmpty();
+    }
 }

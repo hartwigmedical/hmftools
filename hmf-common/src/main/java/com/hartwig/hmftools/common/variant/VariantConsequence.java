@@ -50,7 +50,6 @@ public enum VariantConsequence
     PROTEIN_PROTEIN_CONTACT("protein_protein_contact"),
     OTHER(Strings.EMPTY);
 
-
     private final String mParentSequenceOntologyTerm;
     private final List<String> mSequenceOntologySubTerms;
 
@@ -76,7 +75,9 @@ public enum VariantConsequence
         for(final VariantConsequence consequence : VariantConsequence.values())
         {
             if(consequence.isParentTypeOf(effect))
+            {
                 return consequence;
+            }
         }
 
         return VariantConsequence.OTHER;
@@ -112,12 +113,17 @@ public enum VariantConsequence
         return annotation.equals(mParentSequenceOntologyTerm) || mSequenceOntologySubTerms.contains(annotation);
     }
 
-    public String parentTerm() { return mParentSequenceOntologyTerm; }
+    public String parentTerm()
+    {
+        return mParentSequenceOntologyTerm;
+    }
 
     public String description()
     {
         if(!mSequenceOntologySubTerms.isEmpty())
+        {
             return mSequenceOntologySubTerms.get(0);
+        }
 
         return mParentSequenceOntologyTerm;
     }
@@ -135,23 +141,31 @@ public enum VariantConsequence
             case SPLICE_ACCEPTOR_VARIANT:
                 return 50;
 
-            case SPLICE_REGION_VARIANT: return 49;
+            case SPLICE_REGION_VARIANT:
+                return 49;
 
-            case FRAMESHIFT_VARIANT: return 40;
-            case MISSENSE_VARIANT: return 40;
+            case FRAMESHIFT_VARIANT:
+                return 40;
+            case MISSENSE_VARIANT:
+                return 40;
 
             case INFRAME_INSERTION:
             case INFRAME_DELETION:
                 return 30;
 
-            case SYNONYMOUS_VARIANT: return 25;
+            case SYNONYMOUS_VARIANT:
+                return 25;
 
-            case UTR_VARIANT: return 20;
-            case INTRON_VARIANT: return 20;
+            case UTR_VARIANT:
+                return 20;
+            case INTRON_VARIANT:
+                return 20;
 
-            case NON_CODING_TRANSCRIPT_VARIANT: return 15;
+            case NON_CODING_TRANSCRIPT_VARIANT:
+                return 15;
 
-            case UPSTREAM_GENE_VARIANT: return 10;
+            case UPSTREAM_GENE_VARIANT:
+                return 10;
 
             default:
                 return 0;

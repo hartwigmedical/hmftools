@@ -10,7 +10,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ReportableVariant implements Variant {
+public abstract class ReportableVariant implements Variant
+{
 
     @NotNull
     public abstract ReportableVariantSource source();
@@ -33,7 +34,8 @@ public abstract class ReportableVariant implements Variant {
 
     @NotNull
     @Value.Derived
-    public String gDNA() {
+    public String gDNA()
+    {
         return chromosome() + ":" + position();
     }
 
@@ -88,7 +90,8 @@ public abstract class ReportableVariant implements Variant {
 
     @NotNull
     @Value.Derived
-    public String tVAF() {
+    public String tVAF()
+    {
         double vaf = alleleCopyNumber() / totalCopyNumber();
         return DataUtil.formatPercentage(100 * Math.max(0, Math.min(1, vaf)));
     }
@@ -102,7 +105,8 @@ public abstract class ReportableVariant implements Variant {
 
     @NotNull
     @Value.Derived
-    public DriverInterpretation driverLikelihoodInterpretation() {
+    public DriverInterpretation driverLikelihoodInterpretation()
+    {
         return DriverInterpretation.interpret(driverLikelihood());
     }
 

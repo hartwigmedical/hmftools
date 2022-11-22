@@ -6,8 +6,8 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface GermlineVariant extends Variant {
-
+public interface GermlineVariant extends Variant
+{
     double qual();
 
     @NotNull
@@ -26,17 +26,20 @@ public interface GermlineVariant extends Variant {
     @NotNull
     Hotspot hotspot();
 
-    default boolean isHotspot() {
+    default boolean isHotspot()
+    {
         return hotspot() == Hotspot.HOTSPOT;
     }
 
     double mappability();
 
-    default boolean isFiltered() {
+    default boolean isFiltered()
+    {
         return !filter().equals(SomaticVariantFactory.PASS_FILTER);
     }
 
-    default boolean isSnp() {
+    default boolean isSnp()
+    {
         return type() == VariantType.SNP;
     }
 
