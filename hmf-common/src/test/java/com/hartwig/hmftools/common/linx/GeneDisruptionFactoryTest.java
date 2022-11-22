@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +36,7 @@ public class GeneDisruptionFactoryTest {
                 .transcriptId("ENST1")
                 .chromosome("3")
                 .chrBand("p12")
-                .type("INV")
+                .type(StructuralVariantType.INV)
                 .junctionCopyNumber(1.12);
         List<LinxBreakend> pairedBreakends =
                 Lists.newArrayList(pairedBreakendBuilder.exonUp(3).exonDown(4).undisruptedCopyNumber(4.3).build(),

@@ -14,7 +14,6 @@ public class PurpleInterpreterTest {
     public void canInterpretMinimalPurpleData() {
         assertNotNull(PurpleInterpreter.interpret(PurpleTestFactory.createMinimalTestPurpleData(),
                 Lists.newArrayList(),
-                Lists.newArrayList(),
                 ChordTestFactory.createMinimalTestChordAnalysis()));
     }
 }

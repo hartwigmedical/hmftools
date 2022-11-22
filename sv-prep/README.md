@@ -4,7 +4,7 @@ SV Prep generates a maximally filtered SV BAM file by identifying candidate SV j
 
 In tumor-normal mode, SV Prep may be run first on the tumor and then a 2nd time on the reference sample using the junctions found in the tumor mode, to ensure all potential evidence in the reference sample is collected for candidate tumor junctions. 
 
-Example usage of SV Prep can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/wgs_scripts/run_gridss)
+Example usage of SV Prep can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/scripts/run_sv_calling)
 
 ## Running SvPrep
 
@@ -89,7 +89,7 @@ Please see the example [script](https://github.com/hartwigmedical/hmftools/blob/
 
 ## SV Prep Blacklist
 
-The blacklist is the combination of the existing encode blacklisted regions and all regions with 200x or greater depth found in 4 out of 11 reference samples (40x mean coverage) used to identify artefacts (and 4 out of 8 for HG38).   Regions that overlap PANEL or fusion KB genes are excluded from the blacklist unless the min coverage is >2000x. These  regions mainly capture long repeat sections of the genome with poorly aligned reads and make up 13M bases of the genome (0.4%).  
+The blacklist is the combination of the existing encode blacklisted regions and all regions with 200x or greater depth found in 4 out of 11 reference samples (40x mean coverage) used to identify artefacts (and 4 out of 8 for HG38).   Regions that overlap PANEL or fusion KB genes are excluded from the blacklist unless the max coverage is >2000x. These  regions mainly capture long repeat sections of the genome with poorly aligned reads and make up 13M bases of the genome (0.4%).  
 
 ## Known issues and future improvements
 
@@ -103,4 +103,4 @@ Variants near blacklisted regions - GRIDSS will ignore any read that overlaps a 
 - **Performance** - ComputeSamTags could be done in extraction step
 
 # Version History and Download Links
-- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.0)
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.0.1)

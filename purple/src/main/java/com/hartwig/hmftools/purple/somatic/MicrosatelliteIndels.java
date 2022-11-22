@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE_FLAG;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MSI_2_3_BASE_AF;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MSI_4_BASE_AF;
 
 import java.util.stream.Collectors;
 
@@ -72,7 +70,7 @@ public class MicrosatelliteIndels
 
             if(altLength > refLength)
             {
-                if(variant.alleleFrequency() < TARGET_REGIONS_MSI_4_BASE_AF)
+                if(variant.alleleFrequency() < mTargetRegions.msi4BaseAF())
                     return;
             }
             else
@@ -82,12 +80,12 @@ public class MicrosatelliteIndels
 
                 if(refLength <= 4)
                 {
-                    if(variant.alleleFrequency() < TARGET_REGIONS_MSI_2_3_BASE_AF)
+                    if(variant.alleleFrequency() < mTargetRegions.msi23BaseAF())
                         return;
                 }
                 else
                 {
-                    if(variant.alleleFrequency() < TARGET_REGIONS_MSI_4_BASE_AF)
+                    if(variant.alleleFrequency() < mTargetRegions.msi4BaseAF())
                         return;
                 }
             }

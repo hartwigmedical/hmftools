@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.orange.report.ImmutableReportConfig;
 import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.util.Config;
-import com.hartwig.serve.datamodel.EvidenceLevel;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -83,11 +82,9 @@ public interface OrangeConfig {
     String CUPPA_SUMMARY_PLOT = "cuppa_summary_plot";
     String CUPPA_FEATURE_PLOT = "cuppa_feature_plot";
     String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
-    String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
 
     // Some additional optional params and flags
     String DISABLE_GERMLINE = "disable_germline";
-    String MAX_EVIDENCE_LEVEL = "max_evidence_level";
     String LIMIT_JSON_OUTPUT = "limit_json_output";
     String LOG_DEBUG = "log_debug";
 
@@ -141,10 +138,8 @@ public interface OrangeConfig {
         options.addOption(CUPPA_SUMMARY_PLOT, true, "Path towards the Cuppa report summary plot PNG.");
         options.addOption(CUPPA_FEATURE_PLOT, true, "Path towards the Cuppa report feature plot PNG.");
         options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
-        options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
 
         options.addOption(DISABLE_GERMLINE, false, "If provided, germline results are not added to the report");
-        options.addOption(MAX_EVIDENCE_LEVEL, true, "If provided, only evidence up to provided maximum level are added to report");
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         options.addOption(LIMIT_JSON_OUTPUT, false, "If provided, limits the json output.");
 
@@ -294,9 +289,6 @@ public interface OrangeConfig {
     String peachGenotypeTsv();
 
     @NotNull
-    String protectEvidenceTsv();
-
-    @NotNull
     static OrangeConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
@@ -306,7 +298,6 @@ public interface OrangeConfig {
         ReportConfig report = ImmutableReportConfig.builder()
                 .limitJsonOutput(cmd.hasOption(LIMIT_JSON_OUTPUT))
                 .reportGermline(!cmd.hasOption(DISABLE_GERMLINE))
-                .maxEvidenceLevel(cmd.hasOption(MAX_EVIDENCE_LEVEL) ? EvidenceLevel.valueOf(cmd.getOptionValue(MAX_EVIDENCE_LEVEL)) : null)
                 .build();
 
         if (report.limitJsonOutput()) {
@@ -315,10 +306,6 @@ public interface OrangeConfig {
 
         if (!report.reportGermline()) {
             LOGGER.info("Germline reporting has been disabled");
-        }
-
-        if (report.maxEvidenceLevel() != null) {
-            LOGGER.info("Max reporting level configured to {}", report.maxEvidenceLevel());
         }
 
         String refSampleId = Config.optionalValue(cmd, REFERENCE_SAMPLE_ID);
@@ -380,7 +367,6 @@ public interface OrangeConfig {
                 .cuppaSummaryPlot(Config.nonOptionalFile(cmd, CUPPA_SUMMARY_PLOT))
                 .cuppaFeaturePlot(Config.optionalValue(cmd, CUPPA_FEATURE_PLOT))
                 .peachGenotypeTsv(Config.nonOptionalFile(cmd, PEACH_GENOTYPE_TSV))
-                .protectEvidenceTsv(Config.nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV))
                 .build();
     }
 

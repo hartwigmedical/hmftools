@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.samtools.SoftClipSide;
+import com.hartwig.hmftools.common.samtools.ClippedSide;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 
@@ -65,7 +65,7 @@ public class SupplementaryJunctionData
             return null;
 
         // find the junction from this read's SC and same for the supp mapping data
-        SoftClipSide scSide = ReadRecord.softClipSide(read);
+        ClippedSide scSide = ReadRecord.clippedSide(read);
 
         SupplementaryJunctionData suppJuncData = new SupplementaryJunctionData(read.Id);
 
@@ -82,7 +82,10 @@ public class SupplementaryJunctionData
 
         suppJuncData.RemoteChromosome = suppData.Chromosome;
         Cigar remoteCigar = cigarFromStr(suppData.Cigar);
-        scSide = SoftClipSide.fromCigar(remoteCigar);
+        scSide = ClippedSide.fromCigar(remoteCigar, true);
+
+        if(scSide == null)
+            return null;
 
         if(scSide.isLeft())
         {

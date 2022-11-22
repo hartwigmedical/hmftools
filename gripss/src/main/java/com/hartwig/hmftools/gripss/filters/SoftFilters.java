@@ -217,6 +217,9 @@ public class SoftFilters
         if(!breakend.isSgl() || breakend.IsLineInsertion)
             return false;
 
+        if(mFilterConstants.LowQualRegion.containsPosition(breakend.Chromosome, breakend.Position))
+            return false;
+
         double strandBias = calcStrandBias(breakend.Context);
         return strandBias < SGL_MIN_STRAND_BIAS || strandBias > SGL_MAX_STRAND_BIAS;
     }

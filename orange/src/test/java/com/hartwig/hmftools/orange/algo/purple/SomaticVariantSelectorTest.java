@@ -8,9 +8,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.common.protect.EventGenerator;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -37,32 +34,11 @@ public class SomaticVariantSelectorTest {
         List<ReportableVariant> variants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(hotspot, nearHotspot, nonHotspot),
                         Lists.newArrayList(),
-                        Lists.newArrayList(),
                         Lists.newArrayList());
 
         assertEquals(2, variants.size());
         assertNotNull(findByCanonicalEffect(variants, "hotspot"));
         assertNotNull(findByCanonicalEffect(variants, "near hotspot"));
-    }
-
-    @Test
-    public void canSelectVariantsWithEvidence() {
-        SomaticVariant withEvidence =
-                SomaticVariantTestFactory.builder().gene("gene 1").canonicalEffect("with evidence").reported(false).build();
-        SomaticVariant withoutEvidence =
-                SomaticVariantTestFactory.builder().gene("gene 2").canonicalEffect("no evidence").reported(false).build();
-
-        ProtectEvidence evidence =
-                ProtectTestFactory.builder().gene(withEvidence.gene()).event(EventGenerator.variantEvent(withEvidence)).build();
-
-        List<ReportableVariant> variants =
-                SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(withEvidence, withoutEvidence),
-                        Lists.newArrayList(),
-                        Lists.newArrayList(evidence),
-                        Lists.newArrayList());
-
-        assertEquals(1, variants.size());
-        assertNotNull(findByCanonicalEffect(variants, "with evidence"));
     }
 
     @Test
@@ -79,7 +55,6 @@ public class SomaticVariantSelectorTest {
         List<ReportableVariant> variants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(withMatch, withoutMatch, withoutPhase),
                         Lists.newArrayList(withPhase, noPhase),
-                        Lists.newArrayList(),
                         Lists.newArrayList());
 
         assertEquals(1, variants.size());
@@ -115,7 +90,7 @@ public class SomaticVariantSelectorTest {
 
         List<ReportableVariant> variants = SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(cuppaRelevant,
                 cuppaTooManyRepeats,
-                wrongGene), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+                wrongGene), Lists.newArrayList(), Lists.newArrayList());
 
         assertEquals(1, variants.size());
         assertNotNull(findByCanonicalEffect(variants, "relevant"));
@@ -162,7 +137,6 @@ public class SomaticVariantSelectorTest {
         List<ReportableVariant> variants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(nonsense, splice, missense, wrongGene),
                         Lists.newArrayList(),
-                        Lists.newArrayList(),
                         Lists.newArrayList(driverGene));
 
         assertEquals(2, variants.size());
@@ -189,7 +163,6 @@ public class SomaticVariantSelectorTest {
 
         List<ReportableVariant> variants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(reportedGene, nonReportedGene, otherGene),
-                        Lists.newArrayList(),
                         Lists.newArrayList(),
                         Lists.newArrayList(driverGeneYes, driverGeneNo));
 

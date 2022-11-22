@@ -13,6 +13,7 @@ import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.HardFilters;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
+import com.hartwig.hmftools.gripss.filters.TargetRegions;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
@@ -21,16 +22,18 @@ public class VariantBuilder
 {
     private final HardFilters mHardFilters;
     private final HotspotCache mHotspotCache;
+    private final TargetRegions mTargetRegions;
     private StructuralVariantFactory mSvFactory;
     private final Set<String> mHotspotCandidateVcfIds;
     private final Set<String> mHardFilteredVcfIds;
 
     private int mHardFilteredCount;
 
-    public VariantBuilder(final FilterConstants filterConstants, final HotspotCache hotspotCache)
+    public VariantBuilder(final FilterConstants filterConstants, final HotspotCache hotspotCache, final TargetRegions targetRegions)
     {
         mHardFilters = filterConstants != null ? new HardFilters(filterConstants) : null;
         mHotspotCache = hotspotCache;
+        mTargetRegions = targetRegions;
 
         mSvFactory = new StructuralVariantFactory(new CompoundFilter(false));
         mHardFilteredVcfIds = Sets.newHashSet();
@@ -56,7 +59,17 @@ public class VariantBuilder
         // if either are hard-filtered and not hotspot candidates, then drop them both
         boolean isSgl = StructuralVariantFactory.isSingleBreakend(variant);
 
-        boolean hardFiltered = mHardFilters != null ? mHardFilters.isFiltered(variant, genotypeIds, isSgl) : false;
+        boolean hardFiltered = false;
+
+        if(isSgl && mTargetRegions.hasTargetRegions())
+        {
+            hardFiltered = !mTargetRegions.inTargetRegions(variant.getContig(), variant.getStart());
+        }
+
+        if(!hardFiltered && mHardFilters != null)
+        {
+            hardFiltered = mHardFilters.isFiltered(variant, genotypeIds, isSgl);
+        }
 
         if(isSgl)
         {

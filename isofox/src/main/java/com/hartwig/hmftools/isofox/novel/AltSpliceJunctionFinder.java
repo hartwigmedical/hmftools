@@ -37,6 +37,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
+import com.hartwig.hmftools.common.samtools.ClippedSide;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -296,22 +297,9 @@ public class AltSpliceJunctionFinder
             final ReadRecord read = (i == 0) ? read1 : read2;
 
             // take the longer of the 2 soft-clippings
-            int scLeft = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
-            int scRight = read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0;
+            ClippedSide clippedSide = ClippedSide.from(read.Cigar, read.isSoftClipped(SE_START), read.isSoftClipped(SE_END));
 
-            boolean useLeft = false;
-
-            if (scLeft > 0 && scRight > 0)
-            {
-                if (scLeft >= scRight)
-                    useLeft = true;
-                else
-                    useLeft = false;
-            }
-            else
-            {
-                useLeft = scLeft > 0;
-            }
+            boolean useLeft = clippedSide != null && clippedSide.isLeft();
 
             if(useLeft)
                 spliceJunction[SE_START] = read.getCoordsBoundary(SE_START);

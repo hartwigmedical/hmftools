@@ -57,6 +57,7 @@ import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.common.VcfUtils;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
+import com.hartwig.hmftools.gripss.filters.TargetRegions;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -114,7 +115,7 @@ public class GripssCompareVcfs
         mOriginalSvData = Maps.newHashMap();
         mOriginalCoordsSvData = Maps.newHashMap();
 
-        mVariantBuilder = new VariantBuilder(null, new HotspotCache(cmd));
+        mVariantBuilder = new VariantBuilder(null, new HotspotCache(cmd), new TargetRegions(null));
 
         mIgnorePonDiff = cmd.hasOption(IGNORE_PON_DIFF);
         mKeyByCoords = cmd.hasOption(KEY_BY_COORDS);

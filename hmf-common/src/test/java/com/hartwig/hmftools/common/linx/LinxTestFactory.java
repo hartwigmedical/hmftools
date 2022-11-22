@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.linx;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.TranscriptCodingType;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -66,7 +67,7 @@ public final class LinxTestFactory {
                 .nextSpliceExonPhase(0)
                 .nextSpliceDistance(0)
                 .totalExonCount(0)
-                .type(Strings.EMPTY)
+                .type(StructuralVariantType.BND)
                 .chromosome(Strings.EMPTY)
                 .orientation(0)
                 .strand(0)

@@ -13,7 +13,7 @@ import static htsjdk.samtools.CigarOperator.N;
 import java.util.Comparator;
 import java.util.List;
 
-import com.hartwig.hmftools.common.samtools.SoftClipSide;
+import com.hartwig.hmftools.common.samtools.ClippedSide;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
 import htsjdk.samtools.Cigar;
@@ -37,7 +37,7 @@ public class RemoteJunction
     {
         // use the cigar if the alignment suggest the soft-clip is on the right side
         Cigar remoteCigar = cigarFromStr(suppData.Cigar);
-        SoftClipSide scSide = SoftClipSide.fromCigar(remoteCigar);
+        ClippedSide scSide = ClippedSide.fromCigar(remoteCigar, true);
 
         if(scSide.isLeft())
         {

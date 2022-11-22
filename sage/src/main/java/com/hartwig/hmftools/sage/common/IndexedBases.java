@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE_PARTIAL;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL;
@@ -116,7 +117,7 @@ public class IndexedBases
     private int otherLeftCoreIndex(int otherRefIndex) { return otherRefIndex - Index + LeftCoreIndex; }
     private int otherRightCoreIndex(int otherRefIndex)
     {
-        return otherRefIndex- Index + RightCoreIndex;
+        return otherRefIndex - Index + RightCoreIndex;
     }
 
     public boolean isCoreCovered(int otherReadIndex, int otherBasesLength)
@@ -151,9 +152,9 @@ public class IndexedBases
 
         final byte[] otherBases = other.Bases;
 
-        boolean centreMatch = coreMatch(otherReadIndex, otherBases, otherBaseQuals, wildcardsInCore, maxCoreMismatches);
-        if(!centreMatch)
-            return NONE;
+        ReadContextMatch centreMatch = coreMatch(otherReadIndex, otherBases, otherBaseQuals, wildcardsInCore, maxCoreMismatches);
+        if(centreMatch == NONE || centreMatch == CORE_PARTIAL)
+            return centreMatch;
 
         int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, otherBases, otherBaseQuals);
         if(leftFlankingBases < 0)
@@ -172,18 +173,16 @@ public class IndexedBases
         return length() == otherLength && leftFlankingBases == leftFlankLength && rightFlankingBases == rightFlankLength ? FULL : PARTIAL;
     }
 
-    protected boolean coreMatch(
+    protected ReadContextMatch coreMatch(
             int otherRefIndex, final byte[] otherBases, final byte[] otherBaseQuals, boolean wildcardAllowed, int maxCoreMismatches)
     {
         int otherLeftCentreIndex = otherLeftCoreIndex(otherRefIndex);
 
-        if(otherLeftCentreIndex < 0)
-            return false;
-
         int otherRightCentreIndex = otherRightCoreIndex(otherRefIndex);
 
-        if(otherRightCentreIndex >= otherBases.length)
-            return false;
+        // exit if there's no overlap
+        if(otherRightCentreIndex < 0 || otherLeftCentreIndex >= otherBases.length)
+            return NONE;
 
         int permittedLowQualMismatches;
 
@@ -197,11 +196,14 @@ public class IndexedBases
             permittedLowQualMismatches = 0;
         }
 
+        boolean partialCoreOverlap = false;
+        int matchedBases = 0;
+
         for(int i = 0; i < coreLength(); i++)
         {
             if(i > 0 && (i % CORE_LOW_QUAL_MISMATCH_BASE_LENGTH) == 0)
             {
-                // allow at most 1 mis-match per X bases, so reset it if required
+                // allow at most 1 mismatch per X bases, so reset it if required
                 if(maxCoreMismatches > 0)
                 {
                     permittedLowQualMismatches = 1;
@@ -215,10 +217,24 @@ public class IndexedBases
 
             int readIndex = LeftCoreIndex + i;
             int otherByteIndex = otherLeftCentreIndex + i;
+
+            if(otherByteIndex < 0 || otherByteIndex >= otherBases.length)
+            {
+                partialCoreOverlap = true;
+
+                if(otherByteIndex >= otherBases.length)
+                    break;
+                else
+                    continue;
+            }
+
             byte otherByte = otherBases[otherByteIndex];
 
             if(Bases[readIndex] == otherByte)
+            {
+                ++matchedBases;
                 continue;
+            }
 
             if(wildcardAllowed && otherByte == MATCH_WILDCARD)
                 continue;
@@ -229,11 +245,10 @@ public class IndexedBases
                 continue;
             }
 
-            return false;
-
+            return NONE;
         }
 
-        return true;
+        return partialCoreOverlap && matchedBases > 0 ? CORE_PARTIAL : CORE;
     }
 
     private static boolean isLowBaseQual(final byte[] baseQualities, int bqIndex)

@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.common.protect;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
+
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
-
-import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 
 import org.jetbrains.annotations.NotNull;
 

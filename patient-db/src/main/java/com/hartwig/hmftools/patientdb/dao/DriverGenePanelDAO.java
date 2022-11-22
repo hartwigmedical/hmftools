@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRIVERG
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
@@ -12,6 +13,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep12;
+import org.jooq.InsertValuesStep15;
 
 public class DriverGenePanelDAO {
 
@@ -25,7 +27,7 @@ public class DriverGenePanelDAO {
     void writeDriverGenes(@NotNull final List<DriverGene> driverGenes) {
         context.truncate(DRIVERGENEPANEL).execute();
         Timestamp timestamp = new Timestamp(new Date().getTime());
-        InsertValuesStep12 inserter = context.insertInto(DRIVERGENEPANEL,
+        InsertValuesStep15 inserter = context.insertInto(DRIVERGENEPANEL,
                 DRIVERGENEPANEL.MODIFIED,
                 DRIVERGENEPANEL.GENE,
                 DRIVERGENEPANEL.REPORTMISSENSE,
@@ -37,9 +39,16 @@ public class DriverGenePanelDAO {
                 DRIVERGENEPANEL.REPORTSOMATICHOTSPOT,
                 DRIVERGENEPANEL.REPORTGERMLINEVARIANT,
                 DRIVERGENEPANEL.REPORTGERMLINEHOTSPOT,
-                DRIVERGENEPANEL.LIKELIHOODTYPE);
+                DRIVERGENEPANEL.LIKELIHOODTYPE,
+                DRIVERGENEPANEL.REPORTGERMLINEDISRUPTION,
+                DRIVERGENEPANEL.ADDITIONALREPORTEDTRANSCRIPTS,
+                DRIVERGENEPANEL.REPORTPGX);
 
-        for (DriverGene driverGene : driverGenes) {
+        for (DriverGene driverGene : driverGenes)
+        {
+            StringJoiner altTrans = new StringJoiner(";");
+            driverGene.additionalReportedTranscripts().forEach(x -> altTrans.add(x));
+
             inserter.values(timestamp,
                     driverGene.gene(),
                     driverGene.reportMissenseAndInframe(),
@@ -49,9 +58,12 @@ public class DriverGenePanelDAO {
                     driverGene.reportDisruption(),
                     driverGene.reportAmplification(),
                     driverGene.reportSomaticHotspot(),
-                    driverGene.reportGermlineVariant(),
-                    driverGene.reportGermlineHotspot(),
-                    driverGene.likelihoodType().toString());
+                    driverGene.reportGermlineVariant().toString(),
+                    driverGene.reportGermlineHotspot().toString(),
+                    driverGene.likelihoodType().toString(),
+                    driverGene.reportGermlineDisruption(),
+                    DatabaseUtil.checkStringLength(altTrans.toString(), DRIVERGENEPANEL.ADDITIONALREPORTEDTRANSCRIPTS),
+                    driverGene.reportPGX());
         }
 
         inserter.execute();

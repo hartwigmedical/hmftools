@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.samtools.ClippedSide;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
@@ -172,15 +173,13 @@ public class UmrFinder
         if(!read.containsSoftClipping())
             return null;
 
-        int scLengthStart = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
-        int scLengthEnd = read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0;
+        ClippedSide clippedSide = ClippedSide.fromCigar(read.Cigar, false);
 
-        if(scLengthStart == 0 && scLengthEnd == 0)
+        if(clippedSide == null)
             return null;
 
-        int scSide = scLengthStart > scLengthEnd ? SE_START : SE_END;
-
-        int scLength = scSide == SE_START ? scLengthStart : scLengthEnd;
+        int scSide = clippedSide.Side;
+        int scLength = clippedSide.Length;
 
         if(scLength < MIN_SOFT_CLIP_LENGTH)
             return null;

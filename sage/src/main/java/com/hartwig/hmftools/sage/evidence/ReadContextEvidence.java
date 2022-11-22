@@ -40,6 +40,7 @@ public class ReadContextEvidence
     private int mMaxDeleteLength;
 
     private VariantPhaser mVariantPhaser;
+    private String mCurrentSample;
 
     public ReadContextEvidence(
             final SageConfig config, final RefGenomeInterface refGenome, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
@@ -55,6 +56,7 @@ public class ReadContextEvidence
         mLastCandidateIndex = 0;
         mMaxDeleteLength = 0;
         mVariantPhaser = null;
+        mCurrentSample = null;
     }
 
     public List<ReadContextCounter> collectEvidence(
@@ -90,6 +92,8 @@ public class ReadContextEvidence
 
         QualityRecalibrationMap qrMap = mQualityRecalibrationMap.get(sample);
         mQualityCalculator = new QualityCalculator(mSageConfig.Quality, qrMap, mRefSequence.IndexedBases);
+
+        mCurrentSample = sample;
 
         final SamSlicerInterface samSlicer = samSlicerFactory.getSamSlicer(sample, Lists.newArrayList(sliceRegion), false);
         samSlicer.slice(this::processReadRecord);
@@ -170,7 +174,8 @@ public class ReadContextEvidence
 
         for(ReadContextCounter readCounter : readCounters)
         {
-            ReadMatchType matchType = readCounter.processRead(record, mSageConfig, mQualityCalculator, numberOfEvents);
+            ReadMatchType matchType = readCounter.processRead(
+                    record, mSageConfig, mQualityCalculator, numberOfEvents, mSageConfig.LogEvidenceReads ? mCurrentSample : null);
 
             if(mVariantPhaser != null)
             {

@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
@@ -56,5 +57,14 @@ public class VariantsTest {
 
         ReportableVariant noDepth = ReportableVariantTestFactory.builder().rnaAlleleReadCount(0).rnaTotalReadCount(0).build();
         assertEquals("0/0", Variants.rnaDepthField(noDepth));
+    }
+
+    @Test
+    public void canGenerateVariantEvents() {
+        assertEquals("p.Gly12Cys", Variants.toVariantEvent("p.Gly12Cys", "c.123A>C", "missense_variant", CodingEffect.MISSENSE));
+        assertEquals("c.123A>C splice", Variants.toVariantEvent("p.?", "c.123A>C", "missense_variant", CodingEffect.SPLICE));
+        assertEquals("c.123A>C", Variants.toVariantEvent("", "c.123A>C", "missense_variant", CodingEffect.MISSENSE));
+        assertEquals("splice", Variants.toVariantEvent("", "", "splice", CodingEffect.SPLICE));
+        assertEquals("missense_variant", Variants.toVariantEvent("", "", "missense_variant", CodingEffect.MISSENSE));
     }
 }

@@ -50,6 +50,11 @@ public class ReadContextCounterTest
 
     private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(CONFIG.Quality, RECALIBRATION, REF_BASES);
 
+    private static void processRead(final ReadContextCounter rcCounter, final SAMRecord record)
+    {
+        rcCounter.processRead(record, CONFIG, QUALITY_CALCULATOR,1, null);
+    }
+
     @Test
     public void testInsertInLeftSoftClip()
     {
@@ -60,7 +65,7 @@ public class ReadContextCounterTest
                 new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
 
         final SAMRecord record = buildSamRecord(555, "3S3M", "TGTTTC", "######");
-        victim.processRead(record, CONFIG, QUALITY_CALCULATOR,1);
+        processRead(victim, record);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -75,7 +80,7 @@ public class ReadContextCounterTest
                 new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
 
         final SAMRecord record = buildSamRecord(556, "2S3M", "TGTTC", "#####");
-        victim.processRead(record, CONFIG, QUALITY_CALCULATOR,1);
+        processRead(victim, record);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -90,7 +95,7 @@ public class ReadContextCounterTest
                 new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
 
         final SAMRecord record = buildSamRecord(555, "2S1M", "CAT", "#####");
-        victim.processRead(record, CONFIG, QUALITY_CALCULATOR, 1);
+        processRead(victim, record);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -107,7 +112,7 @@ public class ReadContextCounterTest
         String quals = buildQualString(new int[] {37, 37, 37});
 
         final SAMRecord record = buildSamRecord(555, "2S1M", "CGT", quals);
-        victim.processRead(record, CONFIG, QUALITY_CALCULATOR, 1);
+        processRead(victim, record);
 
         assertEquals(0, victim.depth());
         assertEquals(0, victim.altSupport());
@@ -133,7 +138,7 @@ public class ReadContextCounterTest
                 new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
 
         final SAMRecord record = buildSamRecord(555, "5S3M", "GAAAAATC", "########");
-        victim.processRead(record, CONFIG, QUALITY_CALCULATOR, 1);
+        processRead(victim, record);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -148,7 +153,7 @@ public class ReadContextCounterTest
                 new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
 
         final SAMRecord record = buildSamRecord(553, "2M4S", "TGTTTC", "######");
-        victim.processRead(record, CONFIG, QUALITY_CALCULATOR, 1);
+        processRead(victim, record);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -163,7 +168,7 @@ public class ReadContextCounterTest
                 new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
 
         final SAMRecord record = buildSamRecord(553, "2M3S", "TGTTC", "#####");
-        victim.processRead(record, CONFIG, QUALITY_CALCULATOR, 1);
+        processRead(victim, record);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -180,7 +185,7 @@ public class ReadContextCounterTest
                 new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
 
         final SAMRecord record = buildSamRecord(550, "2M6S", "GAAAAATC", "########");
-        victim.processRead(record, CONFIG, QUALITY_CALCULATOR, 1);
+        processRead(victim, record);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());

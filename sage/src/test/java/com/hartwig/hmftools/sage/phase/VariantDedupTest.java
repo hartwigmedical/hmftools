@@ -349,8 +349,6 @@ public class VariantDedupTest
 
         // 0123456789  01  2  34  0123456789
         String leftFlank = generateRandomBases(DEFAULT_READ_CONTEXT_FLANK_SIZE);
-        String alt1 = "CTCTC";
-        String alt2 = "C";
         String altCore = "TCTCTCTCTCTCTC";
         String rightFlank = leftFlank;
 
@@ -377,8 +375,8 @@ public class VariantDedupTest
 
         SageVariant var1 = createVariant(12, "T", "TCT", indexBases1);
         SageVariant var2 = createVariant(14, "T", "TCT", indexBases2);
-        SageVariant var3 = createVariant(16, "T", "TCT", indexBases2);
-        SageVariant var4 = createVariant(18, "T", "TCT", indexBases2);
+        SageVariant var3 = createVariant(16, "T", "TCT", indexBases3);
+        SageVariant var4 = createVariant(18, "T", "TCT", indexBases4);
 
         // must be same LPS
         addLocalPhaseSet(var1, 1, 1);
@@ -393,12 +391,13 @@ public class VariantDedupTest
 
         List<SageVariant> variants = Lists.newArrayList(var1, var2, var3, var4);
 
+        // will keep left most since all are of equal length
         dedupIndels(variants);
 
-        assertFalse(var1.isPassing());
+        assertTrue(var1.isPassing());
         assertFalse(var2.isPassing());
         assertFalse(var3.isPassing());
-        assertTrue(var4.isPassing());
+        assertFalse(var4.isPassing());
     }
 
     @Test

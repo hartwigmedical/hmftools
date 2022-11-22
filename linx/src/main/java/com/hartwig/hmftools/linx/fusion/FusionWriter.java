@@ -53,7 +53,7 @@ public class FusionWriter implements CohortFileInterface
                     .id(breakendId++)
                     .svId(transcript.gene().id())
                     .isStart(transcript.gene().isStart())
-                    .type(gene.type().toString())
+                    .type(gene.type())
                     .gene(transcript.geneName())
                     .transcriptId(transcript.transName())
                     .canonical(transcript.isCanonical())

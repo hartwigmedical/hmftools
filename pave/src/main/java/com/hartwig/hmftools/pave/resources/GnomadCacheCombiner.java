@@ -66,10 +66,16 @@ public class GnomadCacheCombiner
     private void combineChromosome(final String chromosome)
     {
         // eg gnomad_variants_chr21_v38.csv.gz
-        String chrFilename = format("gnomad_variants_chr%s_v38.csv.gz", chromosome);
+        String chrFilename = format("gnomad_variants_chr%s_v38.csv", chromosome);
 
         String filename1 = mGnomadDir1 + chrFilename;
         String filename2 = mGnomadDir2 + chrFilename;
+
+        if(!Files.exists(Paths.get(filename1)) && Files.exists(Paths.get(filename1 + ".gz")))
+            filename1 += ".gz";
+
+        if(!Files.exists(Paths.get(filename2)) && Files.exists(Paths.get(filename2 + ".gz")))
+            filename2 += ".gz";
 
         if(!Files.exists(Paths.get(filename1)) || !Files.exists(Paths.get(filename2)))
         {
@@ -81,7 +87,6 @@ public class GnomadCacheCombiner
 
         try
         {
-
             BufferedReader fileReader = createBufferedReader(filename1);
 
             int itemCount = 0;

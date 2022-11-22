@@ -27,6 +27,7 @@ import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.FilterType;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 import com.hartwig.hmftools.gripss.filters.SoftFilters;
+import com.hartwig.hmftools.gripss.filters.TargetRegions;
 import com.hartwig.hmftools.gripss.links.AlternatePath;
 import com.hartwig.hmftools.gripss.links.AlternatePathFinder;
 import com.hartwig.hmftools.gripss.links.AssemblyLinks;
@@ -62,6 +63,7 @@ public class GripssApplication
     private final RefGenomeInterface mRefGenome;
     private BreakendRealigner mRealigner;
     private final RepeatMaskAnnotations mRepeatMaskAnnotations;
+    private final TargetRegions mTargetRegions;
 
     private int mProcessedVariants;
     private final SvDataCache mSvDataCache;
@@ -70,6 +72,9 @@ public class GripssApplication
     public GripssApplication(
             final GripssConfig config, final FilterConstants filterConstants, final RefGenomeInterface refGenome, final CommandLine cmd)
     {
+        final VersionInfo version = new VersionInfo("gripss.version");
+        GR_LOGGER.info("Gripss version: {}", version.version());
+
         mConfig = config;
         mFilterConstants = filterConstants;
 
@@ -78,8 +83,9 @@ public class GripssApplication
         GR_LOGGER.info("loading reference data");
         mPonCache = new PonCache(cmd);
         mHotspotCache = new HotspotCache(cmd);
+        mTargetRegions = new TargetRegions(cmd);
 
-        mVariantBuilder = new VariantBuilder(mFilterConstants, mHotspotCache);
+        mVariantBuilder = new VariantBuilder(mFilterConstants, mHotspotCache, mTargetRegions);
         mSoftFilters = new SoftFilters(mFilterConstants, mConfig.GermlineMode);
         mRealigner = null;
 

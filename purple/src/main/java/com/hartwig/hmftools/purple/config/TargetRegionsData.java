@@ -1,13 +1,9 @@
 package com.hartwig.hmftools.purple.config;
 
-import static java.lang.Math.round;
-
 import static com.hartwig.hmftools.common.genome.bed.NamedBedFile.readBedFile;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.CODING_BASES_PER_GENOME;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,6 +26,11 @@ public class TargetRegionsData
     private double mTmlRatio;
     private double mTmbRatio;
     private double mMsiIndelRatio;
+    private double mMaxAF;
+    private double mMaxAFDiff;
+    private double mMsi23BaseAF;
+    private double mMsi4BaseAF;
+    private int mCodingBaseFactor;
 
     private boolean mIsValid;
 
@@ -38,6 +39,15 @@ public class TargetRegionsData
 
     public static final List<String> TMB_GENE_EXCLUSIONS = Lists.newArrayList("HLA-A","HLA-B","HLA-C","PIM1","BCL2");
 
+    // target-region TML, TMB and MSI-Indels
+    // public static final double TARGET_REGIONS_CN_DIFF = 0.5;
+    // public static final double TARGET_REGIONS_CN_PERC_DIFF = 0.2;
+    public static final double DEFAULT_MAX_AF = 0.9;
+    public static final double DEFAULT_MAX_AF_DIFF = 0.08;
+    public static final double DEFAULT_MSI_2_3_BASE_AF = 0.15;
+    public static final double DEFAULT_MSI_4_BASE_AF = 0.08;
+    public static final int DEFAULT_CODING_BASE_FACTOR = 150000;
+
     public TargetRegionsData(final String bedFile, final String ratiosFile, final String msiIndelsFile)
     {
         mTotalBases = 0;
@@ -45,6 +55,12 @@ public class TargetRegionsData
         mTmlRatio = 1;
         mTmbRatio = 1;
         mMsiIndelRatio = 1;
+        mMaxAF = DEFAULT_MAX_AF;
+        mMaxAFDiff = DEFAULT_MAX_AF_DIFF;
+        mMsi23BaseAF = DEFAULT_MSI_2_3_BASE_AF;
+        mMsi4BaseAF = DEFAULT_MSI_4_BASE_AF;
+        mCodingBaseFactor = DEFAULT_CODING_BASE_FACTOR;
+
         mTargetRegions = Maps.newHashMap();
         mTargetRegionsMsiIndels = Maps.newHashMap();
         mIsValid = true;
@@ -82,6 +98,11 @@ public class TargetRegionsData
     public double tmlRatio() { return mTmlRatio; }
     public double tmbRatio() { return mTmbRatio; }
     public double msiIndelRatio() { return mMsiIndelRatio; }
+    public double maxAF() { return mMaxAF; }
+    public double maxAFDiff() { return mMaxAFDiff; }
+    public double msi23BaseAF() { return mMsi23BaseAF; }
+    public double msi4BaseAF() { return mMsi4BaseAF; }
+    public int codingBaseFactor() { return mCodingBaseFactor; }
 
     private void loadTargetRegionsBed(final String bedFile)
     {
@@ -178,8 +199,23 @@ public class TargetRegionsData
                 mTmlRatio = Double.parseDouble(values[fieldsIndexMap.get("TmlRatio")]);
                 mMsiIndelRatio = Double.parseDouble(values[fieldsIndexMap.get("MsiIndelRatio")]);
 
-                PPL_LOGGER.info("tumor load factors: tml({}) tmb({}) msiIndels({})",
-                        mTmlRatio, mTmbRatio, mMsiIndelRatio);
+                if(fieldsIndexMap.containsKey("MaxAF"))
+                    mMaxAF = Double.parseDouble(values[fieldsIndexMap.get("MaxAF")]);
+
+                if(fieldsIndexMap.containsKey("MaxAFDiff"))
+                    mMaxAFDiff = Double.parseDouble(values[fieldsIndexMap.get("MaxAFDiff")]);
+
+                if(fieldsIndexMap.containsKey("Msi23BaseAF"))
+                    mMsi23BaseAF = Double.parseDouble(values[fieldsIndexMap.get("Msi23BaseAF")]);
+
+                if(fieldsIndexMap.containsKey("Msi4BaseAF"))
+                    mMsi4BaseAF = Double.parseDouble(values[fieldsIndexMap.get("Msi4BaseAF")]);
+
+                if(fieldsIndexMap.containsKey("CodingBaseFactor"))
+                    mCodingBaseFactor = Integer.parseInt(values[fieldsIndexMap.get("CodingBaseFactor")]);
+
+                PPL_LOGGER.info("target regions: tml({}) tmb({}) msiIndels({}) afMax({} diff={}), msiAF(2-3 base={} 4 base={}) codingBaseFactor({})",
+                        mTmlRatio, mTmbRatio, mMsiIndelRatio, mMaxAF, mMaxAFDiff, mMsi23BaseAF, mMsi4BaseAF, mCodingBaseFactor);
             }
             catch(IOException e)
             {

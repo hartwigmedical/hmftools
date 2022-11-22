@@ -411,7 +411,7 @@ Each of the 3 penalty terms is described in detail in the following sections.
 #### Deviation Penalty
 The deviation penalty aims to penalise [ploidy|purity] combinations which require extensive sub-clonality to explain the observed copy number pattern.
 
-For each [ploidy|purity] combination tested an implied major and minor allele copy number is calculated based on the observed BAF and depth ratio.    A deviation penalty is then calculated for each segment for both minor and major allele based on the implied copy numbers.   The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
+For each [ploidy|purity] combination tested an implied major and minor allele copy number is calculated based on the observed BAF and depth ratio.    A deviation penalty is then calculated for each segment for both minor and major allele based on the implied copy numbers (note Y chromosome, X chromsome for males & chromosomes with detected germline aberrations are all excluded from fitting).   The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
 - For major allele copy number > 1 and minor allele copy number > 0 a deviation penalty applies to penalise solutions which imply subclonality:
   - the penalty depends only on the distance to the nearest integer copy number and varies between a minimum of a small baseline deviation [0.2] and a max of 1.
   - small deviations from an integer don’t occur any additional penalty, but once a certain noise level is exceeded the penalty grows rapidly to the maximum penalty reflecting the increasing probability that the observed deviation requires an implied non-integer (subclonal) copy number.
@@ -515,7 +515,6 @@ We repeat this process iteratively and infer the copy number of all regions with
 
 When the entire short arm of a chromosome is lacking copy number information (and always on chromosome 13,14,15,21, or 22), the copy number of the long arm is extended to the short arm.
 
-
 ### 6. Allele specific copy number inferring
 
 Once copy number region smoothing and inference is complete, it is possible there will be regions without BAF points which will result in a unknown allele specific copy number, since BAF coverage of the genome is limited and many copy number regions can be very small.
@@ -543,7 +542,6 @@ This rule is intended to ensure that short templated insertions do not break reg
 - Failing everything else, hold constant the minor allele of the neighbour with the largest number of BAF observations.
 
 At this stage we have determined a copy number and minor allele copy number for every base in the genome
-
 
 ### 7. Structural Variant Recovery
 
@@ -969,7 +967,7 @@ We can determine the likelihood of a variant being subclonal at any given varian
 
 
 ## Version History and Download Links
-- [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.7)
+- [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.7.2)
 - [3.6](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.6)
 - [3.5](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.5)
 - [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.4)

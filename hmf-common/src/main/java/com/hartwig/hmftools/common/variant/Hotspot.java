@@ -13,6 +13,8 @@ public enum Hotspot
     public static final String HOTSPOT_FLAG = HOTSPOT.toString();
     public static final String NEAR_HOTSPOT_FLAG = NEAR_HOTSPOT.toString();
 
+    public static final String HOTSPOT_DESCRIPTION = "Site is at a known hotspot location";
+
     @NotNull
     public static Hotspot fromVariant(@NotNull final VariantContext context)
     {

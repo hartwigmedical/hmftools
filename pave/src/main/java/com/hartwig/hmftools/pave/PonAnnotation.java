@@ -169,7 +169,7 @@ public class PonAnnotation
 
         try
         {
-            mFileReader = filename.endsWith(".gz") ? createGzipBufferedReader(filename) : createBufferedReader(filename);
+            mFileReader = createBufferedReader(filename);
 
             String line = mFileReader.readLine();
             final String[] values = line.split(PON_DELIM, -1);

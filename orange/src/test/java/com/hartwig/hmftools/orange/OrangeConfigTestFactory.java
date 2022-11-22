@@ -64,7 +64,6 @@ public final class OrangeConfigTestFactory {
     private static final String CUPPA_RESULT_CSV = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.data.csv";
     private static final String CUPPA_SUMMARY_PLOT = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.report.summary.png";
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/tumor_sample.peach.genotype.tsv";
-    private static final String PROTECT_EVIDENCE_TSV = RUN_DIRECTORY + "/protect/tumor_sample.protect.tsv";
 
     private OrangeConfigTestFactory() {
     }
@@ -120,7 +119,6 @@ public final class OrangeConfigTestFactory {
                 .cuppaResultCsv(CUPPA_RESULT_CSV)
                 .cuppaSummaryPlot(CUPPA_SUMMARY_PLOT)
                 .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
-                .protectEvidenceTsv(PROTECT_EVIDENCE_TSV)
                 .build();
     }
 

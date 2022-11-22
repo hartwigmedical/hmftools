@@ -4,10 +4,9 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.purple.loader.PurpleData;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
+import com.hartwig.hmftools.common.purple.loader.PurpleData;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 
 import org.apache.logging.log4j.LogManager;
@@ -22,12 +21,11 @@ public final class PurpleInterpreter {
     }
 
     @NotNull
-    public static PurpleInterpretedData interpret(@NotNull PurpleData purple, @NotNull List<ProtectEvidence> evidences,
-            @NotNull List<DriverGene> driverGenes, @NotNull ChordData chord) {
+    public static PurpleInterpretedData interpret(@NotNull PurpleData purple, @NotNull List<DriverGene> driverGenes,
+            @NotNull ChordData chord) {
         List<ReportableVariant> additionalSuspectSomaticVariants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(purple.allSomaticVariants(),
                         purple.reportableSomaticVariants(),
-                        evidences,
                         driverGenes);
         LOGGER.info(" Found an additional {} somatic variants that are potentially interesting", additionalSuspectSomaticVariants.size());
 
@@ -44,8 +42,7 @@ public final class PurpleInterpreter {
 
         List<GainLoss> additionalSuspectSomaticGainsLosses =
                 CopyNumberSelector.selectInterestingUnreportedGainsLosses(purple.allSomaticGainsLosses(),
-                        purple.reportableSomaticGainsLosses(),
-                        evidences);
+                        purple.reportableSomaticGainsLosses());
         LOGGER.info(" Found an additional {} somatic gains/losses that are potentially interesting",
                 additionalSuspectSomaticGainsLosses.size());
 

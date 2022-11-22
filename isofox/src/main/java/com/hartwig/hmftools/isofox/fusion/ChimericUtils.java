@@ -30,7 +30,7 @@ public final class ChimericUtils
 
         for(ReadRecord read : reads)
         {
-            if (!read.hasSuppAlignment())
+            if(!read.hasSuppAlignment())
                 continue;
 
             if(existingChromosome.equals(""))
@@ -41,7 +41,7 @@ public final class ChimericUtils
             int scLeft = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
             int scRight = read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0;
 
-            if (scLeft == 0 && scRight == 0)
+            if(scLeft == 0 && scRight == 0)
                 return false;
 
             byte orientation = scLeft >= scRight ? POS_ORIENT : NEG_ORIENT;

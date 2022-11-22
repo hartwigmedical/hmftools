@@ -37,7 +37,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.samtools.SoftClipSide;
+import com.hartwig.hmftools.common.samtools.ClippedSide;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -169,10 +169,25 @@ public class ReadRecord
 
     public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
 
-    public static SoftClipSide softClipSide(final ReadRecord read)
+    public static ClippedSide clippedSide(final ReadRecord read)
     {
-        return SoftClipSide.from(read.Cigar, read.isSoftClipped(SE_START), read.isSoftClipped(SE_END));
+        // considers hard or soft clips
+        boolean leftClipped = read.getSoftClipRegionsMatched()[SE_START] == 0 && read.Cigar.isLeftClipped();
+        boolean rightClipped = read.getSoftClipRegionsMatched()[SE_END] == 0 && read.Cigar.isRightClipped();
+        return ClippedSide.from(read.Cigar, leftClipped, rightClipped);
     }
+
+    public int[] getSoftClipRegionsMatched() { return mSoftClipRegionsMatched; }
+
+    public boolean isSoftClipped(int se)
+    {
+        if(mSoftClipRegionsMatched[se] > 0)
+            return false;
+
+        return se == SE_START ? leftSoftClipped(Cigar) : rightSoftClipped(Cigar);
+    }
+
+    public boolean containsSoftClipping() { return Cigar.containsOperator(CigarOperator.S); }
 
     public void setMapQuality(short mapQuality) { mMapQuality = mapQuality; }
     public short mapQuality() { return mMapQuality; }
@@ -553,11 +568,6 @@ public class ReadRecord
     public boolean hasInterGeneSplit() { return mHasInterGeneSplit; }
     public void setHasInterGeneSplit() { mHasInterGeneSplit = true; }
 
-    public boolean containsSoftClipping()
-    {
-        return Cigar.containsOperator(CigarOperator.S);
-    }
-
     private static final int MIN_SC_BASE_MATCH = 2;
     public static final int MAX_SC_BASE_MATCH = 10;
 
@@ -706,16 +716,6 @@ public class ReadRecord
     }
 
     public boolean inferredCoordAdded(boolean isLower) { return isLower ? mLowerInferredAdded : mUpperInferredAdded; }
-
-    public int[] getSoftClipRegionsMatched() { return mSoftClipRegionsMatched; }
-
-    public boolean isSoftClipped(int se)
-    {
-        if(mSoftClipRegionsMatched[se] > 0)
-            return false;
-
-        return se == SE_START ? Cigar.isLeftClipped() : Cigar.isRightClipped();
-    }
 
     private void addInferredMappingRegion(boolean isLower, int posStart, int posEnd)
     {

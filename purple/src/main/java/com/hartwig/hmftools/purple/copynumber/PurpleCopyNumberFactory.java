@@ -2,7 +2,6 @@ package com.hartwig.hmftools.purple.copynumber;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.List;
@@ -23,9 +22,6 @@ import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
-import com.hartwig.hmftools.purple.segment.PurpleSegment;
-
-import org.jetbrains.annotations.NotNull;
 
 public class PurpleCopyNumberFactory
 {
@@ -134,14 +130,6 @@ public class PurpleCopyNumberFactory
             PurpleCopyNumber copyNumber = toCopyNumber(region, copyNumberStartPos, trailingSupport);
             copyNumbers.add(copyNumber);
         }
-
-        /*
-        if(!regions.isEmpty())
-        {
-            CombinedRegion lastRegion = regions.get(regions.size() - 1);
-            copyNumbers.add(toCopyNumber(lastRegion, lastRegion.start(), SegmentSupport.TELOMERE));
-        }
-        */
 
         return copyNumbers;
     }
