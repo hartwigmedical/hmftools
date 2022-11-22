@@ -252,7 +252,7 @@ For our smaller cohorts which have around 100k total TMB the effect is a blendin
 
 The genomic position similarity likelihood for a given sample is determined by first calculating the cosine similarity (CSS) of a sample to each cohort consensus distribution and then weighing using the following algorithm:
 ```
-Score(sample=s,cancerType=i) = 30^[100*min[(CSS(i,s)-BestCSS(s)),0.012]]*3^[100*max[(CSS(i,s)-BestCSS(s))-0.012,0]] 
+Score(sample=s,cancerType=i) = 30^[100*min[(CSS(i,s)-BestCSS(i)),0.012]]*3^[100*max[(CSS(i,s)-BestCSS(i))-0.012,0]] 
 ```
 The 2 exponents used (30 and 3) are set empirically to match the confidence empirically observed accuracy based on relative CSS similarity
 
