@@ -51,6 +51,7 @@ import com.hartwig.hmftools.common.purple.ImmutableBestFit;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.purple.fitting.SomaticPurityFitter;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.purple.purity.PurityAdjusterAbnormalChromosome;
@@ -94,6 +95,7 @@ import com.hartwig.hmftools.purple.recovery.RecoverStructuralVariants;
 import com.hartwig.hmftools.purple.somatic.SomaticPeakStream;
 import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -616,6 +618,14 @@ public class PurpleApplication
 
         final CobaltChromosomes cobaltChromosomes = sampleData.Cobalt.CobaltChromosomes;
 
+        List<SomaticVariant> fittingVariants = !mConfig.tumorOnlyMode() ?
+                SomaticPurityFitter.findFittingVariants(sampleData.SomaticCache.variants(), observedRegions) : Lists.newArrayList();
+
+        if(!fittingVariants.isEmpty())
+        {
+            PPL_LOGGER.info("somatic fitting variants({})", fittingVariants.size());
+        }
+
         final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
                 mExecutorService,
                 cobaltChromosomes,
@@ -628,7 +638,7 @@ public class PurpleApplication
                 mConfig.tumorOnlyMode(),
                 fittedRegionFactory,
                 observedRegions,
-                sampleData.SomaticCache.fittingVariants());
+                fittingVariants);
 
         fitCandidates.addAll(fittedPurityFactory.all());
 
@@ -637,7 +647,7 @@ public class PurpleApplication
                 sampleData.Amber.minSomaticTotalReadCount(),
                 sampleData.Amber.maxSomaticTotalReadCount(),
                 fitCandidates,
-                sampleData.SomaticCache.fittingVariants(),
+                fittingVariants,
                 structuralVariants,
                 observedRegions);
 

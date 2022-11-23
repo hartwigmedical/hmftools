@@ -2,8 +2,6 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
 
-import java.util.Set;
-
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
@@ -20,8 +18,9 @@ public class SomaticVariant implements GenomePosition
     private final int mPosition;
     private VariantContextDecorator mDecorator;
     private final AllelicDepth mTumorAllelicDepth;
+    private final AllelicDepth mReferenceAllelicDepth;
 
-    public SomaticVariant(final VariantContext context, final String sampleId)
+    public SomaticVariant(final VariantContext context, final String sampleId, final String referenceId)
     {
         mContext = context;
         mDecorator = new VariantContextDecorator(mContext);
@@ -29,6 +28,7 @@ public class SomaticVariant implements GenomePosition
         mChromosome = mContext.getContig();
         mPosition = mContext.getStart();
         mTumorAllelicDepth = sampleId != null ? mDecorator.allelicDepth(sampleId) :  null;
+        mReferenceAllelicDepth = referenceId != null ? mDecorator.allelicDepth(referenceId) :  null;
     }
 
     public VariantContext context() { return mContext; }
@@ -60,15 +60,17 @@ public class SomaticVariant implements GenomePosition
     public boolean biallelic() { return mDecorator.biallelic(); }
     public String gene() { return mDecorator.variantImpact().CanonicalGeneName; }
 
-    public boolean hasAlleleDepth() { return mTumorAllelicDepth != null; }
+    public boolean hasTumorAlleleDepth() { return mTumorAllelicDepth != null; }
     public AllelicDepth tumorAlleleDepth() { return mTumorAllelicDepth; }
+    public AllelicDepth referenceAlleleDepth() { return mReferenceAllelicDepth; }
     public double alleleFrequency() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.alleleFrequency() : 0; }
     public int totalReadCount() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.totalReadCount() : 0; }
     public int alleleReadCount() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.alleleReadCount() : 0; }
+    public int referenceAlleleReadCount() { return mReferenceAllelicDepth != null ? mReferenceAllelicDepth.alleleReadCount() : 0; }
 
     public String toString()
     {
-        return String.format("%s %s:%d %s>%s filter(%s)",
-                type(), chromosome(), position(), mDecorator.ref(), mDecorator.alt(), mDecorator.filter());
+        return String.format("%s %s:%d %s>%s filter(%s) tier(%s)",
+                type(), chromosome(), position(), mDecorator.ref(), mDecorator.alt(), mDecorator.filter(), mDecorator.tier());
     }
 }

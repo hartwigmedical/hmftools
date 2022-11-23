@@ -109,7 +109,7 @@ public class KataegisQueueTest
         Allele altAllele = Allele.create(alt, false);
 
         VariantContext context = new VariantContextBuilder("Source", contig, start, start, Lists.newArrayList(refAllele, altAllele)).make();
-        return new SomaticVariant(context, SAMPLE_ID);
+        return new SomaticVariant(context, SAMPLE_ID, null);
     }
 
     private static List<SomaticVariant> kataegis(final List<SomaticVariant> variants)

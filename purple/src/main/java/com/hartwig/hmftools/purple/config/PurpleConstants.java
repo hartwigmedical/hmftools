@@ -21,6 +21,8 @@ public class PurpleConstants
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
     public static final int SNV_HOTSPOT_MAX_SNV_COUNT = 2000;
+    public static final double SNV_FITTING_MAPPABILITY = 1.0;
+    public static final int SNV_FITTING_MAX_REPEATS = 3;
 
     // SV recovery
     public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 300;
