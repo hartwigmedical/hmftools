@@ -38,8 +38,8 @@ public class AmberData
     public final double Contamination;
     public final Gender PatientGender;
 
-    private static final double MAX_SOMATIC_TOTAL_READ_COUNT_PROPORTION = 1.4;
-    private static final double MIN_SOMATIC_TOTAL_READ_COUNT_PROPORTION = 0.6;
+    private static final double MAX_SOMATIC_TOTAL_READ_COUNT_PROPORTION = 1.2;
+    private static final double MIN_SOMATIC_TOTAL_READ_COUNT_PROPORTION = 0.8;
 
     public AmberData(
             final String sampleId, final String amberDirectory, final boolean germlineOnlyMode, final RefGenomeVersion version)

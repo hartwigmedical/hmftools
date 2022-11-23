@@ -45,7 +45,6 @@ public class BestFitFactory
     private int mSvFragmentReadCount;
     private int mSomaticHotspotCount;
     private int mAlleleReadCountTotal;
-    private final List<SomaticVariant> mVariantsInReadCountRange;
 
     private static final double PERCENT_RANGE = 0.1;
     private static final double ABS_RANGE = 0.0005;
@@ -54,7 +53,7 @@ public class BestFitFactory
 
     public BestFitFactory(
             final PurpleConfig config, int minReadCount, int maxReadCount,
-            final List<FittedPurity> allCandidates, final List<SomaticVariant> somatics,
+            final List<FittedPurity> allCandidates, final List<SomaticVariant> fittingSomatics,
             final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
     {
         mConfig = config;
@@ -65,19 +64,18 @@ public class BestFitFactory
         mSvFragmentReadCount = 0;
         mSomaticHotspotCount = 0;
         mAlleleReadCountTotal = 0;
-        mVariantsInReadCountRange = Lists.newArrayList();
 
         mSomaticPurityFitter = new SomaticPurityFitter(
                 config.SomaticFitting.MinPeakVariants, config.SomaticFitting.MinTotalVariants,
                 config.Fitting.MinPurity, config.Fitting.MaxPurity);
 
-        mBestFit = determineBestFit(allCandidates, somatics, structuralVariants, observedRegions);
+        mBestFit = determineBestFit(allCandidates, fittingSomatics, structuralVariants, observedRegions);
     }
 
     public BestFit bestFit() { return mBestFit; }
 
     private BestFit determineBestFit(
-            final List<FittedPurity> allCandidates, final List<SomaticVariant> somatics,
+            final List<FittedPurity> allCandidates, final List<SomaticVariant> fittingSomatics,
             final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
     {
         Collections.sort(allCandidates);
@@ -90,7 +88,7 @@ public class BestFitFactory
         boolean exceedsPuritySpread = Doubles.greaterOrEqual(score.puritySpread(), mConfig.SomaticFitting.MinSomaticPuritySpread);
         boolean highlyDiploid = isHighlyDiploid(score);
 
-        boolean hasTumor = !highlyDiploid || hasTumor(somatics, structuralVariants, observedRegions);
+        boolean hasTumor = !highlyDiploid || hasTumor(fittingSomatics, structuralVariants, observedRegions);
         final List<FittedPurity> diploidCandidates = BestFit.mostDiploidPerPurity(allCandidates);
 
         PPL_LOGGER.info("maxDiploidProportion({}) diploidCandidates({}) purityRange({} - {}) hasTumor({})",
@@ -114,8 +112,12 @@ public class BestFitFactory
         if(!useSomatics)
             return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
 
+        final List<SomaticVariant> fittingSomaticsWithinReadCountRange = fittingSomatics.stream()
+                .filter(x -> x.isHotspot() || (x.totalReadCount() >= mMinReadCount && x.totalReadCount() <= mMaxReadCount))
+                .collect(toList());
+
         final Optional<FittedPurity> somaticFit = mSomaticPurityFitter.fromSomatics(
-                mVariantsInReadCountRange, structuralVariants, diploidCandidates);
+                fittingSomaticsWithinReadCountRange, structuralVariants, diploidCandidates);
 
         if(!somaticFit.isPresent())
         {
@@ -130,7 +132,7 @@ public class BestFitFactory
             return builder.fit(somaticFit.get()).method(FittedPurityMethod.SOMATIC).build();
         }
     }
-
+    
     private boolean hasTumor(
             final List<SomaticVariant> somatics, final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
     {
@@ -225,14 +227,9 @@ public class BestFitFactory
             if(variant.isHotspot())
                 mSomaticHotspotCount++;
 
-            if(variant.type() == VariantType.SNP)
+            if(variant.type() == VariantType.SNP) // they all should be
             {
                 mAlleleReadCountTotal += variant.alleleReadCount();
-
-                if(variant.totalReadCount() >= mMinReadCount && variant.totalReadCount() <= mMaxReadCount)
-                {
-                    mVariantsInReadCountRange.add(variant);
-                }
             }
         }
     }
