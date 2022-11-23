@@ -77,8 +77,7 @@ public class RecoverStructuralVariants implements Closeable
         mRecoveredVariantFactory = factory;
     }
 
-    @NotNull
-    public Collection<VariantContext> recoverVariants(@NotNull final List<StructuralVariant> currentVariants) throws IOException
+    public Collection<VariantContext> recoverVariants(final List<StructuralVariant> currentVariants) throws IOException
     {
         final Map<String, VariantContext> result = Maps.newHashMap();
 
@@ -89,10 +88,8 @@ public class RecoverStructuralVariants implements Closeable
     }
 
     @VisibleForTesting
-    @NotNull
     List<VariantContext> recoverFromUnbalancedVariants(
-            @NotNull final List<StructuralVariant> currentVariants,
-            @NotNull final Collection<VariantContext> recovered) throws IOException
+            final List<StructuralVariant> currentVariants, final Collection<VariantContext> recovered) throws IOException
     {
         final StructuralVariantLegCopyNumberChangeFactory changeFactory =
                 new StructuralVariantLegCopyNumberChangeFactory(mPurityAdjuster, mAllCopyNumbers, currentVariants);
@@ -263,7 +260,7 @@ public class RecoverStructuralVariants implements Closeable
         return result;
     }
 
-    private static <T extends GenomeRegion> int indexOf(long cnaPosition, @NotNull final List<T> regions)
+    private static <T extends GenomeRegion> int indexOf(long cnaPosition, final List<T> regions)
     {
         assert (!regions.isEmpty());
         for(int i = 0; i < regions.size(); i++)
@@ -301,8 +298,7 @@ public class RecoverStructuralVariants implements Closeable
         return result;
     }
 
-    @NotNull
-    private VariantContext infer(@NotNull final StructuralVariantLeg leg)
+    private VariantContext infer(final StructuralVariantLeg leg)
     {
         // Note: Opposite orientation to leg!
         final Allele allele = leg.orientation() < 0 ? DECREASING_ALLELE : INCREASING_ALLELE;
@@ -318,15 +314,13 @@ public class RecoverStructuralVariants implements Closeable
                 .make();
     }
 
-    @NotNull
-    private static Set<String> filterSet(@NotNull VariantContext variantContext)
+    private static Set<String> filterSet(VariantContext variantContext)
     {
         return variantContext.isNotFiltered() ? Sets.newHashSet("PASS") : Sets.newHashSet(variantContext.getFilters());
     }
 
-    @NotNull
     private static VariantContext addRecoveryDetails(
-            @NotNull final VariantContext context, @NotNull final String recoveryMethod, @NotNull final List<String> recoveryFilters)
+            final VariantContext context, final String recoveryMethod, final List<String> recoveryFilters)
     {
         return new VariantContextBuilder(context).unfiltered()
                 .attribute(RECOVERED, true)
@@ -342,7 +336,7 @@ public class RecoverStructuralVariants implements Closeable
                 && Doubles.greaterOrEqual(unexplainedCopyNumberChange, RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE);
     }
 
-    private static boolean isSupportedByDepthWindowCounts(@NotNull final PurpleCopyNumber prev, @Nullable final PurpleCopyNumber next)
+    private static boolean isSupportedByDepthWindowCounts(final PurpleCopyNumber prev, @Nullable final PurpleCopyNumber next)
     {
         return prev.depthWindowCount() >= RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT
                 && (next == null || next.depthWindowCount() >= RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT);

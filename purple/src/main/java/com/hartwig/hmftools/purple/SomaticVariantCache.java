@@ -95,6 +95,6 @@ public class SomaticVariantCache
 
     public void purityEnrich(final SomaticPurityEnrichment purityEnrichment)
     {
-        mVariants.forEach(x -> purityEnrichment.processVariant(x.context()));
+        mVariants.forEach(x -> purityEnrichment.processVariant(x));
     }
 }

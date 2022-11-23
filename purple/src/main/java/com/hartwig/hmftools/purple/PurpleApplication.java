@@ -559,7 +559,7 @@ public class PurpleApplication
     }
 
     private int recoverStructuralVariants(final SampleData sampleData, final SampleDataFiles sampleDataFiles,
-            final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException
+            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers) throws IOException
     {
         if(sampleDataFiles.RecoveredSvVcfFile.isEmpty())
             return 0;

@@ -132,7 +132,7 @@ public class BestFitFactory
             return builder.fit(somaticFit.get()).method(FittedPurityMethod.SOMATIC).build();
         }
     }
-    
+
     private boolean hasTumor(
             final List<SomaticVariant> somatics, final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
     {
