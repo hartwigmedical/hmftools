@@ -119,12 +119,6 @@ ensembl_data_dir | Path to Ensembl data cache
 The GC Profile file used by HMF (GC_profile.1000bp.37.cnp) is available to download from [HMFTools-Resources > DNA Resources](https://resources.hartwigmedicalfoundation.nl). 
 A 38 equivalent is also available.
 
-The ref genome must be indexed and have an associated sequence dictionary. These can be created with samtools as follows:
-```
-samtools faidx ref_genome.fasta
-samtools dict ref_genome.fasta -o ref_genome.dict
-```
-
 ### Optional Arguments
 
 Argument | Default | Description 
@@ -136,9 +130,6 @@ structural_vcf | None | Optional location of high confidence structural variants
 sv_recovery_vcf | None | Optional location of low confidence structural variants vcf which may be recovered by PURPLE. GZ files supported.
 germline_del_freq_file | None | Provide a cohort frequency for germline deletions
 circos | None | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot
-db_user | None | Database username - set all 3 DB parameters to load Purple data to hmf_patients DB
-db_pass | None | Database password
-db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`
 no_charts | NA | Disables creation of (non-circos) charts
 
 #### Optional Somatic Fit Arguments
@@ -258,43 +249,7 @@ Firstly, each solution receives a penalty for the proportion of somatic variants
 Secondly, for highly diploid samples, the VAFs of the somatic variants are used directly to calculate a somatic variant implied purity.
 
 For both purposes, accurate VAF estimation is essential thus PURPLE requires the ‘AD’ (Allelic Depth) field in the vcf.
-High quality filtering of artifacts and false positive calls is also critical to achieving an accurate fit.    [SAGE](https://github.com/hartwigmedical/hmftools/tree/master/sage) is the recommended input somatic variant caller, but other callers may be used (eg. as described for Strelka below)
-
-#### Preparing Strelka input for PURPLE 
-
-A number of transformations are required to prepare Strelka output for use in PURPLE. 
-At a minimum this includes:
-1. Merging SNP and INDEL output
-2. Renaming samples from NORMAL and TUMOR to names consistent with AMBER/COBALT/PURPLE
-3. Generating the AD field from Strelka's AU,GU,TU,CU,TIR and TAR fields. The PURPLE jar contains a tool to do this as demonstrated below. 
-
-The resultant pipeline might look something like this:
-
-```
-### Merge strelka snp and indel output
-java -jar /path/GenomeAnalysisTK.jar \
-    -T CombineVariants \
-    -R /path/Homo_sapiens.GRCh37.GATK.illumina.fa \
-    --genotypemergeoption unsorted \
-    -V:snvs strelka.snvs.vcf \
-    -V:indels strelka.indels.vcf \
-    -o strelka.merged.vcf
-
-### Replace NORMAL and TUMOR with actual sample names
-sed -i 's/NORMAL/COLO829R/g' strelka.merged.vcf
-sed -i 's/TUMOR/COLO829T/g' strelka.merged.vcf
-
-### Add Allelic Depth field
-java -Xmx4G -cp purple.jar com.hartwig.hmftools.purple.tools.AnnotateStrelkaWithAllelicDepth \ 
-    -in strelka.merged.vcf -out strelka.merged.annotated.vcf.gz
-
-``` 
-
-At this point, file `strelka.merged.annotated.vcf.gz` is ready to be used by PURPLE. 
-The actual HMF somatic pipeline includes a number of additional filtering steps including applying a panel of normals.  
-
-While these steps are specific to Strelka, these principles can be applied to other callers. 
-
+High quality filtering of artifacts and false positive calls is also critical to achieving an accurate fit.    [SAGE](https://github.com/hartwigmedical/hmftools/tree/master/sage) is the recommended input somatic variant caller.
 
 ## Tumor-Only Mode
 Whilst PURPLE is primarily designed to be run with paired normal / tumor data, it is possible to run with tumor data only by leaving the reference and reference_bam parameters null. 
@@ -963,7 +918,6 @@ We can determine the likelihood of a variant being subclonal at any given varian
 <p align="center">
   <img src="src/main/resources/readme/COLO829T.somatic.clonality.png" width="500" alt="Somatic clonality">
 </p>
-
 
 
 ## Version History and Download Links
