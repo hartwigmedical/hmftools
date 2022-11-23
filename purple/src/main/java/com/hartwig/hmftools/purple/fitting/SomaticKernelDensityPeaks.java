@@ -45,12 +45,12 @@ final class SomaticKernelDensityPeaks
                     Optional<FittedPurity> diploid = diploid(impliedPurity, allCandidates);
                     if(diploid.isPresent())
                     {
-                        PPL_LOGGER.debug("Somatic implied purity: {}", impliedPurity);
+                        PPL_LOGGER.debug("somatic implied purity({})", impliedPurity);
                         return diploid;
                     }
                     else
                     {
-                        PPL_LOGGER.warn("Unable to find diploid solution for implied purity: {}", impliedPurity);
+                        PPL_LOGGER.warn("unable to find diploid solution for implied purity: {}", impliedPurity);
                     }
                 }
                 maxPeak = Math.max(maxPeak, peak.count());
@@ -69,18 +69,18 @@ final class SomaticKernelDensityPeaks
                     Optional<FittedPurity> diploid = diploid(impliedPurity, allCandidates);
                     if(diploid.isPresent())
                     {
-                        PPL_LOGGER.debug("Somatic implied purity: {}", impliedPurity);
+                        PPL_LOGGER.debug("somatic implied purity({})", impliedPurity);
                         return diploid;
                     }
                     else
                     {
-                        PPL_LOGGER.warn("Unable to find diploid solution for implied purity: {}", impliedPurity);
+                        PPL_LOGGER.warn("unable to find diploid solution for implied purity: {}", impliedPurity);
                     }
                 }
             }
         }
 
-        PPL_LOGGER.debug("Unable to determine somatic implied purity.");
+        PPL_LOGGER.debug("unable to determine somatic implied purity.");
         return Optional.empty();
     }
 

@@ -14,9 +14,6 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
 import static com.hartwig.hmftools.purple.Segmentation.validateObservedRegions;
@@ -73,7 +70,6 @@ import com.hartwig.hmftools.purple.segment.SegmentFile;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.config.AmberData;
 import com.hartwig.hmftools.purple.config.CobaltData;
 import com.hartwig.hmftools.purple.config.FittingConfig;
@@ -120,8 +116,6 @@ public class PurpleApplication
     private final Segmentation mSegmentation;
     private final Charts mCharts;
 
-    private final DatabaseAccess mDbAccess;
-
     private static final int THREADS_DEFAULT = 2;
     private static final String VERSION = "version";
 
@@ -138,8 +132,6 @@ public class PurpleApplication
         }
 
         setLogLevel(mCmdLineArgs);
-
-        mDbAccess = hasDatabaseConfig(mCmdLineArgs) ? createDatabaseAccess(mCmdLineArgs) : null;
 
         // load config
         mConfig = new PurpleConfig(mPurpleVersion.version(), mCmdLineArgs);
@@ -455,23 +447,6 @@ public class PurpleApplication
             GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorSample), germlineDeletions);
         }
 
-        if(mDbAccess != null)
-        {
-            PPL_LOGGER.info("writing purple data to database: {}", mCmdLineArgs.getOptionValue(DB_URL));
-
-            mDbAccess.writePurity(tumorSample, purityContext, qcChecks);
-
-            if(mConfig.runTumor())
-            {
-                mDbAccess.writeBestFitPerPurity(tumorSample, bestFit.bestFitPerPurity());
-                mDbAccess.writeCopynumbers(tumorSample, copyNumbers);
-                mDbAccess.writeGeneCopyNumbers(tumorSample, geneCopyNumbers);
-            }
-
-            if(mConfig.runGermline())
-                mDbAccess.writeGermlineDeletions(tumorSample, germlineDeletions);
-        }
-
         if(!mConfig.germlineMode() && (mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent()))
         {
             PPL_LOGGER.info("generating charts");
@@ -581,9 +556,6 @@ public class PurpleApplication
 
             DriverCatalogFile.write(DriverCatalogFile.generateGermlineFilename(mConfig.OutputDir, tumorSample), germlineDriverCatalog);
         }
-
-        if(mDbAccess != null)
-            mDbAccess.writePurpleDriverCatalog(tumorSample, somaticDriverCatalog, germlineDriverCatalog);
     }
 
     private int recoverStructuralVariants(final SampleData sampleData, final SampleDataFiles sampleDataFiles,

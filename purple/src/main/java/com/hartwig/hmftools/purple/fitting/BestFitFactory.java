@@ -139,7 +139,7 @@ public class BestFitFactory
 
         if(mSomaticHotspotCount > 0 || mAlleleReadCountTotal >= MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT)
         {
-            PPL_LOGGER.info("Tumor evidence: somaticHotspotCount({}) alleleReadCountTotal({})",
+            PPL_LOGGER.info("tumor evidence: somaticHotspotCount({}) alleleReadCountTotal({})",
                     mSomaticHotspotCount, mAlleleReadCountTotal);
             return true;
         }

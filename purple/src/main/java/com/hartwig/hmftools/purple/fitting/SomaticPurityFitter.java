@@ -66,8 +66,7 @@ public class SomaticPurityFitter
         MAPPABILITY;
     }
 
-    public static List<SomaticVariant> findFittingVariants(
-            final List<SomaticVariant> variants, final List<ObservedRegion> observedRegions)
+    public static List<SomaticVariant> findFittingVariants(final List<SomaticVariant> variants, final List<ObservedRegion> observedRegions)
     {
         List<SomaticVariant> fittingVariants = Lists.newArrayList();
 
@@ -120,7 +119,6 @@ public class SomaticPurityFitter
         }
 
         PPL_LOGGER.debug("variants({}) fitting({}) filters: {}", variants.size(), fittingVariants.size(), filterCountsStr);
-
 
         return fittingVariants;
     }

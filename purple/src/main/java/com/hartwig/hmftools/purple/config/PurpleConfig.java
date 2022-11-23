@@ -2,14 +2,10 @@ package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomes;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.ReferenceData.TARGET_REGION_BED;
 
 import java.io.File;
-import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
@@ -171,7 +167,6 @@ public class PurpleConfig
         options.addOption(DRIVERS_ONLY, false, "Only run the driver routine");
         options.addOption(TIER_FILTERS, true, "Variant qual filters by tier, format: TIER_A=QUAL;TIER_A=QUAL etc");
 
-        addDatabaseCmdLineArgs(options);
         FittingConfig.addOptions(options);
         SomaticFitConfig.addOptions(options);
         ReferenceData.addOptions(options);
