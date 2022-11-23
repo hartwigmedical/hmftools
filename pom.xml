@@ -96,7 +96,7 @@
         <apache.lucene.version>7.1.0</apache.lucene.version>
         <jooq.version>3.15.5</jooq.version>
         <mysqlconnector.version>8.0.16</mysqlconnector.version>
-        <bouncycastle.jdk15.version>1.53</bouncycastle.jdk15.version>
+        <bouncycastle.jdk15.version>1.67</bouncycastle.jdk15.version>
         <kotlin.version>1.5.32</kotlin.version>
         <kotlin.coroutines.version>1.5.2</kotlin.coroutines.version>
         <selenium.version>3.14.0</selenium.version>
