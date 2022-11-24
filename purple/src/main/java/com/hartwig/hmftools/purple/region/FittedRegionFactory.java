@@ -51,7 +51,7 @@ public class FittedRegionFactory
 
     public ObservedRegion fitRegion(final double purity, final double normFactor, final ObservedRegion observedRegion)
     {
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(purity, normFactor, mCobaltChromosomes.chromosomes(), mCobaltChromosomes.gender());
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(purity, normFactor, mCobaltChromosomes);
 
         double observedTumorRatio = observedRegion.observedTumorRatio();
         double impliedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);

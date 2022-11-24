@@ -63,7 +63,10 @@ public class SomaticPurityEnrichment
     private void applyPurityAdjustment(final SomaticVariant variant, final PurpleCopyNumber purpleCopyNumber, boolean isGermlineHetDeletion)
     {
         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
-        double vaf = mPurityAdjuster.purityAdjustedVAF(purpleCopyNumber.chromosome(), Math.max(0.001, copyNumber), variant.alleleFrequency());
+
+        double vaf = mPurityAdjuster.purityAdjustedVAF(
+                purpleCopyNumber.chromosome(), Math.max(0.001, copyNumber), variant.alleleFrequency(), isGermlineHetDeletion);
+
         double variantCopyNumber = Math.max(0, vaf * copyNumber);
 
         boolean biallelic = Doubles.lessOrEqual(copyNumber, 0) || Doubles.greaterOrEqual(variantCopyNumber, copyNumber - 0.5);

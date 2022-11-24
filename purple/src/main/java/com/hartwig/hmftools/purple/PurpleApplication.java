@@ -304,7 +304,7 @@ public class PurpleApplication
             bestFit = bestFitFactory.somaticFit() != null ? bestFitFactory.somaticFit() : bestFitFactory.bestNormalFit();
 
             purityAdjuster = new PurityAdjuster(
-                    bestFit.fit().purity(), bestFit.fit().normFactor(), cobaltChromosomes.chromosomes(), cobaltGender);
+                    bestFit.fit().purity(), bestFit.fit().normFactor(), cobaltChromosomes);
 
             buildCopyNumbers(
                     sampleData, sampleDataFiles, fittedRegionFactory, purityAdjuster, observedRegions, bestFit.fit(), copyNumbers, fittedRegions);
@@ -323,7 +323,7 @@ public class PurpleApplication
                     bestFit = bestFitFactory.bestNormalFit();
 
                     purityAdjuster = new PurityAdjuster(
-                            bestFit.fit().purity(), bestFit.fit().normFactor(), cobaltChromosomes.chromosomes(), cobaltGender);
+                            bestFit.fit().purity(), bestFit.fit().normFactor(), cobaltChromosomes);
 
                     buildCopyNumbers(
                             sampleData, sampleDataFiles, fittedRegionFactory, purityAdjuster, observedRegions, bestFit.fit(), copyNumbers, fittedRegions);

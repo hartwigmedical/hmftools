@@ -203,7 +203,7 @@ public class FittedPurityFactory
             fittedRegions.add(fittedRegion);
         }
 
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(purity, normFactor, mCobaltChromosomes.chromosomes(), mCobaltChromosomes.gender());
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(purity, normFactor, mCobaltChromosomes);
 
         final double somaticPenalty = Doubles.greaterThan(mSomaticPenaltyWeight, 0) ?
                 mSomaticPenaltyWeight * SomaticPenaltyFactory.calcPenalty(purityAdjuster, fittedRegions, mVariants) : 0;
