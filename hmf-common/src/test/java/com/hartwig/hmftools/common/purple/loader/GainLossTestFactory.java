@@ -9,11 +9,6 @@ public final class GainLossTestFactory {
     }
 
     @NotNull
-    public static GainLoss createTestGainLoss() {
-        return createGainLoss(Strings.EMPTY, CopyNumberInterpretation.FULL_GAIN);
-    }
-
-    @NotNull
     public static GainLoss createGainLoss(@NotNull String gene, @NotNull CopyNumberInterpretation interpretation) {
         return builder().gene(gene).interpretation(interpretation).build();
     }
