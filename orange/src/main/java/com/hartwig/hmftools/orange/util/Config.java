@@ -69,11 +69,11 @@ public final class Config {
         return value;
     }
 
-    public static boolean pathExists(@NotNull String path) {
+    private static boolean pathExists(@NotNull String path) {
         return Files.exists(new File(path).toPath());
     }
 
-    public static boolean pathIsDirectory(@NotNull String path) {
+    private static boolean pathIsDirectory(@NotNull String path) {
         return Files.isDirectory(new File(path).toPath());
     }
 }

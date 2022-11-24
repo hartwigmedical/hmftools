@@ -202,18 +202,18 @@ public class OrangeAlgo {
     @Nullable
     private static String determinePlatinumVersion(@NotNull OrangeConfig config) throws IOException {
         String pipelineVersionFile = config.pipelineVersionFile();
-        if (pipelineVersionFile != null) {
-            String platinumVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
-            if (platinumVersion != null) {
-                LOGGER.info("Determined platinum version to be 'v{}'", platinumVersion);
-            } else {
-                LOGGER.warn("No platinum version could be determined as version could not be resolved from {}", pipelineVersionFile);
-            }
-            return platinumVersion;
-        } else {
+        if (pipelineVersionFile == null) {
             LOGGER.warn("No platinum version could be determined as pipeline version file was not passed");
             return null;
         }
+
+        String platinumVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
+        if (platinumVersion != null) {
+            LOGGER.info("Determined platinum version to be 'v{}'", platinumVersion);
+        } else {
+            LOGGER.warn("No platinum version could be determined as version could not be resolved from {}", pipelineVersionFile);
+        }
+        return platinumVersion;
     }
 
     @NotNull
