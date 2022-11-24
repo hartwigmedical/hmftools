@@ -1,14 +1,13 @@
-package com.hartwig.hmftools.common.linx;
+package com.hartwig.hmftools.orange.algo.linx;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
-@Value.Style(allParameters = true,
-             passAnnotations = { NotNull.class, Nullable.class })
-public abstract class GeneDisruption
-{
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public abstract class GeneDisruption {
+
     @NotNull
     public abstract String location();
 

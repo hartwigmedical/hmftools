@@ -4,9 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.purple.loader.PurpleData;
-
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,27 +17,20 @@ public final class LinxDataLoader
     private LinxDataLoader() {}
 
     @NotNull
-    public static LinxData load(final String tumorSample, final String linxDir) throws IOException
+    public static LinxData load(final String tumorSample, final String linxSomaticDir, final String linxGermlineDir) throws IOException
     {
-        String svAnnotationFile = LinxSvAnnotation.generateFilename(linxDir, tumorSample, false);
-        final String breakendFile = LinxBreakend.generateFilename(linxDir, tumorSample);
-        final String fusionFile = LinxFusion.generateFilename(linxDir, tumorSample);
-        final String driversFile = LinxDriver.generateFilename(linxDir, tumorSample);
-        final String driverCatalogFile = LinxDriver.generateCatalogFilename(linxDir, tumorSample, true);
-        final String germlineSvFile = LinxGermlineSv.generateFilename(linxDir, tumorSample);
+        final String svAnnotationFile = LinxSvAnnotation.generateFilename(linxSomaticDir, tumorSample, false);
+        final String breakendFile = LinxBreakend.generateFilename(linxSomaticDir, tumorSample);
+        final String fusionFile = LinxFusion.generateFilename(linxSomaticDir, tumorSample);
+        final String driversFile = LinxDriver.generateFilename(linxSomaticDir, tumorSample);
+        final String driverCatalogFile = LinxDriver.generateCatalogFilename(linxSomaticDir, tumorSample, true);
+        final String germlineSvFile = LinxGermlineSv.generateFilename(linxGermlineDir, tumorSample);
 
         return load(svAnnotationFile, fusionFile, breakendFile, driverCatalogFile, driversFile, germlineSvFile);
     }
 
     @NotNull
-    public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxDriverCatalogTsv)
-            throws IOException
-    {
-        return load(null, linxFusionTsv, linxBreakendTsv, linxDriverCatalogTsv, null, null);
-    }
-
-    @NotNull
-    public static LinxData load(@Nullable String linxStructuralVariantTsv, @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv,
+    private static LinxData load(@Nullable String linxStructuralVariantTsv, @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv,
             @NotNull String linxDriverCatalogTsv, @Nullable String linxDriverTsv, @Nullable String linxGermlineDisruptionTsv)
             throws IOException
     {
@@ -65,14 +55,10 @@ public final class LinxDataLoader
         }
 
         List<LinxBreakend> allBreakends = LinxBreakend.read(linxBreakendTsv);
-        List<GeneDisruption> reportableGeneDisruptions =
-                GeneDisruptionFactory.convert(selectReportable(allBreakends), allStructuralVariants);
-        LOGGER.debug(" Generated {} reportable disruptions based on {} reportable breakends",
-                reportableGeneDisruptions.size(),
-                allBreakends.size());
+        List<LinxBreakend> reportableBreakends = selectReportable(allBreakends);
         LOGGER.info(" Loaded {} breakends (of which {} are reportable) from {}",
                 allBreakends.size(),
-                reportableGeneDisruptions.size(),
+                reportableBreakends.size(),
                 linxBreakendTsv);
 
         List<HomozygousDisruption> homozygousDisruptions =
@@ -110,7 +96,7 @@ public final class LinxDataLoader
                 .allFusions(allFusions)
                 .reportableFusions(reportableFusions)
                 .allBreakends(allBreakends)
-                .reportableGeneDisruptions(reportableGeneDisruptions)
+                .reportableBreakends(reportableBreakends)
                 .homozygousDisruptions(homozygousDisruptions)
                 .drivers(allDrivers)
                 .allGermlineDisruptions(allGermlineDisruptions)

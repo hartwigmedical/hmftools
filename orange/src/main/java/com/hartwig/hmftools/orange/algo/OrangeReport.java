@@ -11,11 +11,11 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
-import com.hartwig.hmftools.common.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
+import com.hartwig.hmftools.orange.algo.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 

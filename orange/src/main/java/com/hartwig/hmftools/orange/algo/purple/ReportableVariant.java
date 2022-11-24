@@ -1,15 +1,18 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.orange.algo.purple;
 
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.utils.DataUtil;
+import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.DriverInterpretation;
+import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.Variant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
-@Value.Style(allParameters = true,
-             passAnnotations = { NotNull.class, Nullable.class })
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ReportableVariant implements Variant {
 
     @NotNull

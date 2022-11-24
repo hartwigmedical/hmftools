@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.orange.algo.purple;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.junit.Test;
 

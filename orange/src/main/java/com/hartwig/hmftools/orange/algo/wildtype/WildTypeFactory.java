@@ -1,16 +1,16 @@
-package com.hartwig.hmftools.common.wildtype;
+package com.hartwig.hmftools.orange.algo.wildtype;
 
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
-import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.orange.algo.linx.GeneDisruption;
+import com.hartwig.hmftools.orange.algo.purple.ReportableVariant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -72,8 +72,8 @@ public final class WildTypeFactory {
             }
 
             boolean hasGeneDisruption = false;
-            for (GeneDisruption geneDisruption : reportableGeneDisruptions) {
-                if (driverGene.gene().equals(geneDisruption.gene())) {
+            for (GeneDisruption disruption : reportableGeneDisruptions) {
+                if (driverGene.gene().equals(disruption.gene())) {
                     hasGeneDisruption = true;
                 }
             }

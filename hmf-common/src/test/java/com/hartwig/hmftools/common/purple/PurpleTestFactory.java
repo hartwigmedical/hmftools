@@ -4,6 +4,7 @@ import com.hartwig.hmftools.common.purple.loader.ImmutablePurpleData;
 import com.hartwig.hmftools.common.purple.loader.PurpleData;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class PurpleTestFactory {
@@ -13,25 +14,41 @@ public final class PurpleTestFactory {
 
     @NotNull
     public static PurpleData createMinimalTestPurpleData() {
-        return ImmutablePurpleData.builder()
+        PurityContext minimalContext = ImmutablePurityContext.builder()
+                .version(Strings.EMPTY)
+                .gender(Gender.FEMALE)
+                .runMode(RunMode.TUMOR_GERMLINE)
+                .targeted(false)
+                .bestFit(ImmutableFittedPurity.builder()
+                        .purity(0D)
+                        .normFactor(0D)
+                        .ploidy(0D)
+                        .score(0D)
+                        .diploidProportion(0D)
+                        .somaticPenalty(0D)
+                        .build())
+                .method(FittedPurityMethod.NORMAL)
+                .score(ImmutableFittedPurityScore.builder()
+                        .minPurity(0D)
+                        .maxPurity(0D)
+                        .minPloidy(0D)
+                        .maxPloidy(0D)
+                        .minDiploidProportion(0D)
+                        .maxDiploidProportion(0D)
+                        .build())
                 .qc(qcPass())
-                .fittedPurityMethod(FittedPurityMethod.NORMAL)
-                .purity(0D)
-                .minPurity(0D)
-                .maxPurity(0D)
-                .hasReliablePurity(true)
-                .hasReliableQuality(true)
-                .ploidy(0D)
-                .minPloidy(0D)
-                .maxPloidy(0D)
+                .polyClonalProportion(0D)
                 .wholeGenomeDuplication(false)
                 .microsatelliteIndelsPerMb(0D)
-                .microsatelliteStatus(MicrosatelliteStatus.UNKNOWN)
                 .tumorMutationalBurdenPerMb(0D)
                 .tumorMutationalLoad(0)
-                .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
                 .svTumorMutationalBurden(0)
+                .microsatelliteStatus(MicrosatelliteStatus.UNKNOWN)
+                .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
+                .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
                 .build();
+
+        return ImmutablePurpleData.builder().purityContext(minimalContext).build();
     }
 
     @NotNull

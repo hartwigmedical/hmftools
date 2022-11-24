@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 import java.util.Map;
@@ -10,6 +10,8 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogMap;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 
 import org.apache.logging.log4j.LogManager;

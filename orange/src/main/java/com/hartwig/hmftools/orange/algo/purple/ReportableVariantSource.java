@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.orange.algo.purple;
 
 public enum ReportableVariantSource {
     SOMATIC,

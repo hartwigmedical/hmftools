@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface LinxData
 {
-
     @NotNull
     List<LinxSvAnnotation> allStructuralVariants();
 
@@ -24,7 +23,7 @@ public interface LinxData
     List<LinxBreakend> allBreakends();
 
     @NotNull
-    List<GeneDisruption> reportableGeneDisruptions();
+    List<LinxBreakend> reportableBreakends();
 
     @NotNull
     List<HomozygousDisruption> homozygousDisruptions();

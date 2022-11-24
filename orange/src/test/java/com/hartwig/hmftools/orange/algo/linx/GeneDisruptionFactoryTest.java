@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.linx;
+package com.hartwig.hmftools.orange.algo.linx;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -7,6 +7,11 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
+import com.hartwig.hmftools.common.linx.ImmutableLinxSvAnnotation;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.apache.logging.log4j.util.Strings;

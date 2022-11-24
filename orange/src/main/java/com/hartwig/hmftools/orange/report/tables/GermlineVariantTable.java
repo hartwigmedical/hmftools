@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.report.tables;
 import java.text.DecimalFormat;
 import java.util.List;
 
-import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.orange.algo.purple.ReportableVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Variants;
 import com.hartwig.hmftools.orange.report.util.Cells;

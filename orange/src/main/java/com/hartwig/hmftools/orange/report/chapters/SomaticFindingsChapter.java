@@ -5,9 +5,9 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.algo.purple.ReportableVariant;
+import com.hartwig.hmftools.orange.algo.purple.ReportableVariantFactory;
 import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.DNAFusionTable;
@@ -70,7 +70,8 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     private void addSomaticVariants(@NotNull Document document) {
         List<ReportableVariant> reportableVariants;
-        if (reportConfig.reportGermline()) {
+        // TODO Handle germline properly.
+        if (reportConfig.reportGermline() || report.purple().reportableGermlineVariants() == null) {
             reportableVariants = report.purple().reportableSomaticVariants();
         } else {
             reportableVariants = ReportableVariantFactory.mergeVariantLists(report.purple().reportableSomaticVariants(),

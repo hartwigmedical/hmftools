@@ -2,21 +2,23 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
-import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class GermlineVariantSelector {
 
     private GermlineVariantSelector() {
     }
 
-    @NotNull
-    public static List<ReportableVariant> selectInterestingUnreportedVariants(@NotNull List<SomaticVariant> allGermlineVariants) {
+    @Nullable
+    public static List<ReportableVariant> selectInterestingUnreportedVariants(@Nullable List<SomaticVariant> allGermlineVariants) {
+        if (allGermlineVariants == null) {
+            return null;
+        }
+
         List<ReportableVariant> filtered = Lists.newArrayList();
         for (SomaticVariant variant : allGermlineVariants) {
             if (!variant.reported()) {

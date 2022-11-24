@@ -14,6 +14,7 @@ import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class OrangeReportModifier {
 
@@ -59,7 +60,6 @@ public final class OrangeReportModifier {
                 .additionalSuspectSomaticGainsLosses(max1(purple.additionalSuspectSomaticGainsLosses()))
                 .allGermlineDeletions(max1(purple.allGermlineDeletions()))
                 .reportableGermlineDeletions(max1(purple.reportableGermlineDeletions()))
-                .copyNumberPerChromosome(max1(purple.copyNumberPerChromosome()))
                 .build();
     }
 
@@ -96,9 +96,9 @@ public final class OrangeReportModifier {
                 .build();
     }
 
-    @NotNull
-    private static <T> List<T> max1(@NotNull List<T> elements) {
-        return elements.subList(0, Math.min(1, elements.size()));
+    @Nullable
+    private static <T> List<T> max1(@Nullable List<T> elements) {
+        return elements != null ? elements.subList(0, Math.min(1, elements.size())) : null;
     }
 }
 

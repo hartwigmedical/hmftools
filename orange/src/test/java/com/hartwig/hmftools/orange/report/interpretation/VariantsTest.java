@@ -7,9 +7,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.orange.algo.purple.ReportableVariant;
+import com.hartwig.hmftools.orange.algo.purple.ReportableVariantTestFactory;
 import com.hartwig.hmftools.orange.report.ReportResources;
 
 import org.junit.Test;

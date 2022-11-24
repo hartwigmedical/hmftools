@@ -39,8 +39,6 @@ import com.hartwig.hmftools.common.purple.loader.PurpleDataLoader;
 import com.hartwig.hmftools.common.sage.GeneDepthFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
-import com.hartwig.hmftools.common.wildtype.WildTypeFactory;
-import com.hartwig.hmftools.common.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaData;
@@ -52,6 +50,8 @@ import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
+import com.hartwig.hmftools.orange.algo.wildtype.WildTypeFactory;
+import com.hartwig.hmftools.orange.algo.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
@@ -240,7 +240,7 @@ public class OrangeAlgo {
         List<String> lines = Files.readAllLines(new File(config.sageGermlineGeneCoverageTsv()).toPath());
         String header = lines.get(0);
 
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, GeneDepthFile.DELIM);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, GeneDepthFile.DELIM);
         int geneIndex = fieldsIndexMap.get(GeneDepthFile.COL_GENE);
         int mvlhIndex = fieldsIndexMap.get(GeneDepthFile.COL_MV_LIKELIHOOD);
 
@@ -259,26 +259,12 @@ public class OrangeAlgo {
         return PurpleDataLoader.load(config.tumorSampleId(),
                 config.referenceSampleId(),
                 config.rnaConfig() != null ? config.rnaConfig().rnaSampleId() : null,
-                config.purpleQcFile(),
-                config.purplePurityTsv(),
-                config.purpleSomaticDriverCatalogTsv(),
-                config.purpleSomaticVariantVcf(),
-                config.purpleGermlineDriverCatalogTsv(),
-                config.purpleGermlineVariantVcf(),
-                config.purpleGeneCopyNumberTsv(),
-                config.purpleSomaticCopyNumberTsv(),
-                config.purpleGermlineDeletionTsv(),
-                config.refGenomeVersion());
+                config.purpleDataDirectory());
     }
 
     @NotNull
     private static LinxData loadLinxData(@NotNull OrangeConfig config) throws IOException {
-        return LinxDataLoader.load(config.linxStructuralVariantTsv(),
-                config.linxFusionTsv(),
-                config.linxBreakendTsv(),
-                config.linxDriverCatalogTsv(),
-                config.linxDriverTsv(),
-                config.linxGermlineDisruptionTsv());
+        return LinxDataLoader.load(config.tumorSampleId(), config.linxSomaticDataDirectory(), config.linxGermlineDataDirectory());
     }
 
     @Nullable

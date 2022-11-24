@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.common.purple.loader;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleGermlineVcfFile;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticVcfFile;
-
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -24,18 +21,16 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporti
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.purple.PurpleQCFile;
-import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.purple.PurpleQCFile;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 
@@ -52,38 +47,49 @@ public final class PurpleDataLoader
 
     @NotNull
     public static PurpleData load(final String tumorSample, @Nullable final String referenceSample, @Nullable final String rnaSample,
-            final String purpleDir, final RefGenomeVersion refGenomeVersion) throws IOException
+            final String purpleDir) throws IOException
     {
         String qcFile = PurpleQCFile.generateFilename(purpleDir, tumorSample);
         String purityTsv = PurityContextFile.generateFilenameForReading(purpleDir, tumorSample);
         String somaticDriverCatalogTsv = DriverCatalogFile.generateSomaticFilename(purpleDir, tumorSample);
-        String somaticVariantVcf = purpleSomaticVcfFile(purpleDir, tumorSample);
+        String somaticVariantVcf = resolveVcfPath(PurpleCommon.purpleSomaticVcfFile(purpleDir, tumorSample));
         String germlineDriverCatalogTsv = DriverCatalogFile.generateGermlineFilename(purpleDir, tumorSample);
-        String germlineVariantVcf = purpleGermlineVcfFile(purpleDir, tumorSample);
+        String germlineVariantVcf = resolveVcfPath(PurpleCommon.purpleGermlineVcfFile(purpleDir, tumorSample));
         String geneCopyNumberTsv = GeneCopyNumberFile.generateFilenameForReading(purpleDir, tumorSample);
         String copyNumberTsv = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, tumorSample);
         String germlineDeletionTsv = GermlineDeletion.generateFilename(purpleDir, tumorSample);
 
         return load(tumorSample, referenceSample, rnaSample, qcFile, purityTsv, somaticDriverCatalogTsv, somaticVariantVcf,
-                germlineDriverCatalogTsv, germlineVariantVcf, geneCopyNumberTsv, copyNumberTsv, germlineDeletionTsv,
-                refGenomeVersion);
+                germlineDriverCatalogTsv, germlineVariantVcf, geneCopyNumberTsv, copyNumberTsv, germlineDeletionTsv);
+    }
+
+    private static String resolveVcfPath(final String vcfPath)
+    {
+        if (!new File(vcfPath).exists() && vcfPath.endsWith(".gz"))
+        {
+            String unzippedVcfPath = vcfPath.substring(0, vcfPath.length() - 3);
+            if (new File(unzippedVcfPath).exists())
+            {
+                return unzippedVcfPath;
+            }
+        }
+        return vcfPath;
     }
 
     @NotNull
     public static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @Nullable String rnaSample,
             @NotNull String qcFile, @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
             @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @Nullable String geneCopyNumberTsv,
-            @Nullable String copyNumberTsv, @Nullable String germlineDeletionTsv,
-            @Nullable RefGenomeVersion refGenomeVersion) throws IOException
+            @Nullable String copyNumberTsv, @Nullable String germlineDeletionTsv) throws IOException
     {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
         PurityContext purityContext = readPurityContext(qcFile, purityTsv);
 
-        List<DriverCatalog> somaticDriverCatalog = DriverCatalogFile.read(somaticDriverCatalogTsv);
-        LOGGER.info(" Loaded {} somatic driver catalog entries from {}", somaticDriverCatalog.size(), somaticDriverCatalogTsv);
+        List<DriverCatalog> somaticDrivers = DriverCatalogFile.read(somaticDriverCatalogTsv);
+        LOGGER.info(" Loaded {} somatic driver catalog entries from {}", somaticDrivers.size(), somaticDriverCatalogTsv);
 
-        List<GainLoss> reportableSomaticGainsLosses = somaticGainsLossesFromDrivers(somaticDriverCatalog);
+        List<GainLoss> reportableSomaticGainsLosses = somaticGainsLossesFromDrivers(somaticDrivers);
         LOGGER.info("  Extracted {} reportable somatic gains and losses from driver catalog", reportableSomaticGainsLosses.size());
 
         List<GeneCopyNumber> allSomaticGeneCopyNumbers = Lists.newArrayList();
@@ -99,25 +105,18 @@ public final class PurpleDataLoader
             LOGGER.info("  Extracted {} somatic gains and losses from gene copy numbers", allSomaticGainsLosses.size());
         }
 
-        List<CnPerChromosomeArmData> copyNumberPerChromosome = Lists.newArrayList();
-        if(copyNumberTsv != null && refGenomeVersion != null)
-        {
-            RefGenomeCoordinates refGenomeCoordinates =
-                    refGenomeVersion == RefGenomeVersion.V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-            copyNumberPerChromosome = CnPerChromosomeFactory.generate(copyNumberTsv, refGenomeCoordinates);
-            LOGGER.debug(" Generated chromosomal arm copy numbers from {}", copyNumberTsv);
-        }
+        List<PurpleCopyNumber> somaticCopyNumbers = PurpleCopyNumberFile.read(copyNumberTsv);
 
-        List<SomaticVariant> allGermlineVariants = Lists.newArrayList();
-        List<ReportableVariant> reportableGermlineVariants = Lists.newArrayList();
+        List<SomaticVariant> allGermlineVariants = null;
+        List<SomaticVariant> reportableGermlineVariants = null;
+        List<DriverCatalog> germlineDrivers = null;
         if(referenceSample != null)
         {
-            List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(germlineDriverCatalogTsv);
-            LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), germlineDriverCatalogTsv);
+            germlineDrivers = DriverCatalogFile.read(germlineDriverCatalogTsv);
+            LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDrivers.size(), germlineDriverCatalogTsv);
 
-            /// TODO Pass RNA sample once germline variants can be RNA-annotated.
-            allGermlineVariants = new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, germlineVariantVcf);
-            reportableGermlineVariants = ReportableVariantFactory.toReportableGermlineVariants(allGermlineVariants, germlineDriverCatalog);
+            allGermlineVariants = new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample, germlineVariantVcf);
+            reportableGermlineVariants = selectReportedVariants(allGermlineVariants);
             LOGGER.info(" Loaded {} germline variants (of which {} are reportable) from {}",
                     allGermlineVariants.size(),
                     reportableGermlineVariants.size(),
@@ -128,8 +127,8 @@ public final class PurpleDataLoader
             LOGGER.debug(" Skipped loading germline variants since no reference sample configured");
         }
 
-        List<GermlineDeletion> allGermlineDeletions = Lists.newArrayList();
-        List<GermlineDeletion> reportableGermlineDeletions = Lists.newArrayList();
+        List<GermlineDeletion> allGermlineDeletions = null;
+        List<GermlineDeletion> reportableGermlineDeletions = null;
         if(germlineDeletionTsv != null)
         {
             allGermlineDeletions = GermlineDeletion.read(germlineDeletionTsv);
@@ -143,41 +142,26 @@ public final class PurpleDataLoader
 
         List<SomaticVariant> allSomaticVariants =
                 SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVariantVcf);
-        List<ReportableVariant> reportableSomaticVariants =
-                ReportableVariantFactory.toReportableSomaticVariants(allSomaticVariants, somaticDriverCatalog);
+        List<SomaticVariant> reportableSomaticVariants = selectReportedVariants(allSomaticVariants);
         LOGGER.info(" Loaded {} somatic variants (of which {} are reportable) from {}",
                 allSomaticVariants.size(),
                 reportableSomaticVariants.size(),
                 somaticVariantVcf);
 
         return ImmutablePurpleData.builder()
-                .qc(purityContext.qc())
-                .hasReliableQuality(purityContext.qc().pass())
-                .fittedPurityMethod(purityContext.method())
-                .hasReliablePurity(PurityContext.checkHasReliablePurity(purityContext))
-                .purity(purityContext.bestFit().purity())
-                .minPurity(purityContext.score().minPurity())
-                .maxPurity(purityContext.score().maxPurity())
-                .ploidy(purityContext.bestFit().ploidy())
-                .minPloidy(purityContext.score().minPloidy())
-                .maxPloidy(purityContext.score().maxPloidy())
-                .wholeGenomeDuplication(purityContext.wholeGenomeDuplication())
-                .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())
-                .microsatelliteStatus(purityContext.microsatelliteStatus())
-                .tumorMutationalBurdenPerMb(purityContext.tumorMutationalBurdenPerMb())
-                .tumorMutationalLoad(purityContext.tumorMutationalLoad())
-                .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
-                .svTumorMutationalBurden(purityContext.svTumorMutationalBurden())
+                .purityContext(purityContext)
+                .somaticDrivers(somaticDrivers)
+                .germlineDrivers(germlineDrivers)
                 .allSomaticVariants(allSomaticVariants)
                 .reportableSomaticVariants(reportableSomaticVariants)
                 .allGermlineVariants(allGermlineVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
+                .allSomaticCopyNumbers(somaticCopyNumbers)
                 .allSomaticGeneCopyNumbers(allSomaticGeneCopyNumbers)
                 .allSomaticGainsLosses(allSomaticGainsLosses)
                 .reportableSomaticGainsLosses(reportableSomaticGainsLosses)
                 .allGermlineDeletions(allGermlineDeletions)
                 .reportableGermlineDeletions(reportableGermlineDeletions)
-                .copyNumberPerChromosome(copyNumberPerChromosome)
                 .build();
     }
 
@@ -270,6 +254,20 @@ public final class PurpleDataLoader
                 .minCopies(Math.round(Math.max(0, driver.minCopyNumber())))
                 .maxCopies(Math.round(Math.max(0, driver.maxCopyNumber())))
                 .build();
+    }
+
+    @NotNull
+    private static List<SomaticVariant> selectReportedVariants(@NotNull List<SomaticVariant> allVariants)
+    {
+        List<SomaticVariant> reported = Lists.newArrayList();
+        for(SomaticVariant variant : allVariants)
+        {
+            if(variant.reported())
+            {
+                reported.add(variant);
+            }
+        }
+        return reported;
     }
 
     @NotNull

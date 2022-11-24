@@ -27,7 +27,7 @@ public class ReportWriterTest {
     public void canGenerateTestReportFromMinimalTestData() throws IOException {
         OrangeReport report = OrangeReportTestFactory.createMinimalTestReport();
 
-        ReportWriter writer = new ReportWriter(false, null, withGermlineReporting());
+        ReportWriter writer = new ReportWriter(false, null, noGermlineReporting());
 
         writer.write(report);
     }
@@ -44,5 +44,10 @@ public class ReportWriterTest {
     @NotNull
     private static ReportConfig withGermlineReporting() {
         return ImmutableReportConfig.builder().limitJsonOutput(false).reportGermline(true).build();
+    }
+
+    @NotNull
+    private static ReportConfig noGermlineReporting() {
+        return ImmutableReportConfig.builder().limitJsonOutput(false).reportGermline(false).build();
     }
 }

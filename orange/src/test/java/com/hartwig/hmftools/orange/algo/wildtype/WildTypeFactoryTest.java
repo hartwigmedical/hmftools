@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.wildtype;
+package com.hartwig.hmftools.orange.algo.wildtype;
 
 import static org.junit.Assert.assertEquals;
 
@@ -9,19 +9,19 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
-import com.hartwig.hmftools.common.linx.ImmutableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.purple.loader.GainLossTestFactory;
-import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
+import com.hartwig.hmftools.orange.algo.linx.GeneDisruption;
+import com.hartwig.hmftools.orange.algo.linx.ImmutableGeneDisruption;
+import com.hartwig.hmftools.orange.algo.purple.ImmutableReportableVariant;
+import com.hartwig.hmftools.orange.algo.purple.ReportableVariant;
+import com.hartwig.hmftools.orange.algo.purple.ReportableVariantTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
