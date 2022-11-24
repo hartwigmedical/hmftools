@@ -26,7 +26,7 @@ public class CobaltChromosomes
     public static final double TWO_Y_CUTOFF = 0.75;
     public static final double Y_CUTOFF = 0.05;
     public static final double MOSIAC_X_CUTOFF = 0.8;
-    public static final double TRISOMY_CUTOFF = 1.4;
+    public static final double TRISOMY_CUTOFF = 1.35;
 
     /**
      * Gender:
