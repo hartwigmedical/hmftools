@@ -1,8 +1,7 @@
-package com.hartwig.hmftools.common.clinical;
+package com.hartwig.hmftools.patientdb.clinical;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -13,8 +12,7 @@ import org.junit.Test;
 
 public class PatientPrimaryTumorFileTest {
 
-    private static final String BASE_RESOURCE_DIR = Resources.getResource("clinical").getPath();
-    private static final String TEST_TSV = BASE_RESOURCE_DIR + File.separator + "patient_primary_tumor.tsv";
+    private static final String TEST_TSV = Resources.getResource("primary_tumors/patient_primary_tumor.tsv").getPath();
 
     @Test
     public void canConvertStringLists() {
