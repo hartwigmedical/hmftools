@@ -1,62 +1,46 @@
 package com.hartwig.hmftools.peach;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class HaplotypePanel
 {
     @NotNull
-    private final List<Haplotype> haplotypes;
+    private final Map<String, GeneHaplotypePanel> geneToGeneHaplotypePanel;
 
-    public HaplotypePanel(@NotNull List<Haplotype> haplotypes)
+    public HaplotypePanel(@NotNull Map<String, GeneHaplotypePanel> geneToGeneHaplotypePanel)
     {
-        this.haplotypes = List.copyOf(haplotypes);
+        this.geneToGeneHaplotypePanel = geneToGeneHaplotypePanel;
     }
 
     public Map<Chromosome, Set<Integer>> getRelevantVariantPositions()
     {
-        Stream<VariantHaplotypeEvent> variantHaplotypeEvents = haplotypes.stream()
-                .filter(h -> ! h.wildType) // Ignore variants configured for wild type haplotypes, since they should be ignored anyway
-                .map(h -> h.events)
-                .flatMap(Collection::stream)
-                .filter(e -> e instanceof VariantHaplotypeEvent)
-                .map(VariantHaplotypeEvent.class::cast);
-        return variantHaplotypeEvents.collect(
-                Collectors.groupingBy(
-                        e -> e.chromosome,
-                        Collectors.mapping(VariantHaplotypeEvent::getCoveredPositions, Collectors.flatMapping(Collection::stream, Collectors.toSet()))
-                )
-        );
+        return geneToGeneHaplotypePanel.values().stream()
+                .map(GeneHaplotypePanel::getRelevantVariantPositions)
+                .flatMap(m -> m.entrySet().stream())
+                .collect(
+                        Collectors.groupingBy(
+                                Map.Entry::getKey,
+                                Collectors.mapping(Map.Entry::getValue, Collectors.flatMapping(Collection::stream, Collectors.toSet()))
+                        )
+                );
     }
 
-    public Set<String> getRelevantGenes(VariantHaplotypeEvent event)
+    public Set<String> getRelevantGenes(HaplotypeEvent event)
     {
-        return haplotypes.stream()
-                .filter(h -> isRelevantHaplotype(h, event))
-                .map(h -> h.gene)
+        return geneToGeneHaplotypePanel.entrySet().stream()
+                .filter(e -> e.getValue().isRelevantFor(event))
+                .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
     }
 
     public Set<String> getGenes()
     {
-        return haplotypes.stream().map(h -> h.gene).collect(Collectors.toSet());
+        return new HashSet<>(geneToGeneHaplotypePanel.keySet());
     }
 
-    private static boolean isRelevantHaplotype(Haplotype haplotype, VariantHaplotypeEvent event)
-    {
-        return haplotype.events.stream()
-                .filter(e -> e instanceof VariantHaplotypeEvent)
-                .map(e -> (VariantHaplotypeEvent) e)
-                .map(VariantHaplotypeEvent::getCoveredPositions)
-                .flatMap(Set::stream)
-                .anyMatch(event.getCoveredPositions()::contains);
-    }
+
 }

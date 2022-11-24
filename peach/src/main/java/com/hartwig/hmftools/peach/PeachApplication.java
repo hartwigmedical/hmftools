@@ -92,18 +92,38 @@ public class PeachApplication
         } else {
             callInputVcf = config.vcfFile;
         }
-        Map<VariantHaplotypeEvent, Integer> variantEventToCount = loadRelevantVariantHaplotypeEvents(
-                callInputVcf, haplotypePanel.getRelevantVariantPositions()
-        );
+        Map<HaplotypeEvent, Integer> eventToCount = loadHaplotypeEvents(callInputVcf, haplotypePanel);
 
-        PCH_LOGGER.info("events found: {}", variantEventToCount.toString());
+        PCH_LOGGER.info("events found: {}", eventToCount.toString());
 
-        Map<HaplotypeEvent, Set<String>> eventToRelevantGenes = variantEventToCount.keySet().stream()
+        Map<HaplotypeEvent, Set<String>> eventToRelevantGenes = eventToCount.keySet().stream()
                 .collect(Collectors.toMap(e -> e, haplotypePanel::getRelevantGenes));
 
         PCH_LOGGER.info("genes per event: {}", eventToRelevantGenes.toString());
 
+        for (String gene : haplotypePanel.getGenes())
+        {
+            PCH_LOGGER.info("handling gene: {}", gene);
+
+            Map<HaplotypeEvent, Integer> relevantEventToCount = eventToRelevantGenes.entrySet().stream()
+                    .filter(e -> e.getValue().contains(gene))
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toMap(e -> e, eventToCount::get));
+
+            PCH_LOGGER.info("events for gene '{}': {}", gene, relevantEventToCount);
+        }
+
         PCH_LOGGER.info("finished running PEACH");
+    }
+
+    @NotNull
+    private Map<HaplotypeEvent, Integer> loadHaplotypeEvents(String callInputVcf, HaplotypePanel haplotypePanel)
+    {
+        Map<VariantHaplotypeEvent, Integer> variantEventToCount = loadRelevantVariantHaplotypeEvents(
+                callInputVcf, haplotypePanel.getRelevantVariantPositions()
+        );
+        return variantEventToCount.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private Map<VariantHaplotypeEvent, Integer> loadRelevantVariantHaplotypeEvents(String vcf, Map<Chromosome, Set<Integer>> relevantVariantPositions)
@@ -297,8 +317,16 @@ public class PeachApplication
 
     private HaplotypePanel loadHaplotypePanel(String filename)
     {
-        List<Haplotype> haplotypes = Lists.newArrayList();
+        Map<String, List<Haplotype>> geneToHaplotypes = loadGeneToHaplotypes(filename);
+        Map<String, GeneHaplotypePanel> geneToGeneHaplotypePanel = geneToHaplotypes.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> GeneHaplotypePanel.fromHaplotypes(e.getKey(), e.getValue())));
+        return new HaplotypePanel(geneToGeneHaplotypePanel);
+    }
 
+    @NotNull
+    private static Map<String, List<Haplotype>> loadGeneToHaplotypes(String filename)
+    {
+        Map<String, List<Haplotype>> geneToHaplotypes = new HashMap<>();
         try
         {
             List<String> lines = Files.readAllLines(Paths.get(filename));
@@ -323,24 +351,27 @@ public class PeachApplication
                     haplotypeEvents = ImmutableSet.of();
                 else
                     haplotypeEvents = getHaplotypeEvents(haplotypeEventsString);
-
+                String gene = values[geneIndex];
                 Haplotype haplotype = new Haplotype(
-                        values[geneIndex],
                         values[haplotypeIndex],
                         Boolean.parseBoolean(values[wildTypeIndex]),
                         haplotypeEvents
                 );
-                haplotypes.add(haplotype);
+                if (!geneToHaplotypes.containsKey(gene))
+                {
+                    geneToHaplotypes.put(gene, Lists.newArrayList());
+                }
+                geneToHaplotypes.get(gene).add(haplotype);
             }
-
-            PCH_LOGGER.info("loaded {} haplotypes from file ({})", haplotypes.size(), filename);
+            int haplotypeCount = geneToHaplotypes.values().stream().mapToInt(List::size).sum();
+            PCH_LOGGER.info("loaded {} haplotypes from file ({})", haplotypeCount, filename);
         }
         catch(Exception e)
         {
             PCH_LOGGER.error("failed to load haplotypes TSV({}): {}", filename, e.toString());
             System.exit(1);
         }
-        return new HaplotypePanel(haplotypes);
+        return geneToHaplotypes;
     }
 
     private static ImmutableSet<HaplotypeEvent> getHaplotypeEvents(String haplotypeEventsString)
