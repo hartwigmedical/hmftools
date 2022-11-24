@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.peach;
 
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.peach.event.HaplotypeEvent;
+import com.hartwig.hmftools.peach.event.VariantHaplotypeEvent;
+import com.hartwig.hmftools.peach.haplotype.NonWildTypeHaplotype;
+import com.hartwig.hmftools.peach.haplotype.WildTypeHaplotype;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;

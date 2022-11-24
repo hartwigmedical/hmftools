@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.peach;
+package com.hartwig.hmftools.peach.event;
 
 import org.jetbrains.annotations.NotNull;
 

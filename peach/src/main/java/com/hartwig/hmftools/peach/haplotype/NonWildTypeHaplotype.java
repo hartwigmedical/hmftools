@@ -1,6 +1,8 @@
-package com.hartwig.hmftools.peach;
+package com.hartwig.hmftools.peach.haplotype;
 
 import com.google.common.collect.ImmutableSet;
+import com.hartwig.hmftools.peach.event.HaplotypeEvent;
+import com.hartwig.hmftools.peach.event.VariantHaplotypeEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.peach;
+package com.hartwig.hmftools.peach.event;
 
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
