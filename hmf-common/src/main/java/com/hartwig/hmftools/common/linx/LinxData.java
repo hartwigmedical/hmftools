@@ -14,6 +14,9 @@ public interface LinxData
     List<LinxSvAnnotation> allStructuralVariants();
 
     @NotNull
+    List<LinxDriver> drivers();
+
+    @NotNull
     List<LinxFusion> allFusions();
 
     @NotNull
@@ -27,9 +30,6 @@ public interface LinxData
 
     @NotNull
     List<HomozygousDisruption> homozygousDisruptions();
-
-    @NotNull
-    List<LinxDriver> drivers();
 
     @NotNull
     List<LinxGermlineSv> allGermlineDisruptions();

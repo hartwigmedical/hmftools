@@ -198,7 +198,7 @@ public interface OrangeConfig {
     @NotNull
     String linxSomaticDataDirectory();
 
-    @NotNull
+    @Nullable
     String linxGermlineDataDirectory();
 
     @NotNull

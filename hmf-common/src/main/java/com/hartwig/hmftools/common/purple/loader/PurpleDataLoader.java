@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.purple.loader;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,22 +26,17 @@ import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class PurpleDataLoader
 {
-    private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
-
     private PurpleDataLoader() {}
 
     @NotNull
@@ -77,76 +71,39 @@ public final class PurpleDataLoader
     }
 
     @NotNull
-    public static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @Nullable String rnaSample,
+    private static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @Nullable String rnaSample,
             @NotNull String qcFile, @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
-            @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @Nullable String geneCopyNumberTsv,
-            @Nullable String copyNumberTsv, @Nullable String germlineDeletionTsv) throws IOException
+            @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @NotNull String geneCopyNumberTsv,
+            @NotNull String copyNumberTsv, @NotNull String germlineDeletionTsv) throws IOException
     {
-        LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
-
-        PurityContext purityContext = readPurityContext(qcFile, purityTsv);
+        PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
 
         List<DriverCatalog> somaticDrivers = DriverCatalogFile.read(somaticDriverCatalogTsv);
-        LOGGER.info(" Loaded {} somatic driver catalog entries from {}", somaticDrivers.size(), somaticDriverCatalogTsv);
-
-        List<GainLoss> reportableSomaticGainsLosses = somaticGainsLossesFromDrivers(somaticDrivers);
-        LOGGER.info("  Extracted {} reportable somatic gains and losses from driver catalog", reportableSomaticGainsLosses.size());
-
-        List<GeneCopyNumber> allSomaticGeneCopyNumbers = Lists.newArrayList();
-        List<GainLoss> allSomaticGainsLosses = Lists.newArrayList();
-        if(geneCopyNumberTsv != null)
-        {
-            allSomaticGeneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberTsv);
-            LOGGER.debug(" Loaded {} gene copy numbers entries from {}", allSomaticGeneCopyNumbers.size(), geneCopyNumberTsv);
-
-            allSomaticGainsLosses = extractAllGainsLosses(
-                    purityContext.qc().status(), purityContext.bestFit().ploidy(), purityContext.targeted(), allSomaticGeneCopyNumbers);
-
-            LOGGER.info("  Extracted {} somatic gains and losses from gene copy numbers", allSomaticGainsLosses.size());
-        }
-
-        List<PurpleCopyNumber> somaticCopyNumbers = PurpleCopyNumberFile.read(copyNumberTsv);
-
-        List<SomaticVariant> allGermlineVariants = null;
-        List<SomaticVariant> reportableGermlineVariants = null;
-        List<DriverCatalog> germlineDrivers = null;
-        if(referenceSample != null)
-        {
-            germlineDrivers = DriverCatalogFile.read(germlineDriverCatalogTsv);
-            LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDrivers.size(), germlineDriverCatalogTsv);
-
-            allGermlineVariants = new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample, germlineVariantVcf);
-            reportableGermlineVariants = selectReportedVariants(allGermlineVariants);
-            LOGGER.info(" Loaded {} germline variants (of which {} are reportable) from {}",
-                    allGermlineVariants.size(),
-                    reportableGermlineVariants.size(),
-                    germlineVariantVcf);
-        }
-        else
-        {
-            LOGGER.debug(" Skipped loading germline variants since no reference sample configured");
-        }
-
-        List<GermlineDeletion> allGermlineDeletions = null;
-        List<GermlineDeletion> reportableGermlineDeletions = null;
-        if(germlineDeletionTsv != null)
-        {
-            allGermlineDeletions = GermlineDeletion.read(germlineDeletionTsv);
-            reportableGermlineDeletions = selectReportedDeletions(allGermlineDeletions);
-
-            LOGGER.info(" Loaded {} germline deletions (of which {} are reportable) from {}",
-                    allGermlineDeletions.size(),
-                    reportableGermlineDeletions.size(),
-                    germlineDeletionTsv);
-        }
 
         List<SomaticVariant> allSomaticVariants =
                 SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVariantVcf);
         List<SomaticVariant> reportableSomaticVariants = selectReportedVariants(allSomaticVariants);
-        LOGGER.info(" Loaded {} somatic variants (of which {} are reportable) from {}",
-                allSomaticVariants.size(),
-                reportableSomaticVariants.size(),
-                somaticVariantVcf);
+
+        List<GeneCopyNumber> allSomaticGeneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberTsv);
+        List<GainLoss> allSomaticGainsLosses = extractAllGainsLosses(
+                    purityContext.qc().status(), purityContext.bestFit().ploidy(), purityContext.targeted(), allSomaticGeneCopyNumbers);
+        List<GainLoss> reportableSomaticGainsLosses = somaticGainsLossesFromDrivers(somaticDrivers);
+
+        List<DriverCatalog> germlineDrivers = null;
+        List<SomaticVariant> allGermlineVariants = null;
+        List<SomaticVariant> reportableGermlineVariants = null;
+        List<GermlineDeletion> allGermlineDeletions = null;
+        List<GermlineDeletion> reportableGermlineDeletions = null;
+        if(referenceSample != null)
+        {
+            germlineDrivers = DriverCatalogFile.read(germlineDriverCatalogTsv);
+
+            allGermlineVariants = new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample, germlineVariantVcf);
+            reportableGermlineVariants = selectReportedVariants(allGermlineVariants);
+
+            allGermlineDeletions = GermlineDeletion.read(germlineDeletionTsv);
+            reportableGermlineDeletions = selectReportedDeletions(allGermlineDeletions);
+        }
 
         return ImmutablePurpleData.builder()
                 .purityContext(purityContext)
@@ -156,36 +113,13 @@ public final class PurpleDataLoader
                 .reportableSomaticVariants(reportableSomaticVariants)
                 .allGermlineVariants(allGermlineVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
-                .allSomaticCopyNumbers(somaticCopyNumbers)
+                .allSomaticCopyNumbers(PurpleCopyNumberFile.read(copyNumberTsv))
                 .allSomaticGeneCopyNumbers(allSomaticGeneCopyNumbers)
                 .allSomaticGainsLosses(allSomaticGainsLosses)
                 .reportableSomaticGainsLosses(reportableSomaticGainsLosses)
                 .allGermlineDeletions(allGermlineDeletions)
                 .reportableGermlineDeletions(reportableGermlineDeletions)
                 .build();
-    }
-
-    @NotNull
-    private static PurityContext readPurityContext(@NotNull String qcFile, @NotNull String purityTsv) throws IOException
-    {
-        PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
-
-        DecimalFormat purityFormat = new DecimalFormat("#'%'");
-        LOGGER.info("  QC status: {}", purityContext.qc().toString());
-        LOGGER.info("  Tumor purity: {} ({}-{})",
-                purityFormat.format(purityContext.bestFit().purity() * 100),
-                purityFormat.format(purityContext.score().minPurity() * 100),
-                purityFormat.format(purityContext.score().maxPurity() * 100));
-        LOGGER.info("  Tumor ploidy: {} ({}-{})",
-                purityContext.bestFit().ploidy(),
-                purityContext.score().minPloidy(),
-                purityContext.score().maxPloidy());
-        LOGGER.info("  Fit method: {}", purityContext.method());
-        LOGGER.info("  Whole genome duplication: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
-        LOGGER.info("  Microsatellite status: {}", purityContext.microsatelliteStatus().display());
-        LOGGER.info("  Tumor mutational load status: {}", purityContext.tumorMutationalLoadStatus().display());
-
-        return purityContext;
     }
 
     @NotNull
