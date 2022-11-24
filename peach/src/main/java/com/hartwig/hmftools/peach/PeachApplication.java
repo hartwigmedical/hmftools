@@ -92,10 +92,16 @@ public class PeachApplication
         } else {
             callInputVcf = config.vcfFile;
         }
-        Map<VariantHaplotypeEvent, Integer> eventToCount = loadRelevantVariantHaplotypeEvents(
+        Map<VariantHaplotypeEvent, Integer> variantEventToCount = loadRelevantVariantHaplotypeEvents(
                 callInputVcf, haplotypePanel.getRelevantVariantPositions()
         );
-        PCH_LOGGER.info("events found: {}", eventToCount.toString());
+
+        PCH_LOGGER.info("events found: {}", variantEventToCount.toString());
+
+        Map<HaplotypeEvent, Set<String>> eventToRelevantGenes = variantEventToCount.keySet().stream()
+                .collect(Collectors.toMap(e -> e, haplotypePanel::getRelevantGenes));
+
+        PCH_LOGGER.info("genes per event: {}", eventToRelevantGenes.toString());
 
         PCH_LOGGER.info("finished running PEACH");
     }

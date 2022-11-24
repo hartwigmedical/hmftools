@@ -7,6 +7,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -103,8 +104,8 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
                 .toString();
     }
 
-    public List<Integer> getCoveredPositions()
+    public Set<Integer> getCoveredPositions()
     {
-        return IntStream.range(position, position + ref.length()).boxed().collect(Collectors.toList());
+        return IntStream.range(position, position + ref.length()).boxed().collect(Collectors.toSet());
     }
 }

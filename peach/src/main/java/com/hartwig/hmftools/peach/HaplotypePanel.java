@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.peach;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,5 +35,28 @@ public class HaplotypePanel
                         Collectors.mapping(VariantHaplotypeEvent::getCoveredPositions, Collectors.flatMapping(Collection::stream, Collectors.toSet()))
                 )
         );
+    }
+
+    public Set<String> getRelevantGenes(VariantHaplotypeEvent event)
+    {
+        return haplotypes.stream()
+                .filter(h -> isRelevantHaplotype(h, event))
+                .map(h -> h.gene)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<String> getGenes()
+    {
+        return haplotypes.stream().map(h -> h.gene).collect(Collectors.toSet());
+    }
+
+    private static boolean isRelevantHaplotype(Haplotype haplotype, VariantHaplotypeEvent event)
+    {
+        return haplotype.events.stream()
+                .filter(e -> e instanceof VariantHaplotypeEvent)
+                .map(e -> (VariantHaplotypeEvent) e)
+                .map(VariantHaplotypeEvent::getCoveredPositions)
+                .flatMap(Set::stream)
+                .anyMatch(event.getCoveredPositions()::contains);
     }
 }
