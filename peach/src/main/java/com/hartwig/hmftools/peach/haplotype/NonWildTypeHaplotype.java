@@ -16,6 +16,8 @@ public class NonWildTypeHaplotype implements Haplotype
 
     public NonWildTypeHaplotype(@NotNull String name, @NotNull ImmutableSet<HaplotypeEvent> events)
     {
+        if (events.size() < 1)
+            throw new RuntimeException(String.format("Non-wild type haplotype '%s' has no associated events", name));
         this.name = name;
         this.events = events;
     }
