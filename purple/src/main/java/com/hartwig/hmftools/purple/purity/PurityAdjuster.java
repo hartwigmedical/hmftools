@@ -1,24 +1,43 @@
 package com.hartwig.hmftools.purple.purity;
 
-import com.hartwig.hmftools.common.purple.FittedPurity;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-public abstract class PurityAdjuster
+public class PurityAdjuster
 {
     private final double mPurity;
     private final double mNormFactor;
 
-    public PurityAdjuster(@NotNull final FittedPurity fittedPurity)
+    private final Map<String, Double> mObservedRatioMap;
+    private final Gender mGender;
+
+    /*
+    public PurityAdjuster(final FittedPurity fittedPurity)
     {
         this(fittedPurity.purity(), fittedPurity.normFactor());
     }
+    */
 
-    public PurityAdjuster(final double purity, final double normFactor)
+    public PurityAdjuster(final double purity, final double normFactor, final Collection<CobaltChromosome> chromosomeList, final Gender gender)
     {
         mPurity = purity;
         mNormFactor = normFactor;
+        mObservedRatioMap = chromosomeList.stream().collect(Collectors.toMap(CobaltChromosome::contig, CobaltChromosome::actualRatio));
+        mGender = gender;
+    }
+
+    public PurityAdjuster(final Gender gender, final double purity, final double normFactor)
+    {
+        this(purity, normFactor, Collections.emptyList(), gender);
     }
 
     public double purity()
@@ -36,7 +55,14 @@ public abstract class PurityAdjuster
         return germlineRatio(chromosome) * 2;
     }
 
-    public abstract double germlineRatio(@NotNull String contig);
+    public double germlineRatio(final String chromosome)
+    {
+        if(!mObservedRatioMap.isEmpty())
+            return mObservedRatioMap.getOrDefault(chromosome, 0d);
+
+        // for testing only
+        return HumanChromosome.fromString(chromosome).isDiploid(mGender) ? 1 : 0.5;
+    }
 
     public double purityAdjustedCopyNumber(final String chromosomeName, final double ratio)
     {

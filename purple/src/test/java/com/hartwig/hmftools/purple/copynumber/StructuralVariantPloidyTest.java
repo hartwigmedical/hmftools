@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.Optional;
 
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
-import com.hartwig.hmftools.purple.purity.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.purple.copynumber.sv.ImmutableStructuralVariantLegPloidy;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
@@ -16,9 +15,8 @@ import org.junit.Test;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class StructuralVariantPloidyTest
 {
-
     static final String CHROMOSOME = "X";
-    static final PurityAdjuster PURE = new PurityAdjusterTypicalChromosome(Gender.FEMALE, 1d, 1d);
+    static final PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1d, 1d);
 
     private static final double EPSILON = 1e-10;
     private static final double PLOIDY = 1;

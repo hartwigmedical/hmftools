@@ -58,7 +58,6 @@ public class SomaticPurityEnrichment
                 applyPurityAdjustment(variant, purpleCopyNumber.get(), germlineStatus == GermlineStatus.HET_DELETION);
             }
         }
-
     }
 
     private void applyPurityAdjustment(final SomaticVariant variant, final PurpleCopyNumber purpleCopyNumber, boolean isGermlineHetDeletion)

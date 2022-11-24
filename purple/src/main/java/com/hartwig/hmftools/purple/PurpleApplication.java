@@ -49,7 +49,6 @@ import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.purple.fitting.SomaticPurityFitter;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
-import com.hartwig.hmftools.purple.purity.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
@@ -304,8 +303,8 @@ public class PurpleApplication
             boolean testSomaticFit = bestFitFactory.somaticFit() != null;
             bestFit = bestFitFactory.somaticFit() != null ? bestFitFactory.somaticFit() : bestFitFactory.bestNormalFit();
 
-            purityAdjuster = new PurityAdjusterAbnormalChromosome(
-                    bestFit.fit().purity(), bestFit.fit().normFactor(), cobaltChromosomes.chromosomes());
+            purityAdjuster = new PurityAdjuster(
+                    bestFit.fit().purity(), bestFit.fit().normFactor(), cobaltChromosomes.chromosomes(), cobaltGender);
 
             buildCopyNumbers(
                     sampleData, sampleDataFiles, fittedRegionFactory, purityAdjuster, observedRegions, bestFit.fit(), copyNumbers, fittedRegions);
@@ -323,8 +322,8 @@ public class PurpleApplication
                     // re-build using the normal fit
                     bestFit = bestFitFactory.bestNormalFit();
 
-                    purityAdjuster = new PurityAdjusterAbnormalChromosome(
-                            bestFit.fit().purity(), bestFit.fit().normFactor(), cobaltChromosomes.chromosomes());
+                    purityAdjuster = new PurityAdjuster(
+                            bestFit.fit().purity(), bestFit.fit().normFactor(), cobaltChromosomes.chromosomes(), cobaltGender);
 
                     buildCopyNumbers(
                             sampleData, sampleDataFiles, fittedRegionFactory, purityAdjuster, observedRegions, bestFit.fit(), copyNumbers, fittedRegions);
@@ -334,46 +333,6 @@ public class PurpleApplication
                     PPL_LOGGER.debug("somatic fit deleted DW percent({})", format("%.3f", deletedPercent));
                 }
             }
-
-            /*
-            final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(
-                    mConfig.Fitting.MinDiploidTumorRatioCount,
-                    mConfig.Fitting.MinDiploidTumorRatioCountAtCentromere,
-                    amberData.AverageTumorDepth,
-                    fittedPurity.ploidy(),
-                    purityAdjuster,
-                    cobaltData.CobaltChromosomes);
-
-            PPL_LOGGER.info("calculating copy number");
-            fittedRegions.addAll(fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions));
-
-            copyNumberFactory.buildCopyNumbers(fittedRegions, sampleData.SvCache.variants());
-
-            final int recoveredSVCount = RecoverStructuralVariants.recoverStructuralVariants(
-                    sampleData, sampleDataFiles, mConfig.Fitting, purityAdjuster, copyNumberFactory.copyNumbers());
-
-            if(recoveredSVCount > 0)
-            {
-                PPL_LOGGER.info("reapplying segmentation with {} recovered structural variants", recoveredSVCount);
-                final List<ObservedRegion> recoveredObservedRegions =
-                        mSegmentation.createObservedRegions(sampleData.SvCache.variants(), amberData, cobaltData);
-
-                PPL_LOGGER.info("recalculating copy number");
-                fittedRegions.clear();
-                fittedRegions.addAll(fittedRegionFactory.fitRegion(
-                        fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions));
-
-                copyNumberFactory.buildCopyNumbers(fittedRegions, sampleData.SvCache.variants());
-            }
-
-            copyNumbers.addAll(copyNumberFactory.copyNumbers());
-
-            if(!validateCopyNumbers(copyNumbers))
-            {
-                PPL_LOGGER.warn("invalid copy numbers, exiting");
-                System.exit(0);
-            }
-            */
 
             sampleData.SvCache.inferMissingVariant(copyNumbers);
 
