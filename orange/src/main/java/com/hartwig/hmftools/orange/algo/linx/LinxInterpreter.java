@@ -27,7 +27,7 @@ public final class LinxInterpreter {
         LOGGER.info(" Found an additional {} suspect fusions that are potentially interesting", additionalSuspectFusions.size());
 
         List<GeneDisruption> reportableGeneDisruptions =
-                GeneDisruptionFactory.convert(linx.allBreakends(), linx.allStructuralVariants());
+                GeneDisruptionFactory.convert(linx.reportableBreakends(), linx.allStructuralVariants());
 
         List<LinxBreakend> additionalSuspectBreakends =
                 BreakendSelector.selectInterestingUnreportedBreakends(linx.allBreakends(), linx.reportableFusions(), knownFusionCache);
