@@ -54,8 +54,6 @@ public class SomaticGenotypeEnrichment
         }
 
         // set the tumor status
-        // VariantContextDecorator variant = new VariantContextDecorator(context);
-
         Genotype tumorGT = origContext.getGenotype(mTumorSample);
         SomaticGenotypeStatus tumorStatus = variant.biallelic() ? SomaticGenotypeStatus.HOM : SomaticGenotypeStatus.HET;
 

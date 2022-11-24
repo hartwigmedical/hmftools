@@ -34,6 +34,7 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.math3.distribution.PoissonDistribution;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 
@@ -166,13 +167,14 @@ public class SomaticPurityFitter
         return true;
     }
 
-    public Optional<FittedPurity> fromSomatics(
+    @Nullable
+    public FittedPurity fromSomatics(
             final List<SomaticVariant> variants, final List<StructuralVariant> structuralVariants, final List<FittedPurity> allCandidates)
     {
         if(variants.size() < mKdMinSomatics)
         {
             PPL_LOGGER.info("somatic variants count({}) too low for somatic fit", variants.size());
-            return Optional.empty();
+            return null;
         }
 
         PPL_LOGGER.info("looking for peak somatic allelic frequencies");
@@ -181,7 +183,7 @@ public class SomaticPurityFitter
                 allCandidates, variants, mKdMinSomatics, mKdMinPeak, mMinPurity, mMaxPurity);
 
         if(!kdFit.isPresent())
-            return kdFit;
+            return null;
 
         double peakPurity = kdFit.get().purity();
 
@@ -191,7 +193,7 @@ public class SomaticPurityFitter
         int snvCount = (int)variants.stream().filter(x -> !x.isFiltered()).count();
 
         if(snvCount > SNV_HOTSPOT_MAX_SNV_COUNT)
-            return kdFit;
+            return kdFit.get();
 
         double maxHotspotVaf = 0;
 
@@ -247,18 +249,18 @@ public class SomaticPurityFitter
 
         if(maxHotspotVaf > peakPurity)
         {
-            return Optional.of(ImmutableFittedPurity.builder()
+            return ImmutableFittedPurity.builder()
                     .score(1)
                     .diploidProportion(1)
                     .normFactor(1)
                     .purity(maxHotspotVaf)
                     .somaticPenalty(1)
                     .ploidy(2)
-                    .build());
+                    .build();
         }
         else
         {
-            return kdFit;
+            return kdFit.get();
         }
     }
 

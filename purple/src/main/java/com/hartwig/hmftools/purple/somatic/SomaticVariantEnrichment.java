@@ -32,7 +32,7 @@ public class SomaticVariantEnrichment
 
         mSubclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(CLONALITY_BIN_WIDTH, peakModel);
 
-        mPurityEnrichment = new SomaticPurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, fittedRegions);
+        mPurityEnrichment = new SomaticPurityEnrichment(purpleVersion, purityAdjuster, copyNumbers, fittedRegions);
 
         mKataegisEnrichment = new KataegisEnrichment();
 

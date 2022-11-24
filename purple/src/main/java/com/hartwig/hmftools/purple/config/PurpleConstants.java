@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.config;
 
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+
 public class PurpleConstants
 {
     // constants prefixed with 'DEFAULT' can be overridden in config
@@ -51,5 +53,8 @@ public class PurpleConstants
     public static final double MIN_RELATIVE_COPY_NUMBER_TOLERANCE = 0.12;
     public static final double MIN_ABSOLUTE_COPY_NUMBER_ADDITION = 1;
     public static final double MIN_RELATIVE_COPY_NUMBER_ADDITION = 0.8;
+
+    public static final ChrBaseRegion CDKN2A_DELETION_REGION = new ChrBaseRegion("9", 9000000, 12000000);
+    public static final double MAX_SOMATIC_FIT_DELETED_PERC = 0.003;
 
 }

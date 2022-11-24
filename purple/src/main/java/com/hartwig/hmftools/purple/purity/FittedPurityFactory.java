@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
+import com.hartwig.hmftools.purple.config.FittingConfig;
 import com.hartwig.hmftools.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -88,6 +89,19 @@ public class FittedPurityFactory
         mVariants = Downsample.downsample(MAX_SOMATICS_TO_FIT, filteredVariants);
 
         fitPurity();
+    }
+
+    public static FittedRegionFactory createFittedRegionFactory(
+            final int averageTumorDepth, final CobaltChromosomes cobaltChromosomes, final FittingConfig fitScoreConfig)
+    {
+        return new FittedRegionFactory(cobaltChromosomes,
+                averageTumorDepth,
+                fitScoreConfig.PloidyPenaltyFactor,
+                fitScoreConfig.PloidyPenaltyStandardDeviation,
+                fitScoreConfig.PloidyPenaltyMinStandardDeviationPerPloidy,
+                fitScoreConfig.PloidyPenaltyMajorAlleleSubOneMultiplier,
+                fitScoreConfig.PloidyPenaltyMajorAlleleSubOneAdditional,
+                fitScoreConfig.PloidyPenaltyBaselineDeviation);
     }
 
     @VisibleForTesting
@@ -224,5 +238,4 @@ public class FittedPurityFactory
         }
         return results;
     }
-
 }

@@ -12,6 +12,7 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.PurpleVcfTags;
@@ -27,15 +28,13 @@ public class SomaticPurityEnrichment
     private final PurityAdjuster mPurityAdjuster;
     private final GenomeRegionSelector<PurpleCopyNumber> mCopyNumberSelector;
     private final GenomeRegionSelector<ObservedRegion> mObservedRegionSelector;
-    private final String mSample;
     private final String mPurpleVersion;
 
-    public SomaticPurityEnrichment(final String purpleVersion, final String sample, final PurityAdjuster purityAdjuster,
+    public SomaticPurityEnrichment(final String purpleVersion, final PurityAdjuster purityAdjuster,
             final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions)
     {
         mPurpleVersion = purpleVersion;
 
-        mSample = sample;
         mPurityAdjuster = purityAdjuster;
         mCopyNumberSelector = GenomeRegionSelectorFactory.createImproved(Multimaps.fromRegions(copyNumbers));
         mObservedRegionSelector = GenomeRegionSelectorFactory.createImproved(Multimaps.fromRegions(fittedRegions));
@@ -43,34 +42,36 @@ public class SomaticPurityEnrichment
 
     public void processVariant(final SomaticVariant variant)
     {
+        Optional<ObservedRegion> observedRegion = mObservedRegionSelector.select(variant);
+        GermlineStatus germlineStatus = GermlineStatus.UNKNOWN;
+
+        if(observedRegion.isPresent())
+            germlineStatus = observedRegion.get().germlineStatus();
+
+        variant.context().getCommonInfo().putAttribute(PURPLE_GERMLINE_INFO, germlineStatus.toString());
+
         if(variant.hasTumorAlleleDepth())
         {
             Optional<PurpleCopyNumber> purpleCopyNumber = mCopyNumberSelector.select(variant);
             if(purpleCopyNumber.isPresent())
             {
-                applyPurityAdjustment(variant, purpleCopyNumber.get());
+                applyPurityAdjustment(variant, purpleCopyNumber.get(), germlineStatus == GermlineStatus.HET_DELETION);
             }
         }
 
-        Optional<ObservedRegion> observedRegion = mObservedRegionSelector.select(variant);
-
-        if(observedRegion.isPresent())
-        {
-            variant.context().getCommonInfo().putAttribute(PURPLE_GERMLINE_INFO, observedRegion.get().germlineStatus().toString());
-        }
     }
 
-    private void applyPurityAdjustment(final SomaticVariant variant, final PurpleCopyNumber purpleCopyNumber)
+    private void applyPurityAdjustment(final SomaticVariant variant, final PurpleCopyNumber purpleCopyNumber, boolean isGermlineHetDeletion)
     {
         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
         double vaf = mPurityAdjuster.purityAdjustedVAF(purpleCopyNumber.chromosome(), Math.max(0.001, copyNumber), variant.alleleFrequency());
-        double ploidy = Math.max(0, vaf * copyNumber);
+        double variantCopyNumber = Math.max(0, vaf * copyNumber);
 
-        boolean biallelic = Doubles.lessOrEqual(copyNumber, 0) || Doubles.greaterOrEqual(ploidy, copyNumber - 0.5);
+        boolean biallelic = Doubles.lessOrEqual(copyNumber, 0) || Doubles.greaterOrEqual(variantCopyNumber, copyNumber - 0.5);
 
         VariantContext variantContext = variant.context();
 
-        variantContext.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, ploidy);
+        variantContext.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, variantCopyNumber);
         variantContext.getCommonInfo().putAttribute(PURPLE_CN_INFO, copyNumber);
 
         variantContext.getCommonInfo().putAttribute(PURPLE_AF_INFO, String.format("%.4f", vaf));

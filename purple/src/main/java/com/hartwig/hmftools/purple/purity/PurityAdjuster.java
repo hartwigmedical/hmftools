@@ -31,9 +31,9 @@ public abstract class PurityAdjuster
         return mNormFactor;
     }
 
-    public double germlineCopyNumber(@NotNull String contig)
+    public double germlineCopyNumber(final String chromosome)
     {
-        return germlineRatio(contig) * 2;
+        return germlineRatio(chromosome) * 2;
     }
 
     public abstract double germlineRatio(@NotNull String contig);

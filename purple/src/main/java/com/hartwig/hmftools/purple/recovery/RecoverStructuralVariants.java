@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.RECOVERED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.RECOVERY_FILTER;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.RECOVERY_METHOD;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SVTYPE;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE_PERC;
@@ -28,6 +29,8 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.purple.config.SampleData;
+import com.hartwig.hmftools.purple.config.SampleDataFiles;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.config.FittingConfig;
@@ -75,6 +78,36 @@ public class RecoverStructuralVariants implements Closeable
         mAllCopyNumbers = Multimaps.fromRegions(allCopyNumbers);
         mPloidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
         mRecoveredVariantFactory = factory;
+    }
+
+    public static int recoverStructuralVariants(
+            final SampleData sampleData, final SampleDataFiles sampleDataFiles, final FittingConfig fitting,
+            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers)
+    {
+        if(sampleDataFiles.RecoveredSvVcfFile.isEmpty())
+            return 0;
+
+        PPL_LOGGER.info("loading recovery candidates from {}", sampleDataFiles.RecoveredSvVcfFile);
+
+        final RecoverStructuralVariants recovery = new RecoverStructuralVariants(
+                fitting, purityAdjuster, sampleDataFiles.RecoveredSvVcfFile, copyNumbers);
+
+        try
+        {
+            final Collection<VariantContext> recoveredVariants = recovery.recoverVariants(sampleData.SvCache.variants());
+
+            if(!recoveredVariants.isEmpty())
+            {
+                recoveredVariants.forEach(x -> sampleData.SvCache.addVariant(x));
+            }
+
+            return recoveredVariants.size();
+        }
+        catch(IOException e)
+        {
+            PPL_LOGGER.error("failed to load recovery SVs: {}", e.toString());
+            return 0;
+        }
     }
 
     public Collection<VariantContext> recoverVariants(final List<StructuralVariant> currentVariants) throws IOException
