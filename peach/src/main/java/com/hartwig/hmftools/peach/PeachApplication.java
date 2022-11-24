@@ -63,9 +63,7 @@ public class PeachApplication
         }
 
         PCH_LOGGER.info("read haplotypes TSV");
-        List<Haplotype> haplotypes = loadHaplotypes(config.haplotypesTsv);
-        Map<Chromosome, Set<Integer>> relevantVariantPositions = getRelevantVariantPositions(haplotypes);
-
+        HaplotypePanel haplotypePanel = loadHaplotypePanel(config.haplotypesTsv);
         String callInputVcf;
         if (config.doLiftOver)
         {
@@ -94,7 +92,9 @@ public class PeachApplication
         } else {
             callInputVcf = config.vcfFile;
         }
-        Map<VariantHaplotypeEvent, Integer> eventToCount = loadRelevantVariantHaplotypeEvents(callInputVcf, relevantVariantPositions);
+        Map<VariantHaplotypeEvent, Integer> eventToCount = loadRelevantVariantHaplotypeEvents(
+                callInputVcf, haplotypePanel.getRelevantVariantPositions()
+        );
         PCH_LOGGER.info("events found: {}", eventToCount.toString());
 
         PCH_LOGGER.info("finished running PEACH");
@@ -289,7 +289,7 @@ public class PeachApplication
         return config.outputDir + filename.substring(0, extensionIndex) + "." + addition + filename.substring(extensionIndex);
     }
 
-    private List<Haplotype> loadHaplotypes(String filename)
+    private HaplotypePanel loadHaplotypePanel(String filename)
     {
         List<Haplotype> haplotypes = Lists.newArrayList();
 
@@ -334,30 +334,13 @@ public class PeachApplication
             PCH_LOGGER.error("failed to load haplotypes TSV({}): {}", filename, e.toString());
             System.exit(1);
         }
-
-        return haplotypes;
+        return new HaplotypePanel(haplotypes);
     }
 
     private static ImmutableSet<HaplotypeEvent> getHaplotypeEvents(String haplotypeEventsString)
     {
         return Arrays.stream(haplotypeEventsString.split(HAPLOTYPE_EVENT_DELIMITER))
                 .map(HaplotypeEventFactory::fromId).collect(ImmutableSet.toImmutableSet());
-    }
-
-    private static Map<Chromosome, Set<Integer>> getRelevantVariantPositions(List<Haplotype> haplotypes)
-    {
-        Stream<VariantHaplotypeEvent> variantHaplotypeEvents = haplotypes.stream()
-                .filter(h -> ! h.wildType) // Ignore variants configured for wild type haplotypes, since they should be ignored anyway
-                .map(h -> h.events)
-                .flatMap(Collection::stream)
-                .filter(e -> e instanceof VariantHaplotypeEvent)
-                .map(VariantHaplotypeEvent.class::cast);
-        return variantHaplotypeEvents.collect(
-                Collectors.groupingBy(
-                        e -> e.chromosome,
-                        Collectors.mapping(VariantHaplotypeEvent::getCoveredPositions, Collectors.flatMapping(Collection::stream, Collectors.toSet()))
-                )
-        );
     }
 
     private Map<Chromosome, List<BaseRegion>> loadBedFile(final String filename)
