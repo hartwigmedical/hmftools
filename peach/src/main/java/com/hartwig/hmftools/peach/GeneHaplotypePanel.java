@@ -13,33 +13,17 @@ import java.util.stream.Stream;
 public class GeneHaplotypePanel
 {
     @NotNull
-    private final String gene;
+    private final WildTypeHaplotype wildTypeHaplotype;
     @NotNull
-    private final Haplotype wildTypeHaplotype;
-    @NotNull
-    private final List<Haplotype> nonWildTypeHaplotypes;
+    private final List<NonWildTypeHaplotype> nonWildTypeHaplotypes;
 
     public GeneHaplotypePanel(
-            @NotNull String gene,
-            @NotNull Haplotype wildTypeHaplotype,
-            @NotNull List<Haplotype> nonWildTypeHaplotypes
+            @NotNull WildTypeHaplotype wildTypeHaplotype,
+            @NotNull List<NonWildTypeHaplotype> nonWildTypeHaplotypes
     )
     {
-        this.gene = gene;
         this.wildTypeHaplotype = wildTypeHaplotype;
         this.nonWildTypeHaplotypes = List.copyOf(nonWildTypeHaplotypes);
-    }
-
-    public static GeneHaplotypePanel fromHaplotypes(@NotNull String gene, @NotNull List<Haplotype> haplotypes)
-    {
-        List<Haplotype> wildTypeHaplotypes = haplotypes.stream().filter(h -> h.wildType).collect(Collectors.toList());
-        if (wildTypeHaplotypes.size() != 1)
-        {
-            throw new RuntimeException(String.format("Gene '%s' does not have precisely one wild type haplotype", gene));
-        }
-        Haplotype wildTypeHaplotype = wildTypeHaplotypes.get(0);
-        List<Haplotype> nonWildTypeHaplotypes = haplotypes.stream().filter(h -> !h.wildType).collect(Collectors.toList());
-        return new GeneHaplotypePanel(gene, wildTypeHaplotype, nonWildTypeHaplotypes);
     }
 
     public Map<Chromosome, Set<Integer>> getRelevantVariantPositions()

@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Streams;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
@@ -109,8 +110,9 @@ public class PeachApplication
                     .filter(e -> e.getValue().contains(gene))
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toMap(e -> e, eventToCount::get));
-
             PCH_LOGGER.info("events for gene '{}': {}", gene, relevantEventToCount);
+
+            GeneHaplotypePanel geneHaplotypePanel = haplotypePanel.getGeneHaplotypePanel(gene);
         }
 
         PCH_LOGGER.info("finished running PEACH");
@@ -317,16 +319,15 @@ public class PeachApplication
 
     private HaplotypePanel loadHaplotypePanel(String filename)
     {
-        Map<String, List<Haplotype>> geneToHaplotypes = loadGeneToHaplotypes(filename);
-        Map<String, GeneHaplotypePanel> geneToGeneHaplotypePanel = geneToHaplotypes.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> GeneHaplotypePanel.fromHaplotypes(e.getKey(), e.getValue())));
+        Map<String, GeneHaplotypePanel> geneToGeneHaplotypePanel = loadGeneToGeneHaplotypePanel(filename);
         return new HaplotypePanel(geneToGeneHaplotypePanel);
     }
 
     @NotNull
-    private static Map<String, List<Haplotype>> loadGeneToHaplotypes(String filename)
+    private static Map<String, GeneHaplotypePanel> loadGeneToGeneHaplotypePanel(String filename)
     {
-        Map<String, List<Haplotype>> geneToHaplotypes = new HashMap<>();
+        Map<String, List<WildTypeHaplotype>> geneToWildTypeHaplotypes = new HashMap<>();
+        Map<String, List<NonWildTypeHaplotype>> geneToNonWildTypeHaplotypes = new HashMap<>();
         try
         {
             List<String> lines = Files.readAllLines(Paths.get(filename));
@@ -346,38 +347,74 @@ public class PeachApplication
                 String[] values = line.split(TSV_DELIMITER, -1);
 
                 String haplotypeEventsString = values[eventsIndex];
-                ImmutableSet<HaplotypeEvent> haplotypeEvents;
-                if (haplotypeEventsString.isEmpty())
-                    haplotypeEvents = ImmutableSet.of();
-                else
-                    haplotypeEvents = getHaplotypeEvents(haplotypeEventsString);
                 String gene = values[geneIndex];
-                Haplotype haplotype = new Haplotype(
-                        values[haplotypeIndex],
-                        Boolean.parseBoolean(values[wildTypeIndex]),
-                        haplotypeEvents
-                );
-                if (!geneToHaplotypes.containsKey(gene))
+                boolean isWildType = Boolean.parseBoolean(values[wildTypeIndex]);
+
+                ImmutableSet<HaplotypeEvent> haplotypeEvents = getHaplotypeEvents(haplotypeEventsString);
+                if (isWildType)
                 {
-                    geneToHaplotypes.put(gene, Lists.newArrayList());
+                    WildTypeHaplotype haplotype = new WildTypeHaplotype(values[haplotypeIndex], haplotypeEvents);
+                    if (!geneToWildTypeHaplotypes.containsKey(gene))
+                        geneToWildTypeHaplotypes.put(gene, Lists.newArrayList());
+                    geneToWildTypeHaplotypes.get(gene).add(haplotype);
                 }
-                geneToHaplotypes.get(gene).add(haplotype);
+                else
+                {
+                    NonWildTypeHaplotype haplotype = new NonWildTypeHaplotype(values[haplotypeIndex], haplotypeEvents);
+                    if (!geneToNonWildTypeHaplotypes.containsKey(gene))
+                        geneToNonWildTypeHaplotypes.put(gene, Lists.newArrayList());
+                    geneToNonWildTypeHaplotypes.get(gene).add(haplotype);
+                }
             }
-            int haplotypeCount = geneToHaplotypes.values().stream().mapToInt(List::size).sum();
-            PCH_LOGGER.info("loaded {} haplotypes from file ({})", haplotypeCount, filename);
         }
         catch(Exception e)
         {
             PCH_LOGGER.error("failed to load haplotypes TSV({}): {}", filename, e.toString());
             System.exit(1);
         }
-        return geneToHaplotypes;
+
+        int haplotypeCount = Streams.concat(
+                geneToWildTypeHaplotypes.values().stream(),
+                geneToNonWildTypeHaplotypes.values().stream()
+        ).mapToInt(List::size).sum();
+        PCH_LOGGER.info("loaded {} haplotypes from file ({})", haplotypeCount, filename);
+
+        return createGeneToGeneHaplotypePanel(geneToWildTypeHaplotypes, geneToNonWildTypeHaplotypes);
+    }
+
+    private static Map<String, GeneHaplotypePanel> createGeneToGeneHaplotypePanel(
+            Map<String, List<WildTypeHaplotype>> geneToWildTypeHaplotypes,
+            Map<String, List<NonWildTypeHaplotype>> geneToNonWildTypeHaplotypes
+    )
+    {
+        Map<String, GeneHaplotypePanel> geneToGeneHaplotypePanel = new HashMap<>();
+        Set<String> genes = Streams.concat(
+                geneToWildTypeHaplotypes.keySet().stream(),
+                geneToNonWildTypeHaplotypes.keySet().stream()
+        ).collect(Collectors.toSet());
+        for (String gene : genes)
+        {
+            List<WildTypeHaplotype> wildTypeHaplotypes = geneToWildTypeHaplotypes.getOrDefault(gene, new ArrayList<>());
+            if (wildTypeHaplotypes.size() != 1)
+            {
+                throw new RuntimeException(String.format("Cannot have more than 1 wild type haplotype for gene: %s", gene));
+            }
+            WildTypeHaplotype wildTypeHaplotype = wildTypeHaplotypes.get(0);
+
+            List<NonWildTypeHaplotype> nonWildTypeHaplotypes = geneToNonWildTypeHaplotypes.getOrDefault(gene, new ArrayList<>());
+            geneToGeneHaplotypePanel.put(gene, new GeneHaplotypePanel(wildTypeHaplotype, nonWildTypeHaplotypes));
+        }
+
+        return geneToGeneHaplotypePanel;
     }
 
     private static ImmutableSet<HaplotypeEvent> getHaplotypeEvents(String haplotypeEventsString)
     {
-        return Arrays.stream(haplotypeEventsString.split(HAPLOTYPE_EVENT_DELIMITER))
-                .map(HaplotypeEventFactory::fromId).collect(ImmutableSet.toImmutableSet());
+        if (haplotypeEventsString.isEmpty())
+            return ImmutableSet.of();
+        else
+            return Arrays.stream(haplotypeEventsString.split(HAPLOTYPE_EVENT_DELIMITER))
+                    .map(HaplotypeEventFactory::fromId).collect(ImmutableSet.toImmutableSet());
     }
 
     private Map<Chromosome, List<BaseRegion>> loadBedFile(final String filename)

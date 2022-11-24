@@ -42,5 +42,8 @@ public class HaplotypePanel
         return new HashSet<>(geneToGeneHaplotypePanel.keySet());
     }
 
-
+    public GeneHaplotypePanel getGeneHaplotypePanel(String gene)
+    {
+        return geneToGeneHaplotypePanel.get(gene);
+    }
 }
