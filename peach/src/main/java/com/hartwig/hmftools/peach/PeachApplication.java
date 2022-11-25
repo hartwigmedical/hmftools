@@ -102,23 +102,10 @@ public class PeachApplication
 
         PCH_LOGGER.info("events found: {}", eventToCount.toString());
 
-        Map<HaplotypeEvent, Set<String>> eventToRelevantGenes = eventToCount.keySet().stream()
-                .collect(Collectors.toMap(e -> e, haplotypePanel::getRelevantGenes));
+        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
+        caller.callPossibleHaplotypes(eventToCount);
 
-        PCH_LOGGER.info("genes per event: {}", eventToRelevantGenes.toString());
 
-        for (String gene : haplotypePanel.getGenes())
-        {
-            PCH_LOGGER.info("handling gene: {}", gene);
-
-            Map<HaplotypeEvent, Integer> relevantEventToCount = eventToRelevantGenes.entrySet().stream()
-                    .filter(e -> e.getValue().contains(gene))
-                    .map(Map.Entry::getKey)
-                    .collect(Collectors.toMap(e -> e, eventToCount::get));
-            PCH_LOGGER.info("events for gene '{}': {}", gene, relevantEventToCount);
-
-            GeneHaplotypePanel geneHaplotypePanel = haplotypePanel.getGeneHaplotypePanel(gene);
-        }
 
         PCH_LOGGER.info("finished running PEACH");
     }

@@ -38,6 +38,11 @@ public class HaplotypePanel
                 .collect(Collectors.toSet());
     }
 
+    public boolean isRelevantFor(HaplotypeEvent event, String gene)
+    {
+        return geneToGeneHaplotypePanel.get(gene).isRelevantFor(event);
+    }
+
     public Set<String> getGenes()
     {
         return new HashSet<>(geneToGeneHaplotypePanel.keySet());
