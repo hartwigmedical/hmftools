@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.fitting;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.List;
@@ -116,7 +118,7 @@ final class SomaticKernelDensityPeaks
                 final double alleleFrequency = vafs[i];
                 final int peakCount = count(alleleFrequency, sample);
                 final SomaticPeak peak = ImmutableSomaticPeak.builder().alleleFrequency(alleleFrequency).count(peakCount).build();
-                PPL_LOGGER.debug("discovered peak {}", peak);
+                PPL_LOGGER.debug(format("discovered somatic peak: count(%d) alleleFrequency(%.3f)", peak.count(), peak.alleleFrequency()));
                 results.add(peak);
             }
         }
