@@ -15,7 +15,7 @@ public class OrangeAlgoTest {
 
     @Test
     public void canRunReportFromTestDirDNA() throws IOException {
-        OrangeConfig config = OrangeConfigTestFactory.createDNAConfig();
+        OrangeConfig config = OrangeConfigTestFactory.createDNAConfigTumorNormal();
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
 
         assertNotNull(algo.run(config));
@@ -32,7 +32,7 @@ public class OrangeAlgoTest {
     @Test
     public void canCreateReportWithoutTumorDoids() throws IOException {
         OrangeConfig config = ImmutableOrangeConfig.builder()
-                .from(OrangeConfigTestFactory.createDNAConfig())
+                .from(OrangeConfigTestFactory.createDNAConfigTumorNormal())
                 .primaryTumorDoids(Sets.newHashSet())
                 .build();
 

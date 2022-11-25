@@ -56,13 +56,11 @@ public final class OrangeConfigTestFactory {
     }
 
     @NotNull
-    public static OrangeConfig createDNAConfig() {
+    public static OrangeConfig createDNAConfigTumorOnly() {
         ReportConfig reportConfig = ImmutableReportConfig.builder().limitJsonOutput(false).reportGermline(true).build();
 
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(TUMOR_SAMPLE_ID)
-                .referenceSampleId(REFERENCE_SAMPLE_ID)
-                .rnaConfig(null)
                 .reportConfig(reportConfig)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
                 .experimentDate(LocalDate.now())
@@ -74,17 +72,12 @@ public final class OrangeConfigTestFactory {
                 .driverGenePanelTsv(DRIVER_GENE_PANEL_TSV)
                 .knownFusionFile(KNOWN_FUSION_FILE)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)
-                .refSampleWGSMetricsFile(REF_SAMPLE_WGS_METRICS_FILE)
-                .refSampleFlagstatFile(REF_SAMPLE_FLAGSTAT_FILE)
                 .tumorSampleWGSMetricsFile(TUMOR_SAMPLE_WGS_METRICS_FILE)
                 .tumorSampleFlagstatFile(TUMOR_SAMPLE_FLAGSTAT_FILE)
-                .sageGermlineGeneCoverageTsv(SAGE_GERMLINE_GENE_COVERAGE)
-                .sageSomaticRefSampleBQRPlot(SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT)
                 .sageSomaticTumorSampleBQRPlot(SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT)
                 .purpleDataDirectory(PURPLE_DATA_DIRECTORY)
                 .purplePlotDirectory(PURPLE_PLOT_DIRECTORY)
                 .linxSomaticDataDirectory(LINX_SOMATIC_DATA_DIRECTORY)
-                .linxGermlineDataDirectory(LINX_GERMLINE_DATA_DIRECTORY)
                 .linxPlotDirectory(LINX_PLOT_DIRECTORY)
                 .lilacResultCsv(LILAC_RESULT_CSV)
                 .lilacQcCsv(LILAC_QC_CSV)
@@ -92,6 +85,20 @@ public final class OrangeConfigTestFactory {
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .cuppaResultCsv(CUPPA_RESULT_CSV)
                 .cuppaSummaryPlot(CUPPA_SUMMARY_PLOT)
+                .build();
+    }
+
+    @NotNull
+    public static OrangeConfig createDNAConfigTumorNormal() {
+        return ImmutableOrangeConfig.builder()
+                .from(createDNAConfigTumorOnly())
+                .referenceSampleId(REFERENCE_SAMPLE_ID)
+                .rnaConfig(null)
+                .refSampleWGSMetricsFile(REF_SAMPLE_WGS_METRICS_FILE)
+                .refSampleFlagstatFile(REF_SAMPLE_FLAGSTAT_FILE)
+                .sageGermlineGeneCoverageTsv(SAGE_GERMLINE_GENE_COVERAGE)
+                .sageSomaticRefSampleBQRPlot(SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT)
+                .linxGermlineDataDirectory(LINX_GERMLINE_DATA_DIRECTORY)
                 .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
                 .build();
     }
@@ -100,7 +107,7 @@ public final class OrangeConfigTestFactory {
     public static OrangeConfig createDNARNAConfig() {
         // We use tumor_sample as rnaSampleId since we have no real ISOFOX test data for our test_run
         return ImmutableOrangeConfig.builder()
-                .from(createDNAConfig())
+                .from(createDNAConfigTumorNormal())
                 .rnaConfig(ImmutableOrangeRNAConfig.builder()
                         .rnaSampleId("tumor_sample")
                         .isofoxGeneDistributionCsv(ISOFOX_GENE_DISTRIBUTION_CSV)

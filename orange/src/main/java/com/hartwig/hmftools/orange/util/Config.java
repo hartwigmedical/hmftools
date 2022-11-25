@@ -58,11 +58,33 @@ public final class Config {
         return value;
     }
 
+    @Nullable
+    public static String optionalDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = optionalValue(cmd, param);
+
+        if (value != null && (!pathExists(value) || !pathIsDirectory(value))) {
+            throw new ParseException("Parameter '" + param + "' must be an existing directory: " + value);
+        }
+
+        return value;
+    }
+
     @NotNull
     public static String nonOptionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
         String value = nonOptionalValue(cmd, param);
 
         if (!pathExists(value)) {
+            throw new ParseException("Parameter '" + param + "' must be an existing file: " + value);
+        }
+
+        return value;
+    }
+
+    @Nullable
+    public static String optionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = optionalValue(cmd, param);
+
+        if (value != null && !pathExists(value)) {
             throw new ParseException("Parameter '" + param + "' must be an existing file: " + value);
         }
 

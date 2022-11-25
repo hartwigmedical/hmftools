@@ -216,12 +216,17 @@ public class OrangeAlgo {
         return platinumVersion;
     }
 
-    @NotNull
+    @Nullable
     private static OrangeSample loadSampleData(@NotNull OrangeConfig config, boolean loadTumorSample) throws IOException {
         if (loadTumorSample) {
             LOGGER.info("Loading tumor sample data");
         } else {
-            LOGGER.info("Loading reference sample data");
+            if (config.refSampleWGSMetricsFile() != null && config.refSampleFlagstatFile() != null) {
+                LOGGER.info("Loading reference sample data");
+            } else {
+                LOGGER.info("Skipping loading of reference sample data as no flagstat or WGS metrics has been provided");
+                return null;
+            }
         }
 
         String metricsFile = loadTumorSample ? config.tumorSampleWGSMetricsFile() : config.refSampleWGSMetricsFile();
@@ -235,11 +240,17 @@ public class OrangeAlgo {
         return ImmutableOrangeSample.builder().metrics(metrics).flagstat(flagstat).build();
     }
 
-    @NotNull
+    @Nullable
     private static Map<String, Double> loadGermlineMVLHPerGene(@NotNull OrangeConfig config) throws IOException {
+        String sageGermlineGeneCoverageTsv = config.sageGermlineGeneCoverageTsv();
+        if (sageGermlineGeneCoverageTsv == null) {
+            LOGGER.info("Skipping loading of germline MVLH as no germline gene coverage has been provided");
+            return null;
+        }
+
         Map<String, Double> mvlhPerGene = Maps.newTreeMap();
 
-        List<String> lines = Files.readAllLines(new File(config.sageGermlineGeneCoverageTsv()).toPath());
+        List<String> lines = Files.readAllLines(new File(sageGermlineGeneCoverageTsv).toPath());
         String header = lines.get(0);
 
         Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, GeneDepthFile.DELIM);
@@ -326,6 +337,8 @@ public class OrangeAlgo {
             LOGGER.info(" Loaded {} germline disruptions (of which {} are reportable)",
                     linx.allGermlineDisruptions().size(),
                     linx.reportableGermlineDisruptions().size());
+        } else {
+            LOGGER.info(" Skipped loading LINX germline data as no linx germline data directory has been provided");
         }
 
         return linx;
@@ -382,9 +395,16 @@ public class OrangeAlgo {
         return cuppaData;
     }
 
-    @NotNull
+    @Nullable
     private static List<PeachGenotype> loadPeachData(@NotNull OrangeConfig config) throws IOException {
-        LOGGER.info("Loading PEACH from {}", new File(config.peachGenotypeTsv()).getParent());
+        String peachGenotypeTsv = config.peachGenotypeTsv();
+
+        if (peachGenotypeTsv == null) {
+            LOGGER.info("Skipping PEACH loading since no peach genotype tsv has been provided");
+            return null;
+        }
+
+        LOGGER.info("Loading PEACH from {}", new File(peachGenotypeTsv).getParent());
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(config.peachGenotypeTsv());
         LOGGER.info(" Loaded {} PEACH genotypes from {}", peachGenotypes.size(), config.peachGenotypeTsv());
 

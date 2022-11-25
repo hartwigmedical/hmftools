@@ -32,8 +32,12 @@ public final class OrangeReportModifier {
                 .build();
     }
 
-    @NotNull
-    private static Map<String, Double> limitGermlineMVLHToOne(@NotNull Map<String, Double> germlineMVLHPerGene) {
+    @Nullable
+    private static Map<String, Double> limitGermlineMVLHToOne(@Nullable Map<String, Double> germlineMVLHPerGene) {
+        if (germlineMVLHPerGene == null) {
+            return null;
+        }
+
         Map<String, Double> filtered = Maps.newHashMap();
         if (!germlineMVLHPerGene.isEmpty()) {
             String firstKey = germlineMVLHPerGene.keySet().iterator().next();
@@ -80,8 +84,12 @@ public final class OrangeReportModifier {
                 .build();
     }
 
-    @NotNull
-    private static IsofoxInterpretedData limitIsofoxDataToOne(@NotNull IsofoxInterpretedData isofox) {
+    @Nullable
+    private static IsofoxInterpretedData limitIsofoxDataToOne(@Nullable IsofoxInterpretedData isofox) {
+        if (isofox == null) {
+            return null;
+        }
+
         return ImmutableIsofoxInterpretedData.builder()
                 .from(isofox)
                 .allGeneExpressions(max1(isofox.allGeneExpressions()))

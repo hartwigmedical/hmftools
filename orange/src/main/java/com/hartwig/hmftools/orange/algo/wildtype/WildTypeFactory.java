@@ -13,6 +13,7 @@ import com.hartwig.hmftools.orange.algo.linx.GeneDisruption;
 import com.hartwig.hmftools.orange.algo.purple.ReportableVariant;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class WildTypeFactory {
 
@@ -29,7 +30,7 @@ public final class WildTypeFactory {
     }
 
     @NotNull
-    public static List<WildTypeGene> determineWildTypeGenes(@NotNull List<ReportableVariant> reportableGermlineVariants,
+    public static List<WildTypeGene> determineWildTypeGenes(@Nullable List<ReportableVariant> reportableGermlineVariants,
             @NotNull List<ReportableVariant> reportableSomaticVariants, @NotNull List<GainLoss> reportableSomaticGainsLosses,
             @NotNull List<LinxFusion> reportableFusions, @NotNull List<HomozygousDisruption> homozygousDisruptions,
             @NotNull List<GeneDisruption> reportableGeneDisruptions, @NotNull List<DriverGene> driverGenes) {
@@ -44,9 +45,11 @@ public final class WildTypeFactory {
             }
 
             boolean hasGermlineVariant = false;
-            for (ReportableVariant germlineVariant : reportableGermlineVariants) {
-                if (driverGene.gene().equals(germlineVariant.gene())) {
-                    hasGermlineVariant = true;
+            if (reportableGermlineVariants != null) {
+                for (ReportableVariant germlineVariant : reportableGermlineVariants) {
+                    if (driverGene.gene().equals(germlineVariant.gene())) {
+                        hasGermlineVariant = true;
+                    }
                 }
             }
 

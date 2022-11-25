@@ -204,8 +204,9 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String germlineDriverString() {
-        if (reportGermline) {
-            return variantDriverString(report.purple().reportableGermlineVariants());
+        List<ReportableVariant> reportableGermlineVariants = report.purple().reportableGermlineVariants();
+        if (reportGermline && reportableGermlineVariants != null) {
+            return variantDriverString(reportableGermlineVariants);
         } else {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -319,8 +320,13 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String dpydStatus() {
+        List<PeachGenotype> genotypes = report.peach();
+        if (genotypes == null ) {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         Set<String> haplotypes = Sets.newHashSet();
-        for (PeachGenotype genotype : report.peach()) {
+        for (PeachGenotype genotype : genotypes) {
             if (genotype.gene().equals("DPYD")) {
                 haplotypes.add(genotype.haplotype() + " (" + genotype.function() + ")");
             }
