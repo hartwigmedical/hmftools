@@ -23,29 +23,8 @@ public class NonWildTypeHaplotype implements Haplotype
         this.events = events;
     }
 
-    public boolean isRelevantFor(String eventId)
+    public boolean isRelevantFor(HaplotypeEvent event)
     {
-        return isRelevantFor(HaplotypeEventFactory.fromId(eventId));
-    }
-    private boolean isRelevantFor(HaplotypeEvent event)
-    {
-        if (event instanceof VariantHaplotypeEvent)
-        {
-            return isRelevantFor((VariantHaplotypeEvent) event);
-        }
-        else
-        {
-            throw new RuntimeException(String.format("Cannot determine relevance of event %s", event));
-        }
-    }
-
-    private boolean isRelevantFor(VariantHaplotypeEvent event)
-    {
-        return events.stream()
-                .filter(e -> e instanceof VariantHaplotypeEvent)
-                .map(e -> (VariantHaplotypeEvent) e)
-                .map(VariantHaplotypeEvent::getCoveredPositions)
-                .flatMap(Set::stream)
-                .anyMatch(event.getCoveredPositions()::contains);
+        return events.stream().anyMatch(event::isRelevantFor);
     }
 }

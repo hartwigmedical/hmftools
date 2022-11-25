@@ -45,11 +45,11 @@ public class GeneHaplotypePanel
         );
     }
 
-    public boolean isRelevantFor(String eventId)
+    public boolean isRelevantFor(HaplotypeEvent event)
     {
         boolean isEventToIgnore = wildTypeHaplotype.eventsToIgnore.stream()
                 .map(HaplotypeEvent::id)
-                .anyMatch(e -> e.equals(eventId));
-        return !isEventToIgnore && nonWildTypeHaplotypes.stream().anyMatch(h -> h.isRelevantFor(eventId));
+                .anyMatch(e -> e.equals(event.id()));
+        return !isEventToIgnore && nonWildTypeHaplotypes.stream().anyMatch(h -> h.isRelevantFor(event));
     }
 }

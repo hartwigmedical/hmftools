@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.peach;
 
+import com.hartwig.hmftools.peach.event.HaplotypeEvent;
+import com.hartwig.hmftools.peach.event.HaplotypeEventFactory;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -13,18 +16,14 @@ public class HaplotypeCaller
     @NotNull
     private final HaplotypePanel haplotypePanel;
 
-    public HaplotypeCaller(
-            @NotNull HaplotypePanel haplotypePanel
-    )
+    public HaplotypeCaller(@NotNull HaplotypePanel haplotypePanel)
     {
         this.haplotypePanel = haplotypePanel;
     }
 
-    public void callPossibleHaplotypes(Map<String, Integer> eventIdToCount)
+    public void callPossibleHaplotypes(@NotNull Map<String, Integer> eventIdToCount)
     {
         //haplotypePanel.getGenes().stream().map(g -> callPossibleHaplotypes(eventIdToCount, g));
-
-        Map<String, Set<String>> eventIdToRelevantGenes = getEventIdToRelevantGenes(eventIdToCount.keySet());
     }
 
     private void callPossibleHaplotypes(Map<String, Integer> eventIdToCount, String gene)
@@ -34,14 +33,6 @@ public class HaplotypeCaller
                 .filter(e -> haplotypePanel.isRelevantFor(e.getKey(), gene))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         PCH_LOGGER.info("events for gene '{}': {}", gene, relevantEventIdToCount);
-
+        
     }
-
-    @NotNull
-    private Map<String, Set<String>> getEventIdToRelevantGenes(Set<String> eventIds)
-    {
-        return eventIds.stream().collect(Collectors.toMap(e -> e, haplotypePanel::getRelevantGenes));
-    }
-
-
 }

@@ -108,4 +108,17 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
     {
         return IntStream.range(position, position + ref.length()).boxed().collect(Collectors.toSet());
     }
+
+    public boolean isRelevantFor(HaplotypeEvent event)
+    {
+        if (!(event instanceof VariantHaplotypeEvent))
+            return false;
+
+        VariantHaplotypeEvent castEvent = (VariantHaplotypeEvent) event;
+        if (castEvent.chromosome != chromosome)
+            return false;
+
+        // Checks for overlap of positions. position + ref.length() is position after last reference base
+        return position < castEvent.position + castEvent.ref.length() && castEvent.position < position + ref.length();
+    }
 }

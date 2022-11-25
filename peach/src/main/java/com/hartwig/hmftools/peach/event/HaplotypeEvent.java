@@ -8,4 +8,6 @@ public interface HaplotypeEvent
 
     @NotNull
     String id();
+
+    boolean isRelevantFor(HaplotypeEvent event);
 }
