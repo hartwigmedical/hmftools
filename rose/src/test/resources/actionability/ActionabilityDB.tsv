@@ -1,5 +1,0 @@
-match	type_alteration	condition	conclusion
-KRAS	AMPLIFICATION	ALWAYS	inhibitor benefit
-KRAS	ACTIVATING_MUTATION	ONLY_HIGH	inhibitor benefit
-KRAS	EXTRACELLULAR_DOMAIN_MUTATION	ALWAYS	inhibitor benefit
-KRAS	KINASE_DOMAIN_DUPLICATION	ALWAYS	inhibitor benefit

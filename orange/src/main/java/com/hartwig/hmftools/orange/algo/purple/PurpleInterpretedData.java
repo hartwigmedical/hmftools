@@ -2,11 +2,9 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.immutables.value.Value;
@@ -32,13 +30,13 @@ public abstract class PurpleInterpretedData {
     @NotNull
     public abstract List<ReportableVariant> additionalSuspectSomaticVariants();
 
-    @NotNull
+    @Nullable
     public abstract List<SomaticVariant> allGermlineVariants();
 
-    @NotNull
+    @Nullable
     public abstract List<ReportableVariant> reportableGermlineVariants();
 
-    @NotNull
+    @Nullable
     public abstract List<ReportableVariant> additionalSuspectGermlineVariants();
 
     @NotNull
@@ -59,12 +57,9 @@ public abstract class PurpleInterpretedData {
     @NotNull
     public abstract List<GainLoss> additionalSuspectSomaticGainsLosses();
 
-    @NotNull
+    @Nullable
     public abstract List<GermlineDeletion> allGermlineDeletions();
 
-    @NotNull
+    @Nullable
     public abstract List<GermlineDeletion> reportableGermlineDeletions();
-
-    @NotNull
-    public abstract List<CnPerChromosomeArmData> copyNumberPerChromosome();
 }

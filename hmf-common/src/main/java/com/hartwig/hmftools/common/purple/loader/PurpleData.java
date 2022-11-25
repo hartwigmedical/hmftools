@@ -2,14 +2,12 @@ package com.hartwig.hmftools.common.purple.loader;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.PurpleQC;
-import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
-import com.hartwig.hmftools.common.purple.FittedPurityMethod;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -19,56 +17,29 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface PurpleData
 {
+    @NotNull
+    PurityContext purityContext();
 
     @NotNull
-    PurpleQC qc();
+    List<DriverCatalog> somaticDrivers();
 
-    boolean hasReliableQuality();
-
-    @NotNull
-    FittedPurityMethod fittedPurityMethod();
-
-    boolean hasReliablePurity();
-
-    double purity();
-
-    double minPurity();
-
-    double maxPurity();
-
-    double ploidy();
-
-    double minPloidy();
-
-    double maxPloidy();
-
-    boolean wholeGenomeDuplication();
-
-    double microsatelliteIndelsPerMb();
-
-    @NotNull
-    MicrosatelliteStatus microsatelliteStatus();
-
-    double tumorMutationalBurdenPerMb();
-
-    int tumorMutationalLoad();
-
-    @NotNull
-    TumorMutationalStatus tumorMutationalLoadStatus();
-
-    int svTumorMutationalBurden();
+    @Nullable
+    List<DriverCatalog> germlineDrivers();
 
     @NotNull
     List<SomaticVariant> allSomaticVariants();
 
     @NotNull
-    List<ReportableVariant> reportableSomaticVariants();
+    List<SomaticVariant> reportableSomaticVariants();
 
-    @NotNull
+    @Nullable
     List<SomaticVariant> allGermlineVariants();
 
+    @Nullable
+    List<SomaticVariant> reportableGermlineVariants();
+
     @NotNull
-    List<ReportableVariant> reportableGermlineVariants();
+    List<PurpleCopyNumber> allSomaticCopyNumbers();
 
     @NotNull
     List<GeneCopyNumber> allSomaticGeneCopyNumbers();
@@ -79,12 +50,9 @@ public interface PurpleData
     @NotNull
     List<GainLoss> reportableSomaticGainsLosses();
 
-    @NotNull
+    @Nullable
     List<GermlineDeletion> allGermlineDeletions();
 
-    @NotNull
+    @Nullable
     List<GermlineDeletion> reportableGermlineDeletions();
-
-    @NotNull
-    List<CnPerChromosomeArmData> copyNumberPerChromosome();
 }

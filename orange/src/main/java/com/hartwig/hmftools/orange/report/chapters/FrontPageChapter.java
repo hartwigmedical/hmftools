@@ -16,14 +16,14 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaData;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.orange.algo.purple.PurpleCharacteristics;
+import com.hartwig.hmftools.orange.algo.purple.ReportableVariant;
+import com.hartwig.hmftools.orange.algo.purple.ReportableVariantFactory;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
@@ -192,7 +192,8 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String somaticDriverString() {
         List<ReportableVariant> reportableVariants;
-        if (reportGermline) {
+        // TODO Handle germline properly.
+        if (reportGermline || report.purple().reportableGermlineVariants() == null) {
             reportableVariants = report.purple().reportableSomaticVariants();
         } else {
             reportableVariants = ReportableVariantFactory.mergeVariantLists(report.purple().reportableSomaticVariants(),

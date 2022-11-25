@@ -5,9 +5,9 @@ import java.util.List;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.purple.loader.PurpleData;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,18 +23,23 @@ public final class PurpleInterpreter {
     @NotNull
     public static PurpleInterpretedData interpret(@NotNull PurpleData purple, @NotNull List<DriverGene> driverGenes,
             @NotNull ChordData chord) {
+        List<ReportableVariant> reportableSomaticVariants =
+                ReportableVariantFactory.toReportableSomaticVariants(purple.reportableSomaticVariants(), purple.somaticDrivers());
         List<ReportableVariant> additionalSuspectSomaticVariants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(purple.allSomaticVariants(),
-                        purple.reportableSomaticVariants(),
+                        reportableSomaticVariants,
                         driverGenes);
         LOGGER.info(" Found an additional {} somatic variants that are potentially interesting", additionalSuspectSomaticVariants.size());
 
         List<ReportableVariant> additionalSuspectGermlineVariants =
                 GermlineVariantSelector.selectInterestingUnreportedVariants(purple.allGermlineVariants());
-        LOGGER.info(" Found an additional {} germline variants that are potentially interesting", additionalSuspectGermlineVariants.size());
+        if (additionalSuspectGermlineVariants != null) {
+            LOGGER.info(" Found an additional {} germline variants that are potentially interesting",
+                    additionalSuspectGermlineVariants.size());
+        }
 
         List<GainLoss> nearReportableSomaticGains = CopyNumberSelector.selectNearReportableSomaticGains(purple.allSomaticGeneCopyNumbers(),
-                purple.ploidy(),
+                purple.purityContext().bestFit().ploidy(),
                 purple.reportableSomaticGainsLosses(),
                 driverGenes);
         LOGGER.info(" Found an additional {} near-reportable somatic gains that are potentially interesting",
@@ -48,18 +53,22 @@ public final class PurpleInterpreter {
 
         List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH =
                 LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(purple.allSomaticGeneCopyNumbers(),
-                        purple.microsatelliteStatus(),
+                        purple.purityContext().microsatelliteStatus(),
                         chord.hrStatus());
         LOGGER.info(" Found an additional {} suspect gene copy numbers with LOH", suspectGeneCopyNumbersWithLOH.size());
+
+        List<ReportableVariant> reportableGermlineVariants = purple.reportableGermlineVariants() != null
+                ? ReportableVariantFactory.toReportableGermlineVariants(purple.reportableGermlineVariants(), purple.germlineDrivers())
+                : null;
 
         return ImmutablePurpleInterpretedData.builder()
                 .fit(createFit(purple))
                 .characteristics(createCharacteristics(purple))
                 .allSomaticVariants(purple.allSomaticVariants())
-                .reportableSomaticVariants(purple.reportableSomaticVariants())
+                .reportableSomaticVariants(reportableSomaticVariants)
                 .additionalSuspectSomaticVariants(additionalSuspectSomaticVariants)
                 .allGermlineVariants(purple.allGermlineVariants())
-                .reportableGermlineVariants(purple.reportableGermlineVariants())
+                .reportableGermlineVariants(reportableGermlineVariants)
                 .additionalSuspectGermlineVariants(additionalSuspectGermlineVariants)
                 .allSomaticGeneCopyNumbers(purple.allSomaticGeneCopyNumbers())
                 .suspectGeneCopyNumbersWithLOH(suspectGeneCopyNumbersWithLOH)
@@ -69,36 +78,35 @@ public final class PurpleInterpreter {
                 .additionalSuspectSomaticGainsLosses(additionalSuspectSomaticGainsLosses)
                 .allGermlineDeletions(purple.allGermlineDeletions())
                 .reportableGermlineDeletions(purple.reportableGermlineDeletions())
-                .copyNumberPerChromosome(purple.copyNumberPerChromosome())
                 .build();
     }
 
     @NotNull
     private static PurityPloidyFit createFit(@NotNull PurpleData purple) {
         return ImmutablePurityPloidyFit.builder()
-                .qc(purple.qc())
-                .hasReliableQuality(purple.hasReliableQuality())
-                .fittedPurityMethod(purple.fittedPurityMethod())
-                .hasReliablePurity(purple.hasReliablePurity())
-                .purity(purple.purity())
-                .minPurity(purple.minPurity())
-                .maxPurity(purple.maxPurity())
-                .ploidy(purple.ploidy())
-                .minPloidy(purple.minPloidy())
-                .maxPloidy(purple.maxPloidy())
+                .qc(purple.purityContext().qc())
+                .hasReliableQuality(purple.purityContext().qc().pass())
+                .fittedPurityMethod(purple.purityContext().method())
+                .hasReliablePurity(PurityContext.checkHasReliablePurity(purple.purityContext()))
+                .purity(purple.purityContext().bestFit().purity())
+                .minPurity(purple.purityContext().score().minPurity())
+                .maxPurity(purple.purityContext().score().maxPurity())
+                .ploidy(purple.purityContext().bestFit().ploidy())
+                .minPloidy(purple.purityContext().score().minPloidy())
+                .maxPloidy(purple.purityContext().score().maxPloidy())
                 .build();
     }
 
     @NotNull
     private static PurpleCharacteristics createCharacteristics(@NotNull PurpleData purple) {
         return ImmutablePurpleCharacteristics.builder()
-                .wholeGenomeDuplication(purple.wholeGenomeDuplication())
-                .microsatelliteIndelsPerMb(purple.microsatelliteIndelsPerMb())
-                .microsatelliteStatus(purple.microsatelliteStatus())
-                .tumorMutationalBurdenPerMb(purple.tumorMutationalBurdenPerMb())
-                .tumorMutationalLoad(purple.tumorMutationalLoad())
-                .tumorMutationalLoadStatus(purple.tumorMutationalLoadStatus())
-                .svTumorMutationalBurden(purple.svTumorMutationalBurden())
+                .wholeGenomeDuplication(purple.purityContext().wholeGenomeDuplication())
+                .microsatelliteIndelsPerMb(purple.purityContext().microsatelliteIndelsPerMb())
+                .microsatelliteStatus(purple.purityContext().microsatelliteStatus())
+                .tumorMutationalBurdenPerMb(purple.purityContext().tumorMutationalBurdenPerMb())
+                .tumorMutationalLoad(purple.purityContext().tumorMutationalLoad())
+                .tumorMutationalLoadStatus(purple.purityContext().tumorMutationalLoadStatus())
+                .svTumorMutationalBurden(purple.purityContext().svTumorMutationalBurden())
                 .build();
     }
 }

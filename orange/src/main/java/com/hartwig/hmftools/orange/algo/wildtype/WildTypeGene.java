@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report;
+package com.hartwig.hmftools.orange.algo.wildtype;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -6,10 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface ReportConfig {
+public abstract class WildTypeGene {
 
-    boolean limitJsonOutput();
-
-    boolean reportGermline();
-
+    @NotNull
+    public abstract String gene();
 }

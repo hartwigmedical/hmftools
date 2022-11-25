@@ -20,8 +20,6 @@ import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
-import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
-import com.hartwig.hmftools.common.variant.ReportableVariantTestFactory;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
@@ -41,8 +39,10 @@ import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretationTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
+import com.hartwig.hmftools.orange.algo.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretationTestFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
+import com.hartwig.hmftools.orange.algo.purple.ReportableVariantTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -128,6 +128,11 @@ public final class OrangeReportTestFactory {
                         .canonicalHgvsCodingImpact("c.11712-884A>T")
                         .localPhaseSet(42256)
                         .build())
+                .allGermlineVariants(Lists.newArrayList())
+                .reportableGermlineVariants(Lists.newArrayList())
+                .additionalSuspectGermlineVariants(Lists.newArrayList())
+                .allGermlineDeletions(Lists.newArrayList())
+                .reportableGermlineDeletions(Lists.newArrayList())
                 .build();
     }
 
@@ -144,6 +149,8 @@ public final class OrangeReportTestFactory {
                 .addReportableFusions(fusion)
                 .addReportableFusions(fusion)
                 .addReportableFusions(fusion)
+                .allGermlineDisruptions(Lists.newArrayList())
+                .reportableGermlineDisruptions(Lists.newArrayList())
                 .build();
     }
 

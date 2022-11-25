@@ -4,8 +4,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.linx.GeneDisruption;
-import com.hartwig.hmftools.common.linx.GeneDisruptionFactory;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxFusion;
@@ -28,6 +26,9 @@ public final class LinxInterpreter {
                 DNAFusionSelector.selectInterestingUnreportedFusions(linx.allFusions(), driverGenes);
         LOGGER.info(" Found an additional {} suspect fusions that are potentially interesting", additionalSuspectFusions.size());
 
+        List<GeneDisruption> reportableGeneDisruptions =
+                GeneDisruptionFactory.convert(linx.reportableBreakends(), linx.allStructuralVariants());
+
         List<LinxBreakend> additionalSuspectBreakends =
                 BreakendSelector.selectInterestingUnreportedBreakends(linx.allBreakends(), linx.reportableFusions(), knownFusionCache);
         List<GeneDisruption> additionalSuspectDisruptions =
@@ -40,7 +41,7 @@ public final class LinxInterpreter {
                 .reportableFusions(linx.reportableFusions())
                 .additionalSuspectFusions(additionalSuspectFusions)
                 .allBreakends(linx.allBreakends())
-                .reportableGeneDisruptions(linx.reportableGeneDisruptions())
+                .reportableGeneDisruptions(reportableGeneDisruptions)
                 .additionalSuspectDisruptions(additionalSuspectDisruptions)
                 .homozygousDisruptions(linx.homozygousDisruptions())
                 .allGermlineDisruptions(linx.allGermlineDisruptions())

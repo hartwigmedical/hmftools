@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsInde
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,13 +35,12 @@ import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
+import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.loader.PurpleData;
 import com.hartwig.hmftools.common.purple.loader.PurpleDataLoader;
 import com.hartwig.hmftools.common.sage.GeneDepthFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
-import com.hartwig.hmftools.common.wildtype.WildTypeFactory;
-import com.hartwig.hmftools.common.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaData;
@@ -52,6 +52,8 @@ import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
+import com.hartwig.hmftools.orange.algo.wildtype.WildTypeFactory;
+import com.hartwig.hmftools.orange.algo.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
@@ -200,18 +202,18 @@ public class OrangeAlgo {
     @Nullable
     private static String determinePlatinumVersion(@NotNull OrangeConfig config) throws IOException {
         String pipelineVersionFile = config.pipelineVersionFile();
-        if (pipelineVersionFile != null) {
-            String platinumVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
-            if (platinumVersion != null) {
-                LOGGER.info("Determined platinum version to be 'v{}'", platinumVersion);
-            } else {
-                LOGGER.warn("No platinum version could be determined as version could not be resolved from {}", pipelineVersionFile);
-            }
-            return platinumVersion;
-        } else {
+        if (pipelineVersionFile == null) {
             LOGGER.warn("No platinum version could be determined as pipeline version file was not passed");
             return null;
         }
+
+        String platinumVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
+        if (platinumVersion != null) {
+            LOGGER.info("Determined platinum version to be 'v{}'", platinumVersion);
+        } else {
+            LOGGER.warn("No platinum version could be determined as version could not be resolved from {}", pipelineVersionFile);
+        }
+        return platinumVersion;
     }
 
     @NotNull
@@ -240,7 +242,7 @@ public class OrangeAlgo {
         List<String> lines = Files.readAllLines(new File(config.sageGermlineGeneCoverageTsv()).toPath());
         String header = lines.get(0);
 
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, GeneDepthFile.DELIM);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, GeneDepthFile.DELIM);
         int geneIndex = fieldsIndexMap.get(GeneDepthFile.COL_GENE);
         int mvlhIndex = fieldsIndexMap.get(GeneDepthFile.COL_MV_LIKELIHOOD);
 
@@ -256,29 +258,77 @@ public class OrangeAlgo {
 
     @NotNull
     private static PurpleData loadPurpleData(@NotNull OrangeConfig config) throws IOException {
-        return PurpleDataLoader.load(config.tumorSampleId(),
-                config.referenceSampleId(),
+        LOGGER.info("Loading PURPLE data from {}", config.purpleDataDirectory());
+
+        String referenceSample = config.referenceSampleId();
+        PurpleData purple = PurpleDataLoader.load(config.tumorSampleId(),
+                referenceSample,
                 config.rnaConfig() != null ? config.rnaConfig().rnaSampleId() : null,
-                config.purpleQcFile(),
-                config.purplePurityTsv(),
-                config.purpleSomaticDriverCatalogTsv(),
-                config.purpleSomaticVariantVcf(),
-                config.purpleGermlineDriverCatalogTsv(),
-                config.purpleGermlineVariantVcf(),
-                config.purpleGeneCopyNumberTsv(),
-                config.purpleSomaticCopyNumberTsv(),
-                config.purpleGermlineDeletionTsv(),
-                config.refGenomeVersion());
+                config.purpleDataDirectory());
+
+        DecimalFormat purityFormat = new DecimalFormat("#'%'");
+        PurityContext purityContext = purple.purityContext();
+        LOGGER.info("  QC status: {}", purityContext.qc().toString());
+        LOGGER.info("  Tumor purity: {} ({}-{})",
+                purityFormat.format(purityContext.bestFit().purity() * 100),
+                purityFormat.format(purityContext.score().minPurity() * 100),
+                purityFormat.format(purityContext.score().maxPurity() * 100));
+        LOGGER.info("  Tumor ploidy: {} ({}-{})",
+                purityContext.bestFit().ploidy(),
+                purityContext.score().minPloidy(),
+                purityContext.score().maxPloidy());
+        LOGGER.info("  Fit method: {}", purityContext.method());
+        LOGGER.info("  Whole genome duplication: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
+        LOGGER.info("  Microsatellite status: {}", purityContext.microsatelliteStatus().display());
+        LOGGER.info("  Tumor mutational load status: {}", purityContext.tumorMutationalLoadStatus().display());
+
+        LOGGER.info(" Loaded {} somatic driver catalog entries", purple.somaticDrivers().size());
+
+        LOGGER.info(" Loaded {} somatic variants (of which {} are reportable)",
+                purple.allSomaticVariants().size(),
+                purple.reportableSomaticVariants().size());
+        LOGGER.info(" Loaded {} gene copy numbers entries", purple.allSomaticGeneCopyNumbers().size());
+        LOGGER.info(" Extracted {} somatic gains and losses from gene copy numbers for which {} are reportable",
+                purple.allSomaticGainsLosses().size(),
+                purple.reportableSomaticGainsLosses().size());
+
+        if (referenceSample != null) {
+            LOGGER.info(" Loaded {} germline driver catalog entries", purple.germlineDrivers().size());
+            LOGGER.info(" Loaded {} germline variants (of which {} are reportable)",
+                    purple.allGermlineVariants().size(),
+                    purple.reportableGermlineVariants().size());
+
+            LOGGER.info(" Loaded {} germline deletions (of which {} are reportable)",
+                    purple.allGermlineDeletions().size(),
+                    purple.reportableGermlineDeletions().size());
+        } else {
+            LOGGER.debug(" Skipped loading germline variants since no reference sample configured");
+        }
+
+        return purple;
     }
 
     @NotNull
     private static LinxData loadLinxData(@NotNull OrangeConfig config) throws IOException {
-        return LinxDataLoader.load(config.linxStructuralVariantTsv(),
-                config.linxFusionTsv(),
-                config.linxBreakendTsv(),
-                config.linxDriverCatalogTsv(),
-                config.linxDriverTsv(),
-                config.linxGermlineDisruptionTsv());
+        String linxGermlineDataDirectory = config.linxGermlineDataDirectory();
+        LOGGER.info("Loading LINX somatic data from {}", config.linxSomaticDataDirectory());
+
+        LinxData linx = LinxDataLoader.load(config.tumorSampleId(), config.linxSomaticDataDirectory(), linxGermlineDataDirectory);
+
+        LOGGER.info(" Loaded {} structural variants", linx.allStructuralVariants().size());
+        LOGGER.info(" Loaded {} structural drivers", linx.drivers().size());
+        LOGGER.info(" Loaded {} fusions (of which {} are reportable)", linx.allFusions().size(), linx.reportableFusions().size());
+        LOGGER.info(" Loaded {} breakends (of which {} are reportable)", linx.allBreakends().size(), linx.reportableBreakends().size());
+        LOGGER.info(" Loaded {} reportable homozygous disruptions", linx.homozygousDisruptions().size());
+
+        if (linxGermlineDataDirectory != null) {
+            LOGGER.info("Loading LINX germline data from {}", linxGermlineDataDirectory);
+            LOGGER.info(" Loaded {} germline disruptions (of which {} are reportable)",
+                    linx.allGermlineDisruptions().size(),
+                    linx.reportableGermlineDisruptions().size());
+        }
+
+        return linx;
     }
 
     @Nullable

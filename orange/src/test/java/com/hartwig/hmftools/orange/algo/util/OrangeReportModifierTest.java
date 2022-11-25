@@ -9,7 +9,7 @@ import org.junit.Test;
 public class OrangeReportModifierTest {
 
     @Test
-    public void canLimitJsonOutput() {
+    public void canLimitAllListsToOne() {
         assertNotNull(OrangeReportModifier.limitAllListsToMaxOne(OrangeReportTestFactory.createProperTestReport()));
     }
 }

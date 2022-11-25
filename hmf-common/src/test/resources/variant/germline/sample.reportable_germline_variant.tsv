@@ -1,2 +1,0 @@
-gene	chromosome	position	ref	alt	codingEffect	hgvsCoding	hgvsProtein	alleleReadCount	totalReadCount	adjustedVaf	adjustedCopyNumber	biallelic
-BRCA1	17	41276044	ACT	A	NONSENSE_OR_FRAMESHIFT	c.68_69delAG	p.Glu23fs	45	97	0.43355030873174055	3.8773	false

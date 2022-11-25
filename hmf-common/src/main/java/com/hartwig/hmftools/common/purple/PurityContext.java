@@ -48,7 +48,6 @@ public abstract class PurityContext {
     @NotNull
     public abstract TumorMutationalStatus tumorMutationalBurdenStatus();
 
-
     public static boolean checkHasReliablePurity(final PurityContext purityContext)
     {
         return purityContext.method() != FittedPurityMethod.NO_TUMOR;
