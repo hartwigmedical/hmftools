@@ -2,7 +2,7 @@ package com.hartwig.hmftools.peach;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
@@ -104,8 +104,6 @@ public class PeachApplication
 
         HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
         caller.callPossibleHaplotypes(eventToCount);
-
-
 
         PCH_LOGGER.info("finished running PEACH");
     }
@@ -342,7 +340,7 @@ public class PeachApplication
                 String gene = values[geneIndex];
                 boolean isWildType = Boolean.parseBoolean(values[wildTypeIndex]);
 
-                ImmutableSet<HaplotypeEvent> haplotypeEvents = getHaplotypeEvents(haplotypeEventsString);
+                ImmutableList<HaplotypeEvent> haplotypeEvents = getHaplotypeEvents(haplotypeEventsString);
                 if (isWildType)
                 {
                     WildTypeHaplotype haplotype = new WildTypeHaplotype(values[haplotypeIndex], haplotypeEvents);
@@ -400,13 +398,13 @@ public class PeachApplication
         return geneToGeneHaplotypePanel;
     }
 
-    private static ImmutableSet<HaplotypeEvent> getHaplotypeEvents(String haplotypeEventsString)
+    private static ImmutableList<HaplotypeEvent> getHaplotypeEvents(String haplotypeEventsString)
     {
         if (haplotypeEventsString.isEmpty())
-            return ImmutableSet.of();
+            return ImmutableList.of();
         else
             return Arrays.stream(haplotypeEventsString.split(HAPLOTYPE_EVENT_DELIMITER))
-                    .map(HaplotypeEventFactory::fromId).collect(ImmutableSet.toImmutableSet());
+                    .map(HaplotypeEventFactory::fromId).collect(ImmutableList.toImmutableList());
     }
 
     private Map<Chromosome, List<BaseRegion>> loadBedFile(final String filename)

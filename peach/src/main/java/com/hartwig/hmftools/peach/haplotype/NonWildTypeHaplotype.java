@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.peach.haplotype;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.hartwig.hmftools.peach.event.HaplotypeEvent;
 import com.hartwig.hmftools.peach.event.VariantHaplotypeEvent;
 import org.jetbrains.annotations.NotNull;
@@ -12,9 +12,9 @@ public class NonWildTypeHaplotype implements Haplotype
     @NotNull
     public final String name;
     @NotNull
-    public final ImmutableSet<HaplotypeEvent> events;
+    public final ImmutableList<HaplotypeEvent> events;
 
-    public NonWildTypeHaplotype(@NotNull String name, @NotNull ImmutableSet<HaplotypeEvent> events)
+    public NonWildTypeHaplotype(@NotNull String name, @NotNull ImmutableList<HaplotypeEvent> events)
     {
         if (events.size() < 1)
             throw new RuntimeException(String.format("Non-wild type haplotype '%s' has no associated events", name));
