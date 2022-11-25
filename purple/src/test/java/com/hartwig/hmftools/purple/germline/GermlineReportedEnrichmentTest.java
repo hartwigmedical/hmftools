@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.toVcfData;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -21,7 +20,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
-import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.test.VariantContextFromString;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
