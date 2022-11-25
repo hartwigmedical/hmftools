@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.isofox.TestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.isofox.TestUtils.TRANS_1;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createGeneReadData;
+import static com.hartwig.hmftools.isofox.TestUtils.createIsofoxConfig;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
@@ -222,7 +223,7 @@ public class TransClassificationTest
     public void testFragmentReadPairs()
     {
         // one read outside the gene
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         config.Functions.clear();
         config.Functions.add(TRANSCRIPT_COUNTS);
         BamFragmentAllocator bamReader = new BamFragmentAllocator(config, new ResultsWriter(config));

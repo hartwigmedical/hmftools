@@ -9,10 +9,10 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
+import static com.hartwig.hmftools.isofox.TestUtils.createIsofoxConfig;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
@@ -57,7 +57,7 @@ public class UnmappedReadsTest
 
         gene.setTranscripts(Lists.newArrayList(transData));
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         config.Functions.add(IsofoxFunction.UNMAPPED_READS);
         mUmrFinder = new UmrFinder(config, null);
         mGenes = new GeneCollection(0, Lists.newArrayList(gene));

@@ -83,6 +83,8 @@ public class TestUtils
     public static final int EXON_LENGTH = 100;
     public static final int INTRON_LENGTH = 200;
 
+    public static IsofoxConfig createIsofoxConfig() { return new IsofoxConfig(new MockRefGenome()); }
+
     public static int getGeneCollection(final String geneId)
     {
         if(geneId == GENE_ID_1)

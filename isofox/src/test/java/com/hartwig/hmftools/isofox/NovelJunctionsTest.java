@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
+import static com.hartwig.hmftools.isofox.TestUtils.createIsofoxConfig;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.SPLICE_JUNC;
@@ -49,7 +50,7 @@ public class NovelJunctionsTest
     @Test
     public void testAltSpliceJunctionTypes()
     {
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         config.FragmentSizeData.add(new FragmentSize(30, 1));
         config.ReadLength = 10;
 
@@ -103,7 +104,7 @@ public class NovelJunctionsTest
 
         gene.setTranscripts(transcripts);
 
-        AltSpliceJunctionFinder asjFinder = new AltSpliceJunctionFinder(new IsofoxConfig(), null);
+        AltSpliceJunctionFinder asjFinder = new AltSpliceJunctionFinder(createIsofoxConfig(), null);
         GeneCollection genes = new GeneCollection(0, Lists.newArrayList(gene));
         asjFinder.setGeneData(genes);
 
@@ -260,7 +261,7 @@ public class NovelJunctionsTest
     @Test
     public void testRetainedIntrons()
     {
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         config.FragmentSizeData.add(new FragmentSize(30, 1));
         config.ReadLength = 10;
 
