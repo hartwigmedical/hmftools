@@ -59,11 +59,8 @@ public class Mappability
 
         while(!mEntries.isEmpty() || mFileReader != null)
         {
-            if(variant.Chromosome.equals(mCurrentChromosome))
-            {
-                checkEntries(variant);
+            if(checkEntries(variant))
                 return;
-            }
 
             loadEntries(variant.Chromosome);
         }
@@ -71,13 +68,13 @@ public class Mappability
         PV_LOGGER.warn("variant({}) no mappability entry found", variant);
     }
 
-    private void checkEntries(final VariantData variant)
+    private boolean checkEntries(final VariantData variant)
     {
         if(!variant.Chromosome.equals(mCurrentChromosome))
-            return;
+            return false;
 
         if(mEntries.isEmpty() || mEntries.get(mEntries.size() - 1).Region.end() < variant.Position)
-            return;
+            return false;
 
         for(int i = mCurrentIndex; i < mEntries.size(); ++i)
         {
@@ -87,7 +84,7 @@ public class Mappability
             {
                 variant.context().getCommonInfo().putAttribute(MAPPABILITY, entry.Mappability);
                 mCurrentIndex = i;
-                return;
+                return true;
             }
 
             // take previous if the next is past this variant
@@ -95,9 +92,11 @@ public class Mappability
             {
                 MapEntry prevEntry = mEntries.get(i - 1);
                 variant.context().getCommonInfo().putAttribute(MAPPABILITY, prevEntry.Mappability);
-                return;
+                return true;
             }
         }
+
+        return false;
     }
 
     public static void addHeader(final VCFHeader header)
@@ -138,7 +137,10 @@ public class Mappability
     private void loadEntries(final String requestedChromosome)
     {
         if(mFileReader == null)
+        {
+            mEntries.clear();
             return;
+        }
 
         // clear all but the last if it's a match for the required chromosome
         mEntries.clear();
@@ -206,7 +208,6 @@ public class Mappability
         {
             PV_LOGGER.error("failed to load mappability file: {}", e.toString());
             mHasValidData = false;
-            return;
         }
     }
 
