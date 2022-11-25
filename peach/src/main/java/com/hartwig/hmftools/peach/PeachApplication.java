@@ -10,9 +10,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.peach.event.HaplotypeEvent;
-import com.hartwig.hmftools.peach.event.HaplotypeEventFactory;
-import com.hartwig.hmftools.peach.event.VariantHaplotypeEvent;
+import com.hartwig.hmftools.peach.event.*;
 import com.hartwig.hmftools.peach.haplotype.NonWildTypeHaplotype;
 import com.hartwig.hmftools.peach.haplotype.WildTypeHaplotype;
 import htsjdk.tribble.AbstractFeatureReader;
@@ -39,13 +37,14 @@ import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 public class PeachApplication
 {
-    static final String CHAIN_FILE_DELIMITER = " ";
-    static final String BED_FILE_DELIMITER = "\t";
-    static final String TSV_DELIMITER = "\t";
-    static final String HAPLOTYPE_EVENT_DELIMITER = ",";
+    public static final String CHAIN_FILE_DELIMITER = " ";
+    public static final String BED_FILE_DELIMITER = "\t";
+    public static final String TSV_DELIMITER = "\t";
+    public static final String HAPLOTYPE_EVENT_DELIMITER = ",";
 
     @NotNull
     private final PeachConfig config;
+
     public PeachApplication(@NotNull final PeachConfig config)
     {
         this.config = config;
@@ -98,29 +97,21 @@ public class PeachApplication
         } else {
             callInputVcf = config.vcfFile;
         }
-        Map<HaplotypeEvent, Integer> eventToCount = loadHaplotypeEvents(callInputVcf, haplotypePanel);
+        Map<String, Integer> eventIdToCount = loadRelevantVariantHaplotypeEvents(
+                callInputVcf, haplotypePanel.getRelevantVariantPositions()
+        );
 
-        PCH_LOGGER.info("events found: {}", eventToCount.toString());
+        PCH_LOGGER.info("events found: {}", eventIdToCount.toString());
 
         HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
-        caller.callPossibleHaplotypes(eventToCount);
+        caller.callPossibleHaplotypes(eventIdToCount);
 
         PCH_LOGGER.info("finished running PEACH");
     }
 
-    @NotNull
-    private Map<HaplotypeEvent, Integer> loadHaplotypeEvents(String callInputVcf, HaplotypePanel haplotypePanel)
+    private Map<String, Integer> loadRelevantVariantHaplotypeEvents(String vcf, Map<Chromosome, Set<Integer>> relevantVariantPositions)
     {
-        Map<VariantHaplotypeEvent, Integer> variantEventToCount = loadRelevantVariantHaplotypeEvents(
-                callInputVcf, haplotypePanel.getRelevantVariantPositions()
-        );
-        return variantEventToCount.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-    private Map<VariantHaplotypeEvent, Integer> loadRelevantVariantHaplotypeEvents(String vcf, Map<Chromosome, Set<Integer>> relevantVariantPositions)
-    {
-        Map<VariantHaplotypeEvent, Integer> eventToCount = new HashMap<>();
+        Map<String, Integer> eventIdToCount = new HashMap<>();
         try(
                 AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
                         vcf, new VCFCodec(), false)
@@ -140,13 +131,13 @@ public class PeachApplication
                 Integer count = getEventCount(variantContext, event.id());
                 if(count == 0)
                     continue;
-                if(eventToCount.containsKey(event))
+                if(eventIdToCount.containsKey(event.id()))
                 {
                     PCH_LOGGER.error("encountered event with ID '{}' more than once in VCF '{}'", event.id(), vcf);
                     System.exit(1);
                 }
 
-                eventToCount.put(event, count);
+                eventIdToCount.put(event.id(), count);
             }
         }
         catch(IOException e)
@@ -154,7 +145,7 @@ public class PeachApplication
             PCH_LOGGER.error("failed to read VCF file({}): {}", vcf, e.toString());
             System.exit(1);
         }
-        return eventToCount;
+        return eventIdToCount;
     }
 
     private Integer getEventCount(VariantContext variantContext, String eventId)

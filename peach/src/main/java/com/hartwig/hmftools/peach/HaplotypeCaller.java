@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.peach;
 
-import com.hartwig.hmftools.peach.event.HaplotypeEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -21,27 +20,27 @@ public class HaplotypeCaller
         this.haplotypePanel = haplotypePanel;
     }
 
-    public void callPossibleHaplotypes(Map<HaplotypeEvent, Integer> eventToCount)
+    public void callPossibleHaplotypes(Map<String, Integer> eventIdToCount)
     {
-        //haplotypePanel.getGenes().stream().map(g -> callPossibleHaplotypes(eventToCount, g));
+        //haplotypePanel.getGenes().stream().map(g -> callPossibleHaplotypes(eventIdToCount, g));
 
-        Map<HaplotypeEvent, Set<String>> eventToRelevantGenes = getEventToRelevantGenes(eventToCount.keySet());
+        Map<String, Set<String>> eventIdToRelevantGenes = getEventIdToRelevantGenes(eventIdToCount.keySet());
     }
 
-    private void callPossibleHaplotypes(Map<HaplotypeEvent, Integer> eventToCount, String gene)
+    private void callPossibleHaplotypes(Map<String, Integer> eventIdToCount, String gene)
     {
         PCH_LOGGER.info("handling gene: {}", gene);
-        Map<HaplotypeEvent, Integer> relevantEventToCount = eventToCount.entrySet().stream()
+        Map<String, Integer> relevantEventIdToCount = eventIdToCount.entrySet().stream()
                 .filter(e -> haplotypePanel.isRelevantFor(e.getKey(), gene))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        PCH_LOGGER.info("events for gene '{}': {}", gene, relevantEventToCount);
+        PCH_LOGGER.info("events for gene '{}': {}", gene, relevantEventIdToCount);
 
     }
 
     @NotNull
-    private Map<HaplotypeEvent, Set<String>> getEventToRelevantGenes(Set<HaplotypeEvent> events)
+    private Map<String, Set<String>> getEventIdToRelevantGenes(Set<String> eventIds)
     {
-        return events.stream().collect(Collectors.toMap(e -> e, haplotypePanel::getRelevantGenes));
+        return eventIds.stream().collect(Collectors.toMap(e -> e, haplotypePanel::getRelevantGenes));
     }
 
 

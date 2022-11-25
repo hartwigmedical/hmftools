@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.peach;
 
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.peach.event.HaplotypeEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class HaplotypePanel
@@ -30,26 +31,16 @@ public class HaplotypePanel
                 );
     }
 
-    public Set<String> getRelevantGenes(HaplotypeEvent event)
+    public Set<String> getRelevantGenes(String eventId)
     {
         return geneToGeneHaplotypePanel.entrySet().stream()
-                .filter(e -> e.getValue().isRelevantFor(event))
+                .filter(e -> e.getValue().isRelevantFor(eventId))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
     }
 
-    public boolean isRelevantFor(HaplotypeEvent event, String gene)
+    public boolean isRelevantFor(String eventId, String gene)
     {
-        return geneToGeneHaplotypePanel.get(gene).isRelevantFor(event);
-    }
-
-    public Set<String> getGenes()
-    {
-        return new HashSet<>(geneToGeneHaplotypePanel.keySet());
-    }
-
-    public GeneHaplotypePanel getGeneHaplotypePanel(String gene)
-    {
-        return geneToGeneHaplotypePanel.get(gene);
+        return geneToGeneHaplotypePanel.get(gene).isRelevantFor(eventId);
     }
 }

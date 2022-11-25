@@ -2,6 +2,7 @@ package com.hartwig.hmftools.peach.haplotype;
 
 import com.google.common.collect.ImmutableList;
 import com.hartwig.hmftools.peach.event.HaplotypeEvent;
+import com.hartwig.hmftools.peach.event.HaplotypeEventFactory;
 import com.hartwig.hmftools.peach.event.VariantHaplotypeEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +23,11 @@ public class NonWildTypeHaplotype implements Haplotype
         this.events = events;
     }
 
-    public boolean isRelevantFor(HaplotypeEvent event)
+    public boolean isRelevantFor(String eventId)
+    {
+        return isRelevantFor(HaplotypeEventFactory.fromId(eventId));
+    }
+    private boolean isRelevantFor(HaplotypeEvent event)
     {
         if (event instanceof VariantHaplotypeEvent)
         {

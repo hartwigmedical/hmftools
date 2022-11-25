@@ -16,9 +16,4 @@ public class WildTypeHaplotype implements Haplotype
         this.name = name;
         this.eventsToIgnore = eventsToIgnore;
     }
-
-    public boolean isRelevantFor(HaplotypeEvent event)
-    {
-        return false;
-    }
 }
