@@ -47,6 +47,6 @@ public class GeneHaplotypePanel
 
     public boolean isRelevantFor(HaplotypeEvent event)
     {
-        return nonWildTypeHaplotypes.stream().anyMatch(h -> h.isRelevantFor(event));
+        return !wildTypeHaplotype.ignoredEvents.contains(event) && nonWildTypeHaplotypes.stream().anyMatch(h -> h.isRelevantFor(event));
     }
 }
