@@ -382,8 +382,11 @@ public class PeachApplication
             }
             WildTypeHaplotype wildTypeHaplotype = wildTypeHaplotypes.get(0);
 
-            List<NonWildTypeHaplotype> nonWildTypeHaplotypes = geneToNonWildTypeHaplotypes.getOrDefault(gene, new ArrayList<>());
-            geneToGeneHaplotypePanel.put(gene, new GeneHaplotypePanel(wildTypeHaplotype, nonWildTypeHaplotypes));
+            GeneHaplotypePanel geneHaplotypePanel = new GeneHaplotypePanel(
+                    wildTypeHaplotype,
+                    ImmutableList.copyOf(geneToNonWildTypeHaplotypes.getOrDefault(gene, new ArrayList<>()))
+            );
+            geneToGeneHaplotypePanel.put(gene, geneHaplotypePanel);
         }
 
         return geneToGeneHaplotypePanel;

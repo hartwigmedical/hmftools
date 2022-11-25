@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.peach;
 
+import com.google.common.collect.ImmutableList;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.peach.event.HaplotypeEvent;
 import com.hartwig.hmftools.peach.event.VariantHaplotypeEvent;
@@ -8,7 +9,6 @@ import com.hartwig.hmftools.peach.haplotype.WildTypeHaplotype;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -17,17 +17,17 @@ import java.util.stream.Stream;
 public class GeneHaplotypePanel
 {
     @NotNull
-    private final WildTypeHaplotype wildTypeHaplotype;
+    public final WildTypeHaplotype wildTypeHaplotype;
     @NotNull
-    private final List<NonWildTypeHaplotype> nonWildTypeHaplotypes;
+    public final ImmutableList<NonWildTypeHaplotype> nonWildTypeHaplotypes;
 
     public GeneHaplotypePanel(
             @NotNull WildTypeHaplotype wildTypeHaplotype,
-            @NotNull List<NonWildTypeHaplotype> nonWildTypeHaplotypes
+            @NotNull ImmutableList<NonWildTypeHaplotype> nonWildTypeHaplotypes
     )
     {
         this.wildTypeHaplotype = wildTypeHaplotype;
-        this.nonWildTypeHaplotypes = List.copyOf(nonWildTypeHaplotypes);
+        this.nonWildTypeHaplotypes = nonWildTypeHaplotypes;
     }
 
     public Map<Chromosome, Set<Integer>> getRelevantVariantPositions()
