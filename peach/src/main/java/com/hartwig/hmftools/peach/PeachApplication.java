@@ -97,21 +97,21 @@ public class PeachApplication
         } else {
             callInputVcf = config.vcfFile;
         }
-        Map<String, Integer> eventIdToCount = loadRelevantVariantHaplotypeEvents(
+        Map<String, Zygosity> eventIdToZygosity = loadRelevantVariantHaplotypeEvents(
                 callInputVcf, haplotypePanel.getRelevantVariantPositions()
         );
 
-        PCH_LOGGER.info("events found: {}", eventIdToCount.toString());
+        PCH_LOGGER.info("events found: {}", eventIdToZygosity.toString());
 
         HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
-        caller.callPossibleHaplotypes(eventIdToCount);
+        caller.callPossibleHaplotypes(eventIdToZygosity);
 
         PCH_LOGGER.info("finished running PEACH");
     }
 
-    private Map<String, Integer> loadRelevantVariantHaplotypeEvents(String vcf, Map<Chromosome, Set<Integer>> relevantVariantPositions)
+    private Map<String, Zygosity> loadRelevantVariantHaplotypeEvents(String vcf, Map<Chromosome, Set<Integer>> relevantVariantPositions)
     {
-        Map<String, Integer> eventIdToCount = new HashMap<>();
+        Map<String, Zygosity> eventIdToZygosity = new HashMap<>();
         try(
                 AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
                         vcf, new VCFCodec(), false)
@@ -131,13 +131,14 @@ public class PeachApplication
                 Integer count = getEventCount(variantContext, event.id());
                 if(count == 0)
                     continue;
-                if(eventIdToCount.containsKey(event.id()))
+
+                if(eventIdToZygosity.containsKey(event.id()))
                 {
                     PCH_LOGGER.error("encountered event with ID '{}' more than once in VCF '{}'", event.id(), vcf);
                     System.exit(1);
                 }
 
-                eventIdToCount.put(event.id(), count);
+                eventIdToZygosity.put(event.id(), Zygosity.fromInt(count));
             }
         }
         catch(IOException e)
@@ -145,7 +146,7 @@ public class PeachApplication
             PCH_LOGGER.error("failed to read VCF file({}): {}", vcf, e.toString());
             System.exit(1);
         }
-        return eventIdToCount;
+        return eventIdToZygosity;
     }
 
     private Integer getEventCount(VariantContext variantContext, String eventId)

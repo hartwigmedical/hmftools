@@ -21,35 +21,25 @@ public class HaplotypeCaller
         this.haplotypePanel = haplotypePanel;
     }
 
-    public void callPossibleHaplotypes(@NotNull Map<String, Integer> eventIdToCount)
+    public void callPossibleHaplotypes(@NotNull Map<String, Zygosity> eventIdToZygosity)
     {
         //haplotypePanel.getGenes().stream().map(g -> callPossibleHaplotypes(eventIdToCount, g));
     }
 
-    private void callPossibleHaplotypes(Map<String, Integer> eventIdToCount, String gene)
-    {
-        PCH_LOGGER.info("handling gene: {}", gene);
-        Map<String, Integer> relevantEventIdToCount = eventIdToCount.entrySet().stream()
-                .filter(e -> haplotypePanel.isRelevantFor(e.getKey(), gene))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        PCH_LOGGER.info("events for gene '{}': {}", gene, relevantEventIdToCount);
-
-        if (relevantEventIdToCount.values().stream().anyMatch(c -> c < 0))
-        {
-            String error_msg = String.format(
-                    "Cannot call haplotypes for %s since some event counts are negative: %s",
-                    gene,
-                    relevantEventIdToCount
-            );
-            throw new RuntimeException(error_msg);
-        }
-
+//    private void callPossibleHaplotypes(Map<String, Zygosity> eventIdToZygosity, String gene)
+//    {
+//        PCH_LOGGER.info("handling gene: {}", gene);
+//        Map<String, Integer> relevantEventIdToCount = eventIdToZygosity.entrySet().stream()
+//                .filter(e -> haplotypePanel.isRelevantFor(e.getKey(), gene))
+//                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getVariantCount()));
+//        PCH_LOGGER.info("events for gene '{}': {}", gene, relevantEventIdToCount);
+//
 //        getPossibleNonWildTypeHaplotypes(
 //                relevantEventIdToCount,
 //                new ArrayList<>(),
 //                List.copyOf(haplotypePanel.getNonWildTypeHaplotypes(gene))
 //        );
-    }
+//    }
 
 //    private List<HaplotypeCombination> getPossibleNonWildTypeHaplotypes(
 //            Map<String, Integer> eventIdToCount,
