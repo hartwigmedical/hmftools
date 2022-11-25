@@ -168,10 +168,10 @@ public interface OrangeConfig {
     @Nullable
     String pipelineVersionFile();
 
-    @NotNull
+    @Nullable
     String refSampleWGSMetricsFile();
 
-    @NotNull
+    @Nullable
     String refSampleFlagstatFile();
 
     @NotNull
@@ -180,10 +180,10 @@ public interface OrangeConfig {
     @NotNull
     String tumorSampleFlagstatFile();
 
-    @NotNull
+    @Nullable
     String sageGermlineGeneCoverageTsv();
 
-    @NotNull
+    @Nullable
     String sageSomaticRefSampleBQRPlot();
 
     @NotNull
@@ -225,7 +225,7 @@ public interface OrangeConfig {
     @Nullable
     String cuppaFeaturePlot();
 
-    @NotNull
+    @Nullable
     String peachGenotypeTsv();
 
     @NotNull
@@ -275,17 +275,17 @@ public interface OrangeConfig {
                 .driverGenePanelTsv(Config.nonOptionalFile(cmd, DRIVER_GENE_PANEL_TSV))
                 .knownFusionFile(Config.nonOptionalFile(cmd, KNOWN_FUSION_FILE))
                 .pipelineVersionFile(Config.optionalValue(cmd, PIPELINE_VERSION_FILE))
-                .refSampleWGSMetricsFile(Config.nonOptionalValue(cmd, REF_SAMPLE_WGS_METRICS_FILE))
-                .refSampleFlagstatFile(Config.nonOptionalValue(cmd, REF_SAMPLE_FLAGSTAT_FILE))
-                .tumorSampleWGSMetricsFile(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_WGS_METRICS_FILE))
-                .tumorSampleFlagstatFile(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_FLAGSTAT_FILE))
-                .sageGermlineGeneCoverageTsv(Config.nonOptionalFile(cmd, SAGE_GERMLINE_GENE_COVERAGE_TSV))
-                .sageSomaticRefSampleBQRPlot(Config.nonOptionalFile(cmd, SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT))
+                .refSampleWGSMetricsFile(Config.optionalFile(cmd, REF_SAMPLE_WGS_METRICS_FILE))
+                .refSampleFlagstatFile(Config.optionalFile(cmd, REF_SAMPLE_FLAGSTAT_FILE))
+                .tumorSampleWGSMetricsFile(Config.nonOptionalFile(cmd, TUMOR_SAMPLE_WGS_METRICS_FILE))
+                .tumorSampleFlagstatFile(Config.nonOptionalFile(cmd, TUMOR_SAMPLE_FLAGSTAT_FILE))
+                .sageGermlineGeneCoverageTsv(Config.optionalFile(cmd, SAGE_GERMLINE_GENE_COVERAGE_TSV))
+                .sageSomaticRefSampleBQRPlot(Config.optionalFile(cmd, SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT))
                 .sageSomaticTumorSampleBQRPlot(Config.nonOptionalFile(cmd, SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT))
                 .purpleDataDirectory(Config.nonOptionalDir(cmd, PURPLE_DATA_DIRECTORY))
                 .purplePlotDirectory(Config.nonOptionalDir(cmd, PURPLE_PLOT_DIRECTORY))
                 .linxSomaticDataDirectory(Config.nonOptionalDir(cmd, LINX_SOMATIC_DATA_DIRECTORY))
-                .linxGermlineDataDirectory(Config.nonOptionalDir(cmd, LINX_GERMLINE_DATA_DIRECTORY))
+                .linxGermlineDataDirectory(Config.optionalDir(cmd, LINX_GERMLINE_DATA_DIRECTORY))
                 .linxPlotDirectory(Config.nonOptionalValue(cmd, LINX_PLOT_DIRECTORY))
                 .lilacResultCsv(Config.nonOptionalFile(cmd, LILAC_RESULT_CSV))
                 .lilacQcCsv(Config.nonOptionalFile(cmd, LILAC_QC_CSV))
@@ -294,7 +294,7 @@ public interface OrangeConfig {
                 .cuppaResultCsv(Config.nonOptionalFile(cmd, CUPPA_RESULT_CSV))
                 .cuppaSummaryPlot(Config.nonOptionalFile(cmd, CUPPA_SUMMARY_PLOT))
                 .cuppaFeaturePlot(Config.optionalValue(cmd, CUPPA_FEATURE_PLOT))
-                .peachGenotypeTsv(Config.nonOptionalFile(cmd, PEACH_GENOTYPE_TSV))
+                .peachGenotypeTsv(Config.optionalFile(cmd, PEACH_GENOTYPE_TSV))
                 .build();
     }
 

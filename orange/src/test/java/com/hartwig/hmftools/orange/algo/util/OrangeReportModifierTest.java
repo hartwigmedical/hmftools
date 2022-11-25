@@ -10,6 +10,8 @@ public class OrangeReportModifierTest {
 
     @Test
     public void canLimitAllListsToOne() {
+        assertNotNull(OrangeReportModifier.limitAllListsToMaxOne(OrangeReportTestFactory.createMinimalTestReport()));
+
         assertNotNull(OrangeReportModifier.limitAllListsToMaxOne(OrangeReportTestFactory.createProperTestReport()));
     }
 }

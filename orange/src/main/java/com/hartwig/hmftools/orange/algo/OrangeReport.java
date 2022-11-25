@@ -42,13 +42,13 @@ public abstract class OrangeReport {
     @Nullable
     public abstract String platinumVersion();
 
-    @NotNull
+    @Nullable
     public abstract OrangeSample refSample();
 
     @NotNull
     public abstract OrangeSample tumorSample();
 
-    @NotNull
+    @Nullable
     public abstract Map<String, Double> germlineMVLHPerGene();
 
     @NotNull
@@ -75,7 +75,7 @@ public abstract class OrangeReport {
     @NotNull
     public abstract CuppaData cuppa();
 
-    @NotNull
+    @Nullable
     public abstract List<PeachGenotype> peach();
 
     @NotNull

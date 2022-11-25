@@ -54,7 +54,7 @@ public class GermlineFindingsChapter implements ReportChapter {
     public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
 
-        if (reportGermline) {
+        if (reportGermline && hasExhaustiveGermlineData()) {
             addGermlineVariants(document);
             addGermlineDeletions(document);
             addGermlineDisruptions(document);
@@ -64,6 +64,12 @@ public class GermlineFindingsChapter implements ReportChapter {
         } else {
             document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(ReportResources.tableContentStyle()));
         }
+    }
+
+    private boolean hasExhaustiveGermlineData() {
+        return report.purple().reportableGermlineVariants() != null && report.purple().additionalSuspectGermlineVariants() != null
+                && report.purple().reportableGermlineDeletions() != null && report.linx().reportableGermlineDisruptions() != null
+                && report.germlineMVLHPerGene() != null && report.peach() != null;
     }
 
     private void addGermlineVariants(@NotNull Document document) {
