@@ -105,7 +105,7 @@ public class ExpressionReadTracker
         }
     }
 
-    public void processEnrichedGeneFragments(int enrichedGeneFragments)
+    public void processEnrichedGeneFragments(long enrichedGeneFragments)
     {
         if(!mEnabled)
             return;

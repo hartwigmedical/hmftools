@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
-import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 
 import java.io.File;
 import java.util.List;
@@ -40,7 +39,7 @@ public class BamReadCounter implements Callable
     private final int[] mCurrentGenesRange;
     private int mTotalReadCount;
     private int mCurrentGeneReadCount;
-    private int[] mReadTypeCounts;
+    private FragmentTypeCounts mFragmentTypeCounts;
     private int mSecondaryReads;
     private String mChromosome;
     private final List<GeneData> mGeneDataList;
@@ -63,7 +62,7 @@ public class BamReadCounter implements Callable
         mCurrentGeneReadCount = 0;
         mCurrentGenes = "";
         mSecondaryReads = 0;
-        mReadTypeCounts = new int[typeAsInt(FragmentType.MAX)];
+        mFragmentTypeCounts = new FragmentTypeCounts();
         mMaqQualFrequencies = new int[4];
     }
 
@@ -127,7 +126,7 @@ public class BamReadCounter implements Callable
         }
 
         ISF_LOGGER.info("chromosome({}) processing complete: total({}) duplicates({}) chimeric({}) secondaries({}) mapQuals(0={} 1={} 2={} 3={})",
-                mChromosome, mTotalReadCount, mReadTypeCounts[typeAsInt(DUPLICATE)], mReadTypeCounts[typeAsInt(CHIMERIC)], mSecondaryReads,
+                mChromosome, mTotalReadCount, mFragmentTypeCounts.typeCount(DUPLICATE), mFragmentTypeCounts.typeCount(CHIMERIC), mSecondaryReads,
                 mMaqQualFrequencies[0], mMaqQualFrequencies[1], mMaqQualFrequencies[2], mMaqQualFrequencies[3]);
     }
 
@@ -135,13 +134,13 @@ public class BamReadCounter implements Callable
     {
         ++mTotalReadCount;
         ++mCurrentGeneReadCount;
-        ++mReadTypeCounts[typeAsInt(TOTAL)];
+        mFragmentTypeCounts.addCount(TOTAL);
 
         if(read.getDuplicateReadFlag())
-            ++mReadTypeCounts[typeAsInt(DUPLICATE)];
+            mFragmentTypeCounts.addCount(DUPLICATE);
 
         if((read.getFlags() & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0)
-            ++mReadTypeCounts[typeAsInt(CHIMERIC)];
+            mFragmentTypeCounts.addCount(CHIMERIC);
 
         if(read.isSecondaryAlignment())
             ++mSecondaryReads;

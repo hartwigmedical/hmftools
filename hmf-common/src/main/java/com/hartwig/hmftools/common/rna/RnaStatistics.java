@@ -9,8 +9,8 @@ import org.immutables.value.Value;
 @Value.Immutable
 public abstract class RnaStatistics
 {
-    public abstract int totalFragments();
-    public abstract int duplicateFragments();
+    public abstract long totalFragments();
+    public abstract long duplicateFragments();
     public abstract double splicedFragmentPerc();
     public abstract double unsplicedFragmentPerc();
     public abstract double altFragmentPerc();
@@ -80,8 +80,8 @@ public abstract class RnaStatistics
         int index = 1;
 
         return ImmutableRnaStatistics.builder()
-                .totalFragments(Integer.parseInt(items[index++]))
-                .duplicateFragments(Integer.parseInt(items[index++]))
+                .totalFragments(Long.parseLong(items[index++]))
+                .duplicateFragments(Long.parseLong(items[index++]))
                 .splicedFragmentPerc(Double.parseDouble(items[index++]))
                 .unsplicedFragmentPerc(Double.parseDouble(items[index++]))
                 .altFragmentPerc(Double.parseDouble(items[index++]))

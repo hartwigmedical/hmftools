@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.generateCommonExonicRegions;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.generateExonicRegions;
@@ -49,7 +48,7 @@ public class GeneCollection
 
     // summary results
     private final Map<Integer,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
-    private final int[] mFragmentCounts; // counts by various classifications
+    private final FragmentTypeCounts mFragmentCounts; // counts by various classifications
 
     public GeneCollection(int id, final List<GeneReadData> genes)
     {
@@ -74,7 +73,7 @@ public class GeneCollection
         buildCache();
 
         mTranscriptReadCounts = Maps.newHashMap();
-        mFragmentCounts = new int[typeAsInt(FragmentType.MAX)];
+        mFragmentCounts = new FragmentTypeCounts();
 
         mEnrichedTranscripts = null;
         mEnrichedRegion = null;
@@ -295,14 +294,9 @@ public class GeneCollection
         ++counts[FragmentMatchType.typeAsInt(type)][TRANS_COUNT];
     }
 
-    public final int[] getCounts() { return mFragmentCounts; }
-    public void addCount(FragmentType type, int count) { mFragmentCounts[typeAsInt(type)] += count; }
+    public final FragmentTypeCounts fragmentTypeCounts() { return mFragmentCounts; }
+    public void addCount(final FragmentType type, long count) { mFragmentCounts.addCount(type, count); }
 
     @VisibleForTesting
-    public void clearCounts()
-    {
-        for(int i = 0; i < mFragmentCounts.length; ++i)
-            mFragmentCounts[i] = 0;
-    }
-
+    public void clearCounts() { mFragmentCounts.clear(); }
 }

@@ -14,8 +14,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
-import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
-import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.findSplitReadJunction;
 import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.isInversion;
 import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.setHasMultipleKnownSpliceGenes;
@@ -277,24 +275,11 @@ public class ChimericReadTracker
             final List<ReadRecord> reads = readGroup.Reads;
             final String readId = reads.get(0).Id;
 
-            /*
-            if(readId.equals(""))
-            {
-                ISF_LOGGER.debug("specific read: {}", readId);
-            }
-            */
-
             int readCount = reads.size();
             boolean readGroupComplete = readGroup.isComplete();
 
             // duplicates are kept until a group is complete, since not all reads are marked as duplicates and those would otherwise
             // be orphaned later on
-
-            if(reads.stream().anyMatch(x -> x.isDuplicate()) && reads.size() >= 2)
-            {
-                // chimeric read groups with duplicates will be dropped later on once the group is complete
-                mGeneCollection.addCount(DUPLICATE, 1);
-            }
 
             if(mRunFusions && skipNonGenicReads(reads))
             {
@@ -321,7 +306,6 @@ public class ChimericReadTracker
             fragsToRemove.forEach(x -> mChimericReadMap.remove(x));
 
         int chimericCount = mChimericReadMap.size();
-        mGeneCollection.addCount(TOTAL, chimericCount);
         mGeneCollection.addCount(CHIMERIC, chimericCount);
 
         applyHardFilter();

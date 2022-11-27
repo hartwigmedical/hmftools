@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
-import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,26 +18,26 @@ import com.hartwig.hmftools.common.rna.ImmutableRnaStatistics;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
+import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 
 public class SummaryStats
 {
     public static RnaStatistics createSummaryStats(
-            final int[] totalCounts, int enrichedGeneFragCount,
+            final FragmentTypeCounts fragmentTypeCounts, long enrichedGeneFragCount,
             double medianGCRatio, final List<FragmentSize> fragmentLengths, int maxReadLength)
     {
-        int totalFragments = totalCounts[typeAsInt(TOTAL)];
-        int totalDuplicates = totalCounts[typeAsInt(DUPLICATE)];
+        double totalFragments = fragmentTypeCounts.typeCount(TOTAL);
         double enrichedGenePercent = totalFragments > 0 ? enrichedGeneFragCount / (double)totalFragments : 0;
 
         final List<Double> fragLengths = FragmentSizeCalcs.calcPercentileData(fragmentLengths, Lists.newArrayList(0.05, 0.5, 0.95));
 
         return ImmutableRnaStatistics.builder()
-                .totalFragments(totalFragments)
-                .duplicateFragments(totalDuplicates)
-                .splicedFragmentPerc(totalCounts[typeAsInt(TRANS_SUPPORTING)] / (double)totalFragments)
-                .unsplicedFragmentPerc(totalCounts[typeAsInt(UNSPLICED)] / (double)totalFragments)
-                .altFragmentPerc(totalCounts[typeAsInt(ALT)] / (double)totalFragments)
-                .chimericFragmentPerc(totalCounts[typeAsInt(CHIMERIC)] / (double)totalFragments)
+                .totalFragments(fragmentTypeCounts.typeCount(TOTAL))
+                .duplicateFragments(fragmentTypeCounts.typeCount(DUPLICATE))
+                .splicedFragmentPerc(fragmentTypeCounts.typeCount(TRANS_SUPPORTING) / totalFragments)
+                .unsplicedFragmentPerc(fragmentTypeCounts.typeCount(UNSPLICED) / totalFragments)
+                .altFragmentPerc(fragmentTypeCounts.typeCount(ALT) / totalFragments)
+                .chimericFragmentPerc(fragmentTypeCounts.typeCount(CHIMERIC) / totalFragments)
                 .readLength(maxReadLength)
                 .fragmentLength5thPercent(!fragLengths.isEmpty() ? fragLengths.get(0) : 0)
                 .fragmentLength50thPercent(!fragLengths.isEmpty() ? fragLengths.get(1) : 0)

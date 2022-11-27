@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
-import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.createGeneReadData;
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_FIT;
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_FUSIONS;
@@ -35,6 +34,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.common.FragmentType;
+import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.PerformanceTracking;
@@ -74,8 +74,8 @@ public class ChromosomeTaskExecutor implements Callable
 
     // cache of results
     private final List<GeneCollectionSummary> mGeneCollectionSummaryData;
-    private int mEnrichedGenesFragmentCount;
-    private final int[] mCombinedFragmentCounts;
+    private long mEnrichedGenesFragmentCount;
+    private final FragmentTypeCounts mCombinedFragmentCounts;
     private final GcRatioCounts mNonEnrichedGcRatioCounts;
     private int mTotalReadsProcessed;
     private final GcRatioCounts mGcRatioCounts;
@@ -113,7 +113,7 @@ public class ChromosomeTaskExecutor implements Callable
         mGeneCollectionSummaryData = Lists.newArrayList();
         mEnrichedGenesFragmentCount = 0;
         mTotalReadsProcessed = 0;
-        mCombinedFragmentCounts = new int[typeAsInt(FragmentType.MAX)];
+        mCombinedFragmentCounts = new FragmentTypeCounts();
         mNonEnrichedGcRatioCounts = new GcRatioCounts();
 
         mPerfCounters = PerformanceTracking.createPerfCounters();
@@ -329,11 +329,7 @@ public class ChromosomeTaskExecutor implements Callable
     {
         if(mConfig.runStatisticsOnly())
         {
-            for(int i = 0; i < mCombinedFragmentCounts.length; ++i)
-            {
-                mCombinedFragmentCounts[i] += geneCollection.getCounts()[i];
-            }
-
+            mCombinedFragmentCounts.combine(geneCollection.fragmentTypeCounts());
             return;
         }
 
@@ -390,9 +386,9 @@ public class ChromosomeTaskExecutor implements Callable
 
         if(!mConfig.Filters.EnrichedGeneIds.isEmpty())
         {
-            int enrichedGeneFragments = geneCollection.genes().stream()
+            long enrichedGeneFragments = geneCollection.genes().stream()
                     .anyMatch(x -> mConfig.Filters.EnrichedGeneIds.contains(x.GeneData.GeneId))
-                    ? geneCollection.getCounts()[typeAsInt(TOTAL)] : 0;
+                    ? geneCollection.fragmentTypeCounts().typeCount(TOTAL) : 0;
 
             if(enrichedGeneFragments > 0)
             {
@@ -411,10 +407,7 @@ public class ChromosomeTaskExecutor implements Callable
                 mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamFragmentAllocator.getGeneGcRatioCounts().getCounts());
         }
 
-        for(int i = 0; i < mCombinedFragmentCounts.length; ++i)
-        {
-            mCombinedFragmentCounts[i] += geneCollection.getCounts()[i];
-        }
+        mCombinedFragmentCounts.combine(geneCollection.fragmentTypeCounts());
 
         geneCollectionSummary.allocateResidualsToGenes();
         mResultsWriter.writeGeneCollectionData(geneCollection);
@@ -492,8 +485,8 @@ public class ChromosomeTaskExecutor implements Callable
         geneCollectionSummary.TranscriptResults.forEach(x -> x.setPreGcFitAllocation(x.getFitAllocation()));
     }
 
-    public int getEnrichedGenesFragmentCount() { return mEnrichedGenesFragmentCount; }
-    public int[] getCombinedCounts() { return mCombinedFragmentCounts; }
+    public long getEnrichedGenesFragmentCount() { return mEnrichedGenesFragmentCount; }
+    public FragmentTypeCounts getCombinedCounts() { return mCombinedFragmentCounts; }
     public GcRatioCounts getNonEnrichedGcRatioCounts() { return mNonEnrichedGcRatioCounts; }
 
     public void writeResults()

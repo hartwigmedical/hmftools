@@ -13,8 +13,6 @@ import static com.hartwig.hmftools.isofox.TestUtils.createIsofoxConfig;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
-import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
-import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.EXONIC;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
@@ -28,6 +26,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.isofox.common.FragmentType;
+import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
@@ -248,9 +247,9 @@ public class TransClassificationTest
         GeneCollection geneSet = new GeneCollection(0, Lists.newArrayList(geneReadData));
         bamReader.processReadRecords(geneSet, reads);
 
-        int[] geneCounts = geneSet.getCounts();
-        assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
-        assertEquals(1, geneCounts[typeAsInt(CHIMERIC)]);
+        FragmentTypeCounts fragTypeCounts = geneSet.fragmentTypeCounts();
+        // assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
+        assertEquals(1, fragTypeCounts.typeCount(CHIMERIC));
 
         // exon to intronic read
         read1 = createReadRecord(1, CHR_1, 1300, 1350, REF_BASE_STR_1, createCigar(0, 50, 0));
@@ -261,8 +260,8 @@ public class TransClassificationTest
         reads = Lists.newArrayList(read1, read2);
         bamReader.processReadRecords(geneSet, reads);
 
-        assertEquals(2, geneCounts[typeAsInt(TOTAL)]);
-        assertEquals(1, geneCounts[typeAsInt(FragmentType.UNSPLICED)]);
+        // assertEquals(2, geneCounts[typeAsInt(TOTAL)]);
+        assertEquals(1, fragTypeCounts.typeCount(FragmentType.UNSPLICED));
 
         // fully intronic
         read1 = createReadRecord(1, CHR_1, 2600, 2650, REF_BASE_STR_1, createCigar(0, 50, 0));
@@ -275,8 +274,8 @@ public class TransClassificationTest
         reads = Lists.newArrayList(read1, read2);
         bamReader.processReadRecords(geneSet, reads);
 
-        assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
-        assertEquals(1, geneCounts[typeAsInt(FragmentType.UNSPLICED)]);
+        // assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
+        assertEquals(1, fragTypeCounts.typeCount(FragmentType.UNSPLICED));
 
         // alternative splicing - first from reads with splits
         geneSet.clearCounts();
@@ -289,8 +288,8 @@ public class TransClassificationTest
         reads = Lists.newArrayList(read1, read2);
         bamReader.processReadRecords(geneSet, reads);
 
-        assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
-        assertEquals(1, geneCounts[typeAsInt(CHIMERIC)]);
+        // assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
+        assertEquals(1, fragTypeCounts.typeCount(CHIMERIC));
 
         int longInsertSize = config.MaxFragmentLength + 100;
 
@@ -305,8 +304,8 @@ public class TransClassificationTest
         reads = Lists.newArrayList(read1, read2);
         bamReader.processReadRecords(geneSet, reads);
 
-        assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
-        assertEquals(1, geneCounts[typeAsInt(FragmentType.TRANS_SUPPORTING)]);
+        // assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
+        assertEquals(1, fragTypeCounts.typeCount(FragmentType.TRANS_SUPPORTING));
 
         // alt splicing - exon to exon read skipping an exon and long, currently not detected
         geneSet.clearCounts();
@@ -319,8 +318,8 @@ public class TransClassificationTest
         reads = Lists.newArrayList(read1, read2);
         bamReader.processReadRecords(geneSet, reads);
 
-        assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
-        assertEquals(1, geneCounts[typeAsInt(FragmentType.ALT)]);
+        // assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
+        assertEquals(1, fragTypeCounts.typeCount(FragmentType.ALT));
     }
 
 }
