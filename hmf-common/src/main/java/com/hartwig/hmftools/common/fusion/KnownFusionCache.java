@@ -65,8 +65,9 @@ public class KnownFusionCache
     }
 
     public boolean hasValidData() { return mHasValidData; }
-    public final List<KnownFusionData> getData() { return mData; }
-    public final List<KnownFusionData> getDataByType(final KnownFusionType type) { return mDataByType.get(type); }
+    public List<KnownFusionData> getData() { return mData; }
+    public List<KnownFusionData> knownPairData() { return mKnownPairData; }
+    public List<KnownFusionData> getDataByType(final KnownFusionType type) { return mDataByType.get(type); }
 
     public boolean hasKnownFusion(final String fiveGene, final String threeGene)
     {
