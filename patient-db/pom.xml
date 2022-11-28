@@ -54,9 +54,15 @@
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-suggest</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.immutables</groupId>
             <artifactId>value</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.immutables</groupId>
+            <artifactId>gson</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -162,7 +168,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-shade-plugin</artifactId>
-                        <version>3.2.4</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>

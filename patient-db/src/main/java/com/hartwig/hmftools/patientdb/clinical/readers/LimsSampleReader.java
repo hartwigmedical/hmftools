@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsAnalysisType;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
-import com.hartwig.hmftools.common.lims.reportingdb.ReportingEntry;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableSampleData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
+import com.hartwig.hmftools.patientdb.clinical.lims.Lims;
+import com.hartwig.hmftools.patientdb.clinical.lims.LimsAnalysisType;
+import com.hartwig.hmftools.patientdb.clinical.lims.cohort.LimsCohortConfig;
+import com.hartwig.hmftools.patientdb.clinical.lims.reportingdb.ReportingEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
