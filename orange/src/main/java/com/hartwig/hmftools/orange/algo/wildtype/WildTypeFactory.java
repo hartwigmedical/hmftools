@@ -8,8 +8,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.orange.algo.linx.GeneDisruption;
+import com.hartwig.hmftools.orange.algo.purple.GainLoss;
 import com.hartwig.hmftools.orange.algo.purple.ReportableVariant;
 
 import org.jetbrains.annotations.NotNull;

@@ -299,9 +299,6 @@ public class OrangeAlgo {
                 purple.allSomaticVariants().size(),
                 purple.reportableSomaticVariants().size());
         LOGGER.info(" Loaded {} gene copy numbers entries", purple.allSomaticGeneCopyNumbers().size());
-        LOGGER.info(" Extracted {} somatic gains and losses from gene copy numbers for which {} are reportable",
-                purple.allSomaticGainsLosses().size(),
-                purple.reportableSomaticGainsLosses().size());
 
         if (referenceSample != null) {
             LOGGER.info(" Loaded {} germline driver catalog entries", purple.germlineDrivers().size());

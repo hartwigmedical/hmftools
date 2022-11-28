@@ -44,12 +44,6 @@ public interface PurpleData
     @NotNull
     List<GeneCopyNumber> allSomaticGeneCopyNumbers();
 
-    @NotNull
-    List<GainLoss> allSomaticGainsLosses();
-
-    @NotNull
-    List<GainLoss> reportableSomaticGainsLosses();
-
     @Nullable
     List<GermlineDeletion> allGermlineDeletions();
 

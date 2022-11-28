@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.loader;
+package com.hartwig.hmftools.orange.algo.purple;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.utils.Doubles;

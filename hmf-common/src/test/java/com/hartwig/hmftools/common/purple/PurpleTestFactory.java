@@ -13,7 +13,8 @@ public final class PurpleTestFactory {
     }
 
     @NotNull
-    public static PurpleData createMinimalTestPurpleData() {
+    public static PurpleData createMinimalTestPurpleData()
+    {
         PurityContext minimalContext = ImmutablePurityContext.builder()
                 .version(Strings.EMPTY)
                 .gender(Gender.FEMALE)
@@ -52,7 +53,8 @@ public final class PurpleTestFactory {
     }
 
     @NotNull
-    private static PurpleQC qcPass() {
+    private static PurpleQC qcPass()
+    {
         return ImmutablePurpleQC.builder()
                 .method(FittedPurityMethod.NORMAL)
                 .amberMeanDepth(0)
