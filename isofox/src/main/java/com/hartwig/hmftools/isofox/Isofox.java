@@ -141,7 +141,9 @@ public class Isofox
 
         if(mConfig.runFunction(READ_COUNTS))
         {
-            return countBamReads(chrGeneMap);
+            boolean status = countBamReads(chrGeneMap);
+            mResultsWriter.close();
+            return status;
         }
 
         // BAM processing for the key routines - novel junctions, fusions and gene expression
@@ -451,7 +453,7 @@ public class Isofox
 
         for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
         {
-            BamReadCounter bamReaderTask = new BamReadCounter(mConfig);
+            BamReadCounter bamReaderTask = new BamReadCounter(mConfig, mResultsWriter);
             bamReaderTask.initialise(entry.getKey(), entry.getValue());
             taskList.add(bamReaderTask);
             callableList.add(bamReaderTask);
