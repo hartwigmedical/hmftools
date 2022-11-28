@@ -21,12 +21,34 @@ class VdjPrimerMatcher(private val maxMismatch: Int)
 
             for (primer in primerList)
             {
-                val i = sequence.indexOf(primer.sequence)
-                if (i != -1)
-                {
-                    sLogger.info("vdj seq matches primer: {}, full vdj seq: {}", primer, vdj.sequenceFormatted)
+                val primerSeq = primer.sequence
 
-                    matchList.add(VdjPrimerMatch(vdj, primer, i, sequence))
+                for (i in 0 .. sequence.length - primerSeq.length)
+                {
+                    // try to find it using a simple loop
+                    var numMismatch = 0
+
+                    for (j in primerSeq.indices)
+                    {
+                        if (sequence[i + j] != primerSeq[j])
+                        {
+                            ++numMismatch
+
+                            if (numMismatch > maxMismatch)
+                            {
+                                break
+                            }
+                        }
+                    }
+
+                    if (numMismatch <= maxMismatch)
+                    {
+                        sLogger.info("vdj seq matches primer: i: {}, {}, full vdj seq: {}, mismatch: {}",
+                            i, primer, vdj.sequenceFormatted, numMismatch)
+
+                        matchList.add(VdjPrimerMatch(vdj, primer, i, numMismatch, sequence))
+                        break
+                    }
                 }
             }
         }

@@ -41,7 +41,8 @@ object VDJSequenceTsvWriter
         jPrimerMatches,
         layoutId,
         vdjSeq,
-        support
+        support,
+        fullSeq
     }
 
     private const val FILE_EXTENSION = ".cider.vdj_seq.tsv"
@@ -114,6 +115,7 @@ object VDJSequenceTsvWriter
                 Column.layoutId -> csvPrinter.print(vdj.layout.id)
                 Column.vdjSeq -> csvPrinter.print(vdj.sequence)
                 Column.support -> csvPrinter.print(CiderUtils.countsToString(vdj.supportCounts))
+                Column.fullSeq -> csvPrinter.print(vdj.layout.consensusSequence())
             }
         }
         csvPrinter.println()

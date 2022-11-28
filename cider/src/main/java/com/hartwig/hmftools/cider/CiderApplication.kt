@@ -92,7 +92,7 @@ class CiderApplication
         {
             val primerList = PrimerTsvFile.load(mParams.primerCsv!!)
             // if we are provided a list of primers, match those against the input
-            val vdjPrimerMatcher = VdjPrimerMatcher(1)
+            val vdjPrimerMatcher = VdjPrimerMatcher(mParams.primerMismatchMax)
             primerMatchList = vdjPrimerMatcher.matchVdjPrimer(vdjSequences, primerList)
 
             // write out the primer matches

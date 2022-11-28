@@ -202,20 +202,7 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
 
         fun calcCdr3SupportMin(vdj: VDJSequence) : Int
         {
-            val supportCounts = vdj.supportCounts
-            var supportSliceStart: Int = vdj.cdr3Start
-            var supportSliceEnd: Int = vdj.cdr3End
-
-            // if V or J anchor is missing we want to limit them to just 60 bases
-            if (vdj.vAnchor == null)
-            {
-                supportSliceStart = Math.max(supportSliceEnd - CiderConstants.PARTIAL_VDJ_UNANCHORED_LENGTH_BASES, 0)
-            }
-            else if (vdj.jAnchor == null)
-            {
-                supportSliceEnd = Math.min(supportSliceStart + CiderConstants.PARTIAL_VDJ_UNANCHORED_LENGTH_BASES, supportCounts.size)
-            }
-            return supportCounts.slice(supportSliceStart until supportSliceEnd).minOrNull() ?: 0
+            return vdj.supportCounts.minOrNull() ?: 0
         }
 
         fun calcAnchorSimilarity(vdj: VDJSequence, anchor: VJAnchor) : Int

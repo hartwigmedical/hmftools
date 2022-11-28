@@ -14,6 +14,7 @@ object VdjPrimerMatchTsv
         cdr3AA,
         primerGene,
         primerName,
+        numMismatch,
         primerSequence,
         vdjFullSeq
     }
@@ -53,6 +54,7 @@ object VdjPrimerMatchTsv
                 Column.cdr3AA -> csvPrinter.print(CiderFormatter.cdr3AminoAcid(match.vdj))
                 Column.primerGene -> csvPrinter.print(match.primer.target)
                 Column.primerName -> csvPrinter.print(match.primer.name)
+                Column.numMismatch -> csvPrinter.print(match.numMismatch)
                 Column.primerSequence -> csvPrinter.print(match.primer.sequence)
                 Column.vdjFullSeq -> csvPrinter.print(match.fullVdjSequence)
             }

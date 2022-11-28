@@ -54,17 +54,17 @@ class CiderParams
     @Parameter(names = ["-min_base_quality"], description = "Minimum quality for a base to be considered")
     var minBaseQuality = 25
 
-    @Parameter(names = ["-write_filtered_bam"], description = "Write a output BAM file containing all CDR3 reads")
+    @Parameter(names = ["-write_cider_bam"], description = "Write a output BAM file containing all CDR3 reads")
     var writeFilteredBam = false
-
-    //@Parameter(names = ["-skip_partial_seq"], description = "Skip partially rearranged sequences (V only or J only)")
-    //var skipPartialSeq = false
 
     @Parameter(names = ["-num_trim_bases"], description = "Number of bases to trim on each side of reads")
     var numBasesToTrim = 0
 
     @Parameter(names = ["-primer_csv"], description = "Path to csv file containing primers")
     var primerCsv: String? = null
+
+    @Parameter(names = ["-primer_mismatch_max"], description = "Maximum number of mismatch bases for matching primer sequence")
+    var primerMismatchMax: Int = 0
 
     val isValid: Boolean get() = true
 
