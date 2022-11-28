@@ -103,7 +103,7 @@ public class SomaticPurityFitter
 
             GermlineStatus germlineStatus = region.isPresent() ? region.get().germlineStatus() : GermlineStatus.UNKNOWN;
 
-            if(germlineStatus != GermlineStatus.DIPLOID)
+            if(!variant.isHotspot() && germlineStatus != GermlineStatus.DIPLOID)
             {
                 ++filterCounts[FilterReason.GERMLINE_DIPLOID.ordinal()];
                 continue;
@@ -157,12 +157,12 @@ public class SomaticPurityFitter
                 ++filterCounts[FilterReason.MAPPABILITY.ordinal()];
                 return false;
             }
-        }
 
-        if(variant.referenceAlleleReadCount() > 0)
-        {
-            ++filterCounts[FilterReason.GERMLINE_ALLELE_COUNT.ordinal()];
-            return false;
+            if(variant.referenceAlleleReadCount() > 0)
+            {
+                ++filterCounts[FilterReason.GERMLINE_ALLELE_COUNT.ordinal()];
+                return false;
+            }
         }
 
         return true;
