@@ -8,11 +8,11 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.setSvGeneData;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createDriverGene;
+import static com.hartwig.hmftools.linx.utils.SampleDataLoader.setSvGeneData;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 
@@ -215,7 +215,7 @@ public class GermlineDisruptionTest
         mLinx.preClusteringInit();
         mLinx.Analyser.clusterAndAnalyse();
 
-        setSvGeneData(mLinx.AllVariants, mGeneDataCache, true, false);
+        setSvGeneData(mLinx.AllVariants, mGeneDataCache, true);
         mLinx.FusionAnalyser.annotateTranscripts(mLinx.AllVariants, true);
 
         mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());

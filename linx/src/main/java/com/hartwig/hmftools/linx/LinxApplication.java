@@ -119,36 +119,29 @@ public class LinxApplication
 
             boolean ensemblLoadOk = false;
 
-            if(!config.breakendGeneLoading())
+            if(!config.RestrictedGeneIds.isEmpty())
             {
-                if(!config.RestrictedGeneIds.isEmpty())
-                {
-                    ensemblDataCache.setRestrictedGeneIdList(config.RestrictedGeneIds);
-                    ensemblLoadOk = ensemblDataCache.load(false);
-                }
-                else if(!config.RunFusions && config.RunDrivers && !config.HomDisAllGenes)
-                {
-                    // only load transcripts for the driver gene panel
-                    ensemblLoadOk = ensemblDataCache.load(true);
+                ensemblDataCache.setRestrictedGeneIdList(config.RestrictedGeneIds);
+                ensemblLoadOk = ensemblDataCache.load(false);
+            }
+            else if(!config.RunFusions && config.RunDrivers && !config.HomDisAllGenes)
+            {
+                // only load transcripts for the driver gene panel
+                ensemblLoadOk = ensemblDataCache.load(true);
 
-                    if(ensemblLoadOk)
-                    {
-                        final List<String> geneIds = config.DriverGenes.stream()
-                                .map(x -> ensemblDataCache.getGeneDataByName(x.gene()))
-                                .filter(x -> x != null)
-                                .map(x -> x.GeneId).collect(Collectors.toList());
-
-                        ensemblLoadOk &= ensemblDataCache.loadTranscriptData(geneIds);
-                    }
-                }
-                else
+                if(ensemblLoadOk)
                 {
-                    ensemblLoadOk = ensemblDataCache.load(false);
+                    final List<String> geneIds = config.DriverGenes.stream()
+                            .map(x -> ensemblDataCache.getGeneDataByName(x.gene()))
+                            .filter(x -> x != null)
+                            .map(x -> x.GeneId).collect(Collectors.toList());
+
+                    ensemblLoadOk &= ensemblDataCache.loadTranscriptData(geneIds);
                 }
             }
             else
             {
-                ensemblLoadOk = ensemblDataCache.load(true);
+                ensemblLoadOk = ensemblDataCache.load(false);
             }
 
             if(!ensemblLoadOk)

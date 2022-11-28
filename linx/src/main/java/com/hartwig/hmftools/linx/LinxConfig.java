@@ -185,11 +185,6 @@ public class LinxConfig
         }
     }
 
-    public boolean breakendGeneLoading()
-    {
-        return isSingleSample() && !RunDrivers && RestrictedGeneIds.isEmpty() && !IsGermline;
-    }
-
     private List<DriverGene> loadDriverGenes(final CommandLine cmd)
     {
         if(DriverGenePanelConfig.isConfigured(cmd))
