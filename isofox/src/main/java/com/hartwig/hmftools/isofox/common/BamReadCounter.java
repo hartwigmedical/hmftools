@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -96,7 +97,7 @@ public class BamReadCounter implements Callable
 
     private void processBam()
     {
-        if (mGeneDataList.isEmpty())
+        if(mGeneDataList.isEmpty())
             return;
 
         // walk through each chromosome, taking groups of overlapping genes together
@@ -110,13 +111,13 @@ public class BamReadCounter implements Callable
         {
             currentGeneIndex = findNextOverlappingGenes(mGeneDataList, currentGeneIndex, overlappingGenes);
 
-            if(overlappingGenes.stream().anyMatch(x -> mConfig.Filters.EnrichedGeneIds.contains(x.GeneId)))
-                continue;
+            // if(overlappingGenes.stream().anyMatch(x -> mConfig.Filters.EnrichedGeneIds.contains(x.GeneId)))
+            //    continue;
 
             mCurrentGenesRange[SE_START] = 0;
             mCurrentGenesRange[SE_END] = 0;
 
-            for (int i = 0; i < overlappingGenes.size(); ++i)
+            for(int i = 0; i < overlappingGenes.size(); ++i)
             {
                 GeneData geneData = overlappingGenes.get(i);
 
@@ -146,6 +147,12 @@ public class BamReadCounter implements Callable
 
     private void processBamRead(final SAMRecord record)
     {
+        if(!positionWithin(record.getStart(), mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END]))
+            return;
+
+        if(GeneRegionFilters.inExcludedRegion(mConfig.Filters.ExcludedRegion, record))
+            return;
+
         ++mTotalReadCount;
         ++mCurrentGeneReadCount;
         mFragmentTypeCounts.addCount(TOTAL);
@@ -181,8 +188,8 @@ public class BamReadCounter implements Callable
             final String outputFileName = config.formOutputFile("read_data.csv");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("GeneId,ReadId,Chromosome,PosStart,PosEnd,Cigar");
-            writer.write(",InsertSize,MateChr,MatePosStart,FirstInPair,ReadReversed,Duplicate,Secondary,Supplementary,SuppData");
+            writer.write("GeneId,ReadId,Chromosome,PosStart,PosEnd,Cigar,Flags,InsertSize");
+            writer.write(",MateChr,MatePosStart,FirstInPair,ReadReversed,Duplicate,Secondary,Supplementary,SuppData");
             writer.newLine();
             return writer;
         }
@@ -199,9 +206,10 @@ public class BamReadCounter implements Callable
         {
             SupplementaryReadData suppData = SupplementaryReadData.from(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
-            writer.write(String.format("%s,%s,%s,%d,%d,%s,%d,%s,%d",
+            writer.write(String.format("%s,%s,%s,%d,%d,%s,%d,%d,%s,%d",
                     geneId, record.getReadName(), record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd(),
-                    record.getCigarString(), record.getInferredInsertSize(), record.getMateReferenceName(), record.getMateAlignmentStart()));
+                    record.getCigarString(), record.getFlags(), record.getInferredInsertSize(),
+                    record.getMateReferenceName(), record.getMateAlignmentStart()));
 
             writer.write(String.format(",%s,%s,%s,%s,%s,%s",
                     record.getFirstOfPairFlag(), record.getReadNegativeStrandFlag(), record.getDuplicateReadFlag(),

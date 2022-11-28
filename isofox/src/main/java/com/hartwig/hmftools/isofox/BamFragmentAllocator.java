@@ -58,6 +58,7 @@ import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
+import com.hartwig.hmftools.isofox.common.GeneRegionFilters;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
@@ -699,17 +700,7 @@ public class BamFragmentAllocator
         if(mExcludedRegion == null)
             return false;
 
-        if(mExcludedRegion.containsPosition(record.getStart()) || mExcludedRegion.containsPosition(record.getEnd()))
-            return true;
-
-        // check the mate as well
-        if(record.getMateReferenceName() != null
-        && mConfig.Filters.ExcludedRegion.containsPosition(record.getMateReferenceName(), record.getMateAlignmentStart()))
-        {
-            return true;
-        }
-
-        return false;
+        return GeneRegionFilters.inExcludedRegion(mConfig.Filters.ExcludedRegion, record);
     }
 
     private void processEnrichedRegionRead(final SAMRecord record)

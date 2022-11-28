@@ -26,6 +26,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import htsjdk.samtools.SAMRecord;
+
 public class GeneRegionFilters
 {
     public final List<String> SpecificChromosomes;
@@ -145,5 +147,22 @@ public class GeneRegionFilters
                 .filter(x -> x != null)
                 .forEach(x -> RestrictedGeneRegions.add(new ChrBaseRegion(
                         x.Chromosome, x.GeneStart - 1000, x.GeneEnd + 1000)));
+    }
+
+    public static boolean inExcludedRegion(final ChrBaseRegion excludedRegion, final SAMRecord record)
+    {
+        if(excludedRegion == null)
+            return false;
+
+        if(excludedRegion.containsPosition(record.getStart()) || excludedRegion.containsPosition(record.getEnd()))
+            return true;
+
+        // check the mate as well
+        if(record.getMateReferenceName() != null && excludedRegion.containsPosition(record.getMateReferenceName(), record.getMateAlignmentStart()))
+        {
+            return true;
+        }
+
+        return false;
     }
 }
