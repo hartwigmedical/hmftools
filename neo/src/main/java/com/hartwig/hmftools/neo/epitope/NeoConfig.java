@@ -2,7 +2,10 @@ package com.hartwig.hmftools.neo.epitope;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
@@ -27,6 +30,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -39,6 +43,7 @@ public class NeoConfig
     public final int PeptideFlanks;
 
     public final RefGenomeInterface RefGenome;
+    public final RefGenomeVersion RefGenVersion;
 
     public final List<String> RestrictedGeneIds;
     public final List<String> CommonHlaTypes;
@@ -129,6 +134,7 @@ public class NeoConfig
 
         final String refGenomeFilename = cmd.getOptionValue(REF_GENOME);
         RefGenome = loadRefGenome(refGenomeFilename);
+        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(V37)));
 
         SvFusionsDir = cmd.getOptionValue(SV_FUSION_DATA_DIR);
         SomaticVcf = cmd.getOptionValue(SOMATIC_VCF);
@@ -165,7 +171,7 @@ public class NeoConfig
         options.addOption(PEPTIDE_FLANKS, true, "Peptide flanking amino acids");
         EnsemblDataCache.addEnsemblDir(options);
         options.addOption(GENE_ID_FILE, true, "Restrict to specific genes");
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
+        addRefGenomeConfig(options);
         options.addOption(SV_FUSION_DATA_DIR, true, "Linx neoepitope directory");
         options.addOption(SOMATIC_VCF, true, "Purple somatic VCF (use '*') as required");
         options.addOption(CANCER_TPM_FILE, true, "TPM per cancer type and pan-cancer");
