@@ -93,7 +93,6 @@ public class DriverDataCache
         mDriverCatalog.addAll(
                 mDbAccess.readDriverCatalog(mSampleId).stream()
                         .filter(x -> DRIVERS_PURPLE_SOMATIC.contains(x.driver()))
-                        .filter(x -> x.isCanonical())
                         .collect(Collectors.toList()));
 
         LNX_LOGGER.debug("retrieved {} driver gene records", mDriverCatalog.size());
@@ -117,7 +116,6 @@ public class DriverDataCache
             mDriverCatalog.addAll(
                     DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDataPath, mSampleId)).stream()
                             .filter(x -> DRIVERS_PURPLE_SOMATIC.contains(x.driver()))
-                            .filter(x -> x.isCanonical())
                             .collect(Collectors.toList()));
 
             mGeneCopyNumberData.addAll(
