@@ -1,12 +1,8 @@
-package com.hartwig.hmftools.common.purple.loader;
+package com.hartwig.hmftools.common.purple;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
-import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.immutables.value.Value;

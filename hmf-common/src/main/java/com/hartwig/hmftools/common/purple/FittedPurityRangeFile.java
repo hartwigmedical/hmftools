@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
 import static com.hartwig.hmftools.common.purple.BestFit.bestFitPerPurity;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -32,7 +32,7 @@ public final class FittedPurityRangeFile
     private static final String PURITY = "purity";
     private static final String NORM_FACTOR = "normFactor";
     private static final String SCORE = "score";
-    private static final String DIPLOD_PROPORTION = "diploidProportion";
+    private static final String DIPLOID_PROPORTION = "diploidProportion";
     private static final String PLOIDY = "ploidy";
     private static final String SOMATIC_PENALTY = "somaticPenalty";
 
@@ -56,7 +56,7 @@ public final class FittedPurityRangeFile
                     .purity(Double.parseDouble(values[fieldsIndexMap.get(PURITY)]))
                     .normFactor(Double.parseDouble(values[fieldsIndexMap.get(NORM_FACTOR)]))
                     .score(Double.parseDouble(values[fieldsIndexMap.get(SCORE)]))
-                    .diploidProportion(Double.parseDouble(values[fieldsIndexMap.get(DIPLOD_PROPORTION)]))
+                    .diploidProportion(Double.parseDouble(values[fieldsIndexMap.get(DIPLOID_PROPORTION)]))
                     .ploidy(Double.parseDouble(values[fieldsIndexMap.get(PLOIDY)]))
                     .somaticPenalty(Double.parseDouble(values[fieldsIndexMap.get(SOMATIC_PENALTY)]))
                     .build());
@@ -99,7 +99,7 @@ public final class FittedPurityRangeFile
                 .add(PURITY)
                 .add(NORM_FACTOR)
                 .add(SCORE)
-                .add(DIPLOD_PROPORTION)
+                .add(DIPLOID_PROPORTION)
                 .add(PLOIDY)
                 .add(SOMATIC_PENALTY)
                 .toString();
