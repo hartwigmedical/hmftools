@@ -23,7 +23,6 @@ public class SvBreakend {
     private final int mPosition;
     private final byte mOrientation;
     private boolean mUsesStart;
-    private boolean mSglMapping;
 
     public SvBreakend(final SvVarData var, boolean useStart)
     {
@@ -36,7 +35,6 @@ public class SvBreakend {
         mChrArm = makeChrArmStr(mChromosome, mArm);
         mPosition = var.position(useStart);
         mOrientation = var.orientation(useStart);
-        mSglMapping = false;
     }
 
     public SvBreakend(final SvVarData var, final SglMapping mapping)
@@ -50,7 +48,6 @@ public class SvBreakend {
         mChrArm = makeChrArmStr(mChromosome, mArm);
         mPosition = mapping.Position;
         mOrientation = mapping.Orientation;
-        mSglMapping = true;
     }
 
     public final SvVarData getSV() { return mSV; }
@@ -64,7 +61,6 @@ public class SvBreakend {
     public final byte orientation() { return mOrientation; }
     public boolean usesStart() { return mUsesStart; }
     public StructuralVariantType type() { return mSV.type(); }
-    public boolean isSglMapping() { return mSglMapping; }
 
     public final SvBreakend getOtherBreakend() { return mSV.getBreakend(!mUsesStart); }
 
@@ -102,10 +98,7 @@ public class SvBreakend {
     {
         return mSV.copyNumberChange(mUsesStart);
     }
-    public double copyNumber()
-    {
-        return mSV.copyNumber(mUsesStart);
-    }
+    public double copyNumber() { return mSV.copyNumber(mUsesStart); }
     public double jcn() { return mSV.jcn(); }
     public double jcnUncertainty() { return mSV.jcnUncertainty(); }
 

@@ -351,8 +351,6 @@ public class SvVarData
 
     public boolean isFoldback() { return mFoldbackBreakends[SE_START] != null || mFoldbackBreakends[SE_END] != null; }
 
-    public boolean isSameSvFoldback() { return mFoldbackBreakends[SE_END] != null && mFoldbackBreakends[SE_END] == mBreakend[SE_START]; }
-
     public boolean isSingleBreakendFoldback()
     {
         if(mFoldbackBreakends[SE_START] != null && mFoldbackBreakends[SE_START] == mBreakend[SE_START])
@@ -432,8 +430,6 @@ public class SvVarData
         return getAssemblyData(true).contains(ASSEMBLY_TYPE_EQV);
     }
 
-    public List<SglMapping> getSglMappings() { return mSglMappings; }
-
     public void setLinkedSVs(final SvVarData var1, final SvVarData var2)
     {
         mLinkedSVs = new SvVarData[] {var1, var2};
@@ -442,6 +438,8 @@ public class SvVarData
     public SvVarData[] getLinkedSVs() { return mLinkedSVs; }
 
     public List<BreakendGeneData> getGenesList(boolean isStart) { return mGenes.get(isStart); }
+
+    public List<SglMapping> getSglMappings() { return mSglMappings; }
 
     private static final int PRE_TRANSCRIPT_DISTANCE = 10000;
 

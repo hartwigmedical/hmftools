@@ -202,13 +202,15 @@ public class GermlineDisruptions
 
                             SvDisruptionData upDisruptionData = new SvDisruptionData(
                                     breakend.getSV(), breakend.usesStart(), geneData, canonicalTrans,
-                                    new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, UPSTREAM, 1.0);
+                                    new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, UPSTREAM,
+                                    1.0, 2.0);
 
                             mDisruptions.add(upDisruptionData);
 
                             SvDisruptionData downDisruptionData = new SvDisruptionData(
                                     nextBreakend.getSV(), nextBreakend.usesStart(), geneData, canonicalTrans,
-                                    new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, DOWNSTREAM, 1.0);
+                                    new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, DOWNSTREAM,
+                                    1.0, 2.0);
 
                             mDisruptions.add(downDisruptionData);
                         }
@@ -327,7 +329,7 @@ public class GermlineDisruptions
                 {
                     SvDisruptionData disruptionData = new SvDisruptionData(
                             breakendStart.getSV(), breakendStart.usesStart(), geneData, canonicalTrans,
-                            new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, UPSTREAM, 1.0);
+                            new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, UPSTREAM, 1.0, 2.0);
 
                     if(impliedType == DEL && isPseudogeneDeletion(var, posStart, posEnd, canonicalTrans))
                     {

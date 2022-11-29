@@ -760,16 +760,22 @@ public class DisruptionFinder implements CohortFileInterface
                         if(!matchesDisruptionTranscript(gene.geneId(), transcript.TransData))
                             continue;
 
+                        SvBreakend breakend = var.getBreakend(be);
+
                         LNX_LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted, cnLowside({})",
-                                var.id(), var.getBreakend(be), gene.geneName(), transcript.transName(),
+                                var.id(), breakend, gene.geneName(), transcript.transName(),
                                 formatJcn(transcript.undisruptedCopyNumber()));
 
                         transcript.setReportableDisruption(true);
 
+                        if(!transcript.undisruptedCopyNumberSet())
+                            transcript.setUndisruptedCopyNumber(getUndisruptedCopyNumber(breakend));
+
                         SvDisruptionData disruptionData = new SvDisruptionData(
                                 var,  gene.isStart(), gene.GeneData, transcript.TransData,
                                 new int[] { transcript.ExonUpstream, transcript.ExonDownstream },
-                                transcript.codingType(), transcript.regionType(), transcript.undisruptedCopyNumber());
+                                transcript.codingType(), transcript.regionType(), transcript.undisruptedCopyNumber(),
+                                breakend.copyNumber());
 
                         disruptionData.setReportable(true);
 
@@ -818,16 +824,16 @@ public class DisruptionFinder implements CohortFileInterface
                     .isCanonical(disruptionData.Transcript.IsCanonical)
                     .chromosome(disruptionData.Gene.Chromosome)
                     .chromosomeBand(disruptionData.Gene.KaryotypeBand)
-                    .likelihoodMethod(LikelihoodMethod.DEL)
+                    .likelihoodMethod(LikelihoodMethod.DISRUPTION)
                     .driverLikelihood(0)
                     .missense(0)
                     .nonsense(0)
                     .splice(0)
                     .inframe(0)
                     .frameshift(0)
-                    .biallelic(true)
+                    .biallelic(disruptionData.UndisruptedCopyNumber < 0.5)
                     .minCopyNumber(disruptionData.UndisruptedCopyNumber)
-                    .maxCopyNumber(disruptionData.UndisruptedCopyNumber)
+                    .maxCopyNumber(disruptionData.MaxCopyNumber)
                     .build();
 
             driverCatalogs.add(driverCatalog);
