@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.linx.fusion.FusionConfig;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionResources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -289,7 +290,7 @@ public class LinxApplication
         // allow sub-components to add their specific config
         LinxConfig.addCmdLineArgs(options);
         addKnownFusionFileOption(options);
-        FusionDisruptionAnalyser.addCmdLineArgs(options);
+        FusionConfig.addCmdLineArgs(options);
 
         return options;
     }

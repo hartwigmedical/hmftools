@@ -222,7 +222,7 @@ public class SampleAnalyser implements Callable
 
         if(mEnsemblDataCache != null)
         {
-            Map<String,Integer> specificPreGeneDistances = mFusionAnalyser.getSpecificPreGeneDistances();
+            Map<String,Integer> specificPreGeneDistances = mFusionAnalyser.getSpecialFusions().getSpecificPreGeneDistances();
             int preGeneDefaultDistance = mConfig.RunFusions ? PRE_GENE_PROMOTOR_DISTANCE : 0;
 
             BreakendGenePrep.setSvGeneData(mAllVariants, mEnsemblDataCache, preGeneDefaultDistance, specificPreGeneDistances);

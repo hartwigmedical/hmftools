@@ -3,19 +3,17 @@ package com.hartwig.hmftools.linx.fusion;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.getUndisruptedCopyNumber;
+import static com.hartwig.hmftools.linx.fusion.FusionConfig.LOG_INVALID_REASONS;
+import static com.hartwig.hmftools.linx.fusion.FusionConfig.WRITE_NEO_EPITOPES;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LENGTH;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_IG_KNOWN;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.allowSuspectChains;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
@@ -34,13 +32,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
-import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.linx.LinxConfig;
@@ -57,7 +52,6 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class FusionDisruptionAnalyser
 {
@@ -73,31 +67,20 @@ public class FusionDisruptionAnalyser
     private final DatabaseAccess mDbAccess;
 
     private final boolean mRunFusions;
-    private final FusionParameters mFusionParams;
-    private boolean mLogReportableOnly;
-    private boolean mLogAllPotentials;
-    private boolean mWriteAllVisFusions;
+    private final FusionConfig mFusionConfig;
 
-    private final List<SvVarData> mKnownPairSglCandidates;
     private final List<GeneFusion> mFusions; // all possible valid transcript-pair fusions
     private final List<GeneFusion> mUniqueFusions; // top-priority fusions from within each unique gene and SV pair
     private final Map<GeneFusion,String> mInvalidFusions;
+    private final SpecialFusions mSpecialFusions;
 
     private RnaFusionMapper mRnaFusionMapper;
     private final VisSampleData mVisSampleData;
 
     private PerformanceCounter mPerfCounter;
 
-    public static final String PRE_GENE_BREAKEND_DISTANCE = "fusion_gene_distance";
-    public static final String LOG_REPORTABLE_ONLY = "log_reportable_fusions";
-    public static final String LOG_ALL_POTENTIALS = "log_all_potential_fusions";
-    public static final String LOG_INVALID_REASONS = "log_invalid_fusions";
-    public static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
-    public static final String WRITE_NEO_EPITOPES = "write_neo_epitopes";
-    public static final String WRITE_ALL_VIS_FUSIONS = "write_all_vis_fusions";
-
     public FusionDisruptionAnalyser(
-            final CommandLine cmdLineArgs, final LinxConfig config, final EnsemblDataCache ensemblDataCache, final DatabaseAccess dbAccess,
+            final CommandLine cmd, final LinxConfig config, final EnsemblDataCache ensemblDataCache, final DatabaseAccess dbAccess,
             final FusionResources fusionResources, final CohortDataWriter cohortDataWriter, final VisSampleData visSampleData)
     {
         mOutputDir = config.OutputDataPath;
@@ -105,45 +88,56 @@ public class FusionDisruptionAnalyser
         mConfig = config;
         mGeneDataCache = ensemblDataCache;
         mDbAccess = dbAccess;
-        mFusionFinder = new FusionFinder(ensemblDataCache, fusionResources.knownFusionCache());
+
+        mFusionConfig = cmd != null ? new FusionConfig(cmd) : new FusionConfig();
+        mRunFusions = cmd == null ? true : mConfig.RunFusions;
+
+        mFusionFinder = new FusionFinder(mFusionConfig, ensemblDataCache, fusionResources.knownFusionCache());
         mFusionWriter = new FusionWriter(mOutputDir, cohortDataWriter);
         mDisruptionFinder = new DisruptionFinder(config, ensemblDataCache, cohortDataWriter, visSampleData);
         mVisSampleData = visSampleData;
 
         mNeoEpitopeWriter = null;
 
-        mRunFusions = cmdLineArgs == null || cmdLineArgs.hasOption(CHECK_FUSIONS);
         mFusions = Lists.newArrayList();
         mUniqueFusions = Lists.newArrayList();
-        mKnownPairSglCandidates = Lists.newArrayList();
         mInvalidFusions = Maps.newHashMap();
-        mLogReportableOnly = false;
-        mLogAllPotentials = false;
-        mWriteAllVisFusions = false;
 
-        mFusionParams = new FusionParameters();
-        mFusionParams.RequireUpstreamBiotypes = true;
+        mSpecialFusions = new SpecialFusions(mGeneDataCache, mFusionFinder, mFusionConfig);
 
         mRnaFusionMapper = null;
 
         mPerfCounter = new PerformanceCounter("Fusions");
 
-        initialise(cmdLineArgs);
-    }
+        if(cmd != null)
+        {
+            if(cmd.hasOption(RNA_FUSIONS_FILE))
+            {
+                if(mConfig.Threads > 1 && mConfig.hasMultipleSamples())
+                {
+                    LNX_LOGGER.error("RNA fusions mapping not yet supported in multi-threading mode");
+                }
+                else
+                {
+                    mRnaFusionMapper = new RnaFusionMapper(
+                            mOutputDir, cmd, mGeneDataCache, mFusionFinder, mUniqueFusions, mInvalidFusions);
+                }
+            }
 
-    public static void addCmdLineArgs(Options options)
-    {
-        options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
-        options.addOption(SKIP_UNPHASED_FUSIONS, false, "Skip unphased fusions");
-        options.addOption(WRITE_NEO_EPITOPES, false, "Search for neo-epitopes from fusions");
+            if(cmd.hasOption(WRITE_NEO_EPITOPES))
+            {
+                mNeoEpitopeWriter = new NeoEpitopeWriter(mOutputDir, mGeneDataCache, mFusionFinder.getKnownFusionCache());
+            }
 
-        options.addOption(RNA_FUSIONS_FILE, true, "Sample RNA fusion data to match vs Linx fusions");
-        options.addOption(RNA_FILE_SOURCE, true, "RNA fusion source: ISOFOX, ARRIBA or STARFUSION");
+            if(mRunFusions)
+            {
+                LNX_LOGGER.debug("fusion config: requirePhaseMatch({}) allowExonSkipping({}) requireUpstreamBiotypes({})",
+                        mFusionConfig.RequirePhaseMatch, mFusionConfig.AllowExonSkipping, mFusionConfig.RequireUpstreamBiotypes);
 
-        options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
-        options.addOption(LOG_ALL_POTENTIALS, false, "Log all potential fusions");
-        options.addOption(LOG_INVALID_REASONS, false, "Log reasons for not making a fusion between transcripts");
-        options.addOption(WRITE_ALL_VIS_FUSIONS, false, "Write all fusions including non-reportable for visualiser");
+                mSpecialFusions.cacheSpecialFusionGenes();
+            }
+        }
+
     }
 
     public PerformanceCounter getPerfCounter() { return mPerfCounter; }
@@ -153,110 +147,13 @@ public class FusionDisruptionAnalyser
         return configPathValid(cmd, RNA_FUSIONS_FILE) && configPathValid(cmd, KNOWN_FUSIONS_FILE);
     }
 
-    private void initialise(final CommandLine cmdLineArgs)
-    {
-        if(cmdLineArgs == null)
-            return;
-
-        if(cmdLineArgs.hasOption(PRE_GENE_BREAKEND_DISTANCE))
-        {
-            int preGeneBreakendDistance = Integer.parseInt(cmdLineArgs.getOptionValue(PRE_GENE_BREAKEND_DISTANCE));
-            PRE_GENE_PROMOTOR_DISTANCE = preGeneBreakendDistance;
-        }
-
-        mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
-        mFusionParams.RequirePhaseMatch = cmdLineArgs.hasOption(SKIP_UNPHASED_FUSIONS);
-        mLogAllPotentials = cmdLineArgs.hasOption(LOG_ALL_POTENTIALS);
-        mWriteAllVisFusions = cmdLineArgs.hasOption(WRITE_ALL_VIS_FUSIONS);
-
-        if(cmdLineArgs.hasOption(LOG_INVALID_REASONS))
-        {
-            mFusionFinder.setLogInvalidReasons(true);
-            mFusionParams.LogInvalidReasons = cmdLineArgs.hasOption(LOG_INVALID_REASONS);
-        }
-
-        if(cmdLineArgs.hasOption(RNA_FUSIONS_FILE))
-        {
-            if(mConfig.Threads > 1 && mConfig.hasMultipleSamples())
-            {
-                LNX_LOGGER.error("RNA fusions mapping not yet supported in multi-threading mode");
-            }
-            else
-            {
-                mRnaFusionMapper = new RnaFusionMapper(
-                        mOutputDir, cmdLineArgs, mGeneDataCache, mFusionFinder, mUniqueFusions, mInvalidFusions);
-            }
-        }
-
-        if(cmdLineArgs.hasOption(WRITE_NEO_EPITOPES))
-        {
-            mNeoEpitopeWriter = new NeoEpitopeWriter(mOutputDir, mGeneDataCache, mFusionFinder.getKnownFusionCache());
-        }
-
-        if(mRunFusions)
-        {
-            LNX_LOGGER.debug("fusion config: requirePhaseMatch({}) allowExonSkipping({}) requireUpstreamBiotypes({})",
-                    mFusionParams.RequirePhaseMatch, mFusionParams.AllowExonSkipping, mFusionParams.RequireUpstreamBiotypes);
-
-            cacheSpecialFusionGenes();
-        }
-    }
-
-    public Map<String,Integer> getSpecificPreGeneDistances()
-    {
-        Map<String,Integer> specificGeneDistances = Maps.newHashMap();
-        List<KnownFusionData> igKnownPairs = mFusionFinder.getKnownFusionCache().getDataByType(IG_KNOWN_PAIR);
-        igKnownPairs.forEach(x -> specificGeneDistances.put(x.ThreeGene, MAX_UPSTREAM_DISTANCE_IG_KNOWN));
-        return specificGeneDistances;
-    }
-
-    public void cacheSpecialFusionGenes()
-    {
-        for(final KnownFusionData kfData : mFusionFinder.getKnownFusionCache().getData())
-        {
-            if(kfData.downstreamDistance(FS_UP) > 0)
-            {
-                final GeneData geneData = mGeneDataCache.getGeneDataByName(kfData.FiveGene);
-                if(geneData != null)
-                {
-                    mGeneDataCache.addDownstreamGeneAnnotations(geneData, kfData.downstreamDistance(FS_UP));
-                }
-            }
-
-            if(kfData.downstreamDistance(FS_DOWN) > 0)
-            {
-                final GeneData geneData = mGeneDataCache.getGeneDataByName(kfData.ThreeGene);
-                if(geneData != null)
-                {
-                    mGeneDataCache.addDownstreamGeneAnnotations(geneData, kfData.downstreamDistance(FS_DOWN));
-                }
-            }
-
-            if(!kfData.getThreeGeneAltRegions().isEmpty())
-            {
-                final GeneData geneData = mGeneDataCache.getGeneDataByName(kfData.ThreeGene);
-
-                if(geneData != null)
-                {
-                    if(mGeneDataCache.getAlternativeGeneData().stream().anyMatch(x -> x.GeneId.equals(geneData.GeneId)))
-                        continue;
-
-                    for(final ChrBaseRegion altRegion : kfData.getThreeGeneAltRegions())
-                    {
-                        mGeneDataCache.getAlternativeGeneData().add(new GeneData(
-                                geneData.GeneId, geneData.GeneName, altRegion.Chromosome, geneData.Strand, altRegion.start(), altRegion.end(), ""));
-                    }
-                }
-            }
-        }
-    }
-
     public boolean hasRnaSampleData() { return mRnaFusionMapper != null; }
     public final List<GeneFusion> getFusions() { return mFusions; }
     public final List<GeneFusion> getUniqueFusions() { return mUniqueFusions; }
     public final Map<GeneFusion,String> getInvalidFusions() { return mInvalidFusions; }
     public final FusionFinder getFusionFinder() { return mFusionFinder; }
     public final DisruptionFinder getDisruptionFinder() { return mDisruptionFinder; }
+    public final SpecialFusions getSpecialFusions() { return mSpecialFusions; }
 
     public void annotateTranscripts(final List<SvVarData> svList, boolean purgeInvalidTranscripts)
     {
@@ -341,7 +238,7 @@ public class FusionDisruptionAnalyser
         {
             mFusionWriter.writeSampleData(mSampleId, fusions, breakends);
 
-            if(mLogAllPotentials)
+            if(mFusionConfig.LogAllPotentials)
             {
                 mFusions.forEach(x -> mFusionWriter.writeVerboseFusionData(x, mSampleId));
             }
@@ -349,10 +246,10 @@ public class FusionDisruptionAnalyser
         else
         {
             // write fusions in detail when in batch mode
-            final List<GeneFusion> fusionList = mLogAllPotentials ? mFusions : mUniqueFusions;
+            final List<GeneFusion> fusionList = mFusionConfig.LogAllPotentials ? mFusions : mUniqueFusions;
 
             fusionList.stream()
-                    .filter(x -> x.reportable() || !mLogReportableOnly)
+                    .filter(x -> x.reportable() || !mFusionConfig.LogReportableOnly)
                     .forEach(x -> mFusionWriter.writeVerboseFusionData(x, mSampleId));
         }
 
@@ -406,14 +303,15 @@ public class FusionDisruptionAnalyser
 
         mFusions.clear();
         mInvalidFusions.clear();
-        mKnownPairSglCandidates.clear();
+        mSpecialFusions.clear();
 
         if(mNeoEpitopeWriter != null)
             mNeoEpitopeWriter.initialiseSample(mSampleId);
 
         findSingleSVFusions(svList);
         findChainedFusions(clusters);
-        // findKnownPairSglFusions();
+
+        mSpecialFusions.findFusions(svList);
     }
 
     private void findSingleSVFusions(final List<SvVarData> svList)
@@ -421,14 +319,8 @@ public class FusionDisruptionAnalyser
         // always report SVs by themselves
         for(final SvVarData var : svList)
         {
-            if(var.isSglBreakend())
-            {
-                if(!getBreakendGeneList(var, true).isEmpty())
-                    mKnownPairSglCandidates.add(var);
-
-                if(var.getSglMappings().isEmpty())
-                    continue;
-            }
+            if(var.isSglBreakend() && var.getSglMappings().isEmpty())
+                continue;
 
             // skip SVs which have been chained unless they are in an IG region
             if(var.getCluster().getSvCount() > 1 && var.getCluster().findChain(var) != null)
@@ -447,7 +339,7 @@ public class FusionDisruptionAnalyser
             if(genesListStart.isEmpty() || genesListEnd.isEmpty())
                 continue;
 
-            List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd, mFusionParams);
+            List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd);
 
             if(mNeoEpitopeWriter != null)
             {
@@ -458,7 +350,7 @@ public class FusionDisruptionAnalyser
             if(fusions.isEmpty())
                 continue;
 
-            if(mLogReportableOnly)
+            if(mFusionConfig.LogReportableOnly)
             {
                 fusions = fusions.stream().filter(x -> determineReportability(x) == OK).collect(Collectors.toList());
             }
@@ -481,118 +373,6 @@ public class FusionDisruptionAnalyser
                 mFusions.add(fusion);
             }
         }
-    }
-
-    private void findKnownPairSglFusions()
-    {
-        if(mKnownPairSglCandidates.size() < 2)
-            return;
-
-        List<KnownFusionData> knownPairData = mFusionFinder.getKnownFusionCache().knownPairData();
-
-        for(int i = 0; i < mKnownPairSglCandidates.size() - 1; ++i)
-        {
-            SvVarData sgl1 = mKnownPairSglCandidates.get(i);
-
-            final List<BreakendGeneData> genesList1 = getBreakendGeneList(sgl1, true);
-
-            List<KnownFusionData> fivePrimeData = Lists.newArrayList();
-            List<KnownFusionData> threePrimeData = Lists.newArrayList();
-
-            for(BreakendGeneData geneData : genesList1)
-            {
-                if(geneData.isUpstream())
-                {
-                    knownPairData.stream()
-                            .filter(x -> genesList1.stream().anyMatch(y -> y.geneName().equals(x.FiveGene)))
-                            .forEach(x -> fivePrimeData.add(x));
-                }
-                else
-                {
-                    knownPairData.stream()
-                            .filter(x -> genesList1.stream().anyMatch(y -> y.geneName().equals(x.ThreeGene)))
-                            .forEach(x -> threePrimeData.add(x));
-                }
-            }
-
-            for(int j = i + 1; j < mKnownPairSglCandidates.size(); ++j)
-            {
-                SvVarData sgl2 = mKnownPairSglCandidates.get(j);
-
-                final List<BreakendGeneData> genesList2 =  getBreakendGeneList(sgl2, true);
-
-                List<GeneFusion> fusions = Lists.newArrayList();
-
-                for(BreakendGeneData geneData : genesList2)
-                {
-                    if(geneData.isUpstream())
-                    {
-                        for(KnownFusionData kpData : threePrimeData)
-                        {
-                            if(kpData.FiveGene.equals(geneData.geneName()))
-                            {
-                                checkKnownPairSgls(kpData, sgl1, sgl2);
-
-                                fusions.addAll(mFusionFinder.findFusions(
-                                        Lists.newArrayList(geneData),
-                                        Lists.newArrayList(genesList1.stream().filter(x -> x.geneName().equals(kpData.ThreeGene)).collect(Collectors.toList())),
-                                        mFusionParams));
-                            }
-                        }
-                    }
-                    else
-                    {
-                        for(KnownFusionData kpData : fivePrimeData)
-                        {
-                            if(kpData.ThreeGene.equals(geneData.geneName()))
-                            {
-                                checkKnownPairSgls(kpData, sgl1, sgl2);
-
-                                fusions.addAll(mFusionFinder.findFusions(
-                                        Lists.newArrayList(genesList1.stream().filter(x -> x.geneName().equals(kpData.FiveGene)).collect(Collectors.toList())),
-                                        Lists.newArrayList(geneData),
-                                        mFusionParams));
-                            }
-                        }
-                    }
-                }
-
-                if(fusions.isEmpty())
-                    continue;
-
-                if(mLogReportableOnly)
-                {
-                    fusions = fusions.stream().filter(x -> determineReportability(x) == OK).collect(Collectors.toList());
-                }
-
-                final SvCluster cluster = sgl1.getCluster();
-
-                // check transcript disruptions
-                for(final GeneFusion fusion : fusions)
-                {
-                    FusionAnnotations annotations = ImmutableFusionAnnotations.builder()
-                            .clusterId(cluster.id())
-                            .clusterCount(cluster.getSvCount())
-                            .resolvedType(cluster.getResolvedType().toString())
-                            .chainInfo(null)
-                            .terminatedUp(false)
-                            .terminatedDown(false)
-                            .build();
-
-                    fusion.setAnnotations(annotations);
-                    mFusions.add(fusion);
-                }
-            }
-        }
-    }
-
-    private boolean checkKnownPairSgls(final KnownFusionData kpData, final SvVarData sgl1, final SvVarData sgl2)
-    {
-        LNX_LOGGER.info("sample({}) sgls({} & {}) knownPair({}-{}) sequences({}, {})",
-                mSampleId, sgl1.posId(), sgl2.posId(), kpData.FiveGene, kpData.ThreeGene,
-                sgl1.getSvData().insertSequence(), sgl2.getSvData().insertSequence());
-
-        return false;
     }
 
     private void findChainedFusions(final List<SvCluster> clusters)
@@ -624,7 +404,7 @@ public class FusionDisruptionAnalyser
             final Map<String,List<GeneFusion>> genePairFusions = Maps.newHashMap();
 
             // allocate fusions to unique SV pairings
-            for(final GeneFusion fusion : chainFusions)
+            for(GeneFusion fusion : chainFusions)
             {
                 final String name = fusion.name();
 
@@ -637,7 +417,7 @@ public class FusionDisruptionAnalyser
             }
 
             mFusions.addAll(chainFusions.stream()
-                    .filter(x -> !mLogReportableOnly || x.reportable())
+                    .filter(x -> !mFusionConfig.LogReportableOnly || x.reportable())
                     .filter(x -> x.getAnnotations() != null)
                     .collect(Collectors.toList()));
         }
@@ -759,7 +539,7 @@ public class FusionDisruptionAnalyser
                 }
 
                 // test the fusion between these 2 breakends
-                List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper, mFusionParams);
+                List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper);
 
                 if(mNeoEpitopeWriter != null)
                 {
@@ -779,7 +559,7 @@ public class FusionDisruptionAnalyser
                     fusions = fusions.stream().filter(x -> !x.isExonic()).collect(Collectors.toList());
                 }
 
-                if(mLogReportableOnly)
+                if(mFusionConfig.LogReportableOnly)
                 {
                     fusions = fusions.stream().filter(x -> determineReportability(x) == OK).collect(Collectors.toList());
 
@@ -1215,7 +995,7 @@ public class FusionDisruptionAnalyser
 
         for(final GeneFusion fusion : fusionList)
         {
-            if(fusion.reportable() || mWriteAllVisFusions)
+            if(fusion.reportable() || mFusionConfig.WriteAllVisFusions)
             {
                 int clusterId = fusion.getAnnotations() != null ? fusion.getAnnotations().clusterId() : -1;
 

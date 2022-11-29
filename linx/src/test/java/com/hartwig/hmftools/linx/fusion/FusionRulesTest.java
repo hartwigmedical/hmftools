@@ -103,9 +103,10 @@ public class FusionRulesTest
                 gene2, transId2, false, 50, 250, codingStart, codingEnd, "",
                 2, 3, PHASE_NONE, 10, getCodingBases(codingStart, codingEnd));
 
-        FusionParameters params = new FusionParameters();
+        FusionConfig params = new FusionConfig();
         params.AllowExonSkipping = false;
         params.RequirePhaseMatch = true;
+        params.RequireUpstreamBiotypes = false;
 
         // up non-coding
         assertTrue(trans1.nonCoding());
@@ -281,12 +282,19 @@ public class FusionRulesTest
 
         assertNotNull(checkFusionLogic(trans1, trans2, params));
 
+        FusionConfig config = new FusionConfig();
+        config.AllowExonSkipping = false;
+        config.RequirePhaseMatch = true;
+        config.RequireUpstreamBiotypes = false;
+
         KnownFusionCache knownFusionCache = new KnownFusionCache();
-        FusionFinder fusionFinder = new FusionFinder(null, knownFusionCache);
         knownFusionCache.addData(new KnownFusionData(KNOWN_PAIR, gene1.geneName(), gene2.geneName(), "", ""));
+
+        FusionFinder fusionFinder = new FusionFinder(config, null, knownFusionCache);
+
         gene1.addTranscript(trans1);
         gene2.addTranscript(trans2);
-        final List<GeneFusion> fusions = fusionFinder.findFusions(Lists.newArrayList(gene1), Lists.newArrayList(gene2), params);
+        final List<GeneFusion> fusions = fusionFinder.findFusions(Lists.newArrayList(gene1), Lists.newArrayList(gene2));
         assertEquals(1, fusions.size());
         assertTrue(fusions.get(0).phaseMatched());
     }
@@ -322,9 +330,10 @@ public class FusionRulesTest
                 gene2, transId2, false, 50, 250, codingStart, codingEnd, "",
                 2, 3, PHASE_0, 10, getCodingBases(codingStart, codingEnd));
 
-        FusionParameters params = new FusionParameters();
+        FusionConfig params = new FusionConfig();
         params.AllowExonSkipping = true;
         params.RequirePhaseMatch = false;
+        params.RequireUpstreamBiotypes = false;
 
         // up non-coding
         assertTrue(transUp.isCoding());
@@ -443,11 +452,9 @@ public class FusionRulesTest
         downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, 10650, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, 10650, NEG_ORIENT);
 
-        FusionParameters params = new FusionParameters();
-        params.RequirePhaseMatch = false;
-        params.AllowExonSkipping = true;
+        tester.FusionAnalyser.getFusionFinder().setFusionParams(false, true, false);
 
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes);
 
         assertEquals(1, fusions.size());
         GeneFusion fusion = fusions.get(0);
@@ -472,7 +479,7 @@ public class FusionRulesTest
         downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, 10705, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, 10705, NEG_ORIENT);
 
-        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);
+        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes);
 
         assertEquals(1, fusions.size());
         fusion = fusions.get(0);
