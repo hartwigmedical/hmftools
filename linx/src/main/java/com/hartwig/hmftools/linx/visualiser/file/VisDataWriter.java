@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
@@ -478,7 +478,7 @@ public class VisDataWriter
             return false;
 
         String igGene = geneData.TransName.replace("@", "");
-        ChrBaseRegion igRegion = getIgRegion(igGene, RG_VERSION);
+        ChrBaseRegion igRegion = getIgRegion(igGene, REF_GENOME_VERSION);
 
         geneExonList.add(new VisGeneExon(sampleId, geneData.ClusterId, geneData.TransName, geneData.TransName,
                 geneData.Chromosome, geneData.AnnotationType, 1, igRegion.start(), igRegion.end()));

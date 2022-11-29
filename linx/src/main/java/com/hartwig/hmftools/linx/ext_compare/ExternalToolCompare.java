@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_DRIVERS;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.linx.LinxConfig.VCF_FILE;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconCompare.AMPLICON_DATA_FILE;
 import static com.hartwig.hmftools.linx.ext_compare.ChainFinderCompare.CHAIN_FINDER_DATA_DIR;
@@ -81,7 +81,7 @@ public class ExternalToolCompare
         boolean selectiveGeneLoading = (samplesList.size() == 1 && !checkDrivers);
 
         final EnsemblDataCache ensemblDataCache = cmd.hasOption(ENSEMBL_DATA_DIR) ?
-                new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), RG_VERSION) : null;
+                new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), REF_GENOME_VERSION) : null;
 
         CohortDataWriter cohortDataWriter = new CohortDataWriter(config, ensemblDataCache);
 

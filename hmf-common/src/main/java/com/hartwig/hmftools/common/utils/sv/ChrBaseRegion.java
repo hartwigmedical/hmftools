@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -37,6 +39,7 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
     }
 
     public static ChrBaseRegion from(final GenomeRegion region) { return new ChrBaseRegion(region.chromosome(), region.start(), region.end()); }
+    public GenomeRegion genomeRegion() { return GenomeRegions.create(chromosome(), start(), end()); }
 
     public int start() { return Positions[SE_START]; }
     public int end() { return Positions[SE_END]; }

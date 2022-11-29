@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusion
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
@@ -25,7 +25,6 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
-import com.hartwig.hmftools.linx.fusion.FusionFinder;
 import com.hartwig.hmftools.linx.fusion.FusionResources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -107,7 +106,7 @@ public class LinxApplication
         }
 
         final EnsemblDataCache ensemblDataCache = cmd.hasOption(ENSEMBL_DATA_DIR) ?
-                new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), RG_VERSION) : null;
+                new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), REF_GENOME_VERSION) : null;
 
         if(ensemblDataCache != null)
         {

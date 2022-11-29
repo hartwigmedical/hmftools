@@ -7,7 +7,8 @@ import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
+import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
@@ -21,6 +22,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.purple.ChromosomeArm;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -32,7 +34,7 @@ public class SvUtilities {
 
     public static RefGenomeCoordinates refGenomeLengths()
     {
-        return RG_VERSION == RefGenomeVersion.V38 ? RefGenomeCoordinates.COORDS_38 : RefGenomeCoordinates.COORDS_37;
+        return REF_GENOME_VERSION == RefGenomeVersion.V38 ? RefGenomeCoordinates.COORDS_38 : RefGenomeCoordinates.COORDS_37;
     }
 
     public static int getChromosomeLength(final String chromosome)
@@ -291,5 +293,30 @@ public class SvUtilities {
 
     public static String makeChrArmStr(final String chr, final String arm) { return chr + "_" + arm; }
     public static String makeChrArmStr(final String chr, final ChromosomeArm arm) { return makeChrArmStr(chr, asStr(arm)); }
+
+    public static List<ChrBaseRegion> loadConfigFile(final List<String> fileLines, final RefGenomeVersion refGenomeVersion)
+    {
+        List<ChrBaseRegion> regions = Lists.newArrayList();
+
+        for(final String line : fileLines)
+        {
+            if(line.contains("Chromosome"))
+                continue;
+
+            String[] items = line.split(",", -1);
+
+            if(items.length < 3)
+            {
+                LNX_LOGGER.error("invalid resource file: {}", line);
+                return null;
+            }
+
+            regions.add(new ChrBaseRegion(
+                    refGenomeVersion.versionedChromosome(items[0]), Integer.parseInt(items[1]), Integer.parseInt(items[2])));
+        }
+
+        return regions;
+    }
+
 
 }

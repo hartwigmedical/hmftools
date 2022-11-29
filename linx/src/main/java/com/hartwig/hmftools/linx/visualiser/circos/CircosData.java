@@ -86,10 +86,10 @@ public class CircosData
         }
 
         final List<GenomeRegion> unadjustedFragileSites =
-                Highlights.limitHighlightsToRegions(Highlights.fragileSites(), Span.spanPositions(positionsToScale));
+                Highlights.limitHighlightsToRegions(Highlights.FRAGILE_SITES, Span.spanPositions(positionsToScale));
 
         final List<GenomeRegion> unadjustedLineElements =
-                Highlights.limitHighlightsToRegions(Highlights.lineElements(), Span.spanPositions(positionsToScale));
+                Highlights.limitHighlightsToRegions(Highlights.LINE_ELEMENTS, Span.spanPositions(positionsToScale));
 
         final ScalePosition scalePosition = new ScalePosition(positionsToScale);
         contigLengths = scalePosition.contigLengths();

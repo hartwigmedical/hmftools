@@ -3,7 +3,6 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
@@ -88,7 +87,7 @@ public class LinxConfig
     private static final String CHAINING_SV_LIMIT = "chaining_sv_limit";
     private static final String ANNOTATION_EXTENSIONS = "annotations";
 
-    public static RefGenomeVersion RG_VERSION = V37;
+    public static RefGenomeVersion REF_GENOME_VERSION = V37;
 
     private static final String INDEL_ANNOTATIONS = "indel_annotation";
     private static final String GERMLINE = "germline";
@@ -153,15 +152,15 @@ public class LinxConfig
 
         Output = new LinxOutput(cmd, isSingleSample() && !IsGermline);
 
-        if(cmd.hasOption(REF_GENOME_VERSION))
-            RG_VERSION = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
+        if(cmd.hasOption(RefGenomeVersion.REF_GENOME_VERSION))
+            REF_GENOME_VERSION = RefGenomeVersion.from(cmd.getOptionValue(RefGenomeVersion.REF_GENOME_VERSION));
 
         ProximityDistance = cmd.hasOption(CLUSTER_BASE_DISTANCE) ? Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE))
                 : DEFAULT_PROXIMITY_DISTANCE;
 
-        FragileSiteFile = cmd.getOptionValue(FRAGILE_SITE_FILE, "");
+        FragileSiteFile = cmd.getOptionValue(FRAGILE_SITE_FILE);
         KataegisFile = cmd.getOptionValue(KATAEGIS_FILE, "");
-        LineElementFile = cmd.getOptionValue(LINE_ELEMENT_FILE, "");
+        LineElementFile = cmd.getOptionValue(LINE_ELEMENT_FILE);
         IndelAnnotation = cmd.hasOption(INDEL_ANNOTATIONS);
         IndelFile = cmd.getOptionValue(INDEL_FILE, "");
 
@@ -268,7 +267,7 @@ public class LinxConfig
     {
         CmdLineArgs = null;
         ProximityDistance = DEFAULT_PROXIMITY_DISTANCE;
-        RG_VERSION = V37;
+        REF_GENOME_VERSION = V37;
         PurpleDataPath = "";
         OutputDataPath = null;
         SampleDataPath = "";
@@ -327,7 +326,7 @@ public class LinxConfig
         options.addOption(SAMPLE_DATA_DIR, true, "Optional: directory for per-sample SV data, default is to use output_dir");
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         options.addOption(UPLOAD_TO_DB, true, "Upload all LINX data to DB (true/false), single-sample default=true, batch-mode default=false");
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default), or 38");
+        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default), or 38");
         options.addOption(CHECK_DRIVERS, false, "Check SVs against drivers catalog");
         options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
         options.addOption(HOM_DIS_ALL_GENES, false, "Run fusion detection");

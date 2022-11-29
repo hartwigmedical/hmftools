@@ -1,24 +1,24 @@
 package com.hartwig.hmftools.linx.visualiser.circos;
 
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.loadConfigFile;
+import static com.hartwig.hmftools.linx.annotators.FragileSiteAnnotator.fragileSitesResourceFile;
+import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.lineElementsResourceFile;
+
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 
-import org.jetbrains.annotations.NotNull;
-
 public class Highlights
 {
-    private static final String HEADER = "SampleId";
-    private static final String COMMENT = "#";
-    private static final String DELIMITER = ",";
+    public static final List<GenomeRegion> FRAGILE_SITES = Lists.newArrayList();
+    public static final List<GenomeRegion> LINE_ELEMENTS = Lists.newArrayList();
 
-    @NotNull
     public static List<GenomeRegion> limitHighlightsToRegions(final List<GenomeRegion> highlights, final List<GenomeRegion> segments)
     {
         final List<GenomeRegion> result = Lists.newArrayList();
@@ -44,42 +44,18 @@ public class Highlights
         return result;
     }
 
-    @NotNull
-    public static List<GenomeRegion> fragileSites()
+    public static void populateKnownSites(final RefGenomeVersion refGenomeVersion)
     {
-        return fromResource("fragile_sites.csv");
+        List<String> resourceLines = new BufferedReader(new InputStreamReader(
+                Highlights.class.getResourceAsStream(fragileSitesResourceFile(refGenomeVersion))))
+                .lines().collect(Collectors.toList());
+
+        loadConfigFile(resourceLines, refGenomeVersion).forEach(x -> FRAGILE_SITES.add(x.genomeRegion()));
+
+        resourceLines = new BufferedReader(new InputStreamReader(
+                Highlights.class.getResourceAsStream(lineElementsResourceFile(refGenomeVersion))))
+                .lines().collect(Collectors.toList());
+
+        loadConfigFile(resourceLines, refGenomeVersion).forEach(x -> LINE_ELEMENTS.add(x.genomeRegion()));
     }
-
-    @NotNull
-    public static List<GenomeRegion> lineElements()
-    {
-        return fromResource("line_elements.csv");
-    }
-
-    @NotNull
-    private static List<GenomeRegion> fromResource(@NotNull final String resource)
-    {
-        final InputStream inputStream = Highlights.class.getResourceAsStream("/visualisation/" + resource);
-        return fromString(new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList()));
-    }
-
-    @NotNull
-    private static List<GenomeRegion> fromString(@NotNull final List<String> lines)
-    {
-        final List<GenomeRegion> result = Lists.newArrayList();
-
-        for (final String line : lines)
-        {
-
-            if (!line.startsWith(COMMENT) && !line.startsWith(HEADER))
-            {
-                final String[] values = line.split(DELIMITER);
-                result.add(GenomeRegions.create(values[0], Integer.parseInt(values[1]), Integer.parseInt(values[2])));
-
-            }
-        }
-
-        return result;
-    }
-
 }

@@ -42,8 +42,8 @@ check_drivers | Run driver annotation logic
 driver_gene_panel | A panel of driver genes to annotate, matching the format in the DriverGenePanel.tsv resource file from the HMFTools resources
 check_fusions | Discover and annotate gene fusions
 known_fusion_file | known_fusion_data.csv 
-fragile_site_file | List of known fragile sites  {Chromosome,PosStart,PosEnd}
-line_element_file | List of known LINE source regions {Chromosome,PosStart,PosEnd}
+fragile_site_file | Linx has in-built default set of known fragile sites, but override as required (format: Chromosome,PosStart,PosEnd)
+line_element_file | Linx has in-built default set of LINE source regions, but override as required (format: Chromosome,PosStart,PosEnd)
 ensembl_data_dir | Directory for Ensembl reference files
 
 Reference files are available for ref genome 37 and 38 [HMFTools-Resources > DNA Pipeline](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/):
@@ -62,8 +62,6 @@ java -jar linx.jar
     -sv_vcf /path_to_purple_vcf/
     -purple_dir /path_to_purple_data_files/
     -output_dir /path_to_sample_data/ 
-    -fragile_site_file fragile_sites.csv 
-    -line_element_file line_elements.csv 
     -ensembl_data_dir /path_to_ensembl_data_cache/ 
     -check_fusions 
     -known_fusion_file known_fusion_data.csv 
@@ -106,8 +104,6 @@ java -jar linx.jar
     -sample SAMPLE_ID 
     -db_url [db_url] -db_user [username] -db_pass [password] 
     -output_dir /path_to_sample_data/ 
-    -fragile_site_file fragile_sites.csv 
-    -line_element_file line_elements.csv 
     -ensembl_data_dir /path_to_ensembl_data_cache/ 
     -check_fusions 
     -known_fusion_file known_fusion_data.csv 
@@ -131,8 +127,6 @@ java -jar linx.jar
     -sample cohort_sample_ids.csv
     -db_url [db_url] -db_user [username] -db_pass [password] 
     -output_dir /path_to_sample_data/ 
-    -fragile_site_file fragile_sites.csv 
-    -line_element_file line_elements.csv 
     -ensembl_data_dir /path_to_ensembl_data_cache/ 
     -check_fusions 
     -known_fusion_file known_fusion_data.csv 

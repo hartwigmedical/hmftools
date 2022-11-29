@@ -11,8 +11,6 @@ java -jar linx.jar
     -ref_genome_version 37
     -sv_vcf /path_to_purple_vcf/
     -output_dir /path_to_sample_data/ 
-    -fragile_site_file fragile_sites.csv 
-    -line_element_file line_elements.csv 
     -ensembl_data_dir /path_to_ensembl_data_cache/ 
     -driver_gene_panel DriverGenePanel.tsv
 ```
