@@ -15,11 +15,11 @@ class ScaleIntrons
 {
     private static final int INTRON_LENGTH = 10;
 
-    private final List<GenomeRegion> introns;
+    private final List<GenomeRegion> mIntrons;
 
     ScaleIntrons(@NotNull final List<GenomeRegion> introns)
     {
-        this.introns = introns;
+        this.mIntrons = introns;
     }
 
     @NotNull
@@ -81,7 +81,7 @@ class ScaleIntrons
     private int offset(long position)
     {
         int offset = 0;
-        for (GenomeRegion intron : introns)
+        for (GenomeRegion intron : mIntrons)
         {
             if (position > intron.start())
             {

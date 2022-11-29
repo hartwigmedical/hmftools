@@ -10,30 +10,30 @@ import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
 
-class ScaleContig
+public class ScaleContig
 {
-    private int maxAdjustedPosition;
-    private final String contig;
-    private final Map<Integer, Integer> positionMap;
-
+    private int mMaxAdjustedPosition;
+    private final String mContig;
+    private final Map<Integer,Integer> mPositionMap;
 
     @VisibleForTesting
-    ScaleContig(@NotNull final String contig, Map<Integer, Integer> positionMap) {
-        this.contig = contig;
-        this.positionMap = positionMap;
+    ScaleContig(@NotNull final String contig, Map<Integer, Integer> positionMap) 
+    {
+        mContig = contig;
+        mPositionMap = positionMap;
     }
 
     ScaleContig(@NotNull final String contig, @NotNull final List<Integer> positions)
     {
-        this.contig = contig;
-        this.positionMap = Maps.newHashMap();
+        this.mContig = contig;
+        this.mPositionMap = Maps.newHashMap();
         final List<Integer> sortedDistinctPositions = positions.stream().sorted().distinct().collect(Collectors.toList());
 
-        if (!sortedDistinctPositions.isEmpty())
+        if(!sortedDistinctPositions.isEmpty())
         {
             int currentAdjustedPosition = 1;
             int previousUnadjustedPositionPosition = sortedDistinctPositions.get(0);
-            positionMap.put(previousUnadjustedPositionPosition, currentAdjustedPosition);
+            mPositionMap.put(previousUnadjustedPositionPosition, currentAdjustedPosition);
 
             for (int i = 1; i < sortedDistinctPositions.size(); i++)
             {
@@ -41,62 +41,60 @@ class ScaleContig
                 int linearDistance = currentUnadjustedPosition - previousUnadjustedPositionPosition;
                 int logDistance = logDistance(linearDistance);
                 currentAdjustedPosition = currentAdjustedPosition + logDistance;
-                positionMap.put(currentUnadjustedPosition, currentAdjustedPosition);
+                mPositionMap.put(currentUnadjustedPosition, currentAdjustedPosition);
 
                 previousUnadjustedPositionPosition = currentUnadjustedPosition;
             }
 
-            maxAdjustedPosition = currentAdjustedPosition;
+            mMaxAdjustedPosition = currentAdjustedPosition;
         }
-
     }
 
     public boolean isEmpty()
     {
-        return positionMap.isEmpty();
+        return mPositionMap.isEmpty();
     }
 
     public String contig()
     {
-        return contig;
+        return mContig;
     }
 
     public int length()
     {
-        return maxAdjustedPosition;
+        return mMaxAdjustedPosition;
     }
 
     public void expand(double factor)
     {
-        for (Map.Entry<Integer, Integer> entry : positionMap.entrySet())
+        for (Map.Entry<Integer, Integer> entry : mPositionMap.entrySet())
         {
-            if (entry.getValue() > 1)
+            if(entry.getValue() > 1)
             {
                 entry.setValue((int) Math.round(factor * entry.getValue()));
             }
         }
 
-        maxAdjustedPosition = (int) Math.round(factor * maxAdjustedPosition);
+        mMaxAdjustedPosition = (int) Math.round(factor * mMaxAdjustedPosition);
     }
 
     public int scale(int position)
     {
-        if (!positionMap.containsKey(position))
+        if(!mPositionMap.containsKey(position))
         {
             throw new IllegalArgumentException("Invalid position");
         }
 
-        return positionMap.get(position);
+        return mPositionMap.get(position);
     }
 
     public int interpolate(int value)
     {
+        final Set<Integer> keySet = mPositionMap.keySet();
 
-        final Set<Integer> keySet = positionMap.keySet();
-
-        if (positionMap.containsKey(value))
+        if(mPositionMap.containsKey(value))
         {
-            return positionMap.get(value);
+            return mPositionMap.get(value);
         }
 
         int minValue = keySet.stream().mapToInt(x -> x).min().orElse(0);
@@ -104,15 +102,15 @@ class ScaleContig
 
         int closestToStart = keySet.stream().filter(x -> x < value).mapToInt(x -> x).max().orElse(minValue);
         int closestToEnd = keySet.stream().filter(x -> x > value).mapToInt(x -> x).min().orElse(maxValue);
-        if (closestToStart == closestToEnd)
+        if(closestToStart == closestToEnd)
         {
-            return positionMap.get(closestToStart);
+            return mPositionMap.get(closestToStart);
         }
 
         double longDistanceProportion = Math.abs(value - closestToStart) / ((double) Math.abs(closestToEnd - closestToStart));
 
-        int closestIntToStart = positionMap.get(closestToStart);
-        int closestIntToEnd = positionMap.get(closestToEnd);
+        int closestIntToStart = mPositionMap.get(closestToStart);
+        int closestIntToEnd = mPositionMap.get(closestToEnd);
 
         return closestIntToStart + (int) Math.floor(longDistanceProportion * Math.abs(closestIntToEnd - closestIntToStart));
     }

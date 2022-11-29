@@ -102,8 +102,6 @@ class ScalePosition
         }
 
         return results;
-
-        // return segments.stream().map(x -> interpolate(x, y -> ImmutableVisCopyNumberFile.builder().from(x))).collect(Collectors.toList());
     }
 
     public List<VisProteinDomain> interpolateProteinDomains(final List<VisProteinDomain> exons)

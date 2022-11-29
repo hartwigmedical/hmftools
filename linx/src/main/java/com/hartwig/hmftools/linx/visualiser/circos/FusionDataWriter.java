@@ -23,6 +23,9 @@ public class FusionDataWriter
     private final List<VisProteinDomain> mFinalProteinDomains;
     private final ProteinDomainColors mProteinDomainColors;
 
+    protected static final String FUSION_PLOT_TSV = ".fusions.tsv";
+    protected static final String PROTEIN_PLOT_TSV = ".protein_domains.tsv";
+
     public FusionDataWriter(final List<VisFusion> fusions, final List<VisGeneExon> exons, final List<VisProteinDomain> proteinDomains)
     {
         mFinalExons = Lists.newArrayList();
@@ -59,7 +62,7 @@ public class FusionDataWriter
             mFinalProteinDomains.addAll(scalePosition.interpolateProteinDomains(intronScaledProteinDomains));
         }
 
-        this.mProteinDomainColors = new ProteinDomainColors(mFinalProteinDomains);
+        mProteinDomainColors = new ProteinDomainColors(mFinalProteinDomains);
     }
 
     @NotNull
@@ -67,8 +70,8 @@ public class FusionDataWriter
             throws IOException
     {
         String filePrefix = outputDir + File.separator + sample;
-        FusedExons.write(filePrefix + ".fusions.tsv", mFinalExons);
-        FusedProteinDomains.write(filePrefix + ".protein_domains.tsv", mProteinDomainColors, mFinalProteinDomains);
+        FusedExons.write(filePrefix + FUSION_PLOT_TSV, mFinalExons);
+        FusedProteinDomains.write(filePrefix + PROTEIN_PLOT_TSV, mProteinDomainColors, mFinalProteinDomains);
         return this;
     }
 

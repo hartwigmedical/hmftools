@@ -1,35 +1,33 @@
 package com.hartwig.hmftools.linx.visualiser.circos;
 
-import java.io.File;
+import static com.hartwig.hmftools.linx.visualiser.SvVisualiser.VIS_LOGGER;
+import static com.hartwig.hmftools.linx.visualiser.circos.FusionDataWriter.FUSION_PLOT_TSV;
+import static com.hartwig.hmftools.linx.visualiser.circos.FusionDataWriter.PROTEIN_PLOT_TSV;
+
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.linx.visualiser.CircosConfig;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class FusionExecution
 {
-    private static final Logger LOGGER = LogManager.getLogger(FusionExecution.class);
-
-    private final String plotFile;
-    private final String exonFile;
-    private final String proteinDomainFile;
+    private final String mPlotFile;
+    private final String mExonFile;
+    private final String mProteinDomainFile;
 
     public FusionExecution(final String sampleName, final String imageName, final String dataDir, final String plotDir)
     {
-        this.plotFile = plotDir + File.separator + imageName;
-        this.exonFile = dataDir + File.separator + sampleName + ".fusions.tsv";
-        this.proteinDomainFile = dataDir + File.separator + sampleName + ".protein_domains.tsv";
+        mPlotFile = plotDir + imageName;
+        mExonFile = dataDir + sampleName + FUSION_PLOT_TSV;
+        mProteinDomainFile = dataDir + sampleName + PROTEIN_PLOT_TSV;
     }
 
     public Integer executeR(CircosConfig config, double labelSize) throws IOException, InterruptedException
     {
         int result = RExecutor.executeFromClasspath("r/fusionPlot.R",
-                proteinDomainFile,
-                exonFile,
-                plotFile,
+                mProteinDomainFile,
+                mExonFile,
+                mPlotFile,
                 String.valueOf(labelSize),
                 String.valueOf(config.FusionLegendRows),
                 String.valueOf(config.FusionLegendHeightPerRow),
@@ -37,7 +35,7 @@ public class FusionExecution
         );
         if (result != 0)
         {
-            LOGGER.warn("Error adding fusion plots.");
+            VIS_LOGGER.warn("Error adding fusion plots.");
         }
 
         return result;
