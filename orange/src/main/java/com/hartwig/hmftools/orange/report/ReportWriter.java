@@ -53,7 +53,7 @@ public class ReportWriter {
 
     private void writePdf(@NotNull OrangeReport report) throws IOException {
         ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, reportConfig.reportGermline()),
-                new SomaticFindingsChapter(report, reportConfig), new GermlineFindingsChapter(report, reportConfig.reportGermline()),
+                new SomaticFindingsChapter(report), new GermlineFindingsChapter(report, reportConfig.reportGermline()),
                 new ImmunologyChapter(report), new RNAFindingsChapter(report), new CohortComparisonChapter(report),
                 new QualityControlChapter(report) };
 

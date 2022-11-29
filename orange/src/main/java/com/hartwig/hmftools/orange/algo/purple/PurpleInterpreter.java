@@ -37,37 +37,39 @@ public final class PurpleInterpreter {
     @NotNull
     public static PurpleInterpretedData interpret(@NotNull PurpleData purple, @NotNull List<DriverGene> driverGenes,
             @NotNull ChordData chord) {
-        List<GainLoss> allSomaticGainsLosses = extractAllGainsLosses(purple.purityContext().qc().status(),
-                purple.purityContext().bestFit().ploidy(),
-                purple.purityContext().targeted(),
-                purple.allSomaticGeneCopyNumbers());
-        List<GainLoss> reportableSomaticGainsLosses = somaticGainsLossesFromDrivers(purple.somaticDrivers());
-
-        List<ReportableVariant> reportableSomaticVariants =
-                ReportableVariantFactory.toReportableSomaticVariants(purple.reportableSomaticVariants(), purple.somaticDrivers());
-        List<ReportableVariant> additionalSuspectSomaticVariants =
-                SomaticVariantSelector.selectInterestingUnreportedVariants(purple.allSomaticVariants(),
+        List<PurpleVariant> allSomaticVariants = PurpleVariantFactory.create(purple.allSomaticVariants());
+        List<PurpleVariant> reportableSomaticVariants = PurpleVariantFactory.create(purple.reportableSomaticVariants());
+        List<PurpleVariant> additionalSuspectSomaticVariants =
+                SomaticVariantSelector.selectInterestingUnreportedVariants(allSomaticVariants,
                         reportableSomaticVariants,
                         driverGenes);
         LOGGER.info(" Found an additional {} somatic variants that are potentially interesting", additionalSuspectSomaticVariants.size());
 
-        List<ReportableVariant> additionalSuspectGermlineVariants =
-                GermlineVariantSelector.selectInterestingUnreportedVariants(purple.allGermlineVariants());
+        List<PurpleVariant> allGermlineVariants = PurpleVariantFactory.create(purple.allGermlineVariants());
+        List<PurpleVariant> reportableGermlineVariants = PurpleVariantFactory.create(purple.reportableGermlineVariants());
+        List<PurpleVariant> additionalSuspectGermlineVariants =
+                GermlineVariantSelector.selectInterestingUnreportedVariants(allGermlineVariants);
         if (additionalSuspectGermlineVariants != null) {
             LOGGER.info(" Found an additional {} germline variants that are potentially interesting",
                     additionalSuspectGermlineVariants.size());
         }
 
-        List<GainLoss> nearReportableSomaticGains = CopyNumberSelector.selectNearReportableSomaticGains(purple.allSomaticGeneCopyNumbers(),
+        List<PurpleGainLoss> allSomaticGainsLosses = extractAllGainsLosses(purple.purityContext().qc().status(),
                 purple.purityContext().bestFit().ploidy(),
-                allSomaticGainsLosses,
-                driverGenes);
+                purple.purityContext().targeted(),
+                purple.allSomaticGeneCopyNumbers());
+        List<PurpleGainLoss> reportableSomaticGainsLosses = somaticGainsLossesFromDrivers(purple.somaticDrivers());
+
+        List<PurpleGainLoss> nearReportableSomaticGains =
+                CopyNumberSelector.selectNearReportableSomaticGains(purple.allSomaticGeneCopyNumbers(),
+                        purple.purityContext().bestFit().ploidy(),
+                        allSomaticGainsLosses,
+                        driverGenes);
         LOGGER.info(" Found an additional {} near-reportable somatic gains that are potentially interesting",
                 nearReportableSomaticGains.size());
 
-        List<GainLoss> additionalSuspectSomaticGainsLosses =
-                CopyNumberSelector.selectInterestingUnreportedGainsLosses(allSomaticGainsLosses,
-                        reportableSomaticGainsLosses);
+        List<PurpleGainLoss> additionalSuspectSomaticGainsLosses =
+                CopyNumberSelector.selectInterestingUnreportedGainsLosses(allSomaticGainsLosses, reportableSomaticGainsLosses);
         LOGGER.info(" Found an additional {} somatic gains/losses that are potentially interesting",
                 additionalSuspectSomaticGainsLosses.size());
 
@@ -77,17 +79,13 @@ public final class PurpleInterpreter {
                         chord.hrStatus());
         LOGGER.info(" Found an additional {} suspect gene copy numbers with LOH", suspectGeneCopyNumbersWithLOH.size());
 
-        List<ReportableVariant> reportableGermlineVariants = purple.reportableGermlineVariants() != null
-                ? ReportableVariantFactory.toReportableGermlineVariants(purple.reportableGermlineVariants(), purple.germlineDrivers())
-                : null;
-
         return ImmutablePurpleInterpretedData.builder()
                 .fit(createFit(purple))
                 .characteristics(createCharacteristics(purple))
-                .allSomaticVariants(purple.allSomaticVariants())
+                .allSomaticVariants(allSomaticVariants)
                 .reportableSomaticVariants(reportableSomaticVariants)
                 .additionalSuspectSomaticVariants(additionalSuspectSomaticVariants)
-                .allGermlineVariants(purple.allGermlineVariants())
+                .allGermlineVariants(allGermlineVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
                 .additionalSuspectGermlineVariants(additionalSuspectGermlineVariants)
                 .allSomaticGeneCopyNumbers(purple.allSomaticGeneCopyNumbers())
@@ -102,7 +100,7 @@ public final class PurpleInterpreter {
     }
 
     @NotNull
-    private static List<GainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, double ploidy, boolean isTargetRegions,
+    private static List<PurpleGainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, double ploidy, boolean isTargetRegions,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers) {
         List<DriverGene> allGenes = Lists.newArrayList();
         for (GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
@@ -135,8 +133,8 @@ public final class PurpleInterpreter {
     }
 
     @NotNull
-    private static List<GainLoss> somaticGainsLossesFromDrivers(@NotNull List<DriverCatalog> drivers) {
-        List<GainLoss> gainsLosses = Lists.newArrayList();
+    private static List<PurpleGainLoss> somaticGainsLossesFromDrivers(@NotNull List<DriverCatalog> drivers) {
+        List<PurpleGainLoss> gainsLosses = Lists.newArrayList();
 
         Map<DriverCatalogKey, DriverCatalog> geneDriverMap = DriverCatalogMap.toDriverMap(drivers);
         for (DriverCatalogKey key : geneDriverMap.keySet()) {
@@ -151,8 +149,8 @@ public final class PurpleInterpreter {
     }
 
     @NotNull
-    private static GainLoss toGainLoss(@NotNull DriverCatalog driver) {
-        return ImmutableGainLoss.builder()
+    private static PurpleGainLoss toGainLoss(@NotNull DriverCatalog driver) {
+        return ImmutablePurpleGainLoss.builder()
                 .chromosome(driver.chromosome())
                 .chromosomeBand(driver.chromosomeBand())
                 .gene(driver.gene())

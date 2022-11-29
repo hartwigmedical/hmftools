@@ -3,7 +3,8 @@ package com.hartwig.hmftools.orange.report.tables;
 import java.text.DecimalFormat;
 import java.util.List;
 
-import com.hartwig.hmftools.orange.algo.purple.ReportableVariant;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Variants;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -21,7 +22,8 @@ public final class GermlineVariantTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<ReportableVariant> variants) {
+    public static Table build(@NotNull String title, float width, @NotNull List<PurpleVariant> variants,
+            @NotNull List<DriverCatalog> drivers) {
         if (variants.isEmpty()) {
             return Tables.createEmpty(title, width);
         }
@@ -32,10 +34,10 @@ public final class GermlineVariantTable {
                         Cells.createHeader("RNA Depth"), Cells.createHeader("Biallelic"), Cells.createHeader("Hotspot"),
                         Cells.createHeader("Genotype") });
 
-        for (ReportableVariant variant : Variants.sort(variants)) {
+        for (PurpleVariant variant : Variants.sort(variants, drivers)) {
             table.addCell(Cells.createContent(Variants.variantField(variant)));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.alleleCopyNumber())));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.totalCopyNumber())));
+            table.addCell(Cells.createContent(Variants.variantCopyNumberField(variant)));
+            table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.adjustedCopyNumber())));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.minorAlleleCopyNumber())));
             table.addCell(Cells.createContent(Variants.rnaDepthField(variant)));
             table.addCell(Cells.createContent(variant.biallelic() ? "Yes" : "No"));

@@ -141,8 +141,8 @@ public class OrangeAlgo {
         PurpleInterpretedData purple = PurpleInterpreter.interpret(loadPurpleData(config), driverGenes, chord);
 
         List<WildTypeGene> wildTypeGenes = WildTypeFactory.filterQCWildTypes(purple.fit().qc().status(),
-                WildTypeFactory.determineWildTypeGenes(purple.reportableGermlineVariants(),
-                        purple.reportableSomaticVariants(),
+                WildTypeFactory.determineWildTypeGenes(purple.reportableSomaticVariants(),
+                        purple.reportableGermlineVariants(),
                         purple.reportableSomaticGainsLosses(),
                         linx.reportableFusions(),
                         linx.homozygousDisruptions(),

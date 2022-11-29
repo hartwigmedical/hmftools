@@ -39,10 +39,9 @@ import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretationTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretationTestFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.ReportableVariantTestFactory;
+import com.hartwig.hmftools.orange.algo.purple.PurpleVariantTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -112,21 +111,24 @@ public final class OrangeReportTestFactory {
     private static PurpleInterpretedData createTestPurpleData() {
         return ImmutablePurpleInterpretedData.builder()
                 .from(PurpleInterpretationTestFactory.createMinimalTestPurpleData())
-                .addReportableSomaticVariants(ImmutableReportableVariant.builder()
-                        .from(ReportableVariantTestFactory.create())
+                .addReportableSomaticVariants(PurpleVariantTestFactory.builder()
                         .gene("ARID1A")
-                        .canonicalHgvsCodingImpact("c.1920+9571_1920+9596delAGTGAACCGTTGACTAGAGTTTGGTT")
+                        .canonicalImpact(PurpleVariantTestFactory.impactBuilder()
+                                .hgvsCodingImpact("c.1920+9571_1920+9596delAGTGAACCGTTGACTAGAGTTTGGTT")
+                                .build())
                         .build())
-                .addReportableSomaticVariants(ImmutableReportableVariant.builder()
-                        .from(ReportableVariantTestFactory.create())
+                .addReportableSomaticVariants(PurpleVariantTestFactory.builder()
                         .gene("USH2A")
-                        .canonicalHgvsCodingImpact("c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
+                        .canonicalImpact(PurpleVariantTestFactory.impactBuilder()
+                                .hgvsCodingImpact("c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
+                                .build())
                         .build())
-                .addReportableSomaticVariants(ImmutableReportableVariant.builder()
-                        .from(ReportableVariantTestFactory.create())
+                .addReportableSomaticVariants(PurpleVariantTestFactory.builder()
                         .gene("USH2A")
-                        .canonicalHgvsCodingImpact("c.11712-884A>T")
-                        .localPhaseSet(42256)
+                        .canonicalImpact(PurpleVariantTestFactory.impactBuilder()
+                                .hgvsCodingImpact("c.11712-884A>T")
+                                .build())
+                        .addLocalPhaseSets(42256)
                         .build())
                 .allGermlineVariants(Lists.newArrayList())
                 .reportableGermlineVariants(Lists.newArrayList())

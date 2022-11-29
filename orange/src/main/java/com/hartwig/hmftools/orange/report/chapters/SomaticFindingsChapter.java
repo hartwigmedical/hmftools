@@ -3,12 +3,11 @@ package com.hartwig.hmftools.orange.report.chapters;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretation;
-import com.hartwig.hmftools.orange.algo.purple.GainLoss;
-import com.hartwig.hmftools.orange.algo.purple.ReportableVariant;
-import com.hartwig.hmftools.orange.algo.purple.ReportableVariantFactory;
-import com.hartwig.hmftools.orange.report.ReportConfig;
+import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
+import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.DNAFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GeneCopyNumberTable;
@@ -33,12 +32,9 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     @NotNull
     private final OrangeReport report;
-    @NotNull
-    private final ReportConfig reportConfig;
 
-    public SomaticFindingsChapter(@NotNull final OrangeReport report, @NotNull final ReportConfig reportConfig) {
+    public SomaticFindingsChapter(@NotNull final OrangeReport report) {
         this.report = report;
-        this.reportConfig = reportConfig;
     }
 
     @NotNull
@@ -69,20 +65,15 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addSomaticVariants(@NotNull Document document) {
-        List<ReportableVariant> reportableVariants;
-        // TODO Handle germline properly.
-        if (reportConfig.reportGermline() || report.purple().reportableGermlineVariants() == null) {
-            reportableVariants = report.purple().reportableSomaticVariants();
-        } else {
-            reportableVariants = ReportableVariantFactory.mergeVariantLists(report.purple().reportableSomaticVariants(),
-                    report.purple().reportableGermlineVariants());
-        }
+        List<DriverCatalog> somaticDrivers = report.purple().somaticDrivers();
 
+        List<PurpleVariant> reportableVariants = report.purple().reportableSomaticVariants();
         String titleDrivers = "Driver variants (" + reportableVariants.size() + ")";
-        document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants));
+        document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants, somaticDrivers));
 
-        String titleNonDrivers = "Other potentially relevant variants (" + report.purple().additionalSuspectSomaticVariants().size() + ")";
-        document.add(SomaticVariantTable.build(titleNonDrivers, contentWidth(), max10(report.purple().additionalSuspectSomaticVariants())));
+        List<PurpleVariant> additionalSuspectVariants = report.purple().additionalSuspectSomaticVariants();
+        String titleNonDrivers = "Other potentially relevant variants (" + additionalSuspectVariants.size() + ")";
+        document.add(SomaticVariantTable.build(titleNonDrivers, contentWidth(), max10(additionalSuspectVariants), somaticDrivers));
     }
 
     private void addKataegisPlot(@NotNull Document document) {
@@ -111,19 +102,19 @@ public class SomaticFindingsChapter implements ReportChapter {
                 report.purple().nearReportableSomaticGains(),
                 report.isofox()));
 
-        List<GainLoss> suspectGains = selectGains(report.purple().additionalSuspectSomaticGainsLosses());
+        List<PurpleGainLoss> suspectGains = selectGains(report.purple().additionalSuspectSomaticGainsLosses());
         String titleSuspectGains = "Other regions with amps (" + suspectGains.size() + ")";
         document.add(GeneCopyNumberTable.build(titleSuspectGains, contentWidth(), max10(suspectGains), report.isofox()));
 
-        List<GainLoss> suspectLosses = selectLosses(report.purple().additionalSuspectSomaticGainsLosses());
+        List<PurpleGainLoss> suspectLosses = selectLosses(report.purple().additionalSuspectSomaticGainsLosses());
         String titleSuspectLosses = "Regions with deletions in genes in other autosomal regions (" + suspectLosses.size() + ")";
         document.add(GeneCopyNumberTable.build(titleSuspectLosses, contentWidth(), max10(suspectLosses), report.isofox()));
     }
 
     @NotNull
-    private static List<GainLoss> selectGains(@NotNull List<GainLoss> gainsLosses) {
-        List<GainLoss> gains = Lists.newArrayList();
-        for (GainLoss gainLoss : gainsLosses) {
+    private static List<PurpleGainLoss> selectGains(@NotNull List<PurpleGainLoss> gainsLosses) {
+        List<PurpleGainLoss> gains = Lists.newArrayList();
+        for (PurpleGainLoss gainLoss : gainsLosses) {
             if (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN
                     || gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN) {
                 gains.add(gainLoss);
@@ -133,9 +124,9 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static List<GainLoss> selectLosses(@NotNull List<GainLoss> gainsLosses) {
-        List<GainLoss> losses = Lists.newArrayList();
-        for (GainLoss gainLoss : gainsLosses) {
+    private static List<PurpleGainLoss> selectLosses(@NotNull List<PurpleGainLoss> gainsLosses) {
+        List<PurpleGainLoss> losses = Lists.newArrayList();
+        for (PurpleGainLoss gainLoss : gainsLosses) {
             if (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
                     || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS) {
                 losses.add(gainLoss);

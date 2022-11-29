@@ -9,13 +9,13 @@ public final class GainLossTestFactory {
     }
 
     @NotNull
-    public static GainLoss createGainLoss(@NotNull String gene, @NotNull CopyNumberInterpretation interpretation) {
+    public static PurpleGainLoss createGainLoss(@NotNull String gene, @NotNull CopyNumberInterpretation interpretation) {
         return builder().gene(gene).interpretation(interpretation).build();
     }
 
     @NotNull
-    public static ImmutableGainLoss.Builder builder() {
-        return ImmutableGainLoss.builder()
+    public static ImmutablePurpleGainLoss.Builder builder() {
+        return ImmutablePurpleGainLoss.builder()
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
                 .gene(Strings.EMPTY)

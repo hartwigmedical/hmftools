@@ -10,24 +10,25 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.doid.DoidNode;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaData;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.orange.algo.purple.GainLoss;
+import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
 import com.hartwig.hmftools.orange.algo.purple.PurpleCharacteristics;
-import com.hartwig.hmftools.orange.algo.purple.ReportableVariant;
-import com.hartwig.hmftools.orange.algo.purple.ReportableVariantFactory;
+import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
+import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.interpretation.Drivers;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -191,36 +192,30 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String somaticDriverString() {
-        List<ReportableVariant> reportableVariants;
-        // TODO Handle germline properly.
-        if (reportGermline || report.purple().reportableGermlineVariants() == null) {
-            reportableVariants = report.purple().reportableSomaticVariants();
-        } else {
-            reportableVariants = ReportableVariantFactory.mergeVariantLists(report.purple().reportableSomaticVariants(),
-                    report.purple().reportableGermlineVariants());
-        }
-        return variantDriverString(reportableVariants);
+        return variantDriverString(report.purple().reportableSomaticVariants(), report.purple().somaticDrivers());
     }
 
     @NotNull
     private String germlineDriverString() {
-        List<ReportableVariant> reportableGermlineVariants = report.purple().reportableGermlineVariants();
-        if (reportGermline && reportableGermlineVariants != null) {
-            return variantDriverString(reportableGermlineVariants);
+        List<PurpleVariant> reportableGermlineVariants = report.purple().reportableGermlineVariants();
+        List<DriverCatalog> germlineDrivers = report.purple().germlineDrivers();
+        if (reportGermline && reportableGermlineVariants != null && germlineDrivers != null) {
+            return variantDriverString(reportableGermlineVariants, germlineDrivers);
         } else {
             return ReportResources.NOT_AVAILABLE;
         }
     }
 
     @NotNull
-    private static String variantDriverString(@NotNull List<ReportableVariant> variants) {
+    private static String variantDriverString(@NotNull List<PurpleVariant> variants, @NotNull List<DriverCatalog> drivers) {
         if (variants.isEmpty()) {
             return NONE;
         }
 
         Set<String> highDriverGenes = Sets.newTreeSet(Comparator.naturalOrder());
-        for (ReportableVariant variant : variants) {
-            if (variant.driverLikelihoodInterpretation() == DriverInterpretation.HIGH) {
+        for (PurpleVariant variant : variants) {
+            DriverCatalog driver = Drivers.variantEntryForGene(drivers, variant.gene());
+            if (driver != null && DriverInterpretation.interpret(driver.driverLikelihood()) == DriverInterpretation.HIGH) {
                 highDriverGenes.add(variant.gene());
             }
         }
@@ -235,7 +230,7 @@ public class FrontPageChapter implements ReportChapter {
         }
 
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for (GainLoss gainLoss : report.purple().reportableSomaticGainsLosses()) {
+        for (PurpleGainLoss gainLoss : report.purple().reportableSomaticGainsLosses()) {
             genes.add(gainLoss.gene());
         }
         return report.purple().reportableSomaticGainsLosses().size() + " (" + concat(genes) + ")";

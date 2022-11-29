@@ -1,97 +1,73 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class SomaticVariantSelectorTest {
 
     @Test
     public void canSelectUnreportedNearHotspots() {
-        SomaticVariant hotspot =
-                SomaticVariantTestFactory.builder().canonicalEffect("hotspot").hotspot(Hotspot.HOTSPOT).reported(false).build();
-        SomaticVariant nearHotspot =
-                SomaticVariantTestFactory.builder().canonicalEffect("near hotspot").hotspot(Hotspot.NEAR_HOTSPOT).reported(false).build();
-        SomaticVariant nonHotspot =
-                SomaticVariantTestFactory.builder().canonicalEffect("non hotspot").hotspot(Hotspot.NON_HOTSPOT).reported(false).build();
+        PurpleVariant hotspot = PurpleVariantTestFactory.builder().hotspot(Hotspot.HOTSPOT).reported(false).build();
+        PurpleVariant nearHotspot = PurpleVariantTestFactory.builder().hotspot(Hotspot.NEAR_HOTSPOT).reported(false).build();
+        PurpleVariant nonHotspot = PurpleVariantTestFactory.builder().hotspot(Hotspot.NON_HOTSPOT).reported(false).build();
 
-        List<ReportableVariant> variants =
+        List<PurpleVariant> variants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(hotspot, nearHotspot, nonHotspot),
                         Lists.newArrayList(),
                         Lists.newArrayList());
 
         assertEquals(2, variants.size());
-        assertNotNull(findByCanonicalEffect(variants, "hotspot"));
-        assertNotNull(findByCanonicalEffect(variants, "near hotspot"));
+        assertTrue(variants.contains(hotspot));
+        assertTrue(variants.contains(nearHotspot));
     }
 
     @Test
     public void canSelectVariantsWithReportedPhaseSet() {
-        SomaticVariant withMatch =
-                SomaticVariantTestFactory.builder().gene("gene").canonicalEffect("match").reported(false).addLocalPhaseSets(1).build();
-        SomaticVariant withoutMatch =
-                SomaticVariantTestFactory.builder().gene("gene").canonicalEffect("no match").reported(false).addLocalPhaseSets(2).build();
-        SomaticVariant withoutPhase = SomaticVariantTestFactory.builder().gene("gene").canonicalEffect("no phase").reported(false).build();
+        PurpleVariant withMatch = PurpleVariantTestFactory.builder().gene("gene").reported(false).addLocalPhaseSets(1).build();
+        PurpleVariant withoutMatch = PurpleVariantTestFactory.builder().gene("gene").reported(false).addLocalPhaseSets(2).build();
+        PurpleVariant withoutPhase = PurpleVariantTestFactory.builder().gene("gene").reported(false).build();
 
-        ReportableVariant withPhase = ReportableVariantTestFactory.builder().localPhaseSet(1).build();
-        ReportableVariant noPhase = ReportableVariantTestFactory.builder().localPhaseSet(null).build();
+        PurpleVariant withPhase = PurpleVariantTestFactory.builder().addLocalPhaseSets(1).build();
+        PurpleVariant noPhase = PurpleVariantTestFactory.builder().localPhaseSets(null).build();
 
-        List<ReportableVariant> variants =
+        List<PurpleVariant> variants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(withMatch, withoutMatch, withoutPhase),
                         Lists.newArrayList(withPhase, noPhase),
                         Lists.newArrayList());
 
         assertEquals(1, variants.size());
-        assertNotNull(findByCanonicalEffect(variants, "match"));
+        assertTrue(variants.contains(withMatch));
     }
 
     @Test
     public void canSelectVariantsRelevantForCuppa() {
         String cuppaGene = SomaticVariantSelector.CUPPA_GENES.iterator().next();
-        SomaticVariant cuppaRelevant = SomaticVariantTestFactory.builder()
-                .canonicalEffect("relevant")
-                .gene(cuppaGene)
-                .type(VariantType.INDEL)
-                .repeatCount(4)
-                .reported(false)
-                .build();
+        PurpleVariant cuppaRelevant =
+                PurpleVariantTestFactory.builder().gene(cuppaGene).type(VariantType.INDEL).repeatCount(4).reported(false).build();
 
-        SomaticVariant cuppaTooManyRepeats = SomaticVariantTestFactory.builder()
-                .canonicalEffect("too many repeats")
-                .gene(cuppaGene)
-                .type(VariantType.INDEL)
-                .repeatCount(10)
-                .reported(false)
-                .build();
+        PurpleVariant cuppaTooManyRepeats =
+                PurpleVariantTestFactory.builder().gene(cuppaGene).type(VariantType.INDEL).repeatCount(10).reported(false).build();
 
-        SomaticVariant wrongGene = SomaticVariantTestFactory.builder()
-                .canonicalEffect("wrong")
-                .gene("wrong gene")
-                .type(VariantType.INDEL)
-                .repeatCount(4)
-                .reported(false)
-                .build();
+        PurpleVariant wrongGene =
+                PurpleVariantTestFactory.builder().gene("wrong gene").type(VariantType.INDEL).repeatCount(4).reported(false).build();
 
-        List<ReportableVariant> variants = SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(cuppaRelevant,
+        List<PurpleVariant> variants = SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(cuppaRelevant,
                 cuppaTooManyRepeats,
                 wrongGene), Lists.newArrayList(), Lists.newArrayList());
 
         assertEquals(1, variants.size());
-        assertNotNull(findByCanonicalEffect(variants, "relevant"));
+        assertTrue(variants.contains(cuppaRelevant));
     }
 
     @Test
@@ -104,42 +80,38 @@ public class SomaticVariantSelectorTest {
                 .reportMissenseAndInframe(true)
                 .build();
 
-        SomaticVariant nonsense = SomaticVariantTestFactory.builder()
+        PurpleVariant nonsense = PurpleVariantTestFactory.builder()
                 .gene(gene)
-                .canonicalEffect("nonsense")
-                .canonicalCodingEffect(CodingEffect.SYNONYMOUS)
+                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
                 .worstCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .build();
 
-        SomaticVariant splice = SomaticVariantTestFactory.builder()
+        PurpleVariant splice = PurpleVariantTestFactory.builder()
                 .gene(gene)
-                .canonicalEffect("splice")
-                .canonicalCodingEffect(CodingEffect.SYNONYMOUS)
+                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
                 .worstCodingEffect(CodingEffect.SPLICE)
                 .build();
 
-        SomaticVariant missense = SomaticVariantTestFactory.builder()
+        PurpleVariant missense = PurpleVariantTestFactory.builder()
                 .gene(gene)
-                .canonicalEffect("missense")
-                .canonicalCodingEffect(CodingEffect.SYNONYMOUS)
+                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
                 .worstCodingEffect(CodingEffect.MISSENSE)
                 .build();
 
-        SomaticVariant wrongGene = SomaticVariantTestFactory.builder()
+        PurpleVariant wrongGene = PurpleVariantTestFactory.builder()
                 .gene("wrong gene")
-                .canonicalEffect("wrong gene")
-                .canonicalCodingEffect(CodingEffect.SYNONYMOUS)
+                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
                 .worstCodingEffect(CodingEffect.MISSENSE)
                 .build();
 
-        List<ReportableVariant> variants =
+        List<PurpleVariant> variants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(nonsense, splice, missense, wrongGene),
                         Lists.newArrayList(),
                         Lists.newArrayList(driverGene));
 
         assertEquals(2, variants.size());
-        assertNotNull(findByCanonicalEffect(variants, "nonsense"));
-        assertNotNull(findByCanonicalEffect(variants, "missense"));
+        assertTrue(variants.contains(nonsense));
+        assertTrue(variants.contains(missense));
     }
 
     @Test
@@ -147,35 +119,27 @@ public class SomaticVariantSelectorTest {
         DriverGene driverGeneYes = DriverGeneTestFactory.builder().gene("driver 1").reportSplice(true).build();
         DriverGene driverGeneNo = DriverGeneTestFactory.builder().gene("driver 2").reportSplice(false).build();
 
-        SomaticVariant reportedGene =
-                SomaticVariantTestFactory.builder().spliceRegion(true).canonicalEffect("all correct").gene(driverGeneYes.gene()).build();
-
-        SomaticVariant nonReportedGene = SomaticVariantTestFactory.builder()
-                .spliceRegion(true)
-                .canonicalEffect("non reported gene")
-                .gene(driverGeneNo.gene())
+        PurpleVariant reportedGene = PurpleVariantTestFactory.builder()
+                .gene(driverGeneYes.gene())
+                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().spliceRegion(true).build())
                 .build();
 
-        SomaticVariant otherGene =
-                SomaticVariantTestFactory.builder().spliceRegion(true).canonicalEffect("other gene").gene(driverGeneNo.gene()).build();
+        PurpleVariant nonReportedGene = PurpleVariantTestFactory.builder()
+                .gene(driverGeneNo.gene())
+                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().spliceRegion(true).build())
+                .build();
 
-        List<ReportableVariant> variants =
+        PurpleVariant otherGene = PurpleVariantTestFactory.builder()
+                .gene("other gene")
+                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().spliceRegion(true).build())
+                .build();
+
+        List<PurpleVariant> variants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(reportedGene, nonReportedGene, otherGene),
                         Lists.newArrayList(),
                         Lists.newArrayList(driverGeneYes, driverGeneNo));
 
         assertEquals(1, variants.size());
-        assertNotNull(findByCanonicalEffect(variants, "all correct"));
-    }
-
-    @Nullable
-    private static ReportableVariant findByCanonicalEffect(@NotNull List<ReportableVariant> variants,
-            @NotNull String canonicalEffectToFind) {
-        for (ReportableVariant variant : variants) {
-            if (variant.canonicalEffect().equals(canonicalEffectToFind)) {
-                return variant;
-            }
-        }
-        return null;
+        assertTrue(variants.contains(reportedGene));
     }
 }

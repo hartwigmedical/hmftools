@@ -3,7 +3,6 @@ package com.hartwig.hmftools.orange.algo.purple;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.Variant;
 
