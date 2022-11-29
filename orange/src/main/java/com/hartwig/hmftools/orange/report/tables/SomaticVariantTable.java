@@ -3,9 +3,8 @@ package com.hartwig.hmftools.orange.report.tables;
 import java.text.DecimalFormat;
 import java.util.List;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.interpretation.VariantEntry;
 import com.hartwig.hmftools.orange.report.interpretation.Variants;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -22,8 +21,7 @@ public final class SomaticVariantTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<PurpleVariant> variants,
-            @NotNull List<DriverCatalog> drivers) {
+    public static Table build(@NotNull String title, float width, @NotNull List<VariantEntry> variants) {
         if (variants.isEmpty()) {
             return Tables.createEmpty(title, width);
         }
@@ -34,14 +32,14 @@ public final class SomaticVariantTable {
                         Cells.createHeader("Biallelic"), Cells.createHeader("Hotspot"), Cells.createHeader("DL"), Cells.createHeader("CL"),
                         Cells.createHeader("Phase ID"), Cells.createHeader("RNA Depth") });
 
-        for (PurpleVariant variant : Variants.sort(Variants.dedup(variants), drivers)) {
+        for (VariantEntry variant : Variants.sort(variants)) {
             table.addCell(Cells.createContent(Variants.variantField(variant)));
-            table.addCell(Cells.createContent(Variants.variantCopyNumberField(variant)));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.adjustedCopyNumber())));
+            table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.variantCopyNumber())));
+            table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.totalCopyNumber())));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.minorAlleleCopyNumber())));
             table.addCell(Cells.createContent(variant.biallelic() ? "Yes" : "No"));
             table.addCell(Cells.createContent(Variants.hotspotField(variant)));
-            table.addCell(Cells.createContent(Variants.driverLikelihoodField(variant, drivers)));
+            table.addCell(Cells.createContent(Variants.driverLikelihoodField(variant)));
             table.addCell(Cells.createContent(Variants.clonalLikelihoodField(variant)));
             table.addCell(Cells.createContent(Variants.phaseSetField(variant)));
             table.addCell(Cells.createContent(Variants.rnaDepthField(variant)));

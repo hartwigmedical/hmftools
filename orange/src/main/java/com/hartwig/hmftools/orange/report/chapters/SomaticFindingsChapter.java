@@ -9,8 +9,10 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
+import com.hartwig.hmftools.orange.report.interpretation.VariantEntry;
+import com.hartwig.hmftools.orange.report.interpretation.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.DNAFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GeneCopyNumberTable;
@@ -69,13 +71,15 @@ public class SomaticFindingsChapter implements ReportChapter {
     private void addSomaticVariants(@NotNull Document document) {
         List<DriverCatalog> somaticDrivers = report.purple().somaticDrivers();
 
-        List<PurpleVariant> reportableVariants = report.purple().reportableSomaticVariants();
+        List<VariantEntry> reportableVariants =
+                VariantEntryFactory.create(VariantDedup.apply(report.purple().reportableSomaticVariants()), somaticDrivers);
         String titleDrivers = "Driver variants (" + reportableVariants.size() + ")";
-        document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants, somaticDrivers));
+        document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants));
 
-        List<PurpleVariant> additionalSuspectVariants = report.purple().additionalSuspectSomaticVariants();
+        List<VariantEntry> additionalSuspectVariants =
+                VariantEntryFactory.create(VariantDedup.apply(report.purple().additionalSuspectSomaticVariants()), somaticDrivers);
         String titleNonDrivers = "Other potentially relevant variants (" + additionalSuspectVariants.size() + ")";
-        document.add(SomaticVariantTable.build(titleNonDrivers, contentWidth(), max10(additionalSuspectVariants), somaticDrivers));
+        document.add(SomaticVariantTable.build(titleNonDrivers, contentWidth(), max10(additionalSuspectVariants)));
     }
 
     private void addKataegisPlot(@NotNull Document document) {

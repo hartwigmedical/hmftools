@@ -10,8 +10,10 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
+import com.hartwig.hmftools.orange.report.interpretation.VariantEntry;
+import com.hartwig.hmftools.orange.report.interpretation.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.tables.GermlineDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
@@ -78,13 +80,15 @@ public class GermlineFindingsChapter implements ReportChapter {
     private void addGermlineVariants(@NotNull Document document) {
         List<DriverCatalog> drivers = report.purple().germlineDrivers();
 
-        List<PurpleVariant> reportableGermlineVariants = report.purple().reportableGermlineVariants();
-        String titleDrivers = "Driver variants (" + reportableGermlineVariants.size() + ")";
-        document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), reportableGermlineVariants, drivers));
+        List<VariantEntry> reportableVariants =
+                VariantEntryFactory.create(VariantDedup.apply(report.purple().reportableGermlineVariants()), drivers);
+        String titleDrivers = "Driver variants (" + reportableVariants.size() + ")";
+        document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), reportableVariants));
 
-        List<PurpleVariant> additionalSuspectVariants = report.purple().additionalSuspectGermlineVariants();
+        List<VariantEntry> additionalSuspectVariants =
+                VariantEntryFactory.create(VariantDedup.apply(report.purple().additionalSuspectGermlineVariants()), drivers);
         String titleNonDrivers = "Other potentially relevant variants (" + additionalSuspectVariants.size() + ")";
-        document.add(GermlineVariantTable.build(titleNonDrivers, contentWidth(), additionalSuspectVariants, drivers));
+        document.add(GermlineVariantTable.build(titleNonDrivers, contentWidth(), additionalSuspectVariants));
     }
 
     private void addGermlineDeletions(@NotNull Document document) {
