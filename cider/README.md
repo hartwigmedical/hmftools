@@ -82,7 +82,7 @@ Each collapsed sequence is either marked as PASS or one or more of the following
 - **MIN_LENGTH** - CDR3 nt sequence must be at least 5 AA in length (including anchor C & W/F)
 - **MATCHES_REF** - NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0.
 
-Sequences with poor or no anchor may represent partial rearrangements.
+Note that sequences with "no anchor" may represent partial rearrangements.
  
 The full set of fields output are:
 
