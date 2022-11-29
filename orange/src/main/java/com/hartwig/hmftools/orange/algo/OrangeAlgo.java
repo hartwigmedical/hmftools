@@ -135,10 +135,12 @@ public class OrangeAlgo {
         OrangeSample refSample = loadSampleData(config, false);
         OrangeSample tumorSample = loadSampleData(config, true);
 
-        LinxInterpretedData linx = LinxInterpreter.interpret(loadLinxData(config), driverGenes, knownFusionCache);
+        LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
+        LinxInterpretedData linx = linxInterpreter.interpret(loadLinxData(config));
 
         ChordData chord = loadChordAnalysis(config);
-        PurpleInterpretedData purple = PurpleInterpreter.interpret(loadPurpleData(config), driverGenes, chord);
+        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(driverGenes, chord);
+        PurpleInterpretedData purple = purpleInterpreter.interpret(loadPurpleData(config));
 
         List<WildTypeGene> wildTypeGenes = WildTypeFactory.filterQCWildTypes(purple.fit().qc().status(),
                 WildTypeFactory.determineWildTypeGenes(driverGenes,

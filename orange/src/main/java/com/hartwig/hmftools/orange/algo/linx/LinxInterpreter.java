@@ -12,16 +12,22 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class LinxInterpreter {
+public class LinxInterpreter {
 
     private static final Logger LOGGER = LogManager.getLogger(LinxInterpreter.class);
 
-    private LinxInterpreter() {
+    @NotNull
+    private final List<DriverGene> driverGenes;
+    @NotNull
+    private final KnownFusionCache knownFusionCache;
+
+    public LinxInterpreter(@NotNull final List<DriverGene> driverGenes, @NotNull final KnownFusionCache knownFusionCache) {
+        this.driverGenes = driverGenes;
+        this.knownFusionCache = knownFusionCache;
     }
 
     @NotNull
-    public static LinxInterpretedData interpret(@NotNull LinxData linx, @NotNull List<DriverGene> driverGenes,
-            @NotNull KnownFusionCache knownFusionCache) {
+    public LinxInterpretedData interpret(@NotNull LinxData linx) {
         List<LinxFusion> additionalSuspectFusions = DNAFusionSelector.selectInterestingUnreportedFusions(linx.allFusions(), driverGenes);
         LOGGER.info(" Found an additional {} suspect fusions that are potentially interesting", additionalSuspectFusions.size());
 

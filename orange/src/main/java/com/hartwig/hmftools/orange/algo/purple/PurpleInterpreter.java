@@ -27,16 +27,22 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class PurpleInterpreter {
+public class PurpleInterpreter {
 
     private static final Logger LOGGER = LogManager.getLogger(PurpleInterpreter.class);
 
-    private PurpleInterpreter() {
+    @NotNull
+    private final List<DriverGene> driverGenes;
+    @NotNull
+    private final ChordData chord;
+
+    public PurpleInterpreter(@NotNull final List<DriverGene> driverGenes, @NotNull final ChordData chord) {
+        this.driverGenes = driverGenes;
+        this.chord = chord;
     }
 
     @NotNull
-    public static PurpleInterpretedData interpret(@NotNull PurpleData purple, @NotNull List<DriverGene> driverGenes,
-            @NotNull ChordData chord) {
+    public PurpleInterpretedData interpret(@NotNull PurpleData purple) {
         List<PurpleVariant> allSomaticVariants = PurpleVariantFactory.create(purple.allSomaticVariants());
         List<PurpleVariant> reportableSomaticVariants = PurpleVariantFactory.create(purple.reportableSomaticVariants());
         List<PurpleVariant> additionalSuspectSomaticVariants =

@@ -27,13 +27,13 @@ final class SomaticVariantSelector {
         for (PurpleVariant variant : allSomaticVariants) {
             if (!variant.reported()) {
                 boolean isNearHotspot = variant.hotspot() == Hotspot.HOTSPOT || variant.hotspot() == Hotspot.NEAR_HOTSPOT;
-                boolean isExonicAndHasPhasedReportedVariant =
+                boolean affectsGeneAndHasPhasedReportedVariant =
                         !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.localPhaseSets());
                 boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);
                 boolean isSynonymousButReportable = isSynonymousWithReportableWorstImpact(variant, driverGenes);
                 boolean isUnreportedSpliceVariant = isUnreportedSpliceVariant(variant, driverGenes);
 
-                if (isNearHotspot || isExonicAndHasPhasedReportedVariant || isCuppaRelevantVariant || isSynonymousButReportable
+                if (isNearHotspot || affectsGeneAndHasPhasedReportedVariant || isCuppaRelevantVariant || isSynonymousButReportable
                         || isUnreportedSpliceVariant) {
                     filtered.add(variant);
                 }
