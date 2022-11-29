@@ -62,7 +62,7 @@ public final class PurpleVariantTestFactory {
     @NotNull
     public static ImmutablePurpleTranscriptImpact.Builder impactBuilder() {
         return ImmutablePurpleTranscriptImpact.builder()
-                .transcriptId(Strings.EMPTY)
+                .transcript(Strings.EMPTY)
                 .hgvsCodingImpact(Strings.EMPTY)
                 .hgvsProteinImpact(Strings.EMPTY)
                 .affectedCodon(null)

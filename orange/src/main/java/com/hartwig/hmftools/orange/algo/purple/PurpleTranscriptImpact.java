@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class PurpleTranscriptImpact {
 
     @NotNull
-    public abstract String transcriptId();
+    public abstract String transcript();
 
     @NotNull
     public abstract String hgvsCodingImpact();
