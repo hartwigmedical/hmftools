@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQC;
-import com.hartwig.hmftools.common.purple.FittedPurityMethod;
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -60,6 +60,7 @@ public final class PurpleInterpretationTestFactory {
                 .microsatelliteIndelsPerMb(0D)
                 .microsatelliteStatus(MicrosatelliteStatus.UNKNOWN)
                 .tumorMutationalBurdenPerMb(0D)
+                .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
                 .tumorMutationalLoad(0)
                 .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
                 .svTumorMutationalBurden(0)
