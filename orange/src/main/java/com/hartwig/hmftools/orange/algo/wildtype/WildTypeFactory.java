@@ -6,9 +6,9 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.orange.algo.linx.GeneDisruption;
 import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 
@@ -30,10 +30,10 @@ public final class WildTypeFactory {
     }
 
     @NotNull
-    public static List<WildTypeGene> determineWildTypeGenes(@NotNull List<PurpleVariant> reportableSomaticVariants,
-            @Nullable List<PurpleVariant> reportableGermlineVariants, @NotNull List<PurpleGainLoss> reportableSomaticGainsLosses,
-            @NotNull List<LinxFusion> reportableFusions, @NotNull List<HomozygousDisruption> homozygousDisruptions,
-            @NotNull List<GeneDisruption> reportableGeneDisruptions, @NotNull List<DriverGene> driverGenes) {
+    public static List<WildTypeGene> determineWildTypeGenes(@NotNull List<DriverGene> driverGenes,
+            @NotNull List<PurpleVariant> reportableSomaticVariants, @Nullable List<PurpleVariant> reportableGermlineVariants,
+            @NotNull List<PurpleGainLoss> reportableSomaticGainsLosses, @NotNull List<LinxFusion> reportableFusions,
+            @NotNull List<HomozygousDisruption> homozygousDisruptions, @NotNull List<LinxBreakend> reportableBreakends) {
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
 
         for (DriverGene driverGene : driverGenes) {
@@ -74,15 +74,15 @@ public final class WildTypeFactory {
                 }
             }
 
-            boolean hasGeneDisruption = false;
-            for (GeneDisruption disruption : reportableGeneDisruptions) {
-                if (driverGene.gene().equals(disruption.gene())) {
-                    hasGeneDisruption = true;
+            boolean hasBreakend = false;
+            for (LinxBreakend breakend : reportableBreakends) {
+                if (driverGene.gene().equals(breakend.gene())) {
+                    hasBreakend = true;
                 }
             }
 
             if (!hasSomaticVariant && !hasGermlineVariant && !hasSomaticGainLoss && !hasFusion && !hasHomozygousDisruption
-                    && !hasGeneDisruption) {
+                    && !hasBreakend) {
                 wildTypeGenes.add(ImmutableWildTypeGene.builder().gene(driverGene.gene()).build());
             }
         }

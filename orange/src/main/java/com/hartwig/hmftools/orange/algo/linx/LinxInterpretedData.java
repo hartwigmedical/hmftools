@@ -32,10 +32,10 @@ public abstract class LinxInterpretedData {
     public abstract List<LinxBreakend> allBreakends();
 
     @NotNull
-    public abstract List<GeneDisruption> reportableGeneDisruptions();
+    public abstract List<LinxBreakend> reportableBreakends();
 
     @NotNull
-    public abstract List<GeneDisruption> additionalSuspectDisruptions();
+    public abstract List<LinxBreakend> additionalSuspectBreakends();
 
     @NotNull
     public abstract List<HomozygousDisruption> homozygousDisruptions();

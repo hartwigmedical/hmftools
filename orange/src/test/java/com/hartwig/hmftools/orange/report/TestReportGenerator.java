@@ -111,7 +111,7 @@ public class TestReportGenerator {
                         .allFusions(Lists.newArrayList())
                         .additionalSuspectFusions(Lists.newArrayList())
                         .allBreakends(Lists.newArrayList())
-                        .additionalSuspectDisruptions(Lists.newArrayList())
+                        .additionalSuspectBreakends(Lists.newArrayList())
                         .allGermlineDisruptions(Lists.newArrayList())
                         .build());
 

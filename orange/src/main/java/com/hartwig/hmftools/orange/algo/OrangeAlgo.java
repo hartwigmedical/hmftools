@@ -141,13 +141,13 @@ public class OrangeAlgo {
         PurpleInterpretedData purple = PurpleInterpreter.interpret(loadPurpleData(config), driverGenes, chord);
 
         List<WildTypeGene> wildTypeGenes = WildTypeFactory.filterQCWildTypes(purple.fit().qc().status(),
-                WildTypeFactory.determineWildTypeGenes(purple.reportableSomaticVariants(),
+                WildTypeFactory.determineWildTypeGenes(driverGenes,
+                        purple.reportableSomaticVariants(),
                         purple.reportableGermlineVariants(),
                         purple.reportableSomaticGainsLosses(),
                         linx.reportableFusions(),
                         linx.homozygousDisruptions(),
-                        linx.reportableGeneDisruptions(),
-                        driverGenes));
+                        linx.reportableBreakends()));
         LOGGER.info("Identified {} of {} driver genes to be wild-type", wildTypeGenes.size(), driverGenes.size());
 
         return ImmutableOrangeReport.builder()
