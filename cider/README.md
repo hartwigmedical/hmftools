@@ -43,7 +43,7 @@ Specifically, for each V and each J component define a 30 anchor region and obta
 | TRDJ           | Sequence starting with “TTTG” or “TTCG” starting between 27 and 33                                                                                                                                                   | 
 | TRGV           | Base 283-312                                                                                                                                                                                                         | 
 | TRGJ           | Sequence starting with “TTTG” or “TTCG” starting between 27 and 33                                                                                                                                                   |
-  
+
 The last 3 bases of the V anchor and the first 3 bases of the J anchor ,corresponding to the conserved C on the V side and W/F on the J side are used as the anchor coordinates. The D region is generally too short to find aligned reads and is ignored. 
 
 ### Bam Extraction 
@@ -52,7 +52,7 @@ From the bam retrieve all reads and their mates which overlap the anchor coordin
 
 ### VDJ consensus candidate sequences 
 
-Separately for V and J aligned / anchored reads, determine the 30 base anchor sequence + any candidate CDR3 sequence starting from the bases immediately following the conserved V-CYS r J-PHE/J-TRP location. Determine a minimal set of consensus sequences separately for each of the V and J side by collapsing sequences which match (trimmed for bases with qual < 25) into a single consensus sequence. PolyG tails of 6 or more consecutive Gs (and the prior 5 bases) are stripped from the sequence before making the consensus sequence.  Additionally num_trim_bases is set to > 0 then the specified number of bases is always trimmed from every read prior to creating the candidate sequences  
+Separately for V and J aligned / anchored reads, determine the 30 base anchor sequence + any candidate CDR3 sequence starting from the bases immediately following the conserved V-CYS r J-PHE/J-TRP location. Determine a minimal set of consensus sequences separately for each of the V and J side by collapsing sequences which match (trimmed for bases with qual < 25) into a single consensus sequence. Note that TRA and TRD sequences may also match together. PolyG tails of 6 or more consecutive Gs (and the prior 5 bases) are stripped from the sequence before making the consensus sequence.  Additionally num_trim_bases is set to > 0 then the specified number of bases is always trimmed from every read prior to creating the candidate sequences  
 
 If a sequence can be collapsed to multiple longer sequences, then greedily allocate it to the most supported sequence. The total base qual supporting each base is retained for later matching). 
 
@@ -76,9 +76,8 @@ Each V only anchored read is also checked for partial overlap with each J only a
 Each collapsed sequence is either marked as PASS or one or more of the following filters 
 - **NO_V_ANCHOR** - No candidate V anchor found 
 - **NO_J_ANCHOR** - No candidate J anchor found 
-- **POOR_V_ANCHOR** - No V anchor found with similarity score >=0 
-- **POOR_J_ANCHOR** - No J anchor found with similarity score >=0 
 - **DUPLICATE** - CDR3 nt sequence is identical to another sequence with more support (different anchors) 
+- **CDR3_DELETED** - A V and J anchor are found, but the CDR3 portion of the sequence (including conserved C,W,F) is fully deleted
 - **MAX_LENGTH** - CDR3 nt sequence must be less than 40 AA in length 
 - **MIN_LENGTH** - CDR3 nt sequence must be at least 5 AA in length (including anchor C & W/F)
 - **MATCHES_REF** - NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0.
@@ -89,10 +88,10 @@ The full set of fields output are:
 
 | Field                | Explanation                                                                                                                                          | 
 |----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
-| CDR3Seq              | CDR3 nucleotide sequence                                                                                                                             | 
-| CDR3aa               | CDR3 aa sequence                                                                                                                                     | 
-| Filter               | PASS if viable CDR3 sequence or one or more filter reasons                                                                                           | 
-| minHighQualBaseReads | number of reads in the least supported base in the CDR3 region or for the first 60 bases of the candidate CDR3 sequence if only one  anchor is found |
+| CDR3Seq              | CDR3 nucleotide sequence. If either the V or J anchor is missing only the first 63 bases of sequence are shown                                                                                                                     | 
+| CDR3aa               | CDR3 aa sequence. If either the V or J anchor is missing only the first 63 bases of sequence are shown                                                                                                                                    | 
+| Filter               | PASS if viable CDR3 sequence or one or more filter reasons  (see above)                                                                                          | 
+| minHighQualBaseReads | number of reads in the least supported base in the CDR3 region or for the first 63 bases of the candidate CDR3 sequence if only one anchor is found |
 | assignedReads        | Total reads assigned to candidate sequence.                                                                                                          | 
 | JAlignedReads        | # of reads initially aligned to J gene                                                                                                               | 
 | VAlignedReads        | # of reads initially aligned to V gene                                                                                                               | 
@@ -116,7 +115,9 @@ The full set of fields output are:
 | vNonSplitReads       | Count of reads supporting sequence with at least 30 aligned bases either side of first base of conserved W/F                                         | 
 | vdjSeq               | Full consensus sequence in nucleotides                                                                                                               | 
 | support              | Counts of high quality base support at each nucleotide (radix-36 ASCII encoded)                                                                      | 
+| SampleType              | "dna" or "rna"                       | 
 | cohortFrequency      | TO DO                                                                                                                                                | 
+
 
 ## Limitations / Future improvements
   
