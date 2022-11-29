@@ -11,10 +11,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
-import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.loader.GainLoss;
-import com.hartwig.hmftools.common.purple.loader.GainLossTestFactory;
-import com.hartwig.hmftools.common.purple.loader.ImmutableGainLoss;
 
 import org.junit.Test;
 

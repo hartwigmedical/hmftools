@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
-import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.immutables.value.Value;

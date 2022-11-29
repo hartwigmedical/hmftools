@@ -9,12 +9,12 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.lims.ImmutableLimsShallowSeqData;
-import com.hartwig.hmftools.common.lims.LimsShallowSeqData;
-import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
+import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.patientdb.clinical.context.RunContext;
+import com.hartwig.hmftools.patientdb.clinical.lims.ImmutableLimsShallowSeqData;
+import com.hartwig.hmftools.patientdb.clinical.lims.LimsShallowSeqData;
 import com.hartwig.hmftools.patientdb.clinical.readers.RunsFolderReader;
 
 import org.apache.commons.cli.CommandLine;

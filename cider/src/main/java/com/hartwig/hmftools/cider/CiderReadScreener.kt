@@ -220,7 +220,16 @@ class CiderReadScreener(// collect the reads and sort by types
         }
 
         // get the VJ gene type we are interested in
-        val relaventVjGeneType = relevantAnchorLocation?.vjGeneType ?: relaventConstantRegion?.getCorrespondingJ() ?: return false
+        val relaventVjGeneType: VJGeneType? = relevantAnchorLocation?.vjGeneType ?: relaventConstantRegion?.getCorrespondingJ()
+
+        if (relaventVjGeneType == null)
+        {
+            return false
+        }
+
+        // we need to match both the V and J side after an anchor region match
+        // i.e. if we match a V gene type, we want to also check for the J gene type, and vice versa
+        val vjGeneTypes = listOf(relaventVjGeneType) + relaventVjGeneType.pairedVjGeneTypes()
 
         // we test both reverse and not reverse, it is simpler this way
         for (reverseRead in arrayOf(true, false))
@@ -230,44 +239,41 @@ class CiderReadScreener(// collect the reads and sort by types
             {
                 readString = SequenceUtil.reverseComplement(readString)
             }
-            // we need to match both the V and J side after an anchor region match
-            // i.e. if we match a V gene type, we want to also check for the J gene type, and vice versa
-            for (vjGeneType in arrayOf(relaventVjGeneType, CiderUtils.getPairedVjGeneType(relaventVjGeneType)))
+
+            val anchorBlosumMatch: AnchorBlosumMatch? = mAnchorBlosumSearcher.searchForAnchor(
+                readString,
+                vjGeneTypes,
+                IAnchorBlosumSearcher.Mode.DISALLOW_NEG_SIMILARITY,
+                0,
+                read.readLength
+            )
+            if (anchorBlosumMatch != null && anchorBlosumMatch.similarityScore > 0)
             {
-                val anchorBlosumMatch: AnchorBlosumMatch? = mAnchorBlosumSearcher.searchForAnchor(
-                    readString,
-                    vjGeneType,
-                    0,
-                    read.readLength
+                val readCandidate = addVjReadCandidate(
+                    read,
+                    anchorBlosumMatch.templateGenes,
+                    MatchMethod.BLOSUM,
+                    reverseRead,
+                    anchorBlosumMatch.anchorStart,
+                    anchorBlosumMatch.anchorEnd
                 )
-                if (anchorBlosumMatch != null && anchorBlosumMatch.similarityScore > 0)
+                if (readCandidate != null)
                 {
-                    val readCandidate = addVjReadCandidate(
-                        read,
-                        anchorBlosumMatch.templateGenes,
-                        MatchMethod.BLOSUM,
-                        reverseRead,
-                        anchorBlosumMatch.anchorStart,
-                        anchorBlosumMatch.anchorEnd
-                    )
-                    if (readCandidate != null)
+                    if (relevantAnchorLocation != null)
                     {
-                        if (relevantAnchorLocation != null)
-                        {
-                            sLogger.info(
-                                "read({}) matched from mate mapped({}:{}) near anchor location({})",
-                                read, read.mateReferenceName, read.mateAlignmentStart, relevantAnchorLocation
-                            )
-                        }
-                        else
-                        {
-                            sLogger.info(
-                                "read({}) matched from mate mapped({}:{}) near constant region({})",
-                                read, read.mateReferenceName, read.mateAlignmentStart, relaventConstantRegion
-                            )
-                        }
-                        return true
+                        sLogger.info(
+                            "read({}) matched from mate mapped({}:{}) near anchor location({})",
+                            read, read.mateReferenceName, read.mateAlignmentStart, relevantAnchorLocation
+                        )
                     }
+                    else
+                    {
+                        sLogger.info(
+                            "read({}) matched from mate mapped({}:{}) near constant region({})",
+                            read, read.mateReferenceName, read.mateAlignmentStart, relaventConstantRegion
+                        )
+                    }
+                    return true
                 }
             }
         }
@@ -285,7 +291,8 @@ class CiderReadScreener(// collect the reads and sort by types
             var readString = samRecord.readString
             if (strand == Strand.REVERSE) readString = SequenceUtil.reverseComplement(readString)
 
-            val anchorBlosumMatch: AnchorBlosumMatch? = mAnchorBlosumSearcher.searchForAnchor(readString)
+            val anchorBlosumMatch: AnchorBlosumMatch? =
+                mAnchorBlosumSearcher.searchForAnchor(readString, IAnchorBlosumSearcher.Mode.DISALLOW_NEG_SIMILARITY)
 
             if (anchorBlosumMatch != null && anchorBlosumMatch.similarityScore > 0)
             {
@@ -336,7 +343,8 @@ class CiderReadScreener(// collect the reads and sort by types
                 // now try to find an anchor here
                 anchorBlosumMatch = mAnchorBlosumSearcher.searchForAnchor(
                     samRecord.readString,
-                    igTcrConstantRegion.getCorrespondingJ(),
+                    listOf(igTcrConstantRegion.getCorrespondingJ()),
+                    IAnchorBlosumSearcher.Mode.DISALLOW_NEG_SIMILARITY,
                     0,
                     leftSoftClip)
             }
@@ -350,7 +358,9 @@ class CiderReadScreener(// collect the reads and sort by types
 
                 anchorBlosumMatch =  mAnchorBlosumSearcher.searchForAnchor(
                     reverseCompSeq,
-                    igTcrConstantRegion.getCorrespondingJ(), 0, rightSoftClip)
+                    listOf(igTcrConstantRegion.getCorrespondingJ()),
+                    IAnchorBlosumSearcher.Mode.DISALLOW_NEG_SIMILARITY,
+                    0, rightSoftClip)
             }
             if (anchorBlosumMatch != null && anchorBlosumMatch.similarityScore > 0)
             {

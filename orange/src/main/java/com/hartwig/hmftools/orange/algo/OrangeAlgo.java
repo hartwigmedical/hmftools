@@ -36,8 +36,8 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.purple.loader.PurpleData;
-import com.hartwig.hmftools.common.purple.loader.PurpleDataLoader;
+import com.hartwig.hmftools.common.purple.PurpleData;
+import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.sage.GeneDepthFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
@@ -299,9 +299,6 @@ public class OrangeAlgo {
                 purple.allSomaticVariants().size(),
                 purple.reportableSomaticVariants().size());
         LOGGER.info(" Loaded {} gene copy numbers entries", purple.allSomaticGeneCopyNumbers().size());
-        LOGGER.info(" Extracted {} somatic gains and losses from gene copy numbers for which {} are reportable",
-                purple.allSomaticGainsLosses().size(),
-                purple.reportableSomaticGainsLosses().size());
 
         if (referenceSample != null) {
             LOGGER.info(" Loaded {} germline driver catalog entries", purple.germlineDrivers().size());

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.TestUtils.createVDJ
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.cider.layout.ReadLayoutBuilderTest
 import com.hartwig.hmftools.cider.layout.TestLayoutRead
@@ -46,7 +47,7 @@ class VDJSequenceBuilderTest
         //org.apache.logging.log4j.core.config.Configurator.setRootLevel(Level.TRACE)
     }
 
-    // build a VDJ from a layout with just V anchor
+    // build a VDJ from a layout with just V anchor, J anchor is found using blosum
     @Test
     fun testBuildVdjFromVLayout()
     {
@@ -75,7 +76,7 @@ class VDJSequenceBuilderTest
             Lists.immutable.of(TestUtils.ighJ1), 10)
 
         // now we should be able to build a VDJ sequence
-        val vdjSeq = vdjSeqBuilder.tryCompleteLayoutWithBlosum(VJGeneType.IGHV, layout, 0)
+        val vdjSeq = vdjSeqBuilder.tryCompleteLayoutWithBlosum(VJGeneType.IGHV, layout)
 
         assertNotNull(vdjSeq)
         assertNotNull(vdjSeq.vAnchor)
@@ -116,7 +117,7 @@ class VDJSequenceBuilderTest
             Lists.immutable.of(TestUtils.ighV1_18), 10)
 
         // now we should be able to build a VDJ sequence
-        val vdjSeq = vdjSeqBuilder.tryCompleteLayoutWithBlosum(VJGeneType.IGHJ, layout, 0)
+        val vdjSeq = vdjSeqBuilder.tryCompleteLayoutWithBlosum(VJGeneType.IGHJ, layout)
 
         assertNotNull(vdjSeq)
         assertNotNull(vdjSeq.vAnchor)
@@ -171,113 +172,204 @@ class VDJSequenceBuilderTest
         assertEquals("CACATCCTGA", vdjSeq.cdr3SequenceShort)
     }
 
+    // building of overlapping layout where the J layout is on the upstream
+    // of V layout
     @Test
-    fun testMergeVDJsSimple()
+    fun testBuildVdjFromOverlapLayouts1()
     {
-        // create two VDJs, both simple read match, exactly the same
-        val seq = "ATGCTGGTGT"
+        val mockVjReadLayoutAdaptor = MockVJReadLayoutAdaptor()
+        val mockAnchorBlosumSearcher = MockAnchorBlosumSearcher()
+        val vdjSeqBuilder = VDJSequenceBuilder(
+            mockVjReadLayoutAdaptor, mockAnchorBlosumSearcher, MIN_BASE_QUALITY,
+            10)
 
-        val layout1 = ReadLayout()
+        // we create two layouts, a V layout and a J layout, and they overlap each other by 25 bases,
+        // and the J layout is actually on the "left" of V layout
+        // v layout:    GC-GAATACC-CACATCCTGA-GAGTG-TCAGA
+        // j layout: GATGC-GAATACC-CACATCCTGA-GAGTG-T
+        //                 |_____|            |___|
+        //            V anchor(align)    J anchor(align)
+        //
+        // V anchor is position 2-9 in the V layout, J anchor is position 22-27 in the J layout.
+        // The final VDJ is 32 bases long, V anchor at position 5-12, J anchor is position 22-27
 
-        // we are aligned at the T
-        val baseQual1 = SAMUtils.fastqToPhred("FF:FFFF:FF") // F is 37, : is 25
-        val read1 = TestLayoutRead("read1", ReadKey("read1", true), seq, baseQual1, 4)
-        layout1.addRead(read1, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
+        val seq = "GATGC-GAATACC-CACATCCTGA-GAGTG-TCAGA".replace("-", "")
+        val vLayout = TestUtils.createLayout(seq.substring(3))
+        val jLayout = TestUtils.createLayout(seq.take(28))
 
-        val layout2 = ReadLayout()
-        val baseQual2 = SAMUtils.fastqToPhred("FFFF::FFFF") // F is 37, : is 25
-        val read2 = TestLayoutRead("read2", ReadKey("read2", true), seq, baseQual2, 4)
-        layout2.addRead(read2, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
+        mockVjReadLayoutAdaptor.anchorRangeMap[vLayout] = 2 until 9
+        mockVjReadLayoutAdaptor.anchorRangeMap[jLayout] = 22 until 27
 
-        val vdj1 = createVDJ(layout1, 3, 7, 0, 10)
-        val vdj2 = createVDJ(layout2, 3, 7, 0, 10)
+        // now we should be able to build a VDJ sequence
+        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ)
 
-        val vdjCombine = VDJSequenceBuilder.mergeVDJs(vdj1, vdj2, MIN_BASE_QUALITY)
-
-        assertEquals(seq, vdjCombine.sequence)
-        assertEquals("2212112122", vdjCombine.supportString) // due to low base qual in some reads
+        assertNotNull(vdjSeq)
+        assertNotNull(vdjSeq.vAnchor)
+        assertNotNull(vdjSeq.jAnchor)
+        assertEquals(seq, vdjSeq.layout.consensusSequence())
+        assertEquals(VJGeneType.TRAV, vdjSeq.vAnchor!!.geneType)
+        assertEquals(VJGeneType.TRAJ, vdjSeq.jAnchor!!.geneType)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.jAnchor)
+        assertEquals("GAATACC", vdjSeq.vAnchorSequence)
+        assertEquals("GAGTG", vdjSeq.jAnchorSequence)
+        assertEquals("CACATCCTGA", vdjSeq.cdr3SequenceShort)
     }
 
+    // building of overlapping layout where the V layout contains J layout
     @Test
-    fun testMergeVDJsLongShort()
+    fun testBuildVdjFromOverlapLayouts3()
     {
-        // want to make a VDJ seq that is  CA-GGT-GAT
-        // by combining two VDJ seq, first CA-GGT-G
-        // second one is                    A-GGT-GAT
+        val mockVjReadLayoutAdaptor = MockVJReadLayoutAdaptor()
+        val mockAnchorBlosumSearcher = MockAnchorBlosumSearcher()
+        val vdjSeqBuilder = VDJSequenceBuilder(
+            mockVjReadLayoutAdaptor, mockAnchorBlosumSearcher, MIN_BASE_QUALITY,
+            10)
 
-        val layout1 = ReadLayout()
-        val seq1 = "CAGGTG"
-        val baseQual1 = SAMUtils.fastqToPhred("FF::FF") // F is 37, : is 25
-        // we are aligned at the T
-        val read1 = TestLayoutRead("read1", ReadKey("read1", true), seq1, baseQual1, 4)
-        layout1.addRead(read1, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
-        val vdj1 = createVDJ(layout1, 2, 5, 0, 6)
+        // we create two layouts, a V layout and a J layout, and they overlap each other by 25 bases,
+        // and the J layout is actually on the "left" of V layout
+        // v layout: GATGC-GAATACC-CACATCCTGA-GAGTG-TCAGA
+        // j layout:         ATACC-CACATCCTGA-GAGTG-T
+        //                 |_____|            |___|
+        //            V anchor(align)    J anchor(align)
+        //
+        // V anchor is position 2-9 in the V layout, J anchor is position 22-27 in the J layout.
+        // The final VDJ is 32 bases long, V anchor at position 5-12, J anchor is position 22-27
 
-        val layout2 = ReadLayout()
-        val seq2 = "AGGTGAT"
-        val baseQual2 = SAMUtils.fastqToPhred("F:FFFF:") // F is 37, : is 25
-        // aligned at the first A
-        val read2 = TestLayoutRead("read2", ReadKey("read2", true), seq2, baseQual2, 0)
-        layout2.addRead(read2, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
-        val vdj2 = createVDJ(layout2, 1, 4, 0, 7)
+        val seq = "GATGC-GAATACC-CACATCCTGA-GAGTG-TCAGA".replace("-", "")
+        val vLayout = TestUtils.createLayout(seq)
+        val jLayout = TestUtils.createLayout(seq.substring(7, 28))
 
-        var vdjCombine = VDJSequenceBuilder.mergeVDJs(vdj1, vdj2, MIN_BASE_QUALITY)
+        mockVjReadLayoutAdaptor.anchorRangeMap[vLayout] = 5 until 12
+        mockVjReadLayoutAdaptor.anchorRangeMap[jLayout] = 15 until 20
 
-        assertNotNull(vdjCombine.vAnchor)
-        assertNotNull(vdjCombine.jAnchor)
-        assertEquals("CAGGTGAT", vdjCombine.sequence)
-        assertEquals(2, vdjCombine.vAnchor!!.anchorBoundary)
-        assertEquals(5, vdjCombine.jAnchor!!.anchorBoundary)
-        //assertEquals("1133333311", vdjCombine.supportString)
+        // now we should be able to build a VDJ sequence
+        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ)
 
-        // try to merge it the other way, result should be the same
-        vdjCombine = VDJSequenceBuilder.mergeVDJs(vdj2, vdj1, MIN_BASE_QUALITY)
+        assertNotNull(vdjSeq)
+        assertNotNull(vdjSeq.vAnchor)
+        assertNotNull(vdjSeq.jAnchor)
+        assertEquals(seq, vdjSeq.layout.consensusSequence())
+        assertEquals(VJGeneType.TRAV, vdjSeq.vAnchor!!.geneType)
+        assertEquals(VJGeneType.TRAJ, vdjSeq.jAnchor!!.geneType)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.jAnchor)
+        assertEquals("GAATACC", vdjSeq.vAnchorSequence)
+        assertEquals("GAGTG", vdjSeq.jAnchorSequence)
+        assertEquals("CACATCCTGA", vdjSeq.cdr3SequenceShort)
+    }
 
-        assertNotNull(vdjCombine.vAnchor)
-        assertNotNull(vdjCombine.jAnchor)
-        assertEquals("CAGGTGAT", vdjCombine.sequence)
-        assertEquals(2, vdjCombine.vAnchor!!.anchorBoundary)
-        assertEquals(5, vdjCombine.jAnchor!!.anchorBoundary)
+    // building of overlapping layout where the J layout contains V layout
+    @Test
+    fun testBuildVdjFromOverlapLayouts4()
+    {
+        val mockVjReadLayoutAdaptor = MockVJReadLayoutAdaptor()
+        val mockAnchorBlosumSearcher = MockAnchorBlosumSearcher()
+        val vdjSeqBuilder = VDJSequenceBuilder(
+            mockVjReadLayoutAdaptor, mockAnchorBlosumSearcher, MIN_BASE_QUALITY,
+            10)
+
+        // we create two layouts, a V layout and a J layout, and they overlap each other by 25 bases,
+        // and the J layout is actually on the "left" of V layout
+        // v layout:     C-GAATACC-CACATCCTGA-GAG
+        // j layout: GATGC-GAATACC-CACATCCTGA-GAGTG-TCAGA
+        //                 |_____|            |___|
+        //            V anchor(align)    J anchor(align)
+        //
+        // V anchor is position 2-9 in the V layout, J anchor is position 22-27 in the J layout.
+        // The final VDJ is 32 bases long, V anchor at position 5-12, J anchor is position 22-27
+
+        val seq = "GATGC-GAATACC-CACATCCTGA-GAGTG-TCAGA".replace("-", "")
+        val vLayout = TestUtils.createLayout(seq.substring(4, 25))
+        val jLayout = TestUtils.createLayout(seq)
+
+        mockVjReadLayoutAdaptor.anchorRangeMap[vLayout] = 1 until 8
+        mockVjReadLayoutAdaptor.anchorRangeMap[jLayout] = 22 until 27
+
+        // now we should be able to build a VDJ sequence
+        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ)
+
+        assertNotNull(vdjSeq)
+        assertNotNull(vdjSeq.vAnchor)
+        assertNotNull(vdjSeq.jAnchor)
+        assertEquals(seq, vdjSeq.layout.consensusSequence())
+        assertEquals(VJGeneType.TRAV, vdjSeq.vAnchor!!.geneType)
+        assertEquals(VJGeneType.TRAJ, vdjSeq.jAnchor!!.geneType)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.jAnchor)
+        assertEquals("GAATACC", vdjSeq.vAnchorSequence)
+        assertEquals("GAGTG", vdjSeq.jAnchorSequence)
+        assertEquals("CACATCCTGA", vdjSeq.cdr3SequenceShort)
+    }
+
+    // build one sided V only VDJ
+    @Test
+    fun testBuildOneSidedVdjVOnly()
+    {
+        val mockVjReadLayoutAdaptor = MockVJReadLayoutAdaptor()
+        val mockAnchorBlosumSearcher = MockAnchorBlosumSearcher()
+        val vdjSeqBuilder = VDJSequenceBuilder(
+            mockVjReadLayoutAdaptor, mockAnchorBlosumSearcher, MIN_BASE_QUALITY,
+            CiderConstants.MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES)
+
+        // we create a layout that has the V anchor but not J anchor
+        // 30 bases long, V anchor is position 3-10:
+        // TGC-GAATACC-CACATCCTGAGAGTGTCAGA
+        //    V anchor
+
+        val seq = "TGC-GAATACC-CACATCCTGAGAGTGTCAGA".replace("-", "")
+        val layout = TestUtils.createLayout(seq)
+
+        mockVjReadLayoutAdaptor.anchorRangeMap[layout] = 3 until 10
+
+        // create one sided v only VDJ
+        val vdjSeq = vdjSeqBuilder.tryCreateOneSidedVdj(VJGeneType.IGHV, layout)
+
+        assertNotNull(vdjSeq)
+        assertNotNull(vdjSeq.vAnchor)
+        assertNull(vdjSeq.jAnchor)
+        assertEquals(VJGeneType.IGHV, vdjSeq.vAnchor!!.geneType)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)
+        assertEquals("GAATACC-CACATCCTGAGAGTGTCAGA", vdjSeq.sequenceFormatted)
+        assertEquals("GAATACC", vdjSeq.vAnchorSequence)
+        assertEquals("CACATCCTGAGAGTGTCAGA", vdjSeq.cdr3SequenceShort)
+    }
+
+    // build one sided J only VDJ
+    @Test
+    fun testBuildOneSidedVdjJOnly()
+    {
+        val mockVjReadLayoutAdaptor = MockVJReadLayoutAdaptor()
+        val mockAnchorBlosumSearcher = MockAnchorBlosumSearcher()
+        val vdjSeqBuilder = VDJSequenceBuilder(
+            mockVjReadLayoutAdaptor, mockAnchorBlosumSearcher, MIN_BASE_QUALITY,
+            CiderConstants.MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES)
+
+        // we create a layout that has J anchor but no V
+        // TGCGAATACCCACAT-CTGAGTG-TCAGA
+        //                J anchor
+
+        val seq = "TGCGAATACCCACAT-CTGAGTG-TCAGA".replace("-", "")
+        val layout = TestUtils.createLayout(seq)
+
+        mockVjReadLayoutAdaptor.anchorRangeMap[layout] = 15 until 22
+
+        // create one sided j only VDJ
+        val vdjSeq = vdjSeqBuilder.tryCreateOneSidedVdj(VJGeneType.IGHJ, layout)
+
+        assertNotNull(vdjSeq)
+        assertNull(vdjSeq.vAnchor)
+        assertNotNull(vdjSeq.jAnchor)
+        assertEquals(VJGeneType.IGHJ, vdjSeq.jAnchor!!.geneType)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.jAnchor)
+        assertEquals("TGCGAATACCCACAT-CTGAGTG", vdjSeq.sequenceFormatted)
+        assertEquals("CTGAGTG", vdjSeq.jAnchorSequence)
+        assertEquals("TGCGAATACCCACAT", vdjSeq.cdr3SequenceShort)
     }
 
     companion object
     {
         const val MIN_BASE_QUALITY = 30.toByte()
-
-        // a simple function to create VDJ sequence
-        fun createVDJ(layout: ReadLayout, vAnchorBoundary: Int, jAnchorBoundary: Int,
-            layoutStart: Int, layoutEnd: Int) : VDJSequence
-        {
-            assertTrue(layoutEnd <= layout.length)
-            assertTrue(vAnchorBoundary < jAnchorBoundary)
-            assertTrue(layoutStart + vAnchorBoundary < layout.length)
-            assertTrue(layoutStart + jAnchorBoundary <= layout.length)
-
-            val vAnchorSeq = layout.consensusSequence().drop(layoutStart).substring(0, vAnchorBoundary)
-            val jAnchorSeq = layout.consensusSequence().substring(jAnchorBoundary)
-
-            // create VJ anchor
-            val vAnchor = VJAnchorByReadMatch(
-                vj = VJ.V,
-                geneType = VJGeneType.IGHV,
-                anchorBoundary = vAnchorBoundary,
-                matchMethod = "exact",
-                templateAnchorSeq = vAnchorSeq,
-                numReads = layout.reads.size
-            )
-
-            val jAnchor = VJAnchorByReadMatch(
-                vj = VJ.J,
-                geneType = VJGeneType.IGHJ,
-                anchorBoundary = jAnchorBoundary,
-                matchMethod = "exact",
-                templateAnchorSeq = jAnchorSeq,
-                numReads = layout.reads.size
-            )
-
-            val vdj = VDJSequence(layout, layoutStart, layoutEnd, vAnchor, jAnchor)
-            return vdj
-        }
 
         /*
         // a simple function to create VDJ sequence

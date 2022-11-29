@@ -3,12 +3,16 @@ package com.hartwig.hmftools.cider
 import htsjdk.samtools.Cigar
 import htsjdk.samtools.CigarElement
 import htsjdk.samtools.CigarOperator
+import htsjdk.samtools.SAMRecord
+import org.apache.logging.log4j.LogManager
 import java.util.*
 
 data class AlignmentBlock(val readStart: Int, val length: Int)
 
 object CiderUtils
 {
+    private val sLogger = LogManager.getLogger(javaClass)
+
     fun conservedAA(vjGeneType: VJGeneType): Char
     {
         if (vjGeneType.vj == VJ.V)
@@ -16,28 +20,6 @@ object CiderUtils
         if (vjGeneType == VJGeneType.IGHJ)
             return 'W'
         return 'F'
-    }
-
-    fun getPairedVjGeneType(vjGene: VJGeneType) : VJGeneType
-    {
-        return when (vjGene)
-        {
-            VJGeneType.IGHV -> VJGeneType.IGHJ
-            VJGeneType.IGHJ -> VJGeneType.IGHV
-            VJGeneType.IGKV -> VJGeneType.IGKJ
-            VJGeneType.IGKJ -> VJGeneType.IGKV
-            VJGeneType.IGLV -> VJGeneType.IGLJ
-            VJGeneType.IGLJ -> VJGeneType.IGLV
-            VJGeneType.TRAV -> VJGeneType.TRAJ
-            VJGeneType.TRAJ -> VJGeneType.TRAV
-            VJGeneType.TRBV -> VJGeneType.TRBJ
-            VJGeneType.TRBJ -> VJGeneType.TRBV
-            VJGeneType.TRDV -> VJGeneType.TRDJ
-            VJGeneType.TRDJ -> VJGeneType.TRDV
-            VJGeneType.TRGV -> VJGeneType.TRGJ
-            VJGeneType.TRGJ -> VJGeneType.TRGV
-            VJGeneType.IGKKDE -> VJGeneType.IGKV
-        }
     }
 
     @JvmStatic
@@ -116,6 +98,117 @@ object CiderUtils
             alignmentBlocks.add(AlignmentBlock(currentBlockReadStart, readBase - currentBlockReadStart))
         }
         return Collections.unmodifiableList(alignmentBlocks)
+    }
+
+    //
+    // apply reverse complement, trim bases and polyG trimming
+    fun determineReadSlice(read: SAMRecord, useReverseComplement: Boolean, trimBases: Int) : ReadSlice?
+    {
+        // work out the slice start and end
+        var sliceStart: Int = trimBases
+        var sliceEnd: Int = read.readLength - trimBases
+
+        // now we also want to try poly G tail trimming
+        // we want to work out there the tail is.
+        // the tail is on the right side and poly G if !read.readNegativeStrandFlag
+        // the tail is on the left side and poly C otherwise
+        if (!read.readNegativeStrandFlag)
+        {
+            // ends with poly G, but take trim bases into account
+            val numGs = numTrailingPolyG(read.readString, sliceEnd)
+            if (numGs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
+            {
+                sLogger.debug("read({}) strand(+) poly G tail of length({}) found({})",
+                    read, numGs, read.readString)
+                sliceEnd -= numGs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
+            }
+        }
+        else
+        {
+            val numCs = numLeadingPolyC(read.readString, sliceStart)
+            if (numCs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
+            {
+                sLogger.debug("read({}) strand(-) poly G tail of length({}) found({})",
+                    read, numCs, read.readString)
+                sliceStart += numCs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
+            }
+        }
+
+        // the above logic is before reverse complement, the following logic is after
+        // so we swap the start / end here
+        if (useReverseComplement)
+        {
+            val sliceStartTmp = sliceStart
+            sliceStart = read.readLength - sliceEnd
+            sliceEnd = read.readLength - sliceStartTmp
+        }
+
+        if ((sliceEnd - sliceStart) < 5)
+        {
+            // if too little left don't bother
+            return null
+        }
+
+        return ReadSlice(read, useReverseComplement, sliceStart, sliceEnd)
+    }
+
+    // apart from trim bases and poly G trim, this also remove bases that are "outside" the anchor
+    // i.e. for V anchor read, bases before the anchor are trimmed, for J anchor read, bases after anchor are trimmed
+    private fun determineAnchorReadSlice(read: SAMRecord, useReverseComplement: Boolean, vj: VJ,
+                                   anchorOffsetStart: Int, anchorOffsetEnd: Int, trimBases: Int) : ReadSlice?
+    {
+        val readSlice = determineReadSlice(read, useReverseComplement, trimBases)
+
+        if (readSlice == null)
+            return null
+
+        var sliceStart: Int = readSlice.sliceStart
+        var sliceEnd: Int = readSlice.sliceEnd
+
+        if (vj == VJ.V)
+        {
+            // for V, we layout from the anchor start, left to right
+            // we are only interested in what comes after anchor start
+            sliceStart = Math.max(anchorOffsetStart, sliceStart)
+        }
+        else
+        {
+            // for J, we layout from the anchor last, right to left
+            // we are only interested in what comes before anchor end
+            sliceEnd = Math.min(anchorOffsetEnd, sliceEnd)
+        }
+
+        if ((sliceEnd - sliceStart) < 5)
+        {
+            // if too little left don't bother
+            return null
+        }
+
+        return ReadSlice(read, useReverseComplement, sliceStart, sliceEnd)
+    }
+
+    fun numTrailingPolyG(seq: String, sliceEnd: Int) : Int
+    {
+        for (i in 0 until sliceEnd)
+        {
+            if (seq[sliceEnd - i - 1] != 'G')
+            {
+                return i
+            }
+        }
+        return sliceEnd
+    }
+
+    fun numLeadingPolyC(seq: String, sliceStart: Int) : Int
+    {
+        for (i in sliceStart until seq.length)
+        {
+            if (seq[i] != 'C')
+            {
+                return i - sliceStart
+            }
+        }
+        return seq.length - sliceStart
     }
 
     fun safeSubstring(str: String, start: Int, end: Int): String

@@ -9,7 +9,7 @@ import kotlin.collections.HashSet
 
 //data class
 
-class ReadLayout(var id: String = String())
+open class ReadLayout(var id: String = String())
 {
     internal val allSequenceSupport: SequenceSupport = SequenceSupport()
     internal val highQualSequenceSupport: SequenceSupport = SequenceSupport()
@@ -38,8 +38,12 @@ class ReadLayout(var id: String = String())
     private var sequenceCache: String? = null
 
     val length: Int get() { return allSequenceSupport.support.size }
+
+    // high qual sequence would contain N if there is no high quality base at a position
     val highQualSequence: String get() { return highQualSequenceSupport.sequence }
 
+    // consensus sequence is high qual sequence but N replace with
+    // the low quality sequence
     fun consensusSequence(): String
     {
         if (sequenceCache == null)

@@ -11,7 +11,7 @@
     <artifactId>compar</artifactId>
     <packaging>jar</packaging>
     <version>1.0</version>
-    <name>HMF Tools - DB Comparision Tool</name>
+    <name>HMF Tools - DB Comparison Tool</name>
 
     <dependencies>
         <dependency>
@@ -81,7 +81,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-shade-plugin</artifactId>
-                        <version>3.2.4</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>
