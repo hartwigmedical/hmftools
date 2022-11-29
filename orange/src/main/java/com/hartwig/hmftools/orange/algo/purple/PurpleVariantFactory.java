@@ -98,6 +98,11 @@ public final class PurpleVariantFactory {
     @NotNull
     private static List<PurpleTranscriptImpact> extractOtherImpacts(@NotNull SomaticVariant variant) {
         List<PurpleTranscriptImpact> otherImpacts = Lists.newArrayList();
+        // TODO Populate codon and exon.
+        // TODO Move other reported effects parsing into SomaticVariant
+        // TODO Move effect parsing into SomaticVariant
+        // TODO Add "splice region" details to non-canonical effects
+
         for (AltTranscriptReportableInfo altInfo : AltTranscriptReportableInfo.parseAltTranscriptInfo(variant.otherReportedEffects())) {
             otherImpacts.add(ImmutablePurpleTranscriptImpact.builder()
                     .transcript(altInfo.TransName)
