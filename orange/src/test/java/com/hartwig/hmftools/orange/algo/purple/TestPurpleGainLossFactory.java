@@ -3,9 +3,9 @@ package com.hartwig.hmftools.orange.algo.purple;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class GainLossTestFactory {
+public final class TestPurpleGainLossFactory {
 
-    private GainLossTestFactory() {
+    private TestPurpleGainLossFactory() {
     }
 
     @NotNull

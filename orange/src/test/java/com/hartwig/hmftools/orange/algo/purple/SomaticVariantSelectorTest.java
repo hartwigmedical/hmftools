@@ -18,9 +18,9 @@ public class SomaticVariantSelectorTest {
 
     @Test
     public void canSelectUnreportedNearHotspots() {
-        PurpleVariant hotspot = PurpleVariantTestFactory.builder().hotspot(Hotspot.HOTSPOT).reported(false).build();
-        PurpleVariant nearHotspot = PurpleVariantTestFactory.builder().hotspot(Hotspot.NEAR_HOTSPOT).reported(false).build();
-        PurpleVariant nonHotspot = PurpleVariantTestFactory.builder().hotspot(Hotspot.NON_HOTSPOT).reported(false).build();
+        PurpleVariant hotspot = TestPurpleVariantFactory.builder().hotspot(Hotspot.HOTSPOT).reported(false).build();
+        PurpleVariant nearHotspot = TestPurpleVariantFactory.builder().hotspot(Hotspot.NEAR_HOTSPOT).reported(false).build();
+        PurpleVariant nonHotspot = TestPurpleVariantFactory.builder().hotspot(Hotspot.NON_HOTSPOT).reported(false).build();
 
         List<PurpleVariant> variants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(hotspot, nearHotspot, nonHotspot),
@@ -34,12 +34,12 @@ public class SomaticVariantSelectorTest {
 
     @Test
     public void canSelectVariantsWithReportedPhaseSet() {
-        PurpleVariant withMatch = PurpleVariantTestFactory.builder().gene("gene").reported(false).addLocalPhaseSets(1).build();
-        PurpleVariant withoutMatch = PurpleVariantTestFactory.builder().gene("gene").reported(false).addLocalPhaseSets(2).build();
-        PurpleVariant withoutPhase = PurpleVariantTestFactory.builder().gene("gene").reported(false).build();
+        PurpleVariant withMatch = TestPurpleVariantFactory.builder().gene("gene").reported(false).addLocalPhaseSets(1).build();
+        PurpleVariant withoutMatch = TestPurpleVariantFactory.builder().gene("gene").reported(false).addLocalPhaseSets(2).build();
+        PurpleVariant withoutPhase = TestPurpleVariantFactory.builder().gene("gene").reported(false).build();
 
-        PurpleVariant withPhase = PurpleVariantTestFactory.builder().addLocalPhaseSets(1).build();
-        PurpleVariant noPhase = PurpleVariantTestFactory.builder().localPhaseSets(null).build();
+        PurpleVariant withPhase = TestPurpleVariantFactory.builder().addLocalPhaseSets(1).build();
+        PurpleVariant noPhase = TestPurpleVariantFactory.builder().localPhaseSets(null).build();
 
         List<PurpleVariant> variants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(withMatch, withoutMatch, withoutPhase),
@@ -54,13 +54,13 @@ public class SomaticVariantSelectorTest {
     public void canSelectVariantsRelevantForCuppa() {
         String cuppaGene = SomaticVariantSelector.CUPPA_GENES.iterator().next();
         PurpleVariant cuppaRelevant =
-                PurpleVariantTestFactory.builder().gene(cuppaGene).type(VariantType.INDEL).repeatCount(4).reported(false).build();
+                TestPurpleVariantFactory.builder().gene(cuppaGene).type(VariantType.INDEL).repeatCount(4).reported(false).build();
 
         PurpleVariant cuppaTooManyRepeats =
-                PurpleVariantTestFactory.builder().gene(cuppaGene).type(VariantType.INDEL).repeatCount(10).reported(false).build();
+                TestPurpleVariantFactory.builder().gene(cuppaGene).type(VariantType.INDEL).repeatCount(10).reported(false).build();
 
         PurpleVariant wrongGene =
-                PurpleVariantTestFactory.builder().gene("wrong gene").type(VariantType.INDEL).repeatCount(4).reported(false).build();
+                TestPurpleVariantFactory.builder().gene("wrong gene").type(VariantType.INDEL).repeatCount(4).reported(false).build();
 
         List<PurpleVariant> variants = SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(cuppaRelevant,
                 cuppaTooManyRepeats,
@@ -80,27 +80,27 @@ public class SomaticVariantSelectorTest {
                 .reportMissenseAndInframe(true)
                 .build();
 
-        PurpleVariant nonsense = PurpleVariantTestFactory.builder()
+        PurpleVariant nonsense = TestPurpleVariantFactory.builder()
                 .gene(gene)
-                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
                 .worstCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .build();
 
-        PurpleVariant splice = PurpleVariantTestFactory.builder()
+        PurpleVariant splice = TestPurpleVariantFactory.builder()
                 .gene(gene)
-                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
                 .worstCodingEffect(CodingEffect.SPLICE)
                 .build();
 
-        PurpleVariant missense = PurpleVariantTestFactory.builder()
+        PurpleVariant missense = TestPurpleVariantFactory.builder()
                 .gene(gene)
-                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
                 .worstCodingEffect(CodingEffect.MISSENSE)
                 .build();
 
-        PurpleVariant wrongGene = PurpleVariantTestFactory.builder()
+        PurpleVariant wrongGene = TestPurpleVariantFactory.builder()
                 .gene("wrong gene")
-                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
                 .worstCodingEffect(CodingEffect.MISSENSE)
                 .build();
 
@@ -119,19 +119,19 @@ public class SomaticVariantSelectorTest {
         DriverGene driverGeneYes = DriverGeneTestFactory.builder().gene("driver 1").reportSplice(true).build();
         DriverGene driverGeneNo = DriverGeneTestFactory.builder().gene("driver 2").reportSplice(false).build();
 
-        PurpleVariant reportedGene = PurpleVariantTestFactory.builder()
+        PurpleVariant reportedGene = TestPurpleVariantFactory.builder()
                 .gene(driverGeneYes.gene())
-                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().spliceRegion(true).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().spliceRegion(true).build())
                 .build();
 
-        PurpleVariant nonReportedGene = PurpleVariantTestFactory.builder()
+        PurpleVariant nonReportedGene = TestPurpleVariantFactory.builder()
                 .gene(driverGeneNo.gene())
-                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().spliceRegion(true).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().spliceRegion(true).build())
                 .build();
 
-        PurpleVariant otherGene = PurpleVariantTestFactory.builder()
+        PurpleVariant otherGene = TestPurpleVariantFactory.builder()
                 .gene("other gene")
-                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().spliceRegion(true).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().spliceRegion(true).build())
                 .build();
 
         List<PurpleVariant> variants =

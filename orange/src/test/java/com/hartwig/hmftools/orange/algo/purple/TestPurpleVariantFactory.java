@@ -11,9 +11,9 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class PurpleVariantTestFactory {
+public final class TestPurpleVariantFactory {
 
-    private PurpleVariantTestFactory() {
+    private TestPurpleVariantFactory() {
     }
 
     @NotNull

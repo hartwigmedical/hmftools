@@ -8,7 +8,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariantTestFactory;
+import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 
 import org.junit.Test;
 
@@ -16,9 +16,9 @@ public class VariantDedupTest {
 
     @Test
     public void canDedupVariants() {
-        PurpleVariant variant1 = PurpleVariantTestFactory.builder()
+        PurpleVariant variant1 = TestPurpleVariantFactory.builder()
                 .gene("EGFR")
-                .canonicalImpact(PurpleVariantTestFactory.impactBuilder()
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact("c.1")
                         .hgvsProteinImpact("p.Glu746_Pro753delinsMetSer")
                         .addEffects(VariantEffect.PHASED_INFRAME_DELETION)
@@ -26,21 +26,21 @@ public class VariantDedupTest {
                 .variantCopyNumber(0.9)
                 .build();
 
-        PurpleVariant variant2 = PurpleVariantTestFactory.builder()
+        PurpleVariant variant2 = TestPurpleVariantFactory.builder()
                 .from(variant1)
-                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().from(variant1.canonicalImpact()).hgvsCodingImpact("c.2").build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().from(variant1.canonicalImpact()).hgvsCodingImpact("c.2").build())
                 .variantCopyNumber(1.2)
                 .build();
 
-        PurpleVariant variant3 = PurpleVariantTestFactory.builder()
+        PurpleVariant variant3 = TestPurpleVariantFactory.builder()
                 .from(variant1)
-                .canonicalImpact(PurpleVariantTestFactory.impactBuilder().from(variant1.canonicalImpact()).hgvsCodingImpact("c.3").build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().from(variant1.canonicalImpact()).hgvsCodingImpact("c.3").build())
                 .variantCopyNumber(0.9)
                 .build();
 
-        PurpleVariant variant4 = PurpleVariantTestFactory.builder()
+        PurpleVariant variant4 = TestPurpleVariantFactory.builder()
                 .gene("APC")
-                .canonicalImpact(PurpleVariantTestFactory.impactBuilder()
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
                         .hgvsProteinImpact("p.Met1fs")
                         .addEffects(VariantEffect.FRAMESHIFT)
                         .build())

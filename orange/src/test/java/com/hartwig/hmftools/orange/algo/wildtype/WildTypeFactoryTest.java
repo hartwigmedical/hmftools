@@ -16,10 +16,10 @@ import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretation;
-import com.hartwig.hmftools.orange.algo.purple.GainLossTestFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariantTestFactory;
+import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainLossFactory;
+import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -32,7 +32,7 @@ public class WildTypeFactoryTest {
         List<DriverGene> driverGenes = createDriverMap(Lists.newArrayList("BRCA2"));
 
         PurpleVariant variantSomatic =
-                PurpleVariantTestFactory.builder().gene("BRCA2").chromosome("1").position(56412).ref("A").alt("C").build();
+                TestPurpleVariantFactory.builder().gene("BRCA2").chromosome("1").position(56412).ref("A").alt("C").build();
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList(variantSomatic);
         List<PurpleVariant> reportableGermlineVariants = null;
 
@@ -57,7 +57,7 @@ public class WildTypeFactoryTest {
 
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList();
         PurpleVariant variantGermline =
-                PurpleVariantTestFactory.builder().gene("BRCA1").chromosome("1").position(56412).ref("A").alt("C").build();
+                TestPurpleVariantFactory.builder().gene("BRCA1").chromosome("1").position(56412).ref("A").alt("C").build();
         List<PurpleVariant> reportableGermlineVariants = Lists.newArrayList(variantGermline);
 
         List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
@@ -81,8 +81,8 @@ public class WildTypeFactoryTest {
 
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList();
         List<PurpleVariant> reportableGermlineVariants = null;
-        PurpleGainLoss reportableAmp = GainLossTestFactory.createGainLoss("KRAS", CopyNumberInterpretation.FULL_GAIN);
-        PurpleGainLoss reportableDel = GainLossTestFactory.createGainLoss("APC", CopyNumberInterpretation.FULL_LOSS);
+        PurpleGainLoss reportableAmp = TestPurpleGainLossFactory.createGainLoss("KRAS", CopyNumberInterpretation.FULL_GAIN);
+        PurpleGainLoss reportableDel = TestPurpleGainLossFactory.createGainLoss("APC", CopyNumberInterpretation.FULL_LOSS);
         List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList(reportableAmp, reportableDel);
         List<LinxFusion> reportableFusions = Lists.newArrayList();
         List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
@@ -194,15 +194,15 @@ public class WildTypeFactoryTest {
                 createDriverMap(Lists.newArrayList("BRCA1", "BRCA2", "APC", "KRAS", "BAG4", "FGFR1", "NRAS", "EGFR", "MYC"));
 
         PurpleVariant variantSomatic =
-                PurpleVariantTestFactory.builder().gene("BRCA2").chromosome("1").position(56412).ref("A").alt("C").build();
+                TestPurpleVariantFactory.builder().gene("BRCA2").chromosome("1").position(56412).ref("A").alt("C").build();
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList(variantSomatic);
 
         PurpleVariant variantGermline =
-                PurpleVariantTestFactory.builder().gene("BRCA1").chromosome("1").position(56412).ref("A").alt("C").build();
+                TestPurpleVariantFactory.builder().gene("BRCA1").chromosome("1").position(56412).ref("A").alt("C").build();
         List<PurpleVariant> reportableGermlineVariants = Lists.newArrayList(variantGermline);
 
-        PurpleGainLoss reportableAmp = GainLossTestFactory.createGainLoss("APC", CopyNumberInterpretation.FULL_GAIN);
-        PurpleGainLoss reportableDel = GainLossTestFactory.createGainLoss("KRAS", CopyNumberInterpretation.FULL_LOSS);
+        PurpleGainLoss reportableAmp = TestPurpleGainLossFactory.createGainLoss("APC", CopyNumberInterpretation.FULL_GAIN);
+        PurpleGainLoss reportableDel = TestPurpleGainLossFactory.createGainLoss("KRAS", CopyNumberInterpretation.FULL_LOSS);
         List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList(reportableAmp, reportableDel);
 
         LinxFusion reportedFusionMatch = createFusion("BAG4", "FGFR1");
@@ -230,15 +230,15 @@ public class WildTypeFactoryTest {
                 createDriverMap(Lists.newArrayList("BRCA1", "BRCA2", "APC", "KRAS", "BAG4", "FGFR1", "NRAS", "EGFR", "MYC"));
 
         PurpleVariant variantSomatic =
-                PurpleVariantTestFactory.builder().gene("BRCA2").chromosome("1").position(56412).ref("A").alt("C").build();
+                TestPurpleVariantFactory.builder().gene("BRCA2").chromosome("1").position(56412).ref("A").alt("C").build();
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList(variantSomatic);
 
         PurpleVariant variantGermline =
-                PurpleVariantTestFactory.builder().gene("BRCA1").chromosome("1").position(56412).ref("A").alt("C").build();
+                TestPurpleVariantFactory.builder().gene("BRCA1").chromosome("1").position(56412).ref("A").alt("C").build();
         List<PurpleVariant> reportableGermlineVariants = Lists.newArrayList(variantGermline);
 
-        PurpleGainLoss reportableAmp = GainLossTestFactory.createGainLoss("APC", CopyNumberInterpretation.FULL_GAIN);
-        PurpleGainLoss reportableDel = GainLossTestFactory.createGainLoss("KRAS", CopyNumberInterpretation.FULL_LOSS);
+        PurpleGainLoss reportableAmp = TestPurpleGainLossFactory.createGainLoss("APC", CopyNumberInterpretation.FULL_GAIN);
+        PurpleGainLoss reportableDel = TestPurpleGainLossFactory.createGainLoss("KRAS", CopyNumberInterpretation.FULL_LOSS);
         List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList(reportableAmp, reportableDel);
 
         LinxFusion reportedFusionMatch = createFusion("BAG4", "FGFR1");

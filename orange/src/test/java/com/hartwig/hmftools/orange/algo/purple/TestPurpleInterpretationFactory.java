@@ -9,9 +9,9 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class PurpleInterpretationTestFactory {
+public final class TestPurpleInterpretationFactory {
 
-    private PurpleInterpretationTestFactory() {
+    private TestPurpleInterpretationFactory() {
     }
 
     @NotNull
