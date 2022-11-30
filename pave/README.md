@@ -29,7 +29,7 @@ OtherReportableEffects |Transcript, HGVS Coding, HGVS Protein, Effects, CodingEf
 WorstCodingEffect | From all transcripts
 GenesAffected | Count of genes which the variant overlaps
 
-* if additional reportable transcripts are configured in drive panel
+* if additional reportable transcripts are configured in driver gene panel
 
 ## Running Pave
 
