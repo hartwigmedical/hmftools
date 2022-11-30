@@ -311,7 +311,7 @@ public class FusionDisruptionAnalyser
         findSingleSVFusions(svList);
         findChainedFusions(clusters);
 
-        mSpecialFusions.findFusions(svList);
+        mFusions.addAll(mSpecialFusions.findFusions(svList));
     }
 
     private void findSingleSVFusions(final List<SvVarData> svList)

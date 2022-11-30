@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.fusion;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_ENHANCER_TARGET;
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
@@ -172,7 +173,7 @@ public class FusionReportability
         factor /= 10;
 
         // 0. Known pair
-        if(fusion.knownType() == KNOWN_PAIR || fusion.knownType() == EXON_DEL_DUP)
+        if(isHighPriorityType(fusion.knownType()))
             fusionPriorityScore += factor;
 
         factor /= 10;
@@ -236,6 +237,11 @@ public class FusionReportability
         fusionPriorityScore += length * factor;
 
         return fusionPriorityScore;
+    }
+
+    public static boolean isHighPriorityType(final KnownFusionType type)
+    {
+        return (type == KNOWN_PAIR || type == IG_KNOWN_PAIR || type == EXON_DEL_DUP || type == PROMISCUOUS_ENHANCER_TARGET);
     }
 
     public static boolean checkProteinDomains(final KnownFusionType type)

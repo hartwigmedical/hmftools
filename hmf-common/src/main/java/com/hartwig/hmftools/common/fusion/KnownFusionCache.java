@@ -74,11 +74,6 @@ public class KnownFusionCache
         return mDataByType.get(KNOWN_PAIR).stream().anyMatch(x -> x.FiveGene.equals(fiveGene) && x.ThreeGene.equals(threeGene));
     }
 
-    public boolean hasKnownIgFusion(final String fiveGene, final String threeGene)
-    {
-        return mDataByType.get(IG_KNOWN_PAIR).stream().anyMatch(x -> x.FiveGene.equals(fiveGene) && x.ThreeGene.equals(threeGene));
-    }
-
     public boolean hasKnownUnmappable3Fusion(final String fiveGene, final String threeGene)
     {
         return mKnownPairData.stream()
@@ -102,11 +97,6 @@ public class KnownFusionCache
         }
 
         return false;
-    }
-
-    public boolean hasPromiscuousIgFusion(final String gene)
-    {
-        return mDataByType.get(IG_PROMISCUOUS).stream().anyMatch(x -> x.FiveGene.equals(gene));
     }
 
     public boolean hasPromiscuousFiveGene(final String gene)
@@ -200,7 +190,7 @@ public class KnownFusionCache
 
     public boolean withinIgRegion(final String chromosome, int position)
     {
-        return mIgRegionData.stream().anyMatch(x -> x.withinIgRegion(chromosome, position));
+        return mIgRegionData.stream().anyMatch(x -> x.withinGeneRegion(chromosome, position));
     }
 
     public boolean loadFromFile(final CommandLine cmd)
@@ -232,7 +222,7 @@ public class KnownFusionCache
         if(data.Type == KNOWN_PAIR)
             mKnownPairData.add(data);
 
-        if(data.igRegion() != null)
+        if(data.geneRegion() != null)
             mIgRegionData.add(data);
 
         if(data.isHighImpactPromiscuous())

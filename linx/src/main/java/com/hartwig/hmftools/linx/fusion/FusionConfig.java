@@ -1,15 +1,10 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
-import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FILE_SOURCE;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FUSIONS_FILE;
-
-import java.util.List;
-
-import com.google.common.collect.Lists;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -20,8 +15,9 @@ public class FusionConfig
     public final boolean LogAllPotentials;
     public final boolean WriteAllVisFusions;
 
+    public static boolean LOG_INVALID_REASON = false;
+
     // dynmamic parameters
-    public boolean LogInvalidReasons;
     public boolean AllowExonSkipping;
     public boolean RequirePhaseMatch;
     public boolean RequireUpstreamBiotypes;
@@ -51,7 +47,7 @@ public class FusionConfig
         LogAllPotentials = cmd.hasOption(LOG_ALL_POTENTIALS);
         WriteAllVisFusions = cmd.hasOption(WRITE_ALL_VIS_FUSIONS);
         RequireUpstreamBiotypes = true;
-        LogInvalidReasons = cmd.hasOption(LOG_INVALID_REASONS);
+        LOG_INVALID_REASON = cmd.hasOption(LOG_INVALID_REASONS);
         AllowExonSkipping = true;
     }
 
@@ -60,7 +56,6 @@ public class FusionConfig
         LogAllPotentials = false;
         LogReportableOnly = false;
         WriteAllVisFusions = false;
-        LogInvalidReasons = false;
         AllowExonSkipping = true;
         RequirePhaseMatch = false;
         RequireUpstreamBiotypes = true;

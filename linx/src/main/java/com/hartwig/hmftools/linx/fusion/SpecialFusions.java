@@ -2,7 +2,15 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_ENHANCER_TARGET;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.ENHANCER;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_5P;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_IG_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
@@ -14,10 +22,16 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
+import com.hartwig.hmftools.linx.types.SglMapping;
+import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -26,32 +40,29 @@ public class SpecialFusions
     private final EnsemblDataCache mGeneDataCache;
     private final FusionFinder mFusionFinder;
     private final FusionConfig mFusionConfig;
-    private final List<SvVarData> mKnownPairSglCandidates;
+    private final KnownFusionCache mKnownFusionCache;
 
     public SpecialFusions(final EnsemblDataCache ensemblDataCache, final FusionFinder fusionFinder, final FusionConfig fusionConfig)
     {
         mGeneDataCache = ensemblDataCache;
         mFusionFinder = fusionFinder;
+        mKnownFusionCache = fusionFinder.getKnownFusionCache();
         mFusionConfig = fusionConfig;
-        mKnownPairSglCandidates = Lists.newArrayList();
     }
 
-    public void clear()
-    {
-        mKnownPairSglCandidates.clear();
-    }
+    public void clear() {}
 
     public Map<String,Integer> getSpecificPreGeneDistances()
     {
         Map<String,Integer> specificGeneDistances = Maps.newHashMap();
-        List<KnownFusionData> igKnownPairs = mFusionFinder.getKnownFusionCache().getDataByType(IG_KNOWN_PAIR);
+        List<KnownFusionData> igKnownPairs = mKnownFusionCache.getDataByType(IG_KNOWN_PAIR);
         igKnownPairs.forEach(x -> specificGeneDistances.put(x.ThreeGene, MAX_UPSTREAM_DISTANCE_IG_KNOWN));
         return specificGeneDistances;
     }
 
     public void cacheSpecialFusionGenes()
     {
-        for(final KnownFusionData kfData : mFusionFinder.getKnownFusionCache().getData())
+        for(final KnownFusionData kfData : mKnownFusionCache.getData())
         {
             if(kfData.downstreamDistance(FS_UP) > 0)
             {
@@ -90,34 +101,183 @@ public class SpecialFusions
         }
     }
 
-    public void findFusions(final List<SvVarData> svList)
-    {
-        // always report SVs by themselves
-        for(final SvVarData var : svList)
-        {
-            if(var.isSglBreakend())
-            {
-                if(!var.getGenesList(true).isEmpty())
-                    mKnownPairSglCandidates.add(var);
-
-                if(var.getSglMappings().isEmpty())
-                    continue;
-            }
-        }
-    }
-
-    public List<GeneFusion> findKnownPairSglFusions()
+    public List<GeneFusion> findFusions(final List<SvVarData> svList)
     {
         List<GeneFusion> fusions = Lists.newArrayList();
 
-        if(mKnownPairSglCandidates.size() < 2)
+        // always report SVs by themselves
+        final List<SvVarData> knownPairSglCandidates = Lists.newArrayList();
+
+        List<KnownFusionData> enhancerTargets = mKnownFusionCache.getDataByType(PROMISCUOUS_ENHANCER_TARGET);
+
+        if(enhancerTargets.isEmpty())
             return fusions;
 
-        List<KnownFusionData> knownPairData = mFusionFinder.getKnownFusionCache().knownPairData();
-
-        for(int i = 0; i < mKnownPairSglCandidates.size() - 1; ++i)
+        for(final SvVarData var : svList)
         {
-            SvVarData sgl1 = mKnownPairSglCandidates.get(i);
+            // if(var.isSglBreakend() && !var.getGenesList(true).isEmpty())
+            //    knownPairSglCandidates.add(var);
+
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                SvBreakend breakend = var.getBreakend(se);
+                final int seIndex = se;
+
+                if(var.isSglBreakend() && se == SE_END)
+                {
+                    for(SglMapping mapping : var.getSglMappings())
+                    {
+                        enhancerTargets.stream()
+                                .map(x -> formEnhancerTargetFusion(x, var, null, mapping, seIndex))
+                                .filter(x -> x != null)
+                                .forEach(x -> fusions.add(x));
+                    }
+                }
+                else
+                {
+                    enhancerTargets.stream()
+                            .map(x -> formEnhancerTargetFusion(x, var, breakend, null, seIndex))
+                            .filter(x -> x != null)
+                            .forEach(x -> fusions.add(x));
+                }
+            }
+
+        }
+
+        /*
+        if(!knownPairSglCandidates.isEmpty())
+            fusions.addAll(findKnownPairSglFusions(knownPairSglCandidates));
+        */
+
+        return fusions;
+    }
+
+    private GeneFusion formEnhancerTargetFusion(
+            final KnownFusionData knownFusionData, final SvVarData var, final SvBreakend breakend, final SglMapping sglMapping, int seIndex)
+    {
+        if(sglMapping != null)
+        {
+            if(!knownFusionData.matchesGeneRegion(sglMapping.Chromosome, sglMapping.Position, sglMapping.Orientation))
+                return null;
+
+        }
+        else
+        {
+            if(!knownFusionData.matchesGeneRegion(breakend.chromosome(), breakend.position(), breakend.orientation()))
+                return null;
+        }
+
+        final SvBreakend otherBreakend = var.getBreakend(switchIndex(seIndex));
+
+        // use any upstream breakend if it exists
+        BreakendTransData upTrans = null;
+        boolean otherIsStart = seIndex == SE_END;
+        List<BreakendGeneData> upstreamGenes = var.getGenesList(otherIsStart);
+
+        if(!upstreamGenes.isEmpty())
+        {
+            BreakendGeneData gene = upstreamGenes.get(0);
+            upTrans = gene.canonical();
+        }
+        else
+        {
+            String otherChr;
+            int otherPosition;
+
+            if(otherBreakend != null)
+            {
+                otherChr = otherBreakend.chromosome();
+                otherPosition = otherBreakend.position();
+            }
+            else
+            {
+                otherChr = !var.getSglMappings().isEmpty() ? var.getSglMappings().get(0).Chromosome : "";
+                otherPosition = !var.getSglMappings().isEmpty() ? var.getSglMappings().get(0).Position : 0;
+            }
+
+            GeneData geneData = new GeneData(
+                    "", "", otherChr, POS_STRAND, otherPosition, otherPosition, "");
+
+            BreakendGeneData gene = new BreakendGeneData(var.id(), otherIsStart, geneData);
+            gene.setSvData(var.getSvData(), var.jcn());
+
+            TranscriptData transData = new TranscriptData(
+                    0, "", "", false, POS_STRAND, 0, 0, null, null, "");
+
+            BreakendTransData transcript = new BreakendTransData(
+                    gene, transData,  0, 0, PHASE_NONE, PHASE_NONE, 0, 0);
+
+            transcript.setCodingType(ENHANCER);
+            transcript.setRegionType(TranscriptRegionType.UNKNOWN);
+            // transcript.setIsDisruptive(true);
+
+            upTrans = transcript;
+        }
+
+        BreakendTransData downTrans = null;
+        BreakendGeneData downstreamGene = var.getGenesList(seIndex == SE_START).stream()
+                .filter(x -> x.geneName().equals(knownFusionData.ThreeGene))
+                .findFirst().orElse(null);
+
+        if(downstreamGene != null)
+        {
+            downTrans = downstreamGene.canonical();
+        }
+        else
+        {
+            ChrBaseRegion geneRegion = knownFusionData.geneRegion();
+            GeneData geneData = new GeneData(
+                    "", knownFusionData.ThreeGene, geneRegion.chromosome(), knownFusionData.geneStrand(),
+                    geneRegion.start(), geneRegion.end(), "");
+
+            BreakendGeneData gene = new BreakendGeneData(var.id(), seIndex == SE_START, geneData);
+            gene.setSvData(var.getSvData(), var.jcn());
+
+            TranscriptData transData = new TranscriptData(
+                    0, "", knownFusionData.ThreeGene, false, POS_STRAND, geneRegion.start(), geneRegion.end(),
+                    null, null, "");
+
+            BreakendTransData transcript = new BreakendTransData(
+                    gene, transData,  1, 1, PHASE_NONE, PHASE_NONE, 0, 0);
+
+            transcript.setCodingType(UTR_5P);
+            transcript.setRegionType(TranscriptRegionType.UPSTREAM);
+            // transcript.setIsDisruptive(true);
+
+            downTrans = transcript;
+        }
+
+        GeneFusion fusion = new GeneFusion(upTrans, downTrans, false);
+        // fusion.setReportable(true);
+        fusion.setId(mFusionFinder.nextFusionId());
+        fusion.setKnownType(PROMISCUOUS_ENHANCER_TARGET);
+
+        FusionAnnotations annotations = ImmutableFusionAnnotations.builder()
+                .clusterId(var.getCluster().id())
+                .clusterCount(var.getCluster().getSvCount())
+                .resolvedType(var.getCluster().getResolvedType().toString())
+                .chainInfo(null)
+                .terminatedUp(false)
+                .terminatedDown(false)
+                .build();
+
+        fusion.setAnnotations(annotations);
+
+        return fusion;
+    }
+
+    private List<GeneFusion> findKnownPairSglFusions(final List<SvVarData> knownPairSglCandidates)
+    {
+        List<GeneFusion> fusions = Lists.newArrayList();
+
+        if(knownPairSglCandidates.size() < 2)
+            return fusions;
+
+        List<KnownFusionData> knownPairData = mKnownFusionCache.knownPairData();
+
+        for(int i = 0; i < knownPairSglCandidates.size() - 1; ++i)
+        {
+            SvVarData sgl1 = knownPairSglCandidates.get(i);
 
             final List<BreakendGeneData> genesList1 = sgl1.getGenesList(true);
 
@@ -140,9 +300,9 @@ public class SpecialFusions
                 }
             }
 
-            for(int j = i + 1; j < mKnownPairSglCandidates.size(); ++j)
+            for(int j = i + 1; j < knownPairSglCandidates.size(); ++j)
             {
-                SvVarData sgl2 = mKnownPairSglCandidates.get(j);
+                SvVarData sgl2 = knownPairSglCandidates.get(j);
 
                 final List<BreakendGeneData> genesList2 = sgl2.getGenesList(true);
 
