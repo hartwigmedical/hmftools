@@ -19,7 +19,8 @@ public abstract class VariantEntry {
 
     public abstract boolean isCanonical();
 
-    public abstract int codon();
+    @Nullable
+    public abstract Integer affectedCodon();
 
     @NotNull
     public abstract String impact();

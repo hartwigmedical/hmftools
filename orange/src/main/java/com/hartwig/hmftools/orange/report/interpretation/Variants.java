@@ -34,7 +34,15 @@ public final class Variants {
                 return geneCompare;
             }
 
-            return Integer.compare(variant1.codon(), variant2.codon());
+            if (variant1.affectedCodon() == null && variant2.affectedCodon() == null) {
+                return 0;
+            } else if (variant1.affectedCodon() == null) {
+                return 1;
+            } else if (variant2.affectedCodon() == null) {
+                return -1;
+            } else {
+                return Integer.compare(variant1.affectedCodon(), variant2.affectedCodon());
+            }
         }).collect(Collectors.toList());
     }
 

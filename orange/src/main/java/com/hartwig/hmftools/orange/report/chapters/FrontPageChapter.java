@@ -214,7 +214,7 @@ public class FrontPageChapter implements ReportChapter {
 
         Set<String> highDriverGenes = Sets.newTreeSet(Comparator.naturalOrder());
         for (PurpleVariant variant : variants) {
-            DriverCatalog driver = Drivers.variantEntryForGene(drivers, variant.gene());
+            DriverCatalog driver = Drivers.canonicalVariantEntryForGene(drivers, variant.gene());
             if (driver != null && DriverInterpretation.interpret(driver.driverLikelihood()) == DriverInterpretation.HIGH) {
                 highDriverGenes.add(variant.gene());
             }

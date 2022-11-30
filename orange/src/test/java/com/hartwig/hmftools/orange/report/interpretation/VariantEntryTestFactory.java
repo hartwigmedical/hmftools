@@ -16,7 +16,7 @@ public final class VariantEntryTestFactory {
         return ImmutableVariantEntry.builder()
                 .gene(Strings.EMPTY)
                 .isCanonical(false)
-                .codon(-1)
+                .affectedCodon(null)
                 .impact(Strings.EMPTY)
                 .variantCopyNumber(0D)
                 .totalCopyNumber(0D)

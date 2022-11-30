@@ -80,14 +80,14 @@ public final class PurpleVariantFactory {
 
     @NotNull
     private static PurpleTranscriptImpact extractCanonicalImpact(@NotNull SomaticVariant variant) {
-        // TODO Populate codon and exon.
+        // TODO Populate exon, don't reverse engineer codon
         // TODO Move effect parsing into SomaticVariant
 
         return ImmutablePurpleTranscriptImpact.builder()
                 .transcript(variant.canonicalTranscript())
                 .hgvsCodingImpact(variant.canonicalHgvsCodingImpact())
                 .hgvsProteinImpact(variant.canonicalHgvsProteinImpact())
-                .affectedCodon(null)
+                .affectedCodon(extractCodonField(variant.canonicalHgvsCodingImpact()))
                 .affectedExon(null)
                 .spliceRegion(variant.spliceRegion())
                 .effects(VariantEffect.effectsToList(variant.canonicalEffect()))
@@ -98,7 +98,7 @@ public final class PurpleVariantFactory {
     @NotNull
     private static List<PurpleTranscriptImpact> extractOtherImpacts(@NotNull SomaticVariant variant) {
         List<PurpleTranscriptImpact> otherImpacts = Lists.newArrayList();
-        // TODO Populate codon and exon.
+        // TODO Populate exon, don't reverse engineer codon
         // TODO Move other reported effects parsing into SomaticVariant
         // TODO Move effect parsing into SomaticVariant
         // TODO Add "splice region" details to non-canonical effects
@@ -108,7 +108,7 @@ public final class PurpleVariantFactory {
                     .transcript(altInfo.TransName)
                     .hgvsCodingImpact(altInfo.HgvsCoding)
                     .hgvsProteinImpact(altInfo.HgvsProtein)
-                    .affectedCodon(null)
+                    .affectedCodon(extractCodonField(altInfo.HgvsCoding))
                     .affectedExon(null)
                     .spliceRegion(variant.spliceRegion())
                     .effects(VariantEffect.effectsToList(altInfo.Effects))
@@ -116,5 +116,30 @@ public final class PurpleVariantFactory {
                     .build());
         }
         return otherImpacts;
+    }
+
+    @Nullable
+    private static Integer extractCodonField(@NotNull String hgvsCoding) {
+        StringBuilder codonAppender = new StringBuilder();
+        boolean noDigitFound = true;
+
+        int startIndex = findStartIndex(hgvsCoding);
+        int index = startIndex;
+        while (noDigitFound && index < hgvsCoding.length()) {
+            boolean isMinusSign = Character.toString(hgvsCoding.charAt(index)).equals("-");
+            if ((isMinusSign && index == startIndex) || Character.isDigit(hgvsCoding.charAt(index))) {
+                codonAppender.append(hgvsCoding.charAt(index));
+            } else {
+                noDigitFound = false;
+            }
+            index++;
+        }
+        String codon = codonAppender.toString();
+        return !codon.isEmpty() ? Integer.parseInt(codon) : null;
+    }
+
+    private static int findStartIndex(@NotNull String hgvsCoding) {
+        // hgvsCoding starts with either "c." or "c.*", we need to skip that...
+        return hgvsCoding.startsWith("c.*") ? 3 : 2;
     }
 }

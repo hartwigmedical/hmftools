@@ -8,18 +8,15 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.orange.algo.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 
 import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class VariantEntryFactory {
-
-    private static final Logger LOGGER = LogManager.getLogger(VariantEntryFactory.class);
 
     private VariantEntryFactory() {
     }
@@ -27,64 +24,105 @@ public final class VariantEntryFactory {
     @NotNull
     public static List<VariantEntry> create(@NotNull List<PurpleVariant> variants, @NotNull List<DriverCatalog> drivers) {
         List<VariantEntry> entries = Lists.newArrayList();
-        // TODO Add driver likelihood
         for (PurpleVariant variant : variants) {
-            entries.add(ImmutableVariantEntry.builder()
-                    .gene(variant.gene())
-                    .isCanonical(true)
-                    .impact(determineImpact(variant))
-                    .codon(extractCodonField(variant.canonicalImpact().hgvsCodingImpact()))
-                    .variantCopyNumber(variant.adjustedCopyNumber() * Math.max(0, Math.min(1, variant.adjustedVAF())))
-                    .totalCopyNumber(variant.adjustedCopyNumber())
-                    .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
-                    .biallelic(variant.biallelic())
-                    .hotspot(variant.hotspot())
-                    .clonalLikelihood(1 - variant.subclonalLikelihood())
-                    .localPhaseSets(variant.localPhaseSets())
-                    .rnaDepth(variant.rnaDepth())
-                    .genotypeStatus(variant.genotypeStatus())
-                    .build());
+            DriverCatalog driver = Drivers.canonicalVariantEntryForGene(drivers, variant.gene());
+            entries.add(toVariantEntry(variant, driver));
         }
 
-        // TODO Add non-canonical driver entries.
+        for (DriverCatalog nonCanonicalDriver : Drivers.nonCanonicalVariantEntries(drivers)) {
+            PurpleVariant nonCanonicalVariant = findReportedVariantForDriver(variants, nonCanonicalDriver);
+            if (nonCanonicalVariant != null) {
+                entries.add(toVariantEntry(nonCanonicalVariant, nonCanonicalDriver));
+            }
+        }
 
         return entries;
     }
 
     @NotNull
-    private static String determineImpact(@NotNull PurpleVariant variant) {
-        return canonicalVariantEvent(variant);
+    private static VariantEntry toVariantEntry(@NotNull PurpleVariant variant, @Nullable DriverCatalog driver) {
+        PurpleTranscriptImpact transcriptImpact;
+
+        if (driver != null) {
+            transcriptImpact = findTranscriptImpact(variant, driver.transcript());
+            if (transcriptImpact == null) {
+                throw new IllegalStateException("Could not find impact on transcript " + driver.transcript() + " for variant " + variant);
+            }
+        } else {
+            transcriptImpact = variant.canonicalImpact();
+        }
+
+        return ImmutableVariantEntry.builder()
+                .gene(variant.gene())
+                .isCanonical(driver == null || driver.transcript().equals(variant.canonicalImpact().transcript()))
+                .affectedCodon(transcriptImpact.affectedCodon())
+                .impact(determineImpact(transcriptImpact))
+                .variantCopyNumber(variant.adjustedCopyNumber() * Math.max(0, Math.min(1, variant.adjustedVAF())))
+                .totalCopyNumber(variant.adjustedCopyNumber())
+                .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
+                .biallelic(variant.biallelic())
+                .hotspot(variant.hotspot())
+                .driverLikelihood(driver != null ? driver.driverLikelihood() : null)
+                .clonalLikelihood(1 - variant.subclonalLikelihood())
+                .localPhaseSets(variant.localPhaseSets())
+                .rnaDepth(variant.rnaDepth())
+                .genotypeStatus(variant.genotypeStatus())
+                .build();
+    }
+
+    @Nullable
+    private static PurpleVariant findReportedVariantForDriver(@NotNull List<PurpleVariant> variants, @NotNull DriverCatalog driver) {
+        List<PurpleVariant> reportedVariantsForGene = findReportedVariantsForGene(variants, driver.gene());
+        for (PurpleVariant variant : reportedVariantsForGene) {
+            if (findTranscriptImpact(variant, driver.transcript()) != null) {
+                return variant;
+            }
+        }
+
+        return null;
     }
 
     @NotNull
-    private static String canonicalVariantEvent(@NotNull PurpleVariant variant) {
-        return toVariantEvent(variant.canonicalImpact().hgvsProteinImpact(),
-                variant.canonicalImpact().hgvsCodingImpact(),
-                variant.canonicalImpact().effects(),
-                variant.canonicalImpact().codingEffect());
+    private static List<PurpleVariant> findReportedVariantsForGene(@NotNull List<PurpleVariant> variants, @NotNull String geneToFind) {
+        List<PurpleVariant> reportedVariantsForGene = Lists.newArrayList();
+        for (PurpleVariant variant : variants) {
+            if (variant.reported() && variant.gene().equals(geneToFind)) {
+                reportedVariantsForGene.add(variant);
+            }
+        }
+        return reportedVariantsForGene;
     }
-
-    //    @NotNull
-    //    private static String nonCanonicalVariantEvent(@NotNull PurpleVariant variant) {
-    //
-    //        return toVariantEvent(AltTranscriptReportableInfo.firstOtherHgvsProteinImpact(variant.otherReportedEffects()),
-    //                AltTranscriptReportableInfo.firstOtherHgvsCodingImpact(variant.otherReportedEffects()),
-    //                AltTranscriptReportableInfo.firstOtherEffects(variant.otherReportedEffects()),
-    //                AltTranscriptReportableInfo.firstOtherCodingEffect(variant.otherReportedEffects()));
-    //    }
 
     @NotNull
     @VisibleForTesting
-    static String toVariantEvent(@NotNull String protein, @NotNull String coding, @NotNull Set<VariantEffect> effects,
-            @NotNull CodingEffect codingEffect) {
-        if (!protein.isEmpty() && !protein.equals("p.?")) {
-            return protein;
+    static PurpleTranscriptImpact findTranscriptImpact(@NotNull PurpleVariant variant, @NotNull String transcriptToFind) {
+        if (variant.canonicalImpact().transcript().equals(transcriptToFind)) {
+            return variant.canonicalImpact();
         }
 
-        if (!coding.isEmpty()) {
-            return codingEffect == SPLICE ? coding + " splice" : coding;
+        for (PurpleTranscriptImpact otherImpact : variant.otherImpacts()) {
+            if (otherImpact.transcript().equals(transcriptToFind)) {
+                return otherImpact;
+            }
         }
 
+        return null;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static String determineImpact(@NotNull PurpleTranscriptImpact impact) {
+        String hgvsProteinImpact = impact.hgvsProteinImpact();
+        if (!hgvsProteinImpact.isEmpty() && !hgvsProteinImpact.equals("p.?")) {
+            return hgvsProteinImpact;
+        }
+
+        String hgvsCodingImpact = impact.hgvsCodingImpact();
+        if (!hgvsCodingImpact.isEmpty()) {
+            return impact.codingEffect() == SPLICE ? hgvsCodingImpact + " splice" : hgvsCodingImpact;
+        }
+
+        Set<VariantEffect> effects = impact.effects();
         if (effects.contains(VariantEffect.UPSTREAM_GENE)) {
             return "upstream";
         }
@@ -94,34 +132,5 @@ public final class VariantEntryFactory {
             joiner.add(effect.effect());
         }
         return joiner.toString();
-    }
-
-    private static int extractCodonField(@NotNull String hgvsCoding) {
-        StringBuilder codonAppender = new StringBuilder();
-        boolean noDigitFound = true;
-
-        int startIndex = findStartIndex(hgvsCoding);
-        int index = startIndex;
-        while (noDigitFound && index < hgvsCoding.length()) {
-            boolean isMinusSign = Character.toString(hgvsCoding.charAt(index)).equals("-");
-            if ((isMinusSign && index == startIndex) || Character.isDigit(hgvsCoding.charAt(index))) {
-                codonAppender.append(hgvsCoding.charAt(index));
-            } else {
-                noDigitFound = false;
-            }
-            index++;
-        }
-        String codon = codonAppender.toString();
-        if (codon.isEmpty()) {
-            LOGGER.warn("Could not extract codon from {}", hgvsCoding);
-            return -1;
-        } else {
-            return Integer.parseInt(codon);
-        }
-    }
-
-    private static int findStartIndex(@NotNull String hgvsCoding) {
-        // hgvsCoding starts with either "c." or "c.*", we need to skip that...
-        return hgvsCoding.startsWith("c.*") ? 3 : 2;
     }
 }
