@@ -10,7 +10,7 @@ import com.hartwig.hmftools.orange.report.ReportConfig;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class OrangeConfigTestFactory {
+public final class TestOrangeConfigFactory {
 
     private static final String MELANOMA_DOID = "8923";
 
@@ -52,7 +52,7 @@ public final class OrangeConfigTestFactory {
     private static final String CUPPA_SUMMARY_PLOT = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.report.summary.png";
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/tumor_sample.peach.genotype.tsv";
 
-    private OrangeConfigTestFactory() {
+    private TestOrangeConfigFactory() {
     }
 
     @NotNull

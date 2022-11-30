@@ -2,9 +2,9 @@ package com.hartwig.hmftools.orange.algo.linx;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class LinxInterpretationTestFactory {
+public final class TestLinxInterpretationFactory {
 
-    private LinxInterpretationTestFactory() {
+    private TestLinxInterpretationFactory() {
     }
 
     @NotNull

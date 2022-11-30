@@ -8,8 +8,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
-import com.hartwig.hmftools.orange.OrangeConfigTestFactory;
-import com.hartwig.hmftools.orange.OrangeReportTestFactory;
+import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
+import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
@@ -26,9 +26,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
-public class TestReportGenerator {
+public class ReportGeneratorTestApplication {
 
-    private static final Logger LOGGER = LogManager.getLogger(TestReportGenerator.class);
+    private static final Logger LOGGER = LogManager.getLogger(ReportGeneratorTestApplication.class);
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
 
@@ -54,7 +54,7 @@ public class TestReportGenerator {
     @NotNull
     private static OrangeReport buildReport(@NotNull OrangeConfig config) throws IOException {
         if (USE_MOCK_DATA_FOR_REPORT) {
-            return OrangeReportTestFactory.createProperTestReport();
+            return TestOrangeReportFactory.createProperTestReport();
         }
 
         OrangeReport report = OrangeAlgo.fromConfig(config).run(config);
@@ -85,7 +85,7 @@ public class TestReportGenerator {
 
     @NotNull
     private static OrangeConfig buildConfig() {
-        return ImmutableOrangeConfig.builder().from(OrangeConfigTestFactory.createDNAConfigTumorNormal()).outputDir(REPORT_BASE_DIR).build();
+        return ImmutableOrangeConfig.builder().from(TestOrangeConfigFactory.createDNAConfigTumorNormal()).outputDir(REPORT_BASE_DIR).build();
     }
 
     @NotNull

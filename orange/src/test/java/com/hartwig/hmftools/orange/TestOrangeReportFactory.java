@@ -32,12 +32,12 @@ import com.hartwig.hmftools.orange.algo.ImmutableOrangeSample;
 import com.hartwig.hmftools.orange.algo.OrangePlots;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeSample;
-import com.hartwig.hmftools.orange.algo.cuppa.CuppaTestFactory;
+import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpretationTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
+import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
@@ -46,12 +46,12 @@ import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class OrangeReportTestFactory {
+public final class TestOrangeReportFactory {
 
     private static final String TEST_SAMPLE = "TEST";
     private static final String DUMMY_IMAGE = Resources.getResource("test_images/white.png").getPath();
 
-    private OrangeReportTestFactory() {
+    private TestOrangeReportFactory() {
     }
 
     @NotNull
@@ -63,11 +63,11 @@ public final class OrangeReportTestFactory {
                 .refSample(createMinimalOrangeSample())
                 .tumorSample(createMinimalOrangeSample())
                 .purple(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
-                .linx(LinxInterpretationTestFactory.createMinimalTestLinxData())
+                .linx(TestLinxInterpretationFactory.createMinimalTestLinxData())
                 .lilac(ImmutableLilacSummaryData.builder().qc(Strings.EMPTY).build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(ChordTestFactory.createMinimalTestChordAnalysis())
-                .cuppa(CuppaTestFactory.createMinimalCuppaData())
+                .cuppa(TestCuppaFactory.createMinimalCuppaData())
                 .plots(createMinimalOrangePlots())
                 .build();
     }
@@ -142,7 +142,7 @@ public final class OrangeReportTestFactory {
     private static LinxInterpretedData createTestLinxData() {
         LinxFusion fusion = LinxTestFactory.createMinimalTestFusion();
         return ImmutableLinxInterpretedData.builder()
-                .from(LinxInterpretationTestFactory.createMinimalTestLinxData())
+                .from(TestLinxInterpretationFactory.createMinimalTestLinxData())
                 .addReportableFusions(fusion)
                 .addReportableFusions(fusion)
                 .addReportableFusions(fusion)

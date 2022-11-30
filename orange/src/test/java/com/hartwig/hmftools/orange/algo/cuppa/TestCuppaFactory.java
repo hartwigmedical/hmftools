@@ -6,9 +6,9 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class CuppaTestFactory {
+public final class TestCuppaFactory {
 
-    private CuppaTestFactory() {
+    private TestCuppaFactory() {
     }
 
     @NotNull

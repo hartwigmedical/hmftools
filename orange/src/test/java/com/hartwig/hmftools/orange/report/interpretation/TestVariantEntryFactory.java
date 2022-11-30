@@ -6,9 +6,9 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class VariantEntryTestFactory {
+public final class TestVariantEntryFactory {
 
-    private VariantEntryTestFactory() {
+    private TestVariantEntryFactory() {
     }
 
     @NotNull

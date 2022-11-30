@@ -7,7 +7,7 @@ import java.io.IOException;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
-import com.hartwig.hmftools.orange.OrangeConfigTestFactory;
+import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
 
 import org.junit.Test;
 
@@ -15,7 +15,7 @@ public class OrangeAlgoTest {
 
     @Test
     public void canRunReportFromTestDirDNA() throws IOException {
-        OrangeConfig config = OrangeConfigTestFactory.createDNAConfigTumorNormal();
+        OrangeConfig config = TestOrangeConfigFactory.createDNAConfigTumorNormal();
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
 
         assertNotNull(algo.run(config));
@@ -23,7 +23,7 @@ public class OrangeAlgoTest {
 
     @Test
     public void canRunReportFromTestDirDNARNA() throws IOException {
-        OrangeConfig config = OrangeConfigTestFactory.createDNARNAConfig();
+        OrangeConfig config = TestOrangeConfigFactory.createDNARNAConfig();
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
 
         assertNotNull(algo.run(config));
@@ -32,7 +32,7 @@ public class OrangeAlgoTest {
     @Test
     public void canCreateReportWithoutTumorDoids() throws IOException {
         OrangeConfig config = ImmutableOrangeConfig.builder()
-                .from(OrangeConfigTestFactory.createDNAConfigTumorNormal())
+                .from(TestOrangeConfigFactory.createDNAConfigTumorNormal())
                 .primaryTumorDoids(Sets.newHashSet())
                 .build();
 
