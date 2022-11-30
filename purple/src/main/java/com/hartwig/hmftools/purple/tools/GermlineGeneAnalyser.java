@@ -3,6 +3,8 @@ package com.hartwig.hmftools.purple.tools;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
@@ -27,6 +29,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
@@ -53,7 +56,8 @@ public class GermlineGeneAnalyser
 
     public GermlineGeneAnalyser(final CommandLine cmd)
     {
-        mGeneDataCache = new EnsemblDataCache(cmd, V37);
+        RefGenomeVersion refGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        mGeneDataCache = new EnsemblDataCache(cmd, refGenVersion);
 
         mGeneDataCache.setRequiredData(true, false, false, true);
         mGeneDataCache.load(false);
@@ -101,8 +105,7 @@ public class GermlineGeneAnalyser
         }
         else
         {
-            SampleGermlineGeneTask sampleTask = new SampleGermlineGeneTask(
-                    0, mWriter, mGeneDataCache, mPurpleDataDir, mWriteVerbose);
+            SampleGermlineGeneTask sampleTask = new SampleGermlineGeneTask(0, mWriter, mGeneDataCache, mPurpleDataDir, mWriteVerbose);
 
             sampleTask.getSampleIds().addAll(mSampleIds);
 
@@ -206,6 +209,7 @@ public class GermlineGeneAnalyser
 
         options.addOption(PURPLE_DATA_DIR, true, "Directory pattern for sample purple directory");
         options.addOption(WRITE_VERBOSE, false, "Write transcript and exon details for each deleted gene segment");
+        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
 
         addEnsemblDir(options);
         addLoggingOptions(options);

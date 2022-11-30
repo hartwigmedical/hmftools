@@ -17,7 +17,7 @@ public class SomaticFitConfig
 
     public static final double SOMATIC_MIN_PURITY_DEFAULT = 0.17;
     public static final double SOMATIC_MIN_PURITY_SPREAD_DEFAULT = 0.15;
-    public static final int SOMATIC_MIN_PEAK_DEFAULT = 10;
+    public static final int SOMATIC_MIN_PEAK_DEFAULT = 4;
     public static final int SOMATIC_MIN_VARIANTS_DEFAULT = 10;
     public static final double SOMATIC_PENALTY_WEIGHT_DEFAULT = 1;
     public static final double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.97;

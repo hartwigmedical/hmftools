@@ -57,4 +57,12 @@ public class PurpleConstants
     public static final ChrBaseRegion CDKN2A_DELETION_REGION = new ChrBaseRegion("9", 9000000, 12000000);
     public static final double MAX_SOMATIC_FIT_DELETED_PERC = 0.003;
 
+    // somatic subclonality peaks
+    public static final int PEAK_BIN_COUNT = 10;
+    public static final double PEAK_BIN_WIDTH = 0.01;
+    public static final double PEAK_BIN_MIN_AVERAGE_WEIGHT = 0.4;
+    public static final double PEAK_BIN_CLONAL_PLOIDY = 0.85;
+    public static final double MAX_UNEXPLAINED_WEIGHT_PERCENT = 0.01;
+
+
 }
