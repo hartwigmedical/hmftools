@@ -27,7 +27,7 @@ public final class TestPurpleInterpretationFactory {
     }
 
     @NotNull
-    private static PurityPloidyFit createMinimalTestFitData() {
+    public static PurityPloidyFit createMinimalTestFitData() {
         return ImmutablePurityPloidyFit.builder()
                 .qc(qcPass())
                 .fittedPurityMethod(FittedPurityMethod.NORMAL)

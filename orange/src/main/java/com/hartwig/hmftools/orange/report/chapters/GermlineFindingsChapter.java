@@ -3,13 +3,18 @@ package com.hartwig.hmftools.orange.report.chapters;
 import java.text.DecimalFormat;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
+import com.hartwig.hmftools.common.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.interpretation.VariantEntry;
@@ -57,100 +62,110 @@ public class GermlineFindingsChapter implements ReportChapter {
     public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
 
-        if (hasExhaustiveGermlineData()) {
-            addGermlineVariants(document);
-            addGermlineDeletions(document);
-            addGermlineDisruptions(document);
-            addMVLHAnalysis(document);
-            addGermlineCNAberrations(document);
-            addPharmacogenetics(document);
-        } else {
-            document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(ReportResources.tableContentStyle()));
-        }
-    }
-
-    private boolean hasExhaustiveGermlineData() {
-        return report.purple().germlineDrivers() != null && report.purple().reportableGermlineVariants() != null
-                && report.purple().additionalSuspectGermlineVariants() != null && report.purple().reportableGermlineDeletions() != null
-                && report.linx().reportableGermlineDisruptions() != null && report.germlineMVLHPerGene() != null && report.peach() != null;
+        addGermlineVariants(document);
+        addGermlineDeletions(document);
+        addGermlineDisruptions(document);
+        addMVLHAnalysis(document);
+        addGermlineCNAberrations(document);
+        addPharmacogenetics(document);
     }
 
     private void addGermlineVariants(@NotNull Document document) {
         List<DriverCatalog> drivers = report.purple().germlineDrivers();
 
-        List<VariantEntry> reportableVariants =
-                VariantEntryFactory.create(VariantDedup.apply(report.purple().reportableGermlineVariants()), drivers);
-        String titleDrivers = "Driver variants (" + reportableVariants.size() + ")";
-        document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), reportableVariants));
+        List<PurpleVariant> reportableVariants = report.purple().reportableGermlineVariants();
+        if (drivers != null && reportableVariants != null) {
+            List<VariantEntry> reportableEntries = VariantEntryFactory.create(VariantDedup.apply(reportableVariants), drivers);
+            String titleDrivers = "Driver variants (" + reportableEntries.size() + ")";
+            document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), reportableEntries));
+        }
 
-        List<VariantEntry> additionalSuspectVariants =
-                VariantEntryFactory.create(VariantDedup.apply(report.purple().additionalSuspectGermlineVariants()), drivers);
-        String titleNonDrivers = "Other potentially relevant variants (" + additionalSuspectVariants.size() + ")";
-        document.add(GermlineVariantTable.build(titleNonDrivers, contentWidth(), additionalSuspectVariants));
+        List<PurpleVariant> additionalSuspectVariants = report.purple().additionalSuspectGermlineVariants();
+        if (drivers != null && additionalSuspectVariants != null) {
+            List<VariantEntry> additionalSuspectEntries =
+                    VariantEntryFactory.create(VariantDedup.apply(additionalSuspectVariants), drivers);
+            String titleNonDrivers = "Other potentially relevant variants (" + additionalSuspectEntries.size() + ")";
+            document.add(GermlineVariantTable.build(titleNonDrivers, contentWidth(), additionalSuspectEntries));
+        }
     }
 
     private void addGermlineDeletions(@NotNull Document document) {
-        String title = "Potentially pathogenic germline deletions (" + report.purple().reportableGermlineDeletions().size() + ")";
-        document.add(GermlineDeletionTable.build(title, contentWidth(), report.purple().reportableGermlineDeletions()));
+        List<GermlineDeletion> reportableGermlineDeletions = report.purple().reportableGermlineDeletions();
+        if (reportableGermlineDeletions != null) {
+            String title = "Potentially pathogenic germline deletions (" + reportableGermlineDeletions.size() + ")";
+            document.add(GermlineDeletionTable.build(title, contentWidth(), reportableGermlineDeletions));
+        }
     }
 
     private void addGermlineDisruptions(@NotNull Document document) {
-        String title = "Potentially pathogenic germline disruptions (" + report.linx().reportableGermlineDisruptions().size() + ")";
-        document.add(GermlineDisruptionTable.build(title, contentWidth(), report.linx().reportableGermlineDisruptions()));
+        List<LinxGermlineSv> reportableGermlineDisruptions = report.linx().reportableGermlineDisruptions();
+        if (reportableGermlineDisruptions != null) {
+            String title = "Potentially pathogenic germline disruptions (" + reportableGermlineDisruptions.size() + ")";
+            document.add(GermlineDisruptionTable.build(title, contentWidth(), reportableGermlineDisruptions));
+        }
     }
 
     private void addMVLHAnalysis(@NotNull Document document) {
-        Table table = Tables.createContent(contentWidth(),
-                new float[] { 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1 },
-                new Cell[] { Cells.createHeader("Gene"), Cells.createHeader("MVLH"), Cells.createHeader(Strings.EMPTY),
-                        Cells.createHeader("Gene"), Cells.createHeader("MVLH"), Cells.createHeader(Strings.EMPTY),
-                        Cells.createHeader("Gene"), Cells.createHeader("MVLH"), Cells.createHeader(Strings.EMPTY),
-                        Cells.createHeader("Gene"), Cells.createHeader("MVLH"), Cells.createHeader(Strings.EMPTY) });
+        Map<String, Double> germlineMVLHPerGene = report.germlineMVLHPerGene();
+        if (germlineMVLHPerGene != null) {
+            Table table = Tables.createContent(contentWidth(),
+                    new float[] { 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1 },
+                    new Cell[] { Cells.createHeader("Gene"), Cells.createHeader("MVLH"), Cells.createHeader(Strings.EMPTY),
+                            Cells.createHeader("Gene"), Cells.createHeader("MVLH"), Cells.createHeader(Strings.EMPTY),
+                            Cells.createHeader("Gene"), Cells.createHeader("MVLH"), Cells.createHeader(Strings.EMPTY),
+                            Cells.createHeader("Gene"), Cells.createHeader("MVLH"), Cells.createHeader(Strings.EMPTY) });
 
-        int count = 0;
-        Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        genes.addAll(report.germlineMVLHPerGene().keySet());
-        for (String gene : genes) {
-            double mvlh = report.germlineMVLHPerGene().get(gene);
-            if (mvlh > 0.01) {
-                count++;
-                table.addCell(Cells.createContent(gene));
-                table.addCell(Cells.createContent(PERCENTAGE_FORMAT.format(mvlh * 100)));
-                table.addCell(Cells.createContent(Strings.EMPTY));
+            int count = 0;
+            Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
+            genes.addAll(germlineMVLHPerGene.keySet());
+            for (String gene : genes) {
+                double mvlh = germlineMVLHPerGene.get(gene);
+                if (mvlh > 0.01) {
+                    count++;
+                    table.addCell(Cells.createContent(gene));
+                    table.addCell(Cells.createContent(PERCENTAGE_FORMAT.format(mvlh * 100)));
+                    table.addCell(Cells.createContent(Strings.EMPTY));
+                }
             }
-        }
 
-        // Make sure all rows are properly filled in case table is sparse.
-        if (count % 4 != 0) {
-            for (int i = 0; i < 12 - 3 * (count % 4); i++) {
-                table.addCell(Cells.createContent(Strings.EMPTY));
+            // Make sure all rows are properly filled in case table is sparse.
+            if (count % 4 != 0) {
+                for (int i = 0; i < 12 - 3 * (count % 4); i++) {
+                    table.addCell(Cells.createContent(Strings.EMPTY));
+                }
             }
-        }
 
-        String title = "Genes with missed variant likelihood > 1% (" + count + ")";
-        if (count == 0) {
-            document.add(Tables.createEmpty(title, contentWidth()));
-        } else {
-            document.add(Tables.createWrapping(table, title));
+            String title = "Genes with missed variant likelihood > 1% (" + count + ")";
+            if (count == 0) {
+                document.add(Tables.createEmpty(title, contentWidth()));
+            } else {
+                document.add(Tables.createWrapping(table, title));
+            }
         }
     }
 
     private void addGermlineCNAberrations(@NotNull Document document) {
-        int count = 0;
-        StringJoiner germlineAberrations = new StringJoiner(", ");
-        for (GermlineAberration aberration : report.purple().fit().qc().germlineAberrations()) {
-            if (aberration != GermlineAberration.NONE) {
-                count++;
+        Set<GermlineAberration> germlineAberrations = report.purple().fit().qc().germlineAberrations();
+        if (!germlineAberrations.isEmpty()) {
+            int count = 0;
+            StringJoiner germlineAberrationJoiner = new StringJoiner(", ");
+            for (GermlineAberration germlineAberration : germlineAberrations) {
+                if (germlineAberration != GermlineAberration.NONE) {
+                    count++;
+                }
+                germlineAberrationJoiner.add(germlineAberration.toString());
             }
-            germlineAberrations.add(aberration.toString());
+            Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(contentWidth());
+            table.addCell(Cells.createContent(germlineAberrationJoiner.toString()));
+            document.add(Tables.createWrapping(table, "Germline CN aberrations (" + count + ")"));
         }
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(contentWidth());
-        table.addCell(Cells.createContent(germlineAberrations.toString()));
-        document.add(Tables.createWrapping(table, "Germline CN aberrations (" + count + ")"));
     }
 
     private void addPharmacogenetics(@NotNull Document document) {
-        String titlePharmacogenetics = "Pharmacogenetics (" + report.peach().size() + ")";
-        document.add(PharmacogeneticsTable.build(titlePharmacogenetics, contentWidth(), report.peach()));
+        List<PeachGenotype> peach = report.peach();
+        if (peach != null) {
+            String titlePharmacogenetics = "Pharmacogenetics (" + peach.size() + ")";
+            document.add(PharmacogeneticsTable.build(titlePharmacogenetics, contentWidth(), peach));
+        }
     }
 }

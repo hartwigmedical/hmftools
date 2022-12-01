@@ -13,9 +13,13 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogTestFactory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
+import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
+import com.hartwig.hmftools.orange.algo.purple.ImmutablePurityPloidyFit;
+import com.hartwig.hmftools.orange.algo.purple.PurityPloidyFit;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
@@ -76,6 +80,7 @@ public class GermlineConversionTest {
         DriverCatalog germlineDisruptionDriver = DriverCatalogTestFactory.builder().driver(DriverType.GERMLINE_DISRUPTION).build();
 
         PurpleInterpretedData purple = TestPurpleInterpretationFactory.builder()
+                .fit(createWithGermlineAberration())
                 .addSomaticDrivers(somaticDriver)
                 .addGermlineDrivers(germlineMutationDriver, germlineDisruptionDriver)
                 .addAllSomaticVariants(somaticVariant)
@@ -87,6 +92,8 @@ public class GermlineConversionTest {
                 .build();
 
         PurpleInterpretedData converted = GermlineConversion.convertPurpleGermline(purple);
+
+        assertTrue(converted.fit().qc().germlineAberrations().isEmpty());
 
         assertNull(converted.germlineDrivers());
         assertNull(converted.allGermlineVariants());
@@ -108,6 +115,15 @@ public class GermlineConversionTest {
         assertEquals(2, converted.additionalSuspectSomaticVariants().size());
         assertTrue(converted.additionalSuspectSomaticVariants().contains(suspectSomaticVariant));
         assertTrue(converted.additionalSuspectSomaticVariants().contains(suspectGermlineVariant));
+    }
+
+    @NotNull
+    private static PurityPloidyFit createWithGermlineAberration() {
+        PurityPloidyFit base = TestPurpleInterpretationFactory.createMinimalTestFitData();
+        return ImmutablePurityPloidyFit.builder()
+                .from(base)
+                .qc(ImmutablePurpleQC.builder().from(base.qc()).addGermlineAberrations(GermlineAberration.MOSAIC_X).build())
+                .build();
     }
 
     @Nullable

@@ -4,16 +4,20 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
+import com.hartwig.hmftools.orange.algo.purple.ImmutablePurityPloidyFit;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
+import com.hartwig.hmftools.orange.algo.purple.PurityPloidyFit;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 
@@ -45,6 +49,7 @@ public final class GermlineConversion {
         // TODO Convert germline deletions into somatic deletions.
         return ImmutablePurpleInterpretedData.builder()
                 .from(purple)
+                .fit(removeGermlineAberrations(purple.fit()))
                 .somaticDrivers(mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers()))
                 .germlineDrivers(null)
                 .allSomaticVariants(mergeGermlineVariantsIntoSomatic(purple.allSomaticVariants(), purple.allGermlineVariants()))
@@ -58,6 +63,15 @@ public final class GermlineConversion {
                 .allGermlineDeletions(null)
                 .reportableGermlineDeletions(null)
                 .build();
+    }
+
+    @NotNull
+    private static PurityPloidyFit removeGermlineAberrations(@NotNull PurityPloidyFit fit) {
+        return ImmutablePurityPloidyFit.builder()
+                .from(fit)
+                .qc(ImmutablePurpleQC.builder().from(fit.qc()).germlineAberrations(Sets.newHashSet()).build())
+                .build();
+
     }
 
     @NotNull
