@@ -172,29 +172,53 @@ public class SomaticPurityFitter
     public FittedPurity fromSomatics(
             final List<SomaticVariant> variants, final List<StructuralVariant> structuralVariants, final List<FittedPurity> allCandidates)
     {
-        if(variants.size() < mKdMinSomatics)
+        double somaticPeakPurity = 0;
+        FittedPurity somaticFitPurity = null;
+
+        if(variants.size() >= mKdMinSomatics)
+        {
+            PPL_LOGGER.info("looking for peak somatic allelic frequencies");
+
+            Optional<FittedPurity> kdFit = SomaticKernelDensityPeaks.fitPurity(
+                    allCandidates, variants, mKdMinSomatics, mKdMinPeak, mMinPurity, mMaxPurity);
+
+            if(kdFit.isPresent())
+            {
+                somaticFitPurity = kdFit.get();
+                somaticPeakPurity = kdFit.get().purity();
+                PPL_LOGGER.info("peak somatic purity({})", formatPurity(somaticPeakPurity));
+            }
+        }
+        else
         {
             PPL_LOGGER.info("somatic variants count({}) too low for somatic fit", variants.size());
-            return null;
         }
 
-        PPL_LOGGER.info("looking for peak somatic allelic frequencies");
+        double hotspotVaf = findHotspotVaf(variants, structuralVariants, somaticPeakPurity);
 
-        Optional<FittedPurity> kdFit = SomaticKernelDensityPeaks.fitPurity(
-                allCandidates, variants, mKdMinSomatics, mKdMinPeak, mMinPurity, mMaxPurity);
+        if(hotspotVaf > somaticPeakPurity)
+        {
+            return ImmutableFittedPurity.builder()
+                    .score(1)
+                    .diploidProportion(1)
+                    .normFactor(1)
+                    .purity(hotspotVaf)
+                    .somaticPenalty(1)
+                    .ploidy(2)
+                    .build();
+        }
 
-        if(!kdFit.isPresent())
-            return null;
+        return somaticFitPurity;
+    }
 
-        double peakPurity = kdFit.get().purity();
-
-        PPL_LOGGER.info("peak somatic purity({})", formatPurity(peakPurity));
-
+    private double findHotspotVaf(
+            final List<SomaticVariant> variants, final List<StructuralVariant> structuralVariants, final double somaticPeakPurity)
+    {
         // check for a hotspot variant with a higher VAF
         int snvCount = (int)variants.stream().filter(x -> !x.isFiltered()).count();
 
         if(snvCount > SNV_HOTSPOT_MAX_SNV_COUNT)
-            return kdFit.get();
+            return 0;
 
         double maxHotspotVaf = 0;
 
@@ -206,14 +230,14 @@ public class SomaticPurityFitter
             if(!HumanChromosome.contains(variant.chromosome()) || !HumanChromosome.fromString(variant.chromosome()).isAutosome())
                 continue;
 
-            if(variant.alleleFrequency() * 2 <= peakPurity || variant.alleleFrequency() > 0.5)
+            if(variant.alleleFrequency() * 2 <= somaticPeakPurity || variant.alleleFrequency() > 0.5)
                 continue;
 
             if(variant.alleleFrequency() < maxHotspotVaf)
                 continue;
 
             // test this variants allele read count vs what's expected from the somatic peak
-            if(!belowRequiredProbability(peakPurity, variant.totalReadCount(), variant.alleleReadCount()))
+            if(!belowRequiredProbability(somaticPeakPurity, variant.totalReadCount(), variant.alleleReadCount()))
                 continue;
 
             PPL_LOGGER.info(format("hotspot(%s:%d) vaf(%.3f %d/%d)",
@@ -246,23 +270,7 @@ public class SomaticPurityFitter
             */
         }
 
-        maxHotspotVaf *= 2;
-
-        if(maxHotspotVaf > peakPurity)
-        {
-            return ImmutableFittedPurity.builder()
-                    .score(1)
-                    .diploidProportion(1)
-                    .normFactor(1)
-                    .purity(maxHotspotVaf)
-                    .somaticPenalty(1)
-                    .ploidy(2)
-                    .build();
-        }
-        else
-        {
-            return kdFit.get();
-        }
+        return maxHotspotVaf * 2;
     }
 
     private boolean belowRequiredProbability(double peakPurity, int totalReadCount, int alleleReadCount)
