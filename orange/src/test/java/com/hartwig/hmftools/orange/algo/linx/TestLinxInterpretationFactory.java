@@ -9,6 +9,11 @@ public final class TestLinxInterpretationFactory {
 
     @NotNull
     public static LinxInterpretedData createMinimalTestLinxData() {
-        return ImmutableLinxInterpretedData.builder().build();
+        return builder().build();
+    }
+
+    @NotNull
+    public static ImmutableLinxInterpretedData.Builder builder() {
+        return ImmutableLinxInterpretedData.builder();
     }
 }

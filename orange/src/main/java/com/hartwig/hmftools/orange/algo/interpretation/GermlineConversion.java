@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.algo.interpretation;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
@@ -39,7 +40,8 @@ public final class GermlineConversion {
     }
 
     @NotNull
-    private static PurpleInterpretedData convertPurpleGermline(@NotNull PurpleInterpretedData purple) {
+    @VisibleForTesting
+    static PurpleInterpretedData convertPurpleGermline(@NotNull PurpleInterpretedData purple) {
         // TODO Convert germline deletions into somatic deletions.
         return ImmutablePurpleInterpretedData.builder()
                 .from(purple)
@@ -59,7 +61,8 @@ public final class GermlineConversion {
     }
 
     @NotNull
-    private static List<DriverCatalog> mergeGermlineDriversIntoSomatic(@NotNull List<DriverCatalog> somaticDrivers,
+    @VisibleForTesting
+    static List<DriverCatalog> mergeGermlineDriversIntoSomatic(@NotNull List<DriverCatalog> somaticDrivers,
             @NotNull List<DriverCatalog> germlineDrivers) {
         List<DriverCatalog> merged = Lists.newArrayList();
         for (DriverCatalog somaticDriver : somaticDrivers) {

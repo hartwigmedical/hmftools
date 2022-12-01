@@ -16,10 +16,14 @@ public final class TestPurpleInterpretationFactory {
 
     @NotNull
     public static PurpleInterpretedData createMinimalTestPurpleData() {
+        return builder().build();
+    }
+
+    @NotNull
+    public static ImmutablePurpleInterpretedData.Builder builder() {
         return ImmutablePurpleInterpretedData.builder()
                 .fit(createMinimalTestFitData())
-                .characteristics(createMinimalTestCharacteristicsData())
-                .build();
+                .characteristics(createMinimalTestCharacteristicsData());
     }
 
     @NotNull

@@ -2,8 +2,10 @@ package com.hartwig.hmftools.orange;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
@@ -56,11 +58,27 @@ public final class TestOrangeReportFactory {
 
     @NotNull
     public static OrangeReport createMinimalTestReport() {
+        return builder().build();
+    }
+
+    @NotNull
+    public static OrangeReport createProperTestReport() {
+        return builder().refSample(createMinimalOrangeSample())
+                .germlineMVLHPerGene(createTestGermlineMVLHPerGene())
+                .purple(createTestPurpleData())
+                .linx(createTestLinxData())
+                .lilac(createTestLilacData())
+                .isofox(createTestIsofoxData())
+                .virusInterpreter(createTestVirusInterpreterData())
+                .build();
+    }
+
+    @NotNull
+    public static ImmutableOrangeReport.Builder builder() {
         return ImmutableOrangeReport.builder()
                 .sampleId(TEST_SAMPLE)
                 .experimentDate(LocalDate.of(2021, 11, 19))
                 .refGenomeVersion(RefGenomeVersion.V37)
-                .refSample(createMinimalOrangeSample())
                 .tumorSample(createMinimalOrangeSample())
                 .purple(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
                 .linx(TestLinxInterpretationFactory.createMinimalTestLinxData())
@@ -68,20 +86,7 @@ public final class TestOrangeReportFactory {
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(ChordTestFactory.createMinimalTestChordAnalysis())
                 .cuppa(TestCuppaFactory.createMinimalCuppaData())
-                .plots(createMinimalOrangePlots())
-                .build();
-    }
-
-    @NotNull
-    public static OrangeReport createProperTestReport() {
-        return ImmutableOrangeReport.builder()
-                .from(createMinimalTestReport())
-                .purple(createTestPurpleData())
-                .linx(createTestLinxData())
-                .lilac(createTestLilacData())
-                .isofox(createTestIsofoxData())
-                .virusInterpreter(createTestVirusInterpreterData())
-                .build();
+                .plots(createMinimalOrangePlots());
     }
 
     @NotNull
@@ -95,7 +100,6 @@ public final class TestOrangeReportFactory {
     @NotNull
     private static OrangePlots createMinimalOrangePlots() {
         return ImmutableOrangePlots.builder()
-                .sageReferenceBQRPlot(DUMMY_IMAGE)
                 .sageTumorBQRPlot(DUMMY_IMAGE)
                 .purpleInputPlot(DUMMY_IMAGE)
                 .purpleFinalCircosPlot(DUMMY_IMAGE)
@@ -105,6 +109,13 @@ public final class TestOrangeReportFactory {
                 .purplePurityRangePlot(DUMMY_IMAGE)
                 .cuppaSummaryPlot(DUMMY_IMAGE)
                 .build();
+    }
+
+    @NotNull
+    private static Map<String, Double> createTestGermlineMVLHPerGene() {
+        Map<String, Double> germlineMVLHPerGene = Maps.newHashMap();
+        germlineMVLHPerGene.put("gene", 0.01);
+        return germlineMVLHPerGene;
     }
 
     @NotNull
@@ -125,9 +136,7 @@ public final class TestOrangeReportFactory {
                         .build())
                 .addReportableSomaticVariants(TestPurpleVariantFactory.builder()
                         .gene("USH2A")
-                        .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
-                                .hgvsCodingImpact("c.11712-884A>T")
-                                .build())
+                        .canonicalImpact(TestPurpleVariantFactory.impactBuilder().hgvsCodingImpact("c.11712-884A>T").build())
                         .addLocalPhaseSets(42256)
                         .build())
                 .allGermlineVariants(Lists.newArrayList())
