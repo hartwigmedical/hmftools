@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
+import com.hartwig.hmftools.common.doid.DoidTestFactory;
 import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.ImmutableLilacSummaryData;
@@ -18,6 +19,8 @@ import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
@@ -44,6 +47,7 @@ import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
+import com.hartwig.hmftools.orange.algo.wildtype.TestWildTypeFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -54,23 +58,6 @@ public final class TestOrangeReportFactory {
     private static final String DUMMY_IMAGE = Resources.getResource("test_images/white.png").getPath();
 
     private TestOrangeReportFactory() {
-    }
-
-    @NotNull
-    public static OrangeReport createMinimalTestReport() {
-        return builder().build();
-    }
-
-    @NotNull
-    public static OrangeReport createProperTestReport() {
-        return builder().refSample(createMinimalOrangeSample())
-                .germlineMVLHPerGene(createTestGermlineMVLHPerGene())
-                .purple(createTestPurpleData())
-                .linx(createTestLinxData())
-                .lilac(createTestLilacData())
-                .isofox(createTestIsofoxData())
-                .virusInterpreter(createTestVirusInterpreterData())
-                .build();
     }
 
     @NotNull
@@ -87,6 +74,27 @@ public final class TestOrangeReportFactory {
                 .chord(ChordTestFactory.createMinimalTestChordAnalysis())
                 .cuppa(TestCuppaFactory.createMinimalCuppaData())
                 .plots(createMinimalOrangePlots());
+    }
+
+    @NotNull
+    public static OrangeReport createMinimalTestReport() {
+        return builder().build();
+    }
+
+    @NotNull
+    public static OrangeReport createProperTestReport() {
+        return builder().addConfiguredPrimaryTumor(DoidTestFactory.createDoidNode("1", "cancer type"))
+                .platinumVersion("v5.30")
+                .refSample(createMinimalOrangeSample())
+                .germlineMVLHPerGene(createTestGermlineMVLHPerGene())
+                .purple(createTestPurpleData())
+                .linx(createTestLinxData())
+                .addWildTypeGenes(TestWildTypeFactory.create("gene"))
+                .isofox(createTestIsofoxData())
+                .lilac(createTestLilacData())
+                .virusInterpreter(createTestVirusInterpreterData())
+                .peach(createTestPeachData())
+                .build();
     }
 
     @NotNull
@@ -290,5 +298,12 @@ public final class TestOrangeReportFactory {
                 .build());
 
         return ImmutableVirusInterpreterData.builder().reportableViruses(reportableViruses).build();
+    }
+
+    @NotNull
+    private static List<PeachGenotype> createTestPeachData() {
+        List<PeachGenotype> genotypes = Lists.newArrayList();
+        genotypes.add(PeachTestFactory.builder().gene("DPYD").haplotype("haplotype").build());
+        return genotypes;
     }
 }
