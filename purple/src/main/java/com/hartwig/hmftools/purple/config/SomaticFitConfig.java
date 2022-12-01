@@ -1,6 +1,12 @@
 package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.HIGHLY_DIPLOID_PERCENTAGE_DEFAULT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_MIN_PEAK_DEFAULT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_MIN_PURITY_DEFAULT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_MIN_PURITY_SPREAD_DEFAULT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_MIN_VARIANTS_DEFAULT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_PENALTY_WEIGHT_DEFAULT;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -14,18 +20,6 @@ public class SomaticFitConfig
     public static final String SOMATIC_MIN_PURITY_SPREAD = "somatic_min_purity_spread";
     public static final String SOMATIC_PENALTY_WEIGHT = "somatic_penalty_weight";
     public static final String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
-
-    public static final double SOMATIC_MIN_PURITY_DEFAULT = 0.17;
-    public static final double SOMATIC_MIN_PURITY_SPREAD_DEFAULT = 0.15;
-    public static final int SOMATIC_MIN_PEAK_DEFAULT = 4;
-    public static final int SOMATIC_MIN_VARIANTS_DEFAULT = 10;
-    public static final double SOMATIC_PENALTY_WEIGHT_DEFAULT = 1;
-    public static final double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.97;
-
-    public static final double CLONALITY_BIN_WIDTH = 0.05;
-    public static final double CLONALITY_MAX_PLOIDY = 10;
-    public static final int MIN_TOTAL_SV_FRAGMENT_COUNT = 1000;
-    public static final int MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT = 2000;
 
     public int MinTotalVariants;
     public int MinPeakVariants;
