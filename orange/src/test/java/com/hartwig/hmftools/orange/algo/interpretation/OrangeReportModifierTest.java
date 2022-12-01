@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.algo.util;
+package com.hartwig.hmftools.orange.algo.interpretation;
 
 import static org.junit.Assert.assertNotNull;
 
