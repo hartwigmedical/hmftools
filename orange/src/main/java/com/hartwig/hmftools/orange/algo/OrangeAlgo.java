@@ -46,6 +46,8 @@ import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaData;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.orange.algo.interpretation.GermlineConversion;
+import com.hartwig.hmftools.orange.algo.interpretation.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
@@ -152,7 +154,7 @@ public class OrangeAlgo {
                         linx.reportableBreakends()));
         LOGGER.info("Identified {} of {} driver genes to be wild-type", wildTypeGenes.size(), driverGenes.size());
 
-        return ImmutableOrangeReport.builder()
+        OrangeReport report = ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
                 .experimentDate(config.experimentDate())
                 .configuredPrimaryTumor(configuredPrimaryTumor)
@@ -173,6 +175,16 @@ public class OrangeAlgo {
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();
+
+        if (config.limitJsonOutput()) {
+            report = ReportLimiter.limitAllListsToMaxOne(report);
+        }
+
+        if (config.convertGermlineToSomatic()) {
+            report = GermlineConversion.convertGermlineToSomatic(report);
+        }
+
+        return report;
     }
 
     @NotNull

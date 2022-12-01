@@ -16,9 +16,9 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class OrangeReportLimiter {
+public final class ReportLimiter {
 
-    private OrangeReportLimiter() {
+    private ReportLimiter() {
     }
 
     @NotNull
