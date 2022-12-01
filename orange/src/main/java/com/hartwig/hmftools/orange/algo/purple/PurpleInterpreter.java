@@ -96,6 +96,7 @@ public class PurpleInterpreter {
                 .allGermlineVariants(allGermlineVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
                 .additionalSuspectGermlineVariants(additionalSuspectGermlineVariants)
+                .allSomaticCopyNumbers(purple.allSomaticCopyNumbers())
                 .allSomaticGeneCopyNumbers(purple.allSomaticGeneCopyNumbers())
                 .suspectGeneCopyNumbersWithLOH(suspectGeneCopyNumbersWithLOH)
                 .allSomaticGainsLosses(allSomaticGainsLosses)

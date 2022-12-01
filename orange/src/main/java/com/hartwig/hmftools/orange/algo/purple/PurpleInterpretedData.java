@@ -5,6 +5,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -43,6 +44,9 @@ public abstract class PurpleInterpretedData {
 
     @Nullable
     public abstract List<PurpleVariant> additionalSuspectGermlineVariants();
+
+    @NotNull
+    public abstract List<PurpleCopyNumber> allSomaticCopyNumbers();
 
     @NotNull
     public abstract List<GeneCopyNumber> allSomaticGeneCopyNumbers();
