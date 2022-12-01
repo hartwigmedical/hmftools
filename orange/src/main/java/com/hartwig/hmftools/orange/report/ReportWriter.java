@@ -8,7 +8,6 @@ import java.io.IOException;
 
 import com.google.gson.GsonBuilder;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.util.OrangeReportModifier;
 import com.hartwig.hmftools.orange.report.chapters.CohortComparisonChapter;
 import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
 import com.hartwig.hmftools.orange.report.chapters.GermlineFindingsChapter;
@@ -37,13 +36,10 @@ public class ReportWriter {
     private final boolean writeToDisk;
     @Nullable
     private final String outputDir;
-    @NotNull
-    private final ReportConfig reportConfig;
 
-    ReportWriter(final boolean writeToDisk, @Nullable final String outputDir, @NotNull final ReportConfig reportConfig) {
+    ReportWriter(final boolean writeToDisk, @Nullable final String outputDir) {
         this.writeToDisk = writeToDisk;
         this.outputDir = outputDir;
-        this.reportConfig = reportConfig;
     }
 
     public void write(@NotNull OrangeReport report) throws IOException {
@@ -52,8 +48,8 @@ public class ReportWriter {
     }
 
     private void writePdf(@NotNull OrangeReport report) throws IOException {
-        ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, reportConfig.reportGermline()),
-                new SomaticFindingsChapter(report), new GermlineFindingsChapter(report, reportConfig.reportGermline()),
+        ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report),
+                new SomaticFindingsChapter(report), new GermlineFindingsChapter(report),
                 new ImmunologyChapter(report), new RNAFindingsChapter(report), new CohortComparisonChapter(report),
                 new QualityControlChapter(report) };
 
@@ -66,8 +62,7 @@ public class ReportWriter {
             String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.json";
             LOGGER.info("Writing JSON report to {} ", outputFilePath);
 
-            OrangeReport reportToWrite = reportConfig.limitJsonOutput() ? OrangeReportModifier.limitAllListsToMaxOne(report) : report;
-            String json = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(reportToWrite);
+            String json = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(report);
             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath));
 
             writer.write(json);

@@ -36,11 +36,9 @@ public class GermlineFindingsChapter implements ReportChapter {
 
     @NotNull
     private final OrangeReport report;
-    private final boolean reportGermline;
 
-    public GermlineFindingsChapter(@NotNull final OrangeReport report, final boolean reportGermline) {
+    public GermlineFindingsChapter(@NotNull final OrangeReport report) {
         this.report = report;
-        this.reportGermline = reportGermline;
     }
 
     @NotNull
@@ -59,7 +57,7 @@ public class GermlineFindingsChapter implements ReportChapter {
     public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
 
-        if (reportGermline && hasExhaustiveGermlineData()) {
+        if (hasExhaustiveGermlineData()) {
             addGermlineVariants(document);
             addGermlineDeletions(document);
             addGermlineDisruptions(document);

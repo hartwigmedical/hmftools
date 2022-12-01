@@ -53,11 +53,9 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private final OrangeReport report;
-    private final boolean reportGermline;
 
-    public FrontPageChapter(@NotNull final OrangeReport report, final boolean reportGermline) {
+    public FrontPageChapter(@NotNull final OrangeReport report) {
         this.report = report;
-        this.reportGermline = reportGermline;
     }
 
     @NotNull
@@ -199,7 +197,7 @@ public class FrontPageChapter implements ReportChapter {
     private String germlineDriverString() {
         List<PurpleVariant> reportableGermlineVariants = report.purple().reportableGermlineVariants();
         List<DriverCatalog> germlineDrivers = report.purple().germlineDrivers();
-        if (reportGermline && reportableGermlineVariants != null && germlineDrivers != null) {
+        if (reportableGermlineVariants != null && germlineDrivers != null) {
             return variantDriverString(reportableGermlineVariants, germlineDrivers);
         } else {
             return ReportResources.NOT_AVAILABLE;
