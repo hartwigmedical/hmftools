@@ -24,7 +24,7 @@ public final class Variants {
             double driverLikelihood1 = variant1.driverLikelihood() != null ? variant1.driverLikelihood() : -1;
             double driverLikelihood2 = variant2.driverLikelihood() != null ? variant2.driverLikelihood() : -1;
 
-            int driverCompare = Double.compare(driverLikelihood1, driverLikelihood2);
+            int driverCompare = Double.compare(driverLikelihood2, driverLikelihood1);
             if (driverCompare != 0) {
                 return driverCompare;
             }
@@ -70,6 +70,16 @@ public final class Variants {
     }
 
     @NotNull
+    public static String driverLikelihoodField(@NotNull VariantEntry variant) {
+        return variant.driverLikelihood() != null ? PERCENTAGE_FORMAT.format(variant.driverLikelihood() * 100) : Strings.EMPTY;
+    }
+
+    @NotNull
+    public static String clonalLikelihoodField(@NotNull VariantEntry variant) {
+        return PERCENTAGE_FORMAT.format(100 * variant.clonalLikelihood());
+    }
+
+    @NotNull
     public static String rnaDepthField(@NotNull VariantEntry variant) {
         AllelicDepth rnaDepth = variant.rnaDepth();
 
@@ -84,16 +94,6 @@ public final class Variants {
         }
 
         return rnaDepth.alleleReadCount() + "/" + rnaDepth.totalReadCount() + vafAddon;
-    }
-
-    @NotNull
-    public static String driverLikelihoodField(@NotNull VariantEntry variant) {
-        return variant.driverLikelihood() != null ? PERCENTAGE_FORMAT.format(variant.driverLikelihood() * 100) : Strings.EMPTY;
-    }
-
-    @NotNull
-    public static String clonalLikelihoodField(@NotNull VariantEntry variant) {
-        return PERCENTAGE_FORMAT.format(100 * variant.clonalLikelihood());
     }
 
     @NotNull
