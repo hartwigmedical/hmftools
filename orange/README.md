@@ -140,13 +140,14 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 - Upcoming
-  - Many and major datamodel changes in the ORANGE json output
+  - Many and major datamodel changes in the ORANGE json output.
   - Remove PROTECT dependency from ORANGE including clinical evidence chapter and potentially interesting mutation based on evidence
   - Support tumor-only mode
-  - Various minor changes and bug fixes:
+  - Various minor changes and bug fixes to RNA:
     - Improve formatting of non-duplicate fragments in RNA findings
     - Germline variants are now actually annotated with RNA in case RNA data is present.
-    - Fix bug with displaying gene disruptions in case of one SVs causing more than 1 disruption across multiple transcripts of the same gene.
+    - RNA sample config is mandatory in case RNA data is provided. 
+  - Disruptions are now displayed exactly as they are provided by linx without further conversions or merging. 
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.10)
   - Classify each driver gene as wild-type in case:
     1. Purple fit is reliable
