@@ -8,10 +8,6 @@ import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_SV;
 import static com.hartwig.hmftools.ctdna.CategoryType.REPORTABLE_MUTATION;
 import static com.hartwig.hmftools.ctdna.CategoryType.SUBCLONAL_MUTATION;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_MAPPABILITY_MIN;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_REPEAT_COUNT_MAX;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
 import static com.hartwig.hmftools.ctdna.SelectionStatus.EXCEEDS_COUNT;
 import static com.hartwig.hmftools.ctdna.SelectionStatus.FILTERED;
@@ -25,7 +21,6 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 public final class VariantSelection
 {
