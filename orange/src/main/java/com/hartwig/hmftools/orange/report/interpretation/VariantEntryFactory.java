@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.orange.algo.purple.PurpleTranscriptImpact;
@@ -114,7 +115,7 @@ public final class VariantEntryFactory {
     static String determineImpact(@NotNull PurpleTranscriptImpact impact) {
         String hgvsProteinImpact = impact.hgvsProteinImpact();
         if (!hgvsProteinImpact.isEmpty() && !hgvsProteinImpact.equals("p.?")) {
-            return hgvsProteinImpact;
+            return AminoAcids.forceSingleLetterProteinAnnotation(hgvsProteinImpact);
         }
 
         String hgvsCodingImpact = impact.hgvsCodingImpact();

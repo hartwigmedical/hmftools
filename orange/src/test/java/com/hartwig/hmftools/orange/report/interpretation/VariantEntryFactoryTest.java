@@ -100,7 +100,7 @@ public class VariantEntryFactoryTest {
 
     @Test
     public void canDetermineTranscriptImpact() {
-        assertEquals("p.Gly12Cys",
+        assertEquals("p.G12C",
                 VariantEntryFactory.determineImpact(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact("c.123A>C")
                         .hgvsProteinImpact("p.Gly12Cys")
