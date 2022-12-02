@@ -275,6 +275,9 @@ public class SomaticPurityFitter
 
     private boolean belowRequiredProbability(double peakPurity, int totalReadCount, int alleleReadCount)
     {
+        if(peakPurity <= 0)
+            return true;
+
         double expectedAlleleReadCount = peakPurity * 0.5 * totalReadCount;
 
         PoissonDistribution poissonDist = new PoissonDistribution(expectedAlleleReadCount);
