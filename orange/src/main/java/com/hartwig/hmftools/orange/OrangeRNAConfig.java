@@ -44,8 +44,7 @@ public interface OrangeRNAConfig {
         return options;
     }
 
-    // TODO Make mandatory once SAGE RNA annotation consistently runs across samples germline + somatic (v5.29 platinum)
-    @Nullable
+    @NotNull
     String rnaSampleId();
 
     @NotNull
@@ -68,7 +67,8 @@ public interface OrangeRNAConfig {
 
     @NotNull
     static OrangeRNAConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
-        if (missesAnyOption(cmd,
+        if (!hasCompleteRnaConfig(cmd,
+                RNA_SAMPLE_ID,
                 ISOFOX_GENE_DISTRIBUTION_CSV,
                 ISOFOX_ALT_SJ_COHORT_CSV,
                 ISOFOX_SUMMARY_CSV,
@@ -79,10 +79,8 @@ public interface OrangeRNAConfig {
             return null;
         }
 
-        String rnaSampleId = Config.optionalValue(cmd, RNA_SAMPLE_ID);
-        if (rnaSampleId != null) {
-            LOGGER.debug("RNA sample configured as {}", rnaSampleId);
-        }
+        String rnaSampleId = Config.nonOptionalValue(cmd, RNA_SAMPLE_ID);
+        LOGGER.debug("RNA sample configured as {}", rnaSampleId);
 
         return ImmutableOrangeRNAConfig.builder()
                 .rnaSampleId(rnaSampleId)
@@ -95,13 +93,19 @@ public interface OrangeRNAConfig {
                 .build();
     }
 
-    private static boolean missesAnyOption(@NotNull CommandLine cmd, @NotNull String... options) {
+    private static boolean hasCompleteRnaConfig(@NotNull CommandLine cmd, @NotNull String... options) {
+        boolean hasAllOptions = true;
+        boolean hasAnyOption = false;
         for (String option : options) {
-            if (!cmd.hasOption(option)) {
-                return true;
-            }
+            boolean hasOption = cmd.hasOption(option);
+            hasAllOptions = hasAllOptions && hasOption;
+            hasAnyOption = hasAnyOption || hasOption;
         }
 
-        return false;
+        if (hasAnyOption && !hasAllOptions) {
+            LOGGER.warn("RNA config has been provided but incompletely");
+        }
+
+        return hasAllOptions;
     }
 }
