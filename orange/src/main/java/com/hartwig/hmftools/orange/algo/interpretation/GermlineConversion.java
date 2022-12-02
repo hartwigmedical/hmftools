@@ -47,6 +47,9 @@ public final class GermlineConversion {
     @VisibleForTesting
     static PurpleInterpretedData convertPurpleGermline(@NotNull PurpleInterpretedData purple) {
         // TODO Convert germline deletions into somatic deletions.
+
+        // TODO Consider merging additional suspect variants as well but in practice suspect germline variants are only relevant for peach
+        // and cause confusing when merged into somatic.
         return ImmutablePurpleInterpretedData.builder()
                 .from(purple)
                 .fit(removeGermlineAberrations(purple.fit()))
@@ -55,8 +58,6 @@ public final class GermlineConversion {
                 .allSomaticVariants(mergeGermlineVariantsIntoSomatic(purple.allSomaticVariants(), purple.allGermlineVariants()))
                 .reportableSomaticVariants(mergeGermlineVariantsIntoSomatic(purple.reportableSomaticVariants(),
                         purple.reportableGermlineVariants()))
-                .additionalSuspectSomaticVariants(mergeGermlineVariantsIntoSomatic(purple.additionalSuspectSomaticVariants(),
-                        purple.additionalSuspectGermlineVariants()))
                 .allGermlineVariants(null)
                 .reportableGermlineVariants(null)
                 .additionalSuspectGermlineVariants(null)

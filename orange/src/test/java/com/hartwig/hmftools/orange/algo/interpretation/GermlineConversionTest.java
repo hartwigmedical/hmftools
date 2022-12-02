@@ -112,9 +112,8 @@ public class GermlineConversionTest {
         assertTrue(converted.reportableSomaticVariants().contains(reportableSomaticVariant));
         assertTrue(converted.reportableSomaticVariants().contains(reportableGermlineVariant));
 
-        assertEquals(2, converted.additionalSuspectSomaticVariants().size());
+        assertEquals(1, converted.additionalSuspectSomaticVariants().size());
         assertTrue(converted.additionalSuspectSomaticVariants().contains(suspectSomaticVariant));
-        assertTrue(converted.additionalSuspectSomaticVariants().contains(suspectGermlineVariant));
     }
 
     @NotNull
