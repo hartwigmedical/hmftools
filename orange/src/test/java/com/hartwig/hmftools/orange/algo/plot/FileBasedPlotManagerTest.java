@@ -1,10 +1,19 @@
 package com.hartwig.hmftools.orange.algo.plot;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
+import java.io.IOException;
 
 import org.junit.Test;
 
 public class FileBasedPlotManagerTest {
+
+    @Test
+    public void canHandleNullFiles() throws IOException {
+        FileBasedPlotManager plotManager = new FileBasedPlotManager("/path/to/output");
+        assertNull(plotManager.processPlotFile(null));
+    }
 
     @Test
     public void canExtractFileNames() {

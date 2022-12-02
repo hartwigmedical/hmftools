@@ -143,6 +143,7 @@ investigate potential causes for QC failure.
   - Many and major datamodel changes in the ORANGE json output.
   - Remove PROTECT dependency from ORANGE including clinical evidence chapter and potentially interesting mutation based on evidence
   - Support tumor-only mode
+  - Plots are now copied as part of ORANGE algo and paths to plots are registered relative to the location of the output json file.
   - Various minor changes and bug fixes to RNA:
     - Improve formatting of non-duplicate fragments in RNA findings
     - Germline variants are now actually annotated with RNA in case RNA data is present.

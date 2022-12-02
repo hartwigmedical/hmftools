@@ -59,6 +59,7 @@ public class FileBasedPlotManager implements PlotManager {
     }
 
     @NotNull
+    @VisibleForTesting
     static String extractFileName(@NotNull String sourcePlotPath) {
         return sourcePlotPath.substring(sourcePlotPath.lastIndexOf(File.separator) + 1);
     }
