@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MNV;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
@@ -58,9 +57,9 @@ public class SageConfig
     public final String ResourceDir;
 
     public final boolean AppendMode;
+    public final boolean SyncFragments;
     public final String PanelBed;
     public final boolean PanelOnly;
-    public final boolean MnvEnabled;
     public final String Hotspots;
     public final FilterConfig Filter;
     public final QualityConfig Quality;
@@ -109,12 +108,12 @@ public class SageConfig
     private static final String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
     private static final String REF_GENOME_VERSION = "ref_genome_version";
     private static final String SLICE_SIZE = "slice_size";
-    private static final String MNV = "mnv_enabled";
     private static final String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
     private static final String COVERAGE_BED = "coverage_bed";
     private static final String VALIDATION_STRINGENCY = "validation_stringency";
     private static final String INCLUDE_MT = "include_mt";
     private static final String EXPECTED_READ_LENGTH = "read_length";
+    private static final String SYNC_FRAGMENTS = "sync_fragments";
 
     private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
@@ -193,13 +192,13 @@ public class SageConfig
         RefGenomeFile = getReferenceFile(cmd, REF_GENOME);
 
         Stringency = ValidationStringency.valueOf(cmd.getOptionValue(VALIDATION_STRINGENCY, DEFAULT_STRINGENCY.toString()));
-        MnvEnabled = getConfigValue(cmd, MNV, DEFAULT_MNV);
         RegionSliceSize = getConfigValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE);
         ReadContextFlankSize = getConfigValue(cmd, READ_CONTEXT_FLANK_SIZE, DEFAULT_READ_CONTEXT_FLANK_SIZE);
         MinMapQuality = getConfigValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY);
         MaxReadDepth = getConfigValue(cmd, MAX_READ_DEPTH, DEFAULT_MAX_READ_DEPTH);
         MaxReadDepthPanel = getConfigValue(cmd, MAX_READ_DEPTH_PANEL, DEFAULT_MAX_READ_DEPTH_PANEL);
         ExpectedReadLength = getConfigValue(cmd, EXPECTED_READ_LENGTH, 151);
+        SyncFragments = cmd.hasOption(SYNC_FRAGMENTS);
 
         Filter = new FilterConfig(cmd);
         Quality = new QualityConfig(cmd);
@@ -320,7 +319,6 @@ public class SageConfig
     public static Options createSageOptions()
     {
         final Options options = new Options();
-        options.addOption(MNV, true, "Enable MNVs [" + DEFAULT_MNV + "]");
         options.addOption(TUMOR, true, "Tumor sample, or collection separated by ',\"");
         options.addOption(TUMOR_BAM, true, "Tumor bam file");
         options.addOption(READ_CONTEXT_FLANK_SIZE, true, "Size of read context flank [" + DEFAULT_READ_CONTEXT_FLANK_SIZE + "]");
@@ -361,6 +359,7 @@ public class SageConfig
 
         options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
         options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence in panel [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
+        options.addOption(SYNC_FRAGMENTS, false, "Handle overlapping fragment reads in evidence phase");
 
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
         QualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);
@@ -379,7 +378,6 @@ public class SageConfig
         TumorBams = Lists.newArrayList();
         PanelBed = "panel";
         PanelOnly = false;
-        MnvEnabled = DEFAULT_MNV;
         Hotspots = "hotspots";
         Filter = new FilterConfig();
         Quality = new QualityConfig();
@@ -405,6 +403,7 @@ public class SageConfig
         RefGenVersion = V37;
         Stringency = ValidationStringency.DEFAULT_STRINGENCY;
         AppendMode = false;
+        SyncFragments = false;
         LogEvidenceReads = false;
     }
 }

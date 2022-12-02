@@ -358,40 +358,37 @@ public class RefContextConsumer
 
                 result.add(new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext));
 
-                if(mConfig.MnvEnabled)
+                int mnvMaxLength = mnvLength(readBaseIndex, refBaseIndex, record.getReadBases(), refBases.Bases);
+
+                int nextReadIndex = i;
+                for(int mnvLength = 2; mnvLength <= mnvMaxLength; mnvLength++)
                 {
-                    int mnvMaxLength = mnvLength(readBaseIndex, refBaseIndex, record.getReadBases(), refBases.Bases);
+                    ++nextReadIndex;
 
-                    int nextReadIndex = i;
-                    for(int mnvLength = 2; mnvLength <= mnvMaxLength; mnvLength++)
+                    // MNVs cannot extend past the end of this Cigar element
+                    if(nextReadIndex >= alignmentLength)
+                        break;
+
+                    final String mnvRef = new String(refBases.Bases, refBaseIndex, mnvLength);
+                    final String mnvAlt = new String(record.getReadBases(), readBaseIndex, mnvLength);
+
+                    // Only check last base because some subsets may not be valid,
+                    // ie CA > TA is not a valid subset of CAC > TAT
+                    if(mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1))
                     {
-                        ++nextReadIndex;
+                        final ReadContext mnvReadContext = isWithinReadContext ? mReadContextFactory.createMNVContext(refPosition,
+                                readBaseIndex,
+                                mnvLength,
+                                record,
+                                refBases) : null;
 
-                        // MNVs cannot extend past the end of this Cigar element
-                        if(nextReadIndex >= alignmentLength)
-                            break;
-
-                        final String mnvRef = new String(refBases.Bases, refBaseIndex, mnvLength);
-                        final String mnvAlt = new String(record.getReadBases(), readBaseIndex, mnvLength);
-
-                        // Only check last base because some subsets may not be valid,
-                        // ie CA > TA is not a valid subset of CAC > TAT
-                        if(mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1))
-                        {
-                            final ReadContext mnvReadContext = isWithinReadContext ? mReadContextFactory.createMNVContext(refPosition,
-                                    readBaseIndex,
-                                    mnvLength,
-                                    record,
-                                    refBases) : null;
-
-                            result.add(new AltRead(refContext,
-                                    mnvRef,
-                                    mnvAlt,
-                                    baseQuality,
-                                    NumberEvents.calcWithMnvRaw(numberOfEvents, mnvRef, mnvAlt),
-                                    sufficientMapQuality,
-                                    mnvReadContext));
-                        }
+                        result.add(new AltRead(refContext,
+                                mnvRef,
+                                mnvAlt,
+                                baseQuality,
+                                NumberEvents.calcWithMnvRaw(numberOfEvents, mnvRef, mnvAlt),
+                                sufficientMapQuality,
+                                mnvReadContext));
                     }
                 }
             }

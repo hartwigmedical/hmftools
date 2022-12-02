@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.evidence;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
@@ -22,8 +24,10 @@ import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 
+import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.cram.encoding.readfeatures.SoftClip;
 
 public class ReadContextEvidence
 {
@@ -41,6 +45,7 @@ public class ReadContextEvidence
 
     private VariantPhaser mVariantPhaser;
     private String mCurrentSample;
+    private final Map<String,SAMRecord> mCachedReads;
 
     public ReadContextEvidence(
             final SageConfig config, final RefGenomeInterface refGenome, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
@@ -57,6 +62,7 @@ public class ReadContextEvidence
         mMaxDeleteLength = 0;
         mVariantPhaser = null;
         mCurrentSample = null;
+        mCachedReads = Maps.newHashMap();
     }
 
     public List<ReadContextCounter> collectEvidence(
@@ -94,6 +100,7 @@ public class ReadContextEvidence
         mQualityCalculator = new QualityCalculator(mSageConfig.Quality, qrMap, mRefSequence.IndexedBases);
 
         mCurrentSample = sample;
+        mCachedReads.clear();
 
         final SamSlicerInterface samSlicer = samSlicerFactory.getSamSlicer(sample, Lists.newArrayList(sliceRegion), false);
         samSlicer.slice(this::processReadRecord);
@@ -101,8 +108,55 @@ public class ReadContextEvidence
         return mReadCounters;
     }
 
+    private boolean handleOverlappingReads(final SAMRecord record)
+    {
+        final SAMRecord otherRecord = mCachedReads.get(record.getReadName());
+
+        if(otherRecord != null)
+        {
+            final SAMRecord fragmentRecord = formFragmentRead(otherRecord, record);
+            mCachedReads.remove(record.getReadName());
+
+            if(fragmentRecord != null)
+            {
+                processReadRecord(fragmentRecord, false);
+            }
+            else
+            {
+                // process both reads if a consensus failed
+                processReadRecord(otherRecord, false);
+                processReadRecord(record, false);
+            }
+        }
+
+        if(!record.getContig().equals(record.getMateReferenceName()))
+            return false;
+
+        if(!positionsOverlap(
+                record.getAlignmentStart(), record.getAlignmentEnd(),
+                record.getMateAlignmentStart(), record.getMateAlignmentStart() + record.getReadLength()))
+        {
+            return false;
+        }
+
+        // cache until the paired read arrives
+        mCachedReads.put(record.getReadName(), record);
+        return true;
+    }
+
     private void processReadRecord(final SAMRecord record)
     {
+        processReadRecord(record, true);
+    }
+
+    private void processReadRecord(final SAMRecord record, boolean checkSync)
+    {
+        if(checkSync && mSageConfig.SyncFragments)
+        {
+            if(handleOverlappingReads(record))
+                return;
+        }
+
         // find any candidate potentially interested in this record
         int readStart = record.getAlignmentStart();
         int readEnd = record.getAlignmentEnd();
@@ -188,5 +242,37 @@ public class ReadContextEvidence
 
         if(mVariantPhaser != null)
             mVariantPhaser.registeredPhasedVariants(posPhasedCounters, negPhasedCounters);
+    }
+
+    private SAMRecord formFragmentRead(final SAMRecord first, final SAMRecord second)
+    {
+        // take the highest base qual base for any overlapping bases
+        // widen the read to cover both reads
+        // how to handle preserve INDELs?
+
+        /*
+
+        int firstPosStart = first.getAlignmentStart();
+        int firstPosEnd = first.getAlignmentEnd();
+        Cigar firstCigar = first.getCigar();
+        final byte[] firstBaseQualities = first.getBaseQualities();
+        final byte[] firstBases = first.getReadBases();
+
+        int[] firstScLengths = new int[] { firstCigar.}
+
+        int secondPosStart = second.getAlignmentStart();
+        int secondPosEnd = second.getAlignmentEnd();
+        Cigar secondCigar = second.getCigar();
+        final byte[] secondBaseQualities = second.getBaseQualities();
+        final byte[] secondBases = second.getReadBases();
+
+        Cigar combinedCigar = new Cigar();
+        final byte[] combinedBaseQualities = new byte[];
+        final byte[] combinedBases = new byte[];
+        int combinedPosStart;
+        int combinedPosEnd;
+        */
+
+        return null;
     }
 }
