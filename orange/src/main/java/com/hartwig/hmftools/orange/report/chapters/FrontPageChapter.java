@@ -27,6 +27,7 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
+import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Drivers;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -53,9 +54,12 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private final OrangeReport report;
+    @NotNull
+    private final PlotPathResolver plotPathResolver;
 
-    public FrontPageChapter(@NotNull final OrangeReport report) {
+    public FrontPageChapter(@NotNull final OrangeReport report, @NotNull final PlotPathResolver plotPathResolver) {
         this.report = report;
+        this.plotPathResolver = plotPathResolver;
     }
 
     @NotNull
@@ -154,7 +158,7 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(Cells.createKey("Number of LINE insertions:"));
         summary.addCell(Cells.createValue(Integer.toString(report.cuppa().LINECount())));
 
-        Image circosImage = Images.build(report.plots().purpleFinalCircosPlot());
+        Image circosImage = Images.build(plotPathResolver.resolve(report.plots().purpleFinalCircosPlot()));
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         circosImage.setMaxHeight(290);
 
@@ -164,7 +168,7 @@ public class FrontPageChapter implements ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(contentWidth()).setPadding(0);
         table.addCell(topTable);
 
-        Image clonalityImage = Images.build(report.plots().purpleClonalityPlot());
+        Image clonalityImage = Images.build(plotPathResolver.resolve(report.plots().purpleClonalityPlot()));
         clonalityImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         clonalityImage.setMaxHeight(270);
 

@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Images;
@@ -30,9 +31,12 @@ public class QualityControlChapter implements ReportChapter {
 
     @NotNull
     private final OrangeReport report;
+    @NotNull
+    private final PlotPathResolver plotPathResolver;
 
-    public QualityControlChapter(@NotNull final OrangeReport report) {
+    public QualityControlChapter(@NotNull final OrangeReport report, @NotNull final PlotPathResolver plotPathResolver) {
         this.report = report;
+        this.plotPathResolver = plotPathResolver;
     }
 
     @NotNull
@@ -88,7 +92,7 @@ public class QualityControlChapter implements ReportChapter {
     }
 
     private void addPurplePurityFitPlot(@NotNull Document document) {
-        Image image = Images.build(report.plots().purplePurityRangePlot());
+        Image image = Images.build(plotPathResolver.resolve(report.plots().purplePurityRangePlot()));
         image.setMaxWidth(contentWidth());
         image.setHorizontalAlignment(HorizontalAlignment.CENTER);
         document.add(image);
@@ -191,10 +195,14 @@ public class QualityControlChapter implements ReportChapter {
 
         long halfContentWidth = Math.round(contentWidth() / 2D) - 2;
         Table table = new Table(2);
-        table.addCell(Cells.createImage(Images.build(report.plots().purpleFinalCircosPlot()).setMaxWidth(halfContentWidth)));
-        table.addCell(Cells.createImage(Images.build(report.plots().purpleInputPlot()).setMaxWidth(halfContentWidth)));
-        table.addCell(Cells.createImage(Images.build(report.plots().purpleCopyNumberPlot()).setMaxWidth(halfContentWidth)));
-        table.addCell(Cells.createImage(Images.build(report.plots().purpleVariantCopyNumberPlot()).setMaxWidth(halfContentWidth)));
+        table.addCell(Cells.createImage(Images.build(plotPathResolver.resolve(report.plots().purpleFinalCircosPlot()))
+                .setMaxWidth(halfContentWidth)));
+        table.addCell(Cells.createImage(Images.build(plotPathResolver.resolve(report.plots().purpleInputPlot()))
+                .setMaxWidth(halfContentWidth)));
+        table.addCell(Cells.createImage(Images.build(plotPathResolver.resolve(report.plots().purpleCopyNumberPlot()))
+                .setMaxWidth(halfContentWidth)));
+        table.addCell(Cells.createImage(Images.build(plotPathResolver.resolve(report.plots().purpleVariantCopyNumberPlot()))
+                .setMaxWidth(halfContentWidth)));
         document.add(table);
     }
 
@@ -202,14 +210,14 @@ public class QualityControlChapter implements ReportChapter {
         String sageReferenceBQRPlot = report.plots().sageReferenceBQRPlot();
         if (sageReferenceBQRPlot != null) {
             document.add(new Paragraph("Reference Sample BQR plot").addStyle(ReportResources.tableTitleStyle()));
-            Image refImage = Images.build(sageReferenceBQRPlot);
+            Image refImage = Images.build(plotPathResolver.resolve(sageReferenceBQRPlot));
             refImage.setMaxWidth(contentWidth());
             refImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
             document.add(refImage);
         }
 
         document.add(new Paragraph("Tumor Sample BQR plot").addStyle(ReportResources.tableTitleStyle()));
-        Image tumorImage = Images.build(report.plots().sageTumorBQRPlot());
+        Image tumorImage = Images.build(plotPathResolver.resolve(report.plots().sageTumorBQRPlot()));
         tumorImage.setMaxWidth(contentWidth());
         tumorImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         document.add(tumorImage);

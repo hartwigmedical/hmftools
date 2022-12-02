@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
+import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.interpretation.VariantEntry;
@@ -36,9 +37,12 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     @NotNull
     private final OrangeReport report;
+    @NotNull
+    private final PlotPathResolver plotPathResolver;
 
-    public SomaticFindingsChapter(@NotNull final OrangeReport report) {
+    public SomaticFindingsChapter(@NotNull final OrangeReport report, @NotNull final PlotPathResolver plotPathResolver) {
         this.report = report;
+        this.plotPathResolver = plotPathResolver;
     }
 
     @NotNull
@@ -84,8 +88,9 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     private void addKataegisPlot(@NotNull Document document) {
         document.add(new Paragraph("Kataegis plot").addStyle(ReportResources.tableTitleStyle()));
-        if (report.plots().purpleKataegisPlot() != null) {
-            Image image = Images.build(report.plots().purpleKataegisPlot());
+        String kataegisPlot = report.plots().purpleKataegisPlot();
+        if (kataegisPlot != null) {
+            Image image = Images.build(plotPathResolver.resolve(kataegisPlot));
             image.setMaxWidth(contentWidth());
             image.setHorizontalAlignment(HorizontalAlignment.CENTER);
             document.add(image);
@@ -186,7 +191,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         document.add(new Paragraph(title).addStyle(ReportResources.tableTitleStyle()));
         Table table = new Table(2);
         for (String plot : report.plots().linxDriverPlots()) {
-            Image image = Images.build(plot);
+            Image image = Images.build(plotPathResolver.resolve(plot));
             image.setMaxWidth(Math.round(contentWidth() / 2D) - 2);
             image.setHorizontalAlignment(HorizontalAlignment.CENTER);
             table.addCell(Cells.createImage(image));

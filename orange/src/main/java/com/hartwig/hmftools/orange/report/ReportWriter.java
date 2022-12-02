@@ -36,10 +36,13 @@ public class ReportWriter {
     private final boolean writeToDisk;
     @Nullable
     private final String outputDir;
+    @NotNull
+    private final PlotPathResolver plotPathResolver;
 
-    ReportWriter(final boolean writeToDisk, @Nullable final String outputDir) {
+    ReportWriter(final boolean writeToDisk, @Nullable final String outputDir, @NotNull final PlotPathResolver plotPathResolver) {
         this.writeToDisk = writeToDisk;
         this.outputDir = outputDir;
+        this.plotPathResolver = plotPathResolver;
     }
 
     public void write(@NotNull OrangeReport report) throws IOException {
@@ -48,10 +51,17 @@ public class ReportWriter {
     }
 
     private void writePdf(@NotNull OrangeReport report) throws IOException {
-        ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report),
-                new SomaticFindingsChapter(report), new GermlineFindingsChapter(report),
-                new ImmunologyChapter(report), new RNAFindingsChapter(report), new CohortComparisonChapter(report),
-                new QualityControlChapter(report) };
+        ReportChapter[] chapters;
+        if (report.refSample() != null) {
+            chapters = new ReportChapter[] { new FrontPageChapter(report, plotPathResolver),
+                    new SomaticFindingsChapter(report, plotPathResolver), new GermlineFindingsChapter(report),
+                    new ImmunologyChapter(report), new RNAFindingsChapter(report), new CohortComparisonChapter(report, plotPathResolver),
+                    new QualityControlChapter(report, plotPathResolver) };
+        } else {
+            chapters = new ReportChapter[] { new FrontPageChapter(report, plotPathResolver),
+                    new SomaticFindingsChapter(report, plotPathResolver), new ImmunologyChapter(report), new RNAFindingsChapter(report),
+                    new CohortComparisonChapter(report, plotPathResolver), new QualityControlChapter(report, plotPathResolver) };
+        }
 
         String platinumVersion = report.platinumVersion() != null ? report.platinumVersion() : ReportResources.NOT_AVAILABLE;
         writePdfChapters(report.sampleId(), platinumVersion, chapters);

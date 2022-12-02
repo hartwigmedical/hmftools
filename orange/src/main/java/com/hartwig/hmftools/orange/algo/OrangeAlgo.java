@@ -52,6 +52,9 @@ import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
+import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
+import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
+import com.hartwig.hmftools.orange.algo.plot.PlotManager;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeFactory;
@@ -89,6 +92,8 @@ public class OrangeAlgo {
     private final List<DriverGene> driverGenes;
     @NotNull
     private final KnownFusionCache knownFusionCache;
+    @NotNull
+    private final PlotManager plotManager;
 
     @NotNull
     public static OrangeAlgo fromConfig(@NotNull OrangeConfig config) throws IOException {
@@ -117,17 +122,21 @@ public class OrangeAlgo {
         }
         LOGGER.info(" Read {} known fusion entries", knownFusionCache.getData().size());
 
-        return new OrangeAlgo(doidEntry, mapper, percentilesModel, driverGenes, knownFusionCache);
+        String outputDir = config.outputDir();
+        PlotManager plotManager = !outputDir.isEmpty() ? new FileBasedPlotManager(outputDir) : new DummyPlotManager();
+
+        return new OrangeAlgo(doidEntry, mapper, percentilesModel, driverGenes, knownFusionCache, plotManager);
     }
 
     private OrangeAlgo(@NotNull final DoidEntry doidEntry, @NotNull final CohortMapper cohortMapper,
             @NotNull final CohortPercentilesModel percentilesModel, @NotNull final List<DriverGene> driverGenes,
-            @NotNull final KnownFusionCache knownFusionCache) {
+            @NotNull final KnownFusionCache knownFusionCache, @NotNull final PlotManager plotManager) {
         this.doidEntry = doidEntry;
         this.cohortMapper = cohortMapper;
         this.percentilesModel = percentilesModel;
         this.driverGenes = driverGenes;
         this.knownFusionCache = knownFusionCache;
+        this.plotManager = plotManager;
     }
 
     @NotNull
@@ -454,38 +463,61 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static OrangePlots buildPlots(@NotNull OrangeConfig config) {
+    private OrangePlots buildPlots(@NotNull OrangeConfig config) throws IOException {
         LOGGER.info("Loading plots");
+
+        plotManager.createPlotDirectory();
+
         String linxPlotDir = config.linxPlotDirectory();
         List<String> linxDriverPlots = Lists.newArrayList();
         if (new File(linxPlotDir).exists()) {
             for (String file : new File(linxPlotDir).list()) {
-                linxDriverPlots.add(linxPlotDir + File.separator + file);
+                linxDriverPlots.add(plotManager.processPlotFile(linxPlotDir + File.separator + file));
             }
             LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
         } else {
             LOGGER.debug(" No linx plots have been loaded as plot directory {} does not exist", linxPlotDir);
         }
 
-        String kataegisPlot = config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.rainfall.png";
-        if (!new File(kataegisPlot).exists()) {
-            LOGGER.debug(" Could not locate kataegis plot '{}'", kataegisPlot);
-            kataegisPlot = null;
+        String sageReferenceBQRPlot = plotManager.processPlotFile(config.sageSomaticRefSampleBQRPlot());
+        String sageTumorBQRPlot = plotManager.processPlotFile(config.sageSomaticTumorSampleBQRPlot());
+
+        String purplePlotBasePath = config.purplePlotDirectory() + File.separator + config.tumorSampleId();
+        String purpleInputPlot = plotManager.processPlotFile(purplePlotBasePath + ".input.png");
+        String purpleFinalCircosPlot = plotManager.processPlotFile(purplePlotBasePath + ".circos.png");
+        String purpleClonalityPlot = plotManager.processPlotFile(purplePlotBasePath + ".somatic.clonality.png");
+        String purpleCopyNumberPlot = plotManager.processPlotFile(purplePlotBasePath + ".copynumber.png");
+        String purpleVariantCopyNumberPlot = plotManager.processPlotFile(purplePlotBasePath + ".somatic.png");
+        String purplePurityRangePlot = plotManager.processPlotFile(purplePlotBasePath + ".purity.range.png");
+
+        String purpleKataegisPlot = purplePlotBasePath + ".somatic.rainfall.png";
+        if (!new File(purpleKataegisPlot).exists()) {
+            LOGGER.debug(" Could not locate kataegis plot '{}'", purpleKataegisPlot);
+            purpleKataegisPlot = null;
+        } else {
+            purpleKataegisPlot = plotManager.processPlotFile(purpleKataegisPlot);
+        }
+
+        String cuppaSummaryPlot = plotManager.processPlotFile(config.cuppaSummaryPlot());
+
+        String cuppaFeaturePlot = null;
+        if (config.cuppaFeaturePlot() != null && new File(config.cuppaFeaturePlot()).exists()) {
+            cuppaFeaturePlot = plotManager.processPlotFile(config.cuppaFeaturePlot());
         }
 
         return ImmutableOrangePlots.builder()
-                .sageReferenceBQRPlot(config.sageSomaticRefSampleBQRPlot())
-                .sageTumorBQRPlot(config.sageSomaticTumorSampleBQRPlot())
-                .purpleInputPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".input.png")
-                .purpleFinalCircosPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".circos.png")
-                .purpleClonalityPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.clonality.png")
-                .purpleCopyNumberPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".copynumber.png")
-                .purpleVariantCopyNumberPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.png")
-                .purplePurityRangePlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".purity.range.png")
-                .purpleKataegisPlot(kataegisPlot)
+                .sageReferenceBQRPlot(sageReferenceBQRPlot)
+                .sageTumorBQRPlot(sageTumorBQRPlot)
+                .purpleInputPlot(purpleInputPlot)
+                .purpleFinalCircosPlot(purpleFinalCircosPlot)
+                .purpleClonalityPlot(purpleClonalityPlot)
+                .purpleCopyNumberPlot(purpleCopyNumberPlot)
+                .purpleVariantCopyNumberPlot(purpleVariantCopyNumberPlot)
+                .purplePurityRangePlot(purplePurityRangePlot)
+                .purpleKataegisPlot(purpleKataegisPlot)
                 .linxDriverPlots(linxDriverPlots)
-                .cuppaSummaryPlot(config.cuppaSummaryPlot())
-                .cuppaFeaturePlot(config.cuppaFeaturePlot())
+                .cuppaSummaryPlot(cuppaSummaryPlot)
+                .cuppaFeaturePlot(cuppaFeaturePlot)
                 .build();
     }
 
