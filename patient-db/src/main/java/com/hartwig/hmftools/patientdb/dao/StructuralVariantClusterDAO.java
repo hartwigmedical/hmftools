@@ -12,6 +12,7 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.linx.DriverEventType;
 import com.hartwig.hmftools.common.linx.ImmutableLinxCluster;
 import com.hartwig.hmftools.common.linx.ImmutableLinxDriver;
 import com.hartwig.hmftools.common.linx.ImmutableLinxSvAnnotation;
@@ -219,7 +220,7 @@ class StructuralVariantClusterDAO
                 timestamp,
                 driver.clusterId() == -1 ? null : driver.clusterId(),
                 driver.gene(),
-                DatabaseUtil.checkStringLength(driver.eventType(), SVDRIVER.EVENTTYPE));
+                DatabaseUtil.checkStringLength(driver.eventType().toString(), SVDRIVER.EVENTTYPE));
     }
 
     @NotNull
@@ -294,7 +295,7 @@ class StructuralVariantClusterDAO
         {
             LinxDriver driver = ImmutableLinxDriver.builder()
                     .clusterId(DatabaseUtil.valueNotNull(record.getValue(SVDRIVER.CLUSTERID)))
-                    .eventType(record.getValue(SVDRIVER.EVENTTYPE))
+                    .eventType(DriverEventType.valueOf(record.getValue(SVDRIVER.EVENTTYPE)))
                     .gene(record.getValue(SVDRIVER.GENE))
                     .build();
 
