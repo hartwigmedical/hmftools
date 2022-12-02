@@ -30,4 +30,5 @@ public class FusionConstants
     public static final int FUSION_MAX_CHAIN_LENGTH = 150000;
     public static final int FUSION_MAX_CHAIN_LINKS = 4;
 
+    public static final int ENHANCER_PROMISCUOUS_MIN_DISTANCE = 100000;
 }

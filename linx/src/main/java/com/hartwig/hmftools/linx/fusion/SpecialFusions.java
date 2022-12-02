@@ -8,9 +8,11 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_ENH
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_5P;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.ENHANCER_PROMISCUOUS_MIN_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_IG_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
@@ -118,28 +120,18 @@ public class SpecialFusions
             // if(var.isSglBreakend() && !var.getGenesList(true).isEmpty())
             //    knownPairSglCandidates.add(var);
 
+            if(var.isSglBreakend())
+                continue;
+
             for(int se = SE_START; se <= SE_END; ++se)
             {
                 SvBreakend breakend = var.getBreakend(se);
                 final int seIndex = se;
 
-                if(var.isSglBreakend() && se == SE_END)
-                {
-                    for(SglMapping mapping : var.getSglMappings())
-                    {
-                        enhancerTargets.stream()
-                                .map(x -> formEnhancerTargetFusion(x, var, null, mapping, seIndex))
-                                .filter(x -> x != null)
-                                .forEach(x -> fusions.add(x));
-                    }
-                }
-                else
-                {
-                    enhancerTargets.stream()
-                            .map(x -> formEnhancerTargetFusion(x, var, breakend, null, seIndex))
-                            .filter(x -> x != null)
-                            .forEach(x -> fusions.add(x));
-                }
+                enhancerTargets.stream()
+                        .map(x -> formEnhancerTargetFusion(x, var, breakend, seIndex))
+                        .filter(x -> x != null)
+                        .forEach(x -> fusions.add(x));
             }
 
         }
@@ -153,19 +145,13 @@ public class SpecialFusions
     }
 
     private GeneFusion formEnhancerTargetFusion(
-            final KnownFusionData knownFusionData, final SvVarData var, final SvBreakend breakend, final SglMapping sglMapping, int seIndex)
+            final KnownFusionData knownFusionData, final SvVarData var, final SvBreakend breakend, int seIndex)
     {
-        if(sglMapping != null)
-        {
-            if(!knownFusionData.matchesGeneRegion(sglMapping.Chromosome, sglMapping.Position, sglMapping.Orientation))
-                return null;
+        if(!knownFusionData.matchesGeneRegion(breakend.chromosome(), breakend.position(), breakend.orientation()))
+            return null;
 
-        }
-        else
-        {
-            if(!knownFusionData.matchesGeneRegion(breakend.chromosome(), breakend.position(), breakend.orientation()))
-                return null;
-        }
+        if(var.type() != BND && var.length() < ENHANCER_PROMISCUOUS_MIN_DISTANCE)
+            return null;
 
         final SvBreakend otherBreakend = var.getBreakend(switchIndex(seIndex));
 
@@ -181,22 +167,9 @@ public class SpecialFusions
         }
         else
         {
-            String otherChr;
-            int otherPosition;
-
-            if(otherBreakend != null)
-            {
-                otherChr = otherBreakend.chromosome();
-                otherPosition = otherBreakend.position();
-            }
-            else
-            {
-                otherChr = !var.getSglMappings().isEmpty() ? var.getSglMappings().get(0).Chromosome : "";
-                otherPosition = !var.getSglMappings().isEmpty() ? var.getSglMappings().get(0).Position : 0;
-            }
-
             GeneData geneData = new GeneData(
-                    "", "", otherChr, POS_STRAND, otherPosition, otherPosition, "");
+                    "", "", otherBreakend.chromosome(), POS_STRAND,
+                    otherBreakend.position(), otherBreakend.position(), "");
 
             BreakendGeneData gene = new BreakendGeneData(var.id(), otherIsStart, geneData);
             gene.setSvData(var.getSvData(), var.jcn());
