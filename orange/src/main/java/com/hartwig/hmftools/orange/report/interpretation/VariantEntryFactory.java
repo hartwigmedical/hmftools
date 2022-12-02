@@ -25,11 +25,11 @@ public final class VariantEntryFactory {
     public static List<VariantEntry> create(@NotNull List<PurpleVariant> variants, @NotNull List<DriverCatalog> drivers) {
         List<VariantEntry> entries = Lists.newArrayList();
         for (PurpleVariant variant : variants) {
-            DriverCatalog driver = Drivers.canonicalVariantEntryForGene(drivers, variant.gene());
+            DriverCatalog driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
             entries.add(toVariantEntry(variant, driver));
         }
 
-        for (DriverCatalog nonCanonicalDriver : Drivers.nonCanonicalVariantEntries(drivers)) {
+        for (DriverCatalog nonCanonicalDriver : Drivers.nonCanonicalMutationEntries(drivers)) {
             PurpleVariant nonCanonicalVariant = findReportedVariantForDriver(variants, nonCanonicalDriver);
             if (nonCanonicalVariant != null) {
                 entries.add(toVariantEntry(nonCanonicalVariant, nonCanonicalDriver));

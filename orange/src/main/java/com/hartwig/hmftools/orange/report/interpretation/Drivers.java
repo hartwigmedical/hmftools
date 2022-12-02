@@ -13,16 +13,16 @@ import org.jetbrains.annotations.Nullable;
 
 public final class Drivers {
 
-    private static final Set<DriverType> VARIANT_DRIVER_TYPES = Sets.newHashSet(DriverType.MUTATION, DriverType.GERMLINE_MUTATION);
+    private static final Set<DriverType> MUTATION_DRIVER_TYPES = Sets.newHashSet(DriverType.MUTATION, DriverType.GERMLINE_MUTATION);
 
     private Drivers() {
     }
 
     @NotNull
-    public static List<DriverCatalog> nonCanonicalVariantEntries(@NotNull List<DriverCatalog> drivers) {
+    public static List<DriverCatalog> nonCanonicalMutationEntries(@NotNull List<DriverCatalog> drivers) {
         List<DriverCatalog> nonCanonicalVariantEntries = Lists.newArrayList();
         for (DriverCatalog driver : drivers) {
-            if (VARIANT_DRIVER_TYPES.contains(driver.driver()) && !driver.isCanonical()) {
+            if (MUTATION_DRIVER_TYPES.contains(driver.driver()) && !driver.isCanonical()) {
                 nonCanonicalVariantEntries.add(driver);
             }
         }
@@ -30,10 +30,10 @@ public final class Drivers {
     }
 
     @Nullable
-    public static DriverCatalog canonicalVariantEntryForGene(@NotNull List<DriverCatalog> drivers, @NotNull String geneToFind) {
+    public static DriverCatalog canonicalMutationEntryForGene(@NotNull List<DriverCatalog> drivers, @NotNull String geneToFind) {
         DriverCatalog highest = null;
         for (DriverCatalog driver : drivers) {
-            if (VARIANT_DRIVER_TYPES.contains(driver.driver()) && driver.gene().equals(geneToFind) && driver.isCanonical()) {
+            if (MUTATION_DRIVER_TYPES.contains(driver.driver()) && driver.gene().equals(geneToFind) && driver.isCanonical()) {
                 if (highest == null || driver.driverLikelihood() > highest.driverLikelihood()) {
                     highest = driver;
                 }
