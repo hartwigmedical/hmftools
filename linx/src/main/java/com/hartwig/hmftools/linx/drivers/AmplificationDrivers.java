@@ -9,9 +9,9 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.isShortArmChromosome;
-import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN;
-import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN_ARM;
-import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN_CHR;
+import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN;
+import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN_ARM;
+import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN_CHR;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 
 import java.util.List;

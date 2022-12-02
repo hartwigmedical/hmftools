@@ -9,13 +9,13 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF_P
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.TOTAL_CN_LOSS;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.expectSingleChromosome;
-import static com.hartwig.hmftools.linx.drivers.DriverEventType.HOM_DEL_DISRUPTION;
-import static com.hartwig.hmftools.linx.drivers.DriverEventType.HOM_DUP_DISRUPTION;
-import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH;
-import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_ARM;
-import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_CHR;
-import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_SV_CENTRO;
-import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_SV_TELO;
+import static com.hartwig.hmftools.common.linx.DriverEventType.HOM_DEL_DISRUPTION;
+import static com.hartwig.hmftools.common.linx.DriverEventType.HOM_DUP_DISRUPTION;
+import static com.hartwig.hmftools.common.linx.DriverEventType.LOH;
+import static com.hartwig.hmftools.common.linx.DriverEventType.LOH_ARM;
+import static com.hartwig.hmftools.common.linx.DriverEventType.LOH_CHR;
+import static com.hartwig.hmftools.common.linx.DriverEventType.LOH_SV_CENTRO;
+import static com.hartwig.hmftools.common.linx.DriverEventType.LOH_SV_TELO;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_ARM_SV;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_DEL;
 
@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.linx.DriverEventType;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;

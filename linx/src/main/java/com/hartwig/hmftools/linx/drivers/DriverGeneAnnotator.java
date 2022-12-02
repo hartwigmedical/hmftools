@@ -242,7 +242,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
                 mDriverOutputList.add(ImmutableLinxDriver.builder()
                         .clusterId(clusterId)
                         .gene(dgData.GeneInfo.GeneName)
-                        .eventType(driverEvent.Type.toString())
+                        .eventType(driverEvent.Type)
                         .build());
 
                 mVisSampleData.addGeneExonData(clusterId, dgData.GeneInfo.GeneId, dgData.GeneInfo.GeneName,

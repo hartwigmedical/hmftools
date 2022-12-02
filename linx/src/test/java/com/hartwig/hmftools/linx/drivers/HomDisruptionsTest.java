@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.drivers;
 
-import static com.hartwig.hmftools.linx.drivers.DriverEventType.HOM_DEL_DISRUPTION;
-import static com.hartwig.hmftools.linx.drivers.DriverEventType.HOM_DUP_DISRUPTION;
+import static com.hartwig.hmftools.common.linx.DriverEventType.HOM_DEL_DISRUPTION;
+import static com.hartwig.hmftools.common.linx.DriverEventType.HOM_DUP_DISRUPTION;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
