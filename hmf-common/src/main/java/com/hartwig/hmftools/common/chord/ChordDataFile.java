@@ -38,10 +38,7 @@ public final class ChordDataFile
     }
 
     @NotNull
-    public static ChordData read(final String filePath) throws IOException { return read(filePath, false); }
-
-    @NotNull
-    public static ChordData read(final String filePath, boolean logDetails) throws IOException
+    public static ChordData read(final String filePath) throws IOException
     {
         List<String> lines = Files.readAllLines(Paths.get(filePath));
 
@@ -64,25 +61,10 @@ public final class ChordDataFile
                 .remarksHrdType(typeRemarks)
                 .build();
 
-        if(logDetails)
-        {
-            LOGGER.info("Loaded CHORD data from {}: HR Status: {} Type: {}",
-                    filePath, chordData.hrStatus().display(), chordData.hrdType());
-        }
-
         return chordData;
     }
 
-    @NotNull
-    public static ChordData load(@NotNull String chordPredictionTxt) throws IOException
-    {
-        LOGGER.info("Loading CHORD data from {}", new File(chordPredictionTxt).getParent());
-        ChordData chordData = ChordDataFile.read(chordPredictionTxt);
-        LOGGER.info(" HR Status: {} with type '{}'", chordData.hrStatus().display(), chordData.hrdType());
-        return chordData;
-    }
-
-    public static ChordStatus extractHrStatus(@NotNull String hrStatus)
+    static ChordStatus extractHrStatus(@NotNull String hrStatus)
     {
         switch(hrStatus)
         {

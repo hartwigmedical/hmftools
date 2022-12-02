@@ -390,7 +390,10 @@ public class OrangeAlgo {
 
     @NotNull
     private static ChordData loadChordAnalysis(@NotNull OrangeConfig config) throws IOException {
-        return ChordDataFile.read(config.chordPredictionTxt(), true);
+        LOGGER.info("Loading CHORD data from {}", new File(config.chordPredictionTxt()).getParent());
+        ChordData chordData = ChordDataFile.read(config.chordPredictionTxt());
+        LOGGER.info(" HR Status: {} with type '{}'", chordData.hrStatus().display(), chordData.hrdType());
+        return chordData;
     }
 
     @NotNull
