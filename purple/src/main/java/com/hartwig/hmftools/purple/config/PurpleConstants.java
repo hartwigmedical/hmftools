@@ -29,13 +29,16 @@ public class PurpleConstants
     public static final double SOMATIC_MIN_PURITY_SPREAD_DEFAULT = 0.15;
     public static final int SOMATIC_MIN_PEAK_DEFAULT = 4;
     public static final int SOMATIC_MIN_VARIANTS_DEFAULT = 10;
-    public static final double SOMATIC_PENALTY_WEIGHT_DEFAULT = 1;
+    public static final double SOMATIC_PENALTY_WEIGHT_DEFAULT = 1.5;
     public static final double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.97;
 
     public static final double CLONALITY_BIN_WIDTH = 0.05;
     public static final double CLONALITY_MAX_PLOIDY = 10;
     public static final int MIN_TOTAL_SV_FRAGMENT_COUNT = 1000;
     public static final int MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT = 2000;
+
+    // somatic enrichment
+    public static final double BIALLELIC_PROBABILITY = 0.005;
 
 
     // SV recovery
