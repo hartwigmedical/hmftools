@@ -63,6 +63,7 @@ public class GermlineFindingsChapter implements ReportChapter {
         document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
 
         if (report.refSample() != null) {
+            // TODO Show tables as NA rather than not show them in case germline data is missing while ref sample is present
             addGermlineVariants(document);
             addGermlineDeletions(document);
             addGermlineDisruptions(document);
