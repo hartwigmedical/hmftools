@@ -30,7 +30,6 @@ SNV/Indel clonality. In addition to this front page, the following chapters are 
 - [Immunology](#immunology): What can we tell about the immunogenicity of the tumor sample?
 - [RNA Findings](#rna-findings): What potentially relevant findings do we detect in RNA?
 - [Cohort Comparison](#cohort-comparison): How do the various properties of this tumor compare to existing cancer cohorts?
-- [Clinical Evidence](#clinical-evidence): What genomic evidence has been found in favor of, or against, specific treatments?
 - [Quality Control](#quality-control): Various stats and graphs regarding the quality of the data and interpretation thereof.
 
 ### Optional Configuration
@@ -50,14 +49,14 @@ interesting and added to the report:
 
 - Other potentially relevant variants:
     1. Variants that are hotspots or near hotspots but not part of the reporting gene panel.
-    1. Variants which have clinical evidence but are not part of the reporting gene panel.
-    1. Exonic variants that are not reported but are phased with variants that are reported.
-    1. Variants that are considered relevant for tumor type classification according to Cuppa.
-    1. Variants with synonymous impact on the canonical transcript of a reporting gene but with a reportable worst impact
-    1. Variants in splice regions that are not reported in genes with splice variant reporting enabled.
+  2. Variants which have clinical evidence but are not part of the reporting gene panel.
+  3. Exonic variants that are not reported but are phased with variants that are reported.
+  4. Variants that are considered relevant for tumor type classification according to Cuppa.
+  5. Variants with synonymous impact on the canonical transcript of a reporting gene but with a reportable worst impact
+  6. Variants in splice regions that are not reported in genes with splice variant reporting enabled.
 - Other regions with amps, or with deletions in other autosomal regions:
     1. Gains in genes for which we report amplifications with a relative minimum copy number between 2.5 and 3 times ploidy.
-    1. Any chromosomal band location with at least one gene lost or fully amplified is considered potentially interesting.
+  2. Any chromosomal band location with at least one gene lost or fully amplified is considered potentially interesting.
        A maximum of 10 additional gains (sorted by minimum copy number) and 10 additional losses are reported as potentially interesting:
         - For a band with more than one gene amplified, genes are first picked based on having clinical evidence and alternatively the
           gene with the highest minimum copy number is picked.
@@ -66,8 +65,8 @@ interesting and added to the report:
         - For a band with a loss that has no losses reported in this band already, an arbitrary gene is picked.
 - Other potentially relevant fusions. A maximum of 10 additional fusions (picked arbitrarily) are reported as potentially interesting:
     1. Any fusion that is not reported and has a reported type other than NONE.
-    1. Any fusion with clinical evidence.
-    1. Any fusion in a gene that is configured as an oncogene in the driver gene panel.
+  2. Any fusion with clinical evidence.
+  3. Any fusion in a gene that is configured as an oncogene in the driver gene panel.
 - Other viral presence:
     1. Any viral presence that is not otherwise reported.
 - Potentially interesting gene disruptions:
@@ -75,7 +74,7 @@ interesting and added to the report:
        the fusion knowledgebase.
 - Potentially interesting LOH events:
     1. In case MSI is detected, LOH (if present) is shown for the following genes: MLH1, MSH2, MSH6, PMS2, EPCAM
-    1. In case HRD (based on CHORD) is detected, LOH (if present) is shown for the following genes: BRCA1, BRCA2, RAD51C, PALB2
+  2. In case HRD (based on CHORD) is detected, LOH (if present) is shown for the following genes: BRCA1, BRCA2, RAD51C, PALB2
 
 In case ORANGE was run in DNA+RNA mode, DNA findings will be annotated with RNA:
 
@@ -84,8 +83,8 @@ In case ORANGE was run in DNA+RNA mode, DNA findings will be annotated with RNA:
   applicable tumor type
 - Driver and potentially interesting fusions are annotated depending on fusion type:
     1. `EXON_DEL_DUP` and other intra-gene fusions are annotated with exon-skipping novel splice junctions
-    1. @IG fusions are annotated with TPM of the 3' fusion gene
-    1. Other fusions are annotated with RNA fusion details (detected fusions in RNA, and corresponding fragment support and depth of 5' and
+  2. @IG fusions are annotated with TPM of the 3' fusion gene
+  3. Other fusions are annotated with RNA fusion details (detected fusions in RNA, and corresponding fragment support and depth of 5' and
        3' junction)
 
 ### Germline Findings
@@ -94,7 +93,7 @@ In addition to all germline SNV/Indel tumor drivers determined by [PURPLE](../pu
 
 - Other potentially relevant variants
     1. Any hotspots that are not configured to be reported.
-    1. Any hotspots that are filtered based on quality.
+  2. Any hotspots that are filtered based on quality.
 - Missed variant likelihood (MVLH) per gene, presenting the likelihood of missing a pathogenic variant in case there would have been one
   present.
 - Potentially pathogenic germline deletions
@@ -111,7 +110,7 @@ The chapter currently presents the following:
 
 - HLA-A/B/C details
     1. QC Status
-    1. Detected alleles, annotated with #total fragments and somatic annotation (tumor copy number, #mutations)
+  2. Detected alleles, annotated with #total fragments and somatic annotation (tumor copy number, #mutations)
 
 In case ORANGE was run in DNA+RNA mode, the alleles will be annotated by RNA fragment support.
 
@@ -124,7 +123,7 @@ If run with RNA, this chapter displays potentially interesting RNA details:
 - Potentially interesting support for Known or Promiscuous fusions not detected in our DNA analysis pipeline
 - Potentially interesting novel splice junctions
     1. Exon-skipping events in `EXON_DEL_DUP` fusion genes
-    1. Novel exon/intron events in driver gene panel genes
+  2. Novel exon/intron events in driver gene panel genes
 
 ### Cohort Comparison
 
@@ -136,16 +135,6 @@ comparison displays the prevalence of the tumor's properties with respect to the
 - (Driver) features of the tumor.
 
 Do note that RNA features and cohort comparison thereof are only included if ORANGE was run in combined DNA/RNA mode.
-
-### Clinical Evidence
-
-The following algo is used to render clinical evidence in the ORANGE report based
-on [PROTECT](https://github.com/hartwigmedical/oncoact/tree/master/protect) output:
-
-1. Evidence is split up based on applicable and "potentially interesting" based on PROTECT reported yes/no.
-1. Evidence is split between trials and non-trials which are further split up based on on/off label.
-1. Evidence is grouped by event and split up between responsive and resistance treatment evidence.
-1. Evidence is filtered based on the optional `max_reporting_level` configuration.
 
 ### Quality Control
 
@@ -159,9 +148,9 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 
-- Upcoming
+- [2.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.0)
     - Many and major datamodel changes in the ORANGE json output.
-    - Remove PROTECT dependency from ORANGE including clinical evidence chapter and potentially interesting mutation based on evidence
+    - Remove PROTECT dependency from ORANGE including clinical evidence chapter and potentially interesting mutations based on evidence
     - Support tumor-only mode
     - Plots are now copied as part of ORANGE algo and paths to plots are registered relative to the location of the output json file.
     - Various minor changes and bug fixes to RNA:
@@ -172,7 +161,7 @@ investigate potential causes for QC failure.
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.10)
     - Classify each driver gene as wild-type in case:
         1. Purple fit is reliable
-        1. No reportable events have been found in the gene.
+        2. No reportable events have been found in the gene.
     - Various additions and improvements to selection of potentially interesting events:
         - Unreported variants with canonical synonymous impact but reportable worst impact are added as potentially interesting variants.
         - Unreported variants in splice regions of genes for which we report splice variants are added as potentially interesting variants.

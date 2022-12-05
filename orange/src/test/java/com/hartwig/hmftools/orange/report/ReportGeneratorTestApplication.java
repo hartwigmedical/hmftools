@@ -2,10 +2,13 @@ package com.hartwig.hmftools.orange.report;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
@@ -85,7 +88,10 @@ public class ReportGeneratorTestApplication {
 
     @NotNull
     private static OrangeConfig buildConfig() {
-        return ImmutableOrangeConfig.builder().from(TestOrangeConfigFactory.createDNAConfigTumorNormal()).outputDir(REPORT_BASE_DIR).build();
+        return ImmutableOrangeConfig.builder()
+                .from(TestOrangeConfigFactory.createDNAConfigTumorNormal())
+                .outputDir(REPORT_BASE_DIR)
+                .build();
     }
 
     @NotNull
@@ -98,6 +104,7 @@ public class ReportGeneratorTestApplication {
                         .additionalSuspectSomaticVariants(Lists.newArrayList())
                         .allGermlineVariants(Lists.newArrayList())
                         .additionalSuspectGermlineVariants(Lists.newArrayList())
+                        .allSomaticCopyNumbers(Lists.newArrayList())
                         .allSomaticGeneCopyNumbers(Lists.newArrayList())
                         .suspectGeneCopyNumbersWithLOH(Lists.newArrayList())
                         .allSomaticGainsLosses(Lists.newArrayList())
@@ -107,7 +114,7 @@ public class ReportGeneratorTestApplication {
                         .build())
                 .linx(ImmutableLinxInterpretedData.builder()
                         .from(report.linx())
-                        .allStructuralVariants(Lists.newArrayList())
+                        .allStructuralVariants(retainReportable(report.linx().allStructuralVariants(), report.linx().reportableBreakends()))
                         .allFusions(Lists.newArrayList())
                         .additionalSuspectFusions(Lists.newArrayList())
                         .allBreakends(Lists.newArrayList())
@@ -125,5 +132,26 @@ public class ReportGeneratorTestApplication {
         }
 
         return builder.build();
+    }
+
+    @NotNull
+    private static List<LinxSvAnnotation> retainReportable(@NotNull List<LinxSvAnnotation> structuralVariants,
+            @NotNull List<LinxBreakend> reportableBreakends) {
+        List<LinxSvAnnotation> reportableVariants = Lists.newArrayList();
+        for (LinxSvAnnotation structuralVariant : structuralVariants) {
+            if (isReportableSv(structuralVariant, reportableBreakends)) {
+                reportableVariants.add(structuralVariant);
+            }
+        }
+        return reportableVariants;
+    }
+
+    private static boolean isReportableSv(@NotNull LinxSvAnnotation structuralVariant, @NotNull List<LinxBreakend> reportableBreakends) {
+        for (LinxBreakend breakend : reportableBreakends) {
+            if (breakend.svId() == structuralVariant.svId()) {
+                return true;
+            }
+        }
+        return false;
     }
 }
