@@ -16,7 +16,8 @@ ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into 
    driver. Details of what is considered interesting are described in below.
 6. A comprehensive range of QC measures and plots is displayed which provides in-depth details about the data quality of the tumor sample.
 
-An example report based on the publicly available melanoma cell line COLO829 can be found [here](src/main/resources/Test.orange.pdf).
+An example tumor + reference report based on the publicly available melanoma cell line COLO829 can be
+found [here](src/main/resources/Test.orange.pdf).
 
 Note that neither this readme nor the report itself contains any documentation about the Hartwig algorithms and output. For questions in
 this area please refer to the specific algorithm documentation present
@@ -28,19 +29,74 @@ SNV/Indel clonality. In addition to this front page, the following chapters are 
 - [Somatic Findings](#somatic-findings): What potentially relevant mutations have been found in the tumor specifically?
 - [Germline Findings](#germline-findings): What potentially relevant mutations have been found in the germline data?
 - [Immunology](#immunology): What can we tell about the immunogenicity of the tumor sample?
-- [RNA Findings](#rna-findings): What potentially relevant findings do we detect in RNA?
+- [RNA Findings](#rna-findings): What potentially relevant findings have we detected in RNA?
 - [Cohort Comparison](#cohort-comparison): How do the various properties of this tumor compare to existing cancer cohorts?
 - [Quality Control](#quality-control): Various stats and graphs regarding the quality of the data and interpretation thereof.
 
-### Optional Configuration
+## Running ORANGE
 
-| Argument           | Description                                                                                                                                                                                                                                                                                                                 |
-|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| disable_germline   | If set, disables the germline findings chapter and transforms germline variants to somatic variants.                                                                                                                                                                                                                        |
-| max_evidence_level | If set, filters evidence down to this level. For example, if "B" is passed as a parameter, only treatments with at least A or B level evidence are displayed in the clinical evidence chapter of the report. Do note that the front page always lists the count of all evidence present, regardless of this filter setting. |
-| experiment_date    | Sets the experiment date to the specified date if set. Expected format is YYMMDD. If omitted, current date is used as experiment date.                                                                                                                                                                                      |
-| limit_json_output  | If set, limits all lists in the JSON output to a single entry to make facilitate manual inspection of the JSON output.                                                                                                                                                                                                      |
-| log_debug          | If set, additional DEBUG logging is generated.                                                                                                                                                                                                                                                                              |
+### Base (tumor-only) mode
+
+```
+java -jar orange.jar \
+   -tumor_sample_id tumor_sample
+   -primary_tumor_doids doid1;doid2 \
+   -ref_genome_version 37 \
+   -output_dir /path/to/where/to/write/output \
+   -doid_json /path/to/input_doid_tree.json \
+   -cohort_mapping_tsv /path/to/input_cohort_mapping.tsv \
+   -cohort_percentiles_tsv /path/to/input_cohort_percentiles.tsv \
+   -driver_gene_panel_tsv /path/to/driver_gene_panel.tsv \
+   -known_fusion_file /path/to/known_fusion_file.tsv \
+   -tumor_sample_wgs_metrics_file /path/to/tumor_sample_wgs_metrics \
+   -tumor_sample_flagstat_file /path/to/tumor_sample_flagstats \
+   -sage_somatic_tumor_sample_bqr_plot /path/to/sage_tumor_sample_bqr_plot \
+   -purple_data_directory /path/to/purple_data \
+   -purple_plot_directory /path/to/purple_plots \
+   -linx_somatic_data_directory /path/to/linx_somatic_data \
+   -linx_plot_directory /path/to/linx_plots \
+   -lilac_result_csv /path/to/lilac_results.csv \
+   -lilac_qc_csv /path/to/lilac_qc.csv \
+   -annotated_virus_tsv /path/to/annotated_virus.tsv \
+   -chord_prediction_txt /path/to/chord_prediction.txt \
+   -cuppa_result_csv /path/to/cuppa_results.tsv \
+   -cuppa_summary_plot /path/to/cuppa_summary_plot \
+```
+
+### Additional parameters when running tumor-reference mode
+
+```
+    -reference_sample_id reference_sample \
+    -ref_sample_wgs_metrics_file /path/to/reference_sample_wgs_metrics \
+    -ref_sample_flagstat_file /path/to/reference_sample_flagstats \
+    -safe_germline_gene_coverage_tsv /path/to/sage_germline_gene_coverage.tsv \
+    -sage_somatic_ref_sample_bqr_plot /path/to/sage_ref_sample_bqr_plot \
+    -linx_germline_data_directory /path/to/linx_germline_data \
+    -peach_genotype_tsv /path/to/peach_genotypes.tsv 
+```
+
+### Additional parameters when RNA data is available
+
+```
+    -rna_sample_id rna_sample \
+    -isofox_gene_distribution_csv /path/to/isofox_gene_distribution.csv \
+    -isofox_alt_sj_cohort_csv /path/to/isofox_alt_sj_cohort.csv \
+    -isofox_summary_csv /path/to/isofox_summary.csv \
+    -isofox_gene_data_csv /path/to/isofox_gene_data.csv \
+    -isofox_fusion_csv /path/to/isofox_fusion.csv \
+    -isofox_alt_splice_junction_csv /path/to/isofox_alt_splice_junctions.csv
+```
+
+### Additional optional parameters across all modes
+
+| Argument                    | Description                                                                                                                                        |
+|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| pipeline_version_file       | Path to the file containing the (platinum) pipeline version used.                                                                                  |
+| cuppa_feature_plot          | In case the cuppa summary does not fit onto one page, an additional cuppa feature plot is generated that has to be passed separately               |
+| convert_germline_to_somatic | If set, converts all germline findings to somatic findings, thereby obfuscating the germline part of the analysis without loosing any actual data. |
+| experiment_date             | Sets the experiment date to the specified date if set. Expected format is YYMMDD. If omitted, current date is used as experiment date.             |
+| limit_json_output           | If set, limits all lists in the JSON output to a single entry to facilitate manual inspection of the JSON output.                                  |
+| log_debug                   | If set, additional DEBUG logging is generated.                                                                                                     |
 
 ### Somatic Findings
 
@@ -49,24 +105,21 @@ interesting and added to the report:
 
 - Other potentially relevant variants:
     1. Variants that are hotspots or near hotspots but not part of the reporting gene panel.
-  2. Variants which have clinical evidence but are not part of the reporting gene panel.
-  3. Exonic variants that are not reported but are phased with variants that are reported.
-  4. Variants that are considered relevant for tumor type classification according to Cuppa.
-  5. Variants with synonymous impact on the canonical transcript of a reporting gene but with a reportable worst impact
-  6. Variants in splice regions that are not reported in genes with splice variant reporting enabled.
+    2. Exonic variants that are not reported but are phased with variants that are reported.
+    3. Variants that are considered relevant for tumor type classification according to Cuppa.
+    4. Variants with synonymous impact on the canonical transcript of a reporting gene but with a reportable worst impact
+    5. Variants in splice regions that are not reported in genes with splice variant reporting enabled.
 - Other regions with amps, or with deletions in other autosomal regions:
     1. Gains in genes for which we report amplifications with a relative minimum copy number between 2.5 and 3 times ploidy.
-  2. Any chromosomal band location with at least one gene lost or fully amplified is considered potentially interesting.
+    2. Any chromosomal band location with at least one gene lost or fully amplified is considered potentially interesting.
        A maximum of 10 additional gains (sorted by minimum copy number) and 10 additional losses are reported as potentially interesting:
-        - For a band with more than one gene amplified, genes are first picked based on having clinical evidence and alternatively the
-          gene with the highest minimum copy number is picked.
+        - For a band with more than one gene amplified, genes are first picked based on heighest minimum copy number.
         - In case of a loss in a band with a reported loss, the additional loss is considered potentially interesting in case it is
           associated with clinical evidence.
         - For a band with a loss that has no losses reported in this band already, an arbitrary gene is picked.
 - Other potentially relevant fusions. A maximum of 10 additional fusions (picked arbitrarily) are reported as potentially interesting:
     1. Any fusion that is not reported and has a reported type other than NONE.
-  2. Any fusion with clinical evidence.
-  3. Any fusion in a gene that is configured as an oncogene in the driver gene panel.
+    2. Any fusion in a gene that is configured as an oncogene in the driver gene panel.
 - Other viral presence:
     1. Any viral presence that is not otherwise reported.
 - Potentially interesting gene disruptions:
@@ -74,7 +127,7 @@ interesting and added to the report:
        the fusion knowledgebase.
 - Potentially interesting LOH events:
     1. In case MSI is detected, LOH (if present) is shown for the following genes: MLH1, MSH2, MSH6, PMS2, EPCAM
-  2. In case HRD (based on CHORD) is detected, LOH (if present) is shown for the following genes: BRCA1, BRCA2, RAD51C, PALB2
+    2. In case HRD (based on CHORD) is detected, LOH (if present) is shown for the following genes: BRCA1, BRCA2, RAD51C, PALB2
 
 In case ORANGE was run in DNA+RNA mode, DNA findings will be annotated with RNA:
 
@@ -83,8 +136,8 @@ In case ORANGE was run in DNA+RNA mode, DNA findings will be annotated with RNA:
   applicable tumor type
 - Driver and potentially interesting fusions are annotated depending on fusion type:
     1. `EXON_DEL_DUP` and other intra-gene fusions are annotated with exon-skipping novel splice junctions
-  2. @IG fusions are annotated with TPM of the 3' fusion gene
-  3. Other fusions are annotated with RNA fusion details (detected fusions in RNA, and corresponding fragment support and depth of 5' and
+    2. @IG fusions are annotated with TPM of the 3' fusion gene
+    3. Other fusions are annotated with RNA fusion details (detected fusions in RNA, and corresponding fragment support and depth of 5' and
        3' junction)
 
 ### Germline Findings
@@ -93,7 +146,7 @@ In addition to all germline SNV/Indel tumor drivers determined by [PURPLE](../pu
 
 - Other potentially relevant variants
     1. Any hotspots that are not configured to be reported.
-  2. Any hotspots that are filtered based on quality.
+    2. Any hotspots that are filtered based on quality.
 - Missed variant likelihood (MVLH) per gene, presenting the likelihood of missing a pathogenic variant in case there would have been one
   present.
 - Potentially pathogenic germline deletions
@@ -110,7 +163,7 @@ The chapter currently presents the following:
 
 - HLA-A/B/C details
     1. QC Status
-  2. Detected alleles, annotated with #total fragments and somatic annotation (tumor copy number, #mutations)
+    2. Detected alleles, annotated with #total fragments and somatic annotation (tumor copy number, #mutations)
 
 In case ORANGE was run in DNA+RNA mode, the alleles will be annotated by RNA fragment support.
 
@@ -123,7 +176,7 @@ If run with RNA, this chapter displays potentially interesting RNA details:
 - Potentially interesting support for Known or Promiscuous fusions not detected in our DNA analysis pipeline
 - Potentially interesting novel splice junctions
     1. Exon-skipping events in `EXON_DEL_DUP` fusion genes
-  2. Novel exon/intron events in driver gene panel genes
+    2. Novel exon/intron events in driver gene panel genes
 
 ### Cohort Comparison
 
