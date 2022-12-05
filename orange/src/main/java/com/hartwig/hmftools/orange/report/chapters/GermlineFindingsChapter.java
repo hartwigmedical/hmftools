@@ -62,12 +62,16 @@ public class GermlineFindingsChapter implements ReportChapter {
     public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
 
-        addGermlineVariants(document);
-        addGermlineDeletions(document);
-        addGermlineDisruptions(document);
-        addMVLHAnalysis(document);
-        addGermlineCNAberrations(document);
-        addPharmacogenetics(document);
+        if (report.refSample() != null) {
+            addGermlineVariants(document);
+            addGermlineDeletions(document);
+            addGermlineDisruptions(document);
+            addMVLHAnalysis(document);
+            addGermlineCNAberrations(document);
+            addPharmacogenetics(document);
+        } else {
+            document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(ReportResources.tableContentStyle()));
+        }
     }
 
     private void addGermlineVariants(@NotNull Document document) {
