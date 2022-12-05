@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.interpretation;
+package com.hartwig.hmftools.orange.report.datamodel;
 
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.Hotspot;

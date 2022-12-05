@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.interpretation;
+package com.hartwig.hmftools.orange.report.datamodel;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 
@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.orange.algo.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
+import com.hartwig.hmftools.orange.report.interpretation.Drivers;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;

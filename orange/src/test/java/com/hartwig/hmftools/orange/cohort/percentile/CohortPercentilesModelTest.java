@@ -40,7 +40,7 @@ public class CohortPercentilesModelTest {
         // At the top
         assertEquals(0.9, model.percentile(observedValue(9D)).cancerTypePercentile(), EPSILON);
 
-        // Higher than highest percentile
+        // Higher than the highest percentile
         assertEquals(1D, model.percentile(observedValue(10D)).cancerTypePercentile(), EPSILON);
     }
 
