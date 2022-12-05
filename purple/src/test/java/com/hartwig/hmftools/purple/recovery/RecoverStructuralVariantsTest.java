@@ -12,7 +12,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
-import com.hartwig.hmftools.purple.purity.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
@@ -29,7 +28,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class RecoverStructuralVariantsTest
 {
     private RecoveredVariantFactory recoveredVariantFactory;
-    private final PurityAdjuster purityAdjuster = new PurityAdjusterTypicalChromosome(Gender.FEMALE, 1, 0.68);
+    private final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.FEMALE, 1, 0.68);
 
     @Before
     public void setup() {

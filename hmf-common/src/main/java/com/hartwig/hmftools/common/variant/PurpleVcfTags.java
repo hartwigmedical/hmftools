@@ -37,7 +37,7 @@ public final class PurpleVcfTags
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF_INFO, 1, VCFHeaderLineType.Float, PURPLE_AF_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_CN_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_VARIANT_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_VARIANT_CN_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_MINOR_ALLELE_CN_INFO, 1,  VCFHeaderLineType.Float, PURPLE_MINOR_ALLELE_PLOIDY_DESC));
+        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_MINOR_ALLELE_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_MINOR_ALLELE_PLOIDY_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_BIALLELIC_FLAG, 0, VCFHeaderLineType.Flag, PURPLE_BIALLELIC_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
 
@@ -51,7 +51,7 @@ public final class PurpleVcfTags
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF_INFO, 1, VCFHeaderLineType.Float, PURPLE_AF_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_CN_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_VARIANT_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_VARIANT_CN_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_MINOR_ALLELE_CN_INFO, 1,  VCFHeaderLineType.Float, PURPLE_MINOR_ALLELE_PLOIDY_DESC));
+        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_MINOR_ALLELE_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_MINOR_ALLELE_PLOIDY_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_GERMLINE_INFO, 1, VCFHeaderLineType.String, PURPLE_GERMLINE_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_BIALLELIC_FLAG, 0, VCFHeaderLineType.Flag, PURPLE_BIALLELIC_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));

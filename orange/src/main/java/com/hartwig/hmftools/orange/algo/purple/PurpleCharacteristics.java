@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +19,9 @@ public abstract class PurpleCharacteristics {
     public abstract MicrosatelliteStatus microsatelliteStatus();
 
     public abstract double tumorMutationalBurdenPerMb();
+
+    @NotNull
+    public abstract TumorMutationalStatus tumorMutationalBurdenStatus();
 
     public abstract int tumorMutationalLoad();
 

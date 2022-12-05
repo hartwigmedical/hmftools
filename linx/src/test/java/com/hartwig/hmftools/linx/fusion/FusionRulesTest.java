@@ -1,11 +1,5 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.getCodingBases;
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
@@ -16,6 +10,12 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.getCodingBases;
 import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.findGeneAnnotationsBySv;
 import static com.hartwig.hmftools.linx.gene.BreakendTransData.POST_CODING_PHASE;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;

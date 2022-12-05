@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.utils;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.initialiseSV;
 
 import java.io.BufferedReader;
@@ -10,8 +11,11 @@ import java.io.InputStreamReader;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFile;
+import com.hartwig.hmftools.linx.gene.BreakendGenePrep;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.jetbrains.annotations.NotNull;
@@ -59,4 +63,9 @@ public class SampleDataLoader
         return svList;
     }
 
+    public static void setSvGeneData(final List<SvVarData> svList, final EnsemblDataCache ensemblDataCache, boolean applyPreGeneDistance)
+    {
+        int preGeneDistance = applyPreGeneDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
+        BreakendGenePrep.setSvGeneData(svList, ensemblDataCache, preGeneDistance, Maps.newHashMap());
+    }
 }

@@ -15,14 +15,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.hartwig.serve</groupId>
-            <artifactId>datamodel</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-xml</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.intellij</groupId>
             <artifactId>annotations</artifactId>
         </dependency>
@@ -62,11 +54,6 @@
         <dependency>
             <groupId>org.immutables</groupId>
             <artifactId>value</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.immutables</groupId>
-            <artifactId>gson</artifactId>
             <scope>provided</scope>
         </dependency>
 

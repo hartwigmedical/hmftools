@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
@@ -40,8 +39,6 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
@@ -53,9 +50,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class IsofoxConfig
 {
@@ -362,7 +356,7 @@ public class IsofoxConfig
 
     public boolean skipFilteredRead(final String readId) { return FilteredReadIds != null && !FilteredReadIds.contains(readId); }
 
-    public IsofoxConfig()
+    public IsofoxConfig(final RefGenomeInterface refGenome)
     {
         SampleId = "TEST";
 
@@ -376,7 +370,7 @@ public class IsofoxConfig
         BamFile = null;
         RefGenomeFile = null;
         RefGenVersion = V37;
-        RefGenome = new MockRefGenome();
+        RefGenome = refGenome;
         CanonicalTranscriptOnly = false;
         GeneReadLimit = 0;
         MaxFragmentLength = DEFAULT_MAX_FRAGMENT_SIZE;

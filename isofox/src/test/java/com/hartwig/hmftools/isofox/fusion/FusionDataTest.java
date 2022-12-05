@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.isofox.TestUtils.createFusionFinder;
 import static com.hartwig.hmftools.isofox.TestUtils.createGeneCollection;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestTranscripts;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
+import static com.hartwig.hmftools.isofox.TestUtils.createIsofoxConfig;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
@@ -62,7 +63,7 @@ public class FusionDataTest
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
 
         FusionFinder finder = createFusionFinder(config, geneTransCache);
 
@@ -91,7 +92,7 @@ public class FusionDataTest
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         FusionFinder finder = createFusionFinder(config, geneTransCache);
 
         int gcId = 0;
@@ -248,7 +249,7 @@ public class FusionDataTest
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         populateRefGenome(config.RefGenome);
 
         int gcId = 0;
@@ -364,7 +365,7 @@ public class FusionDataTest
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         populateRefGenome(config.RefGenome);
 
         FusionFinder finder = createFusionFinder(config, geneTransCache);
@@ -435,7 +436,7 @@ public class FusionDataTest
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         populateRefGenome(config.RefGenome);
 
         FusionFinder finder = createFusionFinder(config, geneTransCache);
@@ -531,7 +532,7 @@ public class FusionDataTest
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         populateRefGenome(config.RefGenome);
 
         FusionFinder finder = createFusionFinder(config, geneTransCache);
@@ -628,7 +629,7 @@ public class FusionDataTest
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         populateRefGenome(config.RefGenome);
 
         FusionFinder finder = createFusionFinder(config, geneTransCache);
@@ -710,7 +711,7 @@ public class FusionDataTest
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         populateRefGenome(config.RefGenome);
 
         FusionFinder finder = createFusionFinder(config, geneTransCache);
@@ -792,7 +793,7 @@ public class FusionDataTest
     {
         final EnsemblDataCache geneTransCache = createGeneDataCache();
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
 
         FusionFinder finder = createFusionFinder(config, geneTransCache);
 

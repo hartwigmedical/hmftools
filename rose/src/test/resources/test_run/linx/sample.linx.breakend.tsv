@@ -1,6 +1,0 @@
-id	svId	isStart	gene	transcriptId	canonical	geneOrientation	disruptive	reportedDisruption	undisruptedCopyNumber	regionType	codingContext	biotype	exonicBasePhase	nextSpliceExonRank	nextSpliceExonPhase	nextSpliceDistance	totalExonCount	type	chromosome	orientation	strand	chrBand	exonUp	exonDown	junctionCopyNumber
-25	5	true	MUL1	ENST00000264198	true	Upstream	false	false	2.998	UPSTREAM	CODING	protein_coding	-1	0	-1	-1	4	DUP	1	-1	-1	p36.12	0	2	1.02
-26	5	true	CDA	ENST00000375071	true	Downstream	false	false	2.998	UPSTREAM	CODING	protein_coding	-1	2	1	34624	4	DUP	1	-1	1	p36.12	0	2	1.02
-27	5	true	PINK1	ENST00000321556	true	Downstream	false	false	2.998	UPSTREAM	CODING	protein_coding	-1	2	0	67538	8	DUP	1	-1	1	p36.12	0	2	1.02
-28	5	false	EIF4G3	ENST00000602326	true	Downstream	true	false	3.056	INTRONIC	CODING	protein_coding	-1	17	0	3365	35	DUP	1	1	-1	p36.12	16	17	1.02
-29	6	true	EIF4G3	ENST00000602326	true	Downstream	true	false	1.9899999999999998	INTRONIC	CODING	protein_coding	-1	7	0	383	35	DEL	1	1	-1	p36.12	6	7	0.875

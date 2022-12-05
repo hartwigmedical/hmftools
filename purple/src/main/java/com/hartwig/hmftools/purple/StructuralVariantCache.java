@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.purple;
 
+import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSvFile;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SVTYPE;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
 import java.util.Collection;
@@ -17,6 +19,8 @@ import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.config.SampleDataFiles;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
@@ -86,7 +90,23 @@ public class StructuralVariantCache
         vcfReader.close();
     }
 
-    protected void addVariant(final VariantContext variantContext)
+    public static StructuralVariantCache createStructuralVariantCache(
+            final String tumorSample, final SampleDataFiles sampleDataFiles, final PurpleConfig config, final String purpleVersion,
+            final ReferenceData referenceData)
+    {
+        if(sampleDataFiles.SvVcfFile.isEmpty())
+        {
+            return new StructuralVariantCache();
+        }
+
+        PPL_LOGGER.info("loading structural variants from {}", sampleDataFiles.SvVcfFile);
+
+        final String outputVcf = purpleSvFile(config.OutputDir, tumorSample);
+
+        return new StructuralVariantCache(purpleVersion, sampleDataFiles.SvVcfFile, outputVcf, referenceData);
+    }
+
+    public void addVariant(final VariantContext variantContext)
     {
         if(enabled())
         {

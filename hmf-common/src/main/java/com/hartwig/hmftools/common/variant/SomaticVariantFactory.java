@@ -63,8 +63,15 @@ public class SomaticVariantFactory implements VariantContextFilter
         mFilteredCount = 0;
     }
 
-    public int getCreatedCount() { return mCreatedCount; }
-    public int getFilteredCount() { return mFilteredCount; }
+    public int getCreatedCount()
+    {
+        return mCreatedCount;
+    }
+
+    public int getFilteredCount()
+    {
+        return mFilteredCount;
+    }
 
     @NotNull
     public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String vcfFile) throws IOException
@@ -243,7 +250,9 @@ public class SomaticVariantFactory implements VariantContextFilter
     public static List<Integer> localPhaseSetsStringToList(@Nullable final String localPhaseSetStr)
     {
         if(localPhaseSetStr == null || localPhaseSetStr.isEmpty())
+        {
             return null;
+        }
 
         List<Integer> localPhaseSets = Lists.newArrayList();
         Arrays.stream(localPhaseSetStr.split(LPS_DELIM)).forEach(x -> localPhaseSets.add(Integer.valueOf(x)));
@@ -253,10 +262,14 @@ public class SomaticVariantFactory implements VariantContextFilter
     public static String localPhaseSetsStr(@Nullable final List<Integer> localPhaseSets)
     {
         if(localPhaseSets == null || localPhaseSets.isEmpty())
+        {
             return "";
+        }
 
         if(localPhaseSets.size() == 1)
+        {
             return String.valueOf(localPhaseSets.get(0));
+        }
 
         StringJoiner sj = new StringJoiner(LPS_DELIM);
         localPhaseSets.forEach(x -> sj.add(String.valueOf(x)));

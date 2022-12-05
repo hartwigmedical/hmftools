@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.isofox.TaskType.APPLY_GC_ADJUSTMENT;
 import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs.setConfigFragmentLengthData;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.writeReadGcRatioCounts;
-import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.logMemory;
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.calcTpmFactors;
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.setTranscriptsPerMillion;
@@ -47,6 +46,7 @@ import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.common.BamReadCounter;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.PerformanceTracking;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.expression.ExpressionCacheTask;
@@ -141,7 +141,9 @@ public class Isofox
 
         if(mConfig.runFunction(READ_COUNTS))
         {
-            return countBamReads(chrGeneMap);
+            boolean status = countBamReads(chrGeneMap);
+            mResultsWriter.close();
+            return status;
         }
 
         // BAM processing for the key routines - novel junctions, fusions and gene expression
@@ -240,15 +242,11 @@ public class Isofox
 
     private void processBamFragments(final List<ChromosomeTaskExecutor> chrTasks, final List<Callable> callableList)
     {
-        int[] totalCounts = new int[typeAsInt(FragmentType.MAX)];
+        FragmentTypeCounts totalFragmentCounts = new FragmentTypeCounts();
 
-        for (int i = 0; i < totalCounts.length; ++i)
-        {
-            final int fragIndex = i;
-            totalCounts[i] += chrTasks.stream().mapToInt(x -> x.getCombinedCounts()[fragIndex]).sum();
-        }
+        chrTasks.forEach(x -> totalFragmentCounts.combine(x.getCombinedCounts()));
 
-        int enrichedGeneFragCount = chrTasks.stream().mapToInt(x -> x.getEnrichedGenesFragmentCount()).sum();
+        long enrichedGeneFragCount = chrTasks.stream().mapToLong(x -> x.getEnrichedGenesFragmentCount()).sum();
 
         GcRatioCounts nonEnrichedGcRatioCounts = new GcRatioCounts();
         chrTasks.forEach(x -> nonEnrichedGcRatioCounts.mergeRatioCounts(x.getNonEnrichedGcRatioCounts().getCounts()));
@@ -259,10 +257,10 @@ public class Isofox
             applyGcAdjustments(chrTasks, callableList, nonEnrichedGcRatioCounts);
         }
 
-        if(mConfig.runFunction(IsofoxFunction.TRANSCRIPT_COUNTS))
+        if(mConfig.runFunction(IsofoxFunction.TRANSCRIPT_COUNTS) || mConfig.runFunction(IsofoxFunction.STATISTICS))
         {
             final RnaStatistics summaryStats = createSummaryStats(
-                    totalCounts, enrichedGeneFragCount,
+                    totalFragmentCounts, enrichedGeneFragCount,
                     medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength);
 
             mResultsWriter.writeSummaryStats(summaryStats);
@@ -455,7 +453,7 @@ public class Isofox
 
         for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
         {
-            BamReadCounter bamReaderTask = new BamReadCounter(mConfig);
+            BamReadCounter bamReaderTask = new BamReadCounter(mConfig, mResultsWriter);
             bamReaderTask.initialise(entry.getKey(), entry.getValue());
             taskList.add(bamReaderTask);
             callableList.add(bamReaderTask);
@@ -492,13 +490,19 @@ public class Isofox
             }
 
             Isofox isofox = new Isofox(config, cmd);
+
+            long startTime = System.currentTimeMillis();
+
             if(!isofox.runAnalysis())
             {
                 ISF_LOGGER.info("Isofox RNA analysis failed");
                 return;
             }
 
-            ISF_LOGGER.info("Isofox analysis complete");
+            long timeTakenMs = System.currentTimeMillis() - startTime;
+            double timeTakeMins = timeTakenMs / 60000.0;
+
+            ISF_LOGGER.info("Isofox complete, mins({})", String.format("%.3f", timeTakeMins));
         }
         catch(ParseException e)
         {

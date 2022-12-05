@@ -1,38 +1,19 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
-import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_2;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_3;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_5;
-import static com.hartwig.hmftools.isofox.TestUtils.GENE_NAME_1;
-import static com.hartwig.hmftools.isofox.TestUtils.NEG_STRAND;
-import static com.hartwig.hmftools.isofox.TestUtils.POS_STRAND;
-import static com.hartwig.hmftools.isofox.TestUtils.TRANS_1;
-import static com.hartwig.hmftools.isofox.TestUtils.addRacReadGroup;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestGenes;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestTranscripts;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createGeneCollection;
-import static com.hartwig.hmftools.isofox.TestUtils.createGeneReadData;
+import static com.hartwig.hmftools.isofox.TestUtils.createIsofoxConfig;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
-import static com.hartwig.hmftools.isofox.TestUtils.createReadPair;
-import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.populateRefGenome;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.HIGH_LOG_COUNT;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionTestUtils.createGeneDataCache;
-import static com.hartwig.hmftools.isofox.fusion.FusionTestUtils.createGroup;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
@@ -45,8 +26,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.gene.ExonData;
-import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.isofox.BamFragmentAllocator;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
@@ -192,7 +171,7 @@ public class FusionFiltersTest
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         config.Functions.clear();
         config.Functions.add(FUSIONS);
         config.Fusions.MinHardFilterFrags = 2;

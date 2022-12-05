@@ -110,24 +110,22 @@ public class VisProteinDomain implements GenomeRegion
                 .toString();
     }
 
-    @NotNull
-    public static String toString(@NotNull final VisProteinDomain geData)
+    public static String toString(final VisProteinDomain proteinData)
     {
         return new StringJoiner(DELIMITER)
-                .add(String.valueOf(geData.SampleId))
-                .add(String.valueOf(geData.ClusterId))
-                .add(String.valueOf(geData.Transcript))
-                .add(String.valueOf(geData.Chromosome))
-                .add(String.valueOf(geData.Start))
-                .add(String.valueOf(geData.End))
-                .add(String.valueOf(geData.Info))
+                .add(String.valueOf(proteinData.SampleId))
+                .add(String.valueOf(proteinData.ClusterId))
+                .add(String.valueOf(proteinData.Transcript))
+                .add(String.valueOf(proteinData.Chromosome))
+                .add(String.valueOf(proteinData.Start))
+                .add(String.valueOf(proteinData.End))
+                .add(String.valueOf(proteinData.Info))
                 .toString();
     }
 
-    @NotNull
-    private static VisProteinDomain fromString(@NotNull final String tiData)
+    private static VisProteinDomain fromString(final String line)
     {
-        String[] values = tiData.split(DELIMITER);
+        String[] values = line.split(DELIMITER);
 
         int index = 0;
 

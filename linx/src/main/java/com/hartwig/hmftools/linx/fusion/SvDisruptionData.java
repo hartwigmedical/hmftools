@@ -22,13 +22,15 @@ public class SvDisruptionData
     public final TranscriptRegionType RegionType;
 
     public final double UndisruptedCopyNumber;
+    public final double MaxCopyNumber;
 
     private boolean mReportable;
     private boolean mPseudogeneDeletion;
 
     public SvDisruptionData(
             final SvVarData var, boolean isStart, final GeneData gene, final TranscriptData transcript, final int[] exons,
-            final TranscriptCodingType codingType, final TranscriptRegionType regionType, final double undisruptedCopyNumber)
+            final TranscriptCodingType codingType, final TranscriptRegionType regionType, final double undisruptedCopyNumber,
+            final double maxCopyNumber)
     {
         Var = var;
         IsStart = isStart;
@@ -38,6 +40,7 @@ public class SvDisruptionData
         CodingType = codingType;
         RegionType = regionType;
         UndisruptedCopyNumber = undisruptedCopyNumber;
+        MaxCopyNumber = maxCopyNumber;
 
         mReportable = true;
         mPseudogeneDeletion = false;

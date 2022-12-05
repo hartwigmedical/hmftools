@@ -15,13 +15,13 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
 import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.findGeneAnnotationsBySv;
-import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.setSvGeneData;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTranscript;
+import static com.hartwig.hmftools.linx.utils.SampleDataLoader.setSvGeneData;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
@@ -355,7 +355,7 @@ public class FusionTest
 
         assertEquals(1, cluster.getChains().size());
 
-        setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, true);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
@@ -394,7 +394,7 @@ public class FusionTest
 
         assertEquals(1, cluster.getChains().size());
 
-        setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, true);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
@@ -434,7 +434,7 @@ public class FusionTest
 
         assertEquals(1, cluster.getChains().size());
 
-        setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, true);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
@@ -501,7 +501,7 @@ public class FusionTest
         assertEquals(1, cluster.getChains().size());
         assertEquals(7, cluster.getChains().get(0).getSvCount());
 
-        setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, true);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
@@ -624,7 +624,7 @@ public class FusionTest
         SvCluster cluster = tester.Analyser.getClusters().get(0);
         assertEquals(1, cluster.getChains().size());
 
-        setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, true);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
@@ -666,7 +666,7 @@ public class FusionTest
         SvChain chain = cluster.getChains().get(0);
         assertEquals(4, chain.getLinkCount());
 
-        setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, true);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());

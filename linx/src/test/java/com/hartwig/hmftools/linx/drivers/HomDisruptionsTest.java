@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.setSvGeneData;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createDriverGene;
+import static com.hartwig.hmftools.linx.utils.SampleDataLoader.setSvGeneData;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
@@ -90,7 +90,7 @@ public class HomDisruptionsTest
 
         assertEquals(4, tester.Analyser.getClusters().size());
 
-        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
@@ -159,7 +159,7 @@ public class HomDisruptionsTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
@@ -189,7 +189,7 @@ public class HomDisruptionsTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
         driverAnnotator.clearResults(true);
@@ -256,7 +256,7 @@ public class HomDisruptionsTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());

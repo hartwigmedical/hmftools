@@ -2,32 +2,30 @@ package com.hartwig.hmftools.purple;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSvFile;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
 import static com.hartwig.hmftools.common.purple.GeneCopyNumber.listToMap;
-import static com.hartwig.hmftools.common.purple.FittedPurityMethod.NORMAL;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
 import static com.hartwig.hmftools.purple.Segmentation.validateObservedRegions;
+import static com.hartwig.hmftools.purple.StructuralVariantCache.createStructuralVariantCache;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_SOMATIC_FIT_DELETED_PERC;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;
+import static com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory.calculateDeletedDepthWindows;
 import static com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory.validateCopyNumbers;
+import static com.hartwig.hmftools.purple.fitting.BestFitFactory.buildGermlineBestFit;
 import static com.hartwig.hmftools.purple.gene.PurpleRegionZipper.updateRegionsWithCopyNumbers;
+import static com.hartwig.hmftools.purple.purity.FittedPurityFactory.createFittedRegionFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,13 +45,10 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.ImmutableBestFit;
-import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
-import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.purple.fitting.SomaticPurityFitter;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
-import com.hartwig.hmftools.purple.purity.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
@@ -63,7 +58,6 @@ import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.BestFit;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityRangeFile;
-import com.hartwig.hmftools.common.purple.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.purple.region.FittedRegionFactory;
@@ -72,7 +66,6 @@ import com.hartwig.hmftools.purple.segment.SegmentFile;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.config.AmberData;
 import com.hartwig.hmftools.purple.config.CobaltData;
 import com.hartwig.hmftools.purple.config.FittingConfig;
@@ -94,6 +87,7 @@ import com.hartwig.hmftools.purple.recovery.RecoverStructuralVariants;
 import com.hartwig.hmftools.purple.somatic.SomaticPeakStream;
 import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
+import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -103,8 +97,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import htsjdk.variant.variantcontext.VariantContext;
 
 public class PurpleApplication
 {
@@ -117,8 +109,6 @@ public class PurpleApplication
     private final GermlineVariants mGermlineVariants;
     private final Segmentation mSegmentation;
     private final Charts mCharts;
-
-    private final DatabaseAccess mDbAccess;
 
     private static final int THREADS_DEFAULT = 2;
     private static final String VERSION = "version";
@@ -137,8 +127,6 @@ public class PurpleApplication
 
         setLogLevel(mCmdLineArgs);
 
-        mDbAccess = hasDatabaseConfig(mCmdLineArgs) ? createDatabaseAccess(mCmdLineArgs) : null;
-
         // load config
         mConfig = new PurpleConfig(mPurpleVersion.version(), mCmdLineArgs);
 
@@ -153,7 +141,7 @@ public class PurpleApplication
 
         if(!mReferenceData.isValid())
         {
-            PPL_LOGGER.error("initialisation error, exiting");
+            PPL_LOGGER.error("invalid reference data, exiting");
             System.exit(1);
         }
 
@@ -209,7 +197,8 @@ public class PurpleApplication
                     mConfig.tumorOnlyMode(), mConfig.germlineMode());
 
             // load structural and somatic variants
-            final StructuralVariantCache svCache = createStructuralVariantCache(tumorId, sampleDataFiles);
+            final StructuralVariantCache svCache = createStructuralVariantCache(
+                    tumorId, sampleDataFiles, mConfig, mPurpleVersion.version(), mReferenceData);
 
             sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache, somaticVariantCache);
         }
@@ -299,61 +288,50 @@ public class PurpleApplication
         final List<ObservedRegion> fittedRegions = Lists.newArrayList();
 
         BestFit bestFit = null;
-        FittedPurity fittedPurity = null;
         PurityAdjuster purityAdjuster = null;
         Set<String> reportedGenes = Sets.newHashSet();
         SomaticStream somaticStream = null;
 
-        final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(
-                amberData.AverageTumorDepth, cobaltChromosomes, mConfig.Fitting);
+        final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(amberData.AverageTumorDepth, cobaltChromosomes, mConfig.Fitting);
 
         if(mConfig.runTumor())
         {
             PPL_LOGGER.info("fitting purity");
 
-            bestFit = fitPurity(sampleData, observedRegions, fittedRegionFactory, sampleData.SvCache.variants());
+            BestFitFactory bestFitFactory = fitPurity(sampleData, observedRegions, fittedRegionFactory, sampleData.SvCache.variants());
 
-            fittedPurity = bestFit.fit();
+            boolean testSomaticFit = bestFitFactory.somaticFit() != null;
+            bestFit = bestFitFactory.somaticFit() != null ? bestFitFactory.somaticFit() : bestFitFactory.bestNormalFit();
 
-            purityAdjuster = new PurityAdjusterAbnormalChromosome(
-                    fittedPurity.purity(), fittedPurity.normFactor(), cobaltChromosomes.chromosomes());
+            purityAdjuster = new PurityAdjuster(
+                    bestFit.fit().purity(), bestFit.fit().normFactor(), cobaltChromosomes);
 
-            final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(
-                    mConfig.Fitting.MinDiploidTumorRatioCount,
-                    mConfig.Fitting.MinDiploidTumorRatioCountAtCentromere,
-                    amberData.AverageTumorDepth,
-                    fittedPurity.ploidy(),
-                    purityAdjuster,
-                    cobaltData.CobaltChromosomes);
+            buildCopyNumbers(
+                    sampleData, sampleDataFiles, fittedRegionFactory, purityAdjuster, observedRegions, bestFit.fit(), copyNumbers, fittedRegions);
 
-            PPL_LOGGER.info("calculating copy number");
-            fittedRegions.addAll(fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions));
-
-            copyNumberFactory.invoke(fittedRegions, sampleData.SvCache.variants());
-
-            final int recoveredSVCount = recoverStructuralVariants(
-                    sampleData, sampleDataFiles, purityAdjuster, copyNumberFactory.copyNumbers());
-
-            if(recoveredSVCount > 0)
+            if(testSomaticFit)
             {
-                PPL_LOGGER.info("reapplying segmentation with {} recovered structural variants", recoveredSVCount);
-                final List<ObservedRegion> recoveredObservedRegions =
-                        mSegmentation.createObservedRegions(sampleData.SvCache.variants(), amberData, cobaltData);
+                double deletedPercent = calculateDeletedDepthWindows(copyNumbers);
 
-                PPL_LOGGER.info("recalculating copy number");
-                fittedRegions.clear();
-                fittedRegions.addAll(fittedRegionFactory.fitRegion(
-                        fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions));
+                if(deletedPercent >= MAX_SOMATIC_FIT_DELETED_PERC)
+                {
+                    PPL_LOGGER.info(format("somatic fit(purity=%.3f ploidy=%.3f) deleted DW percent(%.3f), reverting to normal fit(purity=%.3f ploidy=%.3f)",
+                            bestFit.fit().purity(), bestFit.fit().ploidy(), deletedPercent,
+                            bestFitFactory.bestNormalFit().fit().purity(), bestFitFactory.bestNormalFit().fit().ploidy()));
 
-                copyNumberFactory.invoke(fittedRegions, sampleData.SvCache.variants());
-            }
+                    // re-build using the normal fit
+                    bestFit = bestFitFactory.bestNormalFit();
 
-            copyNumbers.addAll(copyNumberFactory.copyNumbers());
+                    purityAdjuster = new PurityAdjuster(
+                            bestFit.fit().purity(), bestFit.fit().normFactor(), cobaltChromosomes);
 
-            if(!validateCopyNumbers(copyNumbers))
-            {
-                PPL_LOGGER.warn("invalid copy numbers, exiting");
-                System.exit(0);
+                    buildCopyNumbers(
+                            sampleData, sampleDataFiles, fittedRegionFactory, purityAdjuster, observedRegions, bestFit.fit(), copyNumbers, fittedRegions);
+                }
+                else
+                {
+                    PPL_LOGGER.debug("somatic fit deleted DW percent({})", format("%.3f", deletedPercent));
+                }
             }
 
             sampleData.SvCache.inferMissingVariant(copyNumbers);
@@ -371,7 +349,7 @@ public class PurpleApplication
             final SomaticPeakStream somaticPeakStream = new SomaticPeakStream(mConfig);
 
             final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(
-                    mConfig.Version, mConfig.TumorId, purityAdjuster, copyNumbers, fittedRegions);
+                    mConfig.Version, purityAdjuster, copyNumbers, fittedRegions);
 
             sampleData.SomaticCache.purityEnrich(somaticPurityEnrichment);
 
@@ -399,32 +377,8 @@ public class PurpleApplication
         }
         else
         {
-            fittedPurity = ImmutableFittedPurity.builder()
-                    .purity(1)
-                    .ploidy(2)
-                    .normFactor(1)
-                    .diploidProportion(1)
-                    .somaticPenalty(0)
-                    .score(0)
-                    .build();
-
-            FittedPurityScore score = ImmutableFittedPurityScore.builder()
-                    .minPloidy(fittedPurity.ploidy())
-                    .maxPloidy(fittedPurity.ploidy())
-                    .minPurity(fittedPurity.purity())
-                    .maxPurity(fittedPurity.purity())
-                    .minDiploidProportion(1)
-                    .maxDiploidProportion(1)
-                    .build();
-
-            bestFit = ImmutableBestFit.builder()
-                    .fit(fittedPurity)
-                    .method(NORMAL)
-                    .score(score)
-                    .allFits(Lists.newArrayList(fittedPurity))
-                    .build();
-
-            fittedRegions.addAll(fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions));
+            bestFit = buildGermlineBestFit();
+            fittedRegions.addAll(fittedRegionFactory.fitRegion(bestFit.fit().purity(), bestFit.fit().normFactor(), observedRegions));
         }
 
         PPL_LOGGER.info("generating QC Stats");
@@ -453,23 +407,6 @@ public class PurpleApplication
             GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorSample), germlineDeletions);
         }
 
-        if(mDbAccess != null)
-        {
-            PPL_LOGGER.info("writing purple data to database: {}", mCmdLineArgs.getOptionValue(DB_URL));
-
-            mDbAccess.writePurity(tumorSample, purityContext, qcChecks);
-
-            if(mConfig.runTumor())
-            {
-                mDbAccess.writeBestFitPerPurity(tumorSample, bestFit.bestFitPerPurity());
-                mDbAccess.writeCopynumbers(tumorSample, copyNumbers);
-                mDbAccess.writeGeneCopyNumbers(tumorSample, geneCopyNumbers);
-            }
-
-            if(mConfig.runGermline())
-                mDbAccess.writeGermlineDeletions(tumorSample, germlineDeletions);
-        }
-
         if(!mConfig.germlineMode() && (mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent()))
         {
             PPL_LOGGER.info("generating charts");
@@ -491,6 +428,95 @@ public class PurpleApplication
         if(mConfig.RunDrivers)
         {
             findDrivers(tumorSample, purityContext, copyNumbers, geneCopyNumbers, fittedRegions, somaticStream);
+        }
+    }
+
+    private BestFitFactory fitPurity(final SampleData sampleData, final List<ObservedRegion> observedRegions,
+            final FittedRegionFactory fittedRegionFactory, final List<StructuralVariant> structuralVariants)
+            throws ExecutionException, InterruptedException
+    {
+        final FittingConfig fittingConfig = mConfig.Fitting;
+        final SomaticFitConfig somaticFitConfig = mConfig.SomaticFitting;
+
+        final List<FittedPurity> fitCandidates = Lists.newArrayList();
+
+        final CobaltChromosomes cobaltChromosomes = sampleData.Cobalt.CobaltChromosomes;
+
+        List<SomaticVariant> fittingVariants = !mConfig.tumorOnlyMode() ?
+                SomaticPurityFitter.findFittingVariants(sampleData.SomaticCache.variants(), observedRegions) : Lists.newArrayList();
+
+        if(!fittingVariants.isEmpty())
+        {
+            PPL_LOGGER.info("somatic fitting variants({})", fittingVariants.size());
+        }
+
+        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
+                mExecutorService, cobaltChromosomes,
+                fittingConfig.MinPurity, fittingConfig.MaxPurity, fittingConfig.PurityIncrement,
+                fittingConfig.MinPloidy, fittingConfig.MaxPloidy, somaticFitConfig.SomaticPenaltyWeight, mConfig.tumorOnlyMode(),
+                fittedRegionFactory, observedRegions, fittingVariants);
+
+        fitCandidates.addAll(fittedPurityFactory.all());
+
+        final BestFitFactory bestFitFactory = new BestFitFactory(
+                mConfig,
+                sampleData.Amber.minSomaticTotalReadCount(),
+                sampleData.Amber.maxSomaticTotalReadCount(),
+                fitCandidates,
+                fittingVariants,
+                structuralVariants,
+                observedRegions);
+
+        return bestFitFactory;
+    }
+
+    private void buildCopyNumbers(
+            final SampleData sampleData, final SampleDataFiles sampleDataFiles, final FittedRegionFactory fittedRegionFactory,
+            final PurityAdjuster purityAdjuster, final List<ObservedRegion> observedRegions, final FittedPurity fittedPurity,
+            final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions)
+    {
+        copyNumbers.clear();
+        fittedRegions.clear();
+
+        final AmberData amberData = sampleData.Amber;
+        final CobaltData cobaltData = sampleData.Cobalt;
+
+        final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(
+                mConfig.Fitting.MinDiploidTumorRatioCount,
+                mConfig.Fitting.MinDiploidTumorRatioCountAtCentromere,
+                amberData.AverageTumorDepth,
+                fittedPurity.ploidy(),
+                purityAdjuster,
+                cobaltData.CobaltChromosomes);
+
+        PPL_LOGGER.info("calculating copy number");
+        fittedRegions.addAll(fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions));
+
+        copyNumberFactory.buildCopyNumbers(fittedRegions, sampleData.SvCache.variants());
+
+        final int recoveredSVCount = RecoverStructuralVariants.recoverStructuralVariants(
+                sampleData, sampleDataFiles, mConfig.Fitting, purityAdjuster, copyNumberFactory.copyNumbers());
+
+        if(recoveredSVCount > 0)
+        {
+            PPL_LOGGER.info("reapplying segmentation with {} recovered structural variants", recoveredSVCount);
+            final List<ObservedRegion> recoveredObservedRegions =
+                    mSegmentation.createObservedRegions(sampleData.SvCache.variants(), amberData, cobaltData);
+
+            PPL_LOGGER.info("recalculating copy number");
+            fittedRegions.clear();
+            fittedRegions.addAll(fittedRegionFactory.fitRegion(
+                    fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions));
+
+            copyNumberFactory.buildCopyNumbers(fittedRegions, sampleData.SvCache.variants());
+        }
+
+        copyNumbers.addAll(copyNumberFactory.copyNumbers());
+
+        if(!validateCopyNumbers(copyNumbers))
+        {
+            PPL_LOGGER.warn("invalid copy numbers, exiting");
+            System.exit(0);
         }
     }
 
@@ -579,97 +605,6 @@ public class PurpleApplication
 
             DriverCatalogFile.write(DriverCatalogFile.generateGermlineFilename(mConfig.OutputDir, tumorSample), germlineDriverCatalog);
         }
-
-        if(mDbAccess != null)
-            mDbAccess.writePurpleDriverCatalog(tumorSample, somaticDriverCatalog, germlineDriverCatalog);
-    }
-
-    private int recoverStructuralVariants(final SampleData sampleData, final SampleDataFiles sampleDataFiles,
-            final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException
-    {
-        if(sampleDataFiles.RecoveredSvVcfFile.isEmpty())
-            return 0;
-
-        PPL_LOGGER.info("loading recovery candidates from {}", sampleDataFiles.RecoveredSvVcfFile);
-
-        final RecoverStructuralVariants recovery = new RecoverStructuralVariants(
-                mConfig.Fitting, purityAdjuster, sampleDataFiles.RecoveredSvVcfFile, copyNumbers);
-
-        final Collection<VariantContext> recoveredVariants = recovery.recoverVariants(sampleData.SvCache.variants());
-
-        if(!recoveredVariants.isEmpty())
-        {
-            recoveredVariants.forEach(x -> sampleData.SvCache.addVariant(x));
-        }
-
-        return recoveredVariants.size();
-    }
-
-    private BestFit fitPurity(final SampleData sampleData, final List<ObservedRegion> observedRegions,
-            final FittedRegionFactory fittedRegionFactory, final List<StructuralVariant> structuralVariants)
-            throws ExecutionException, InterruptedException
-    {
-        final FittingConfig fittingConfig = mConfig.Fitting;
-        final SomaticFitConfig somaticFitConfig = mConfig.SomaticFitting;
-
-        final List<FittedPurity> fitCandidates = Lists.newArrayList();
-
-        final CobaltChromosomes cobaltChromosomes = sampleData.Cobalt.CobaltChromosomes;
-
-        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
-                mExecutorService,
-                cobaltChromosomes,
-                fittingConfig.MinPurity,
-                fittingConfig.MaxPurity,
-                fittingConfig.PurityIncrement,
-                fittingConfig.MinPloidy,
-                fittingConfig.MaxPloidy,
-                somaticFitConfig.SomaticPenaltyWeight,
-                mConfig.tumorOnlyMode(),
-                fittedRegionFactory,
-                observedRegions,
-                sampleData.SomaticCache.fittingVariants());
-
-        fitCandidates.addAll(fittedPurityFactory.all());
-
-        final BestFitFactory bestFitFactory = new BestFitFactory(
-                mConfig,
-                sampleData.Amber.minSomaticTotalReadCount(),
-                sampleData.Amber.maxSomaticTotalReadCount(),
-                fitCandidates,
-                sampleData.SomaticCache.fittingVariants(),
-                structuralVariants,
-                observedRegions);
-
-        return bestFitFactory.bestFit();
-    }
-
-    private FittedRegionFactory createFittedRegionFactory(
-            final int averageTumorDepth, final CobaltChromosomes cobaltChromosomes, final FittingConfig fitScoreConfig)
-    {
-        return new FittedRegionFactory(cobaltChromosomes,
-                averageTumorDepth,
-                fitScoreConfig.PloidyPenaltyFactor,
-                fitScoreConfig.PloidyPenaltyStandardDeviation,
-                fitScoreConfig.PloidyPenaltyMinStandardDeviationPerPloidy,
-                fitScoreConfig.PloidyPenaltyMajorAlleleSubOneMultiplier,
-                fitScoreConfig.PloidyPenaltyMajorAlleleSubOneAdditional,
-                fitScoreConfig.PloidyPenaltyBaselineDeviation);
-    }
-
-    @NotNull
-    private StructuralVariantCache createStructuralVariantCache(final String tumorSample, final SampleDataFiles sampleDataFiles)
-    {
-        if(sampleDataFiles.SvVcfFile.isEmpty())
-        {
-            return new StructuralVariantCache();
-        }
-
-        PPL_LOGGER.info("loading structural variants from {}", sampleDataFiles.SvVcfFile);
-
-        final String outputVcf = purpleSvFile(mConfig.OutputDir, tumorSample);
-
-        return new StructuralVariantCache(mPurpleVersion.version(), sampleDataFiles.SvVcfFile, outputVcf, mReferenceData);
     }
 
     public static void main(final String... args) throws IOException

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.annotators;
 
 import static java.lang.Math.abs;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -10,10 +11,11 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.loadConfigFile;
 import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLineInsertMotif;
 import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLineRepeatClass;
 import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLineSourceMotif;
@@ -21,18 +23,24 @@ import static com.hartwig.hmftools.linx.annotators.LineElementType.KNOWN;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.SUSPECT;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_DEL_LENGTH;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
+
+import org.jetbrains.annotations.Nullable;
 
 public class LineElementAnnotator {
 
@@ -46,10 +54,6 @@ public class LineElementAnnotator {
     public static final String POLY_A_MOTIF = "AAAAAAAAAA";
     public static final String POLY_T_MOTIF = "TTTTTTTTTT";
 
-    private static final int LE_COL_CHR = 0;
-    private static final int LE_COL_POS_START = 1;
-    private static final int LE_COL_POS_END = 2;
-
     public LineElementAnnotator(int proximityDistance)
     {
         mProximityDistance = proximityDistance;
@@ -62,39 +66,34 @@ public class LineElementAnnotator {
         mPseudoGeneFinder = pseudoGeneFinder;
     }
 
-    public void loadLineElementsFile(final String filename)
+    public static String lineElementsResourceFile(final RefGenomeVersion refGenomeVersion)
     {
-        if(filename.isEmpty())
-            return;
+        return format("/sites/line_elements.%s.csv", refGenomeVersion.identifier());
+    }
 
+    public void loadLineElementsFile(@Nullable final String filename)
+    {
         try
         {
-            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
+            List<String> fileContents = Lists.newArrayList();
 
-            for(final String line : fileContents)
+            if(filename != null)
             {
-                if(line.contains("Chromosome"))
-                    continue;
-
-                // parse CSV data
-                String[] items = line.split(",");
-
-                if(items.length < LE_COL_POS_END+1)
-                    continue;
-
-                final ChrBaseRegion lineRegion = new ChrBaseRegion(
-                        RG_VERSION.versionedChromosome(items[LE_COL_CHR]),
-                        Integer.parseInt(items[LE_COL_POS_START]),
-                        Integer.parseInt(items[LE_COL_POS_END]));
-
-                mKnownLineElements.add(lineRegion);
+                fileContents.addAll(Files.readAllLines(new File(filename).toPath()));
+            }
+            else
+            {
+                fileContents.addAll(new BufferedReader(new InputStreamReader(
+                        FragileSiteAnnotator.class.getResourceAsStream(lineElementsResourceFile(REF_GENOME_VERSION))))
+                        .lines().collect(Collectors.toList()));
             }
 
-            LNX_LOGGER.info("loaded {} known line elements from file: {}", mKnownLineElements.size(), filename);
+            mKnownLineElements.addAll(loadConfigFile(fileContents, REF_GENOME_VERSION));
+            LNX_LOGGER.info("loaded {} known line elements", mKnownLineElements.size());
         }
-        catch(IOException exception)
+        catch(IOException e)
         {
-            LNX_LOGGER.error("Failed to read line element CSV file({})", filename);
+            LNX_LOGGER.error("failed to read line element file: {}", e.toString());
         }
     }
 
@@ -231,7 +230,7 @@ public class LineElementAnnotator {
                         continue;
 
                     proxBreakend.getSV().addLineElement(SUSPECT, proxBreakend.usesStart());
-                    proxBreakend.getSV().addAnnotation(String.format("SLR=%s", lineState.suspectReason()));
+                    proxBreakend.getSV().addAnnotation(format("SLR=%s", lineState.suspectReason()));
                 }
 
                 hasSuspected = true;

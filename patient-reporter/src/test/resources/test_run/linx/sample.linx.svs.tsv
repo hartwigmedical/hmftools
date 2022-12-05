@@ -1,2 +1,0 @@
-vcfId	svId	clusterId	clusterReason	fragileSiteStart	fragileSiteEnd	isFoldback	lineTypeStart	lineTypeEnd	junctionCopyNumberMin	junctionCopyNumberMax	geneStart	geneEnd	replicationTimingStart	replicationTimingEnd	localTopologyIdStart	localTopologyIdEnd	localTopologyStart	localTopologyEnd	localTICountStart	localTICountEnd
-gridss12_234	1	2		false	false	false	NONE	NONE	0.8	1.6			0.5	0.2	0	1	ISOLATED_BE	ISOLATED_BE	0	0

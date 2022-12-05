@@ -99,11 +99,11 @@ public class NeoEpitopeWriter
 
         boolean fusionAdded = false;
 
-        for (final BreakendGeneData gene1 : breakendGenes1)
+        for(final BreakendGeneData gene1 : breakendGenes1)
         {
-            for (final BreakendGeneData gene2 : breakendGenes2)
+            for(final BreakendGeneData gene2 : breakendGenes2)
             {
-                if (gene1.isUpstream() == gene2.isUpstream())
+                if(gene1.isUpstream() == gene2.isUpstream())
                     continue;
 
                 final BreakendGeneData upGene = gene1.isUpstream() ? gene1 : gene2;

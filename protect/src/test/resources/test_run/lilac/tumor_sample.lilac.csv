@@ -1,7 +1,0 @@
-Allele,RefTotal,RefUnique,RefShared,RefWild,TumorTotal,TumorUnique,TumorShared,TumorWild,TumorCopyNumber,RnaTotal,RnaUnique,RnaShared,RnaWild,SomaticMissense,SomaticNonsenseOrFrameshift,SomaticSplice,SomaticSynonymous,SomaticInframeIndel
-A*01:01,210,202,8,0,1602,1537,65,0,2.00,0,0,0,0,0.00,0.00,0.00,0.00,0.00
-A*01:01,211,203,8,0,1602,1537,65,0,1.83,0,0,0,0,0.00,0.00,0.00,0.00,0.00
-B*08:01,216,106,110,0,750,332,418,0,1.83,0,0,0,0,0.00,0.00,0.00,0.00,0.00
-B*40:02,196,83,113,0,721,291,430,0,2.00,0,0,0,0,0.00,0.00,0.00,0.00,0.00
-C*03:04,213,177,36,0,768,636,132,0,2.00,0,0,0,0,0.00,0.00,0.00,0.00,0.00
-C*07:01,225,187,38,0,767,619,148,0,1.83,0,0,0,0,0.00,0.00,0.00,0.00,0.00

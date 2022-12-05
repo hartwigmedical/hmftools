@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.isofox.TestUtils.addTestGenes;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestTranscripts;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createGeneCollection;
+import static com.hartwig.hmftools.isofox.TestUtils.createIsofoxConfig;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
@@ -59,7 +60,7 @@ public class ChimericReadTest
         final GeneCollection gc1 =
                 createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         config.Functions.add(FUSIONS);
         ChimericReadTracker chimericRT = new ChimericReadTracker(config);
 
@@ -124,7 +125,7 @@ public class ChimericReadTest
 
         final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, geneDataList);
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         config.Functions.add(FUSIONS);
         ChimericReadTracker chimericRT = new ChimericReadTracker(config);
 
@@ -244,7 +245,7 @@ public class ChimericReadTest
         final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
         final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         config.Functions.add(FUSIONS);
         ChimericReadTracker chimericRT = new ChimericReadTracker(config);
         BaseDepth baseDepth = new BaseDepth();
@@ -352,7 +353,7 @@ public class ChimericReadTest
         final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
         final GeneCollection gc3 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
 
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         config.Functions.add(FUSIONS);
         ChimericReadTracker chimericRT = new ChimericReadTracker(config);
         BaseDepth baseDepth = new BaseDepth();

@@ -29,12 +29,9 @@
         <module>orange</module>
         <module>paddle</module>
         <module>patient-db</module>
-        <module>patient-reporter</module>
         <module>purple</module>
-        <module>rose</module>
         <module>pave</module>
         <module>peach</module>
-        <module>protect</module>
         <module>sage</module>
         <module>sigs</module>
         <module>stat-calcs</module>
@@ -56,6 +53,7 @@
         <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
         <maven.site.plugin.version>3.7.1</maven.site.plugin.version>
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
+        <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
@@ -72,25 +70,20 @@
         <hmf-id-generator.version>3.0</hmf-id-generator.version>
         <isofox.version>1.6</isofox.version>
         <lilac.version>1.4.3</lilac.version>
-        <linx.version>1.22.1</linx.version>
+        <linx.version>1.23</linx.version>
         <neo.version>1.0</neo.version>
         <orange.version>2.0</orange.version>
         <paddle.version>1.0</paddle.version>
         <patient-db.version>3.73</patient-db.version>
-        <patient-reporter.version>7.26</patient-reporter.version>
         <pave.version>1.4.1</pave.version>
         <peach.version>2.0</peach.version>
-        <protect.version>2.3</protect.version>
-        <purple.version>3.7.2</purple.version>
-        <rose.version>1.3</rose.version>
+        <purple.version>3.8</purple.version>
         <sage.version>3.2.2</sage.version>
         <sigs.version>1.2</sigs.version>
-        <sv-prep.version>1.0.1</sv-prep.version>
+        <sv-prep.version>1.1</sv-prep.version>
         <sv-tools.version>1.0</sv-tools.version>
         <teal.version>1.0.1</teal.version>
         <virus-interpreter.version>1.2</virus-interpreter.version>
-
-        <serve.version>1.12</serve.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.5.5</immutables.version>
@@ -106,10 +99,6 @@
         <apache.lucene.version>7.1.0</apache.lucene.version>
         <jooq.version>3.15.5</jooq.version>
         <mysqlconnector.version>8.0.16</mysqlconnector.version>
-        <rxjava2.version>2.1.2</rxjava2.version>
-        <retrofit.version>2.4.0</retrofit.version>
-        <moshi.version>1.6.0</moshi.version>
-        <okhttp.version>3.9.0</okhttp.version>
         <bouncycastle.jdk15.version>1.53</bouncycastle.jdk15.version>
         <kotlin.version>1.5.32</kotlin.version>
         <kotlin.coroutines.version>1.5.2</kotlin.coroutines.version>
@@ -117,7 +106,6 @@
         <itext.version>7.1.5</itext.version>
         <tablesaw.version>0.42.0</tablesaw.version>
         <jcommander.version>1.81</jcommander.version>
-        <jackson-dataformat-xml.version>2.11.1</jackson-dataformat-xml.version>
 
         <kotest.version>4.6.4</kotest.version>
         <junit.version>4.13.1</junit.version>
@@ -128,28 +116,7 @@
         <kotlin.compiler.jvmTarget>${java.version}</kotlin.compiler.jvmTarget>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>artifact-registry</id>
-            <url>artifactregistry://europe-west4-maven.pkg.dev/hmf-build/hmf-maven</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <build>
-        <extensions>
-            <extension>
-                <groupId>com.google.cloud.artifactregistry</groupId>
-                <artifactId>artifactregistry-maven-wagon</artifactId>
-                <version>2.1.0</version>
-            </extension>
-        </extensions>
-
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -183,6 +150,11 @@
                     <version>${maven.surefire.plugin.version}</version>
                 </plugin>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>${maven.shade.plugin.version}</version>
+                </plugin>
+                <plugin>
                     <groupId>org.jetbrains.kotlin</groupId>
                     <artifactId>kotlin-maven-plugin</artifactId>
                     <version>${kotlin.version}</version>
@@ -191,11 +163,6 @@
                     <groupId>org.jooq</groupId>
                     <artifactId>jooq-codegen-maven</artifactId>
                     <version>${jooq.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>com.fasterxml.jackson.dataformat</groupId>
-                    <artifactId>jackson-dataformat-xml</artifactId>
-                    <version>${jackson-dataformat-xml.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -218,25 +185,9 @@
                 <version>${hmf-common.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-xml</artifactId>
-                <version>${jackson-dataformat-xml.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>patient-db</artifactId>
                 <version>${patient-db.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>linx</artifactId>
-                <version>${linx.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.hartwig.serve</groupId>
-                <artifactId>datamodel</artifactId>
-                <version>${serve.version}</version>
             </dependency>
 
             <dependency>
@@ -315,46 +266,6 @@
                 <artifactId>gson</artifactId>
                 <version>${immutables.version}</version>
                 <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.reactivex.rxjava2</groupId>
-                <artifactId>rxjava</artifactId>
-                <version>${rxjava2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.okhttp3</groupId>
-                <artifactId>okhttp</artifactId>
-                <version>${okhttp.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.retrofit2</groupId>
-                <artifactId>retrofit</artifactId>
-                <version>${retrofit.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.retrofit2</groupId>
-                <artifactId>adapter-rxjava2</artifactId>
-                <version>${retrofit.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.retrofit2</groupId>
-                <artifactId>converter-gson</artifactId>
-                <version>${retrofit.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.retrofit2</groupId>
-                <artifactId>converter-moshi</artifactId>
-                <version>${retrofit.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.moshi</groupId>
-                <artifactId>moshi</artifactId>
-                <version>${moshi.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.moshi</groupId>
-                <artifactId>moshi-kotlin</artifactId>
-                <version>${moshi.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.lucene</groupId>
@@ -437,13 +348,6 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmf-common</artifactId>
                 <version>${hmf-common.version}</version>
-                <scope>test</scope>
-                <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>serve</artifactId>
-                <version>${serve.version}</version>
                 <scope>test</scope>
                 <type>test-jar</type>
             </dependency>

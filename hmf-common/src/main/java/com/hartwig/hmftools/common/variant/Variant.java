@@ -5,8 +5,8 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface Variant extends GenomePosition, AllelicDepth {
-
+public interface Variant extends GenomePosition, AllelicDepth
+{
     @NotNull
     VariantType type();
 

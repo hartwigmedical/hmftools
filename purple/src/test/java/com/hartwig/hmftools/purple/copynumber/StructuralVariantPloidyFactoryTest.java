@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
-import com.hartwig.hmftools.purple.purity.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
@@ -178,14 +177,14 @@ public class StructuralVariantPloidyFactoryTest
                 PURE_PLOIDY_FACTORY.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
         assertPloidy(1d, purePloidy);
 
-        final PurityAdjuster diluted = new PurityAdjusterTypicalChromosome(Gender.FEMALE, 0.8, 1);
+        final PurityAdjuster diluted = new PurityAdjuster(Gender.FEMALE, 0.8, 1);
         final StructuralVariantLegPloidyFactory<PurpleCopyNumber> dilutedFactory =
                 new StructuralVariantLegPloidyFactory<>(diluted, PurpleCopyNumber::averageTumorCopyNumber);
         Optional<ModifiableStructuralVariantLegPloidy> dilutedPloidy =
                 dilutedFactory.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
         assertPloidy(1.25d, dilutedPloidy);
 
-        final PurityAdjuster male = new PurityAdjusterTypicalChromosome(Gender.MALE, 0.8, 1);
+        final PurityAdjuster male = new PurityAdjuster(Gender.MALE, 0.8, 1);
         final StructuralVariantLegPloidyFactory<PurpleCopyNumber> maleFactory =
                 new StructuralVariantLegPloidyFactory<>(male, PurpleCopyNumber::averageTumorCopyNumber);
         Optional<ModifiableStructuralVariantLegPloidy> malePloidy =

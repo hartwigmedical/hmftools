@@ -26,7 +26,6 @@ import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -43,7 +42,6 @@ public class HrdDetectionAnalyser
     private final int mThreads;
 
     private final HrdDetection mHrdDetection;
-    private final DatabaseAccess mDbAccess;
 
     private final BufferedWriter mWriter;
 
@@ -57,7 +55,6 @@ public class HrdDetectionAnalyser
         mChordDir = cmd.getOptionValue(CHORD_DIR);
         mThreads = parseThreads(cmd);
 
-        mDbAccess = DatabaseAccess.createDatabaseAccess(cmd);
         mHrdDetection = new HrdDetection();
 
         mWriter = initialiseWriter(cmd.getOptionValue(OUTPUT_DIR));
@@ -71,9 +68,9 @@ public class HrdDetectionAnalyser
             System.exit(1);
         }
 
-        if(mDbAccess == null && mPurpleDataDir == null)
+        if(mPurpleDataDir == null)
         {
-            PPL_LOGGER.error("missing DB or purple & chord data paths");
+            PPL_LOGGER.error("missing purple & chord data paths");
             System.exit(1);
         }
 
@@ -102,42 +99,33 @@ public class HrdDetectionAnalyser
         PurityContext purityContext = null;
         ChordData chordData = null;
 
-        if(mDbAccess != null)
+        try
         {
-            copyNumbers = mDbAccess.readCopynumbers(sampleId);
-            purityContext = mDbAccess.readPurityContext(sampleId);
-            chordData = mDbAccess.readChord(sampleId);
-        }
-        else
-        {
-            try
+            if(mChordDir != null)
             {
-                if(mChordDir != null)
-                {
-                    String sampleChordDirectory = mChordDir.replaceAll("\\*", sampleId);
-                    chordData = ChordDataFile.read(ChordDataFile.generateFilename(sampleChordDirectory, sampleId));
-                }
-                else
-                {
-                    chordData = ImmutableChordData.builder()
-                            .BRCA1Value(0)
-                            .BRCA2Value(0)
-                            .hrdType("N/A")
-                            .hrdValue(0)
-                            .hrStatus(ChordStatus.UNKNOWN)
-                            .remarksHrdType("")
-                            .remarksHrStatus("").build();
-                }
+                String sampleChordDirectory = mChordDir.replaceAll("\\*", sampleId);
+                chordData = ChordDataFile.read(ChordDataFile.generateFilename(sampleChordDirectory, sampleId));
+            }
+            else
+            {
+                chordData = ImmutableChordData.builder()
+                        .BRCA1Value(0)
+                        .BRCA2Value(0)
+                        .hrdType("N/A")
+                        .hrdValue(0)
+                        .hrStatus(ChordStatus.UNKNOWN)
+                        .remarksHrdType("")
+                        .remarksHrStatus("").build();
+            }
 
-                String samplePurpleDirectory = mPurpleDataDir.replaceAll("\\*", sampleId);
-                copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(samplePurpleDirectory, sampleId));
-                purityContext = PurityContextFile.read(samplePurpleDirectory, sampleId);
-            }
-            catch(IOException e)
-            {
-                PPL_LOGGER.error("failed to load file data {}", e.toString());
-                return;
-            }
+            String samplePurpleDirectory = mPurpleDataDir.replaceAll("\\*", sampleId);
+            copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(samplePurpleDirectory, sampleId));
+            purityContext = PurityContextFile.read(samplePurpleDirectory, sampleId);
+        }
+        catch(IOException e)
+        {
+            PPL_LOGGER.error("failed to load file data {}", e.toString());
+            return;
         }
 
         if(chordData == null || purityContext == null)
@@ -199,7 +187,6 @@ public class HrdDetectionAnalyser
         final Options options = new Options();
         addSampleIdFile(options);
 
-        DatabaseAccess.addDatabaseCmdLineArgs(options);
         options.addOption(PURPLE_DATA_DIR, true, "Directory pattern for sample purple directory");
         addLoggingOptions(options);
         addOutputOptions(options);

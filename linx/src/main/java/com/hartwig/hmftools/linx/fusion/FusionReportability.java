@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LINKS;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_IG_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.SHORT_UNPHASED_DISTANCE_KNOWN;
@@ -110,10 +111,12 @@ public class FusionReportability
 
     private static int getMaxUpstreamDistance(final GeneFusion fusion)
     {
-        if(fusion.knownType() == KNOWN_PAIR || fusion.knownType() == IG_KNOWN_PAIR || fusion.isHighImpactPromiscuous())
+        if(fusion.knownType() == IG_KNOWN_PAIR)
+            return MAX_UPSTREAM_DISTANCE_IG_KNOWN;
+        else if(fusion.knownType() == KNOWN_PAIR  || fusion.isHighImpactPromiscuous())
             return MAX_UPSTREAM_DISTANCE_KNOWN;
-
-        return MAX_UPSTREAM_DISTANCE_OTHER;
+        else
+            return MAX_UPSTREAM_DISTANCE_OTHER;
     }
 
     public static boolean allowSuspectChains(final KnownFusionType type)

@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import java.io.File;
-
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.itextpdf.kernel.geom.PageSize;
@@ -17,9 +16,12 @@ public class CohortComparisonChapter implements ReportChapter {
 
     @NotNull
     private final OrangeReport report;
+    @NotNull
+    private final PlotPathResolver plotPathResolver;
 
-    public CohortComparisonChapter(@NotNull final OrangeReport report) {
+    public CohortComparisonChapter(@NotNull final OrangeReport report, @NotNull final PlotPathResolver plotPathResolver) {
         this.report = report;
+        this.plotPathResolver = plotPathResolver;
     }
 
     @NotNull
@@ -43,7 +45,7 @@ public class CohortComparisonChapter implements ReportChapter {
     }
 
     private void addCuppaSummaryPlot(@NotNull Document document) {
-        Image cuppaSummaryImage = Images.build(report.plots().cuppaSummaryPlot());
+        Image cuppaSummaryImage = Images.build(plotPathResolver.resolve(report.plots().cuppaSummaryPlot()));
         cuppaSummaryImage.setMaxWidth(740);
         cuppaSummaryImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         document.add(cuppaSummaryImage);
@@ -51,8 +53,8 @@ public class CohortComparisonChapter implements ReportChapter {
 
     private void addCuppaFeaturePlot(@NotNull Document document) {
         String featurePlotPaths = report.plots().cuppaFeaturePlot();
-        if (featurePlotPaths != null && new File(featurePlotPaths).exists()) {
-            Image cuppaFeatureImage = Images.build(featurePlotPaths);
+        if (featurePlotPaths != null) {
+            Image cuppaFeatureImage = Images.build(plotPathResolver.resolve(featurePlotPaths));
             cuppaFeatureImage.setMaxWidth(740);
             cuppaFeatureImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
             document.add(cuppaFeatureImage);

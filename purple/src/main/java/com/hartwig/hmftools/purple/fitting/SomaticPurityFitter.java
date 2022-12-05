@@ -2,22 +2,42 @@ package com.hartwig.hmftools.purple.fitting;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleUtils.formatPurity;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_FITTING_MAPPABILITY;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_FITTING_MAX_REPEATS;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_MAX_SNV_COUNT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_VAF_PROBABILITY;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.utils.collection.Multimaps;
+import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
+import com.hartwig.hmftools.common.variant.filter.NTFilter;
+import com.hartwig.hmftools.common.variant.filter.SGTFilter;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.math3.distribution.PoissonDistribution;
+import org.jetbrains.annotations.Nullable;
+
+import htsjdk.variant.variantcontext.filter.CompoundFilter;
 
 public class SomaticPurityFitter
 {
@@ -35,13 +55,127 @@ public class SomaticPurityFitter
         mMaxPurity = maxPurity;
     }
 
-    public Optional<FittedPurity> fromSomatics(
+    private enum FilterReason
+    {
+        FILTERED,
+        NON_SNV,
+        GERMLINE_DIPLOID,
+        GERMLINE_ALLELE_COUNT,
+        REPEAT_COUNT,
+        GNOMAD_FREQ,
+        TIER,
+        MAX_REPEATS,
+        MAPPABILITY;
+    }
+
+    public static List<SomaticVariant> findFittingVariants(final List<SomaticVariant> variants, final List<ObservedRegion> observedRegions)
+    {
+        List<SomaticVariant> fittingVariants = Lists.newArrayList();
+
+        CompoundFilter filter = new CompoundFilter(true);
+        filter.add(new SGTFilter());
+        filter.add(new HumanChromosomeFilter());
+        filter.add(new NTFilter());
+
+        GenomeRegionSelector<ObservedRegion> observedRegionSelector = GenomeRegionSelectorFactory.createImproved(
+                Multimaps.fromRegions(observedRegions));
+
+        final int[] filterCounts = new int[FilterReason.values().length];
+
+        for(SomaticVariant variant : variants)
+        {
+            if(variant.type() != VariantType.SNP)
+            {
+                ++filterCounts[FilterReason.NON_SNV.ordinal()];
+                continue;
+            }
+
+            if(!variant.isPass() || !filter.test(variant.context()))
+            {
+                ++filterCounts[FilterReason.FILTERED.ordinal()];
+                continue;
+            }
+
+            if(!isFittingCandidate(variant, filterCounts))
+                continue;
+
+            Optional<ObservedRegion> region = observedRegionSelector.select(variant);
+
+            GermlineStatus germlineStatus = region.isPresent() ? region.get().germlineStatus() : GermlineStatus.UNKNOWN;
+
+            if(!variant.isHotspot() && germlineStatus != GermlineStatus.DIPLOID)
+            {
+                ++filterCounts[FilterReason.GERMLINE_DIPLOID.ordinal()];
+                continue;
+            }
+
+            PPL_LOGGER.trace("variant({}) germlineStatus({}) used for fitting", variant.toString(), germlineStatus);
+
+            fittingVariants.add(variant);
+        }
+
+        StringJoiner filterCountsStr = new StringJoiner(", ");
+        for(FilterReason reason : FilterReason.values())
+        {
+            filterCountsStr.add(format("%s=%d", reason, filterCounts[reason.ordinal()]));
+        }
+
+        PPL_LOGGER.debug("variants({}) fitting({}) filters: {}", variants.size(), fittingVariants.size(), filterCountsStr);
+
+        return fittingVariants;
+    }
+
+    private static boolean isFittingCandidate(final SomaticVariant variant, final int[] filterCounts)
+    {
+        if(!variant.hasTumorAlleleDepth() || variant.tumorAlleleDepth().totalReadCount() == 0)
+            return false;
+
+        VariantTier variantTier = variant.decorator().tier();
+
+        if(variantTier != VariantTier.HOTSPOT)
+        {
+            if(variant.context().hasAttribute(GNOMAD_FREQ))
+            {
+                ++filterCounts[FilterReason.GNOMAD_FREQ.ordinal()];
+                return false;
+            }
+
+            if(variantTier == VariantTier.LOW_CONFIDENCE || variantTier == VariantTier.UNKNOWN)
+            {
+                ++filterCounts[FilterReason.TIER.ordinal()];
+                return false;
+            }
+
+            if(variant.decorator().repeatCount() > SNV_FITTING_MAX_REPEATS)
+            {
+                ++filterCounts[FilterReason.MAX_REPEATS.ordinal()];
+                return false;
+            }
+
+            if(variant.context().hasAttribute(MAPPABILITY_TAG) && variant.decorator().mappability() < SNV_FITTING_MAPPABILITY)
+            {
+                ++filterCounts[FilterReason.MAPPABILITY.ordinal()];
+                return false;
+            }
+
+            if(variant.referenceAlleleReadCount() > 0)
+            {
+                ++filterCounts[FilterReason.GERMLINE_ALLELE_COUNT.ordinal()];
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Nullable
+    public FittedPurity fromSomatics(
             final List<SomaticVariant> variants, final List<StructuralVariant> structuralVariants, final List<FittedPurity> allCandidates)
     {
         if(variants.size() < mKdMinSomatics)
         {
             PPL_LOGGER.info("somatic variants count({}) too low for somatic fit", variants.size());
-            return Optional.empty();
+            return null;
         }
 
         PPL_LOGGER.info("looking for peak somatic allelic frequencies");
@@ -50,7 +184,7 @@ public class SomaticPurityFitter
                 allCandidates, variants, mKdMinSomatics, mKdMinPeak, mMinPurity, mMaxPurity);
 
         if(!kdFit.isPresent())
-            return kdFit;
+            return null;
 
         double peakPurity = kdFit.get().purity();
 
@@ -60,7 +194,7 @@ public class SomaticPurityFitter
         int snvCount = (int)variants.stream().filter(x -> !x.isFiltered()).count();
 
         if(snvCount > SNV_HOTSPOT_MAX_SNV_COUNT)
-            return kdFit;
+            return kdFit.get();
 
         double maxHotspotVaf = 0;
 
@@ -82,7 +216,7 @@ public class SomaticPurityFitter
             if(!belowRequiredProbability(peakPurity, variant.totalReadCount(), variant.alleleReadCount()))
                 continue;
 
-            PPL_LOGGER.info(String.format("hotspot(%s:%d) vaf(%.3f %d/%d)",
+            PPL_LOGGER.info(format("hotspot(%s:%d) vaf(%.3f %d/%d)",
                     variant.chromosome(), variant.position(),
                     variant.alleleFrequency(), variant.alleleReadCount(), variant.totalReadCount()));
 
@@ -116,18 +250,18 @@ public class SomaticPurityFitter
 
         if(maxHotspotVaf > peakPurity)
         {
-            return Optional.of(ImmutableFittedPurity.builder()
+            return ImmutableFittedPurity.builder()
                     .score(1)
                     .diploidProportion(1)
                     .normFactor(1)
                     .purity(maxHotspotVaf)
                     .somaticPenalty(1)
                     .ploidy(2)
-                    .build());
+                    .build();
         }
         else
         {
-            return kdFit;
+            return kdFit.get();
         }
     }
 

@@ -5,13 +5,14 @@ class MockAnchorBlosumSearcher : IAnchorBlosumSearcher
 {
     var anchorBlosumMatch: AnchorBlosumMatch? = null
 
-    override fun searchForAnchor(readString: String) : AnchorBlosumMatch?
+    override fun searchForAnchor(readString: String, mode: IAnchorBlosumSearcher.Mode) : AnchorBlosumMatch?
     {
         return anchorBlosumMatch
     }
 
-    override fun searchForAnchor(dnaSeq: String, targetAnchorGeneType: VJGeneType, startOffset: Int,
-                                 endOffset: Int) : AnchorBlosumMatch?
+    override fun searchForAnchor(sequence: String, targetAnchorGeneTypes: Collection<VJGeneType>,
+                                 mode: IAnchorBlosumSearcher.Mode,
+                                 startOffset: Int, endOffset: Int) : AnchorBlosumMatch?
     {
         return anchorBlosumMatch
     }

@@ -18,6 +18,7 @@
             <groupId>com.hartwig</groupId>
             <artifactId>hmf-common</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>patient-db</artifactId>
@@ -26,6 +27,13 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>hmf-common</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
     </dependencies>

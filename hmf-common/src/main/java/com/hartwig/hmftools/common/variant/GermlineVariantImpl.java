@@ -7,5 +7,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class },
              visibility = Value.Style.ImplementationVisibility.PUBLIC)
-abstract class GermlineVariantImpl implements GermlineVariant {
+abstract class GermlineVariantImpl implements GermlineVariant
+{
 }

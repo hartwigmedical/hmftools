@@ -1,5 +1,8 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- TODO Remove per 1st of jan 2023
+DROP TABLE IF EXISTS protect;
+
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
@@ -1170,35 +1173,6 @@ CREATE TABLE cuppa
     cuppaPrediction varchar(255),
     PRIMARY KEY (id),
     KEY(sampleId)
-);
-
-
-DROP TABLE IF EXISTS protect;
-CREATE TABLE protect
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    gene varchar(255),
-    transcript varchar(255),
-    isCanonical BOOLEAN,
-    event varchar(255) NOT NULL,
-    eventIsHighDriver BOOLEAN,
-    germline BOOLEAN NOT NULL,
-    reported BOOLEAN NOT NULL,
-    treatment varchar(255) NOT NULL,
-    sourceTreatmentApproach varchar(500),
-    treatmentApproach varchar(500),
-    onLabel BOOLEAN NOT NULL,
-    level varchar(255) NOT NULL,
-    direction varchar(255) NOT NULL,
-    source varchar(255) NOT NULL,
-    sourceEvent varchar(255) NOT NULL,
-    sourceUrls varchar(2500),
-    evidenceType varchar(50) NOT NULL,
-    rangeRank int,
-    evidenceUrls varchar(2500),
-    PRIMARY KEY (id),
-    INDEX(sampleId)
 );
 
 DROP TABLE IF EXISTS rnaStatistics;

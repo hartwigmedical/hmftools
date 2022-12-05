@@ -151,6 +151,9 @@ public class HighDepthCombiner
             System.exit(1);
         }
 
+        if(!mRefefenceBlacklist.isValid())
+            System.exit(1);
+
         SV_LOGGER.info("combining {} high depth region files", mInputFiles.size());
 
         loadSampleRegions();
@@ -516,7 +519,7 @@ public class HighDepthCombiner
                     highDepthRegion.start(), highDepthRegion.end(), overlappingBases, overlapType,
                     highDepthRegion.SampleCount, highDepthRegion.DepthMin, highDepthRegion.DepthMax);
 
-            boolean removeGeneOverlaps = mRemoveGeneOverlaps && highDepthRegion.DepthMin < PANEL_HIGH_DEPTH_THRESHOLD;
+            boolean removeGeneOverlaps = mRemoveGeneOverlaps && highDepthRegion.DepthMax < PANEL_HIGH_DEPTH_THRESHOLD;
 
             if(!removeGeneOverlaps)
             {

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.fitting;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.List;
@@ -45,12 +47,12 @@ final class SomaticKernelDensityPeaks
                     Optional<FittedPurity> diploid = diploid(impliedPurity, allCandidates);
                     if(diploid.isPresent())
                     {
-                        PPL_LOGGER.debug("Somatic implied purity: {}", impliedPurity);
+                        PPL_LOGGER.debug("somatic implied purity({})", impliedPurity);
                         return diploid;
                     }
                     else
                     {
-                        PPL_LOGGER.warn("Unable to find diploid solution for implied purity: {}", impliedPurity);
+                        PPL_LOGGER.warn("unable to find diploid solution for implied purity: {}", impliedPurity);
                     }
                 }
                 maxPeak = Math.max(maxPeak, peak.count());
@@ -69,18 +71,18 @@ final class SomaticKernelDensityPeaks
                     Optional<FittedPurity> diploid = diploid(impliedPurity, allCandidates);
                     if(diploid.isPresent())
                     {
-                        PPL_LOGGER.debug("Somatic implied purity: {}", impliedPurity);
+                        PPL_LOGGER.debug("somatic implied purity({})", impliedPurity);
                         return diploid;
                     }
                     else
                     {
-                        PPL_LOGGER.warn("Unable to find diploid solution for implied purity: {}", impliedPurity);
+                        PPL_LOGGER.warn("unable to find diploid solution for implied purity: {}", impliedPurity);
                     }
                 }
             }
         }
 
-        PPL_LOGGER.debug("Unable to determine somatic implied purity.");
+        PPL_LOGGER.debug("unable to determine somatic implied purity.");
         return Optional.empty();
     }
 
@@ -116,7 +118,7 @@ final class SomaticKernelDensityPeaks
                 final double alleleFrequency = vafs[i];
                 final int peakCount = count(alleleFrequency, sample);
                 final SomaticPeak peak = ImmutableSomaticPeak.builder().alleleFrequency(alleleFrequency).count(peakCount).build();
-                PPL_LOGGER.debug("discovered peak {}", peak);
+                PPL_LOGGER.debug(format("discovered somatic peak: count(%d) alleleFrequency(%.3f)", peak.count(), peak.alleleFrequency()));
                 results.add(peak);
             }
         }

@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getCluste
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 
 import java.io.IOException;
 import java.util.List;
@@ -221,7 +222,10 @@ public class SampleAnalyser implements Callable
 
         if(mEnsemblDataCache != null)
         {
-            BreakendGenePrep.setSvGeneData(mAllVariants, mEnsemblDataCache, mConfig.RunFusions, mConfig.breakendGeneLoading());
+            Map<String,Integer> specificPreGeneDistances = mFusionAnalyser.getSpecificPreGeneDistances();
+            int preGeneDefaultDistance = mConfig.RunFusions ? PRE_GENE_PROMOTOR_DISTANCE : 0;
+
+            BreakendGenePrep.setSvGeneData(mAllVariants, mEnsemblDataCache, preGeneDefaultDistance, specificPreGeneDistances);
         }
 
         analyse();

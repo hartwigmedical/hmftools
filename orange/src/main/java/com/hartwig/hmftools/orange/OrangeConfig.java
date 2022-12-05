@@ -9,8 +9,6 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.orange.report.ImmutableReportConfig;
-import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.util.Config;
 
 import org.apache.commons.cli.CommandLine;
@@ -57,22 +55,10 @@ public interface OrangeConfig {
     String SAGE_GERMLINE_GENE_COVERAGE_TSV = "sage_germline_gene_coverage_tsv";
     String SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT = "sage_somatic_ref_sample_bqr_plot";
     String SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT = "sage_somatic_tumor_sample_bqr_plot";
-    String PURPLE_PURITY_TSV = "purple_purity_tsv";
-    String PURPLE_QC_FILE = "purple_qc_file";
-    String PURPLE_SOMATIC_COPY_NUMBER_TSV = "purple_somatic_copy_number_tsv";
-    String PURPLE_GENE_COPY_NUMBER_TSV = "purple_gene_copy_number_tsv";
-    String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = "purple_somatic_driver_catalog_tsv";
-    String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_germline_driver_catalog_tsv";
-    String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
-    String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
-    String PURPLE_GERMLINE_DELETION_TSV = "purple_germline_deletion_tsv";
+    String PURPLE_DATA_DIRECTORY = "purple_data_directory";
     String PURPLE_PLOT_DIRECTORY = "purple_plot_directory";
-    String LINX_STRUCTURAL_VARIANT_TSV = "linx_structural_variant_tsv";
-    String LINX_FUSION_TSV = "linx_fusion_tsv";
-    String LINX_BREAKEND_TSV = "linx_breakend_tsv";
-    String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
-    String LINX_DRIVER_TSV = "linx_driver_tsv";
-    String LINX_GERMLINE_DISRUPTION_TSV = "linx_germline_disruption_tsv";
+    String LINX_SOMATIC_DATA_DIRECTORY = "linx_somatic_data_directory";
+    String LINX_GERMLINE_DATA_DIRECTORY = "linx_germline_data_directory";
     String LINX_PLOT_DIRECTORY = "linx_plot_directory";
     String LILAC_RESULT_CSV = "lilac_result_csv";
     String LILAC_QC_CSV = "lilac_qc_csv";
@@ -84,7 +70,7 @@ public interface OrangeConfig {
     String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
 
     // Some additional optional params and flags
-    String DISABLE_GERMLINE = "disable_germline";
+    String CONVERT_GERMLINE_TO_SOMATIC = "convert_germline_to_somatic";
     String LIMIT_JSON_OUTPUT = "limit_json_output";
     String LOG_DEBUG = "log_debug";
 
@@ -113,22 +99,10 @@ public interface OrangeConfig {
         options.addOption(SAGE_GERMLINE_GENE_COVERAGE_TSV, true, "Path towards the SAGE germline gene coverage TSV.");
         options.addOption(SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT, true, "Path towards the SAGE somatic ref sample BQR plot.");
         options.addOption(SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT, true, "Path towards the SAGE somatic tumor sample BQR plot.");
-        options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
-        options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
-        options.addOption(PURPLE_SOMATIC_COPY_NUMBER_TSV, true, "Path towards the purple somatic copy number TSV.");
-        options.addOption(PURPLE_GENE_COPY_NUMBER_TSV, true, "Path towards the purple gene copy number TSV.");
-        options.addOption(PURPLE_SOMATIC_DRIVER_CATALOG_TSV, true, "Path towards the purple somatic driver catalog TSV.");
-        options.addOption(PURPLE_GERMLINE_DRIVER_CATALOG_TSV, true, "Path towards the purple germline driver catalog TSV.");
-        options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
-        options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
-        options.addOption(PURPLE_GERMLINE_DELETION_TSV, true, "Path towards the purple germline deletion TSV.");
+        options.addOption(PURPLE_DATA_DIRECTORY, true, "Path towards the purple data.");
         options.addOption(PURPLE_PLOT_DIRECTORY, true, "Path towards the directory holding all purple plots.");
-        options.addOption(LINX_STRUCTURAL_VARIANT_TSV, true, "Path towards the LINX structural variant TSV.");
-        options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
-        options.addOption(LINX_BREAKEND_TSV, true, "Path towards the LINX breakend TSV.");
-        options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
-        options.addOption(LINX_DRIVER_TSV, true, "Path towards the LINX driver TSV.");
-        options.addOption(LINX_GERMLINE_DISRUPTION_TSV, true, "Path towards the LINX germline disruption TSV.");
+        options.addOption(LINX_SOMATIC_DATA_DIRECTORY, true, "Path towards the somatic linx data.");
+        options.addOption(LINX_GERMLINE_DATA_DIRECTORY, true, "Path towards the germline linx data.");
         options.addOption(LINX_PLOT_DIRECTORY, true, "Path towards the directory holding all linx plots.");
         options.addOption(LILAC_RESULT_CSV, true, "Path towards the LILAC result CSV.");
         options.addOption(LILAC_QC_CSV, true, "Path towards the LILAC QC CSV.");
@@ -139,9 +113,9 @@ public interface OrangeConfig {
         options.addOption(CUPPA_FEATURE_PLOT, true, "Path towards the Cuppa report feature plot PNG.");
         options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
 
-        options.addOption(DISABLE_GERMLINE, false, "If provided, germline results are not added to the report");
-        options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
-        options.addOption(LIMIT_JSON_OUTPUT, false, "If provided, limits the json output.");
+        options.addOption(CONVERT_GERMLINE_TO_SOMATIC, false, "If set, germline events are converted to somatic events");
+        options.addOption(LIMIT_JSON_OUTPUT, false, "If set, limits every list in the json output to 1 entry.");
+        options.addOption(LOG_DEBUG, false, "If set, set the log level to debug rather than default.");
 
         for (Option rnaOption : OrangeRNAConfig.createOptions().getOptions()) {
             options.addOption(rnaOption);
@@ -158,9 +132,6 @@ public interface OrangeConfig {
 
     @Nullable
     OrangeRNAConfig rnaConfig();
-
-    @NotNull
-    ReportConfig reportConfig();
 
     @NotNull
     Set<String> primaryTumorDoids();
@@ -192,10 +163,10 @@ public interface OrangeConfig {
     @Nullable
     String pipelineVersionFile();
 
-    @NotNull
+    @Nullable
     String refSampleWGSMetricsFile();
 
-    @NotNull
+    @Nullable
     String refSampleFlagstatFile();
 
     @NotNull
@@ -204,62 +175,26 @@ public interface OrangeConfig {
     @NotNull
     String tumorSampleFlagstatFile();
 
-    @NotNull
+    @Nullable
     String sageGermlineGeneCoverageTsv();
 
-    @NotNull
+    @Nullable
     String sageSomaticRefSampleBQRPlot();
 
     @NotNull
     String sageSomaticTumorSampleBQRPlot();
 
     @NotNull
-    String purplePurityTsv();
-
-    @NotNull
-    String purpleQcFile();
-
-    @NotNull
-    String purpleSomaticCopyNumberTsv();
-
-    @NotNull
-    String purpleGeneCopyNumberTsv();
-
-    @NotNull
-    String purpleSomaticDriverCatalogTsv();
-
-    @NotNull
-    String purpleGermlineDriverCatalogTsv();
-
-    @NotNull
-    String purpleSomaticVariantVcf();
-
-    @NotNull
-    String purpleGermlineVariantVcf();
-
-    @NotNull
-    String purpleGermlineDeletionTsv();
+    String purpleDataDirectory();
 
     @NotNull
     String purplePlotDirectory();
 
     @NotNull
-    String linxStructuralVariantTsv();
+    String linxSomaticDataDirectory();
 
-    @NotNull
-    String linxFusionTsv();
-
-    @NotNull
-    String linxBreakendTsv();
-
-    @NotNull
-    String linxDriverCatalogTsv();
-
-    @NotNull
-    String linxDriverTsv();
-
-    @NotNull
-    String linxGermlineDisruptionTsv();
+    @Nullable
+    String linxGermlineDataDirectory();
 
     @NotNull
     String linxPlotDirectory();
@@ -285,8 +220,12 @@ public interface OrangeConfig {
     @Nullable
     String cuppaFeaturePlot();
 
-    @NotNull
+    @Nullable
     String peachGenotypeTsv();
+
+    boolean convertGermlineToSomatic();
+
+    boolean limitJsonOutput();
 
     @NotNull
     static OrangeConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
@@ -295,17 +234,14 @@ public interface OrangeConfig {
             LOGGER.debug("Switched root level logging to DEBUG");
         }
 
-        ReportConfig report = ImmutableReportConfig.builder()
-                .limitJsonOutput(cmd.hasOption(LIMIT_JSON_OUTPUT))
-                .reportGermline(!cmd.hasOption(DISABLE_GERMLINE))
-                .build();
-
-        if (report.limitJsonOutput()) {
+        boolean limitJsonOutput = cmd.hasOption(LIMIT_JSON_OUTPUT);
+        if (limitJsonOutput) {
             LOGGER.info("JSON limitation has been enabled.");
         }
 
-        if (!report.reportGermline()) {
-            LOGGER.info("Germline reporting has been disabled");
+        boolean convertGermlineToSomatic = cmd.hasOption(CONVERT_GERMLINE_TO_SOMATIC);
+        if (convertGermlineToSomatic) {
+            LOGGER.info("Germline events will be converted to somatic events");
         }
 
         String refSampleId = Config.optionalValue(cmd, REFERENCE_SAMPLE_ID);
@@ -324,7 +260,6 @@ public interface OrangeConfig {
                 .tumorSampleId(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .referenceSampleId(refSampleId)
                 .rnaConfig(OrangeRNAConfig.createConfig(cmd))
-                .reportConfig(report)
                 .primaryTumorDoids(toStringSet(Config.nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .experimentDate(experimentDate)
                 .refGenomeVersion(RefGenomeVersion.from(Config.nonOptionalValue(cmd, REF_GENOME_VERSION)))
@@ -335,29 +270,17 @@ public interface OrangeConfig {
                 .driverGenePanelTsv(Config.nonOptionalFile(cmd, DRIVER_GENE_PANEL_TSV))
                 .knownFusionFile(Config.nonOptionalFile(cmd, KNOWN_FUSION_FILE))
                 .pipelineVersionFile(Config.optionalValue(cmd, PIPELINE_VERSION_FILE))
-                .refSampleWGSMetricsFile(Config.nonOptionalValue(cmd, REF_SAMPLE_WGS_METRICS_FILE))
-                .refSampleFlagstatFile(Config.nonOptionalValue(cmd, REF_SAMPLE_FLAGSTAT_FILE))
-                .tumorSampleWGSMetricsFile(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_WGS_METRICS_FILE))
-                .tumorSampleFlagstatFile(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_FLAGSTAT_FILE))
-                .sageGermlineGeneCoverageTsv(Config.nonOptionalFile(cmd, SAGE_GERMLINE_GENE_COVERAGE_TSV))
-                .sageSomaticRefSampleBQRPlot(Config.nonOptionalFile(cmd, SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT))
+                .refSampleWGSMetricsFile(Config.optionalFile(cmd, REF_SAMPLE_WGS_METRICS_FILE))
+                .refSampleFlagstatFile(Config.optionalFile(cmd, REF_SAMPLE_FLAGSTAT_FILE))
+                .tumorSampleWGSMetricsFile(Config.nonOptionalFile(cmd, TUMOR_SAMPLE_WGS_METRICS_FILE))
+                .tumorSampleFlagstatFile(Config.nonOptionalFile(cmd, TUMOR_SAMPLE_FLAGSTAT_FILE))
+                .sageGermlineGeneCoverageTsv(Config.optionalFile(cmd, SAGE_GERMLINE_GENE_COVERAGE_TSV))
+                .sageSomaticRefSampleBQRPlot(Config.optionalFile(cmd, SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT))
                 .sageSomaticTumorSampleBQRPlot(Config.nonOptionalFile(cmd, SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT))
-                .purplePurityTsv(Config.nonOptionalFile(cmd, PURPLE_PURITY_TSV))
-                .purpleQcFile(Config.nonOptionalFile(cmd, PURPLE_QC_FILE))
-                .purpleSomaticCopyNumberTsv(Config.nonOptionalFile(cmd, PURPLE_SOMATIC_COPY_NUMBER_TSV))
-                .purpleGeneCopyNumberTsv(Config.nonOptionalFile(cmd, PURPLE_GENE_COPY_NUMBER_TSV))
-                .purpleSomaticDriverCatalogTsv(Config.nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVER_CATALOG_TSV))
-                .purpleGermlineDriverCatalogTsv(Config.nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV))
-                .purpleSomaticVariantVcf(Config.nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
-                .purpleGermlineVariantVcf(Config.nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF))
-                .purpleGermlineDeletionTsv(Config.nonOptionalFile(cmd, PURPLE_GERMLINE_DELETION_TSV))
+                .purpleDataDirectory(Config.nonOptionalDir(cmd, PURPLE_DATA_DIRECTORY))
                 .purplePlotDirectory(Config.nonOptionalDir(cmd, PURPLE_PLOT_DIRECTORY))
-                .linxStructuralVariantTsv(Config.nonOptionalFile(cmd, LINX_STRUCTURAL_VARIANT_TSV))
-                .linxFusionTsv(Config.nonOptionalFile(cmd, LINX_FUSION_TSV))
-                .linxBreakendTsv(Config.nonOptionalFile(cmd, LINX_BREAKEND_TSV))
-                .linxDriverCatalogTsv(Config.nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
-                .linxDriverTsv(Config.nonOptionalFile(cmd, LINX_DRIVER_TSV))
-                .linxGermlineDisruptionTsv(Config.nonOptionalFile(cmd, LINX_GERMLINE_DISRUPTION_TSV))
+                .linxSomaticDataDirectory(Config.nonOptionalDir(cmd, LINX_SOMATIC_DATA_DIRECTORY))
+                .linxGermlineDataDirectory(Config.optionalDir(cmd, LINX_GERMLINE_DATA_DIRECTORY))
                 .linxPlotDirectory(Config.nonOptionalValue(cmd, LINX_PLOT_DIRECTORY))
                 .lilacResultCsv(Config.nonOptionalFile(cmd, LILAC_RESULT_CSV))
                 .lilacQcCsv(Config.nonOptionalFile(cmd, LILAC_QC_CSV))
@@ -366,7 +289,9 @@ public interface OrangeConfig {
                 .cuppaResultCsv(Config.nonOptionalFile(cmd, CUPPA_RESULT_CSV))
                 .cuppaSummaryPlot(Config.nonOptionalFile(cmd, CUPPA_SUMMARY_PLOT))
                 .cuppaFeaturePlot(Config.optionalValue(cmd, CUPPA_FEATURE_PLOT))
-                .peachGenotypeTsv(Config.nonOptionalFile(cmd, PEACH_GENOTYPE_TSV))
+                .peachGenotypeTsv(Config.optionalFile(cmd, PEACH_GENOTYPE_TSV))
+                .convertGermlineToSomatic(convertGermlineToSomatic)
+                .limitJsonOutput(limitJsonOutput)
                 .build();
     }
 

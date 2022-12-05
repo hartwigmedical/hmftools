@@ -9,16 +9,13 @@ import java.util.stream.Collectors;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
-import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
-import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.common.lims.reportingdb.ReportingDatabase;
-import com.hartwig.hmftools.common.lims.reportingdb.ReportingEntry;
 import com.hartwig.hmftools.patientdb.clinical.curators.PatientTumorCurationStatus;
 import com.hartwig.hmftools.patientdb.clinical.curators.PatientTumorCurationStatusFile;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
+import com.hartwig.hmftools.patientdb.clinical.lims.reportingdb.ReportingDatabase;
+import com.hartwig.hmftools.patientdb.clinical.lims.reportingdb.ReportingEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

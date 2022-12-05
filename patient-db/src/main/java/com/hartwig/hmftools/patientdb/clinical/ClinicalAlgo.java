@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfig;
 import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfigFactory;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
@@ -15,6 +14,7 @@ import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.ecrf.EcrfModel;
 import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.patientdb.clinical.lims.Lims;
 import com.hartwig.hmftools.patientdb.clinical.readers.ColoPatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.CorePatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.EcrfPatientReader;

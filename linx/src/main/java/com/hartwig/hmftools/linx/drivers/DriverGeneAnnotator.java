@@ -124,18 +124,17 @@ public class DriverGeneAnnotator implements CohortFileInterface
 
             final GeneData geneData = mGeneTransCache.getGeneDataByName(driverGene.gene());
 
-            if (geneData == null)
+            if(geneData == null)
             {
                 LNX_LOGGER.warn("driver gene({}) data not found", driverGene.gene());
                 continue;
             }
 
-            final TranscriptData canonicalTrans = mGeneTransCache.getTranscriptData(geneData.GeneId, "");
+            final TranscriptData transcriptData = mGeneTransCache.getTranscriptData(geneData.GeneId, driverGene.transcript());
 
-            if(canonicalTrans == null)
+            if(transcriptData == null)
             {
-                List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
-                LNX_LOGGER.warn("driver gene({}) canonical trans not found", driverGene.gene());
+                LNX_LOGGER.warn("driver gene({}) trans data not found", driverGene.gene());
                 continue;
             }
 
@@ -148,7 +147,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
             }
             else
             {
-                geneMinCopyNumber = calcGeneCopyNumberRegion(canonicalTrans, mDataCache.CopyNumberData.getChrCnDataMap().get(geneData.Chromosome));
+                geneMinCopyNumber = calcGeneCopyNumberRegion(transcriptData, mDataCache.CopyNumberData.getChrCnDataMap().get(geneData.Chromosome));
 
                 if (geneMinCopyNumber == null)
                 {
@@ -158,7 +157,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
                 }
             }
 
-            DriverGeneData dgData = new DriverGeneData(driverGene, geneData, canonicalTrans, geneMinCopyNumber);
+            DriverGeneData dgData = new DriverGeneData(driverGene, geneData, transcriptData, geneMinCopyNumber);
             mDataCache.getDriverGeneDataList().add(dgData);
 
             if(dgData.DriverData.driver() == DriverType.DEL)
@@ -230,7 +229,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
 
     private void writeDriverData(final DriverGeneData dgData)
     {
-        if(!dgData.TransData.IsCanonical) // currently ignored since would duplicate everthing
+        if(!dgData.TransData.IsCanonical) // currently ignored since would duplicate everything
             return;
 
         // convert to a sample driver record

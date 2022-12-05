@@ -14,15 +14,15 @@ public class CuppaPredictionComparatorTest {
     @Test
     public void canSortCuppaPredictions() {
         CuppaPrediction prediction1 = create("cancer C", 0.4);
-        CuppaPrediction prediction2 = create("cancer B", 0.3);
-        CuppaPrediction prediction3 = create("cancer A", 0.3);
+        CuppaPrediction prediction2 = create("cancer A", 0.3);
+        CuppaPrediction prediction3 = create("cancer B", 0.3);
 
-        List<CuppaPrediction> predictions = Lists.newArrayList(prediction1, prediction2, prediction3);
+        List<CuppaPrediction> predictions = Lists.newArrayList(prediction1, prediction3, prediction2);
         predictions.sort(new CuppaPredictionComparator());
 
         assertEquals(prediction1, predictions.get(0));
-        assertEquals(prediction3, predictions.get(1));
-        assertEquals(prediction2, predictions.get(2));
+        assertEquals(prediction2, predictions.get(1));
+        assertEquals(prediction3, predictions.get(2));
     }
 
     @NotNull

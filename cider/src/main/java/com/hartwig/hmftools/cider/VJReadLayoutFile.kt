@@ -31,7 +31,7 @@ object VJReadLayoutFile
 
     private fun writeLayouts(writer: BufferedWriter, geneType: VJGeneType, overlayList: List<ReadLayout>)
     {
-        val vjReadLayoutAdaptor = VJReadLayoutAdaptor(0)
+        val vjReadLayoutAdaptor = VJReadLayoutBuilder(0, 0)
 
         // sort the overlays by number of reads
         val sortedOverlayList = overlayList.sortedByDescending({ o -> o.reads.size })
@@ -43,26 +43,26 @@ object VJReadLayoutFile
     }
 
     private fun writeLayout(
-        overlay: ReadLayout,
+        layout: ReadLayout,
         geneType: VJGeneType,
-        vjReadLayoutAdaptor: VJReadLayoutAdaptor,
+        vjReadLayoutAdaptor: VJReadLayoutBuilder,
         writer: BufferedWriter)
     {
         // count how many split reads
-        val numSplitReads5Bases = overlay.reads.map { o -> vjReadLayoutAdaptor.toReadCandidate(o) }
+        val numSplitReads5Bases = layout.reads.map { o -> vjReadLayoutAdaptor.toReadCandidate(o) }
             .count { o -> Math.max(o.leftSoftClip, o.rightSoftClip) >= 5 }
 
-        val numSplitReads10Bases = overlay.reads.map { o -> vjReadLayoutAdaptor.toReadCandidate(o) }
+        val numSplitReads10Bases = layout.reads.map { o -> vjReadLayoutAdaptor.toReadCandidate(o) }
             .count { o -> Math.max(o.leftSoftClip, o.rightSoftClip) >= 10 }
 
-        val anchorRange = vjReadLayoutAdaptor.getAnchorRange(geneType, overlay)
+        val anchorRange = vjReadLayoutAdaptor.getAnchorRange(geneType, layout)
 
         // if there is no anchor within this layout then don't write it
         if (anchorRange == null)
             return
 
-        var sequence = overlay.consensusSequence()
-        var support = overlay.highQualSupportString()
+        var sequence = layout.consensusSequence()
+        var support = layout.highQualSupportString()
 
         // make sure aligned to codon
         val codonAlignedSeq = sequence.drop(anchorRange.first % 3)
@@ -72,20 +72,19 @@ object VJReadLayoutFile
         sequence = insertDashes(sequence, anchorRange)
         support = insertDashes(support, anchorRange)
 
-        writer.write("${overlay.id} type: ${geneType}, read count: ${overlay.reads.size}, split(5) read count: ${numSplitReads5Bases}, ")
+        writer.write("${layout.id} type: ${geneType}, read count: ${layout.reads.size}, split(5) read count: ${numSplitReads5Bases}, ")
         writer.write("split(10) read count: ${numSplitReads10Bases}, ")
-        writer.write("AA: ${aa}, ")
-        writer.write("aligned: ${overlay.alignedPosition}\n")
+        writer.write("AA: ${aa}\n")
         writer.write("    ${sequence}\n")
         writer.write("    ${support}\n")
 
-        for (r in overlay.reads)
+        for (r in layout.reads)
         {
             val read: VJReadCandidate = vjReadLayoutAdaptor.toReadCandidate(r)
-            val readPadding = Math.max(overlay.alignedPosition - r.alignedPosition, 0)
+            val readPadding = Math.max(layout.alignedPosition - r.alignedPosition, 0)
             val paddedSeq = " ".repeat(readPadding) + r.sequence
             val paddedQual = " ".repeat(readPadding) + SAMUtils.phredToFastq(r.baseQualities)
-            writer.write("    read: ${read.read}, aligned: ${r.alignedPosition}\n")
+            writer.write("    read: ${read.read}\n")
             writer.write("    ${insertDashes(paddedSeq, anchorRange)}\n")
             writer.write("    ${insertDashes(paddedQual, anchorRange)}\n")
         }

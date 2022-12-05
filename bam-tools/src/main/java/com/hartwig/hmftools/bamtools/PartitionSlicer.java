@@ -44,7 +44,6 @@ public class PartitionSlicer
 
     // slicing
     private final boolean mRunSlice;
-    private final List<BaseRegion> mSliceRegions;
     private final SliceWriter mSliceWriter;
 
     private int mTotalReads;
@@ -69,12 +68,6 @@ public class PartitionSlicer
         mReadGroupMap = Maps.newHashMap();
 
         mBaseCoverage = mRunMetrics ? new BaseCoverage(mConfig, mRegion.start(), mRegion.end()) : null;
-
-        mSliceRegions = mConfig.SpecificRegions.stream()
-                .filter(x -> mRegion.chromosome().equals(x.chromosome()))
-                .filter(x -> positionsOverlap(mRegion.start(), mRegion.end(), x.start(), x.end()))
-                .map(x -> new BaseRegion(x.start(), x.end()))
-                .collect(Collectors.toList());
 
         mFilterRegion = null;
 
@@ -187,10 +180,9 @@ public class PartitionSlicer
 
     private boolean overlapsSliceRegion(final String chromosome, final int posStart, final int posEnd)
     {
-        if(!mRegion.Chromosome.equals(chromosome))
-            return false;
-
-        return mSliceRegions.stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x.start(), x.end()));
+        return mConfig.SpecificRegions.stream()
+                .filter(x -> x.Chromosome.equals(chromosome))
+                .anyMatch(x -> positionsOverlap(x.start(), x.end(), posStart, posEnd));
     }
 
     private void handleMetricsRecord(final SAMRecord record)

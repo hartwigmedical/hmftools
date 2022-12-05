@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.isofox.TestUtils.POS_STRAND;
+import static com.hartwig.hmftools.isofox.TestUtils.createIsofoxConfig;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.LONG;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SHORT;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SPLICED;
@@ -40,7 +41,7 @@ public class ExpectedRatesTest
     @Test
     public void testRegionMatching()
     {
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         int fragmentLength = 100;
         config.ReadLength = 20;
 
@@ -276,7 +277,7 @@ public class ExpectedRatesTest
     @Test
     public void testSingleTranscriptCounts()
     {
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         config.ReadLength = 10;
         config.FragmentSizeData.add(new FragmentSize(30, 1));
 
@@ -347,7 +348,7 @@ public class ExpectedRatesTest
     @Test
     public void testMultipleTranscriptCounts()
     {
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         config.FragmentSizeData.add(new FragmentSize(30, 1));
         config.ReadLength = 10;
 
@@ -461,7 +462,7 @@ public class ExpectedRatesTest
     @Test
     public void testSingleExonicRegions()
     {
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         config.FragmentSizeData.add(new FragmentSize(30, 1));
         config.ReadLength = 10;
 
@@ -550,7 +551,7 @@ public class ExpectedRatesTest
     @Test
     public void testOverlappingGeneCounts()
     {
-        IsofoxConfig config = new IsofoxConfig();
+        IsofoxConfig config = createIsofoxConfig();
         config.FragmentSizeData.add(new FragmentSize(30, 1));
         config.ReadLength = 10;
 

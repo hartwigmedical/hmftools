@@ -9,7 +9,7 @@ public final class VirusTestFactory {
     }
 
     @NotNull
-    public static ImmutableVirusBreakend.Builder testVirusBreakendBuilder() {
+    public static ImmutableVirusBreakend.Builder virusBreakendBuilder() {
         return ImmutableVirusBreakend.builder()
                 .taxidGenus(0)
                 .nameGenus(Strings.EMPTY)
@@ -38,7 +38,7 @@ public final class VirusTestFactory {
     }
 
     @NotNull
-    public static ImmutableAnnotatedVirus.Builder testAnnotatedVirusBuilder() {
+    public static ImmutableAnnotatedVirus.Builder annotatedVirusBuilder() {
         return ImmutableAnnotatedVirus.builder()
                 .taxid(0)
                 .name(Strings.EMPTY)

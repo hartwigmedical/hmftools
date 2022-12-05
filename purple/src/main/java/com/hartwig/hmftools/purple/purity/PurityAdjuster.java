@@ -1,24 +1,43 @@
 package com.hartwig.hmftools.purple.purity;
 
-import com.hartwig.hmftools.common.purple.FittedPurity;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-public abstract class PurityAdjuster
+public class PurityAdjuster
 {
     private final double mPurity;
     private final double mNormFactor;
 
-    public PurityAdjuster(@NotNull final FittedPurity fittedPurity)
-    {
-        this(fittedPurity.purity(), fittedPurity.normFactor());
-    }
+    private final Map<String, Double> mObservedRatioMap;
+    private final Gender mGender;
 
-    public PurityAdjuster(final double purity, final double normFactor)
+    public PurityAdjuster(final double purity, final double normFactor, final CobaltChromosomes cobaltChromosomes)
     {
         mPurity = purity;
         mNormFactor = normFactor;
+
+        mObservedRatioMap = cobaltChromosomes.chromosomes().stream()
+                .collect(Collectors.toMap(CobaltChromosome::contig, CobaltChromosome::actualRatio));
+
+        mGender = cobaltChromosomes.gender();
+    }
+
+    public PurityAdjuster(final Gender gender, final double purity, final double normFactor)
+    {
+        mPurity = purity;
+        mNormFactor = normFactor;
+        mObservedRatioMap = null;
+        mGender = gender;
     }
 
     public double purity()
@@ -31,12 +50,10 @@ public abstract class PurityAdjuster
         return mNormFactor;
     }
 
-    public double germlineCopyNumber(@NotNull String contig)
+    public double germlineCopyNumber(final String chromosome)
     {
-        return germlineRatio(contig) * 2;
+        return germlineRatio(chromosome) * 2;
     }
-
-    public abstract double germlineRatio(@NotNull String contig);
 
     public double purityAdjustedCopyNumber(final String chromosomeName, final double ratio)
     {
@@ -49,9 +66,15 @@ public abstract class PurityAdjuster
         return Doubles.isZero(tumorRatio) ? 0 : 2 * normalRatio + 2 * (tumorRatio - normalRatio * mNormFactor) / mPurity / mNormFactor;
     }
 
-    public double purityAdjustedVAF(@NotNull final String chromosome, final double copyNumber, final double observedFrequency)
+    public double purityAdjustedVAF(final String chromosome, final double copyNumber, final double observedFrequency)
     {
-        double typicalCopyNumber = germlineCopyNumber(chromosome);
+        return purityAdjustedVAF(chromosome, copyNumber, observedFrequency, false);
+    }
+
+    public double purityAdjustedVAF(
+            final String chromosome, final double copyNumber, final double observedFrequency, boolean isGermlineHetDeletion)
+    {
+        double typicalCopyNumber = !isGermlineHetDeletion ? germlineCopyNumber(chromosome) : 1.0;
         return purityAdjustedFrequency(typicalCopyNumber, 0, copyNumber, observedFrequency);
     }
 
@@ -63,6 +86,15 @@ public abstract class PurityAdjuster
             return 1;
         }
         return purityAdjustedFrequency(2, 1, copyNumber, observedFrequency);
+    }
+
+    private double germlineRatio(final String chromosome)
+    {
+        if(mObservedRatioMap != null)
+            return mObservedRatioMap.getOrDefault(chromosome, 0d);
+
+        // for testing only
+        return HumanChromosome.fromString(chromosome).isDiploid(mGender) ? 1 : 0.5;
     }
 
     double purityAdjustedFrequency(final double normalCopyNumber, final double normalPloidy, final double tumorCopyNumber,

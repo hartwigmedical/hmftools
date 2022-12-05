@@ -17,7 +17,9 @@ public final class CommonVcfTags
     public static final String REPORTED_FLAG = "REPORTED";
     public static final String REPORTED_DESC = "Variant is reported in the driver catalog";
 
-    private CommonVcfTags() { }
+    private CommonVcfTags()
+    {
+    }
 
     public static int getGenotypeAttributeAsInt(final Genotype genotype, final String attribute, int defaultVaue)
     {
@@ -30,7 +32,5 @@ public final class CommonVcfTags
         Object value = genotype.getExtendedAttribute(attribute);
         return value == null ? defaultVaue : Double.parseDouble(value.toString());
     }
-
-
 
 }

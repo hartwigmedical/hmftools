@@ -130,8 +130,6 @@ public class GenerateTargetRegionsBed
         {
             mComparisonFiles.addAll(Arrays.stream(cmd.getOptionValue(COMPARISON_BED_FILES).split(";", -1)).collect(Collectors.toList()));
         }
-
-        // ensembl_trans_tsl.csv
     }
 
     public void run()
@@ -250,7 +248,6 @@ public class GenerateTargetRegionsBed
                 catch(Exception e)
                 {
                     LOGGER.error("invalid specific region data: {}", line);
-                    continue;
                 }
             }
 

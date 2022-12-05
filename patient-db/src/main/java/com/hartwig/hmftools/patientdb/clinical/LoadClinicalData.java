@@ -13,12 +13,12 @@ import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.ecrf.EcrfModel;
 import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.patientdb.clinical.lims.Lims;
+import com.hartwig.hmftools.patientdb.clinical.lims.LimsFactory;
 import com.hartwig.hmftools.patientdb.clinical.validators.CurationValidator;
 import com.hartwig.hmftools.patientdb.clinical.validators.PatientValidator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.config;
 
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+
 public class PurpleConstants
 {
     // constants prefixed with 'DEFAULT' can be overridden in config
@@ -21,6 +23,8 @@ public class PurpleConstants
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
     public static final int SNV_HOTSPOT_MAX_SNV_COUNT = 2000;
+    public static final double SNV_FITTING_MAPPABILITY = 1.0;
+    public static final int SNV_FITTING_MAX_REPEATS = 3;
 
     // SV recovery
     public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 300;
@@ -49,5 +53,8 @@ public class PurpleConstants
     public static final double MIN_RELATIVE_COPY_NUMBER_TOLERANCE = 0.12;
     public static final double MIN_ABSOLUTE_COPY_NUMBER_ADDITION = 1;
     public static final double MIN_RELATIVE_COPY_NUMBER_ADDITION = 0.8;
+
+    public static final ChrBaseRegion CDKN2A_DELETION_REGION = new ChrBaseRegion("9", 9000000, 12000000);
+    public static final double MAX_SOMATIC_FIT_DELETED_PERC = 0.003;
 
 }

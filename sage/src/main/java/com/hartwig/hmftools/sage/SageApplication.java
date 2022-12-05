@@ -108,7 +108,7 @@ public class SageApplication implements AutoCloseable
         long timeTakenMs = System.currentTimeMillis() - startTime;
         double timeTakeMins = timeTakenMs / 60000.0;
 
-        SG_LOGGER.info("Sage complete, mins({}min)", String.format("%.3f", timeTakeMins));
+        SG_LOGGER.info("Sage complete, mins({})", String.format("%.3f", timeTakeMins));
         SG_LOGGER.debug("Sage memory init({}mb) max({}mb)", initMemory, maxTaskMemory);
     }
 

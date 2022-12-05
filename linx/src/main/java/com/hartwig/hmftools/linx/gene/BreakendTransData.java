@@ -51,6 +51,7 @@ public class BreakendTransData
     private boolean mIsDisruptive;
     private boolean mReportableDisruption;
     private double mUndisruptedCopyNumber;
+    private boolean mUndisruptedCopyNumberSet;
 
     private String mProteinFeaturesKept;
     private String mProteinFeaturesLost;
@@ -122,6 +123,7 @@ public class BreakendTransData
 
         mReportableDisruption = false;
         mUndisruptedCopyNumber = 0;
+        mUndisruptedCopyNumberSet = false;
 
         mProteinFeaturesKept = "";
         mProteinFeaturesLost = "";
@@ -142,7 +144,6 @@ public class BreakendTransData
     public final String bioType() { return TransData.BioType; }
     public int codingStart() { return TransData.CodingStart != null ? TransData.CodingStart : 0; }
     public int codingEnd() { return TransData.CodingEnd != null ? TransData.CodingEnd : 0; }
-    public int transLength() { return TransData.length(); }
     public int exonCount() { return TransData.exons().size(); }
 
     public boolean isExonic()
@@ -293,7 +294,12 @@ public class BreakendTransData
     public void setReportableDisruption(boolean toggle) { mReportableDisruption = toggle; }
 
     public double undisruptedCopyNumber() { return mUndisruptedCopyNumber; }
-    public void setUndisruptedCopyNumber(double copyNumber) { mUndisruptedCopyNumber = copyNumber; }
+    public boolean undisruptedCopyNumberSet() { return mUndisruptedCopyNumberSet; }
+    public void setUndisruptedCopyNumber(double copyNumber)
+    {
+        mUndisruptedCopyNumber = copyNumber;
+        mUndisruptedCopyNumberSet = true;
+    }
 
     public final String toString()
     {

@@ -45,6 +45,8 @@ data class VJAnchorByReadMatch(
 {
 }
 
+// NOTE: vAnchorBoundary could be smaller than jAnchorBoundary
+// if the anchors overlap
 class VDJSequence(
     val layout: ReadLayout,
     val layoutSliceStart: Int,
@@ -92,17 +94,32 @@ class VDJSequence(
 
     val aminoAcidSequenceFormatted: String get()
     {
-        // we print the pre J anchor part first then the J anchor. This ensures that if J anchor is not aligned to codon
-        // it will still get printed the way we want it
-        var codonAlignedSeqBeforeJ = if (jAnchor != null) sequence.substring(0, jAnchor.anchorBoundary) else sequence
-
-        if (vAnchor != null)
+        if (vAnchor == null)
         {
-            // codon align
-            codonAlignedSeqBeforeJ = codonAlignedSeqBeforeJ.drop(vAnchor.anchorBoundary % 3)
+            if (jAnchor == null)
+                return String()
+
+            // if there is no v anchor, we have to align to j anchor
+            // also align to codon boundary for the J anchor
+            val codonAlignedSeq = sequence.substring(jAnchor.anchorBoundary % 3)
+            val dashPos = jAnchor.anchorBoundary / 3
+            return CiderUtils.insertDashes(Codons.aminoAcidFromBases(codonAlignedSeq), dashPos)
+        }
+        else if (jAnchor == null)
+        {
+            // if no j anchor, we just need to align to V anchor
+            val codonAlignedSeq = sequence.substring(vAnchor.anchorBoundary % 3)
+            val dashPos = vAnchor.anchorBoundary / 3
+            return CiderUtils.insertDashes(Codons.aminoAcidFromBases(codonAlignedSeq), dashPos)
         }
 
-        return CiderUtils.insertDashes(Codons.aminoAcidFromBases(codonAlignedSeqBeforeJ), (vAnchorBoundary ?: 0) / 3) + '-' +
+        // we print the pre J anchor part first then the J anchor. This ensures that if J anchor is not aligned to codon
+        // it will still get printed the way we want it
+        val codonAlignedSeqBeforeJ = sequence.substring(vAnchor.anchorBoundary % 3, jAnchor.anchorBoundary)
+        val dashPos = vAnchor.anchorBoundary / 3
+
+        return CiderUtils.insertDashes(Codons.aminoAcidFromBases(codonAlignedSeqBeforeJ), dashPos) +
+                '-' +
                 Codons.aminoAcidFromBases(jAnchorSequence)
     }
 
@@ -129,6 +146,7 @@ class VDJSequence(
     val vAnchorAA: String get()
     {
         val vAnchorSeq = vAnchorSequence
+
         // codon align
         return Codons.aminoAcidFromBases(vAnchorSeq.drop(vAnchorSeq.length % 3))
     }
@@ -154,7 +172,7 @@ class VDJSequence(
         return sequence
     }
 
-    private val cdr3Start: Int get()
+    val cdr3Start: Int get()
     {
         if (vAnchorBoundary != null)
         {
@@ -169,9 +187,10 @@ class VDJSequence(
         return 0
     }
 
-    private val cdr3End: Int get()
+    val cdr3End: Int get()
     {
-        return Math.min((jAnchorBoundary ?: return length) + 3, length)
+        // protect against case where v anchor boundary is actually > j anchor boundary
+        return Math.max(Math.min((jAnchorBoundary ?: return length) + 3, length), cdr3Start)
     }
 
     val cdr3Sequence: String get()
@@ -189,14 +208,14 @@ class VDJSequence(
         return CiderUtils.countsToString(supportCounts)
     }
 
-    val cdr3SupportMin: Int get()
-    {
-        return supportCounts.slice(cdr3Start until cdr3End).minOrNull() ?: 0
-    }
-
     val isInFrame: Boolean get()
     {
-        return ((jAnchorBoundary ?: 0) % 3) == 0
+        if (vAnchor == null || jAnchor == null)
+        {
+            // must be in frame if either is null
+            return true
+        }
+        return ((jAnchorBoundary!! - vAnchorBoundary!!) % 3) == 0
     }
 
     fun getSupportAt(index: Int) : Map.Entry<Char, Int>

@@ -45,7 +45,7 @@ class AnchorBlosumSearcherTest
     fun testFindJAnchor()
     {
         val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore,
-            8, true)
+            8)
 
         val vAnchorSeq = "CGAGTCGAAGACACGGCTGTGTATTACTGT"
         val jAnchorSeq = "TGGGGCCAAGGGACCACGGTCACCGTCTCC"
@@ -61,7 +61,8 @@ class AnchorBlosumSearcherTest
         val vAnchorEnd = vAnchorStart + vAnchorSeq.length
 
         val testSeq = fullSeq.substring(vAnchorEnd)
-        val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(testSeq, VJGeneType.IGHJ)
+        val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(
+            testSeq, listOf(VJGeneType.IGHJ), IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY)
 
         assertNotNull(anchorBlosumMatch)
         assertEquals(45, anchorBlosumMatch.anchorStart)
@@ -72,7 +73,7 @@ class AnchorBlosumSearcherTest
     @Test
     fun testFindJAnchorPartial()
     {
-        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 7, true)
+        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 7)
 
         val vAnchorSeq = "CGAGTCGAAGACACGGCTGTGTATTACTGT"
         val jAnchorSeq = "TGGGGCCAAGGGACCACGGTCACCGTCTCC".dropLast(8) // chop off 8 bases
@@ -87,7 +88,8 @@ class AnchorBlosumSearcherTest
         val vAnchorEnd = vAnchorStart + vAnchorSeq.length
 
         val testSeq = fullSeq.substring(vAnchorEnd)
-        val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(testSeq, VJGeneType.IGHJ)
+        val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(
+            testSeq, listOf(VJGeneType.IGHJ), IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY)
 
         assertNotNull(anchorBlosumMatch)
         assertEquals(45, anchorBlosumMatch.anchorStart)
@@ -98,7 +100,7 @@ class AnchorBlosumSearcherTest
     @Test
     fun testFindVAnchor()
     {
-        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 8, true)
+        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 8)
 
         val vAnchorSeq = "CGAGTCGAAGACACGGCTGTGTATTACTGT"
         val jAnchorSeq = "TGGGGCCAAGGGACCACGGTCACCGTCTCC"
@@ -112,7 +114,8 @@ class AnchorBlosumSearcherTest
         assertNotEquals(-1, jAnchorStart)
 
         val testSeq = fullSeq.substring(0, jAnchorStart)
-        val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(testSeq, VJGeneType.IGHV)
+        val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(
+            testSeq, listOf(VJGeneType.IGHV), IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY)
 
         assertNotNull(anchorBlosumMatch)
         assertEquals(27, anchorBlosumMatch.anchorStart)
@@ -123,7 +126,7 @@ class AnchorBlosumSearcherTest
     @Test
     fun testFindVAnchorPartial()
     {
-        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 7, true)
+        val anchorBlosumSearcher = AnchorBlosumSearcher(vjGeneStore, 7)
 
         val vAnchorSeq = "CGAGTCGAAGACACGGCTGTGTATTACTGT".drop(8) // chop off 8
         val jAnchorSeq = "TGGGGCCAAGGGACCACGGTCACCGTCTCC"
@@ -136,7 +139,14 @@ class AnchorBlosumSearcherTest
         assertNotEquals(-1, jAnchorStart)
 
         val testSeq = fullSeq.substring(0, jAnchorStart)
-        val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(testSeq, VJGeneType.IGHV)
+
+        // we use negative start offset, this means that relative to the seq start, the anchor start
+        // could be negative, and would result in a partial match
+        //         ----------------------------------- testSeq
+        // ++++++++++    template anchor
+        // |------|      startOffset
+        val anchorBlosumMatch: AnchorBlosumMatch? = anchorBlosumSearcher.searchForAnchor(
+            testSeq, listOf(VJGeneType.IGHV), IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY)
 
         assertNotNull(anchorBlosumMatch)
         assertEquals(1, anchorBlosumMatch.anchorStart)

@@ -20,20 +20,41 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.CodingBaseData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public final class BreakendGenePrep
 {
-    public static void setSvGeneData(
-            final List<SvVarData> svList, final EnsemblDataCache ensemblDataCache, boolean applyPromotorDistance, boolean loadBreakendGenes)
+    public static void setSvGeneData(final List<SvVarData> svList, final EnsemblDataCache ensemblDataCache,
+            int defaultPreGeneDistance, final Map<String,Integer> specificPreGeneDistances)
     {
-        int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
+        List<ChrBaseRegion> specificPreGeneRanges = Lists.newArrayList();
+        int specificPreGeneDistance = defaultPreGeneDistance;
+
+        for(Map.Entry<String,Integer> entry : specificPreGeneDistances.entrySet())
+        {
+            String geneName = entry.getKey();
+            specificPreGeneDistance = entry.getValue();
+
+            GeneData geneData = ensemblDataCache.getGeneDataByName(geneName);
+
+            if(geneData == null)
+                continue;
+
+            int preGeneStart = geneData.Strand == POS_STRAND ? geneData.GeneStart - specificPreGeneDistance : geneData.GeneEnd;
+            int preGeneEnd = geneData.Strand == POS_STRAND ? geneData.GeneStart : geneData.GeneEnd + specificPreGeneDistance;
+            specificPreGeneRanges.add(new ChrBaseRegion(geneData.Chromosome, preGeneStart, preGeneEnd));
+        }
+
+        /* deprecated logic to only load transcripts relating to the breakends in a specific sample
+           was used: isSingleSample() && !RunDrivers && RestrictedGeneIds.isEmpty() && !IsGermline;
 
         if(loadBreakendGenes)
         {
@@ -65,6 +86,7 @@ public final class BreakendGenePrep
 
             ensemblDataCache.loadTranscriptData(restrictedGeneIds);
         }
+        */
 
         // associate breakends with transcripts
         for(final SvVarData var : svList)
@@ -79,9 +101,12 @@ public final class BreakendGenePrep
                     // special case of looking for mappings to locations containing genes so hotspot fusions can be found
                     for(final SglMapping mapping : var.getSglMappings())
                     {
+                        int preGeneDistance = getPreGeneDistance(
+                                mapping.Chromosome, mapping.Position, defaultPreGeneDistance, specificPreGeneDistance, specificPreGeneRanges);
+
                         final List<BreakendGeneData> mappingGenes = findGeneAnnotationsBySv(
                                 ensemblDataCache, var.id(), isStart, mapping.Chromosome, mapping.Position, mapping.Orientation,
-                                upstreamDistance);
+                                preGeneDistance);
 
                         mappingGenes.forEach(x -> x.setType(var.type()));
 
@@ -90,9 +115,12 @@ public final class BreakendGenePrep
                 }
                 else
                 {
+                    int preGeneDistance = getPreGeneDistance(
+                            var.chromosome(isStart), var.position(isStart), defaultPreGeneDistance, specificPreGeneDistance, specificPreGeneRanges);
+
                     genesList.addAll(findGeneAnnotationsBySv(
                             ensemblDataCache, var.id(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart),
-                            upstreamDistance));
+                            preGeneDistance));
 
                     for(BreakendGeneData gene : genesList)
                     {
@@ -101,6 +129,12 @@ public final class BreakendGenePrep
                 }
             }
         }
+    }
+
+    private static int getPreGeneDistance(
+            final String chromosome, int position, int defaultDistance, int specificDistance, final List<ChrBaseRegion> specificPreGeneRanges)
+    {
+        return specificPreGeneRanges.stream().anyMatch(x -> x.containsPosition(chromosome, position)) ? specificDistance : defaultDistance;
     }
 
     public static List<BreakendGeneData> findGeneAnnotationsBySv(

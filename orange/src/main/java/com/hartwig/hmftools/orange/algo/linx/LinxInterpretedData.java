@@ -2,7 +2,6 @@ package com.hartwig.hmftools.orange.algo.linx;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
@@ -33,17 +32,17 @@ public abstract class LinxInterpretedData {
     public abstract List<LinxBreakend> allBreakends();
 
     @NotNull
-    public abstract List<GeneDisruption> reportableGeneDisruptions();
+    public abstract List<LinxBreakend> reportableBreakends();
 
     @NotNull
-    public abstract List<GeneDisruption> additionalSuspectDisruptions();
+    public abstract List<LinxBreakend> additionalSuspectBreakends();
 
     @NotNull
     public abstract List<HomozygousDisruption> homozygousDisruptions();
 
-    @NotNull
+    @Nullable
     public abstract List<LinxGermlineSv> allGermlineDisruptions();
 
-    @NotNull
+    @Nullable
     public abstract List<LinxGermlineSv> reportableGermlineDisruptions();
 }

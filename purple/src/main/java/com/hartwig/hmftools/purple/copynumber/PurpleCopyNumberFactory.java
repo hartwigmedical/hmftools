@@ -1,8 +1,13 @@
 package com.hartwig.hmftools.purple.copynumber;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.Math.round;
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.CDKN2A_DELETION_REGION;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -13,9 +18,11 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleCopyNumber;
+import com.hartwig.hmftools.purple.config.PurpleConstants;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
@@ -46,7 +53,7 @@ public class PurpleCopyNumberFactory
         mCobaltChromosomes = cobaltChromosomes;
     }
 
-    public void invoke(final List<ObservedRegion> fittedRegions, final List<StructuralVariant> structuralVariants)
+    public void buildCopyNumbers(final List<ObservedRegion> fittedRegions, final List<StructuralVariant> structuralVariants)
     {
         mSomaticCopyNumbers.clear();
 
@@ -194,4 +201,39 @@ public class PurpleCopyNumberFactory
         return isValid;
     }
 
+    public static double calculateDeletedDepthWindows(final List<PurpleCopyNumber> copyNumbers)
+    {
+        int totalDepthWindows = 0;
+        int deletedDepthWindows = 0;
+
+        // excluding chr Y and a large region around CDKN2A
+        for(PurpleCopyNumber copyNumber : copyNumbers)
+        {
+            totalDepthWindows += copyNumber.depthWindowCount();
+
+            String chromosome = RefGenomeFunctions.stripChrPrefix(copyNumber.chromosome());
+
+            if(chromosome.equals("Y"))
+                continue;
+
+            if(copyNumber.averageTumorCopyNumber() >= 0.5)
+                continue;
+
+            int deletedWindows = copyNumber.depthWindowCount();
+
+            if(CDKN2A_DELETION_REGION.chromosome().equals(chromosome))
+            {
+                if(positionsOverlap(copyNumber.start(), copyNumber.end(), CDKN2A_DELETION_REGION.start(), CDKN2A_DELETION_REGION.end()))
+                {
+                    int baseOverlap = min(copyNumber.end(), CDKN2A_DELETION_REGION.end()) - max(copyNumber.start(), CDKN2A_DELETION_REGION.start());
+                    double nonGeneDeletedFraction = (copyNumber.length() - baseOverlap) / (double)copyNumber.length();
+                    deletedWindows = (int)round(nonGeneDeletedFraction * deletedWindows);
+                }
+            }
+
+            deletedDepthWindows += deletedWindows;
+        }
+
+        return totalDepthWindows > 0 ? deletedDepthWindows / (double)totalDepthWindows : 0;
+    }
 }

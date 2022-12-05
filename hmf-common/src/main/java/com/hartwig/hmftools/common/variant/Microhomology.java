@@ -93,7 +93,9 @@ public final class Microhomology
     public static MicrohomologyContext expandMicrohomologyRepeats(@NotNull final MicrohomologyContext result)
     {
         if(result.length() == 0)
+        {
             return result;
+        }
 
         final byte[] readSequence = result.readSequence();
         int length = result.length();

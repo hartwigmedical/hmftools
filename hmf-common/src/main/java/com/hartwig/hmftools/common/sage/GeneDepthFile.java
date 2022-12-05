@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -24,10 +25,19 @@ public final class GeneDepthFile
         Files.write(new File(filename).toPath(), toLines(depths, depthBuckets));
     }
 
+    public static class GeneDepthComparator implements Comparator<GeneDepth>
+    {
+        public int compare(final GeneDepth first, final GeneDepth second)
+        {
+            return first.Gene.compareTo(second.Gene);
+        }
+    }
+
     private static List<String> toLines(final List<GeneDepth> depths, final List<Integer> depthBuckets)
     {
         if(!depths.isEmpty())
         {
+            Collections.sort(depths, new GeneDepthComparator());
             final List<String> lines = Lists.newArrayList();
             lines.add(header(depthBuckets));
             depths.stream().map(GeneDepthFile::toString).forEach(lines::add);

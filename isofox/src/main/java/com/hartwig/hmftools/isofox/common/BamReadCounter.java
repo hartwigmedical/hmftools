@@ -2,25 +2,37 @@ package com.hartwig.hmftools.isofox.common;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import static com.hartwig.hmftools.isofox.ChromosomeTaskExecutor.findNextOverlappingGenes;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.READ_COUNTS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
-import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
+import static com.hartwig.hmftools.isofox.common.ReadRecord.validTranscriptType;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,24 +48,26 @@ public class BamReadCounter implements Callable
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
+    private final ResultsWriter mResultsWriter;
 
     private final int[] mCurrentGenesRange;
     private int mTotalReadCount;
     private int mCurrentGeneReadCount;
-    private int[] mReadTypeCounts;
+    private FragmentTypeCounts mFragmentTypeCounts;
     private int mSecondaryReads;
     private String mChromosome;
     private final List<GeneData> mGeneDataList;
     private String mCurrentGenes;
     private final int[] mMaqQualFrequencies;
 
-    public BamReadCounter(final IsofoxConfig config)
+    public BamReadCounter(final IsofoxConfig config, final ResultsWriter resultsWriter)
     {
         mConfig = config;
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
         mBamSlicer = new BamSlicer(0, true, true, true);
+        mResultsWriter = resultsWriter;
 
         mGeneDataList = Lists.newArrayList();
         mChromosome = "";
@@ -63,7 +77,7 @@ public class BamReadCounter implements Callable
         mCurrentGeneReadCount = 0;
         mCurrentGenes = "";
         mSecondaryReads = 0;
-        mReadTypeCounts = new int[typeAsInt(FragmentType.MAX)];
+        mFragmentTypeCounts = new FragmentTypeCounts();
         mMaqQualFrequencies = new int[4];
     }
 
@@ -83,7 +97,7 @@ public class BamReadCounter implements Callable
 
     private void processBam()
     {
-        if (mGeneDataList.isEmpty())
+        if(mGeneDataList.isEmpty())
             return;
 
         // walk through each chromosome, taking groups of overlapping genes together
@@ -97,13 +111,13 @@ public class BamReadCounter implements Callable
         {
             currentGeneIndex = findNextOverlappingGenes(mGeneDataList, currentGeneIndex, overlappingGenes);
 
-            if(overlappingGenes.stream().anyMatch(x -> mConfig.Filters.EnrichedGeneIds.contains(x.GeneId)))
-                continue;
+            // if(overlappingGenes.stream().anyMatch(x -> mConfig.Filters.EnrichedGeneIds.contains(x.GeneId)))
+            //    continue;
 
             mCurrentGenesRange[SE_START] = 0;
             mCurrentGenesRange[SE_END] = 0;
 
-            for (int i = 0; i < overlappingGenes.size(); ++i)
+            for(int i = 0; i < overlappingGenes.size(); ++i)
             {
                 GeneData geneData = overlappingGenes.get(i);
 
@@ -127,28 +141,34 @@ public class BamReadCounter implements Callable
         }
 
         ISF_LOGGER.info("chromosome({}) processing complete: total({}) duplicates({}) chimeric({}) secondaries({}) mapQuals(0={} 1={} 2={} 3={})",
-                mChromosome, mTotalReadCount, mReadTypeCounts[typeAsInt(DUPLICATE)], mReadTypeCounts[typeAsInt(CHIMERIC)], mSecondaryReads,
+                mChromosome, mTotalReadCount, mFragmentTypeCounts.typeCount(DUPLICATE), mFragmentTypeCounts.typeCount(CHIMERIC), mSecondaryReads,
                 mMaqQualFrequencies[0], mMaqQualFrequencies[1], mMaqQualFrequencies[2], mMaqQualFrequencies[3]);
     }
 
-    private void processBamRead(@NotNull final SAMRecord read)
+    private void processBamRead(final SAMRecord record)
     {
+        if(!positionWithin(record.getStart(), mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END]))
+            return;
+
+        if(GeneRegionFilters.inExcludedRegion(mConfig.Filters.ExcludedRegion, record))
+            return;
+
         ++mTotalReadCount;
         ++mCurrentGeneReadCount;
-        ++mReadTypeCounts[typeAsInt(TOTAL)];
+        mFragmentTypeCounts.addCount(TOTAL);
 
-        if(read.getDuplicateReadFlag())
-            ++mReadTypeCounts[typeAsInt(DUPLICATE)];
+        if(record.getDuplicateReadFlag())
+            mFragmentTypeCounts.addCount(DUPLICATE);
 
-        if((read.getFlags() & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0)
-            ++mReadTypeCounts[typeAsInt(CHIMERIC)];
+        if((record.getFlags() & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0)
+            mFragmentTypeCounts.addCount(CHIMERIC);
 
-        if(read.isSecondaryAlignment())
+        if(record.isSecondaryAlignment())
             ++mSecondaryReads;
 
-        if(read.getMappingQuality() <= 3)
+        if(record.getMappingQuality() <= 3)
         {
-            mMaqQualFrequencies[read.getMappingQuality()]++;
+            mMaqQualFrequencies[record.getMappingQuality()]++;
         }
 
         if(mConfig.GeneReadLimit > 0 && mCurrentGeneReadCount > mConfig.GeneReadLimit)
@@ -156,6 +176,50 @@ public class BamReadCounter implements Callable
             mBamSlicer.haltProcessing();
             ISF_LOGGER.info("chromosome({}) gene({}) halting processing after {} reads", mChromosome, mCurrentGenes, mCurrentGeneReadCount);
         }
+
+        if(mConfig.WriteReadData)
+            writeReadData(mResultsWriter.getReadDataWriter(), record, mCurrentGenes);
     }
 
+    public static BufferedWriter createReadDataWriter(final IsofoxConfig config)
+    {
+        try
+        {
+            final String outputFileName = config.formOutputFile("read_data.csv");
+
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            writer.write("GeneId,ReadId,Chromosome,PosStart,PosEnd,Cigar,Flags,InsertSize");
+            writer.write(",MateChr,MatePosStart,FirstInPair,ReadReversed,Duplicate,Secondary,Supplementary,SuppData");
+            writer.newLine();
+            return writer;
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.error("failed to create read data writer: {}", e.toString());
+            return null;
+        }
+    }
+
+    private synchronized static void writeReadData( final BufferedWriter writer, final SAMRecord record, final String geneId)
+    {
+        try
+        {
+            SupplementaryReadData suppData = SupplementaryReadData.from(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+
+            writer.write(String.format("%s,%s,%s,%d,%d,%s,%d,%d,%s,%d",
+                    geneId, record.getReadName(), record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd(),
+                    record.getCigarString(), record.getFlags(), record.getInferredInsertSize(),
+                    record.getMateReferenceName(), record.getMateAlignmentStart()));
+
+            writer.write(String.format(",%s,%s,%s,%s,%s,%s",
+                    record.getFirstOfPairFlag(), record.getReadNegativeStrandFlag(), record.getDuplicateReadFlag(),
+                    record.getSecondOfPairFlag(), record.getSupplementaryAlignmentFlag(), suppData != null ? suppData.asCsv() : "N/A"));
+
+            writer.newLine();
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write read data file: {}", e.toString());
+        }
+    }
 }

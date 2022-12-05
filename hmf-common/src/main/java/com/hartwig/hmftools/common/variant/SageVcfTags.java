@@ -38,7 +38,7 @@ public final class SageVcfTags
                 LOCAL_PHASE_SET, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(
-                READ_CONTEXT_REPEAT_COUNT,1, VCFHeaderLineType.Integer, READ_CONTEXT_REPEAT_COUNT_DESCRIPTION));
+                READ_CONTEXT_REPEAT_COUNT, 1, VCFHeaderLineType.Integer, READ_CONTEXT_REPEAT_COUNT_DESCRIPTION));
 
         return header;
     }

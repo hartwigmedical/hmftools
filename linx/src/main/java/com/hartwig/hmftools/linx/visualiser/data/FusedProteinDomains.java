@@ -58,9 +58,9 @@ public class FusedProteinDomains
                 final GenomeRegion convertedDomain = convertRegion(fusion.StrandDown, downGeneRegion, unadjustedDomain);
 
                 final VisProteinDomain domain = VisProteinDomain.from(unadjustedDomain);
-                unadjustedDomain.Chromosome = fusion.name();
-                unadjustedDomain.Start = max(convertedDomain.start() + firstUpExon.geneEnd(), finalDownExon.geneStart());
-                unadjustedDomain.End = min(convertedDomain.end() + firstUpExon.geneEnd(), finalDownExon.geneEnd());
+                domain.Chromosome = fusion.name();
+                domain.Start = max(convertedDomain.start() + firstUpExon.geneEnd(), finalDownExon.geneStart());
+                domain.End = min(convertedDomain.end() + firstUpExon.geneEnd(), finalDownExon.geneEnd());
                 result.add(domain);
             }
         }
@@ -101,7 +101,8 @@ public class FusedProteinDomains
     @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER).add("sampleId")
+        return new StringJoiner(DELIMITER)
+                .add("sampleId")
                 .add("clusterId")
                 .add("fusion")
                 .add("start")

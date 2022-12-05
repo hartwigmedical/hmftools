@@ -60,5 +60,4 @@ public class GeneCopyNumberRegion
         return minRegion != null ? new GeneCopyNumberRegion(
                 transData.GeneId, transData.TransName, minRegion.StartPos, minRegion.EndPos, minRegion.CopyNumber) : null;
     }
-
 }

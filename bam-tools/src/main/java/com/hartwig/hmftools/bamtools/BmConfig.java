@@ -139,6 +139,9 @@ public class BmConfig
             try
             {
                 loadSpecificChromsomesOrRegions(cmd, SpecificChromosomes, SpecificRegions, BM_LOGGER);
+
+                if(runSlicing())
+                    SpecificChromosomes.clear();
             }
             catch(ParseException e)
             {
@@ -194,6 +197,7 @@ public class BmConfig
             filename += "." + OutputId;
 
         filename += ".csv";
+
         return filename;
     }
 
@@ -244,6 +248,8 @@ public class BmConfig
         options.addOption(SAMPLE, true, "Tumor sample ID");
         options.addOption(BAM_FILE, true, "BAM file location");
         addRefGenomeConfig(options);;
+        options.addOption(FUNCTIONS, true, "Functions to run: {}" + BamFunction.values());
+        options.addOption(SLICE_BED, true, "BED file defining region to slice");
         options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_CHR_PARTITION_SIZE);
         options.addOption(MAP_QUAL_THRESHOLD, true, "Map quality threshold, default: " + DEFAULT_MAP_QUAL_THRESHOLD);
         options.addOption(BASE_QUAL_THRESHOLD, true, "Base quality threshold, default: " + DEFAULT_BASE_QUAL_THRESHOLD);

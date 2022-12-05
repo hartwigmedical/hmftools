@@ -16,17 +16,17 @@ public final class PurpleCommon
 
     public static final String DELIMITER = "\t";
 
-    public static final String purpleSomaticVcfFile(final String purpleDir, final String sampleId)
+    public static String purpleSomaticVcfFile(final String purpleDir, final String sampleId)
     {
         return FileWriterUtils.checkAddDirSeparator(purpleDir) + sampleId + PURPLE_SOMATIC_VCF_SUFFIX;
     }
 
-    public static final String purpleGermlineVcfFile(final String purpleDir, final String sampleId)
+    public static String purpleGermlineVcfFile(final String purpleDir, final String sampleId)
     {
         return FileWriterUtils.checkAddDirSeparator(purpleDir) + sampleId + PURPLE_GERMLINE_VCF_SUFFIX;
     }
 
-    public static final String purpleSvFile(final String purpleDir, final String sampleId)
+    public static String purpleSvFile(final String purpleDir, final String sampleId)
     {
         return FileWriterUtils.checkAddDirSeparator(purpleDir) + sampleId + PURPLE_SV_VCF_SUFFIX;
     }

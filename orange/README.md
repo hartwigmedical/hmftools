@@ -4,8 +4,8 @@ ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into 
  1. The algo depends exclusively on config and data produced by the [Hartwig platinum pipeline](https://github.com/hartwigmedical/platinum) 
  and hence can always be run as final step without any additional local data or config required. 
  1. The algo combines RNA and DNA data to present an integrated DNA/RNA analysis of a tumor sample. 
- 1. Everything that is labeled as a driver by any of the Hartwig algo's is displayed in the PDF along with the driver likelihood. 
- This effectively means that everything reported by [patient-reporter](../patient-reporter) is present in the ORANGE pdf and json.
+ 1. Everything that is labeled as a driver by any of the Hartwig algorithms is displayed in the PDF along with the driver likelihood. 
+ This effectively means that everything reported by [patient-reporter](https://github.com/hartwigmedical/oncoact/tree/master/patient-reporter) is present in the ORANGE pdf and json.
  1. An additional exhaustive WGS and WTS scan is performed for anything interesting that may be potentially relevant but not picked up as a driver.
  Details of what is considered interesting are described in below.
  1. A comprehensive range of QC measures and plots is displayed which provides in-depth details about the data quality of the tumor sample. 
@@ -123,7 +123,7 @@ Do note that RNA features and cohort comparison thereof are only included if ORA
  
 ### Clinical Evidence 
  
- The following algo is used to render clinical evidence in the ORANGE report based on [PROTECT](../protect) output:
+ The following algo is used to render clinical evidence in the ORANGE report based on [PROTECT](https://github.com/hartwigmedical/oncoact/tree/master/protect) output:
   1. Evidence is split up based on applicable and "potentially interesting" based on PROTECT reported yes/no.
   1. Evidence is split between trials and non-trials which are further split up based on on/off label. 
   1. Evidence is grouped by event and split up between responsive and resistance treatment evidence.
@@ -140,9 +140,15 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 - Upcoming
+  - Many and major datamodel changes in the ORANGE json output.
   - Remove PROTECT dependency from ORANGE including clinical evidence chapter and potentially interesting mutation based on evidence
-  - Improve formatting of non-duplicate fragments in RNA findings
-  - Fix bug with displaying gene disruptions in case of one SVs causing more than 1 disruption across multiple transcripts of the same gene.
+  - Support tumor-only mode
+  - Plots are now copied as part of ORANGE algo and paths to plots are registered relative to the location of the output json file.
+  - Various minor changes and bug fixes to RNA:
+    - Improve formatting of non-duplicate fragments in RNA findings
+    - Germline variants are now actually annotated with RNA in case RNA data is present.
+    - RNA sample config is mandatory in case RNA data is provided. 
+  - Disruptions are now displayed exactly as they are provided by linx without further conversions or merging. 
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.10)
   - Classify each driver gene as wild-type in case:
     1. Purple fit is reliable

@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.READ_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.UNMAPPED_READS;
@@ -15,7 +16,6 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.LOW_MAP_QUAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
-import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.UNIQUE_TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
@@ -34,6 +34,8 @@ import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.isofox.BamFragmentAllocator;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
+import com.hartwig.hmftools.isofox.common.BamReadCounter;
+import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
@@ -136,7 +138,12 @@ public class ResultsWriter
         if(!mConfig.generateExpectedDataOnly())
         {
             if(mConfig.WriteReadData)
-                mReadDataWriter = BamFragmentAllocator.createReadDataWriter(mConfig);
+            {
+                if(mConfig.runFunction(READ_COUNTS))
+                    mReadDataWriter = BamReadCounter.createReadDataWriter(mConfig);
+                else
+                    mReadDataWriter = BamFragmentAllocator.createReadDataWriter(mConfig);
+            }
 
             if(mConfig.WriteSpliceSiteData)
                 mSpliceSiteWriter = SpliceSiteCounter.createWriter(mConfig);
@@ -248,12 +255,12 @@ public class ResultsWriter
                     geneCollection.chrId(), geneCollection.genes().size(), geneCollection.chromosome(),
                     geneCollection.regionBounds()[SE_START], geneCollection.regionBounds()[SE_END]));
 
-            final int[] fragmentCounts = geneCollection.getCounts();
+            final FragmentTypeCounts fragmentCounts = geneCollection.fragmentTypeCounts();
 
             mGeneCollectionWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
-                    fragmentCounts[typeAsInt(TOTAL)], fragmentCounts[typeAsInt(DUPLICATE)], fragmentCounts[typeAsInt(TRANS_SUPPORTING)],
-                    fragmentCounts[typeAsInt(UNSPLICED)], fragmentCounts[typeAsInt(ALT)],
-                    fragmentCounts[typeAsInt(CHIMERIC)], fragmentCounts[typeAsInt(LOW_MAP_QUAL)]));
+                    fragmentCounts.typeCount(TOTAL), fragmentCounts.typeCount(DUPLICATE), fragmentCounts.typeCount(TRANS_SUPPORTING),
+                    fragmentCounts.typeCount(UNSPLICED), fragmentCounts.typeCount(ALT),
+                    fragmentCounts.typeCount(CHIMERIC), fragmentCounts.typeCount(LOW_MAP_QUAL)));
 
             mGeneCollectionWriter.write(String.format(",%s", geneCollection.geneNames(geneCollection.genes().size())));
 

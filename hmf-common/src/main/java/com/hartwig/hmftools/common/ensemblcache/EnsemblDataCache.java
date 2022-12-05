@@ -41,8 +41,6 @@ public class EnsemblDataCache
     private final Map<String,GeneData> mGeneDataMap; // keyed by geneId
     private final Map<String,GeneData> mGeneNameIdMap; // for faster look-up by name
 
-    private GeneNameMapping mGeneNameMapping;
-
     // whether to load more details information for each transcript - exons, protein domains, splice positions etc
     private boolean mRequireExons;
     private boolean mRequireProteinDomains;
@@ -81,7 +79,6 @@ public class EnsemblDataCache
         mRequireGeneSynonyms = false;
         mDownstreamGeneAnnotations = Maps.newHashMap();
         mAlternativeGeneData = Lists.newArrayList();
-        mGeneNameMapping = null;
     }
 
     public static void addEnsemblDir(final Options options)
@@ -195,14 +192,6 @@ public class EnsemblDataCache
         }
     }
 
-    public GeneNameMapping getGeneMappings()
-    {
-        if(mGeneNameMapping == null)
-            mGeneNameMapping = new GeneNameMapping();
-
-        return mGeneNameMapping;
-    }
-
     public List<TranscriptData> getTranscripts(final String geneId)
     {
         return mTranscriptByGeneIdMap.get(geneId);
@@ -213,7 +202,7 @@ public class EnsemblDataCache
         // find the unique set of geneIds
         final List<GeneData> matchedGenes = findGeneRegions(chromosome, position, upstreamDistance);
 
-        for (final GeneData geneData : matchedGenes)
+        for(final GeneData geneData : matchedGenes)
         {
             if(!uniqueGeneIds.contains(geneData.GeneId))
                 uniqueGeneIds.add(geneData.GeneId);

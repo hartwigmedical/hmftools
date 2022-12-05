@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.fitting;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.purple.FittedPurityMethod.NORMAL;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
 import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
@@ -18,11 +19,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.BestFit;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.ImmutableBestFit;
+import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
+import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory;
@@ -30,8 +34,6 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
-
-import org.apache.commons.compress.utils.Lists;
 
 public class BestFitFactory
 {
@@ -45,16 +47,16 @@ public class BestFitFactory
     private int mSvFragmentReadCount;
     private int mSomaticHotspotCount;
     private int mAlleleReadCountTotal;
-    private final List<SomaticVariant> mVariantsInReadCountRange;
 
     private static final double PERCENT_RANGE = 0.1;
     private static final double ABS_RANGE = 0.0005;
 
-    private final BestFit mBestFit;
+    private BestFit mBestNormalFit;
+    private BestFit mSomaticFit;
 
     public BestFitFactory(
             final PurpleConfig config, int minReadCount, int maxReadCount,
-            final List<FittedPurity> allCandidates, final List<SomaticVariant> somatics,
+            final List<FittedPurity> allCandidates, final List<SomaticVariant> fittingSomatics,
             final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
     {
         mConfig = config;
@@ -65,19 +67,50 @@ public class BestFitFactory
         mSvFragmentReadCount = 0;
         mSomaticHotspotCount = 0;
         mAlleleReadCountTotal = 0;
-        mVariantsInReadCountRange = Lists.newArrayList();
 
         mSomaticPurityFitter = new SomaticPurityFitter(
                 config.SomaticFitting.MinPeakVariants, config.SomaticFitting.MinTotalVariants,
                 config.Fitting.MinPurity, config.Fitting.MaxPurity);
 
-        mBestFit = determineBestFit(allCandidates, somatics, structuralVariants, observedRegions);
+        mBestNormalFit = null;
+        mSomaticFit = null;
+
+        determineBestFit(allCandidates, fittingSomatics, structuralVariants, observedRegions);
     }
 
-    public BestFit bestFit() { return mBestFit; }
+    public BestFit bestNormalFit() { return mBestNormalFit; }
+    public BestFit somaticFit() { return mSomaticFit; }
 
-    private BestFit determineBestFit(
-            final List<FittedPurity> allCandidates, final List<SomaticVariant> somatics,
+    public static BestFit buildGermlineBestFit()
+    {
+        FittedPurity fittedPurity = ImmutableFittedPurity.builder()
+                .purity(1)
+                .ploidy(2)
+                .normFactor(1)
+                .diploidProportion(1)
+                .somaticPenalty(0)
+                .score(0)
+                .build();
+
+        FittedPurityScore score = ImmutableFittedPurityScore.builder()
+                .minPloidy(fittedPurity.ploidy())
+                .maxPloidy(fittedPurity.ploidy())
+                .minPurity(fittedPurity.purity())
+                .maxPurity(fittedPurity.purity())
+                .minDiploidProportion(1)
+                .maxDiploidProportion(1)
+                .build();
+
+        return ImmutableBestFit.builder()
+                .fit(fittedPurity)
+                .method(NORMAL)
+                .score(score)
+                .allFits(Lists.newArrayList(fittedPurity))
+                .build();
+    }
+
+    private void determineBestFit(
+            final List<FittedPurity> allCandidates, final List<SomaticVariant> fittingSomatics,
             final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
     {
         Collections.sort(allCandidates);
@@ -90,7 +123,7 @@ public class BestFitFactory
         boolean exceedsPuritySpread = Doubles.greaterOrEqual(score.puritySpread(), mConfig.SomaticFitting.MinSomaticPuritySpread);
         boolean highlyDiploid = isHighlyDiploid(score);
 
-        boolean hasTumor = !highlyDiploid || hasTumor(somatics, structuralVariants, observedRegions);
+        boolean hasTumor = !highlyDiploid || hasTumor(fittingSomatics, structuralVariants, observedRegions);
         final List<FittedPurity> diploidCandidates = BestFit.mostDiploidPerPurity(allCandidates);
 
         PPL_LOGGER.info("maxDiploidProportion({}) diploidCandidates({}) purityRange({} - {}) hasTumor({})",
@@ -101,33 +134,45 @@ public class BestFitFactory
                 lowestScoreFit : diploidCandidates.stream().min(Comparator.comparingDouble(FittedPurity::purity)).get();
 
         if(!hasTumor)
-            return builder.fit(lowestPurityFit).method(FittedPurityMethod.NO_TUMOR).build();
+        {
+            mBestNormalFit = builder.fit(lowestPurityFit).method(FittedPurityMethod.NO_TUMOR).build();
+            return;
+        }
 
         if(diploidCandidates.isEmpty())
         {
             PPL_LOGGER.warn("unable to use somatic fit as there are no diploid candidates");
-            return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
+            mBestNormalFit = builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
+            return;
         }
 
         boolean useSomatics = mConfig.fitWithSomatics() && exceedsPuritySpread && highlyDiploid;
 
         if(!useSomatics)
-            return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
-
-        final Optional<FittedPurity> somaticFit = mSomaticPurityFitter.fromSomatics(
-                mVariantsInReadCountRange, structuralVariants, diploidCandidates);
-
-        if(!somaticFit.isPresent())
         {
-            return builder.fit(lowestPurityFit).method(FittedPurityMethod.SOMATIC).build();
+            mBestNormalFit = builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
+            return;
         }
-        else if(somaticFitIsWorse(lowestScoreFit, somaticFit.get()))
+
+        final List<SomaticVariant> fittingSomaticsWithinReadCountRange = fittingSomatics.stream()
+                .filter(x -> x.isHotspot() || (x.totalReadCount() >= mMinReadCount && x.totalReadCount() <= mMaxReadCount))
+                .collect(toList());
+
+        final FittedPurity somaticFit = mSomaticPurityFitter.fromSomatics(
+                fittingSomaticsWithinReadCountRange, structuralVariants, diploidCandidates);
+
+        if(somaticFit == null)
         {
-            return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
+            mBestNormalFit = builder.fit(lowestPurityFit).method(FittedPurityMethod.SOMATIC).build();
         }
         else
         {
-            return builder.fit(somaticFit.get()).method(FittedPurityMethod.SOMATIC).build();
+            mBestNormalFit = builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
+        }
+
+        if(somaticFit != null && !somaticFitIsWorse(lowestScoreFit, somaticFit))
+        {
+            mSomaticFit = builder.fit(somaticFit).method(FittedPurityMethod.SOMATIC).build();
         }
     }
 
@@ -139,7 +184,7 @@ public class BestFitFactory
 
         if(mSomaticHotspotCount > 0 || mAlleleReadCountTotal >= MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT)
         {
-            PPL_LOGGER.info("Tumor evidence: somaticHotspotCount({}) alleleReadCountTotal({})",
+            PPL_LOGGER.info("tumor evidence: somaticHotspotCount({}) alleleReadCountTotal({})",
                     mSomaticHotspotCount, mAlleleReadCountTotal);
             return true;
         }
@@ -172,9 +217,8 @@ public class BestFitFactory
         double somaticPurity = somaticFit.purity();
 
         return Doubles.lessThan(lowestPurity, mConfig.SomaticFitting.MinSomaticPurity)
-            && Doubles.lessThan(somaticPurity, mConfig.SomaticFitting.MinSomaticPurity) && Doubles.greaterThan(
-                somaticPurity,
-                lowestPurity);
+            && Doubles.lessThan(somaticPurity, mConfig.SomaticFitting.MinSomaticPurity)
+                && Doubles.greaterThan( somaticPurity, lowestPurity);
     }
 
     private boolean isHighlyDiploid(final FittedPurityScore score)
@@ -225,14 +269,9 @@ public class BestFitFactory
             if(variant.isHotspot())
                 mSomaticHotspotCount++;
 
-            if(variant.type() == VariantType.SNP)
+            if(variant.type() == VariantType.SNP) // they all should be
             {
                 mAlleleReadCountTotal += variant.alleleReadCount();
-
-                if(variant.totalReadCount() >= mMinReadCount && variant.totalReadCount() <= mMaxReadCount)
-                {
-                    mVariantsInReadCountRange.add(variant);
-                }
             }
         }
     }

@@ -3,16 +3,20 @@ package com.hartwig.hmftools.orange.report.chapters;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.loader.GainLoss;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.report.ReportConfig;
+import com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretation;
+import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
+import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
+import com.hartwig.hmftools.orange.report.interpretation.VariantEntry;
+import com.hartwig.hmftools.orange.report.interpretation.VariantEntryFactory;
+import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.DNAFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GeneCopyNumberTable;
-import com.hartwig.hmftools.orange.report.tables.GeneDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.LossOfHeterozygosityTable;
 import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
@@ -34,11 +38,11 @@ public class SomaticFindingsChapter implements ReportChapter {
     @NotNull
     private final OrangeReport report;
     @NotNull
-    private final ReportConfig reportConfig;
+    private final PlotPathResolver plotPathResolver;
 
-    public SomaticFindingsChapter(@NotNull final OrangeReport report, @NotNull final ReportConfig reportConfig) {
+    public SomaticFindingsChapter(@NotNull final OrangeReport report, @NotNull final PlotPathResolver plotPathResolver) {
         this.report = report;
-        this.reportConfig = reportConfig;
+        this.plotPathResolver = plotPathResolver;
     }
 
     @NotNull
@@ -63,31 +67,30 @@ public class SomaticFindingsChapter implements ReportChapter {
         addFusions(document);
         addViralPresence(document);
         addHomozygousDisruptions(document);
-        addGeneDisruptions(document);
+        addBreakends(document);
         addLossOfHeterozygosity(document);
         addStructuralDriverPlots(document);
     }
 
     private void addSomaticVariants(@NotNull Document document) {
-        List<ReportableVariant> reportableVariants;
-        if (reportConfig.reportGermline()) {
-            reportableVariants = report.purple().reportableSomaticVariants();
-        } else {
-            reportableVariants = ReportableVariantFactory.mergeVariantLists(report.purple().reportableSomaticVariants(),
-                    report.purple().reportableGermlineVariants());
-        }
+        List<DriverCatalog> somaticDrivers = report.purple().somaticDrivers();
 
+        List<VariantEntry> reportableVariants =
+                VariantEntryFactory.create(VariantDedup.apply(report.purple().reportableSomaticVariants()), somaticDrivers);
         String titleDrivers = "Driver variants (" + reportableVariants.size() + ")";
         document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants));
 
-        String titleNonDrivers = "Other potentially relevant variants (" + report.purple().additionalSuspectSomaticVariants().size() + ")";
-        document.add(SomaticVariantTable.build(titleNonDrivers, contentWidth(), max10(report.purple().additionalSuspectSomaticVariants())));
+        List<VariantEntry> additionalSuspectVariants =
+                VariantEntryFactory.create(VariantDedup.apply(report.purple().additionalSuspectSomaticVariants()), somaticDrivers);
+        String titleNonDrivers = "Other potentially relevant variants (" + additionalSuspectVariants.size() + ")";
+        document.add(SomaticVariantTable.build(titleNonDrivers, contentWidth(), max10(additionalSuspectVariants)));
     }
 
     private void addKataegisPlot(@NotNull Document document) {
         document.add(new Paragraph("Kataegis plot").addStyle(ReportResources.tableTitleStyle()));
-        if (report.plots().purpleKataegisPlot() != null) {
-            Image image = Images.build(report.plots().purpleKataegisPlot());
+        String kataegisPlot = report.plots().purpleKataegisPlot();
+        if (kataegisPlot != null) {
+            Image image = Images.build(plotPathResolver.resolve(kataegisPlot));
             image.setMaxWidth(contentWidth());
             image.setHorizontalAlignment(HorizontalAlignment.CENTER);
             document.add(image);
@@ -110,19 +113,19 @@ public class SomaticFindingsChapter implements ReportChapter {
                 report.purple().nearReportableSomaticGains(),
                 report.isofox()));
 
-        List<GainLoss> suspectGains = selectGains(report.purple().additionalSuspectSomaticGainsLosses());
+        List<PurpleGainLoss> suspectGains = selectGains(report.purple().additionalSuspectSomaticGainsLosses());
         String titleSuspectGains = "Other regions with amps (" + suspectGains.size() + ")";
         document.add(GeneCopyNumberTable.build(titleSuspectGains, contentWidth(), max10(suspectGains), report.isofox()));
 
-        List<GainLoss> suspectLosses = selectLosses(report.purple().additionalSuspectSomaticGainsLosses());
+        List<PurpleGainLoss> suspectLosses = selectLosses(report.purple().additionalSuspectSomaticGainsLosses());
         String titleSuspectLosses = "Regions with deletions in genes in other autosomal regions (" + suspectLosses.size() + ")";
         document.add(GeneCopyNumberTable.build(titleSuspectLosses, contentWidth(), max10(suspectLosses), report.isofox()));
     }
 
     @NotNull
-    private static List<GainLoss> selectGains(@NotNull List<GainLoss> gainsLosses) {
-        List<GainLoss> gains = Lists.newArrayList();
-        for (GainLoss gainLoss : gainsLosses) {
+    private static List<PurpleGainLoss> selectGains(@NotNull List<PurpleGainLoss> gainsLosses) {
+        List<PurpleGainLoss> gains = Lists.newArrayList();
+        for (PurpleGainLoss gainLoss : gainsLosses) {
             if (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN
                     || gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN) {
                 gains.add(gainLoss);
@@ -132,9 +135,9 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static List<GainLoss> selectLosses(@NotNull List<GainLoss> gainsLosses) {
-        List<GainLoss> losses = Lists.newArrayList();
-        for (GainLoss gainLoss : gainsLosses) {
+    private static List<PurpleGainLoss> selectLosses(@NotNull List<PurpleGainLoss> gainsLosses) {
+        List<PurpleGainLoss> losses = Lists.newArrayList();
+        for (PurpleGainLoss gainLoss : gainsLosses) {
             if (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
                     || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS) {
                 losses.add(gainLoss);
@@ -167,19 +170,20 @@ public class SomaticFindingsChapter implements ReportChapter {
         document.add(HomozygousDisruptionTable.build(title, contentWidth(), report.linx().homozygousDisruptions()));
     }
 
-    private void addGeneDisruptions(@NotNull Document document) {
-        String titleDriver = "Driver gene disruptions (" + report.linx().reportableGeneDisruptions().size() + ")";
-        document.add(GeneDisruptionTable.build(titleDriver, contentWidth(), report.linx().reportableGeneDisruptions()));
+    private void addBreakends(@NotNull Document document) {
+        List<LinxBreakend> reportableBreakends = report.linx().reportableBreakends();
+        String titleDriver = "Driver gene disruptions (" + reportableBreakends.size() + ")";
+        document.add(BreakendTable.build(titleDriver, contentWidth(), reportableBreakends));
 
-        String titleNonDrivers =
-                "Other potentially interesting gene disruptions (" + report.linx().additionalSuspectDisruptions().size() + ")";
-        document.add(GeneDisruptionTable.build(titleNonDrivers, contentWidth(), report.linx().additionalSuspectDisruptions()));
+        List<LinxBreakend> additionalSuspectBreakends = report.linx().additionalSuspectBreakends();
+        String titleNonDrivers = "Other potentially interesting gene disruptions (" + additionalSuspectBreakends.size() + ")";
+        document.add(BreakendTable.build(titleNonDrivers, contentWidth(), additionalSuspectBreakends));
     }
 
     private void addLossOfHeterozygosity(@NotNull Document document) {
-        String title =
-                "Potentially interesting LOH events in case of MSI or HRD (" + report.purple().suspectGeneCopyNumbersWithLOH().size() + ")";
-        document.add(LossOfHeterozygosityTable.build(title, contentWidth(), report.purple().suspectGeneCopyNumbersWithLOH()));
+        List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH = report.purple().suspectGeneCopyNumbersWithLOH();
+        String title = "Potentially interesting LOH events in case of MSI or HRD (" + suspectGeneCopyNumbersWithLOH.size() + ")";
+        document.add(LossOfHeterozygosityTable.build(title, contentWidth(), suspectGeneCopyNumbersWithLOH));
     }
 
     private void addStructuralDriverPlots(@NotNull Document document) {
@@ -187,7 +191,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         document.add(new Paragraph(title).addStyle(ReportResources.tableTitleStyle()));
         Table table = new Table(2);
         for (String plot : report.plots().linxDriverPlots()) {
-            Image image = Images.build(plot);
+            Image image = Images.build(plotPathResolver.resolve(plot));
             image.setMaxWidth(Math.round(contentWidth() / 2D) - 2);
             image.setHorizontalAlignment(HorizontalAlignment.CENTER);
             table.addCell(Cells.createImage(image));

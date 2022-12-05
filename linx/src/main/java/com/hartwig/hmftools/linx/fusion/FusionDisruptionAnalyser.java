@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.fusion;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -13,6 +14,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.getUndisruptedCopyNumber;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LENGTH;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_IG_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.allowSuspectChains;
@@ -31,6 +33,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
@@ -75,6 +78,7 @@ public class FusionDisruptionAnalyser
     private boolean mLogAllPotentials;
     private boolean mWriteAllVisFusions;
 
+    private final List<SvVarData> mKnownPairSglCandidates;
     private final List<GeneFusion> mFusions; // all possible valid transcript-pair fusions
     private final List<GeneFusion> mUniqueFusions; // top-priority fusions from within each unique gene and SV pair
     private final Map<GeneFusion,String> mInvalidFusions;
@@ -111,6 +115,7 @@ public class FusionDisruptionAnalyser
         mRunFusions = cmdLineArgs == null || cmdLineArgs.hasOption(CHECK_FUSIONS);
         mFusions = Lists.newArrayList();
         mUniqueFusions = Lists.newArrayList();
+        mKnownPairSglCandidates = Lists.newArrayList();
         mInvalidFusions = Maps.newHashMap();
         mLogReportableOnly = false;
         mLogAllPotentials = false;
@@ -195,6 +200,14 @@ public class FusionDisruptionAnalyser
 
             cacheSpecialFusionGenes();
         }
+    }
+
+    public Map<String,Integer> getSpecificPreGeneDistances()
+    {
+        Map<String,Integer> specificGeneDistances = Maps.newHashMap();
+        List<KnownFusionData> igKnownPairs = mFusionFinder.getKnownFusionCache().getDataByType(IG_KNOWN_PAIR);
+        igKnownPairs.forEach(x -> specificGeneDistances.put(x.ThreeGene, MAX_UPSTREAM_DISTANCE_IG_KNOWN));
+        return specificGeneDistances;
     }
 
     public void cacheSpecialFusionGenes()
@@ -393,12 +406,14 @@ public class FusionDisruptionAnalyser
 
         mFusions.clear();
         mInvalidFusions.clear();
+        mKnownPairSglCandidates.clear();
 
         if(mNeoEpitopeWriter != null)
             mNeoEpitopeWriter.initialiseSample(mSampleId);
 
         findSingleSVFusions(svList);
         findChainedFusions(clusters);
+        // findKnownPairSglFusions();
     }
 
     private void findSingleSVFusions(final List<SvVarData> svList)
@@ -406,8 +421,14 @@ public class FusionDisruptionAnalyser
         // always report SVs by themselves
         for(final SvVarData var : svList)
         {
-            if(var.isSglBreakend() && var.getSglMappings().isEmpty())
-                continue;
+            if(var.isSglBreakend())
+            {
+                if(!getBreakendGeneList(var, true).isEmpty())
+                    mKnownPairSglCandidates.add(var);
+
+                if(var.getSglMappings().isEmpty())
+                    continue;
+            }
 
             // skip SVs which have been chained unless they are in an IG region
             if(var.getCluster().getSvCount() > 1 && var.getCluster().findChain(var) != null)
@@ -460,6 +481,118 @@ public class FusionDisruptionAnalyser
                 mFusions.add(fusion);
             }
         }
+    }
+
+    private void findKnownPairSglFusions()
+    {
+        if(mKnownPairSglCandidates.size() < 2)
+            return;
+
+        List<KnownFusionData> knownPairData = mFusionFinder.getKnownFusionCache().knownPairData();
+
+        for(int i = 0; i < mKnownPairSglCandidates.size() - 1; ++i)
+        {
+            SvVarData sgl1 = mKnownPairSglCandidates.get(i);
+
+            final List<BreakendGeneData> genesList1 = getBreakendGeneList(sgl1, true);
+
+            List<KnownFusionData> fivePrimeData = Lists.newArrayList();
+            List<KnownFusionData> threePrimeData = Lists.newArrayList();
+
+            for(BreakendGeneData geneData : genesList1)
+            {
+                if(geneData.isUpstream())
+                {
+                    knownPairData.stream()
+                            .filter(x -> genesList1.stream().anyMatch(y -> y.geneName().equals(x.FiveGene)))
+                            .forEach(x -> fivePrimeData.add(x));
+                }
+                else
+                {
+                    knownPairData.stream()
+                            .filter(x -> genesList1.stream().anyMatch(y -> y.geneName().equals(x.ThreeGene)))
+                            .forEach(x -> threePrimeData.add(x));
+                }
+            }
+
+            for(int j = i + 1; j < mKnownPairSglCandidates.size(); ++j)
+            {
+                SvVarData sgl2 = mKnownPairSglCandidates.get(j);
+
+                final List<BreakendGeneData> genesList2 =  getBreakendGeneList(sgl2, true);
+
+                List<GeneFusion> fusions = Lists.newArrayList();
+
+                for(BreakendGeneData geneData : genesList2)
+                {
+                    if(geneData.isUpstream())
+                    {
+                        for(KnownFusionData kpData : threePrimeData)
+                        {
+                            if(kpData.FiveGene.equals(geneData.geneName()))
+                            {
+                                checkKnownPairSgls(kpData, sgl1, sgl2);
+
+                                fusions.addAll(mFusionFinder.findFusions(
+                                        Lists.newArrayList(geneData),
+                                        Lists.newArrayList(genesList1.stream().filter(x -> x.geneName().equals(kpData.ThreeGene)).collect(Collectors.toList())),
+                                        mFusionParams));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for(KnownFusionData kpData : fivePrimeData)
+                        {
+                            if(kpData.ThreeGene.equals(geneData.geneName()))
+                            {
+                                checkKnownPairSgls(kpData, sgl1, sgl2);
+
+                                fusions.addAll(mFusionFinder.findFusions(
+                                        Lists.newArrayList(genesList1.stream().filter(x -> x.geneName().equals(kpData.FiveGene)).collect(Collectors.toList())),
+                                        Lists.newArrayList(geneData),
+                                        mFusionParams));
+                            }
+                        }
+                    }
+                }
+
+                if(fusions.isEmpty())
+                    continue;
+
+                if(mLogReportableOnly)
+                {
+                    fusions = fusions.stream().filter(x -> determineReportability(x) == OK).collect(Collectors.toList());
+                }
+
+                final SvCluster cluster = sgl1.getCluster();
+
+                // check transcript disruptions
+                for(final GeneFusion fusion : fusions)
+                {
+                    FusionAnnotations annotations = ImmutableFusionAnnotations.builder()
+                            .clusterId(cluster.id())
+                            .clusterCount(cluster.getSvCount())
+                            .resolvedType(cluster.getResolvedType().toString())
+                            .chainInfo(null)
+                            .terminatedUp(false)
+                            .terminatedDown(false)
+                            .build();
+
+                    fusion.setAnnotations(annotations);
+                    mFusions.add(fusion);
+                }
+            }
+        }
+    }
+
+    private boolean checkKnownPairSgls(final KnownFusionData kpData, final SvVarData sgl1, final SvVarData sgl2)
+    {
+        LNX_LOGGER.info("sample({}) sgls({} & {}) knownPair({}-{}) sequences({}, {})",
+                mSampleId, sgl1.posId(), sgl2.posId(), kpData.FiveGene, kpData.ThreeGene,
+                sgl1.getSvData().insertSequence(), sgl2.getSvData().insertSequence());
+
+        return false;
     }
 
     private void findChainedFusions(final List<SvCluster> clusters)
@@ -1056,6 +1189,9 @@ public class FusionDisruptionAnalyser
         // set undisrupted copy number for all persisted breakends
         for(BreakendTransData transcript : transcripts)
         {
+            if(transcript.undisruptedCopyNumberSet())
+                continue;
+
             SvVarData var = svList.stream().filter(x -> x.id() == transcript.gene().id()).findFirst().orElse(null);
 
             if(var != null)

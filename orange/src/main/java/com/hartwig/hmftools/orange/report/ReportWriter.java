@@ -8,7 +8,6 @@ import java.io.IOException;
 
 import com.google.gson.GsonBuilder;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.util.OrangeReportModifier;
 import com.hartwig.hmftools.orange.report.chapters.CohortComparisonChapter;
 import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
 import com.hartwig.hmftools.orange.report.chapters.GermlineFindingsChapter;
@@ -38,12 +37,12 @@ public class ReportWriter {
     @Nullable
     private final String outputDir;
     @NotNull
-    private final ReportConfig reportConfig;
+    private final PlotPathResolver plotPathResolver;
 
-    ReportWriter(final boolean writeToDisk, @Nullable final String outputDir, @NotNull final ReportConfig reportConfig) {
+    ReportWriter(final boolean writeToDisk, @Nullable final String outputDir, @NotNull final PlotPathResolver plotPathResolver) {
         this.writeToDisk = writeToDisk;
         this.outputDir = outputDir;
-        this.reportConfig = reportConfig;
+        this.plotPathResolver = plotPathResolver;
     }
 
     public void write(@NotNull OrangeReport report) throws IOException {
@@ -52,10 +51,17 @@ public class ReportWriter {
     }
 
     private void writePdf(@NotNull OrangeReport report) throws IOException {
-        ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, reportConfig.reportGermline()),
-                new SomaticFindingsChapter(report, reportConfig), new GermlineFindingsChapter(report, reportConfig.reportGermline()),
-                new ImmunologyChapter(report), new RNAFindingsChapter(report), new CohortComparisonChapter(report),
-                new QualityControlChapter(report) };
+        ReportChapter[] chapters;
+        if (report.refSample() != null) {
+            chapters = new ReportChapter[] { new FrontPageChapter(report, plotPathResolver),
+                    new SomaticFindingsChapter(report, plotPathResolver), new GermlineFindingsChapter(report),
+                    new ImmunologyChapter(report), new RNAFindingsChapter(report), new CohortComparisonChapter(report, plotPathResolver),
+                    new QualityControlChapter(report, plotPathResolver) };
+        } else {
+            chapters = new ReportChapter[] { new FrontPageChapter(report, plotPathResolver),
+                    new SomaticFindingsChapter(report, plotPathResolver), new ImmunologyChapter(report), new RNAFindingsChapter(report),
+                    new CohortComparisonChapter(report, plotPathResolver), new QualityControlChapter(report, plotPathResolver) };
+        }
 
         String platinumVersion = report.platinumVersion() != null ? report.platinumVersion() : ReportResources.NOT_AVAILABLE;
         writePdfChapters(report.sampleId(), platinumVersion, chapters);
@@ -66,8 +72,7 @@ public class ReportWriter {
             String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.json";
             LOGGER.info("Writing JSON report to {} ", outputFilePath);
 
-            OrangeReport reportToWrite = reportConfig.limitJsonOutput() ? OrangeReportModifier.limitAllListsToMaxOne(report) : report;
-            String json = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(reportToWrite);
+            String json = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(report);
             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath));
 
             writer.write(json);

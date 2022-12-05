@@ -24,6 +24,7 @@ import java.util.regex.Pattern
 import kotlin.system.exitProcess
 
 const val ANCHOR_DNA_LENGTH: Int = 30
+const val KDE_ANCHOR_START_OFFSET: Int = 15
 typealias Column = CiderConstants.VjAnchorTemplateTsvColumn
 
 // simple utility to find the anchor sequence for each gene from IMGT fasta data
@@ -242,7 +243,7 @@ class VjTemplateGeneWriter
                     }
                 }
 
-                vjAnchorTemplate = VJAnchorTemplate(vjGeneType, geneAllele, allele, geneLoc, seqString, anchor, anchorLocation)
+                vjAnchorTemplate = VJAnchorTemplate(vjGeneType, geneName, allele, geneLoc, seqString, anchor, anchorLocation)
             }
 
             if (vjAnchorTemplate != null)
@@ -461,14 +462,27 @@ class VjTemplateGeneWriter
             val genomeRegionStrand = GenomeRegionStrand(chr, start, end, Strand.valueOf(strand))
             val kdeSeq = queryRefSequence(refGenome, genomeRegionStrand)
 
-            // first 30 base is the "anchor", in reality does not really matter
-            val anchorSeq = kdeSeq.take(ANCHOR_DNA_LENGTH)
+            // get some sort of "anchor", in reality does not really matter
             val anchorGenomeRegionStrand =
             // now the anchor genome region, depends on the strand
             if (genomeRegionStrand.strand == Strand.FORWARD)
-                genomeRegionStrand.copy(posEnd = genomeRegionStrand.posStart + ANCHOR_DNA_LENGTH - 1)
+            {
+                val posStart = genomeRegionStrand.posStart + KDE_ANCHOR_START_OFFSET
+                genomeRegionStrand.copy(
+                    posStart = posStart,
+                    posEnd = posStart + ANCHOR_DNA_LENGTH - 1
+                )
+            }
             else
-                genomeRegionStrand.copy(posStart = genomeRegionStrand.posEnd - ANCHOR_DNA_LENGTH + 1)
+            {
+                val posEnd = genomeRegionStrand.posEnd - KDE_ANCHOR_START_OFFSET
+                genomeRegionStrand.copy(
+                    posStart = posEnd - ANCHOR_DNA_LENGTH + 1,
+                    posEnd = posEnd
+                )
+            }
+
+            val anchorSeq = queryRefSequence(refGenome, anchorGenomeRegionStrand)
 
             // now we can create the template
             return VJAnchorTemplate(VJGeneType.IGKKDE, "IGKKDE", "01",
