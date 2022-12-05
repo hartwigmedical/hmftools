@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.report;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
@@ -45,12 +46,12 @@ public class ReportGeneratorTestApplication {
 
         ReportWriter writer = ReportWriterFactory.createToDiskWriter(config);
 
-        OrangeReport report = buildReport(config);
-
         if (!new File(REPORT_BASE_DIR).isDirectory()) {
             LOGGER.warn("{} is not a directory. Can't write to disk", REPORT_BASE_DIR);
         } else {
-            writer.write(report);
+            LOGGER.info("Deleting plot dir");
+            deleteDir(new File(REPORT_BASE_DIR + File.separator + "plot"));
+            writer.write(buildReport(config));
         }
     }
 
@@ -153,5 +154,17 @@ public class ReportGeneratorTestApplication {
             }
         }
         return false;
+    }
+
+    private static void deleteDir(@NotNull File file) {
+        File[] contents = file.listFiles();
+        if (contents != null) {
+            for (File content : contents) {
+                if (!Files.isSymbolicLink(content.toPath())) {
+                    deleteDir(content);
+                }
+            }
+        }
+        file.delete();
     }
 }
