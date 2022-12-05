@@ -7,8 +7,6 @@ public enum ChordStatus
     HR_DEFICIENT("Deficient"),
     UNKNOWN("Unknown");
 
-    public static final double HRD_THRESHOLD = 0.5;
-
     private final String display;
 
     ChordStatus(final String display)

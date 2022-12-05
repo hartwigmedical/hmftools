@@ -2,10 +2,9 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.Hotspot;
 
 import org.apache.commons.compress.utils.Lists;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 final class GermlineVariantSelector {
@@ -14,32 +13,23 @@ final class GermlineVariantSelector {
     }
 
     @Nullable
-    public static List<ReportableVariant> selectInterestingUnreportedVariants(@Nullable List<SomaticVariant> allGermlineVariants) {
+    public static List<PurpleVariant> selectInterestingUnreportedVariants(@Nullable List<PurpleVariant> allGermlineVariants) {
         if (allGermlineVariants == null) {
             return null;
         }
 
-        List<ReportableVariant> filtered = Lists.newArrayList();
-        for (SomaticVariant variant : allGermlineVariants) {
+        List<PurpleVariant> filtered = Lists.newArrayList();
+        for (PurpleVariant variant : allGermlineVariants) {
             if (!variant.reported()) {
-                boolean isHotspot = variant.isHotspot();
+                boolean isHotspot = variant.hotspot() == Hotspot.HOTSPOT;
 
                 // TODO: Add pathogenic variants that were not reported
                 // TODO: Add variants with conflicting evidence
                 if (isHotspot) {
-                    filtered.add(toReportable(variant));
+                    filtered.add(variant);
                 }
             }
         }
         return filtered;
-    }
-
-    @NotNull
-    private static ReportableVariant toReportable(@NotNull SomaticVariant variant) {
-        return ReportableVariantFactory.fromVariant(variant, ReportableVariantSource.GERMLINE)
-                .driverLikelihood(Double.NaN)
-                .transcript(variant.canonicalTranscript())
-                .isCanonical(true)
-                .build();
     }
 }

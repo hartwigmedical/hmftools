@@ -14,12 +14,39 @@ public final class LinxTestFactory {
     }
 
     @NotNull
-    public static LinxFusion createMinimalTestFusion() {
+    public static ImmutableLinxSvAnnotation.Builder svAnnotationBuilder()
+    {
+        return ImmutableLinxSvAnnotation.builder()
+                .vcfId(Strings.EMPTY)
+                .svId(0)
+                .clusterId(0)
+                .clusterReason(Strings.EMPTY)
+                .fragileSiteStart(false)
+                .fragileSiteEnd(false)
+                .isFoldback(false)
+                .lineTypeStart(Strings.EMPTY)
+                .lineTypeEnd(Strings.EMPTY)
+                .junctionCopyNumberMin(0D)
+                .junctionCopyNumberMax(0D)
+                .geneStart(Strings.EMPTY)
+                .geneEnd(Strings.EMPTY)
+                .localTopologyIdStart(0)
+                .localTopologyIdEnd(0)
+                .localTopologyStart(Strings.EMPTY)
+                .localTopologyEnd(Strings.EMPTY)
+                .localTICountStart(0)
+                .localTICountEnd(0);
+    }
+
+    @NotNull
+    public static LinxFusion createMinimalTestFusion()
+    {
         return fusionBuilder().build();
     }
 
     @NotNull
-    public static ImmutableLinxFusion.Builder fusionBuilder() {
+    public static ImmutableLinxFusion.Builder fusionBuilder()
+    {
         return ImmutableLinxFusion.builder()
                 .fivePrimeBreakendId(0)
                 .threePrimeBreakendId(0)
@@ -47,7 +74,8 @@ public final class LinxTestFactory {
     }
 
     @NotNull
-    public static ImmutableLinxBreakend.Builder breakendBuilder() {
+    public static ImmutableLinxBreakend.Builder breakendBuilder()
+    {
         return ImmutableLinxBreakend.builder()
                 .id(0)
                 .svId(0)

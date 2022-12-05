@@ -9,8 +9,6 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.orange.report.ImmutableReportConfig;
-import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.util.Config;
 
 import org.apache.commons.cli.CommandLine;
@@ -72,7 +70,7 @@ public interface OrangeConfig {
     String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
 
     // Some additional optional params and flags
-    String DISABLE_GERMLINE = "disable_germline";
+    String CONVERT_GERMLINE_TO_SOMATIC = "convert_germline_to_somatic";
     String LIMIT_JSON_OUTPUT = "limit_json_output";
     String LOG_DEBUG = "log_debug";
 
@@ -115,9 +113,9 @@ public interface OrangeConfig {
         options.addOption(CUPPA_FEATURE_PLOT, true, "Path towards the Cuppa report feature plot PNG.");
         options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
 
-        options.addOption(DISABLE_GERMLINE, false, "If provided, germline results are not added to the report");
-        options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
-        options.addOption(LIMIT_JSON_OUTPUT, false, "If provided, limits the json output.");
+        options.addOption(CONVERT_GERMLINE_TO_SOMATIC, false, "If set, germline events are converted to somatic events");
+        options.addOption(LIMIT_JSON_OUTPUT, false, "If set, limits every list in the json output to 1 entry.");
+        options.addOption(LOG_DEBUG, false, "If set, set the log level to debug rather than default.");
 
         for (Option rnaOption : OrangeRNAConfig.createOptions().getOptions()) {
             options.addOption(rnaOption);
@@ -134,9 +132,6 @@ public interface OrangeConfig {
 
     @Nullable
     OrangeRNAConfig rnaConfig();
-
-    @NotNull
-    ReportConfig reportConfig();
 
     @NotNull
     Set<String> primaryTumorDoids();
@@ -228,6 +223,10 @@ public interface OrangeConfig {
     @Nullable
     String peachGenotypeTsv();
 
+    boolean convertGermlineToSomatic();
+
+    boolean limitJsonOutput();
+
     @NotNull
     static OrangeConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
         if (cmd.hasOption(LOG_DEBUG)) {
@@ -235,17 +234,14 @@ public interface OrangeConfig {
             LOGGER.debug("Switched root level logging to DEBUG");
         }
 
-        ReportConfig report = ImmutableReportConfig.builder()
-                .limitJsonOutput(cmd.hasOption(LIMIT_JSON_OUTPUT))
-                .reportGermline(!cmd.hasOption(DISABLE_GERMLINE))
-                .build();
-
-        if (report.limitJsonOutput()) {
+        boolean limitJsonOutput = cmd.hasOption(LIMIT_JSON_OUTPUT);
+        if (limitJsonOutput) {
             LOGGER.info("JSON limitation has been enabled.");
         }
 
-        if (!report.reportGermline()) {
-            LOGGER.info("Germline reporting has been disabled");
+        boolean convertGermlineToSomatic = cmd.hasOption(CONVERT_GERMLINE_TO_SOMATIC);
+        if (convertGermlineToSomatic) {
+            LOGGER.info("Germline events will be converted to somatic events");
         }
 
         String refSampleId = Config.optionalValue(cmd, REFERENCE_SAMPLE_ID);
@@ -264,7 +260,6 @@ public interface OrangeConfig {
                 .tumorSampleId(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .referenceSampleId(refSampleId)
                 .rnaConfig(OrangeRNAConfig.createConfig(cmd))
-                .reportConfig(report)
                 .primaryTumorDoids(toStringSet(Config.nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .experimentDate(experimentDate)
                 .refGenomeVersion(RefGenomeVersion.from(Config.nonOptionalValue(cmd, REF_GENOME_VERSION)))
@@ -295,6 +290,8 @@ public interface OrangeConfig {
                 .cuppaSummaryPlot(Config.nonOptionalFile(cmd, CUPPA_SUMMARY_PLOT))
                 .cuppaFeaturePlot(Config.optionalValue(cmd, CUPPA_FEATURE_PLOT))
                 .peachGenotypeTsv(Config.optionalFile(cmd, PEACH_GENOTYPE_TSV))
+                .convertGermlineToSomatic(convertGermlineToSomatic)
+                .limitJsonOutput(limitJsonOutput)
                 .build();
     }
 

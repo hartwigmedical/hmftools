@@ -5,7 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpretationTestFactory;
+import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 
 import org.junit.Test;
 
@@ -14,7 +14,7 @@ public class IsofoxInterpreterTest {
     @Test
     public void canInterpretMinimalIsofoxData() {
         assertNotNull(IsofoxInterpreter.interpret(IsofoxTestFactory.createMinimalIsofoxTestData(),
-                LinxInterpretationTestFactory.createMinimalTestLinxData(),
+                TestLinxInterpretationFactory.createMinimalTestLinxData(),
                 Lists.newArrayList(),
                 new KnownFusionCache()));
     }

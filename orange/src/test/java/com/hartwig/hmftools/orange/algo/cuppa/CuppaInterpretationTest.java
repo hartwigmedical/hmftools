@@ -31,7 +31,7 @@ public class CuppaInterpretationTest {
 
     @NotNull
     private static CuppaData withPredictions(@NotNull List<CuppaPrediction> predictions) {
-        return ImmutableCuppaData.builder().from(CuppaTestFactory.createMinimalCuppaData()).predictions(predictions).build();
+        return ImmutableCuppaData.builder().from(TestCuppaFactory.createMinimalCuppaData()).predictions(predictions).build();
     }
 
     @NotNull

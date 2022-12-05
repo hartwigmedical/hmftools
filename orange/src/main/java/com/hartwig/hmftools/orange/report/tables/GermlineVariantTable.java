@@ -3,8 +3,8 @@ package com.hartwig.hmftools.orange.report.tables;
 import java.text.DecimalFormat;
 import java.util.List;
 
-import com.hartwig.hmftools.orange.algo.purple.ReportableVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 import com.hartwig.hmftools.orange.report.interpretation.Variants;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -21,7 +21,7 @@ public final class GermlineVariantTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<ReportableVariant> variants) {
+    public static Table build(@NotNull String title, float width, @NotNull List<VariantEntry> variants) {
         if (variants.isEmpty()) {
             return Tables.createEmpty(title, width);
         }
@@ -32,9 +32,9 @@ public final class GermlineVariantTable {
                         Cells.createHeader("RNA Depth"), Cells.createHeader("Biallelic"), Cells.createHeader("Hotspot"),
                         Cells.createHeader("Genotype") });
 
-        for (ReportableVariant variant : Variants.sort(variants)) {
+        for (VariantEntry variant : Variants.sort(variants)) {
             table.addCell(Cells.createContent(Variants.variantField(variant)));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.alleleCopyNumber())));
+            table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.variantCopyNumber())));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.totalCopyNumber())));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.minorAlleleCopyNumber())));
             table.addCell(Cells.createContent(Variants.rnaDepthField(variant)));

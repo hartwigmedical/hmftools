@@ -11,11 +11,12 @@ public final class ReportWriterFactory {
 
     @NotNull
     public static ReportWriter createToDiskWriter(@NotNull OrangeConfig config) {
-        return new ReportWriter(true, config.outputDir(), config.reportConfig());
+        String outputDir = config.outputDir();
+        return new ReportWriter(true, outputDir, new PlotPathResolver(outputDir));
     }
 
     @NotNull
-    public static ReportWriter createInMemoryWriter(@NotNull OrangeConfig config) {
-        return new ReportWriter(false, null, config.reportConfig());
+    public static ReportWriter createInMemoryWriter() {
+        return new ReportWriter(false, null, new PlotPathResolver(null));
     }
 }

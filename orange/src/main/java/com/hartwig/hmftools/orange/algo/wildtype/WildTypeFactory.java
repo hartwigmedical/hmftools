@@ -6,11 +6,11 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.orange.algo.linx.GeneDisruption;
-import com.hartwig.hmftools.orange.algo.purple.GainLoss;
-import com.hartwig.hmftools.orange.algo.purple.ReportableVariant;
+import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
+import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,15 +30,15 @@ public final class WildTypeFactory {
     }
 
     @NotNull
-    public static List<WildTypeGene> determineWildTypeGenes(@Nullable List<ReportableVariant> reportableGermlineVariants,
-            @NotNull List<ReportableVariant> reportableSomaticVariants, @NotNull List<GainLoss> reportableSomaticGainsLosses,
-            @NotNull List<LinxFusion> reportableFusions, @NotNull List<HomozygousDisruption> homozygousDisruptions,
-            @NotNull List<GeneDisruption> reportableGeneDisruptions, @NotNull List<DriverGene> driverGenes) {
+    public static List<WildTypeGene> determineWildTypeGenes(@NotNull List<DriverGene> driverGenes,
+            @NotNull List<PurpleVariant> reportableSomaticVariants, @Nullable List<PurpleVariant> reportableGermlineVariants,
+            @NotNull List<PurpleGainLoss> reportableSomaticGainsLosses, @NotNull List<LinxFusion> reportableFusions,
+            @NotNull List<HomozygousDisruption> homozygousDisruptions, @NotNull List<LinxBreakend> reportableBreakends) {
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
 
         for (DriverGene driverGene : driverGenes) {
             boolean hasSomaticVariant = false;
-            for (ReportableVariant somaticVariant : reportableSomaticVariants) {
+            for (PurpleVariant somaticVariant : reportableSomaticVariants) {
                 if (driverGene.gene().equals(somaticVariant.gene())) {
                     hasSomaticVariant = true;
                 }
@@ -46,7 +46,7 @@ public final class WildTypeFactory {
 
             boolean hasGermlineVariant = false;
             if (reportableGermlineVariants != null) {
-                for (ReportableVariant germlineVariant : reportableGermlineVariants) {
+                for (PurpleVariant germlineVariant : reportableGermlineVariants) {
                     if (driverGene.gene().equals(germlineVariant.gene())) {
                         hasGermlineVariant = true;
                     }
@@ -54,7 +54,7 @@ public final class WildTypeFactory {
             }
 
             boolean hasSomaticGainLoss = false;
-            for (GainLoss gainLoss : reportableSomaticGainsLosses) {
+            for (PurpleGainLoss gainLoss : reportableSomaticGainsLosses) {
                 if (driverGene.gene().equals(gainLoss.gene())) {
                     hasSomaticGainLoss = true;
                 }
@@ -74,15 +74,15 @@ public final class WildTypeFactory {
                 }
             }
 
-            boolean hasGeneDisruption = false;
-            for (GeneDisruption disruption : reportableGeneDisruptions) {
-                if (driverGene.gene().equals(disruption.gene())) {
-                    hasGeneDisruption = true;
+            boolean hasBreakend = false;
+            for (LinxBreakend breakend : reportableBreakends) {
+                if (driverGene.gene().equals(breakend.gene())) {
+                    hasBreakend = true;
                 }
             }
 
             if (!hasSomaticVariant && !hasGermlineVariant && !hasSomaticGainLoss && !hasFusion && !hasHomozygousDisruption
-                    && !hasGeneDisruption) {
+                    && !hasBreakend) {
                 wildTypeGenes.add(ImmutableWildTypeGene.builder().gene(driverGene.gene()).build());
             }
         }

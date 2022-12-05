@@ -7,7 +7,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.apache.commons.compress.utils.Lists;
@@ -22,35 +21,36 @@ final class SomaticVariantSelector {
     }
 
     @NotNull
-    public static List<ReportableVariant> selectInterestingUnreportedVariants(@NotNull List<SomaticVariant> allVariants,
-            @NotNull List<ReportableVariant> reportedSomaticVariants, @NotNull List<DriverGene> driverGenes) {
-        List<ReportableVariant> filtered = Lists.newArrayList();
-        for (SomaticVariant variant : allVariants) {
+    public static List<PurpleVariant> selectInterestingUnreportedVariants(@NotNull List<PurpleVariant> allSomaticVariants,
+            @NotNull List<PurpleVariant> reportedSomaticVariants, @NotNull List<DriverGene> driverGenes) {
+        List<PurpleVariant> filtered = Lists.newArrayList();
+        for (PurpleVariant variant : allSomaticVariants) {
             if (!variant.reported()) {
                 boolean isNearHotspot = variant.hotspot() == Hotspot.HOTSPOT || variant.hotspot() == Hotspot.NEAR_HOTSPOT;
-                boolean isExonicAndHasPhasedReportedVariant =
-                        !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.topLocalPhaseSet());
+                boolean affectsGeneAndHasPhasedReportedVariant =
+                        !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.localPhaseSets());
                 boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);
                 boolean isSynonymousButReportable = isSynonymousWithReportableWorstImpact(variant, driverGenes);
                 boolean isUnreportedSpliceVariant = isUnreportedSpliceVariant(variant, driverGenes);
 
-                if (isNearHotspot || isExonicAndHasPhasedReportedVariant || isCuppaRelevantVariant || isSynonymousButReportable
+                if (isNearHotspot || affectsGeneAndHasPhasedReportedVariant || isCuppaRelevantVariant || isSynonymousButReportable
                         || isUnreportedSpliceVariant) {
-                    filtered.add(toReportable(variant));
+                    filtered.add(variant);
                 }
             }
         }
         return filtered;
     }
 
-    private static boolean hasReportedVariantWithPhase(@NotNull List<ReportableVariant> reportedVariants,
-            @Nullable Integer targetPhaseSet) {
-        if (targetPhaseSet == null) {
+    private static boolean hasReportedVariantWithPhase(@NotNull List<PurpleVariant> reportedVariants,
+            @Nullable List<Integer> targetPhaseSets) {
+        if (targetPhaseSets == null) {
             return false;
         }
 
-        for (ReportableVariant variant : reportedVariants) {
-            if (variant.localPhaseSet() != null && variant.localPhaseSet().equals(targetPhaseSet)) {
+        for (PurpleVariant variant : reportedVariants) {
+            List<Integer> localPhaseSets = variant.localPhaseSets();
+            if (localPhaseSets != null && hasMatchingPhase(localPhaseSets, targetPhaseSets)) {
                 return true;
             }
         }
@@ -58,12 +58,21 @@ final class SomaticVariantSelector {
         return false;
     }
 
-    private static boolean isRelevantForCuppa(@NotNull SomaticVariant variant) {
+    private static boolean hasMatchingPhase(@NotNull List<Integer> localPhaseSets, @NotNull List<Integer> targetPhaseSets) {
+        for (Integer localPhaseSet : localPhaseSets) {
+            if (targetPhaseSets.contains(localPhaseSet)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isRelevantForCuppa(@NotNull PurpleVariant variant) {
         return variant.type() == VariantType.INDEL && CUPPA_GENES.contains(variant.gene()) && variant.repeatCount() <= 6;
     }
 
-    private static boolean isSynonymousWithReportableWorstImpact(@NotNull SomaticVariant variant, @NotNull List<DriverGene> driverGenes) {
-        if (variant.canonicalCodingEffect() != CodingEffect.SYNONYMOUS) {
+    private static boolean isSynonymousWithReportableWorstImpact(@NotNull PurpleVariant variant, @NotNull List<DriverGene> driverGenes) {
+        if (variant.canonicalImpact().codingEffect() != CodingEffect.SYNONYMOUS) {
             return false;
         }
 
@@ -79,8 +88,8 @@ final class SomaticVariantSelector {
         return nonsenseOrFrameshift || splice || missense;
     }
 
-    private static boolean isUnreportedSpliceVariant(@NotNull SomaticVariant variant, @NotNull List<DriverGene> driverGenes) {
-        if (variant.spliceRegion()) {
+    private static boolean isUnreportedSpliceVariant(@NotNull PurpleVariant variant, @NotNull List<DriverGene> driverGenes) {
+        if (variant.canonicalImpact().spliceRegion()) {
             DriverGene driverGene = findDriverGene(driverGenes, variant.gene());
             if (driverGene != null) {
                 return driverGene.reportSplice();
@@ -97,14 +106,5 @@ final class SomaticVariantSelector {
             }
         }
         return null;
-    }
-
-    @NotNull
-    private static ReportableVariant toReportable(@NotNull SomaticVariant variant) {
-        return ReportableVariantFactory.fromVariant(variant, ReportableVariantSource.SOMATIC)
-                .driverLikelihood(Double.NaN)
-                .transcript(variant.canonicalTranscript())
-                .isCanonical(true)
-                .build();
     }
 }
