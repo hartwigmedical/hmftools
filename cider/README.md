@@ -86,37 +86,37 @@ Note that sequences with "no anchor" may represent partial rearrangements.
  
 The full set of fields output are:
 
-| Field                | Explanation                                                                                                                                          | 
-|----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
-| CDR3Seq              | CDR3 nucleotide sequence. If either the V or J anchor is missing only the first 63 bases of sequence are shown                                                                                                                     | 
-| CDR3aa               | CDR3 aa sequence. If either the V or J anchor is missing only the first 63 bases of sequence are shown                                                                                                                                    | 
-| Filter               | PASS if viable CDR3 sequence or one or more filter reasons  (see above)                                                                                          | 
+| Field                | Explanation                                                                                                                                         | 
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| CDR3Seq              | CDR3 nucleotide sequence. If either the V or J anchor is missing only the first 63 bases of sequence are shown                                      | 
+| CDR3aa               | CDR3 aa sequence. If either the V or J anchor is missing only the first 63 bases of sequence are shown                                              | 
+| Filter               | PASS if viable CDR3 sequence or one or more filter reasons  (see above)                                                                             | 
 | minHighQualBaseReads | number of reads in the least supported base in the CDR3 region or for the first 63 bases of the candidate CDR3 sequence if only one anchor is found |
-| assignedReads        | Total reads assigned to candidate sequence.                                                                                                          | 
-| JAlignedReads        | # of reads initially aligned to J gene                                                                                                               | 
-| VAlignedReads        | # of reads initially aligned to V gene                                                                                                               | 
-| inFrame              | CDR3 sequence is inframe {T/F}                                                                                                                       | 
-| containsStop         | CDR3 contains stop codon {T/F}                                                                                                                       | 
-| vType                | {IGKV;IGLV;IGHV;TRAV;TRBV;TRDV;TRGV}                                                                                                                 | 
-| vAnchorEnd           | Position of V anchor end in nt sequence                                                                                                              | 
-| vAnchorNT            | V anchor sequence in nt                                                                                                                              | 
-| vAnchorTemplateSeq   | Best scoring V template anchor in nt (or null if read aligned to V anchor)                                                                           | 
-| vAnchorAA            | V anchor sequence in AA                                                                                                                              | 
-| vAnchorTemplateAA    | Best scoring V template Anchor in AA (or null if read aligned to V anchor)                                                                           | 
-| vSimilarityScore     | Blosum similarity score for template anchor (or null if read aligned to V anchor)                                                                    | 
-| vNonSplitReads       | Count of reads supporting sequence with at least 30 aligned bases either side of last base of conserved C                                            | 
-| jType                | {IGHJ;IGKJ;IGK-KDE,IGLJ;TRAJ;TRBJ;TRDJ;TRGJ}                                                                                                         | 
-| jAnchorEnd           | Position of J anchor end in nt sequence                                                                                                              | 
-| jAnchorSeq           | J anchor sequence in nt                                                                                                                              | 
-| jAnchorTemplateSeq   | Best scoring J template anchor in nt (or null if read aligned to J anchor)                                                                           | 
-| jAnchorAA            | J anchor sequence in AA                                                                                                                              | 
-| jAnchorTemplateAA    | Best scoring J template Anchor in AA (or null if read aligned to J anchor)                                                                           | 
-| jSimilarityScore     | Blosum62 similarity score for template anchor (or null if read aligned to J anchor)                                                                  | 
-| vNonSplitReads       | Count of reads supporting sequence with at least 30 aligned bases either side of first base of conserved W/F                                         | 
-| vdjSeq               | Full consensus sequence in nucleotides                                                                                                               | 
-| support              | Counts of high quality base support at each nucleotide (radix-36 ASCII encoded)                                                                      | 
-| SampleType              | "dna" or "rna"                       | 
-| cohortFrequency      | TO DO                                                                                                                                                | 
+| assignedReads        | Total reads assigned to candidate sequence.                                                                                                         | 
+| vAlignedReads        | # of reads initially aligned to V gene                                                                                                              | 
+| jAlignedReads        | # of reads initially aligned to J gene                                                                                                              | 
+| inFrame              | CDR3 sequence is inframe {T/F}                                                                                                                      | 
+| containsStop         | CDR3 contains stop codon {T/F}                                                                                                                      | 
+| vType                | {IGKV;IGLV;IGHV;TRAV;TRBV;TRDV;TRGV}                                                                                                                | 
+| vAnchorEnd           | Position of V anchor end in nt sequence                                                                                                             | 
+| vAnchorNT            | V anchor sequence in nt                                                                                                                             | 
+| vAnchorTemplateSeq   | Best scoring V template anchor in nt (or null if read aligned to V anchor)                                                                          | 
+| vAnchorAA            | V anchor sequence in AA                                                                                                                             | 
+| vAnchorTemplateAA    | Best scoring V template Anchor in AA (or null if read aligned to V anchor)                                                                          | 
+| vSimilarityScore     | Blosum similarity score for template anchor (or null if read aligned to V anchor)                                                                   | 
+| vNonSplitReads       | Count of reads supporting sequence with at least 30 aligned bases either side of last base of conserved C                                           | 
+| jType                | {IGHJ;IGKJ;IGK-KDE,IGLJ;TRAJ;TRBJ;TRDJ;TRGJ}                                                                                                        | 
+| jAnchorEnd           | Position of J anchor end in nt sequence                                                                                                             | 
+| jAnchorSeq           | J anchor sequence in nt                                                                                                                             | 
+| jAnchorTemplateSeq   | Best scoring J template anchor in nt (or null if read aligned to J anchor)                                                                          | 
+| jAnchorAA            | J anchor sequence in AA                                                                                                                             | 
+| jAnchorTemplateAA    | Best scoring J template Anchor in AA (or null if read aligned to J anchor)                                                                          | 
+| jSimilarityScore     | Blosum62 similarity score for template anchor (or null if read aligned to J anchor)                                                                 | 
+| vNonSplitReads       | Count of reads supporting sequence with at least 30 aligned bases either side of first base of conserved W/F                                        | 
+| vdjSeq               | Full consensus sequence in nucleotides                                                                                                              | 
+| support              | Counts of high quality base support at each nucleotide (radix-36 ASCII encoded)                                                                     | 
+| SampleType           | "dna" or "rna"                                                                                                                                      | 
+| cohortFrequency      | TO DO                                                                                                                                               | 
 
 
 ## Limitations / Future improvements
@@ -132,3 +132,39 @@ The full set of fields output are:
 - **Error tolerance in collapsing** - We collapse sequences with up to 1 high quality sequencing difference across the anchors + CDR3 sequence. We still see a small number of artefacts from very highly supported sequences which could be cleaned up further. 
 - **Extension of incomplete TCR** - For TCR regions it may be possible to predict a full CDR3 sequence from the germline using a parital frgament.  For IG this is likely dangerous due to hypermutation 
 - **Multiple CDR3s in consensus sequence** - A single consensus sequence may have 2 anchor locations that lead to plausible high scoring CDR3 sequences. Currently we choose the highest scoring, but both could be functional. 
+
+
+## Post CIDER annotation script using BLAST
+
+Included here is a python annotation script [cider_blastn.py](./src/main/resources/cider_blastn.py) that uses [BLAST+](https://www.ncbi.nlm.nih.gov/books/NBK62051/def-item/blast/)
+to query each sequence CIDER found against the human genome (GCF_000001405.39_top_level). It uses this information to assign V, D, J alleles and also
+weed out false positives.
+
+To run the tool
+```
+python cider_blastn.py \
+    --in_tsv=COLO829.cider.vdj_seq.tsv \
+    --out_tsv=COLO829.cider.vdj_seq_blastn.tsv \
+    --blastn=/bin/blastn \
+    --ensembl=/path/data/ensembl_data_cache/38/ensembl_gene_data.csv
+```
+
+This will create a new file `COLO829.cider.vdj_seq_blastn.tsv` with the original file `COLO829.cider.vdj_seq.tsv` plus the following
+additional fields added:
+
+| Field                                 | Explanation                                                                    | 
+|---------------------------------------|--------------------------------------------------------------------------------|
+| vGene, dGene, jGene                   | The V, D or J gene alleles that this sequence is aligned to                    | 
+| vPIdent, dPIdent, jPIdent             | The align sequence % identity with the V, D or J gene                          | 
+| vAlignStart, dAlignStart, jAlignStart | Start of the alignment with the V, D or J gene                                 | 
+| vAlignEnd, dAlignEnd, jAlignEnd       | End of the alignment with the V, D or J gene                                   |
+| blastnFullMatch                       | True if this whole sequence matches a part of the genome, False otherwise      | 
+| blastnStatus                          | SKIPPED_BLASTN, V_D_J, V_J, V_D, D_J, V_ONLY, D_ONLY, J_ONLY, NO_REARRANGEMENT | 
+
+### setting up BLAST+
+
+Follow the instruction in https://www.ncbi.nlm.nih.gov/books/NBK1762/ . And set up the `human_genome` blast DB:
+
+```
+$ perl $BLAST_INSTALL/bin/update_blastdb.pl --passive --decompress human_genome
+```

@@ -93,6 +93,8 @@ def run_blastn(blastn_path, fa_file, blastn_out_file, threads):
            "-num_threads", str(threads),
            "-out", blastn_out_file]
 
+    logger.info(cmd)
+
     proc = subprocess.run(cmd, cwd=".")
     if proc.returncode == 0:
         logger.info("blastn success")
@@ -234,7 +236,11 @@ def process_blastn_result(blastn_csv, gene_finder):
 
     def get_gene_type_df(df, gene_type):
         seq_with_gene_type = df[df["gene_type"] == gene_type].groupby("qseqid")[["gene", "pident", "qstart", "qend"]].first()
-        seq_with_gene_type.columns = [gene_type.lower() + c.capitalize() for c in seq_with_gene_type.columns]
+        # rename columns
+        seq_with_gene_type.rename(columns={ "gene": gene_type.lower() + "Gene",
+                                            "pident": gene_type.lower() + "PIdent",
+                                            "qstart": gene_type.lower() + "AlignStart",
+                                            "qend": gene_type.lower() + "AlignEnd"}, inplace=True)
         return seq_with_gene_type.reset_index()
 
     # now we have to combine the data and mark
@@ -299,7 +305,7 @@ def main():
     parser = argparse.ArgumentParser(description='Running blastn on CIDER sequences')
     parser.add_argument('--in_tsv', help='input vdj_seq tsv file', required=True)
     parser.add_argument('--out_tsv', help='output vdj_seq tsv file', required=True)
-    parser.add_argument('--temp_dir', help='blastn working directory')
+    parser.add_argument('--temp_dir', help='directory to create the working files. Uses system temp if not provided')
     parser.add_argument('--blastn', help='path to the blastn binary', required=True)
     parser.add_argument('--ensembl', help='path to the ensembl_gene_data csv', required=True)
     parser.add_argument('--threads', type=int, default=1, help='number of threads to use in blastn')
@@ -311,12 +317,15 @@ def main():
 
     file_prefix = os.path.basename(args.in_tsv).split('.', maxsplit=1)[0]
 
+    if args.temp_dir:
+        fa_file = f"{args.temp_dir}/{file_prefix}.blastn.fa"
+        blastn_csv = f"{args.temp_dir}/{file_prefix}.blastn.csv"
+    else:
+        fa_file = tempfile.NamedTemporaryFile(delete=False, suffix=".blastn.fa").name
+        blastn_csv = tempfile.NamedTemporaryFile(delete=False, suffix=".blastn.csv").name
+
     # find all the sequences and put them into a fasta file
-    #fd, fa_file = tempfile.mkstemp(suffix=".fa")
-    #with os.fdopen(fd, "w") as f:
-    fa_file = f"{args.temp_dir}/{file_prefix}.blastn.fa"
     write_fasta(vdj_df, fa_file, args.filter_cdr3)
-    blastn_csv = f"{args.temp_dir}/{file_prefix}.blastn.csv"
 
     # now run blastn on all of them
     run_blastn(args.blastn, fa_file, blastn_csv, args.threads)
@@ -324,10 +333,14 @@ def main():
     gene_finder = GeneFinder(get_ensembl(args.ensembl, True))
     seq_gene_df = process_blastn_result(blastn_csv, gene_finder)
 
+    if not args.temp_dir:
+        os.unlink(fa_file)
+        os.unlink(blastn_csv)
+
     # now merge the results back into the vdj_df
     vdj_df = vdj_df.merge(seq_gene_df, how="left", left_on="cdr3AA", right_on="qseqid").drop("qseqid", axis=1)
     vdj_df["blastnStatus"] = vdj_df["blastnStatus"].fillna("SKIPPED_BLASTN")
-    vdj_df.to_csv(args.out_tsv, sep="\t")
+    vdj_df.to_csv(args.out_tsv, sep="\t", float_format='%.10g')
 
     elapsed_sec = time.time() - start
     minute = int(elapsed_sec / 60)
