@@ -43,9 +43,9 @@ public class GermlineDeletionComparer implements ItemComparer
     }
 
     @Override
-    public void processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
     {
-        CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
     }
 
     @Override
@@ -76,7 +76,8 @@ public class GermlineDeletionComparer implements ItemComparer
         }
         catch(IOException e)
         {
-            CMP_LOGGER.info("sample({}) failed to read germline deletion data: {}", sampleId, e.toString());
+            CMP_LOGGER.warn("sample({}) failed to read germline deletion data: {}", sampleId, e.toString());
+            return null;
         }
 
         return comparableItems;

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.compar.CommonUtils.buildComparers;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
@@ -61,24 +63,30 @@ public class ComparTask implements Callable
     private void processSample(final String sampleId)
     {
         int totalMismatches = 0;
+        int failedTypes = 0;
         for(ItemComparer comparer : mComparators)
         {
             List<Mismatch> mismatches = Lists.newArrayList();
 
             try
             {
-                comparer.processSample(sampleId, mismatches);
+                boolean status = comparer.processSample(sampleId, mismatches);
+
+                if(!status)
+                    ++failedTypes;
             }
             catch(Exception e)
             {
                 CMP_LOGGER.error("sample({}) failed processing: {}", sampleId, e.toString());
                 e.printStackTrace();
+                ++failedTypes;
             }
 
             mWriter.writeSampleMismatches(sampleId, comparer, mismatches);
             totalMismatches += mismatches.size();
         }
 
-        CMP_LOGGER.debug("sample({}) wrote {} mismatches", sampleId, totalMismatches);
+        CMP_LOGGER.debug("sample({}) wrote {} mismatches {}",
+                sampleId, totalMismatches, failedTypes > 0 ? format("failed types %d", failedTypes) : "");
     }
 }

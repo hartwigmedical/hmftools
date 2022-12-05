@@ -50,9 +50,9 @@ public class DisruptionComparer implements ItemComparer
     }
 
     @Override
-    public void processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
     {
-        CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
     }
 
     @Override
@@ -97,8 +97,8 @@ public class DisruptionComparer implements ItemComparer
         }
         catch(IOException e)
         {
-            CMP_LOGGER.info("sample({}) failed to load Linx breakend disruption data: {}", sampleId, e.toString());
-            return Lists.newArrayList();
+            CMP_LOGGER.warn("sample({}) failed to load Linx breakend disruption data: {}", sampleId, e.toString());
+            return null;
         }
     }
 

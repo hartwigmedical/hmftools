@@ -100,7 +100,7 @@ public class CommonUtils
         }
     }
 
-    public static void processSample(
+    public static boolean processSample(
             final ItemComparer comparer, final ComparConfig config, final String sampleId, final List<Mismatch> mismatches)
     {
         final MatchLevel matchLevel = config.Categories.get(comparer.category());
@@ -118,12 +118,18 @@ public class CommonUtils
             else
             {
                 FileSources fileSources = config.FileSources.get(sourceName);
-                sourceItems.add(comparer.loadFromFile(sourceSampleId, FileSources.sampleInstance(fileSources, sourceSampleId)));
+                List<ComparableItem> items = comparer.loadFromFile(sourceSampleId, FileSources.sampleInstance(fileSources, sourceSampleId));
+
+                if(items == null)
+                    return false;
+
+                sourceItems.add(items);
             }
         }
 
         // previously support comparisons for N sources but now can only be 2 as controlled by config
         CommonUtils.compareItems(mismatches, matchLevel, config.Thresholds, sourceItems.get(0), sourceItems.get(1));
+        return true;
     }
 
     public static void compareItems(
