@@ -38,7 +38,7 @@ public final class HLAAlleleTable {
             table.addCell(Cells.createContent(allele.allele()));
             table.addCell(Cells.createContent(String.valueOf(allele.refFragments())));
             table.addCell(Cells.createContent(String.valueOf(allele.tumorFragments())));
-            table.addCell(Cells.createContent(rnaFragmentString(allele)));
+            table.addCell(Cells.createContent(String.valueOf(allele.rnaFragments())));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(allele.tumorCopyNumber())));
             table.addCell(Cells.createContent(mutationString(allele)));
         }
@@ -51,11 +51,6 @@ public final class HLAAlleleTable {
         return alleles.stream()
                 .sorted(Comparator.comparing(LilacAllele::allele).thenComparingInt(LilacAllele::refFragments))
                 .collect(Collectors.toList());
-    }
-
-    @NotNull
-    private static String rnaFragmentString(@NotNull LilacAllele allele) {
-        return String.valueOf(allele.rnaFragments());
     }
 
     @NotNull

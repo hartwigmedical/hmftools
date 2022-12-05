@@ -38,6 +38,7 @@ public final class ExpressionTable {
                         Cells.createHeader("Perc (Type)"), Cells.createHeader("FC (Type)"), Cells.createHeader("Perc (DB)"),
                         Cells.createHeader("FC (DB)") });
 
+        // TODO Build the expression datamodel table prior to rendering.
         for (GeneExpression expression : sort(expressions, sortAscending)) {
             table.addCell(Cells.createContent(expression.geneName()));
             table.addCell(Cells.createContent(lookupTumorCN(allSomaticGeneCopyNumbers, expression.geneName())));

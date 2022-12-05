@@ -38,10 +38,10 @@ public class ImmunologyChapter implements ReportChapter {
     public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
 
-        addHlaData(document);
+        addHLAData(document);
     }
 
-    private void addHlaData(final Document document) {
+    private void addHLAData(final Document document) {
         Table qc = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         qc.addCell(Cells.createKey("QC Status:"));
         qc.addCell(Cells.createValue(report.lilac().qc()));
