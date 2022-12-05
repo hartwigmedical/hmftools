@@ -73,6 +73,7 @@ public class PvConfig
     public static final double DEFAULT_MAPPABILITY_MIN = 0.5;
     public static final double DEFAULT_REPEAT_COUNT_MAX = 3;
     public static final double DEFAULT_SUBCLONAL_LIKELIHOOD_MIN = 0.95;
+    public static final int DEFAULT_SV_BREAKENDS_PER_GENE = 5;
 
     public static final int MAX_INSERT_BASES = 60;
     public static final int MAX_INDEL_LENGTH = 32;

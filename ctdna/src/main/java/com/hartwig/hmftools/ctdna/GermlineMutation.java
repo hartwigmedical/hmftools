@@ -92,7 +92,8 @@ public class GermlineMutation extends Variant
         CompoundFilter filter = new CompoundFilter(true);
         filter.add(new PassingVariantFilter());
 
-        String vcfFile = PurpleCommon.purpleGermlineVcfFile(config.PurpleDir, sampleId);
+        String purpleDir = PvConfig.getSampleFilePath(sampleId, config.PurpleDir);
+        String vcfFile = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
 
         List<GermlineVariant> germlineVariants = GermlineVariantFactory.fromVCFFile(sampleId, vcfFile);
 

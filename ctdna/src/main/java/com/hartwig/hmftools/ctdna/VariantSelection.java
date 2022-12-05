@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.ctdna.CategoryType.SUBCLONAL_MUTATION;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
 import static com.hartwig.hmftools.ctdna.SelectionStatus.EXCEEDS_COUNT;
 import static com.hartwig.hmftools.ctdna.SelectionStatus.FILTERED;
+import static com.hartwig.hmftools.ctdna.SelectionStatus.GENE_LOCATIONS;
 import static com.hartwig.hmftools.ctdna.SelectionStatus.PROXIMATE;
 import static com.hartwig.hmftools.ctdna.SelectionStatus.SELECTED;
 
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public final class VariantSelection
 {
@@ -31,6 +33,7 @@ public final class VariantSelection
         List<Variant> selectedVariants = Lists.newArrayList();
 
         ProximateLocations registeredLocations = new ProximateLocations();
+        Map<String,Integer> geneDisruptions = Maps.newHashMap();
 
         int index = 0;
         int[] typeCounts = new int[CategoryType.values().length];
@@ -47,7 +50,12 @@ public final class VariantSelection
             }
             else
             {
-                if(variant.categoryType() == OTHER_SV && typeCounts[OTHER_SV.ordinal()] >= config.NonReportableSvCount)
+                if(!variant.checkAndRegisterGeneLocation(geneDisruptions))
+                {
+                    canAdd = false;
+                    variant.setSelectionStatus(GENE_LOCATIONS);
+                }
+                else if(variant.categoryType() == OTHER_SV && typeCounts[OTHER_SV.ordinal()] >= config.NonReportableSvCount)
                 {
                     canAdd = false;
                     variant.setSelectionStatus(EXCEEDS_COUNT);
@@ -136,6 +144,8 @@ public final class VariantSelection
 
         positions.add(index, position);
     }
+
+
 
     private static void addVariant(final Variant variant, final List<Variant> selectedVariants, final int[] typeCounts)
     {

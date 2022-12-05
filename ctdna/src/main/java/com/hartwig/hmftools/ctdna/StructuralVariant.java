@@ -14,18 +14,14 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.ctdna.CategoryType.AMP_DEL;
 import static com.hartwig.hmftools.ctdna.CategoryType.FUSION;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_SV;
-import static com.hartwig.hmftools.ctdna.CategoryType.SUBCLONAL_MUTATION;
 import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
 import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_MAPPABILITY_MIN;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_REPEAT_COUNT_MAX;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_SV_BREAKENDS_PER_GENE;
 import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
-import static com.hartwig.hmftools.ctdna.VariantSelection.addRegisteredLocation;
-import static com.hartwig.hmftools.ctdna.VariantSelection.isNearRegisteredLocation;
-
 
 import java.util.List;
 import java.util.Map;
@@ -34,10 +30,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.linx.DriverEventType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.linx.LinxCommonTypes;
@@ -81,6 +74,9 @@ public class StructuralVariant extends Variant
     {
         if(!mFusions.isEmpty())
             return FUSION;
+
+        if(mAmpDelDriver)
+            return AMP_DEL;
 
         return OTHER_SV;
     }
@@ -312,6 +308,9 @@ public class StructuralVariant extends Variant
     @Override
     public boolean passNonReportableFilters(final PvConfig config)
     {
+        if(reported())
+            return true;
+
         if(gc() < DEFAULT_GC_THRESHOLD_MIN || gc() > DEFAULT_GC_THRESHOLD_MAX)
             return false;
 
@@ -343,6 +342,29 @@ public class StructuralVariant extends Variant
 
         registeredLocations.addRegisteredLocation(mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation());
         registeredLocations.addRegisteredLocation(mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation());
+        return true;
+    }
+
+    @Override
+    public boolean checkAndRegisterGeneLocation(final Map<String,Integer> geneDisruptions)
+    {
+        for(LinxBreakend breakend : mBreakends)
+        {
+            Integer breakendCount = geneDisruptions.get(breakend.gene());
+
+            if(breakendCount != null)
+            {
+                if(breakendCount >= DEFAULT_SV_BREAKENDS_PER_GENE)
+                    return false;
+
+                geneDisruptions.put(breakend.gene(), breakendCount + 1);
+            }
+            else
+            {
+                geneDisruptions.put(breakend.gene(), 1);
+            }
+        }
+
         return true;
     }
 

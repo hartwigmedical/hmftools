@@ -48,6 +48,7 @@ public abstract class Variant
     abstract void generateSequences(final RefGenomeInterface refGenome, final PvConfig config);
 
     abstract boolean checkAndRegisterLocation(final ProximateLocations registeredLocations);
+    boolean checkAndRegisterGeneLocation(final Map<String,Integer> geneDisruptions) { return true; }
 
     boolean passNonReportableFilters(final PvConfig config) { return true; }
 
