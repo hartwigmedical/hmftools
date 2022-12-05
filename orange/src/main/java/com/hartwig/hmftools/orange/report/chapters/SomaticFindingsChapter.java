@@ -4,13 +4,14 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
+import com.hartwig.hmftools.orange.report.datamodel.BreakendEntryFactory;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
@@ -171,11 +172,14 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addBreakends(@NotNull Document document) {
-        List<LinxBreakend> reportableBreakends = report.linx().reportableBreakends();
+        List<BreakendEntry> reportableBreakends =
+                BreakendEntryFactory.create(report.linx().reportableBreakends(), report.linx().allStructuralVariants());
+
         String titleDriver = "Driver gene disruptions (" + reportableBreakends.size() + ")";
         document.add(BreakendTable.build(titleDriver, contentWidth(), reportableBreakends));
 
-        List<LinxBreakend> additionalSuspectBreakends = report.linx().additionalSuspectBreakends();
+        List<BreakendEntry> additionalSuspectBreakends =
+                BreakendEntryFactory.create(report.linx().additionalSuspectBreakends(), report.linx().allStructuralVariants());
         String titleNonDrivers = "Other potentially interesting gene disruptions (" + additionalSuspectBreakends.size() + ")";
         document.add(BreakendTable.build(titleNonDrivers, contentWidth(), additionalSuspectBreakends));
     }
