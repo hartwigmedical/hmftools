@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
+import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 
 import java.util.List;
@@ -209,18 +210,37 @@ public class DedupMixedGermlineSomatic
         int codonStart = position;
         int codonEnd = position;
 
-        if(codingPhase == PHASE_1)
+        if(transcript.Strand == POS_STRAND)
         {
-            codonEnd = min(exon.End, position + 2);
+            if(codingPhase == PHASE_1)
+            {
+                codonEnd = min(exon.End, position + 2);
+            }
+            else if(codingPhase == PHASE_2)
+            {
+                codonStart = max(exon.Start, position - 1);
+                codonEnd = min(exon.End, position + 1);
+            }
+            else if(codingPhase == PHASE_0)
+            {
+                codonStart = max(exon.Start, position - 2);
+            }
         }
-        else if(codingPhase == PHASE_2)
+        else
         {
-            codonStart = max(exon.Start, position - 1);
-            codonEnd = min(exon.End, position + 1);
-        }
-        else if(codingPhase == PHASE_0)
-        {
-            codonStart = max(exon.Start, position - 2);
+            if(codingPhase == PHASE_1)
+            {
+                codonStart = max(exon.Start, position - 2);
+            }
+            else if(codingPhase == PHASE_2)
+            {
+                codonStart = max(exon.Start, position - 1);
+                codonEnd = min(exon.End, position + 1);
+            }
+            else if(codingPhase == PHASE_0)
+            {
+                codonEnd = min(exon.End, position + 2);
+            }
         }
 
         return new BaseRegion(codonStart, codonEnd);

@@ -583,12 +583,12 @@ public class ReadContextEvidence
         }
         else if(firstQual > secondQual)
         {
-            return new byte[] { firstBase, firstQual };
+            // use the difference in quals
+            return new byte[] { firstBase, (byte)((int)firstQual - (int)secondQual) };
         }
         else
         {
-            return new byte[] { secondBase, secondQual };
+            return new byte[] { secondBase, (byte)((int)secondQual - (int)firstQual) };
         }
     }
-
 }
