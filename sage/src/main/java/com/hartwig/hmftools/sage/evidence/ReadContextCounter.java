@@ -184,7 +184,6 @@ public class ReadContextCounter implements VariantHotspot
     }
 
     public int strandDepth() { return mForwardStrand + mReverseStrand; }
-
     public int improperPair() { return mImproperPair; }
 
     public int rawDepth() { return mRawDepth; }

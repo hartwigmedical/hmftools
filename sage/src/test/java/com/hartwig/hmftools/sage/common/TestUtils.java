@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.common;
 
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
@@ -9,6 +8,7 @@ import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_FULL;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
@@ -124,12 +124,16 @@ public class TestUtils
     }
 
     public static SAMRecord createSamRecord(
-            final String readId, final String chromosome, int readStart, final String readBases, final String cigar)
+            final String readId, final String chrStr, int readStart, final String readBases, final String cigar)
     {
         SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
         recordBuilder.setUnmappedHasBasesAndQualities(false);
+
+        HumanChromosome chromosome = HumanChromosome.fromString(chrStr);
+
         SAMRecord record = recordBuilder.addFrag(
-                readId, 1, readStart, false, false, cigar, readBases, 37, false);
+                readId, chromosome.ordinal(), readStart, false, false,
+                cigar, readBases, 37, false);
 
         record.setReadBases(readBases.getBytes());
 
@@ -139,7 +143,8 @@ public class TestUtils
             qualities[i] = 37;
 
         record.setBaseQualities(qualities);
-        record.setReferenceName(chromosome);
+        record.setReferenceName(chrStr);
+        record.setReferenceIndex(chromosome.ordinal()); // need to override since no header is present
 
         // to be correct this should match the cigar element count
         record.setAttribute("NM", 1);
