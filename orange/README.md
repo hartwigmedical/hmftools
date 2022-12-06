@@ -4,17 +4,15 @@ ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into 
 
 1. The algo depends exclusively on config and data produced by the [Hartwig platinum pipeline](https://github.com/hartwigmedical/platinum)
    and hence can always be run as final step without any additional local data or config required.
-2. The algo combines RNA and DNA data to present an integrated DNA/RNA analysis of a tumor sample.
-   In general, ORANGE respects the mode in which the pipeline has been run (tumor-only, panel, whole genome etc).
+2. ORANGE respects the mode in which the pipeline has been run (tumor-only, panel, whole genome).
+   In case RNA data is provided, the algo combines the RNA and DNA data to present an integrated DNA/RNA analysis of a tumor sample.
 3. ORANGE can be configured to convert all germline findings into somatic findings, thereby enabling downstream users to be oblivious
    of germline findings without missing anything actually relevant.
 4. Everything that is labeled as a driver by any of the Hartwig algorithms is displayed in the PDF along with the driver likelihood.
-   This effectively means that everything reported
-   by [patient-reporter](https://github.com/hartwigmedical/oncoact/tree/master/patient-reporter)
-   is present in the ORANGE pdf and json.
 5. An additional exhaustive WGS and WTS scan is performed for anything interesting that may be potentially relevant but not picked up as a
    driver. Details of what is considered interesting are described in below.
-6. A comprehensive range of QC measures and plots is displayed which provides in-depth details about the data quality of the tumor sample.
+6. A comprehensive range of QC measures and plots is displayed which provides in-depth details about the data quality of the samples
+   provided.
 
 An example tumor + reference report based on the publicly available melanoma cell line COLO829 can be
 found [here](src/main/resources/Test.orange.pdf).
@@ -33,7 +31,14 @@ SNV/Indel clonality. In addition to this front page, the following chapters are 
 - [Cohort Comparison](#cohort-comparison): How do the various properties of this tumor compare to existing cancer cohorts?
 - [Quality Control](#quality-control): Various stats and graphs regarding the quality of the data and interpretation thereof.
 
+Note that the JSON file contains every mutation found in the analysis and hence is much more extensive than the PDF.
+The JSON file is meant to be used by downstream applications who wish to further interpret the results of the molecular analysis.
+
 ## Running ORANGE
+
+ORANGE requires the output of various Hartwig algorithms, along with some resource files (doid json, cohort distributions, driver genes and
+known fusions). The resource files required to run ORANGE can be found [here](https://resources.hartwigmedicalfoundation.nl) for either 37
+or 38 reference genome version.
 
 ### Base (tumor-only) mode
 
@@ -62,6 +67,8 @@ java -jar orange.jar \
    -cuppa_result_csv /path/to/cuppa_results.tsv \
    -cuppa_summary_plot /path/to/cuppa_summary_plot \
 ```
+Note that `primary_tumor_doids` can be left blank (""). This parameter is used to look up cancer-type-specific percentiles for various
+tumor characteristics. If primary tumor doids are not provided, percentiles are calculated against the full HMF database only. 
 
 ### Additional parameters when running tumor-reference mode
 
@@ -113,9 +120,7 @@ interesting and added to the report:
     1. Gains in genes for which we report amplifications with a relative minimum copy number between 2.5 and 3 times ploidy.
     2. Any chromosomal band location with at least one gene lost or fully amplified is considered potentially interesting.
        A maximum of 10 additional gains (sorted by minimum copy number) and 10 additional losses are reported as potentially interesting:
-        - For a band with more than one gene amplified, genes are first picked based on heighest minimum copy number.
-        - In case of a loss in a band with a reported loss, the additional loss is considered potentially interesting in case it is
-          associated with clinical evidence.
+        - For a band with more than one gene amplified, the gene with the highest minimum copy number is picked.
         - For a band with a loss that has no losses reported in this band already, an arbitrary gene is picked.
 - Other potentially relevant fusions. A maximum of 10 additional fusions (picked arbitrarily) are reported as potentially interesting:
     1. Any fusion that is not reported and has a reported type other than NONE.
@@ -131,10 +136,10 @@ interesting and added to the report:
 
 In case ORANGE was run in DNA+RNA mode, DNA findings will be annotated with RNA:
 
-- Driver and potentially interesting variants are annotated with RNA depth
-- Driver and potentially interesting amps/dels are annotated with TPM, and corresponding percentile and foldChange for database and
+- Drivers and potentially interesting variants are annotated with RNA depth
+- Drivers and potentially interesting amps/dels are annotated with TPM, and corresponding percentile and fold change for database and
   applicable tumor type
-- Driver and potentially interesting fusions are annotated depending on fusion type:
+- Drivers and potentially interesting fusions are annotated depending on fusion type:
     1. `EXON_DEL_DUP` and other intra-gene fusions are annotated with exon-skipping novel splice junctions
     2. @IG fusions are annotated with TPM of the 3' fusion gene
     3. Other fusions are annotated with RNA fusion details (detected fusions in RNA, and corresponding fragment support and depth of 5' and
@@ -173,7 +178,7 @@ If run with RNA, this chapter displays potentially interesting RNA details:
 
 - QC Details
 - Drive gene panel genes with high TPM (>90th percentile database & tumor type) or low TPM (<5th percentile database or tumor type)
-- Potentially interesting support for Known or Promiscuous fusions not detected in our DNA analysis pipeline
+- Potentially interesting support for known or promiscuous fusions not detected in our DNA analysis pipeline
 - Potentially interesting novel splice junctions
     1. Exon-skipping events in `EXON_DEL_DUP` fusion genes
     2. Novel exon/intron events in driver gene panel genes
