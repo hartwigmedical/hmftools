@@ -8,8 +8,11 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
@@ -101,26 +104,28 @@ public class ReportGeneratorTestApplication {
                 .from(report)
                 .purple(ImmutablePurpleInterpretedData.builder()
                         .from(report.purple())
-                        .allSomaticVariants(Lists.newArrayList())
+                        .allSomaticVariants(report.purple().reportableSomaticVariants())
                         .additionalSuspectSomaticVariants(Lists.newArrayList())
-                        .allGermlineVariants(Lists.newArrayList())
+                        .allGermlineVariants(report.purple().reportableGermlineVariants())
                         .additionalSuspectGermlineVariants(Lists.newArrayList())
                         .allSomaticCopyNumbers(Lists.newArrayList())
-                        .allSomaticGeneCopyNumbers(Lists.newArrayList())
+                        .allSomaticGeneCopyNumbers(retainReportableCopyNumbers(report.purple().allSomaticGeneCopyNumbers(),
+                                report.purple().somaticDrivers()))
                         .suspectGeneCopyNumbersWithLOH(Lists.newArrayList())
-                        .allSomaticGainsLosses(Lists.newArrayList())
+                        .allSomaticGainsLosses(report.purple().reportableSomaticGainsLosses())
                         .nearReportableSomaticGains(Lists.newArrayList())
                         .additionalSuspectSomaticGainsLosses(Lists.newArrayList())
-                        .allGermlineDeletions(Lists.newArrayList())
+                        .allGermlineDeletions(report.purple().reportableGermlineDeletions())
                         .build())
                 .linx(ImmutableLinxInterpretedData.builder()
                         .from(report.linx())
-                        .allStructuralVariants(retainReportable(report.linx().allStructuralVariants(), report.linx().reportableBreakends()))
-                        .allFusions(Lists.newArrayList())
+                        .allStructuralVariants(retainReportableStructuralVariants(report.linx().allStructuralVariants(),
+                                report.linx().reportableBreakends()))
+                        .allFusions(report.linx().reportableFusions())
                         .additionalSuspectFusions(Lists.newArrayList())
-                        .allBreakends(Lists.newArrayList())
+                        .allBreakends(report.linx().reportableBreakends())
                         .additionalSuspectBreakends(Lists.newArrayList())
-                        .allGermlineDisruptions(Lists.newArrayList())
+                        .allGermlineDisruptions(report.linx().reportableGermlineDisruptions())
                         .build());
 
         if (report.isofox() != null) {
@@ -136,15 +141,35 @@ public class ReportGeneratorTestApplication {
     }
 
     @NotNull
-    private static List<LinxSvAnnotation> retainReportable(@NotNull List<LinxSvAnnotation> structuralVariants,
-            @NotNull List<LinxBreakend> reportableBreakends) {
-        List<LinxSvAnnotation> reportableVariants = Lists.newArrayList();
-        for (LinxSvAnnotation structuralVariant : structuralVariants) {
-            if (isReportableSv(structuralVariant, reportableBreakends)) {
-                reportableVariants.add(structuralVariant);
+    private static List<GeneCopyNumber> retainReportableCopyNumbers(@NotNull List<GeneCopyNumber> geneCopyNumbers,
+            @NotNull List<DriverCatalog> drivers) {
+        List<String> copyNumberDriverGenes = Lists.newArrayList();
+        for (DriverCatalog driver : drivers) {
+            if (driver.driver() == DriverType.AMP || driver.driver() == DriverType.PARTIAL_AMP || driver.driver() == DriverType.DEL
+                    || driver.driver() == DriverType.GERMLINE_DELETION) {
+                copyNumberDriverGenes.add(driver.gene());
             }
         }
-        return reportableVariants;
+
+        List<GeneCopyNumber> reportable = Lists.newArrayList();
+        for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
+            if (copyNumberDriverGenes.contains(geneCopyNumber.geneName())) {
+                reportable.add(geneCopyNumber);
+            }
+        }
+        return reportable;
+    }
+
+    @NotNull
+    private static List<LinxSvAnnotation> retainReportableStructuralVariants(@NotNull List<LinxSvAnnotation> structuralVariants,
+            @NotNull List<LinxBreakend> reportableBreakends) {
+        List<LinxSvAnnotation> reportable = Lists.newArrayList();
+        for (LinxSvAnnotation structuralVariant : structuralVariants) {
+            if (isReportableSv(structuralVariant, reportableBreakends)) {
+                reportable.add(structuralVariant);
+            }
+        }
+        return reportable;
     }
 
     private static boolean isReportableSv(@NotNull LinxSvAnnotation structuralVariant, @NotNull List<LinxBreakend> reportableBreakends) {
