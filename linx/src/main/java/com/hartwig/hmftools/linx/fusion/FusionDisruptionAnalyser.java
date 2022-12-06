@@ -137,7 +137,6 @@ public class FusionDisruptionAnalyser
                 mSpecialFusions.cacheSpecialFusionGenes();
             }
         }
-
     }
 
     public PerformanceCounter getPerfCounter() { return mPerfCounter; }
@@ -198,7 +197,7 @@ public class FusionDisruptionAnalyser
     }
 
     public void run(
-            final String sampleId, final List<SvVarData> svList, final List<SvCluster> clusters,
+            final String sampleId, final List<SvVarData> fullSvList, final List<SvCluster> clusters,
             final Map<String,List<SvBreakend>> chrBreakendMap)
     {
         mPerfCounter.start();
@@ -207,6 +206,9 @@ public class FusionDisruptionAnalyser
 
         mUniqueFusions.clear();
         mFusionFinder.reset();
+
+        final List<SvVarData> svList = fullSvList.stream()
+                .filter(x -> x.getLinkedSVs() == null || !x.isSglBreakend()).collect(Collectors.toList());
 
         if(mConfig.IsGermline && mConfig.isSingleSample())
         {

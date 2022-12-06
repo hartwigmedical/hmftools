@@ -263,7 +263,7 @@ public class SampleAnalyser implements Callable
     {
         mAllVariants.clear();
 
-        if (variants.isEmpty())
+        if(variants.isEmpty())
             return;
 
         mAllVariants.addAll(variants);
