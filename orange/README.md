@@ -6,8 +6,8 @@ ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into 
    and hence can always be run as final step without any additional local data or config required.
 2. ORANGE respects the mode in which the pipeline has been run (tumor-only, panel, whole genome).
    In case RNA data is provided, the algo combines the RNA and DNA data to present an integrated DNA/RNA analysis of a tumor sample.
-3. ORANGE can be configured to convert all germline findings into somatic findings, thereby enabling downstream users to be oblivious
-   of germline findings without missing anything actually relevant.
+3. ORANGE can be configured to convert all germline driver variants to somatic driver variants, thereby obfuscating the germline driver part
+   of the analysis without actually loosing this data.
 4. Everything that is labeled as a driver by any of the Hartwig algorithms is displayed in the PDF along with the driver likelihood.
 5. An additional exhaustive WGS and WTS scan is performed for anything interesting that may be potentially relevant but not picked up as a
    driver. Details of what is considered interesting are described in below.
@@ -67,8 +67,9 @@ java -jar orange.jar \
    -cuppa_result_csv /path/to/cuppa_results.tsv \
    -cuppa_summary_plot /path/to/cuppa_summary_plot \
 ```
+
 Note that `primary_tumor_doids` can be left blank (""). This parameter is used to look up cancer-type-specific percentiles for various
-tumor characteristics. If primary tumor doids are not provided, percentiles are calculated against the full HMF database only. 
+tumor characteristics. If primary tumor doids are not provided, percentiles are calculated against the full HMF database only.
 
 ### Additional parameters when running tumor-reference mode
 
@@ -96,14 +97,14 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
 
 ### Additional optional parameters across all modes
 
-| Argument                    | Description                                                                                                                                        |
-|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| pipeline_version_file       | Path to the file containing the (platinum) pipeline version used.                                                                                  |
-| cuppa_feature_plot          | In case the cuppa summary does not fit onto one page, an additional cuppa feature plot is generated that has to be passed separately               |
-| convert_germline_to_somatic | If set, converts all germline findings to somatic findings, thereby obfuscating the germline part of the analysis without loosing any actual data. |
-| experiment_date             | Sets the experiment date to the specified date if set. Expected format is YYMMDD. If omitted, current date is used as experiment date.             |
-| limit_json_output           | If set, limits all lists in the JSON output to a single entry to facilitate manual inspection of the JSON output.                                  |
-| log_debug                   | If set, additional DEBUG logging is generated.                                                                                                     |
+| Argument                    | Description                                                                                                                                                                                                                                                                           |
+|-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| pipeline_version_file       | Path to the file containing the (platinum) pipeline version used.                                                                                                                                                                                                                     |
+| cuppa_feature_plot          | In case the cuppa summary does not fit onto one page, an additional cuppa feature plot is generated that has to be passed separately                                                                                                                                                  |
+| convert_germline_to_somatic | If set, converts all germline driver variants to somatic driver variants, thereby obfuscating the germline driver part of the analysis without actually loosing this data. Note that the data in other germline tables, except the pharmacogenetics table, is removed from this page. |
+| experiment_date             | Sets the experiment date to the specified date if set. Expected format is YYMMDD. If omitted, current date is used as experiment date.                                                                                                                                                |
+| limit_json_output           | If set, limits all lists in the JSON output to a single entry to facilitate manual inspection of the JSON output.                                                                                                                                                                     |
+| log_debug                   | If set, additional DEBUG logging is generated.                                                                                                                                                                                                                                        |
 
 ### Somatic Findings
 
@@ -152,13 +153,13 @@ In addition to all germline SNV/Indel tumor drivers determined by [PURPLE](../pu
 - Other potentially relevant variants
     1. Any hotspots that are not configured to be reported.
     2. Any hotspots that are filtered based on quality.
-- Missed variant likelihood (MVLH) per gene, presenting the likelihood of missing a pathogenic variant in case there would have been one
-  present.
 - Potentially pathogenic germline deletions
 - Potentially pathogenic germline disruptions
+- Missed variant likelihood (MVLH) per gene, presenting the likelihood of missing a pathogenic variant in case there would have been one
+  present.
 - (Large-scale) germline CN aberrations.
-
-Germline CN aberrations are determined by [PURPLE](../purple) and include aberrations such as klinefelter or trisomy X.
+    - Germline CN aberrations are determined by [PURPLE](../purple) and include aberrations such as klinefelter or trisomy X.
+- Pharmacogenetics (DPYD status)
 
 ### Immunology
 
