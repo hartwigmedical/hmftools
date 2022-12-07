@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.lilac.variant;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import java.util.List;
@@ -62,7 +61,7 @@ public class SomaticCodingCount
 
         for(HlaAllele allele : variantAlleles)
         {
-            // give only to first to first matching allele
+            // give only to the first matching allele
             SomaticCodingCount matchingCount = codingCounts.stream().filter(x -> x.Allele.equals(allele)).findFirst().orElse(null);
 
             if(matchingCount != null)
