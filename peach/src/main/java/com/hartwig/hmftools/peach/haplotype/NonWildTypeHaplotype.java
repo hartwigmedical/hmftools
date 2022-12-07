@@ -4,8 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.hartwig.hmftools.peach.event.HaplotypeEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Set;
-
 public class NonWildTypeHaplotype implements Haplotype
 {
     @NotNull

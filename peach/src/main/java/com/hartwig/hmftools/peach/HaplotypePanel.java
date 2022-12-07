@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.peach;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.peach.event.HaplotypeEvent;
 import com.hartwig.hmftools.peach.event.HaplotypeEventFactory;
@@ -53,5 +54,10 @@ public class HaplotypePanel
     public WildTypeHaplotype getWildTypeHaplotype(String gene)
     {
         return geneToGeneHaplotypePanel.get(gene).wildTypeHaplotype;
+    }
+
+    public Set<String> getGenes()
+    {
+        return Sets.newHashSet(geneToGeneHaplotypePanel.keySet());
     }
 }

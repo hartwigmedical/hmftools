@@ -92,26 +92,26 @@ public class PeachApplication
             }
             //TODO: handle unlifted relevant variants properly
             //TODO: handle reference sequence differences V37 vs V38 properly
-
-            //TODO: validation of haplotype list making sense (try to do this in place where it fails early, but don't have to redo it during actual haplotype calling.)
         } else {
             callInputVcf = config.vcfFile;
         }
-        Map<String, Zygosity> eventIdToZygosity = loadRelevantVariantHaplotypeEvents(
+        Map<String, Integer> eventIdToCount = loadRelevantVariantHaplotypeEvents(
                 callInputVcf, haplotypePanel.getRelevantVariantPositions()
         );
 
-        PCH_LOGGER.info("events found: {}", eventIdToZygosity.toString());
+        PCH_LOGGER.info("events found: {}", eventIdToCount.toString());
 
         HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
-        caller.callPossibleHaplotypes(eventIdToZygosity);
+        Map<String, List<HaplotypeCombination>> geneToPossibleHaplotypes = caller.getGeneToPossibleHaplotypes(eventIdToCount);
+
+        PCH_LOGGER.info("haplotypes called: {}", geneToPossibleHaplotypes.toString());
 
         PCH_LOGGER.info("finished running PEACH");
     }
 
-    private Map<String, Zygosity> loadRelevantVariantHaplotypeEvents(String vcf, Map<Chromosome, Set<Integer>> relevantVariantPositions)
+    private Map<String, Integer> loadRelevantVariantHaplotypeEvents(String vcf, Map<Chromosome, Set<Integer>> relevantVariantPositions)
     {
-        Map<String, Zygosity> eventIdToZygosity = new HashMap<>();
+        Map<String, Integer> eventIdToCount = new HashMap<>();
         try(
                 AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
                         vcf, new VCFCodec(), false)
@@ -132,13 +132,13 @@ public class PeachApplication
                 if(count == 0)
                     continue;
 
-                if(eventIdToZygosity.containsKey(event.id()))
+                if(eventIdToCount.containsKey(event.id()))
                 {
                     PCH_LOGGER.error("encountered event with ID '{}' more than once in VCF '{}'", event.id(), vcf);
                     System.exit(1);
                 }
 
-                eventIdToZygosity.put(event.id(), Zygosity.fromInt(count));
+                eventIdToCount.put(event.id(), count);
             }
         }
         catch(IOException e)
@@ -146,7 +146,7 @@ public class PeachApplication
             PCH_LOGGER.error("failed to read VCF file({}): {}", vcf, e.toString());
             System.exit(1);
         }
-        return eventIdToZygosity;
+        return eventIdToCount;
     }
 
     private Integer getEventCount(VariantContext variantContext, String eventId)
