@@ -73,7 +73,7 @@ public class PeachApplication
         if (config.doLiftOver)
         {
             callInputVcf = getExtendedFileName(config.vcfFile, "liftover", ".vcf");
-            String rejectVcf = getExtendedFileName(config.vcfFile, "reject", ".vcf");
+            String rejectVcf = getExtendedFileName(config.vcfFile, "liftover_reject", ".vcf");
             doLiftover(callInputVcf, rejectVcf);
 
             PCH_LOGGER.info("read bed of important regions");
@@ -105,6 +105,8 @@ public class PeachApplication
         Map<String, List<HaplotypeCombination>> geneToPossibleHaplotypes = caller.getGeneToPossibleHaplotypes(eventIdToCount);
 
         PCH_LOGGER.info("haplotypes called: {}", geneToPossibleHaplotypes.toString());
+
+
 
         PCH_LOGGER.info("finished running PEACH");
     }
