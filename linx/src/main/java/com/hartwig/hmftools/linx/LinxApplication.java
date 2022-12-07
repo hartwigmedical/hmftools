@@ -205,7 +205,7 @@ public class LinxApplication
         svAnnotators.close();
         cohortDataWriter.close();
 
-        if(LNX_LOGGER.isDebugEnabled() || config.hasMultipleSamples())
+        if(config.hasMultipleSamples())
         {
             // combine and log performance counters
             Map<String,PerformanceCounter> combinedPerfCounters = sampleAnalysers.get(0).getPerfCounters();
@@ -237,7 +237,7 @@ public class LinxApplication
 
         if(config.isSingleSample())
         {
-            LNX_LOGGER.info("SV analysis complete for {}", samplesList.get(0));
+            LNX_LOGGER.info("Linx complete for {}", samplesList.get(0));
         }
         else
         {
