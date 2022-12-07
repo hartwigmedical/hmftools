@@ -17,7 +17,6 @@ import org.junit.Test;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class CombinedRecordsTest
@@ -35,7 +34,7 @@ public class CombinedRecordsTest
 
         SAMRecord second = createSamRecord(readId, chromosome, 5, REF_BASES.substring(5, 25), "20M");
 
-        SAMRecord combined = ReadContextEvidence.formFragmentRead(first, second);
+        SAMRecord combined = formFragmentRead(first, second);
         assertNotNull(combined);
         assertEquals(1, combined.getAlignmentStart());
         assertEquals(24, combined.getAlignmentEnd());
@@ -47,7 +46,7 @@ public class CombinedRecordsTest
 
         second = createSamRecord(readId, chromosome, 12, REF_BASES.substring(10, 30), "2S16M2S");
 
-        combined = ReadContextEvidence.formFragmentRead(first, second);
+        combined = formFragmentRead(first, second);
         assertNotNull(combined);
         assertEquals(6, combined.getAlignmentStart());
         assertEquals(27, combined.getAlignmentEnd());
@@ -61,7 +60,7 @@ public class CombinedRecordsTest
         String secondBases = REF_BASES.substring(6, 11) + REF_BASES.substring(12, 27);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M1D15M");
 
-        combined = ReadContextEvidence.formFragmentRead(first, second);
+        combined = formFragmentRead(first, second);
         assertNotNull(combined);
         assertEquals(1, combined.getAlignmentStart());
         assertEquals(26, combined.getAlignmentEnd());
@@ -76,7 +75,7 @@ public class CombinedRecordsTest
         secondBases = REF_BASES.substring(6, 11) + REF_BASES.substring(16, 31);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M5D15M");
 
-        combined = ReadContextEvidence.formFragmentRead(first, second);
+        combined = formFragmentRead(first, second);
         assertNotNull(combined);
         assertEquals(1, combined.getAlignmentStart());
         assertEquals(30, combined.getAlignmentEnd());
@@ -91,7 +90,7 @@ public class CombinedRecordsTest
         secondBases = REF_BASES.substring(6, 11) + REF_BASES.substring(16, 26) + REF_BASES.substring(28, 38) + REF_BASES.substring(41, 51);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M5D10M2D10M3D10M");
 
-        combined = ReadContextEvidence.formFragmentRead(first, second);
+        combined = formFragmentRead(first, second);
         assertNotNull(combined);
         assertEquals(1, combined.getAlignmentStart());
         assertEquals(50, combined.getAlignmentEnd());
@@ -106,7 +105,7 @@ public class CombinedRecordsTest
         secondBases = REF_BASES.substring(6, 11) + "CCC" + REF_BASES.substring(11, 26);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M3I15M");
 
-        combined = ReadContextEvidence.formFragmentRead(first, second);
+        combined = formFragmentRead(first, second);
         assertNotNull(combined);
         assertEquals(1, combined.getAlignmentStart());
         assertEquals(25, combined.getAlignmentEnd());
@@ -124,7 +123,7 @@ public class CombinedRecordsTest
                 + REF_BASES.substring(36, 51);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M3I10M5D10M2I15M");
 
-        combined = ReadContextEvidence.formFragmentRead(first, second);
+        combined = formFragmentRead(first, second);
         assertNotNull(combined);
         assertEquals(1, combined.getAlignmentStart());
         assertEquals(50, combined.getAlignmentEnd());
@@ -183,4 +182,10 @@ public class CombinedRecordsTest
 
         assertTrue(ReadContextEvidence.compatibleCigars(first, first));
     }
+
+    private static SAMRecord formFragmentRead(final SAMRecord first, final SAMRecord second)
+    {
+        return ReadContextEvidence.formFragmentRead(first, second).CombinedRecord;
+    }
+
 }

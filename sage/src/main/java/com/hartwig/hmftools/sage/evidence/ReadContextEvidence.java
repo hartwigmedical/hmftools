@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
+import static com.hartwig.hmftools.sage.evidence.SyncFragmentType.*;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -38,7 +39,6 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
-import htsjdk.samtools.cram.encoding.readfeatures.SoftClip;
 
 public class ReadContextEvidence
 {
@@ -58,6 +58,8 @@ public class ReadContextEvidence
     private String mCurrentSample;
     private final Map<String,SAMRecord> mCachedReads;
 
+    private final int[] mSyncCounts;
+
     public ReadContextEvidence(
             final SageConfig config, final RefGenomeInterface refGenome, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
     {
@@ -74,6 +76,7 @@ public class ReadContextEvidence
         mVariantPhaser = null;
         mCurrentSample = null;
         mCachedReads = Maps.newHashMap();
+        mSyncCounts = new int[SyncFragmentType.values().length];
     }
 
     public List<ReadContextCounter> collectEvidence(
@@ -119,6 +122,8 @@ public class ReadContextEvidence
         return mReadCounters;
     }
 
+    public final int[] getSynCounts() { return mSyncCounts; }
+
     private boolean handleOverlappingReads(final SAMRecord record)
     {
         final SAMRecord otherRecord = mCachedReads.get(record.getReadName());
@@ -127,23 +132,34 @@ public class ReadContextEvidence
         {
             try
             {
-                SAMRecord fragmentRecord = formFragmentRead(otherRecord, record);
+                SyncFragmentOutcome syncOutcome = formFragmentRead(otherRecord, record);
                 mCachedReads.remove(record.getReadName());
+
+                SAMRecord fragmentRecord = syncOutcome.CombinedRecord;
+                ++mSyncCounts[syncOutcome.SyncType.ordinal()];
 
                 if(fragmentRecord != null)
                 {
                     processReadRecord(fragmentRecord, false);
                 }
-                else
+                else if(syncOutcome.SyncType.processSeparately())
                 {
                     // process both reads if a consensus failed
                     processReadRecord(otherRecord, false);
                     processReadRecord(record, false);
                 }
+                else
+                {
+                    // only the first record
+                    processReadRecord(otherRecord, false);
+                }
             }
             catch(Exception e)
             {
+                ++mSyncCounts[SyncFragmentType.EXCEPTION.ordinal()];
+
                 SG_LOGGER.error("failed to sync fragments: {}", e.toString());
+                e.printStackTrace();
 
                 SG_LOGGER.info("firstRead({} {}:{}-{} {})",
                         otherRecord.getReadName(), otherRecord.getContig(), otherRecord.getAlignmentStart(), otherRecord.getAlignmentEnd(),
@@ -162,6 +178,7 @@ public class ReadContextEvidence
                 record.getAlignmentStart(), record.getAlignmentEnd(),
                 record.getMateAlignmentStart(), record.getMateAlignmentStart() + record.getReadLength()))
         {
+            ++mSyncCounts[NO_OVERLAP.ordinal()];
             return false;
         }
 
@@ -270,7 +287,7 @@ public class ReadContextEvidence
             mVariantPhaser.registeredPhasedVariants(posPhasedCounters, negPhasedCounters);
     }
 
-    public static SAMRecord formFragmentRead(final SAMRecord first, final SAMRecord second)
+    public static SyncFragmentOutcome formFragmentRead(final SAMRecord first, final SAMRecord second)
     {
         // take the highest base qual base for any overlapping bases
         // widen the read to cover both reads
@@ -285,14 +302,20 @@ public class ReadContextEvidence
         int secondLength = first.getReadLength();
 
         if(!positionsOverlap(firstPosStart, firstPosEnd, secondPosStart, secondPosEnd))
-            return null;
+        {
+            return new SyncFragmentOutcome(NO_OVERLAP);
+        }
 
         Cigar firstCigar = first.getCigar();
         Cigar secondCigar = second.getCigar();
 
         // must have matching non-alignment and SC elements, otherwise give up
+        /*
         if(!compatibleCigars(firstCigar, secondCigar))
-            return null;
+        {
+            return new SyncFragmentOutcome(CIGAR_MISMATCH);
+        }
+        */
 
         final byte[] firstBaseQualities = first.getBaseQualities();
         final byte[] firstBases = first.getReadBases();
@@ -319,17 +342,26 @@ public class ReadContextEvidence
         int combinedEffectiveStart = min(firstEffectivePosStart, secondEffectivePosStart);
         int combinedEffectiveEnd = max(firstEffectivePosEnd, secondEffectivePosEnd);
 
-        int adjustedBases = firstCigar.getCigarElements().stream()
+        int firstAdjustedBases = firstCigar.getCigarElements().stream()
                 .filter(x -> x.getOperator() == D || x.getOperator() == I)
                 .mapToInt(x -> x.getOperator() == D ? -x.getLength() : x.getLength())
                 .sum();
 
-        int combinedLength = combinedEffectiveEnd - combinedEffectiveStart + 1 + adjustedBases;
+        int secondAdjustedBases = secondCigar.getCigarElements().stream()
+                .filter(x -> x.getOperator() == D || x.getOperator() == I)
+                .mapToInt(x -> x.getOperator() == D ? -x.getLength() : x.getLength())
+                .sum();
+
+        if(firstAdjustedBases != secondAdjustedBases && overlappingCigarDiffs(firstCigar, firstPosStart, secondCigar, secondPosStart))
+        {
+            return new SyncFragmentOutcome(CIGAR_MISMATCH);
+        }
+
+        int combinedLength = combinedEffectiveEnd - combinedEffectiveStart + 1 + firstAdjustedBases;
 
         final byte[] combinedBaseQualities = new byte[combinedLength];
         final byte[] combinedBases = new byte[combinedLength];
         int combinedPosStart = min(firstPosStart, secondPosStart);
-        int combinedPosEnd = max(firstPosEnd, secondPosEnd);
 
         int combinedReadIndex = 0;
         int firstReadIndex = -1;
@@ -346,6 +378,8 @@ public class ReadContextEvidence
         int combinedCigarElementLength = 0;
         CigarOperator combinedCigarOperator = M;
         Cigar combinedCigar = new Cigar();
+
+        int baseMismatches = 0;
 
         for(int currentPos = combinedEffectiveStart; currentPos <= combinedEffectiveEnd; ++currentPos)
         {
@@ -409,12 +443,23 @@ public class ReadContextEvidence
             }
 
             // more precise check of matching cigars
-            if(firstElement != null && secondElement != null && (firstCigarChange || secondCigarChange))
+            if(firstCigarChange || secondCigarChange)
             {
-                if(!ignoreCigarOperatorMismatch(firstElement.getOperator(), secondElement.getOperator())
-                && firstElement.getOperator() != secondElement.getOperator())
+                if(firstElement != null && secondElement != null)
                 {
-                    return null;
+                    if(firstElement.getOperator() != secondElement.getOperator()
+                    && !ignoreCigarOperatorMismatch(firstElement.getOperator(), secondElement.getOperator()))
+                    {
+                        return new SyncFragmentOutcome(CIGAR_MISMATCH);
+                    }
+                }
+                else if(firstElement != null && (firstElement.getOperator() == D || firstElement.getOperator() == I))
+                {
+                    return new SyncFragmentOutcome(NO_OVERLAP_CIGAR_DIFF);
+                }
+                else if(secondElement != null && (secondElement.getOperator() == D || secondElement.getOperator() == I))
+                {
+                    return new SyncFragmentOutcome(NO_OVERLAP_CIGAR_DIFF);
                 }
             }
 
@@ -442,7 +487,7 @@ public class ReadContextEvidence
                 }
                 else
                 {
-                    return null; // error
+                    return new SyncFragmentOutcome(EXCEPTION);
                 }
             }
 
@@ -461,12 +506,27 @@ public class ReadContextEvidence
             // choose the base and qual
             if(firstReadIndex >= 0 && firstReadIndex < firstLength && secondReadIndex >= 0 && secondReadIndex < secondLength)
             {
-                byte[] baseAndQual = getCombinedBaseAndQual(
-                        firstBases[firstReadIndex], firstBaseQualities[firstReadIndex],
-                        secondBases[secondReadIndex], secondBaseQualities[secondReadIndex]);
+                if(firstBases[firstReadIndex] == secondBases[secondReadIndex])
+                {
+                    combinedBases[combinedReadIndex] = firstBases[firstReadIndex];
+                    combinedBaseQualities[combinedReadIndex] = (byte)max(firstBaseQualities[firstReadIndex], secondBaseQualities[secondReadIndex]);
+                }
+                else
+                {
+                    ++baseMismatches;
 
-                combinedBases[combinedReadIndex] = baseAndQual[0];
-                combinedBaseQualities[combinedReadIndex] = baseAndQual[1];
+                    if(baseMismatches >= 10)
+                    {
+                        return new SyncFragmentOutcome(BASE_MISMATCH);
+                    }
+
+                    byte[] baseAndQual = getCombinedBaseAndQual(
+                            firstBases[firstReadIndex], firstBaseQualities[firstReadIndex],
+                            secondBases[secondReadIndex], secondBaseQualities[secondReadIndex]);
+
+                    combinedBases[combinedReadIndex] = baseAndQual[0];
+                    combinedBaseQualities[combinedReadIndex] = baseAndQual[1];
+                }
             }
             else if(firstReadIndex >= 0 && firstReadIndex < firstLength)
             {
@@ -475,6 +535,12 @@ public class ReadContextEvidence
             }
             else
             {
+                if(combinedReadIndex >= combinedBases.length || secondReadIndex >= secondBases.length)
+                {
+                    SG_LOGGER.error("here");
+                    return null;
+                }
+
                 combinedBases[combinedReadIndex] = secondBases[secondReadIndex];
                 combinedBaseQualities[combinedReadIndex] = secondBaseQualities[secondReadIndex];
             }
@@ -521,12 +587,40 @@ public class ReadContextEvidence
             combinedRecord.setAttribute(tagAndValue.tag, tagAndValue.value);
         }
 
-        return combinedRecord;
+        return new SyncFragmentOutcome(combinedRecord, COMBINED);
     }
 
     private static boolean ignoreCigarOperatorMismatch(final CigarOperator first, final CigarOperator second)
     {
         return (first == M || first == S) && (second == M || second == S);
+    }
+
+    public static boolean overlappingCigarDiffs(final Cigar firstCigar, int firstPosStart, final Cigar secondCigar, int secondPosStart)
+    {
+        int firstAdjustedElementPosEnd = firstPosStart;
+        for(CigarElement element : firstCigar.getCigarElements())
+        {
+            switch(element.getOperator())
+            {
+                case M:
+                case D:
+                    firstAdjustedElementPosEnd += element.getLength();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        int secondAdjustedElementPosStart = secondPosStart;
+        for(CigarElement element : secondCigar.getCigarElements())
+        {
+            if(element.getOperator() == M)
+                secondAdjustedElementPosStart += element.getLength();
+            else if(element.getOperator() == D || element.getOperator() == I)
+                break;
+        }
+
+        return firstAdjustedElementPosEnd >= secondAdjustedElementPosStart;
     }
 
     public static boolean compatibleCigars(final Cigar firstCigar, final Cigar secondCigar)

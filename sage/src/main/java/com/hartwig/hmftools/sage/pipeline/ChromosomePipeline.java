@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.pipeline;
 
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
@@ -140,6 +141,9 @@ public class ChromosomePipeline implements AutoCloseable
             mRegionResults.logPerfCounters();
             SG_LOGGER.debug("chromosome({}) max memory({})", mChromosome, mRegionResults.maxMemoryUsage());
         }
+
+        if(mConfig.SyncFragments)
+            mRegionResults.logSynCounts();
 
         SG_LOGGER.info("chromosome({}) analysis complete", mChromosome);
     }

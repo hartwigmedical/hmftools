@@ -10,16 +10,12 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
-import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.evidence.ReadContextEvidence;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
-
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class EvidenceStage
 {
@@ -69,4 +65,6 @@ public class EvidenceStage
     }
 
     public VariantPhaser getVariantPhaser() { return mVariantPhaser; }
+
+    public final int[] getSyncCounts() { return mReadContextEvidence.getSynCounts(); }
 }
