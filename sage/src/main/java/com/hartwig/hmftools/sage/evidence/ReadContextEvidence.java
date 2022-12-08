@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
@@ -138,6 +139,14 @@ public class ReadContextEvidence
                 SAMRecord fragmentRecord = syncOutcome.CombinedRecord;
                 ++mSyncCounts[syncOutcome.SyncType.ordinal()];
 
+                /*
+                SG_LOGGER.trace("fragment sync: first({} {}:{}-{} {}) second({} {}:{}-{} {}) outcome({}) {}",
+                        otherRecord.getReadName(), otherRecord.getContig(), otherRecord.getAlignmentStart(), otherRecord.getAlignmentEnd(),
+                        otherRecord.getCigarString(), record.getReadName(), record.getContig(), record.getAlignmentStart(),
+                        record.getAlignmentEnd(), record.getCigarString(), syncOutcome.SyncType,
+                        syncOutcome.CombinedRecord != null ? format("newCigar(%s)", syncOutcome.CombinedRecord.getCigarString()) : "");
+                */
+
                 if(fragmentRecord != null)
                 {
                     processReadRecord(fragmentRecord, false);
@@ -147,6 +156,19 @@ public class ReadContextEvidence
                     // process both reads if a consensus failed
                     processReadRecord(otherRecord, false);
                     processReadRecord(record, false);
+                }
+                else if(syncOutcome.SyncType == CIGAR_MISMATCH)
+                {
+                    int firstIndelLen = otherRecord.getCigar().getCigarElements().stream()
+                            .filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).sum();
+
+                    int secondIndelLen = record.getCigar().getCigarElements().stream()
+                            .filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).sum();
+
+                    if(secondIndelLen < firstIndelLen)
+                        processReadRecord(record, false);
+                    else
+                        processReadRecord(otherRecord, false);
                 }
                 else
                 {
@@ -343,12 +365,12 @@ public class ReadContextEvidence
         int combinedEffectiveEnd = max(firstEffectivePosEnd, secondEffectivePosEnd);
 
         int firstAdjustedBases = firstCigar.getCigarElements().stream()
-                .filter(x -> x.getOperator() == D || x.getOperator() == I)
+                .filter(x -> x.getOperator().isIndel())
                 .mapToInt(x -> x.getOperator() == D ? -x.getLength() : x.getLength())
                 .sum();
 
         int secondAdjustedBases = secondCigar.getCigarElements().stream()
-                .filter(x -> x.getOperator() == D || x.getOperator() == I)
+                .filter(x -> x.getOperator().isIndel())
                 .mapToInt(x -> x.getOperator() == D ? -x.getLength() : x.getLength())
                 .sum();
 
@@ -453,11 +475,11 @@ public class ReadContextEvidence
                         return new SyncFragmentOutcome(CIGAR_MISMATCH);
                     }
                 }
-                else if(firstElement != null && (firstElement.getOperator() == D || firstElement.getOperator() == I))
+                else if(firstElement != null && firstElement.getOperator().isIndel())
                 {
                     return new SyncFragmentOutcome(NO_OVERLAP_CIGAR_DIFF);
                 }
-                else if(secondElement != null && (secondElement.getOperator() == D || secondElement.getOperator() == I))
+                else if(secondElement != null && secondElement.getOperator().isIndel())
                 {
                     return new SyncFragmentOutcome(NO_OVERLAP_CIGAR_DIFF);
                 }
@@ -597,15 +619,21 @@ public class ReadContextEvidence
 
     public static boolean overlappingCigarDiffs(final Cigar firstCigar, int firstPosStart, final Cigar secondCigar, int secondPosStart)
     {
-        int firstAdjustedElementPosEnd = firstPosStart;
+        int firstAdjustedElementPosEnd = 0;
+        int readPos = firstPosStart;
         for(CigarElement element : firstCigar.getCigarElements())
         {
             switch(element.getOperator())
             {
                 case M:
-                case D:
-                    firstAdjustedElementPosEnd += element.getLength();
+                    readPos += element.getLength();
                     break;
+                case D:
+                    readPos += element.getLength();
+                    firstAdjustedElementPosEnd = readPos + element.getLength();
+                    break;
+                case I:
+                    firstAdjustedElementPosEnd = readPos + 1;
                 default:
                     break;
             }
@@ -616,7 +644,7 @@ public class ReadContextEvidence
         {
             if(element.getOperator() == M)
                 secondAdjustedElementPosStart += element.getLength();
-            else if(element.getOperator() == D || element.getOperator() == I)
+            else if(element.getOperator().isIndel())
                 break;
         }
 

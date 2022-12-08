@@ -135,6 +135,49 @@ public class CombinedRecordsTest
     }
 
     @Test
+    public void testMismatches()
+    {
+        String readId = "READ_01";
+        String chromosome = "1";
+
+        // first a basic match
+        SAMRecord first = createSamRecord(
+                readId, chromosome, 1, REF_BASES.substring(1, 11) + "C" + REF_BASES.substring(11, 21), "10M1I10M");
+
+        SAMRecord second = createSamRecord(readId, chromosome, 5, REF_BASES.substring(5, 25), "20M");
+
+        SyncFragmentOutcome syncOutcome = ReadContextEvidence.formFragmentRead(first, second);
+        assertEquals(SyncFragmentType.CIGAR_MISMATCH, syncOutcome.SyncType);
+
+        // off by 1
+        first = createSamRecord(
+                readId, chromosome, 1, REF_BASES.substring(1, 11) + "C" + REF_BASES.substring(11, 21), "10M1I10M");
+
+        second = createSamRecord(
+                readId, chromosome, 2, REF_BASES.substring(1, 12) + "C" + REF_BASES.substring(12, 21), "10M1I10M");
+
+        syncOutcome = ReadContextEvidence.formFragmentRead(first, second);
+        assertEquals(SyncFragmentType.CIGAR_MISMATCH, syncOutcome.SyncType);
+
+        // too many mismatches
+        first = createSamRecord(readId, chromosome, 1, REF_BASES.substring(1, 21), "20M");
+        second = createSamRecord(readId, chromosome, 1, REF_BASES.substring(2, 22), "20M");
+
+        syncOutcome = ReadContextEvidence.formFragmentRead(first, second);
+        assertEquals(SyncFragmentType.BASE_MISMATCH, syncOutcome.SyncType);
+
+        // non-overlapping but different INDELs
+        first = createSamRecord(
+                readId, chromosome, 1, REF_BASES.substring(1, 6) + "C" + REF_BASES.substring(6, 41), "5M1I35M");
+
+        second = createSamRecord(
+                readId, chromosome, 30, REF_BASES.substring(30, 40) + REF_BASES.substring(45, 75), "10M5D30M");
+
+        syncOutcome = ReadContextEvidence.formFragmentRead(first, second);
+        assertEquals(SyncFragmentType.NO_OVERLAP_CIGAR_DIFF, syncOutcome.SyncType);
+    }
+
+        @Test
     public void testCompatibleCigars()
     {
         Cigar first = new Cigar();

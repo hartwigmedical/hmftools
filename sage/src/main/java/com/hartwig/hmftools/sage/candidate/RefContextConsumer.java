@@ -195,7 +195,7 @@ public class RefContextConsumer
 
     public static boolean ignoreSoftClipAdapter(final SAMRecord record)
     {
-        // ignore soft-clips from short fragments indicating adatper bases are present
+        // ignore soft-clips from short fragments indicating adapter bases are present
         int fragmentLength = abs(record.getInferredInsertSize());
 
         if(fragmentLength >= record.getReadBases().length + MIN_INSERT_ALIGNMENT_OVERLAP)
