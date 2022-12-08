@@ -3,7 +3,6 @@ package com.hartwig.hmftools.orange.report.components;
 import java.net.URL;
 
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
@@ -13,29 +12,25 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class Header {
 
-    @Nullable
-    private final PdfImageXObject orangeCircosObj;
+    @NotNull
+    private final PdfImageXObject orangeCircosObject;
 
     public Header(@NotNull URL orangeCircosPath) {
-        ImageData orangeCircos = ImageDataFactory.create(orangeCircosPath);
-        this.orangeCircosObj = new PdfImageXObject(orangeCircos);
+        this.orangeCircosObject = new PdfImageXObject(ImageDataFactory.create(orangeCircosPath));
     }
 
     public void renderHeader(@NotNull PdfPage page) {
         PdfCanvas pdfCanvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Canvas cv = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
 
-        if (orangeCircosObj != null) {
-            pdfCanvas.addXObject(orangeCircosObj, 50, page.getPageSize().getHeight() - 70, 60, false);
-        }
+        pdfCanvas.addXObject(orangeCircosObject, 50, page.getPageSize().getHeight() - 70, 60, false);
 
         cv.add(new Paragraph().add(new Text("O").setFont(ReportResources.fontBold())
-                .setFontSize(11)
-                .setFontColor(ReportResources.PALETTE_ORANGE_1))
+                        .setFontSize(11)
+                        .setFontColor(ReportResources.PALETTE_ORANGE_1))
                 .add(new Text("R").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_2))
                 .add(new Text("A").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_3))
                 .add(new Text("N").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_4))

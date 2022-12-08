@@ -2,10 +2,17 @@ package com.hartwig.hmftools.orange.report;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
@@ -42,12 +49,12 @@ public class ReportGeneratorTestApplication {
 
         ReportWriter writer = ReportWriterFactory.createToDiskWriter(config);
 
-        OrangeReport report = buildReport(config);
-
         if (!new File(REPORT_BASE_DIR).isDirectory()) {
             LOGGER.warn("{} is not a directory. Can't write to disk", REPORT_BASE_DIR);
         } else {
-            writer.write(report);
+            LOGGER.info("Deleting plot dir");
+            deleteDir(new File(REPORT_BASE_DIR + File.separator + "plot"));
+            writer.write(buildReport(config));
         }
     }
 
@@ -85,7 +92,10 @@ public class ReportGeneratorTestApplication {
 
     @NotNull
     private static OrangeConfig buildConfig() {
-        return ImmutableOrangeConfig.builder().from(TestOrangeConfigFactory.createDNAConfigTumorNormal()).outputDir(REPORT_BASE_DIR).build();
+        return ImmutableOrangeConfig.builder()
+                .from(TestOrangeConfigFactory.createDNAConfigTumorNormal())
+                .outputDir(REPORT_BASE_DIR)
+                .build();
     }
 
     @NotNull
@@ -94,25 +104,28 @@ public class ReportGeneratorTestApplication {
                 .from(report)
                 .purple(ImmutablePurpleInterpretedData.builder()
                         .from(report.purple())
-                        .allSomaticVariants(Lists.newArrayList())
+                        .allSomaticVariants(report.purple().reportableSomaticVariants())
                         .additionalSuspectSomaticVariants(Lists.newArrayList())
-                        .allGermlineVariants(Lists.newArrayList())
+                        .allGermlineVariants(report.purple().reportableGermlineVariants())
                         .additionalSuspectGermlineVariants(Lists.newArrayList())
-                        .allSomaticGeneCopyNumbers(Lists.newArrayList())
+                        .allSomaticCopyNumbers(Lists.newArrayList())
+                        .allSomaticGeneCopyNumbers(retainReportableCopyNumbers(report.purple().allSomaticGeneCopyNumbers(),
+                                report.purple().somaticDrivers()))
                         .suspectGeneCopyNumbersWithLOH(Lists.newArrayList())
-                        .allSomaticGainsLosses(Lists.newArrayList())
+                        .allSomaticGainsLosses(report.purple().reportableSomaticGainsLosses())
                         .nearReportableSomaticGains(Lists.newArrayList())
                         .additionalSuspectSomaticGainsLosses(Lists.newArrayList())
-                        .allGermlineDeletions(Lists.newArrayList())
+                        .allGermlineDeletions(report.purple().reportableGermlineDeletions())
                         .build())
                 .linx(ImmutableLinxInterpretedData.builder()
                         .from(report.linx())
-                        .allStructuralVariants(Lists.newArrayList())
-                        .allFusions(Lists.newArrayList())
+                        .allStructuralVariants(retainReportableStructuralVariants(report.linx().allStructuralVariants(),
+                                report.linx().reportableBreakends()))
+                        .allFusions(report.linx().reportableFusions())
                         .additionalSuspectFusions(Lists.newArrayList())
-                        .allBreakends(Lists.newArrayList())
+                        .allBreakends(report.linx().reportableBreakends())
                         .additionalSuspectBreakends(Lists.newArrayList())
-                        .allGermlineDisruptions(Lists.newArrayList())
+                        .allGermlineDisruptions(report.linx().reportableGermlineDisruptions())
                         .build());
 
         if (report.isofox() != null) {
@@ -125,5 +138,58 @@ public class ReportGeneratorTestApplication {
         }
 
         return builder.build();
+    }
+
+    @NotNull
+    private static List<GeneCopyNumber> retainReportableCopyNumbers(@NotNull List<GeneCopyNumber> geneCopyNumbers,
+            @NotNull List<DriverCatalog> drivers) {
+        List<String> copyNumberDriverGenes = Lists.newArrayList();
+        for (DriverCatalog driver : drivers) {
+            if (driver.driver() == DriverType.AMP || driver.driver() == DriverType.PARTIAL_AMP || driver.driver() == DriverType.DEL
+                    || driver.driver() == DriverType.GERMLINE_DELETION) {
+                copyNumberDriverGenes.add(driver.gene());
+            }
+        }
+
+        List<GeneCopyNumber> reportable = Lists.newArrayList();
+        for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
+            if (copyNumberDriverGenes.contains(geneCopyNumber.geneName())) {
+                reportable.add(geneCopyNumber);
+            }
+        }
+        return reportable;
+    }
+
+    @NotNull
+    private static List<LinxSvAnnotation> retainReportableStructuralVariants(@NotNull List<LinxSvAnnotation> structuralVariants,
+            @NotNull List<LinxBreakend> reportableBreakends) {
+        List<LinxSvAnnotation> reportable = Lists.newArrayList();
+        for (LinxSvAnnotation structuralVariant : structuralVariants) {
+            if (isReportableSv(structuralVariant, reportableBreakends)) {
+                reportable.add(structuralVariant);
+            }
+        }
+        return reportable;
+    }
+
+    private static boolean isReportableSv(@NotNull LinxSvAnnotation structuralVariant, @NotNull List<LinxBreakend> reportableBreakends) {
+        for (LinxBreakend breakend : reportableBreakends) {
+            if (breakend.svId() == structuralVariant.svId()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void deleteDir(@NotNull File file) {
+        File[] contents = file.listFiles();
+        if (contents != null) {
+            for (File content : contents) {
+                if (!Files.isSymbolicLink(content.toPath())) {
+                    deleteDir(content);
+                }
+            }
+        }
+        file.delete();
     }
 }
