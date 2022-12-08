@@ -258,11 +258,11 @@ public class KnownFusionCache
                 }
                 catch (Exception e)
                 {
-                    KF_LOGGER.error("file({}) invalid known fusion data will be skipped: {}", filename, data);
+                    KF_LOGGER.warn("file({}) invalid known fusion data will be skipped: {}", filename, data);
                 }
             }
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             KF_LOGGER.error("file({}) invalid known fusion data: {}", filename, e.toString());
             return false;
