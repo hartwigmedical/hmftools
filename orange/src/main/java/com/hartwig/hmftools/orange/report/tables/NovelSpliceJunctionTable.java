@@ -35,7 +35,7 @@ public final class NovelSpliceJunctionTable {
             table.addCell(Cells.createContent(junction.chromosome()));
             table.addCell(Cells.createContent(String.valueOf(junction.junctionStart())));
             table.addCell(Cells.createContent(String.valueOf(junction.junctionEnd())));
-            table.addCell(Cells.createContent(junction.type()));
+            table.addCell(Cells.createContent(junction.type().toString()));
             table.addCell(Cells.createContent(junction.depthStart() + "/"  + junction.depthEnd()));
             table.addCell(Cells.createContent(junction.regionStart() + "/"  + junction.regionEnd()));
             table.addCell(Cells.createContent(String.valueOf(junction.fragmentCount())));
