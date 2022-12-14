@@ -13,6 +13,7 @@ public interface VirusInterpreterData {
     @NotNull
     List<AnnotatedVirus> reportableViruses();
 
+    // TODO Change to allViruses for consistency with other hmftools
     @NotNull
     List<AnnotatedVirus> unreportedViruses();
 }
