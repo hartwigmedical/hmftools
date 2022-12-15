@@ -14,6 +14,12 @@ public final class TestEnsemblDataCacheFactory {
     }
 
     @NotNull
+    public static EnsemblDataCache createDummyCache() {
+        EnsemblDataCache cache = new EnsemblDataCache(ENSEMBL_DATA_CACHE_PATH, RefGenomeVersion.V37);
+        return cache;
+    }
+
+    @NotNull
     public static EnsemblDataCache loadTestCache() {
         EnsemblDataCache cache = new EnsemblDataCache(ENSEMBL_DATA_CACHE_PATH, RefGenomeVersion.V37);
         cache.load(false);

@@ -45,6 +45,7 @@ public interface OrangeConfig {
     String COHORT_PERCENTILES_TSV = "cohort_percentiles_tsv";
     String DRIVER_GENE_PANEL_TSV = "driver_gene_panel_tsv";
     String KNOWN_FUSION_FILE = "known_fusion_file";
+    String ENSEMBL_DATA_DIRECTORY = "ensembl_data_directory";
 
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
@@ -90,6 +91,7 @@ public interface OrangeConfig {
         options.addOption(COHORT_PERCENTILES_TSV, true, "Path to cohort percentiles TSV.");
         options.addOption(DRIVER_GENE_PANEL_TSV, true, "Path to the driver gene panel TSV.");
         options.addOption(KNOWN_FUSION_FILE, true, "Path to the known fusion file.");
+        options.addOption(ENSEMBL_DATA_DIRECTORY, true, "Path to the ensembl data cache directory.");
 
         options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version file.");
         options.addOption(REF_SAMPLE_WGS_METRICS_FILE, true, "Path towards the ref sample WGS metrics file.");
@@ -159,6 +161,9 @@ public interface OrangeConfig {
 
     @NotNull
     String knownFusionFile();
+
+    @NotNull
+    String ensemblDataDirectory();
 
     @Nullable
     String pipelineVersionFile();
@@ -269,6 +274,7 @@ public interface OrangeConfig {
                 .cohortPercentilesTsv(Config.nonOptionalFile(cmd, COHORT_PERCENTILES_TSV))
                 .driverGenePanelTsv(Config.nonOptionalFile(cmd, DRIVER_GENE_PANEL_TSV))
                 .knownFusionFile(Config.nonOptionalFile(cmd, KNOWN_FUSION_FILE))
+                .ensemblDataDirectory(Config.nonOptionalDir(cmd, ENSEMBL_DATA_DIRECTORY))
                 .pipelineVersionFile(Config.optionalValue(cmd, PIPELINE_VERSION_FILE))
                 .refSampleWGSMetricsFile(Config.optionalFile(cmd, REF_SAMPLE_WGS_METRICS_FILE))
                 .refSampleFlagstatFile(Config.optionalFile(cmd, REF_SAMPLE_FLAGSTAT_FILE))

@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
@@ -50,6 +51,7 @@ import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
+import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
@@ -93,6 +95,8 @@ public class OrangeAlgo {
     @NotNull
     private final KnownFusionCache knownFusionCache;
     @NotNull
+    private final EnsemblDataCache ensemblDataCache;
+    @NotNull
     private final PlotManager plotManager;
 
     @NotNull
@@ -122,20 +126,26 @@ public class OrangeAlgo {
         }
         LOGGER.info(" Read {} known fusion entries", knownFusionCache.getData().size());
 
+        LOGGER.info("Reading ensembl data cache from {}", config.ensemblDataDirectory());
+        EnsemblDataCache ensemblDataCache = loadEnsemblDataCache(config);
+        LOGGER.info(" Read ensembl data dir");
+
         String outputDir = config.outputDir();
         PlotManager plotManager = !outputDir.isEmpty() ? new FileBasedPlotManager(outputDir) : new DummyPlotManager();
 
-        return new OrangeAlgo(doidEntry, mapper, percentilesModel, driverGenes, knownFusionCache, plotManager);
+        return new OrangeAlgo(doidEntry, mapper, percentilesModel, driverGenes, knownFusionCache, ensemblDataCache, plotManager);
     }
 
     private OrangeAlgo(@NotNull final DoidEntry doidEntry, @NotNull final CohortMapper cohortMapper,
             @NotNull final CohortPercentilesModel percentilesModel, @NotNull final List<DriverGene> driverGenes,
-            @NotNull final KnownFusionCache knownFusionCache, @NotNull final PlotManager plotManager) {
+            @NotNull final KnownFusionCache knownFusionCache, @NotNull final EnsemblDataCache ensemblDataCache,
+            @NotNull final PlotManager plotManager) {
         this.doidEntry = doidEntry;
         this.cohortMapper = cohortMapper;
         this.percentilesModel = percentilesModel;
         this.driverGenes = driverGenes;
         this.knownFusionCache = knownFusionCache;
+        this.ensemblDataCache = ensemblDataCache;
         this.plotManager = plotManager;
     }
 
@@ -150,7 +160,7 @@ public class OrangeAlgo {
         LinxInterpretedData linx = linxInterpreter.interpret(loadLinxData(config));
 
         ChordData chord = loadChordAnalysis(config);
-        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(driverGenes, chord);
+        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(new PaveAlgo(ensemblDataCache), driverGenes, chord);
         PurpleInterpretedData purple = purpleInterpreter.interpret(loadPurpleData(config));
 
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
@@ -265,6 +275,13 @@ public class OrangeAlgo {
         LOGGER.info(" Loaded flagstat from {}", flagstatFile);
 
         return ImmutableOrangeSample.builder().metrics(metrics).flagstat(flagstat).build();
+    }
+
+    @NotNull
+    private static EnsemblDataCache loadEnsemblDataCache(@NotNull OrangeConfig config) {
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(config.ensemblDataDirectory(), config.refGenomeVersion());
+        ensemblDataCache.load(false);
+        return ensemblDataCache;
     }
 
     @Nullable

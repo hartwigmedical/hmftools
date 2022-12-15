@@ -10,7 +10,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,35 +28,35 @@ public class PaveAlgo {
     }
 
     @Nullable
-    public PaveEntry run(@NotNull PurpleVariant variant, @NotNull String transcriptId) {
-        TranscriptData transcript = findTranscript(variant, transcriptId);
-        if (transcript == null) {
+    public PaveEntry run(@NotNull String gene, @NotNull String transcript,int position ) {
+        TranscriptData transcriptData = findTranscript(gene, transcript);
+        if (transcriptData == null) {
             return null;
         }
 
-        ExonData affectedExon = findAffectedExon(transcript.exons(), variant.position());
+        ExonData affectedExon = findAffectedExon(transcriptData.exons(), position);
         if (affectedExon == null) {
             // Non-exonic variant and hence not affecting a codon.
             return createEntry(null, null);
         }
 
-        Integer affectedCodon = findAffectedCodon(transcript, variant.position());
+        Integer affectedCodon = findAffectedCodon(transcriptData, position);
         return createEntry(affectedCodon, affectedExon.Rank);
     }
 
     @Nullable
-    private TranscriptData findTranscript(@NotNull PurpleVariant variant, @NotNull String transcriptId) {
-        GeneData gene = ensemblDataCache.getGeneDataByName(variant.gene());
-        if (gene == null) {
-            if (!variant.gene().isEmpty()) {
-                LOGGER.warn("Could not resolve gene against ensembl data cache: '{}'", variant.gene());
+    private TranscriptData findTranscript(@NotNull String gene, @NotNull String transcriptId) {
+        GeneData geneData = ensemblDataCache.getGeneDataByName(gene);
+        if (geneData == null) {
+            if (!gene.isEmpty()) {
+                LOGGER.warn("Could not resolve gene against ensembl data cache: '{}'", gene);
             }
             return null;
         }
 
-        TranscriptData transcript = ensemblDataCache.getTranscriptData(gene.GeneId, transcriptId);
+        TranscriptData transcript = ensemblDataCache.getTranscriptData(geneData.GeneId, transcriptId);
         if (transcript == null) {
-            LOGGER.warn("Could not resolve transcript '{}' against ensembl data cache for gene '{}'", transcriptId, gene.GeneName);
+            LOGGER.warn("Could not resolve transcript '{}' against ensembl data cache for gene '{}'", transcriptId, geneData.GeneName);
         }
         return transcript;
     }

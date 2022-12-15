@@ -9,8 +9,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.region.Strand;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
-import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -27,34 +25,30 @@ public class PaveAlgoTest {
         // "gene", coding range: 30-80, reverse strand. exon1: 60-90, exon2: 45-55, exon3: 25:35
         PaveAlgo pave = new PaveAlgo(TestEnsemblDataCacheFactory.loadTestCache());
 
-        PurpleVariant missingGene = TestPurpleVariantFactory.builder().gene("other gene").build();
-        assertNull(pave.run(missingGene, MATCHING_TRANSCRIPT));
+        // Missing gene
+        assertNull(pave.run("other gene", MATCHING_TRANSCRIPT, 0));
 
-        PurpleVariant missingTrans = TestPurpleVariantFactory.builder().gene(MATCHING_GENE).build();
-        assertNull(pave.run(missingTrans, "other trans"));
+        // Missing transcript
+        assertNull(pave.run(MATCHING_GENE, "other trans", 0));
 
-        PurpleVariant beyond = TestPurpleVariantFactory.builder().gene(MATCHING_GENE).position(100).build();
-        PaveEntry entryBeyond = pave.run(beyond, MATCHING_TRANSCRIPT);
+
+        PaveEntry entryBeyond = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 100);
         assertNull(entryBeyond.affectedCodon());
         assertNull(entryBeyond.affectedExon());
 
-        PurpleVariant utr5 = TestPurpleVariantFactory.builder().gene(MATCHING_GENE).position(85).build();
-        PaveEntry entryUtr5 = pave.run(utr5, MATCHING_TRANSCRIPT);
+        PaveEntry entryUtr5 = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 85);
         assertNull(entryUtr5.affectedCodon());
         assertEquals(1, (int) entryUtr5.affectedExon());
 
-        PurpleVariant coding = TestPurpleVariantFactory.builder().gene(MATCHING_GENE).position(50).build();
-        PaveEntry entryCoding = pave.run(coding, MATCHING_TRANSCRIPT);
+        PaveEntry entryCoding = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 50);
         assertEquals(9, (int) entryCoding.affectedCodon());
         assertEquals(2, (int) entryCoding.affectedExon());
 
-        PurpleVariant intronic = TestPurpleVariantFactory.builder().gene(MATCHING_GENE).position(40).build();
-        PaveEntry entryIntronic = pave.run(intronic, MATCHING_TRANSCRIPT);
+        PaveEntry entryIntronic = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 40);
         assertNull(entryIntronic.affectedCodon());
         assertNull(entryIntronic.affectedExon());
 
-        PurpleVariant utr3 = TestPurpleVariantFactory.builder().gene(MATCHING_GENE).position(25).build();
-        PaveEntry entryUtr3 = pave.run(utr3, MATCHING_TRANSCRIPT);
+        PaveEntry entryUtr3 = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 25);
         assertNull(entryUtr3.affectedCodon());
         assertEquals(3, (int) entryUtr3.affectedExon());
     }

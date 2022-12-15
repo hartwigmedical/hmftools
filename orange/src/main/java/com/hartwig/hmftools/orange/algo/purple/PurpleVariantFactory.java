@@ -7,18 +7,24 @@ import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
+import com.hartwig.hmftools.orange.algo.pave.PaveEntry;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class PurpleVariantFactory {
+public class PurpleVariantFactory {
 
-    private PurpleVariantFactory() {
+    @NotNull
+    private final PaveAlgo paveAlgo;
+
+    public PurpleVariantFactory(@NotNull final PaveAlgo paveAlgo) {
+        this.paveAlgo = paveAlgo;
     }
 
     @Nullable
-    public static List<PurpleVariant> create(@Nullable List<SomaticVariant> variants) {
+    public List<PurpleVariant> create(@Nullable List<SomaticVariant> variants) {
         if (variants == null) {
             return null;
         }
@@ -31,7 +37,7 @@ public final class PurpleVariantFactory {
     }
 
     @NotNull
-    private static PurpleVariant toPurpleVariant(@NotNull SomaticVariant variant) {
+    private PurpleVariant toPurpleVariant(@NotNull SomaticVariant variant) {
         return ImmutablePurpleVariant.builder()
                 .type(variant.type())
                 .gene(variant.gene())
@@ -79,16 +85,16 @@ public final class PurpleVariantFactory {
     }
 
     @NotNull
-    private static PurpleTranscriptImpact extractCanonicalImpact(@NotNull SomaticVariant variant) {
-        // TODO Populate exon, don't reverse engineer codon
+    private PurpleTranscriptImpact extractCanonicalImpact(@NotNull SomaticVariant variant) {
         // TODO Move effect parsing into SomaticVariant
 
+        PaveEntry paveEntry = paveAlgo.run(variant.gene(), variant.canonicalTranscript(), variant.position());
         return ImmutablePurpleTranscriptImpact.builder()
                 .transcript(variant.canonicalTranscript())
                 .hgvsCodingImpact(variant.canonicalHgvsCodingImpact())
                 .hgvsProteinImpact(variant.canonicalHgvsProteinImpact())
-                .affectedCodon(extractCodonField(variant.canonicalHgvsCodingImpact()))
-                .affectedExon(null)
+                .affectedCodon(paveEntry != null ? paveEntry.affectedCodon() : null)
+                .affectedExon(paveEntry != null ? paveEntry.affectedExon() : null)
                 .spliceRegion(variant.spliceRegion())
                 .effects(VariantEffect.effectsToList(variant.canonicalEffect()))
                 .codingEffect(variant.canonicalCodingEffect())
@@ -96,50 +102,25 @@ public final class PurpleVariantFactory {
     }
 
     @NotNull
-    private static List<PurpleTranscriptImpact> extractOtherImpacts(@NotNull SomaticVariant variant) {
+    private List<PurpleTranscriptImpact> extractOtherImpacts(@NotNull SomaticVariant variant) {
         List<PurpleTranscriptImpact> otherImpacts = Lists.newArrayList();
-        // TODO Populate exon, don't reverse engineer codon
         // TODO Move other reported effects parsing into SomaticVariant
         // TODO Move effect parsing into SomaticVariant
         // TODO Add "splice region" details to non-canonical effects
 
         for (AltTranscriptReportableInfo altInfo : AltTranscriptReportableInfo.parseAltTranscriptInfo(variant.otherReportedEffects())) {
+            PaveEntry paveEntry = paveAlgo.run(variant.gene(), altInfo.TransName, variant.position());
             otherImpacts.add(ImmutablePurpleTranscriptImpact.builder()
                     .transcript(altInfo.TransName)
                     .hgvsCodingImpact(altInfo.HgvsCoding)
                     .hgvsProteinImpact(altInfo.HgvsProtein)
-                    .affectedCodon(extractCodonField(altInfo.HgvsCoding))
-                    .affectedExon(null)
+                    .affectedCodon(paveEntry != null ? paveEntry.affectedCodon() : null)
+                    .affectedExon(paveEntry != null ? paveEntry.affectedExon() : null)
                     .spliceRegion(variant.spliceRegion())
                     .effects(VariantEffect.effectsToList(altInfo.Effects))
                     .codingEffect(altInfo.Effect)
                     .build());
         }
         return otherImpacts;
-    }
-
-    @Nullable
-    private static Integer extractCodonField(@NotNull String hgvsCoding) {
-        StringBuilder codonAppender = new StringBuilder();
-        boolean noDigitFound = true;
-
-        int startIndex = findStartIndex(hgvsCoding);
-        int index = startIndex;
-        while (noDigitFound && index < hgvsCoding.length()) {
-            boolean isMinusSign = Character.toString(hgvsCoding.charAt(index)).equals("-");
-            if ((isMinusSign && index == startIndex) || Character.isDigit(hgvsCoding.charAt(index))) {
-                codonAppender.append(hgvsCoding.charAt(index));
-            } else {
-                noDigitFound = false;
-            }
-            index++;
-        }
-        String codon = codonAppender.toString();
-        return !codon.isEmpty() ? Integer.parseInt(codon) : null;
-    }
-
-    private static int findStartIndex(@NotNull String hgvsCoding) {
-        // hgvsCoding starts with either "c." or "c.*", we need to skip that...
-        return hgvsCoding.startsWith("c.*") ? 3 : 2;
     }
 }
