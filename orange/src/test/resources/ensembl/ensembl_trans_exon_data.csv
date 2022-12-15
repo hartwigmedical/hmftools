@@ -1,0 +1,4 @@
+GeneId,CanonicalTranscriptId,Strand,TransId,TransName,BioType,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd
+gene_id,1,-1,1,trans,protein_coding,15,95,3,25,35,1,-1,30,80
+gene_id,1,-1,1,trans,protein_coding,15,95,2,45,55,1,-1,30,80
+gene_id,1,-1,1,trans,protein_coding,15,95,1,60,90,1,-1,30,80
