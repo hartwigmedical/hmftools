@@ -46,8 +46,6 @@ import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaData;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.orange.algo.interpretation.GermlineConversion;
-import com.hartwig.hmftools.orange.algo.interpretation.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
@@ -57,7 +55,9 @@ import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
-import com.hartwig.hmftools.orange.algo.wildtype.WildTypeFactory;
+import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
+import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
+import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
@@ -153,15 +153,19 @@ public class OrangeAlgo {
         PurpleInterpreter purpleInterpreter = new PurpleInterpreter(driverGenes, chord);
         PurpleInterpretedData purple = purpleInterpreter.interpret(loadPurpleData(config));
 
-        List<WildTypeGene> wildTypeGenes = WildTypeFactory.filterQCWildTypes(purple.fit().qc().status(),
-                WildTypeFactory.determineWildTypeGenes(driverGenes,
-                        purple.reportableSomaticVariants(),
-                        purple.reportableGermlineVariants(),
-                        purple.reportableSomaticGainsLosses(),
-                        linx.reportableFusions(),
-                        linx.homozygousDisruptions(),
-                        linx.reportableBreakends()));
-        LOGGER.info("Identified {} of {} driver genes to be wild-type", wildTypeGenes.size(), driverGenes.size());
+        List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
+        if (WildTypeAlgo.wildTypeCallingAllowed(purple.fit().qc().status())) {
+            wildTypeGenes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
+                    purple.reportableSomaticVariants(),
+                    purple.reportableGermlineVariants(),
+                    purple.reportableSomaticGainsLosses(),
+                    linx.reportableFusions(),
+                    linx.homozygousDisruptions(),
+                    linx.reportableBreakends());
+            LOGGER.info("Identified {} of {} driver genes to be wild-type", wildTypeGenes.size(), driverGenes.size());
+        } else {
+            LOGGER.info("Wild-type calling skipped due to insufficient tumor sample quality");
+        }
 
         OrangeReport report = ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
