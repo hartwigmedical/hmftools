@@ -11,9 +11,8 @@ import org.jetbrains.annotations.Nullable;
 public interface VirusInterpreterData {
 
     @NotNull
-    List<AnnotatedVirus> reportableViruses();
+    List<AnnotatedVirus> allViruses();
 
-    // TODO Change to allViruses for consistency with other hmftools
     @NotNull
-    List<AnnotatedVirus> unreportedViruses();
+    List<AnnotatedVirus> reportableViruses();
 }

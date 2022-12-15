@@ -207,6 +207,10 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 
+- Upcoming
+    - Various improvements to RNA datamodel making the datamodel more explicit (enums rather than strings)
+    - Virus interpreter data contains "all" and "reported" consistent with linx and purple.
+    - affectedCodon and affectedExon are populated correctly in variant transcript impact.
 - [2.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.0)
     - Many and major datamodel changes in the ORANGE json output.
     - Remove PROTECT dependency from ORANGE including clinical evidence chapter and potentially interesting mutations based on evidence
