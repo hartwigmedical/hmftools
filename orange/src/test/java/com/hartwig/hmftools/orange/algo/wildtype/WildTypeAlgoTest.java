@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.orange.algo.wildtype;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Set;
@@ -25,7 +27,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class WildTypeFactoryTest {
+public class WildTypeAlgoTest {
 
     @Test
     public void canDetermineWildTypeSomatic() {
@@ -41,7 +43,7 @@ public class WildTypeFactoryTest {
         List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
 
-        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(driverGenes,
+        List<WildTypeGene> wildTypes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
                 reportableSomaticVariants,
                 reportableGermlineVariants,
                 reportableSomaticGainsLosses,
@@ -65,7 +67,7 @@ public class WildTypeFactoryTest {
         List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
 
-        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(driverGenes,
+        List<WildTypeGene> wildTypes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
                 reportableSomaticVariants,
                 reportableGermlineVariants,
                 reportableSomaticGainsLosses,
@@ -88,7 +90,7 @@ public class WildTypeFactoryTest {
         List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
 
-        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(driverGenes,
+        List<WildTypeGene> wildTypes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
                 reportableSomaticVariants,
                 reportableGermlineVariants,
                 reportableSomaticGainsLosses,
@@ -110,7 +112,7 @@ public class WildTypeFactoryTest {
         List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
 
-        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(driverGenes,
+        List<WildTypeGene> wildTypes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
                 reportableSomaticVariants,
                 reportableGermlineVariants,
                 reportableSomaticGainsLosses,
@@ -132,7 +134,7 @@ public class WildTypeFactoryTest {
         List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
 
-        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(driverGenes,
+        List<WildTypeGene> wildTypes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
                 reportableSomaticVariants,
                 reportableGermlineVariants,
                 reportableSomaticGainsLosses,
@@ -154,7 +156,7 @@ public class WildTypeFactoryTest {
         List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
 
-        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(driverGenes,
+        List<WildTypeGene> wildTypes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
                 reportableSomaticVariants,
                 reportableGermlineVariants,
                 reportableSomaticGainsLosses,
@@ -178,7 +180,7 @@ public class WildTypeFactoryTest {
         LinxBreakend breakend = createBreakend("MYC");
         List<LinxBreakend> reportableBreakends = Lists.newArrayList(breakend);
 
-        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(driverGenes,
+        List<WildTypeGene> wildTypes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
                 reportableSomaticVariants,
                 reportableGermlineVariants,
                 reportableSomaticGainsLosses,
@@ -214,7 +216,7 @@ public class WildTypeFactoryTest {
         LinxBreakend breakend = createBreakend("MYC");
         List<LinxBreakend> reportableBreakends = Lists.newArrayList(breakend);
 
-        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(driverGenes,
+        List<WildTypeGene> wildTypes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
                 reportableSomaticVariants,
                 reportableGermlineVariants,
                 reportableSomaticGainsLosses,
@@ -225,54 +227,22 @@ public class WildTypeFactoryTest {
     }
 
     @Test
-    public void canFilterWildType() {
-        List<DriverGene> driverGenes =
-                createDriverMap(Lists.newArrayList("BRCA1", "BRCA2", "APC", "KRAS", "BAG4", "FGFR1", "NRAS", "EGFR", "MYC"));
-
-        PurpleVariant variantSomatic =
-                TestPurpleVariantFactory.builder().gene("BRCA2").chromosome("1").position(56412).ref("A").alt("C").build();
-        List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList(variantSomatic);
-
-        PurpleVariant variantGermline =
-                TestPurpleVariantFactory.builder().gene("BRCA1").chromosome("1").position(56412).ref("A").alt("C").build();
-        List<PurpleVariant> reportableGermlineVariants = Lists.newArrayList(variantGermline);
-
-        PurpleGainLoss reportableAmp = TestPurpleGainLossFactory.createGainLoss("APC", CopyNumberInterpretation.FULL_GAIN);
-        PurpleGainLoss reportableDel = TestPurpleGainLossFactory.createGainLoss("KRAS", CopyNumberInterpretation.FULL_LOSS);
-        List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList(reportableAmp, reportableDel);
-
-        LinxFusion reportedFusionMatch = createFusion("BAG4", "FGFR1");
-        List<LinxFusion> reportableFusions = Lists.newArrayList(reportedFusionMatch);
-
-        HomozygousDisruption homozygousDisruption = createHomDisruption("NRAS");
-        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
-
-        LinxBreakend breakend = createBreakend("MYC");
-        List<LinxBreakend> reportableBreakends = Lists.newArrayList(breakend);
-
-        List<WildTypeGene> wildTypes = WildTypeFactory.determineWildTypeGenes(driverGenes,
-                reportableSomaticVariants,
-                reportableGermlineVariants,
-                reportableSomaticGainsLosses,
-                reportableFusions,
-                homozygousDisruptions,
-                reportableBreakends);
-
+    public void canAssessQualityForWildTypeCalling() {
         Set<PurpleQCStatus> purpleQCStatusSetPASS = Sets.newHashSet();
         purpleQCStatusSetPASS.add(PurpleQCStatus.PASS);
-        assertEquals(1, WildTypeFactory.filterQCWildTypes(purpleQCStatusSetPASS, wildTypes).size());
+        assertTrue(WildTypeAlgo.wildTypeCallingAllowed(purpleQCStatusSetPASS));
 
         Set<PurpleQCStatus> purpleQCStatusSetWarnDeleted = Sets.newHashSet();
         purpleQCStatusSetWarnDeleted.add(PurpleQCStatus.WARN_DELETED_GENES);
-        assertEquals(1, WildTypeFactory.filterQCWildTypes(purpleQCStatusSetWarnDeleted, wildTypes).size());
+        assertTrue(WildTypeAlgo.wildTypeCallingAllowed(purpleQCStatusSetWarnDeleted));
 
         Set<PurpleQCStatus> purpleQCStatusSetFailPurity = Sets.newHashSet();
         purpleQCStatusSetFailPurity.add(PurpleQCStatus.FAIL_NO_TUMOR);
-        assertEquals(0, WildTypeFactory.filterQCWildTypes(purpleQCStatusSetFailPurity, wildTypes).size());
+        assertFalse(WildTypeAlgo.wildTypeCallingAllowed(purpleQCStatusSetFailPurity));
 
         Set<PurpleQCStatus> purpleQCStatusSetWarnPurity = Sets.newHashSet();
         purpleQCStatusSetWarnPurity.add(PurpleQCStatus.WARN_LOW_PURITY);
-        assertEquals(0, WildTypeFactory.filterQCWildTypes(purpleQCStatusSetWarnPurity, wildTypes).size());
+        assertFalse(WildTypeAlgo.wildTypeCallingAllowed(purpleQCStatusSetWarnPurity));
     }
 
     @NotNull

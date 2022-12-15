@@ -7,8 +7,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
+import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.orange.algo.linx.DNAFusionEvaluator;
 
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +26,7 @@ final class NovelSpliceJunctionSelector {
 
         for (NovelSpliceJunction junction : junctions) {
             if (knownFusionCache.hasExonDelDup(junction.geneName())) {
-                boolean isTypeMatch = junction.type().equals("SKIPPED_EXONS");
+                boolean isTypeMatch = junction.type() == AltSpliceJunctionType.SKIPPED_EXONS;
                 boolean hasSufficientFragments = junction.fragmentCount() > 5;
                 boolean hasLimitedCohortFreq = junction.cohortFrequency() < 30;
                 boolean hasReportedLinxFusion = DNAFusionEvaluator.hasFusion(linxFusions, junction.geneName(), junction.geneName());
@@ -50,7 +51,8 @@ final class NovelSpliceJunctionSelector {
 
         for (NovelSpliceJunction junction : junctions) {
             if (drivers.contains(junction.geneName())) {
-                boolean isTypeMatch = junction.type().equals("NOVEL_INTRON") || junction.type().equals("NOVEL_EXON");
+                boolean isTypeMatch =
+                        junction.type() == AltSpliceJunctionType.NOVEL_INTRON || junction.type() == AltSpliceJunctionType.NOVEL_EXON;
                 boolean hasSufficientFragments = junction.fragmentCount() > 5;
                 boolean hasLimitedCohortFreq = junction.cohortFrequency() < 10;
                 if (isTypeMatch && hasSufficientFragments && hasLimitedCohortFreq) {

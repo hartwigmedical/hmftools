@@ -14,6 +14,14 @@ import org.junit.Test;
 public class OrangeAlgoTest {
 
     @Test
+    public void canRunReportFromTestDirDNATumorOnly() throws IOException {
+        OrangeConfig config = TestOrangeConfigFactory.createDNAConfigTumorOnly();
+        OrangeAlgo algo = OrangeAlgo.fromConfig(config);
+
+        assertNotNull(algo.run(config));
+    }
+
+    @Test
     public void canRunReportFromTestDirDNA() throws IOException {
         OrangeConfig config = TestOrangeConfigFactory.createDNAConfigTumorNormal();
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);

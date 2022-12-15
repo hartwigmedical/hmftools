@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
@@ -162,8 +163,15 @@ public class SomaticFindingsChapter implements ReportChapter {
         String titleDrivers = "Driver viruses (" + report.virusInterpreter().reportableViruses().size() + ")";
         document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), report.virusInterpreter().reportableViruses()));
 
-        String titleNonDrivers = "Other viral presence (" + report.virusInterpreter().unreportedViruses().size() + ")";
-        document.add(ViralPresenceTable.build(titleNonDrivers, contentWidth(), report.virusInterpreter().unreportedViruses()));
+        List<AnnotatedVirus> unreported = Lists.newArrayList();
+        for (AnnotatedVirus virus : report.virusInterpreter().allViruses()) {
+            if (!virus.reported()) {
+                unreported.add(virus);
+            }
+        }
+
+        String titleNonDrivers = "Other viral presence (" + unreported.size() + ")";
+        document.add(ViralPresenceTable.build(titleNonDrivers, contentWidth(), unreported));
     }
 
     private void addHomozygousDisruptions(@NotNull Document document) {

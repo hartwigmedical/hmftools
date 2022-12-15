@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.algo.interpretation;
+package com.hartwig.hmftools.orange.algo.util;
 
 import java.util.List;
 import java.util.Map;

@@ -15,18 +15,13 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class WildTypeFactory {
+public final class WildTypeAlgo {
 
-    private WildTypeFactory() {
+    private WildTypeAlgo() {
     }
 
-    @NotNull
-    public static List<WildTypeGene> filterQCWildTypes(@NotNull Set<PurpleQCStatus> purpleQCStatus,
-            @NotNull List<WildTypeGene> wildTypeGenes) {
-        if (!purpleQCStatus.contains(PurpleQCStatus.FAIL_NO_TUMOR) && !purpleQCStatus.contains(PurpleQCStatus.WARN_LOW_PURITY)) {
-            return wildTypeGenes;
-        }
-        return Lists.newArrayList();
+    public static boolean wildTypeCallingAllowed(@NotNull Set<PurpleQCStatus> purpleQCStatus) {
+        return !purpleQCStatus.contains(PurpleQCStatus.FAIL_NO_TUMOR) && !purpleQCStatus.contains(PurpleQCStatus.WARN_LOW_PURITY);
     }
 
     @NotNull

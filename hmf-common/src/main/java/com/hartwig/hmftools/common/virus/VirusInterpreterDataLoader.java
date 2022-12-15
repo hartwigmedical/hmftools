@@ -23,12 +23,9 @@ public final class VirusInterpreterDataLoader {
         List<AnnotatedVirus> viruses = AnnotatedVirusFile.read(annotatedVirusTsv);
 
         List<AnnotatedVirus> reportable = Lists.newArrayList();
-        List<AnnotatedVirus> unreported = Lists.newArrayList();
         for (AnnotatedVirus virus : viruses) {
             if (virus.reported()) {
                 reportable.add(virus);
-            } else {
-                unreported.add(virus);
             }
         }
 
@@ -37,6 +34,6 @@ public final class VirusInterpreterDataLoader {
                 reportable.size(),
                 annotatedVirusTsv);
 
-        return ImmutableVirusInterpreterData.builder().unreportedViruses(unreported).reportableViruses(reportable).build();
+        return ImmutableVirusInterpreterData.builder().allViruses(viruses).reportableViruses(reportable).build();
     }
 }
