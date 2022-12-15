@@ -14,11 +14,11 @@ public class PositionReadGroups
     public final int Position;
     public final List<ReadGroup> ReadGroups;
 
-    public PositionReadGroups(final SAMRecord record)
+    public PositionReadGroups(final SAMRecord read)
     {
         ReadGroups = Lists.newArrayList();
-        ReadGroups.add(new ReadGroup(record));
-        Position = record.getAlignmentStart();
+        ReadGroups.add(new ReadGroup(read));
+        Position = read.getAlignmentStart();
     }
 
     public String toString()

@@ -68,6 +68,9 @@ public class MarkDuplicates
 
         BM_LOGGER.debug("all chromosomes complete");
 
+        groupCombiner.handleRemaining();
+        recordWriter.close();
+
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         double timeTakeMins = timeTakenMs / 60000.0;
 

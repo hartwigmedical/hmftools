@@ -12,6 +12,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 
+import com.hartwig.hmftools.bamtools.ReadGroup;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -40,6 +41,9 @@ public class RecordWriter
 
     private SAMFileWriter initialiseBam()
     {
+        if(!mConfig.writeBam())
+            return null;
+
         SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
 
         mOutputBam = mConfig.OutputDir + mConfig.SampleId + ".slice";
@@ -55,20 +59,28 @@ public class RecordWriter
         return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(mOutputBam));
     }
 
-    public synchronized void writeRecord(final SAMRecord record, boolean isDuplicate)
+    public synchronized void writeReadGroup(final ReadGroup readGroup, boolean isDuplicate)
+    {
+        readGroup.reads().forEach(x -> writeRecord(x, isDuplicate));
+    }
+
+    public synchronized void writeRecord(final SAMRecord read, boolean isDuplicate)
     {
         ++mRecordWriteCount;
 
-        writeReadData(record, isDuplicate);
+        writeReadData(read, isDuplicate);
 
-        record.setDuplicateReadFlag(isDuplicate); // overwrite any existing status
+        read.setDuplicateReadFlag(isDuplicate); // overwrite any existing status
 
         if(mBamWriter != null)
-            mBamWriter.addAlignment(record);
+            mBamWriter.addAlignment(read);
     }
 
     private BufferedWriter initialiseReadWriter()
     {
+        if(!mConfig.writeDupReads() && !mConfig.writeAllReads())
+            return null;
+
         try
         {
             String filename = mConfig.formFilename("reads");
@@ -90,28 +102,28 @@ public class RecordWriter
         return null;
     }
 
-    private void writeReadData(final SAMRecord record, boolean isDuplicate)
+    private void writeReadData(final SAMRecord read, boolean isDuplicate)
     {
         if(mReadWriter == null)
             return;
 
-        if(!record.getDuplicateReadFlag() && !isDuplicate)
+        if(mConfig.writeDupReads() && !read.getDuplicateReadFlag() && !isDuplicate)
             return;
 
         try
         {
             mReadWriter.write(format("%s,%s,%d,%d,%s",
-                    record.getReadName(), record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd(), record.getCigar()));
+                    read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(), read.getCigar()));
 
-            SupplementaryReadData suppData = SupplementaryReadData.from(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+            SupplementaryReadData suppData = SupplementaryReadData.from(read.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
             mReadWriter.write(format(",%d,%s,%d,%d,%s,%d",
-                    abs(record.getInferredInsertSize()), record.getMateReferenceName(), record.getMateAlignmentStart(), record.getMappingQuality(),
-                    suppData != null ? suppData.asCsv() : "N/A", record.getFlags()));
+                    abs(read.getInferredInsertSize()), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getMappingQuality(),
+                    suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
 
             mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s,%s",
-                    record.getFirstOfPairFlag(), record.getReadNegativeStrandFlag(), record.getProperPairFlag(), record.getReadUnmappedFlag(),
-                    record.getMateUnmappedFlag(), record.getSupplementaryAlignmentFlag(), record.getDuplicateReadFlag(), isDuplicate));
+                    read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), read.getProperPairFlag(), read.getReadUnmappedFlag(),
+                    read.getMateUnmappedFlag(), read.getSupplementaryAlignmentFlag(), read.getDuplicateReadFlag(), isDuplicate));
 
             mReadWriter.newLine();
         }

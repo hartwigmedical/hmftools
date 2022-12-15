@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
+import static java.lang.Math.round;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.ReadGroup;
@@ -27,6 +30,50 @@ public class DuplicateGroup
     public ChrBaseRegion lowerCoords() { return mLowerReadRange; }
     public ChrBaseRegion upperCoords() { return mUpperReadRange; }
     public List<ReadGroup> readGroups() { return mReadGroups; }
+
+    public ReadGroup findPrimaryGroup()
+    {
+        List<ReadGroup> nonDupGroups = mReadGroups.stream().filter(x -> !hasDuplicates(x)).collect(Collectors.toList());
+
+        if(nonDupGroups.size() == 1)
+            return nonDupGroups.get(0);
+
+        ReadGroup maxGroup = null;
+        int maxBaseQual = 0;
+
+        for(ReadGroup readGroup : mReadGroups)
+        {
+            int groupBaseQual = calcBaseQualTotal(readGroup);
+
+            if(groupBaseQual > maxBaseQual)
+            {
+                maxBaseQual = groupBaseQual;
+                maxGroup = readGroup;
+            }
+        }
+
+        return maxGroup;
+    }
+
+    public static int calcBaseQualTotal(final ReadGroup readGroup)
+    {
+        int readBaseCount = 0;
+        int readBaseQualTotal = 0;
+
+        for(SAMRecord read : readGroup.reads())
+        {
+            if(read.getSupplementaryAlignmentFlag())
+                continue;
+
+            for(int i = 0; i < read.getBaseQualities().length; ++i)
+            {
+                ++readBaseCount;
+                readBaseQualTotal += read.getBaseQualities()[i];
+            }
+        }
+
+        return readBaseCount > 0 ? (int)round(readBaseQualTotal / (double)readBaseCount) : 0;
+    }
 
     public static ChrBaseRegion lowerCoords(final ReadGroup readGroup)
     {
@@ -61,5 +108,10 @@ public class DuplicateGroup
             return false;
 
         return first.matches(second);
+    }
+
+    public static boolean hasDuplicates(final ReadGroup readGroup)
+    {
+        return readGroup.reads().stream().anyMatch(x -> x.getDuplicateReadFlag());
     }
 }

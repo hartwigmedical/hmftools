@@ -36,9 +36,9 @@ public class ReadPositionArray
 
     public boolean withinRange(int position) { return position >= mMinPosition && position < mMinPosition + mCapacity; }
 
-    public boolean processRead(final SAMRecord record)
+    public boolean processRead(final SAMRecord read)
     {
-        int readPosStart = record.getAlignmentStart();
+        int readPosStart = read.getAlignmentStart();
 
         if(mMinPosition == 0)
             mMinPosition = readPosStart;
@@ -46,14 +46,14 @@ public class ReadPositionArray
         if(!isValidPosition(readPosStart))
             return false;
 
-        boolean readStored = handleRead(record);
-
         checkFlush(readPosStart);
+
+        boolean readStored = handleRead(read);
 
         return readStored;
     }
 
-    private boolean handleRead(final SAMRecord record)
+    private boolean handleRead(final SAMRecord read)
     {
         /* scenarios:
             - unpaired or mate is unmapped
@@ -68,16 +68,16 @@ public class ReadPositionArray
                 - with mate within current range - look up and add
                 - otherwise return unhandled
         */
-        SupplementaryReadData suppData = record.getSupplementaryAlignmentFlag() ? SupplementaryReadData.from(record) : null;
+        SupplementaryReadData suppData = read.getSupplementaryAlignmentFlag() ? SupplementaryReadData.from(read) : null;
 
-        if(!record.getReadPairedFlag() || record.getMateUnmappedFlag())
+        if(!read.getReadPairedFlag() || read.getMateUnmappedFlag())
         {
             // could be a secondary or supplementary, otherwise store
-            if(record.getSupplementaryAlignmentFlag())
+            if(read.getSupplementaryAlignmentFlag())
             {
                 if(suppData.Chromosome.equals(mChromosome) && withinRange(suppData.Position))
                 {
-                    return storeAdditionalRead(record, suppData.Position);
+                    return storeAdditionalRead(read, suppData.Position);
                 }
                 else
                 {
@@ -85,22 +85,22 @@ public class ReadPositionArray
                 }
             }
 
-            storeLowerRead(record);
+            storeLowerRead(read);
             return true;
         }
 
-        int matePosStart = record.getMateAlignmentStart();
-        String mateStr = record.getMateReferenceName();
+        int matePosStart = read.getMateAlignmentStart();
+        String mateStr = read.getMateReferenceName();
 
-        if(record.getSupplementaryAlignmentFlag())
+        if(read.getSupplementaryAlignmentFlag())
         {
             if(mateStr.equals(mChromosome) && withinRange(matePosStart))
             {
-                return storeAdditionalRead(record, matePosStart);
+                return storeAdditionalRead(read, matePosStart);
             }
             else if(suppData.Chromosome.equals(mChromosome) && withinRange(suppData.Position))
             {
-                return storeAdditionalRead(record, suppData.Position);
+                return storeAdditionalRead(read, suppData.Position);
             }
             else
             {
@@ -111,21 +111,21 @@ public class ReadPositionArray
         // mate is elsewhere so store this primary read
         if(!mateStr.equals(mChromosome))
         {
-            storeLowerRead(record);
+            storeLowerRead(read);
             return true;
         }
 
-        int readPosStart = record.getAlignmentStart();
-        if(readPosStart < matePosStart)
+        int readPosStart = read.getAlignmentStart();
+        if(readPosStart <= matePosStart)
         {
-            storeLowerRead(record);
+            storeLowerRead(read);
             return true;
         }
 
         // higher of 2 reads on the same chromosome
         if(withinRange(matePosStart))
         {
-            return storeAdditionalRead(record, matePosStart);
+            return storeAdditionalRead(read, matePosStart);
         }
         else
         {
@@ -134,34 +134,40 @@ public class ReadPositionArray
         }
     }
 
-    private void storeLowerRead(final SAMRecord record)
+    private void storeLowerRead(final SAMRecord read)
     {
-        int index = calcIndex(record.getAlignmentStart());
+        int index = calcIndex(read.getAlignmentStart());
 
         PositionReadGroups element = mElements[index];
         if(element == null)
         {
-            element = new PositionReadGroups(record);
+            element = new PositionReadGroups(read);
             mElements[index] = element;
         }
         else
         {
-            element.ReadGroups.add(new ReadGroup(record));
+            // check for existing reads with mate at the same position
+            ReadGroup readGroup = element.ReadGroups.stream().filter(x -> x.id().equals(read.getReadName())).findFirst().orElse(null);
+
+            if(readGroup != null)
+                readGroup.addRead(read);
+            else
+                element.ReadGroups.add(new ReadGroup(read));
         }
     }
 
-    private boolean storeAdditionalRead(final SAMRecord record, int lowerPosStart)
+    private boolean storeAdditionalRead(final SAMRecord read, int lowerPosStart)
     {
         int index = calcIndex(lowerPosStart);
 
         PositionReadGroups element = mElements[index];
         if(element != null)
         {
-            ReadGroup readGroup = element.ReadGroups.stream().filter(x -> x.id().equals(record.getReadName())).findFirst().orElse(null);
+            ReadGroup readGroup = element.ReadGroups.stream().filter(x -> x.id().equals(read.getReadName())).findFirst().orElse(null);
 
             if(readGroup != null)
             {
-                readGroup.addRead(record);
+                readGroup.addRead(read);
                 return true;
             }
         }
