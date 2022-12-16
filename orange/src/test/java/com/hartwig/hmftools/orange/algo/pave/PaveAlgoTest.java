@@ -31,7 +31,6 @@ public class PaveAlgoTest {
         // Missing transcript
         assertNull(pave.run(MATCHING_GENE, "other trans", 0));
 
-
         PaveEntry entryBeyond = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 100);
         assertNull(entryBeyond.affectedCodon());
         assertNull(entryBeyond.affectedExon());
@@ -67,31 +66,6 @@ public class PaveAlgoTest {
         assertNull(PaveAlgo.findAffectedExon(exons, 17));
         assertEquals(exon3, PaveAlgo.findAffectedExon(exons, 19));
         assertNull(PaveAlgo.findAffectedExon(exons, 25));
-    }
-
-    @Test
-    public void canFindAffectedCodonPositiveStrand() {
-        ExonData exon1 = createExon(1, 3, 5);
-        ExonData exon2 = createExon(2, 11, 15);
-        ExonData exon3 = createExon(3, 18, 20);
-        TranscriptData transcript = createTranscript(Lists.newArrayList(exon1, exon2, exon3), 4, 19, Strand.FORWARD);
-
-        assertNull(PaveAlgo.findAffectedCodon(transcript, 2));
-        assertNull(PaveAlgo.findAffectedCodon(transcript, 3));
-        assertEquals(1, (int) PaveAlgo.findAffectedCodon(transcript, 4));
-        assertEquals(1, (int) PaveAlgo.findAffectedCodon(transcript, 5));
-        assertNull(PaveAlgo.findAffectedCodon(transcript, 6));
-        assertNull(PaveAlgo.findAffectedCodon(transcript, 10));
-        assertEquals(1, (int) PaveAlgo.findAffectedCodon(transcript, 11));
-        assertEquals(2, (int) PaveAlgo.findAffectedCodon(transcript, 12));
-        assertEquals(2, (int) PaveAlgo.findAffectedCodon(transcript, 13));
-        assertEquals(2, (int) PaveAlgo.findAffectedCodon(transcript, 14));
-        assertEquals(3, (int) PaveAlgo.findAffectedCodon(transcript, 15));
-        assertNull(PaveAlgo.findAffectedCodon(transcript, 16));
-        assertNull(PaveAlgo.findAffectedCodon(transcript, 17));
-        assertEquals(3, (int) PaveAlgo.findAffectedCodon(transcript, 18));
-        assertEquals(3, (int) PaveAlgo.findAffectedCodon(transcript, 19));
-        assertNull(PaveAlgo.findAffectedCodon(transcript, 20));
     }
 
     @Test
