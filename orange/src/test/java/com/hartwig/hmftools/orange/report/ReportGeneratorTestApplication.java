@@ -40,7 +40,7 @@ public class ReportGeneratorTestApplication {
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
 
     private static final boolean USE_MOCK_DATA_FOR_REPORT = false;
-    private static final boolean REMOVE_UNREPORTED_VARIANTS = true;
+    private static final boolean REMOVE_UNREPORTED_VARIANTS = false;
 
     public static void main(String[] args) throws IOException {
         Configurator.setRootLevel(Level.DEBUG);
