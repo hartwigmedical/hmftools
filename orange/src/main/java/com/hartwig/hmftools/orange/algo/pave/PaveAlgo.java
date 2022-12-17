@@ -28,7 +28,7 @@ public class PaveAlgo {
     }
 
     @Nullable
-    public PaveEntry run(@NotNull String gene, @NotNull String transcript,int position ) {
+    public PaveEntry run(@NotNull String gene, @NotNull String transcript, int position) {
         TranscriptData transcriptData = findTranscript(gene, transcript);
         if (transcriptData == null) {
             return null;
@@ -91,14 +91,12 @@ public class PaveAlgo {
         int currentCodingBases = 0;
 
         for (ExonData exon : codingCorrected(sortByRank(transcript.exons()), codingStart, codingEnd)) {
-            int exonStart = transcript.posStrand() ? exon.Start : exon.End;
-            int exonEnd = transcript.posStrand() ? exon.End : exon.Start;
-
             if (liesInExon(exon, position)) {
+                int exonStart = transcript.posStrand() ? exon.Start : exon.End;
                 currentCodingBases += Math.abs(position - exonStart);
                 return 1 + (int) Math.round((currentCodingBases - currentCodingBases % 3) / 3D);
             } else {
-                currentCodingBases += (1 + Math.abs(exonEnd - exonStart));
+                currentCodingBases += (1 + exon.End - exon.Start);
             }
         }
 
@@ -110,7 +108,10 @@ public class PaveAlgo {
     private static List<ExonData> codingCorrected(@NotNull List<ExonData> exons, int codingStart, int codingEnd) {
         List<ExonData> codingCorrectedExons = Lists.newArrayList();
         for (ExonData exon : exons) {
-            if (exon.End >= codingStart || exon.Start <= codingEnd) {
+            boolean isFullyCoding = exon.Start >= codingStart && exon.End <= codingEnd;
+            boolean isPartiallyStartUtr = exon.Start < codingStart && exon.End >= codingStart;
+            boolean isPartiallyEndUtr = exon.End > codingEnd && exon.Start <= codingEnd;
+            if (isFullyCoding || isPartiallyStartUtr || isPartiallyEndUtr) {
                 codingCorrectedExons.add(new ExonData(exon.TransId,
                         Math.max(exon.Start, codingStart),
                         Math.min(exon.End, codingEnd),

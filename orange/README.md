@@ -36,9 +36,9 @@ The JSON file is meant to be used by downstream applications who wish to further
 
 ## Running ORANGE
 
-ORANGE requires the output of various Hartwig algorithms, along with some resource files (doid json, cohort distributions, driver genes and
-known fusions). The resource files required to run ORANGE can be found [here](https://resources.hartwigmedicalfoundation.nl) for either 37
-or 38 reference genome version.
+ORANGE requires the output of various Hartwig algorithms, along with some resource files (doid json, cohort distributions, driver genes,
+known fusions and ensembl data cache). The resource files required to run ORANGE can be
+found [here](https://resources.hartwigmedicalfoundation.nl) for either 37 or 38 reference genome version.
 
 ### Base (tumor-only) mode
 
@@ -53,6 +53,7 @@ java -jar orange.jar \
    -cohort_percentiles_tsv /path/to/input_cohort_percentiles.tsv \
    -driver_gene_panel_tsv /path/to/driver_gene_panel.tsv \
    -known_fusion_file /path/to/known_fusion_file.tsv \
+   -ensembl_data_directory /path/to/ensembl_data_directory \
    -tumor_sample_wgs_metrics_file /path/to/tumor_sample_wgs_metrics \
    -tumor_sample_flagstat_file /path/to/tumor_sample_flagstats \
    -sage_somatic_tumor_sample_bqr_plot /path/to/sage_tumor_sample_bqr_plot \
@@ -207,7 +208,7 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 
-- Upcoming
+- [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.1)
     - Various improvements to RNA datamodel making the datamodel more explicit (enums rather than strings)
     - Virus interpreter data contains "all" and "reported" consistent with linx and purple.
     - affectedCodon and affectedExon are populated correctly in variant transcript impact (new parameter: `-ensembl_data_directory`)
