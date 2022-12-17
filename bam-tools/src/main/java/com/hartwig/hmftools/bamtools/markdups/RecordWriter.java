@@ -4,6 +4,10 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.markdups.DuplicateStatus.DUPLICATE;
+import static com.hartwig.hmftools.bamtools.markdups.ReadOutput.DUPLICATES;
+import static com.hartwig.hmftools.bamtools.markdups.ReadOutput.MISMATCHES;
+import static com.hartwig.hmftools.bamtools.markdups.ReadOutput.NONE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -11,7 +15,9 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.bamtools.ReadGroup;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
@@ -31,22 +37,25 @@ public class RecordWriter
     private final BufferedWriter mReadWriter;
     private String mOutputBam;
 
+    private final Set<SAMRecord> mReadsWritten;
+
     public RecordWriter(final MarkDupsConfig config)
     {
         mConfig = config;
         mRecordWriteCount = 0;
         mBamWriter = initialiseBam();
         mReadWriter = initialiseReadWriter();
+        mReadsWritten = Sets.newHashSet();
     }
 
     private SAMFileWriter initialiseBam()
     {
-        if(!mConfig.writeBam())
+        if(!mConfig.WriteBam)
             return null;
 
         SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
 
-        mOutputBam = mConfig.OutputDir + mConfig.SampleId + ".slice";
+        mOutputBam = mConfig.OutputDir + mConfig.SampleId + ".mark_dups";
 
         if(mConfig.OutputId != null)
             mOutputBam += "." + mConfig.OutputId;
@@ -59,18 +68,19 @@ public class RecordWriter
         return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(mOutputBam));
     }
 
-    public synchronized void writeReadGroup(final ReadGroup readGroup, boolean isDuplicate)
-    {
-        readGroup.reads().forEach(x -> writeRecord(x, isDuplicate));
-    }
+    public int recordWriteCount() { return mRecordWriteCount; }
+    public Set<SAMRecord> readsWritten() { return mReadsWritten; }
 
-    public synchronized void writeRecord(final SAMRecord read, boolean isDuplicate)
+    public synchronized void writeRecord(final SAMRecord read, DuplicateStatus duplicateStatus)
     {
         ++mRecordWriteCount;
 
-        writeReadData(read, isDuplicate);
+        if(BM_LOGGER.isTraceEnabled())
+            mReadsWritten.add(read);
 
-        read.setDuplicateReadFlag(isDuplicate); // overwrite any existing status
+        writeReadData(read, duplicateStatus);
+
+        read.setDuplicateReadFlag(duplicateStatus == DUPLICATE); // overwrite any existing status
 
         if(mBamWriter != null)
             mBamWriter.addAlignment(read);
@@ -78,7 +88,7 @@ public class RecordWriter
 
     private BufferedWriter initialiseReadWriter()
     {
-        if(!mConfig.writeDupReads() && !mConfig.writeAllReads())
+        if(mConfig.LogReadType == NONE)
             return null;
 
         try
@@ -87,8 +97,8 @@ public class RecordWriter
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("ReadId,Chromosome,PosStart,PosEnd,Cigar");
-            writer.write(",InsertSize,MateChr,MatePosStart,MapQual,SuppData,Flags");
-            writer.write(",FirstInPair,ReadReversed,Proper,Unmapped,MateUnmapped,Supplementary,Duplicate,CalcDuplicate");
+            writer.write(",InsertSize,MateChr,MatePosStart,Duplicate,CalcDuplicate,MapQual,SuppData,Flags");
+            writer.write(",FirstInPair,ReadReversed,Proper,Unmapped,MateUnmapped,Supplementary,Secondary");
 
             writer.newLine();
 
@@ -102,13 +112,21 @@ public class RecordWriter
         return null;
     }
 
-    private void writeReadData(final SAMRecord read, boolean isDuplicate)
+    private void writeReadData(final SAMRecord read, DuplicateStatus dupStatus)
     {
         if(mReadWriter == null)
             return;
 
-        if(mConfig.writeDupReads() && !read.getDuplicateReadFlag() && !isDuplicate)
-            return;
+        if(mConfig.LogReadType == DUPLICATES)
+        {
+            if(!read.getDuplicateReadFlag() && dupStatus == DuplicateStatus.NONE)
+                return;
+        }
+        else if(mConfig.LogReadType == MISMATCHES)
+        {
+            if(read.getDuplicateReadFlag() == (dupStatus == DUPLICATE))
+                return;
+        }
 
         try
         {
@@ -117,13 +135,13 @@ public class RecordWriter
 
             SupplementaryReadData suppData = SupplementaryReadData.from(read.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
-            mReadWriter.write(format(",%d,%s,%d,%d,%s,%d",
-                    abs(read.getInferredInsertSize()), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getMappingQuality(),
-                    suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
+            mReadWriter.write(format(",%d,%s,%d,%s,%s,%d,%s,%d",
+                    abs(read.getInferredInsertSize()), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getDuplicateReadFlag(),
+                    dupStatus, read.getMappingQuality(), suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
 
-            mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s,%s",
+            mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s",
                     read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), read.getProperPairFlag(), read.getReadUnmappedFlag(),
-                    read.getMateUnmappedFlag(), read.getSupplementaryAlignmentFlag(), read.getDuplicateReadFlag(), isDuplicate));
+                    read.getMateUnmappedFlag(), read.getSupplementaryAlignmentFlag(), read.isSecondaryAlignment()));
 
             mReadWriter.newLine();
         }
@@ -135,16 +153,6 @@ public class RecordWriter
 
     public void close()
     {
-        // write any non-duplicate supplementaries
-        // BM_LOGGER.debug("final duplicate readIds({}) cached supplementaries({})",
-        //        mDuplicateReadIds.size(), mSupplementaryReads.size());
-
-        /*
-        mSupplementaryReads.values().forEach(x -> writeRecord(x));
-        mSupplementaryReads.clear();
-        mDuplicateReadIds.clear();
-        */
-
         if(mBamWriter != null)
         {
             BM_LOGGER.info("{} records written to BAM: {}", mRecordWriteCount, mOutputBam);

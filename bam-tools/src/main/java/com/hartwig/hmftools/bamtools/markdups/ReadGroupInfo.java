@@ -19,17 +19,17 @@ import htsjdk.samtools.SAMRecord;
 public class ReadGroupInfo
 {
     public final String ReadId;
-    public final boolean IsDuplicate;
+    public final DuplicateStatus Status;
     public final boolean IsComplete;
 
     public final BaseRegion CurrentRange;
     public final BaseRegion ExpectedRange;
     public final List<String> ChrPartitions;
 
-    public ReadGroupInfo(final ReadGroup readGroup, boolean isDuplicate, final BaseRegion currentPartition)
+    public ReadGroupInfo(final ReadGroup readGroup, DuplicateStatus dupStatus, final BaseRegion currentPartition)
     {
         ReadId = readGroup.id();
-        IsDuplicate = isDuplicate;
+        Status = dupStatus;
 
         List<String> chrPartitions = Lists.newArrayList();
         String chromosome = readGroup.reads().get(0).getContig();
@@ -65,13 +65,14 @@ public class ReadGroupInfo
             {
                 expectedNonSuppCount = 2;
 
-                if(read.getMateReferenceName().equals(chromosome) && currentPartition.containsPosition(read.getMateAlignmentStart()))
+                if(read.getMateReferenceName().equals(chromosome)) //  && currentPartition.containsPosition(read.getMateAlignmentStart())
                 {
                     expectedRange.setStart(min(expectedRange.start(), read.getMateAlignmentStart()));
                     expectedRange.setEnd(max(expectedRange.end(), read.getMateAlignmentStart()));
                 }
                 else
                 {
+                    // a remote partition - do these really need to be recorded if the mate will also come to the same classification?
                     chrPartitions.add(formChromosomePartition(read.getMateReferenceName(), read.getMateAlignmentStart(), partitionSize));
                 }
             }
@@ -134,6 +135,6 @@ public class ReadGroupInfo
     public String toString()
     {
         return format("range(%s) expected(%s) complete(%s) dup(%s) remotePartitions(%d) id(%s)",
-                CurrentRange, ExpectedRange, IsComplete, IsDuplicate, ChrPartitions != null ? ChrPartitions.size() : 0, ReadId);
+                CurrentRange, ExpectedRange, IsComplete, Status, ChrPartitions != null ? ChrPartitions.size() : 0, ReadId);
     }
 }

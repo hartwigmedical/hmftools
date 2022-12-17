@@ -31,13 +31,18 @@ public class DuplicateGroup
     public ChrBaseRegion upperCoords() { return mUpperReadRange; }
     public List<ReadGroup> readGroups() { return mReadGroups; }
 
-    public ReadGroup findPrimaryGroup()
+    public ReadGroup findPrimaryGroup(boolean considerMarkedDups)
     {
-        List<ReadGroup> nonDupGroups = mReadGroups.stream().filter(x -> !hasDuplicates(x)).collect(Collectors.toList());
+        if(considerMarkedDups)
+        {
+            // take the primary (non-duplicate) group if there is (just) one already marked
+            List<ReadGroup> nonDupGroups = mReadGroups.stream().filter(x -> !hasDuplicates(x)).collect(Collectors.toList());
 
-        if(nonDupGroups.size() == 1)
-            return nonDupGroups.get(0);
+            if(nonDupGroups.size() == 1)
+                return nonDupGroups.get(0);
+        }
 
+        // otherwise choose the group with the highest base quality
         ReadGroup maxGroup = null;
         int maxBaseQual = 0;
 
@@ -107,7 +112,8 @@ public class DuplicateGroup
         if(first == null || second == null)
             return false;
 
-        return first.matches(second);
+        return first.start() == second.start();
+        // return first.matches(second);
     }
 
     public static boolean hasDuplicates(final ReadGroup readGroup)

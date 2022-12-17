@@ -6,8 +6,10 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bamtools.ReadGroup;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
@@ -147,12 +149,12 @@ public class ReadPositionArray
         else
         {
             // check for existing reads with mate at the same position
-            ReadGroup readGroup = element.ReadGroups.stream().filter(x -> x.id().equals(read.getReadName())).findFirst().orElse(null);
+            ReadGroup readGroup = element.ReadGroups.get(read.getReadName());
 
             if(readGroup != null)
                 readGroup.addRead(read);
             else
-                element.ReadGroups.add(new ReadGroup(read));
+                element.ReadGroups.put(read.getReadName(), new ReadGroup(read));
         }
     }
 
@@ -163,7 +165,7 @@ public class ReadPositionArray
         PositionReadGroups element = mElements[index];
         if(element != null)
         {
-            ReadGroup readGroup = element.ReadGroups.stream().filter(x -> x.id().equals(read.getReadName())).findFirst().orElse(null);
+            ReadGroup readGroup = element.ReadGroups.get(read.getReadName());
 
             if(readGroup != null)
             {
@@ -237,6 +239,7 @@ public class ReadPositionArray
             if(element != null)
             {
                 mReadGroupHandler.accept(element);
+                mElements[mMinPositionIndex].ReadGroups.clear();
                 mElements[mMinPositionIndex] = null;
             }
 

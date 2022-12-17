@@ -20,25 +20,19 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.bamtools.BamFunction;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class MarkDupsConfig
 {
@@ -52,30 +46,30 @@ public class MarkDupsConfig
 
     public final String OutputDir;
     public final String OutputId;
+    public final boolean WriteBam;
     public final int Threads;
+    public final int WriteCacheSize;
 
     // debug
     public final List<String> SpecificChromosomes;
     public final List<String> LogReadIds;
     public final List<ChrBaseRegion> SpecificRegions;
-    public final Set<WriteType> WriteTypes;
+    public final ReadOutput LogReadType;
     public final boolean PerfDebug;
+    public final boolean RunChecks;
 
     private boolean mIsValid;
 
     // config strings
     private static final String BUFFER_SIZE = "buffer_size";
-    private static final String WRITE_TYPES = "write_types";
+    private static final String READ_OUTPUTS = "read_output";
+    private static final String WRITE_BAM = "write_bam";
+    private static final String RUN_CHECKS = "run_checks";
+    private static final String WRITE_CACHE_SIZE = "write_cache_size";
 
     private static final int DEFAULT_PARTITION_SIZE = 1000000;
     private static final int DEFAULT_POS_BUFFER_SIZE = 10000;
-
-    private enum WriteType
-    {
-        BAM,
-        DUP_READS,
-        ALL_READS;
-    }
+    private static final int DEFAULT_WRITE_CACHE_SIZE = 1000;
 
     public MarkDupsConfig(final CommandLine cmd)
     {
@@ -113,24 +107,21 @@ public class MarkDupsConfig
             mIsValid = false;
         }
 
-        WriteTypes = Sets.newHashSet();
-
-        if(cmd.hasOption(WRITE_TYPES))
-        {
-            Arrays.stream(cmd.getOptionValue(WRITE_TYPES).split(ITEM_DELIM, -1)).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
-            BM_LOGGER.info("writing types: {}", WriteTypes.toString());
-        }
-        else
-        {
-            WriteTypes.add(WriteType.BAM);
-        }
+        WriteBam = cmd.hasOption(WRITE_BAM) || !cmd.hasOption(READ_OUTPUTS);
+        LogReadType = ReadOutput.valueOf(cmd.getOptionValue(READ_OUTPUTS, ReadOutput.NONE.toString()));
 
         LogReadIds = cmd.hasOption(LOG_READ_IDS) ?
                 Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
 
         Threads = parseThreads(cmd);
 
+        if(Threads <= 1)
+            WriteCacheSize = 0;
+        else
+            WriteCacheSize = Integer.parseInt(cmd.getOptionValue(WRITE_CACHE_SIZE, String.valueOf(DEFAULT_WRITE_CACHE_SIZE)));
+
         PerfDebug = cmd.hasOption(PERF_DEBUG);
+        RunChecks = cmd.hasOption(RUN_CHECKS);
     }
 
     public boolean isValid()
@@ -152,10 +143,6 @@ public class MarkDupsConfig
 
         return true;
     }
-
-    public boolean writeBam() { return WriteTypes.contains(WriteType.BAM); }
-    public boolean writeDupReads() { return WriteTypes.contains(WriteType.DUP_READS); }
-    public boolean writeAllReads() { return WriteTypes.contains(WriteType.ALL_READS); }
 
     public String formFilename(final String fileType)
     {
@@ -182,12 +169,15 @@ public class MarkDupsConfig
         addRefGenomeConfig(options);;
         options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_PARTITION_SIZE);
         options.addOption(BUFFER_SIZE, true, "Read buffer size, default: " + DEFAULT_POS_BUFFER_SIZE);
-        options.addOption(WRITE_TYPES, true, "Write types from 'BAM' (default), 'DUP_READS', 'ALL_READS'");
+        options.addOption(READ_OUTPUTS, true, "Write reads: NONE (default), 'MISMATCHES', 'DUPLICATES', 'ALL'");
+        options.addOption(WRITE_BAM, false, "Write BAM, default true if not write read output");
         addThreadOptions(options);
+        options.addOption(WRITE_CACHE_SIZE, true, "Write cache size (default: 1000)");
 
         addSpecificChromosomesRegionsConfig(options);
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
         options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
+        options.addOption(RUN_CHECKS, false, "Run duplicate mismatch checks");
 
         return options;
     }

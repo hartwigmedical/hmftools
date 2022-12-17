@@ -2,9 +2,9 @@ package com.hartwig.hmftools.bamtools.markdups;
 
 import static java.lang.String.format;
 
-import java.util.List;
+import java.util.Map;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bamtools.ReadGroup;
 
 import htsjdk.samtools.SAMRecord;
@@ -12,12 +12,12 @@ import htsjdk.samtools.SAMRecord;
 public class PositionReadGroups
 {
     public final int Position;
-    public final List<ReadGroup> ReadGroups;
+    public final Map<String,ReadGroup> ReadGroups;
 
     public PositionReadGroups(final SAMRecord read)
     {
-        ReadGroups = Lists.newArrayList();
-        ReadGroups.add(new ReadGroup(read));
+        ReadGroups = Maps.newHashMap();
+        ReadGroups.put(read.getReadName(), new ReadGroup(read));
         Position = read.getAlignmentStart();
     }
 
