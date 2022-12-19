@@ -208,6 +208,8 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 
+- Upcoming
+    - Populate affectedExon for intronic variants in splice regions.
 - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.1)
     - Various improvements to RNA datamodel making the datamodel more explicit (enums rather than strings)
     - Virus interpreter data contains "all" and "reported" consistent with linx and purple.

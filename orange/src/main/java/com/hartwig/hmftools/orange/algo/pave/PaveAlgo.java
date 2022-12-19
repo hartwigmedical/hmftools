@@ -20,6 +20,8 @@ public class PaveAlgo {
 
     private static final Logger LOGGER = LogManager.getLogger(PaveAlgo.class);
 
+    private static final int MAX_SPLICE_DISTANCE = 8;
+
     @NotNull
     private final EnsemblDataCache ensemblDataCache;
 
@@ -70,7 +72,17 @@ public class PaveAlgo {
             }
         }
 
-        return null;
+        ExonData spliceExon = null;
+        for (ExonData exon : exons) {
+            if (liesInExonSpliceRegion(exon, position)) {
+                if (spliceExon != null) {
+                    LOGGER.warn("Multiple splice exons detected for variant on position '{}'", position);
+                }
+                spliceExon = exon;
+            }
+        }
+
+        return spliceExon;
     }
 
     @Nullable
@@ -130,6 +142,16 @@ public class PaveAlgo {
 
     private static boolean liesInExon(@NotNull ExonData exon, int position) {
         return position >= exon.Start && position <= exon.End;
+    }
+
+    private static boolean liesInExonSpliceRegion(@NotNull ExonData exon, int position) {
+        int spliceRegionStart = exon.Start - MAX_SPLICE_DISTANCE;
+        int spliceRegionEnd = exon.End + MAX_SPLICE_DISTANCE;
+
+        boolean liesInSpliceStart = position >= spliceRegionStart && position < exon.Start;
+        boolean liesInSpliceEnd= position > exon.End && position <= spliceRegionEnd;
+
+        return liesInSpliceStart || liesInSpliceEnd;
     }
 
     @NotNull

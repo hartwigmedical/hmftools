@@ -22,7 +22,7 @@ public class PaveAlgoTest {
 
     @Test
     public void canCreatePaveEntries() {
-        // "gene", coding range: 30-80, reverse strand. exon1: 60-90, exon2: 45-55, exon3: 25:35
+        // "gene", coding range: 300-800, reverse strand. exon1: 600-900, exon2: 450-550, exon3: 250:350
         PaveAlgo pave = new PaveAlgo(TestEnsemblDataCacheFactory.loadTestCache());
 
         // Missing gene
@@ -31,41 +31,50 @@ public class PaveAlgoTest {
         // Missing transcript
         assertNull(pave.run(MATCHING_GENE, "other trans", 0));
 
-        PaveEntry entryBeyond = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 100);
+        PaveEntry entryBeyond = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 1000);
         assertNull(entryBeyond.affectedCodon());
         assertNull(entryBeyond.affectedExon());
 
-        PaveEntry entryUtr5 = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 85);
+        PaveEntry entryUtr5 = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 850);
         assertNull(entryUtr5.affectedCodon());
         assertEquals(1, (int) entryUtr5.affectedExon());
 
-        PaveEntry entryCoding = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 50);
-        assertEquals(9, (int) entryCoding.affectedCodon());
+        PaveEntry entryCoding = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 500);
+        assertEquals(84, (int) entryCoding.affectedCodon());
         assertEquals(2, (int) entryCoding.affectedExon());
 
-        PaveEntry entryIntronic = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 40);
+        PaveEntry entrySplice = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 445);
+        assertNull(entrySplice.affectedCodon());
+        assertEquals(2, (int) entrySplice.affectedExon());
+
+        PaveEntry entryIntronic = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 400);
         assertNull(entryIntronic.affectedCodon());
         assertNull(entryIntronic.affectedExon());
 
-        PaveEntry entryUtr3 = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 25);
+        PaveEntry entryUtr3 = pave.run(MATCHING_GENE, MATCHING_TRANSCRIPT, 250);
         assertNull(entryUtr3.affectedCodon());
         assertEquals(3, (int) entryUtr3.affectedExon());
     }
 
     @Test
     public void canFindAffectedExon() {
-        ExonData exon1 = createExon(1, 3, 5);
-        ExonData exon2 = createExon(2, 11, 15);
-        ExonData exon3 = createExon(3, 18, 20);
+        ExonData exon1 = createExon(1, 30, 50);
+        ExonData exon2 = createExon(2, 110, 150);
+        ExonData exon3 = createExon(3, 180, 200);
         List<ExonData> exons = Lists.newArrayList(exon1, exon2, exon3);
 
-        assertNull(PaveAlgo.findAffectedExon(exons, 1));
-        assertEquals(exon1, PaveAlgo.findAffectedExon(exons, 3));
-        assertNull(PaveAlgo.findAffectedExon(exons, 8));
-        assertEquals(exon2, PaveAlgo.findAffectedExon(exons, 15));
-        assertNull(PaveAlgo.findAffectedExon(exons, 17));
-        assertEquals(exon3, PaveAlgo.findAffectedExon(exons, 19));
-        assertNull(PaveAlgo.findAffectedExon(exons, 25));
+        assertNull(PaveAlgo.findAffectedExon(exons, 10));
+        assertEquals(exon1, PaveAlgo.findAffectedExon(exons, 25));
+        assertEquals(exon1, PaveAlgo.findAffectedExon(exons, 30));
+        assertEquals(exon1, PaveAlgo.findAffectedExon(exons, 58));
+        assertNull(PaveAlgo.findAffectedExon(exons, 80));
+        assertEquals(exon2, PaveAlgo.findAffectedExon(exons, 105));
+        assertEquals(exon2, PaveAlgo.findAffectedExon(exons, 150));
+        assertEquals(exon2, PaveAlgo.findAffectedExon(exons, 155));
+        assertNull(PaveAlgo.findAffectedExon(exons, 170));
+        assertEquals(exon3, PaveAlgo.findAffectedExon(exons, 175));
+        assertEquals(exon3, PaveAlgo.findAffectedExon(exons, 190));
+        assertNull(PaveAlgo.findAffectedExon(exons, 250));
     }
 
     @Test
