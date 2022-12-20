@@ -50,16 +50,10 @@ class CiderReadScreenerTest
         // start offset is 99, due to 20 right soft clip
         TestCase.assertEquals(99, readOffset)
         readOffset = CiderReadScreener.extrapolateReadOffsetAtRefPosition(record, alignmentEnd + 30)
-        // out of range
-        TestCase.assertEquals(-1, readOffset)
 
-        // test out of range
-        readOffset = CiderReadScreener.extrapolateReadOffsetAtRefPosition(record, alignmentStart - 31)
-        TestCase.assertEquals(-1, readOffset)
-
-        // this is over the end, so should get -1
-        readOffset = CiderReadScreener.extrapolateReadOffsetAtRefPosition(record, alignmentEnd + 30)
-        TestCase.assertEquals(-1, readOffset)
+        TestCase.assertEquals(109, readOffset)
+        readOffset = CiderReadScreener.extrapolateReadOffsetAtRefPosition(record, alignmentStart - 32)
+        TestCase.assertEquals(-2, readOffset)
     }
 
     @Test
@@ -96,7 +90,7 @@ class CiderReadScreenerTest
 
         // try a point 30 bases before first alignment block
         var readOffset = CiderReadScreener.extrapolateReadOffsetAtRefPosition(record, alignmentStart - 30)
-        TestCase.assertEquals(-1, readOffset) // 20S only so 30 bases is too many
+        TestCase.assertEquals(-10, readOffset) // 20S only so 30 bases would yield -10
 
         // try a point 20 bases before first alignment block, i.e. within the soft clipped region
         readOffset = CiderReadScreener.extrapolateReadOffsetAtRefPosition(record, alignmentStart - 20)
@@ -110,9 +104,9 @@ class CiderReadScreenerTest
         readOffset = CiderReadScreener.extrapolateReadOffsetAtRefPosition(record, 100150)
         TestCase.assertEquals(170, readOffset) // 20 soft clip + 150
 
-        // 200 bases after first block, should get nothing since it will be outside range
+        // 200 bases after first block
         readOffset = CiderReadScreener.extrapolateReadOffsetAtRefPosition(record, 100250)
-        TestCase.assertEquals(-1, readOffset)
+        TestCase.assertEquals(270, readOffset)
 
         // match 50 bases before second block
         readOffset = CiderReadScreener.extrapolateReadOffsetAtRefPosition(record, 107000)
@@ -153,19 +147,19 @@ class CiderReadScreenerTest
             var mappedEnd = anchorRefEnd - readLength + 15
             var mappedStart = mappedEnd - mappedLength
             var mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
-            TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation))
+            TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
 
             // reads with coords above and not overlapping anchor are not relevant
             mappedStart = anchorRefEnd + anchorLocation.baseLength()
             mappedEnd = mappedStart + mappedLength
             mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
-            TestCase.assertFalse(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation))
+            TestCase.assertFalse(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
 
             // reads that overlap with anchor by 15 bases or more are relevant
             mappedEnd = anchorRefEnd + anchorLocation.baseLength() / 2
             mappedStart = mappedEnd - mappedLength
             mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
-            TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation))
+            TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
         }
     }
 
@@ -195,19 +189,19 @@ class CiderReadScreenerTest
             var mappedStart = anchorRefStart + readLength - 15
             var mappedEnd = mappedStart + mappedLength
             var mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
-            TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation))
+            TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
 
             // reads with coords below and not overlapping anchor are not relevant
             mappedEnd = anchorRefStart - anchorLocation.baseLength()
             mappedStart = mappedEnd - mappedLength
             mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
-            TestCase.assertFalse(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation))
+            TestCase.assertFalse(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
 
             // reads that overlap with anchor by 15 bases or more are relevant
             mappedStart = anchorRefStart - anchorLocation.baseLength() / 2
             mappedEnd = mappedStart + mappedLength
             mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
-            TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation))
+            TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
         }
     }
 

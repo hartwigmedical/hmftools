@@ -66,7 +66,7 @@ class CiderApplication
         val readProcessor = CiderReadScreener(
             ciderGeneDatastore,
             candidateBlosumSearcher,
-            CiderConstants.MIN_CANDIDATE_READ_ANCHOR_OVERLAP,
+            CiderConstants.MAX_READ_DISTANCE_FROM_ANCHOR,
             mParams.approxMaxFragmentLength)
 
         readBamFile(readProcessor, ciderGeneDatastore)
@@ -164,7 +164,7 @@ class CiderApplication
                 }
             }
             val readLayouts = vjReadLayoutAdaptor.buildLayouts(
-                geneType, readsOfGeneType, 20, 1.0
+                geneType, readsOfGeneType, 10, 1.0
             )
 
             layoutMap[geneType] = readLayouts
