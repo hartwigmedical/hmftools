@@ -204,7 +204,7 @@ public class QCFailDisclaimerChapter implements ReportChapter {
     @NotNull
     private Paragraph testsArePerformedByAccreditedLab() {
         return createContentParagraph(
-                "The results on this report are based on tests that are performed under ISO/ICE-17025:2017 TESTING L633 accreditation.");
+                "The results on this report are based on tests that are performed under NEN-EN-ISO/IEC-17025:2017 TESTING L633 accreditation.");
     }
 
     @NotNull
