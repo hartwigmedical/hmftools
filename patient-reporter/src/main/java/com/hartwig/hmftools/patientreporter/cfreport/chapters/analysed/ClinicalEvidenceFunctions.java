@@ -55,7 +55,7 @@ public class ClinicalEvidenceFunctions {
 
         for (ProtectEvidence evidence : evidences) {
             if ((reportGermline || !evidence.germline()) && evidence.onLabel() == requireOnLabel) {
-                List<ProtectEvidence> treatmentEvidences = evidencePerTreatmentMap.get(evidence.treatment());
+                List<ProtectEvidence> treatmentEvidences = evidencePerTreatmentMap.get(evidence.treatment().treament());
                 if (treatmentEvidences == null) {
                     treatmentEvidences = Lists.newArrayList();
                 }
