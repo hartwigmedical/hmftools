@@ -313,7 +313,7 @@ public class SummaryChapter implements ReportChapter {
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with driver mutation").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneSetCell(sortGenes(driverVariantGenes)));
+        table.addCell(createGeneSetCell(driverVariantGenes));
 
         int reportedVariants = SomaticVariants.countReportableVariants(analysis().reportableVariants());
         Style reportedVariantsStyle =
@@ -325,22 +325,22 @@ public class SummaryChapter implements ReportChapter {
         Set<String> amplifiedGenes = GainsAndLosses.amplifiedGenes(analysis().gainsAndLosses());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Amplified gene(s)").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneSetCell(sortGenes(amplifiedGenes)));
+        table.addCell(createGeneSetCell(amplifiedGenes));
 
         Set<String> copyLossGenes = GainsAndLosses.lostGenes(analysis().gainsAndLosses());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Deleted gene(s)").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneSetCell(sortGenes(copyLossGenes)));
+        table.addCell(createGeneSetCell(copyLossGenes));
 
         Set<String> disruptedGenes = HomozygousDisruptions.disruptedGenes(analysis().homozygousDisruptions());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Homozygously disrupted genes").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneSetCell(sortGenes(disruptedGenes)));
+        table.addCell(createGeneSetCell(disruptedGenes));
 
         Set<String> fusionGenes = GeneFusions.uniqueGeneFusions(analysis().geneFusions());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Gene fusions").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneSetCell(sortGenes(fusionGenes)));
+        table.addCell(createGeneSetCell(fusionGenes));
 
         MicrosatelliteStatus microSatelliteStabilityString =
                 analysis().hasReliablePurity() ? analysis().microsatelliteStatus() : MicrosatelliteStatus.UNKNOWN;
@@ -350,7 +350,7 @@ public class SummaryChapter implements ReportChapter {
                     analysis().homozygousDisruptions());
             table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                     .add(new Paragraph("Potential MMR genes").addStyle(ReportResources.bodyTextStyle())));
-            table.addCell(createGeneSetCell(sortGenes(genesDisplay)));
+            table.addCell(createGeneSetCell(genesDisplay));
         }
 
         ChordStatus hrdStatus = analysis().hasReliablePurity() ? analysis().hrdStatus() : ChordStatus.UNKNOWN;
@@ -360,7 +360,7 @@ public class SummaryChapter implements ReportChapter {
                     analysis().homozygousDisruptions());
             table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                     .add(new Paragraph("Potential HRD genes").addStyle(ReportResources.bodyTextStyle())));
-            table.addCell(createGeneSetCell(sortGenes(genesDisplay)));
+            table.addCell(createGeneSetCell(genesDisplay));
         }
 
         div.add(table);
@@ -492,14 +492,6 @@ public class SummaryChapter implements ReportChapter {
             joiner.add(entry);
         }
         return joiner.toString();
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static Set<String> sortGenes(@NotNull Set<String> driverVariantGenes) {
-        List<String> genesList = Lists.newArrayList(driverVariantGenes);
-        Collections.sort(genesList);
-        return Sets.newHashSet(genesList);
     }
 
     @NotNull

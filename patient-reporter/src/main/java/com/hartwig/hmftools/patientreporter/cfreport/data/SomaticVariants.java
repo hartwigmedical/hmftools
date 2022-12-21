@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -15,6 +16,7 @@ import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.patientreporter.algo.CurationFunction;
 import com.hartwig.hmftools.patientreporter.util.Genes;
 
 import org.apache.logging.log4j.LogManager;
@@ -29,8 +31,6 @@ public final class SomaticVariants {
 
     private SomaticVariants() {
     }
-
-    private static final String UPSTREAM_GENE_VARIANT = "upstream_gene_variant";
 
     @NotNull
     public static List<ReportableVariant> sort(@NotNull List<ReportableVariant> variants) {
@@ -194,10 +194,10 @@ public final class SomaticVariants {
 
     @NotNull
     public static Set<String> driverGenesWithVariant(@NotNull List<ReportableVariant> variants) {
-        Set<String> genes = Sets.newHashSet();
+        Set<String> genes = new TreeSet<String>();
         for (ReportableVariant variant : variants) {
             if (DriverInterpretation.interpret(variant.driverLikelihood()) == DriverInterpretation.HIGH) {
-                genes.add(variant.gene());
+                genes.add(CurationFunction.curateGeneNamePdf(variant.gene()));
             }
         }
         return genes;
@@ -210,24 +210,24 @@ public final class SomaticVariants {
     @NotNull
     public static Set<String> determineMSIgenes(@NotNull List<ReportableVariant> reportableVariants, @NotNull List<GainLoss> gainsAndLosses,
             @NotNull List<HomozygousDisruption> homozygousDisruptions) {
-        Set<String> genesDisplay = Sets.newHashSet();
+        Set<String> genesDisplay = new TreeSet<String>();
 
         for (ReportableVariant variant : reportableVariants) {
             if (Genes.MSI_GENES.contains(variant.gene())) {
-                genesDisplay.add(variant.gene());
+                genesDisplay.add(CurationFunction.curateGeneNamePdf(variant.gene()));
             }
         }
 
         for (GainLoss gainLoss : gainsAndLosses) {
             if (Genes.MSI_GENES.contains(gainLoss.gene()) && (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
                     || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)) {
-                genesDisplay.add(gainLoss.gene());
+                genesDisplay.add(CurationFunction.curateGeneNamePdf(gainLoss.gene()));
             }
         }
 
         for (HomozygousDisruption homozygousDisruption : homozygousDisruptions) {
             if (Genes.MSI_GENES.contains(homozygousDisruption.gene())) {
-                genesDisplay.add(homozygousDisruption.gene());
+                genesDisplay.add(CurationFunction.curateGeneNamePdf(homozygousDisruption.gene()));
             }
         }
         return genesDisplay;
@@ -236,24 +236,24 @@ public final class SomaticVariants {
     @NotNull
     public static Set<String> determineHRDgenes(@NotNull List<ReportableVariant> reportableVariants,
             @NotNull List<GainLoss> gainsAndLosses, @NotNull List<HomozygousDisruption> homozygousDisruptions) {
-        Set<String> genesDisplay = Sets.newHashSet();
+        Set<String> genesDisplay = new TreeSet<String>();
 
         for (ReportableVariant variant : reportableVariants) {
             if (Genes.HRD_GENES.contains(variant.gene())) {
-                genesDisplay.add(variant.gene());
+                genesDisplay.add(CurationFunction.curateGeneNamePdf(variant.gene()));
             }
         }
 
         for (GainLoss gainLoss : gainsAndLosses) {
             if (Genes.HRD_GENES.contains(gainLoss.gene()) && (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
                     || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)) {
-                genesDisplay.add(gainLoss.gene());
+                genesDisplay.add(CurationFunction.curateGeneNamePdf(gainLoss.gene()));
             }
         }
 
         for (HomozygousDisruption homozygousDisruption : homozygousDisruptions) {
             if (Genes.HRD_GENES.contains(homozygousDisruption.gene())) {
-                genesDisplay.add(homozygousDisruption.gene());
+                genesDisplay.add(CurationFunction.curateGeneNamePdf(homozygousDisruption.gene()));
             }
         }
 

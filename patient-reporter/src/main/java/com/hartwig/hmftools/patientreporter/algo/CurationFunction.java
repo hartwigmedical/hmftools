@@ -24,9 +24,9 @@ public final class CurationFunction {
     private CurationFunction() {
     }
 
-    private static final String GENE_CDKN2A = "CDKN2A";
-    private static final String GENE_CDKN2A_CANONICAL = "CDKN2A (p16)";
-    private static final String GENE_CDKN2A_NON_CANONICAL = "CDKN2A (p14ARF)";
+    public static final String GENE_CDKN2A = "CDKN2A";
+    public static final String GENE_CDKN2A_CANONICAL = "CDKN2A (p16)";
+    public static final String GENE_CDKN2A_NON_CANONICAL = "CDKN2A (p14ARF)";
 
     @NotNull
     public static GenomicAnalysis curation(@NotNull GenomicAnalysis genomicAnalysis) {
@@ -168,5 +168,16 @@ public final class CurationFunction {
             }
         }
         return curateHomozygousDisruptions;
+    }
+
+    @NotNull
+    public static String curateGeneNamePdf(@NotNull String gene) {
+        if (gene.equals(GENE_CDKN2A_CANONICAL)) {
+            return CurationFunction.GENE_CDKN2A;
+        } else if (gene.equals(GENE_CDKN2A_NON_CANONICAL)) {
+            return GENE_CDKN2A;
+        } else {
+            return gene;
+        }
     }
 }

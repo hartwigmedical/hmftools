@@ -2,12 +2,15 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.patientreporter.algo.CurationFunction;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.kernel.pdf.action.PdfAction;
@@ -55,7 +58,8 @@ public final class GeneFusions {
 
     @NotNull
     public static Set<String> uniqueGeneFusions(@NotNull List<LinxFusion> fusions) {
-        Set<String> genes = Sets.newHashSet();
+
+        Set<String> genes = new TreeSet<String>();
         for (LinxFusion fusion : fusions) {
             genes.add(name(fusion));
         }
@@ -64,7 +68,7 @@ public final class GeneFusions {
 
     @NotNull
     public static String name(@NotNull LinxFusion fusion) {
-        return fusion.geneStart() + " - " + fusion.geneEnd();
+        return CurationFunction.curateGeneNamePdf(fusion.geneStart()) + " - " + CurationFunction.curateGeneNamePdf(fusion.geneEnd());
     }
 
     @NotNull

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
@@ -12,6 +13,7 @@ import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.common.purple.ChromosomeArm;
 import com.hartwig.hmftools.common.utils.DataUtil;
 
+import com.hartwig.hmftools.patientreporter.algo.CurationFunction;
 import org.jetbrains.annotations.NotNull;
 
 public final class GainsAndLosses {
@@ -35,11 +37,11 @@ public final class GainsAndLosses {
 
     @NotNull
     public static Set<String> amplifiedGenes(@NotNull List<GainLoss> reportableGainLosses) {
-        Set<String> genes = Sets.newHashSet();
+        Set<String> genes = new TreeSet<String>();
         for (GainLoss gainLoss : reportableGainLosses) {
             if (gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN
                     || gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN) {
-                genes.add(gainLoss.gene());
+                genes.add(CurationFunction.curateGeneNamePdf(gainLoss.gene()));
             }
         }
         return genes;
@@ -47,11 +49,11 @@ public final class GainsAndLosses {
 
     @NotNull
     public static Set<String> lostGenes(@NotNull List<GainLoss> reportableGainLosses) {
-        Set<String> genes = Sets.newHashSet();
+        Set<String> genes = new TreeSet<String>();
         for (GainLoss gainLoss : reportableGainLosses) {
             if (gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS
                     || gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS) {
-                genes.add(gainLoss.gene());
+                genes.add(CurationFunction.curateGeneNamePdf(gainLoss.gene()));
             }
         }
         return genes;

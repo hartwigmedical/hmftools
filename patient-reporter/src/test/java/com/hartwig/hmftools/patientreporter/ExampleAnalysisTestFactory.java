@@ -1279,7 +1279,7 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
                 .source(forceCDKN2AVariantToBeGermline ? ReportableVariantSource.GERMLINE : ReportableVariantSource.SOMATIC)
-                .gene("CDKN2A (p14Arf)")
+                .gene("CDKN2A (p14ARF)")
                 .transcript("ENST00000579755")
                 .isCanonical(false)
                 .chromosome("9")
