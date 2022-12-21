@@ -777,6 +777,7 @@ Notes:
 ##### Special rules for IG rearrangements
 In the special case of IG enhancer rearrangements, the rearrangement normally occurs either between the ‘D’ and ‘J’ region (due to RAG mediation D-J recombination failure – common in IGH-BCL2 fusions) or in the switch region just upstream of the constant regions (due to failure of isoform switching mechanisms – common in IGH-MYC rearrangements). In the former case, the Eµ enhancer is the likely driver of elevated expression whereas in the latter the driver is likely the alpha 1,2 & 3 regulatory region enhancer [ref: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6199666/]. To predict a relevant rearrangement, Linx only requires that the breakend in IG is oriented downstream towards the enhancer regions and is is prior to the 1st coding base of the 3’ gene partner.   There is no requirement for consecutive splice acceptor and donors.
 
+
 ##### Special rules for single breakends which align to a site which forms a pathogenic fusion
 The post processing steps of GRIDSS annotate the best alignments for the insert sequence of single breakends which cannot be uniquely mapped. If any single breakend has an alignment which would create fusion matching a known fusion or a known IG rearrangement in our knowledge base then that fusion is called as if the single breakend was a translocation to that alignment. 
 
@@ -785,7 +786,8 @@ The post processing steps of GRIDSS annotate the best alignments for the insert 
 Linx also has special rules to support unusual biology for a handful of known pathogenic fusions:
 - For CIC_DUX4 and IGH_DUX4, the DUX4 end may map to a number of different chromosomal regions, including the telomeric ends of both chromosomes 10q and 4q and the 37 alt contig GL000228.1.
 - For RP11-356O9.1_ETV1 fusion (pathogenic in Prostate cancer) the breakend on the 5’ side breakend is permitted to be up to 20kb downstream of RP11-356O9.1.
-- In the case of IGH-BCL2 (common in Folicular Lymphomas) & IGH-MYC, Linx also looks for fusions in the 3’UTR region and up to 50k bases downstream of BCL2 (and 500k bases downstream of MYC) facing in the upstream orientation towards the gene [ref: http://atlasgeneticsoncology.org/Genes/BCL2ID49.html ].
+- In the case of IGH-BCL2 (common in Folicular Lymphomas) & IGH-MYC, Linx also looks for fusions in the 3’UTR region and up to 50k bases downstream of BCL2 (and 500k bases downstream of MYC) facing in the upstream orientation towards the gene [ref: http://atlasgeneticsoncology.org/Genes/BCL2ID49.html ].  In the case of IGH-MYC we also allow an extended distance upstream of 250kb in case the enhancer is fused upstream of MYC.
+- TERT and C19MC promoter regions are promiscuous targets for enhancer rearrangements. Any breakpoint with the correct orientation within a specified distance upstream of these genes is called as a a PROMISCUOUS_ENHANCER_TARGET. 
 
 ##### Prioritise genes and transcripts
 Each candidate chained splice acceptor and splice donor fusion pair may have multiple gene fusion transcripts on both the 5’ gene and 3’ gene that meet the above criteria. Occasionally genes may also share a splice acceptor or splice donor in which case the transcripts of that groups of genes are considered together. Linx prioritizes the potential transcript candidates and choose a single pair of 5’ and 3’ transcripts via the following criteria in order of priority:
