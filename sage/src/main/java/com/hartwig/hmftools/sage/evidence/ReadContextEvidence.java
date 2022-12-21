@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -20,6 +21,7 @@ import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -53,7 +55,6 @@ public class ReadContextEvidence
     private QualityCalculator mQualityCalculator;
     private List<ReadContextCounter> mReadCounters; // has one per candidate
     private int mLastCandidateIndex;
-    private int mMaxDeleteLength;
 
     private VariantPhaser mVariantPhaser;
     private String mCurrentSample;
@@ -73,7 +74,6 @@ public class ReadContextEvidence
         mQualityCalculator = null;
         mReadCounters = null;
         mLastCandidateIndex = 0;
-        mMaxDeleteLength = 0;
         mVariantPhaser = null;
         mCurrentSample = null;
         mCachedReads = Maps.newHashMap();
@@ -89,12 +89,18 @@ public class ReadContextEvidence
         if(candidates.isEmpty())
             return mReadCounters;
 
-        mMaxDeleteLength = candidates.stream()
-                .filter(x -> x.variant().isIndel())
-                .mapToInt(x -> max(x.variant().ref().length() - x.variant().alt().length(), 0)).max().orElse(0);
 
-        if(mMaxDeleteLength >= 5)
-            mReadCounters.forEach(x -> x.setMaxCandidateDeleteLength(mMaxDeleteLength));
+        List<Candidate> deleteCandidates = candidates.stream().filter(x -> x.variant().isDelete()).collect(Collectors.toList());
+
+        for(ReadContextCounter readContextCounter : mReadCounters)
+        {
+            int maxCloseDel = deleteCandidates.stream()
+                    .filter(x -> abs(x.position() - x.position()) < 50)
+                    .mapToInt(x -> x.variant().ref().length() - 1).max().orElse(0);
+
+            if(maxCloseDel >= 5)
+                readContextCounter.setMaxCandidateDeleteLength(maxCloseDel);
+        }
 
         final Candidate firstCandidate = candidates.get(0);
         final Candidate lastCandidate = candidates.get(candidates.size() - 1);
@@ -229,13 +235,11 @@ public class ReadContextEvidence
         if(record.getCigar().getFirstCigarElement().getOperator() == S)
         {
             readStart -= record.getCigar().getFirstCigarElement().getLength();;
-            readStart -= mMaxDeleteLength; // account for deleted bases being the cause of the soft-clipping
         }
 
         if(record.getCigar().getLastCigarElement().getOperator() == S)
         {
             readEnd += record.getCigar().getLastCigarElement().getLength();
-            readEnd += mMaxDeleteLength;
         }
 
         // first look back from the last-used index
@@ -253,6 +257,8 @@ public class ReadContextEvidence
             {
                 mLastCandidateIndex = prevIndex;
                 readCounters.add(0, readCounter);
+                readStart -= readCounter.maxCandidateDeleteLength();
+                readEnd += readCounter.maxCandidateDeleteLength();
             }
             else if(readCounter.position() < readStart)
             {

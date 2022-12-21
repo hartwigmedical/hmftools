@@ -330,7 +330,6 @@ public class SageConfig
         options.addOption(COVERAGE_BED, true, "Coverage is calculated for optionally supplied bed");
         options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
         options.addOption(LOG_LPS_DATA, false, "Log local phasing data");
-        options.addOption(LOG_EVIDENCE_READS, false, "Write evidence read data");
         options.addOption(PERF_WARN_TIME, true, "Log details of partitions taking longer than X seconds");
 
         commonOptions().getOptions().forEach(options::addOption);
@@ -360,6 +359,7 @@ public class SageConfig
         options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
         options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence in panel [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
         options.addOption(SYNC_FRAGMENTS, false, "Handle overlapping fragment reads in evidence phase");
+        options.addOption(LOG_EVIDENCE_READS, false, "Write evidence read data");
 
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
         QualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);

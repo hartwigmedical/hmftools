@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.sage.append;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageApplication.createCommandLine;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.appendHeader;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,6 +62,9 @@ public class SageAppendApplication
         SG_LOGGER.info("SAGE version: {}", version.version());
 
         final CommandLine cmd = createCommandLine(args, options);
+
+        setLogLevel(cmd);
+
         mConfig = new SageConfig(true, version.version(), cmd);
         mInputVcf = mConfig.SampleDataDir + cmd.getOptionValue(INPUT_VCF);
 
@@ -226,6 +231,8 @@ public class SageAppendApplication
                 return false;
             }
         }
+
+        appendHeader(header);
 
         return true;
     }

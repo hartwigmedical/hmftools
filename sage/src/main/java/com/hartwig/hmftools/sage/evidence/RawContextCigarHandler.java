@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
-import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -38,9 +37,6 @@ public class RawContextCigarHandler implements CigarHandler
         if(mVariant.position() > record.getAlignmentStart())
             return;
 
-        if(ignoreSoftClipAdapter(record))
-            return;
-
         int readStartPos = record.getReadPositionAtReferencePosition(record.getAlignmentStart());
         int readIndex = readStartPos - 1 - record.getAlignmentStart()
                 + mVariant.position() - mVariant.alt().length() + mVariant.ref().length();
@@ -60,9 +56,6 @@ public class RawContextCigarHandler implements CigarHandler
         int refPositionEnd = refPosition + element.getLength() - 1;
         if(refPositionEnd < mVariant.position())
             return;
-
-         if(ignoreSoftClipAdapter(record))
-             return;
 
         if(mIsInsert)
         {

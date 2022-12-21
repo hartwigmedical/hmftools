@@ -164,7 +164,6 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_BASE_QUALITY, 2, VCFHeaderLineType.Integer, "Raw allelic base quality"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 7, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
-        // header.addMetaDataLine(new VCFFormatHeaderLine(SC_INSERT_SUPPORT, 1, VCFHeaderLineType.Integer, SC_INSERT_SUPPORT_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(
@@ -205,10 +204,15 @@ public class VariantVCF implements AutoCloseable
         return header;
     }
 
+    public static void appendHeader(final VCFHeader header)
+    {
+        if(!header.hasFormatLine(AVG_BASE_QUAL))
+            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
+    }
+
     @Override
     public void close()
     {
         mWriter.close();
     }
-
 }

@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_S
 import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
+import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
@@ -200,7 +201,9 @@ public class ReadContextCounter implements VariantHotspot
     }
 
     public int softClipInsertSupport() { return mSoftClipInsertSupport; }
+
     public void setMaxCandidateDeleteLength(int length) { mMaxCandidateDeleteLength = length; }
+    public int maxCandidateDeleteLength() { return mMaxCandidateDeleteLength; }
 
     public List<Integer> localPhaseSets() { return mLocalPhaseSets; }
     public List<int[]> lpsCounts() { return mLpsCounts; }
@@ -225,6 +228,9 @@ public class ReadContextCounter implements VariantHotspot
             return UNRELATED;
 
         if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < DEFAULT_EVIDENCE_MAP_QUAL)
+            return UNRELATED;
+
+        if(ignoreSoftClipAdapter(record))
             return UNRELATED;
 
         RawContext rawContext = RawContext.create(mVariant, record);
