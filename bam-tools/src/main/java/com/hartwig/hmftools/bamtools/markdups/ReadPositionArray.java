@@ -5,13 +5,15 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.bamtools.ReadGroup;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.google.common.collect.Sets;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -19,24 +21,26 @@ public class ReadPositionArray
 {
     // a ring buffer to store reads at each read starting position
     private final String mChromosome;
-    private final PositionReadGroups[] mElements;
-    private final Consumer<PositionReadGroups> mReadGroupHandler;
+    private final PositionFragments[] mForwardPositionGroups;
+    private final Map<Integer, PositionFragments> mReversePositionGroups;
+    private final Map<String,Fragment> mFragments;
+    private final Consumer<PositionFragments> mReadGroupHandler;
     private int mMinPosition;
     private int mMinPositionIndex;
 
     private final int mCapacity;
 
-    public ReadPositionArray(final String chromosome, int capacity, final Consumer<PositionReadGroups> evictionHandler)
+    public ReadPositionArray(final String chromosome, int capacity, final Consumer<PositionFragments> evictionHandler)
     {
         mChromosome = chromosome;
         mReadGroupHandler = evictionHandler;
         mCapacity = capacity;
-        mElements = new PositionReadGroups[mCapacity];
+        mForwardPositionGroups = new PositionFragments[mCapacity];
+        mReversePositionGroups = Maps.newHashMap();
+        mFragments = Maps.newHashMap();
         mMinPosition = 0;
         mMinPositionIndex = 0;
     }
-
-    public boolean withinRange(int position) { return position >= mMinPosition && position < mMinPosition + mCapacity; }
 
     public boolean processRead(final SAMRecord read)
     {
@@ -70,108 +74,80 @@ public class ReadPositionArray
                 - with mate within current range - look up and add
                 - otherwise return unhandled
         */
-        SupplementaryReadData suppData = read.getSupplementaryAlignmentFlag() ? SupplementaryReadData.from(read) : null;
+
+        // for supplementaries, add the read if the non-supplmentaries have already been stored
+        if(read.getSupplementaryAlignmentFlag())
+            return storeAdditionalRead(read);
 
         if(!read.getReadPairedFlag() || read.getMateUnmappedFlag())
         {
-            // could be a secondary or supplementary, otherwise store
-            if(read.getSupplementaryAlignmentFlag())
-            {
-                if(suppData.Chromosome.equals(mChromosome) && withinRange(suppData.Position))
-                {
-                    return storeAdditionalRead(read, suppData.Position);
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            storeLowerRead(read);
+            storeInitialRead(read);
             return true;
-        }
-
-        int matePosStart = read.getMateAlignmentStart();
-        String mateStr = read.getMateReferenceName();
-
-        if(read.getSupplementaryAlignmentFlag())
-        {
-            if(mateStr.equals(mChromosome) && withinRange(matePosStart))
-            {
-                return storeAdditionalRead(read, matePosStart);
-            }
-            else if(suppData.Chromosome.equals(mChromosome) && withinRange(suppData.Position))
-            {
-                return storeAdditionalRead(read, suppData.Position);
-            }
-            else
-            {
-                return false;
-            }
         }
 
         // mate is elsewhere so store this primary read
-        if(!mateStr.equals(mChromosome))
+        if(!read.getMateReferenceName().equals(mChromosome))
         {
-            storeLowerRead(read);
+            storeInitialRead(read);
             return true;
         }
 
-        int readPosStart = read.getAlignmentStart();
-        if(readPosStart <= matePosStart)
+        Fragment readGroup = mFragments.get(read.getReadName());
+
+        if(readGroup != null)
         {
-            storeLowerRead(read);
+            readGroup.addRead(read);
             return true;
         }
 
-        // higher of 2 reads on the same chromosome
-        if(withinRange(matePosStart))
-        {
-            return storeAdditionalRead(read, matePosStart);
-        }
-        else
-        {
-            // will be linked via the group combiner cache
-            return false;
-        }
+        storeInitialRead(read);
+        return true;
     }
 
-    private void storeLowerRead(final SAMRecord read)
+    private void storeInitialRead(final SAMRecord read)
     {
-        int index = calcIndex(read.getAlignmentStart());
+        Fragment fragment = new Fragment(read);
+        int fragmentPosition = fragment.initialPosition();
 
-        PositionReadGroups element = mElements[index];
-        if(element == null)
+        mFragments.put(read.getReadName(), fragment);
+
+        if(orientation(read) == POS_ORIENT)
         {
-            element = new PositionReadGroups(read);
-            mElements[index] = element;
-        }
-        else
-        {
-            // check for existing reads with mate at the same position
-            ReadGroup readGroup = element.ReadGroups.get(read.getReadName());
+            int index = calcIndex(fragmentPosition);
 
-            if(readGroup != null)
-                readGroup.addRead(read);
-            else
-                element.ReadGroups.put(read.getReadName(), new ReadGroup(read));
-        }
-    }
-
-    private boolean storeAdditionalRead(final SAMRecord read, int lowerPosStart)
-    {
-        int index = calcIndex(lowerPosStart);
-
-        PositionReadGroups element = mElements[index];
-        if(element != null)
-        {
-            ReadGroup readGroup = element.ReadGroups.get(read.getReadName());
-
-            if(readGroup != null)
+            PositionFragments element = mForwardPositionGroups[index];
+            if(element == null)
             {
-                readGroup.addRead(read);
-                return true;
+                element = new PositionFragments(fragment, fragmentPosition);
+                mForwardPositionGroups[index] = element;
             }
+            else
+            {
+                element.Fragments.add(fragment);
+            }
+        }
+        else
+        {
+            // store in reverse strand map
+            PositionFragments element = mReversePositionGroups.get(fragmentPosition);
+            if(element == null)
+            {
+                element = new PositionFragments(fragment, fragmentPosition);
+                mReversePositionGroups.put(fragmentPosition, element);
+            }
+
+            element.Fragments.add(fragment);
+        }
+    }
+
+    private boolean storeAdditionalRead(final SAMRecord read)
+    {
+        Fragment fragment = mFragments.get(read.getReadName());
+
+        if(fragment != null)
+        {
+            fragment.addRead(read);
+            return true;
         }
 
         return false;
@@ -210,6 +186,8 @@ public class ReadPositionArray
     {
         int flushCount = 0;
 
+        Set<String> flushedReadIds = null;
+
         if(position > 0)
         {
             if(mMinPosition == 0)
@@ -233,19 +211,26 @@ public class ReadPositionArray
         // only iterate at most once through the array
         for(int i = 0; i < min(flushCount, mCapacity); i++)
         {
-            PositionReadGroups element = mElements[mMinPositionIndex];
+            PositionFragments element = mForwardPositionGroups[mMinPositionIndex];
 
             // clear and process each element and depth
             if(element != null)
             {
+                if(flushedReadIds == null)
+                    flushedReadIds = Sets.newHashSet();
+
                 mReadGroupHandler.accept(element);
-                mElements[mMinPositionIndex].ReadGroups.clear();
-                mElements[mMinPositionIndex] = null;
+
+                for(Fragment fragment : element.Fragments)
+                    flushedReadIds.add(fragment.id());
+
+                mForwardPositionGroups[mMinPositionIndex].Fragments.clear();
+                mForwardPositionGroups[mMinPositionIndex] = null;
             }
 
             mMinPosition++;
 
-            if(mMinPositionIndex + 1 >= mElements.length)
+            if(mMinPositionIndex + 1 >= mForwardPositionGroups.length)
                 mMinPositionIndex = 0;
             else
                 ++mMinPositionIndex;
@@ -253,6 +238,25 @@ public class ReadPositionArray
 
         if(flushCount >= mCapacity)
             resetMinPosition(position);
+
+        if(!flushedReadIds.isEmpty())
+        {
+            Set<Integer> flushedPositions = Sets.newHashSet();
+            for(Map.Entry<Integer, PositionFragments> entry : mReversePositionGroups.entrySet())
+            {
+                if(position < 0 || entry.getKey() < position)
+                {
+                    flushedPositions.add(entry.getKey());
+
+                    for(Fragment fragment : entry.getValue().Fragments)
+                        flushedReadIds.add(fragment.id());
+
+                    mReadGroupHandler.accept(entry.getValue());
+                }
+            }
+
+            flushedPositions.forEach(x -> mReversePositionGroups.remove(x));
+        }
     }
 
     private void resetMinPosition(int position)

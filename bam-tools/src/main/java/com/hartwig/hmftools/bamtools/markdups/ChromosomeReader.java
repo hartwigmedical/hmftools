@@ -1,17 +1,11 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
-import static com.hartwig.hmftools.bamtools.markdups.DuplicateGroup.calcBaseQualTotal;
-import static com.hartwig.hmftools.bamtools.markdups.DuplicateGroup.hasDuplicates;
-import static com.hartwig.hmftools.bamtools.markdups.DuplicateGroup.upperCoordsMatch;
-import static com.hartwig.hmftools.bamtools.markdups.DuplicateStatus.DUPLICATE;
-import static com.hartwig.hmftools.bamtools.markdups.DuplicateStatus.PRIMARY;
-import static com.hartwig.hmftools.bamtools.markdups.GroupCombiner.formChromosomePartition;
-import static com.hartwig.hmftools.bamtools.markdups.ReadGroupInfo.maxPositionStart;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosomePartition;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.reconcileFragments;
 
 import java.io.File;
 import java.util.List;
@@ -24,9 +18,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.bamtools.ReadGroup;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -35,7 +27,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class ChromosomeReader implements Consumer<PositionReadGroups>, Callable
+public class ChromosomeReader implements Consumer<PositionFragments>, Callable
 {
     private final MarkDupsConfig mConfig;
     private final ChrBaseRegion mRegion;
@@ -44,15 +36,14 @@ public class ChromosomeReader implements Consumer<PositionReadGroups>, Callable
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
-    private final GroupCombiner mGroupCombiner;
+    private final GroupCombiner mRemoteGroupCombiner;
     private final RecordWriter mRecordWriter;
     private final ReadPositionArray mReadPositions;
 
-    private final Map<String,List<SAMRecord>> mSupplementaries;
-    private final Map<String,ReadGroupInfo> mReadGroupInfos;
-
-    private final List<SAMRecord> mPendingReads;
-    private final List<DuplicateStatus> mPendingDuplicateState;
+    // private final GroupCombiner mLocalGroupCombiner;
+    private final Map<String,Fragment> mPartitionSupplementaries;
+    private final Map<String,Fragment> mPartitionResolvedFragments;
+    private final List<PositionFragments> mPartitionIncompletePositionFragments;
 
     private final boolean mLogReadIds;
     private int mTotalRecordCount;
@@ -66,7 +57,7 @@ public class ChromosomeReader implements Consumer<PositionReadGroups>, Callable
     {
         mConfig = config;
         mRegion = region;
-        mGroupCombiner = groupCombiner;
+        mRemoteGroupCombiner = groupCombiner;
 
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
@@ -77,8 +68,10 @@ public class ChromosomeReader implements Consumer<PositionReadGroups>, Callable
         mRecordWriter = recordWriter;
         mReadPositions = new ReadPositionArray(region.Chromosome, config.BufferSize, this);
 
-        mSupplementaries = Maps.newHashMap();
-        mReadGroupInfos = Maps.newHashMap();
+        // mLocalGroupCombiner = new GroupCombiner(mRecordWriter);
+        mPartitionSupplementaries = Maps.newHashMap();
+        mPartitionResolvedFragments = Maps.newHashMap();
+        mPartitionIncompletePositionFragments = Lists.newArrayList();
 
         if(!mConfig.SpecificRegions.isEmpty())
         {
@@ -93,9 +86,6 @@ public class ChromosomeReader implements Consumer<PositionReadGroups>, Callable
 
         mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
         mTotalRecordCount = 0;
-
-        mPendingReads = Lists.newArrayList();
-        mPendingDuplicateState = Lists.newArrayList();
 
         mStats = new DuplicateStats();
 
@@ -137,29 +127,53 @@ public class ChromosomeReader implements Consumer<PositionReadGroups>, Callable
             mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
         }
 
+        /*
         for(List<SAMRecord> supplementaries : mSupplementaries.values())
         {
-            supplementaries.forEach(x -> mRecordWriter.writeRecord(x, DuplicateStatus.NONE));
+            supplementaries.forEach(x -> mRecordWriter.writeRecord(x, FragmentStatus.NONE));
         }
+        */
 
         onPartitionComplete(false);
-        flushPendingReads();
 
         BM_LOGGER.info("chromosome({}) complete, reads({})", mRegion.Chromosome, mTotalRecordCount);
-        mSupplementaries.clear();
-        mReadGroupInfos.clear();
         mReadsProcessed.clear();
     }
 
     private void onPartitionComplete(boolean setupNext)
     {
         mReadPositions.evictAll();
-        mGroupCombiner.partitionComplete(mCurrentStrPartition);
+
+        // first try to assign any supplementaries in this partition to their fragments
+        reconcileFragments(mPartitionSupplementaries, mPartitionResolvedFragments, mPartitionIncompletePositionFragments);
+
+        List<Fragment> remoteSupplementaries = mPartitionSupplementaries.values().stream().collect(Collectors.toList());
+        List<Fragment> resolvedFragments = mPartitionResolvedFragments.values().stream().collect(Collectors.toList());
+
+        int i = 0;
+        while(i < resolvedFragments.size())
+        {
+            Fragment fragment = resolvedFragments.get(i);
+
+            if(fragment.allReadsPresent())
+            {
+                mRecordWriter.writeFragment(fragment);
+                resolvedFragments.remove(i);
+            }
+            else
+            {
+                ++i;
+            }
+        }
+
+        mRemoteGroupCombiner.processPartitionFragments(
+                mCurrentStrPartition, resolvedFragments, mPartitionIncompletePositionFragments, remoteSupplementaries);
 
         mPerfCounter.stop();
 
-        BM_LOGGER.debug("partition({}:{}) complete, cached(supps={} readGroups={})",
-                mRegion.Chromosome, mCurrentPartition, mSupplementaries.size(), mReadGroupInfos.size());
+        BM_LOGGER.debug("partition({}:{}) complete, cached(supps={} resolved={} incompletes={})",
+                mRegion.Chromosome, mCurrentPartition, mPartitionSupplementaries.size(), mPartitionResolvedFragments.size(),
+                mPartitionIncompletePositionFragments.size());
 
         if(setupNext)
         {
@@ -167,18 +181,14 @@ public class ChromosomeReader implements Consumer<PositionReadGroups>, Callable
             mCurrentPartition.setEnd(mCurrentPartition.start() + mConfig.PartitionSize);
             mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
 
-            // remove any group info with an expected start position now before the new partition
-            Set<String> purgeReadIds = Sets.newHashSet();
-            for(ReadGroupInfo groupInfo : mReadGroupInfos.values())
-            {
-                if(groupInfo.ExpectedRange.end() < mCurrentPartition.start())
-                    purgeReadIds.add(groupInfo.ReadId);
-            }
-
-            purgeReadIds.forEach(x -> mReadGroupInfos.remove(x));
-
             perfCounterStart();
         }
+
+        mPartitionResolvedFragments.clear();
+        mPartitionIncompletePositionFragments.clear();
+        mPartitionSupplementaries.clear();
+
+        System.gc();
     }
 
     private void processSamRecord(final SAMRecord read)
@@ -208,226 +218,40 @@ public class ChromosomeReader implements Consumer<PositionReadGroups>, Callable
 
         if(!mReadPositions.processRead(read))
         {
-            processNonPositionArrayRead(read);
+            // currently only supplementaries will not be stored against their initial fragment position or in an existing fragment
+            processSupplementary(read);
         }
     }
 
-    private void processNonPositionArrayRead(final SAMRecord read)
+    private void processSupplementary(final SAMRecord read)
     {
-        // reasons for unhandled records:
-        // - supplementaries not linked to a local group
-        // - higher read with mate already processed (possibly in this partition)
-
-        // check if this record's group has been handled already in this partition
-        if(read.getSupplementaryAlignmentFlag())
-        {
-            SupplementaryReadData suppData = SupplementaryReadData.from(read);
-
-            if(!suppData.Chromosome.equals(mRegion.Chromosome) || !mCurrentPartition.containsPosition(suppData.Position))
-            {
-                mGroupCombiner.handleSupplementary(read, mCurrentStrPartition);
-                return;
-            }
-            else if(suppData.Position > read.getAlignmentStart())
-            {
-                List<SAMRecord> supplementaries = mSupplementaries.get(read.getReadName());
-
-                if(supplementaries == null)
-                {
-                    supplementaries = Lists.newArrayList();
-                    mSupplementaries.put(read.getReadName(), supplementaries);
-                }
-
-                supplementaries.add(read);
-                return;
-            }
-        }
-
-        // check for a previously processed group
-        ReadGroupInfo groupInfo = mReadGroupInfos.get(read.getReadName());
-
-        if(groupInfo == null)
-        {
-            // a mistake has been made?
-            writeRead(read, DuplicateStatus.NONE);
-        }
-        else
-        {
-            writeRead(read, groupInfo.Status);
-
-            // remove this read group info if no further reads on this chromosome are expected
-            int maxPositionStart = maxPositionStart(read);
-
-            if(groupInfo.ExpectedRange.end() == maxPositionStart)
-                mReadGroupInfos.remove(read.getReadName());
-            else
-                groupInfo.ExpectedRange.setEnd(maxPositionStart);
-        }
+        Fragment fragment = new Fragment(read);
+        mPartitionSupplementaries.put(fragment.id(), fragment);
     }
 
-    private void processCandidateReadGroup(final ReadGroup readGroup, DuplicateStatus dupStatus)
+    public void accept(final PositionFragments positionFragments)
     {
-        ReadGroupInfo readGroupInfo = new ReadGroupInfo(readGroup, dupStatus, mCurrentPartition);
+        List<Fragment> resolvedFragments = Lists.newArrayList();
+        List<PositionFragments> incompletePositionFragments = Lists.newArrayList();
 
-        writeReadGroup(readGroup, readGroupInfo.Status);
+        classifyFragments(positionFragments, resolvedFragments, incompletePositionFragments);
 
-        if(readGroupInfo.IsComplete)
-            return;
-
-        if(readGroupInfo.ExpectedRange.start() < readGroupInfo.CurrentRange.start())
+        int unclearFragments = incompletePositionFragments.stream().mapToInt(x -> x.Fragments.size()).sum();
+        if(positionFragments.Fragments.size() != resolvedFragments.size() + unclearFragments)
         {
-            // check supplementaries
-            List<SAMRecord> supplementaries = mSupplementaries.get(readGroup.id());
+            BM_LOGGER.error("failed to classify all fragments");
+        }
 
-            if(supplementaries != null)
+        for(Fragment fragment : resolvedFragments)
+        {
+            if(!fragment.status().isResolved())
             {
-                mSupplementaries.remove(readGroup.id());
-                supplementaries.forEach(x -> writeRead(x, readGroupInfo.Status));
+                BM_LOGGER.error("fragment({}) incorrectly in resolved list", fragment);
             }
         }
 
-        if(readGroupInfo.ExpectedRange.end() > readGroupInfo.CurrentRange.end())
-        {
-            // mate reads in a later partition expected
-            mReadGroupInfos.put(readGroup.id(), readGroupInfo);
-        }
-
-        if(readGroupInfo.ChrPartitions != null)
-        {
-            mGroupCombiner.processReadGroup(readGroup.id(), readGroupInfo.ChrPartitions, readGroupInfo.Status);
-        }
-    }
-
-    public void accept(final PositionReadGroups positionReadGroups)
-    {
-        // identify duplicate groups, and cache any of these which aren't complete
-        int i = 0;
-
-        List<ReadGroup> readGroups = positionReadGroups.ReadGroups.values().stream().collect(Collectors.toList());
-        List<DuplicateGroup> duplicateGroups = Lists.newArrayList();
-
-        while(i < readGroups.size() - 1)
-        {
-            ReadGroup readGroup1 = readGroups.get(i);
-
-            ChrBaseRegion lowerCoords1 = DuplicateGroup.lowerCoords(readGroup1);
-            ChrBaseRegion upperCoords1 = DuplicateGroup.upperCoords(readGroup1);
-
-            DuplicateGroup duplicateGroup = null;
-
-            int j = i + 1;
-
-            while(j < readGroups.size())
-            {
-                ReadGroup readGroup2 = readGroups.get(j);
-
-                ChrBaseRegion lowerCoords2 = DuplicateGroup.lowerCoords(readGroup2);
-
-                if(!lowerCoords1.matches(lowerCoords2))
-                {
-                    ++j;
-                    continue;
-                }
-
-                ChrBaseRegion upperCoords2 = DuplicateGroup.upperCoords(readGroup2);
-
-                if(!upperCoordsMatch(upperCoords1, upperCoords2))
-                {
-                    ++j;
-                    continue;
-                }
-
-                // form a new group
-                if(duplicateGroup == null)
-                {
-                    duplicateGroup = new DuplicateGroup(lowerCoords1, upperCoords1, readGroup1, readGroup2);
-                    duplicateGroups.add(duplicateGroup);
-                }
-                else
-                {
-                    duplicateGroup.readGroups().add(readGroup2);
-                }
-
-                readGroups.remove(j);
-            }
-
-            if(duplicateGroup != null)
-                readGroups.remove(i);
-            else
-                ++i;
-        }
-
-        for(DuplicateGroup duplicateGroup : duplicateGroups)
-        {
-            // primary non-duplicate is the fragment with the highest base qual
-            ReadGroup primaryGroup = duplicateGroup.findPrimaryGroup(true);
-
-            if(mConfig.RunChecks)
-            {
-                // log discrepancies
-                ReadGroup calcPrimaryGroup = duplicateGroup.findPrimaryGroup(false);
-
-                boolean logDiscrepancy = false;
-
-                if(primaryGroup != calcPrimaryGroup && calcBaseQualTotal(primaryGroup) != calcBaseQualTotal(calcPrimaryGroup))
-                    logDiscrepancy = true;
-                else if(duplicateGroup.readGroups().stream().anyMatch(x -> hasDuplicates(x) == (x == primaryGroup)))
-                    logDiscrepancy = true;
-
-                if(logDiscrepancy)
-                {
-                    for(ReadGroup readGroup : duplicateGroup.readGroups())
-                    {
-                        BM_LOGGER.trace("readGroup({}) hasDups({}) isPrimary({}) baseQualTotal({})",
-                                readGroup.toString(), hasDuplicates(readGroup), readGroup == primaryGroup, calcBaseQualTotal(readGroup));
-                    }
-                }
-            }
-
-            for(ReadGroup readGroup : duplicateGroup.readGroups())
-            {
-                DuplicateStatus dupStatus = readGroup == primaryGroup ? PRIMARY : DUPLICATE;
-                processCandidateReadGroup(readGroup, dupStatus);
-            }
-        }
-
-        readGroups.forEach(x -> processCandidateReadGroup(x, DuplicateStatus.NONE));
-    }
-
-    private void writeReadGroup(final ReadGroup readGroup, DuplicateStatus duplicateStatus)
-    {
-        readGroup.reads().forEach(x -> writeRead(x, duplicateStatus));
-    }
-
-    private void writeRead(final SAMRecord read, DuplicateStatus duplicateStatus)
-    {
-        if(mConfig.WriteCacheSize == 0)
-        {
-            mRecordWriter.writeRecord(read, duplicateStatus);
-            return;
-        }
-
-        if(mPendingReads.size() >= mConfig.WriteCacheSize)
-        {
-            flushPendingReads();
-            mRecordWriter.writeRecord(read, duplicateStatus);
-        }
-        else
-        {
-            mPendingReads.add(read);
-            mPendingDuplicateState.add(duplicateStatus);
-        }
-    }
-
-    private void flushPendingReads()
-    {
-        for(int i = 0; i < mPendingReads.size(); ++i)
-        {
-            mRecordWriter.writeRecord(mPendingReads.get(i), mPendingDuplicateState.get(i));
-        }
-
-        mPendingReads.clear();
-        mPendingDuplicateState.clear();
+        resolvedFragments.forEach(x -> mPartitionResolvedFragments.put(x.id(), x));
+        mPartitionIncompletePositionFragments.addAll(incompletePositionFragments);
     }
 
     private void perfCounterStart()

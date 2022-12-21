@@ -1,0 +1,289 @@
+package com.hartwig.hmftools.bamtools.markdups;
+
+import static java.lang.Math.round;
+
+import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.markdups.Fragment.calcFragmentStatus;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.bamtools.ReadGroup;
+
+import htsjdk.samtools.SAMRecord;
+
+public class FragmentUtils
+{
+    public static boolean isComplete(final ReadGroup readGroup)
+    {
+        int expectedNonSuppCount = readGroup.reads().get(0).getReadPairedFlag() ? 2 : 1;
+        long nonSuppCount = readGroup.reads().stream().filter(x -> !x.getSupplementaryAlignmentFlag()).count();
+        return expectedNonSuppCount == nonSuppCount;
+    }
+
+    public static int getUnclippedPosition(final SAMRecord read)
+    {
+        int position;
+
+        if(orientation(read) == POS_ORIENT)
+        {
+            position = read.getAlignmentStart();
+            if(read.getCigar().isLeftClipped())
+                position -= read.getCigar().getFirstCigarElement().getLength();
+        }
+        else
+        {
+            position = read.getAlignmentEnd();
+            if(read.getCigar().isRightClipped())
+                position += read.getCigar().getLastCigarElement().getLength();
+        }
+
+        return position;
+    }
+
+    public static void classifyFragments(
+            final PositionFragments positionFragments, final List<Fragment> resolvedFragments,
+            final List<PositionFragments> incompletePositionFragments)
+    {
+        classifyFragments(positionFragments.Fragments, resolvedFragments, incompletePositionFragments);
+    }
+
+    public static void classifyFragments(
+            final List<Fragment> positionFragments, final List<Fragment> resolvedFragments,
+            final List<PositionFragments> incompletePositionFragments)
+    {
+        // take all the fragments at this initial fragment position and classify them as duplicates, non-duplicates or unclear
+        List<Fragment> allFragments = Lists.newArrayList(positionFragments);
+
+        if(allFragments.size() == 1)
+        {
+            Fragment fragment = allFragments.get(0);
+            fragment.setStatus(NONE);
+            resolvedFragments.add(fragment);
+            return;
+        }
+
+        int i = 0;
+        while(i < allFragments.size() - 1)
+        {
+            Fragment fragment1 = allFragments.get(i);
+
+            PositionFragments incompleteFragments = null;
+            List<Fragment> duplicateFragments = null;
+
+            int j = i + 1;
+
+            while(j < allFragments.size())
+            {
+                Fragment fragment2 = allFragments.get(j);
+
+                FragmentStatus status = calcFragmentStatus(fragment1, fragment2);
+
+                if(fragment1.status() != UNSET && fragment1.status() != status)
+                {
+                    BM_LOGGER.warn("fragment({}) has alt status({}) with other({})", fragment1, status, fragment2);
+                }
+                else if(status == DUPLICATE)
+                {
+                    fragment1.setStatus(status);
+                    fragment2.setStatus(status);
+
+                    if(duplicateFragments == null)
+                        duplicateFragments = Lists.newArrayList(fragment1);
+
+                    duplicateFragments.add(fragment2);
+                    allFragments.remove(j);
+                    continue;
+                }
+                else if(status == UNCLEAR)
+                {
+                    fragment1.setStatus(status);
+                    fragment2.setStatus(status);
+
+                    if(incompleteFragments == null)
+                        incompleteFragments = new PositionFragments(fragment1, fragment1.initialPosition());
+
+                    incompleteFragments.Fragments.add(fragment2);
+                    allFragments.remove(j);
+                    continue;
+                }
+
+                ++j;
+            }
+
+            if(fragment1.status().isDuplicate())
+            {
+                resolvedFragments.add(fragment1);
+
+                Fragment primary = findPrimaryFragment(duplicateFragments, true);
+                primary.setStatus(PRIMARY);
+            }
+            else if(incompleteFragments != null)
+            {
+                incompletePositionFragments.add(incompleteFragments);
+            }
+            else
+            {
+                fragment1.setStatus(NONE);
+                resolvedFragments.add(fragment1);
+            }
+
+            ++i;
+        }
+    }
+
+    private static boolean hasDuplicates(final Fragment fragment)
+    {
+        return fragment.reads().stream().anyMatch(x -> x.getDuplicateReadFlag());
+    }
+
+    public static Fragment findPrimaryFragment(final List<Fragment> fragments, boolean considerMarkedDups)
+    {
+        if(considerMarkedDups)
+        {
+            // take the primary (non-duplicate) group if there is (just) one already marked
+            List<Fragment> nonDupGroups = fragments.stream().filter(x -> !hasDuplicates(x)).collect(Collectors.toList());
+
+            if(nonDupGroups.size() == 1)
+                return nonDupGroups.get(0);
+        }
+
+        // otherwise choose the group with the highest base quality
+        Fragment maxFragment = null;
+        int maxBaseQual = 0;
+
+        for(Fragment fragment : fragments)
+        {
+            int groupBaseQual = calcBaseQualTotal(fragment);
+
+            if(groupBaseQual > maxBaseQual)
+            {
+                maxBaseQual = groupBaseQual;
+                maxFragment = fragment;
+            }
+        }
+
+        return maxFragment;
+    }
+
+    public static int calcBaseQualTotal(final Fragment fragment)
+    {
+        int readBaseCount = 0;
+        int readBaseQualTotal = 0;
+
+        for(SAMRecord read : fragment.reads())
+        {
+            if(read.getSupplementaryAlignmentFlag())
+                continue;
+
+            for(int i = 0; i < read.getBaseQualities().length; ++i)
+            {
+                ++readBaseCount;
+                readBaseQualTotal += read.getBaseQualities()[i];
+            }
+        }
+
+        return readBaseCount > 0 ? (int)round(readBaseQualTotal / (double)readBaseCount) : 0;
+    }
+
+    private static final String CHR_PARTITION_DELIM = "_";
+
+    public static String formChromosomePartition(final String chromosome, int position, int partitionSize)
+    {
+        int partition = position / partitionSize;
+        return chromosome + CHR_PARTITION_DELIM + partition;
+    }
+
+    public static void reconcileFragments(
+            final Map<String,Fragment> supplementaries, final Map<String,Fragment> resolvedFragments,
+            final List<PositionFragments> incompletePositionFragments)
+    {
+        // first add any supplementaries or incomplete fragments to resolved fragments
+
+        // link up any fragments by read ID and look for complete fragments
+        Set<PositionFragments> modifiedPositionFragments = Sets.newHashSet();
+
+        Map<String,Fragment> incompleteFragments = Maps.newHashMap();
+        incompletePositionFragments.forEach(x -> x.Fragments.forEach(y -> incompleteFragments.put(y.id(), y)));
+
+        for(Fragment fragment : resolvedFragments.values())
+        {
+            Fragment supp = supplementaries.get(fragment.id());
+
+            if(supp != null)
+            {
+                supp.reads().forEach(x -> fragment.addRead(x));
+                supplementaries.remove(supp.id());
+            }
+
+            Fragment incompleteFrag = incompleteFragments.get(fragment.id());
+
+            if(incompleteFrag != null)
+            {
+                incompleteFrag.reads().forEach(x -> fragment.addRead(x));
+                incompleteFragments.remove(supp.id());
+
+                PositionFragments positionFragments = incompletePositionFragments.stream()
+                        .filter(x -> x.Position == incompleteFrag.initialPosition()).findFirst().orElse(null);
+
+                if(positionFragments != null)
+                {
+                    positionFragments.Fragments.remove(incompleteFrag);
+                    modifiedPositionFragments.add(positionFragments);
+                }
+            }
+        }
+
+        for(PositionFragments positionFragments : modifiedPositionFragments)
+        {
+            if(positionFragments.Fragments.size() < 2)
+            {
+                for(Fragment fragment : positionFragments.Fragments)
+                {
+                    fragment.setStatus(NONE);
+                    resolvedFragments.put(fragment.id(), fragment);
+                }
+
+                incompletePositionFragments.remove(positionFragments);
+            }
+        }
+    }
+
+    /*
+
+                if(mConfig.RunChecks)
+            {
+                // log discrepancies
+                ReadGroup calcPrimaryGroup = duplicateGroup.findPrimaryGroup(false);
+
+                boolean logDiscrepancy = false;
+
+                if(primaryGroup != calcPrimaryGroup && calcBaseQualTotal(primaryGroup) != calcBaseQualTotal(calcPrimaryGroup))
+                    logDiscrepancy = true;
+                else if(duplicateGroup.readGroups().stream().anyMatch(x -> hasDuplicates(x) == (x == primaryGroup)))
+                    logDiscrepancy = true;
+
+                if(logDiscrepancy)
+                {
+                    for(ReadGroup readGroup : duplicateGroup.readGroups())
+                    {
+                        BM_LOGGER.trace("readGroup({}) hasDups({}) isPrimary({}) baseQualTotal({})",
+                                readGroup.toString(), hasDuplicates(readGroup), readGroup == primaryGroup, calcBaseQualTotal(readGroup));
+                    }
+                }
+            }
+     */
+
+}

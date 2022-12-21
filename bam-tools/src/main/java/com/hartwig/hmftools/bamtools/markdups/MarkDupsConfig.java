@@ -48,7 +48,6 @@ public class MarkDupsConfig
     public final String OutputId;
     public final boolean WriteBam;
     public final int Threads;
-    public final int WriteCacheSize;
 
     // debug
     public final List<String> SpecificChromosomes;
@@ -65,11 +64,12 @@ public class MarkDupsConfig
     private static final String READ_OUTPUTS = "read_output";
     private static final String WRITE_BAM = "write_bam";
     private static final String RUN_CHECKS = "run_checks";
-    private static final String WRITE_CACHE_SIZE = "write_cache_size";
 
     private static final int DEFAULT_PARTITION_SIZE = 1000000;
     private static final int DEFAULT_POS_BUFFER_SIZE = 10000;
-    private static final int DEFAULT_WRITE_CACHE_SIZE = 1000;
+
+    // matching constants
+    public static final int MAX_INSERT_SIZE_DIFF = 5;
 
     public MarkDupsConfig(final CommandLine cmd)
     {
@@ -114,11 +114,6 @@ public class MarkDupsConfig
                 Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
 
         Threads = parseThreads(cmd);
-
-        if(Threads <= 1)
-            WriteCacheSize = 0;
-        else
-            WriteCacheSize = Integer.parseInt(cmd.getOptionValue(WRITE_CACHE_SIZE, String.valueOf(DEFAULT_WRITE_CACHE_SIZE)));
 
         PerfDebug = cmd.hasOption(PERF_DEBUG);
         RunChecks = cmd.hasOption(RUN_CHECKS);
@@ -172,7 +167,6 @@ public class MarkDupsConfig
         options.addOption(READ_OUTPUTS, true, "Write reads: NONE (default), 'MISMATCHES', 'DUPLICATES', 'ALL'");
         options.addOption(WRITE_BAM, false, "Write BAM, default true if not write read output");
         addThreadOptions(options);
-        options.addOption(WRITE_CACHE_SIZE, true, "Write cache size (default: 1000)");
 
         addSpecificChromosomesRegionsConfig(options);
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
@@ -181,4 +175,30 @@ public class MarkDupsConfig
 
         return options;
     }
+
+    public MarkDupsConfig(int partitionSize, int bufferSize)
+    {
+        mIsValid = true;
+        SampleId = "";
+        BamFile = null;
+        RefGenomeFile = null;
+        OutputDir = null;
+        OutputId = "";
+        RefGenVersion = V37;
+
+        PartitionSize = partitionSize;
+        BufferSize = bufferSize;
+
+        SpecificChromosomes = Lists.newArrayList();
+        SpecificRegions = Lists.newArrayList();
+
+        WriteBam = false;
+        LogReadType = ReadOutput.NONE;
+
+        LogReadIds = Lists.newArrayList();
+        Threads = 0;
+        PerfDebug = false;
+        RunChecks = false;
+    }
+
 }

@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.samtools;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import static htsjdk.samtools.CigarOperator.D;
 
@@ -63,6 +65,8 @@ public final class SamRecordUtils
     {
         return record.getReadPairedFlag() && record.getMateUnmappedFlag();
     }
+
+    public static byte orientation(final SAMRecord read) { return !read.getReadNegativeStrandFlag() ? POS_ORIENT : NEG_ORIENT; }
 
     public static int getAvgBaseQuality(final SAMRecord record, int readPosition, int length)
     {

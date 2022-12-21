@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
@@ -137,14 +139,7 @@ public class ReadRecord
 
     public int range() { return PosEnd - PosStart; }
 
-    public byte orientation()
-    {
-        // first in pair has orientation of +1 if not reversed, and vice versa for the second in the pair
-        if(isFirstOfPair())
-            return !isReadReversed() ? 1 : (byte)-1;
-        else
-            return isReadReversed() ? (byte)-1 : 1;
-    }
+    public byte orientation() { return !isReadReversed() ? POS_ORIENT : NEG_ORIENT; }
 
     public int flags() { return mFlags; }
     public boolean isReadReversed() { return (mFlags & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }

@@ -4,7 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
-import static com.hartwig.hmftools.bamtools.markdups.DuplicateStatus.DUPLICATE;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.bamtools.markdups.ReadOutput.DUPLICATES;
 import static com.hartwig.hmftools.bamtools.markdups.ReadOutput.MISMATCHES;
 import static com.hartwig.hmftools.bamtools.markdups.ReadOutput.NONE;
@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.bamtools.ReadGroup;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -71,16 +70,28 @@ public class RecordWriter
     public int recordWriteCount() { return mRecordWriteCount; }
     public Set<SAMRecord> readsWritten() { return mReadsWritten; }
 
-    public synchronized void writeRecord(final SAMRecord read, DuplicateStatus duplicateStatus)
+    public synchronized void writeFragment(final Fragment fragment)
+    {
+        if(fragment.readWritten())
+        {
+            BM_LOGGER.error("fragment({}) reads already written", fragment);
+            return;
+        }
+
+        fragment.setReadWritten();
+        fragment.reads().forEach(x -> writeRecord(x, fragment.status()));
+    }
+
+    private void writeRecord(final SAMRecord read, FragmentStatus fragmentStatus)
     {
         ++mRecordWriteCount;
 
         if(BM_LOGGER.isTraceEnabled())
             mReadsWritten.add(read);
 
-        writeReadData(read, duplicateStatus);
+        writeReadData(read, fragmentStatus);
 
-        read.setDuplicateReadFlag(duplicateStatus == DUPLICATE); // overwrite any existing status
+        read.setDuplicateReadFlag(fragmentStatus == DUPLICATE); // overwrite any existing status
 
         if(mBamWriter != null)
             mBamWriter.addAlignment(read);
@@ -112,19 +123,19 @@ public class RecordWriter
         return null;
     }
 
-    private void writeReadData(final SAMRecord read, DuplicateStatus dupStatus)
+    private void writeReadData(final SAMRecord read, FragmentStatus fragmentStatus)
     {
         if(mReadWriter == null)
             return;
 
         if(mConfig.LogReadType == DUPLICATES)
         {
-            if(!read.getDuplicateReadFlag() && dupStatus == DuplicateStatus.NONE)
+            if(!read.getDuplicateReadFlag() && fragmentStatus == FragmentStatus.NONE)
                 return;
         }
         else if(mConfig.LogReadType == MISMATCHES)
         {
-            if(read.getDuplicateReadFlag() == (dupStatus == DUPLICATE))
+            if(read.getDuplicateReadFlag() == (fragmentStatus == DUPLICATE))
                 return;
         }
 
@@ -137,7 +148,7 @@ public class RecordWriter
 
             mReadWriter.write(format(",%d,%s,%d,%s,%s,%d,%s,%d",
                     abs(read.getInferredInsertSize()), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getDuplicateReadFlag(),
-                    dupStatus, read.getMappingQuality(), suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
+                    fragmentStatus, read.getMappingQuality(), suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
 
             mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s",
                     read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), read.getProperPairFlag(), read.getReadUnmappedFlag(),
