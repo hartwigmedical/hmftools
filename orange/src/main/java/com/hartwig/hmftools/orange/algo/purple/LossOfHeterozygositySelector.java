@@ -21,6 +21,7 @@ final class LossOfHeterozygositySelector {
         HRD_GENES.add("BRCA2");
         HRD_GENES.add("PALB2");
         HRD_GENES.add("RAD51C");
+        HRD_GENES.add("RAD51B");
 
         MSI_GENES.add("MSH6");
         MSI_GENES.add("MSH2");
