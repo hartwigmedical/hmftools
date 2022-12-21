@@ -73,6 +73,8 @@ public class ConclusionAlgo {
         List<HomozygousDisruption> homozygousDisruptions = roseData.linx().homozygousDisruptions();
         List<AnnotatedVirus> reportableViruses = roseData.virusInterpreter().reportableViruses();
 
+        generatePurityConclusion(conclusion, roseData.purple().purity(), roseData.purple().hasReliablePurity(), actionabilityMap);
+
         generateStartSentence(conclusion);
         generateCUPPAConclusion(conclusion, roseData.cuppaPrediction(), actionabilityMap);
         generateVariantConclusion(conclusion,
@@ -101,9 +103,7 @@ public class ConclusionAlgo {
                 oncogenic,
                 actionable);
         generateTMBConclusion(conclusion, roseData.purple().tumorMutationalBurdenPerMb(), actionabilityMap, oncogenic, actionable);
-
         generateTotalResults(conclusion, actionabilityMap, oncogenic, actionable);
-        generatePurityConclusion(conclusion, roseData.purple().purity(), roseData.purple().hasReliablePurity(), actionabilityMap);
         generateFindings(conclusion, actionabilityMap);
 
         return ImmutableActionabilityConclusion.builder().conclusion(conclusion).build();
@@ -257,8 +257,8 @@ public class ConclusionAlgo {
 
                 if (entry != null && (entry.condition() == Condition.ALWAYS || entry.condition() == Condition.ALWAYS_NO_ACTIONABLE)) {
                     String copies = " (copies: " + gainLoss.minCopies() + ")";
-                    conclusion.add("- " + gainLoss.gene() + copies + " " + entry.conclusion());
-                    actionable.add("CNV");
+                    String conclusionSentence = "- " + gainLoss.gene() + copies + " " + entry.conclusion();
+                    addSentenceToCNVConclusion(conclusionSentence, gainLoss.gene(), conclusion, actionable);
                 }
             }
 
@@ -271,10 +271,23 @@ public class ConclusionAlgo {
 
                 if (entry != null && entry.condition() == Condition.ALWAYS) {
                     String copies = " (copies: " + gainLoss.maxCopies() + ")";
-                    conclusion.add("- " + gainLoss.gene() + copies + " " + entry.conclusion());
-                    actionable.add("CNV");
+                    String conclusionSentence = "- " + gainLoss.gene() + copies + " " + entry.conclusion();
+                    addSentenceToCNVConclusion(conclusionSentence, gainLoss.gene(), conclusion, actionable);
                 }
             }
+        }
+    }
+
+    private static void addSentenceToCNVConclusion (@NotNull String conclusionSentence, @NotNull String gene,
+                                                    @NotNull List<String> conclusion, @NotNull Set<String> actionable) {
+        if (gene.equals("CDKN2A")) {
+            if (!conclusion.contains(conclusionSentence)) {
+                conclusion.add(conclusionSentence);
+                actionable.add("CNV");
+            }
+        } else {
+            conclusion.add(conclusionSentence);
+            actionable.add("CNV");
         }
     }
 
@@ -447,14 +460,14 @@ public class ConclusionAlgo {
 
             ActionabilityEntry entryReliable = actionabilityMap.get(keyReliable);
             if (entryReliable != null && entryReliable.condition() == Condition.OTHER) {
-                conclusion.add("- " + entryReliable.conclusion());
+                conclusion.add("- " + entryReliable.conclusion() + "\n");
             }
         } else if (purity < PURITY_CUTOFF) {
             ActionabilityKey keyPurity = ImmutableActionabilityKey.builder().match("PURITY").type(TypeAlteration.PURITY).build();
 
             ActionabilityEntry entry = actionabilityMap.get(keyPurity);
             if (entry != null && entry.condition() == Condition.OTHER) {
-                conclusion.add("- " + entry.conclusion().replace("XX%", DataUtil.formatPercentageRound(purity)));
+                conclusion.add("- " + entry.conclusion().replace("XX%", DataUtil.formatPercentageRound(purity)) + "\n");
             }
         }
     }
