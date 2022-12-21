@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
-import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_CORE;
 import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_FULL;
 import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_PARTIAL;
 
@@ -28,10 +27,7 @@ import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;

@@ -127,13 +127,6 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
             mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
         }
 
-        /*
-        for(List<SAMRecord> supplementaries : mSupplementaries.values())
-        {
-            supplementaries.forEach(x -> mRecordWriter.writeRecord(x, FragmentStatus.NONE));
-        }
-        */
-
         onPartitionComplete(false);
 
         BM_LOGGER.info("chromosome({}) complete, reads({})", mRegion.Chromosome, mTotalRecordCount);
@@ -204,9 +197,6 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
         {
             onPartitionComplete(true);
         }
-
-        // if(!mCurrentPartition.containsPosition(readStart))
-        //    return;
 
         if(mLogReadIds) // debugging only
         {

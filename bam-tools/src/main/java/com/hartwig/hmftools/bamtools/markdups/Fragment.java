@@ -2,10 +2,7 @@ package com.hartwig.hmftools.bamtools.markdups;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.SUPPLEMENTARY;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.getUnclippedPosition;
@@ -101,40 +98,6 @@ public class Fragment
         }
     }
 
-    public static FragmentStatus calcFragmentStatus(final Fragment first, final Fragment second)
-    {
-        if(first.unpaired() != second.unpaired())
-            return NONE;
-
-        if(first.primaryReadsPresent() == second.primaryReadsPresent())
-        {
-            if(first.unpaired())
-            {
-                return first.initialPosition() == second.initialPosition() ? DUPLICATE : NONE;
-            }
-            else
-            {
-                return first.coordinates()[SE_START] == second.coordinates()[SE_START]
-                    && first.coordinates()[SE_END] == second.coordinates()[SE_END] ? DUPLICATE : NONE;
-            }
-        }
-        else
-        {
-            if(first.initialPosition() != second.initialPosition())
-                return NONE;
-
-            // mate start positions must be within close proximity
-            SAMRecord firstRead = first.reads().get(0);
-            SAMRecord secondRead = second.reads().get(0);
-
-            if(!firstRead.getMateReferenceName().equals(secondRead.getMateReferenceName()))
-                return NONE;
-
-            return abs(firstRead.getMateAlignmentStart() - secondRead.getMateAlignmentStart()) < firstRead.getReadLength()
-                    ? UNCLEAR : NONE;
-        }
-    }
-
     public boolean hasRemotePartitions() { return mRemotePartitions != null; }
     public List<String> remotePartitions() { return mRemotePartitions; }
 
@@ -192,7 +155,7 @@ public class Fragment
         int suppCount = 0;
         int nonSuppCount = 0;
         int expectedSuppCount = 0;
-        int expectedNonSuppCount = 0;
+        int expectedNonSuppCount = 1;
 
         for(SAMRecord read : mReads)
         {
@@ -219,6 +182,7 @@ public class Fragment
             }
         }
 
+        mAllPrimaryReadsPresent = expectedNonSuppCount == nonSuppCount;
         mAllReadsPresent = (expectedNonSuppCount == nonSuppCount) && (expectedSuppCount == suppCount);
     }
 
@@ -226,63 +190,9 @@ public class Fragment
 
     public String toString()
     {
-        return String.format("reads(%d) status(%s) coords(%d - %d) initReadStart(%s:%d) id(%s)",
-                mReads.size(), mStatus, mReads.get(0).getContig(), mReads.get(0).getAlignmentStart(), id());
+        return String.format("reads(%d) status(%s) coords(%s:%d-%d) present(%s) id(%s) remotePartitions(%d)",
+                mReads.size(), mStatus, mReads.get(0).getContig(), mCoordinates[SE_START], mCoordinates[SE_END],
+                mAllReadsPresent ? "all" : (mAllPrimaryReadsPresent ? "primary" : "incomplete"), id(),
+                mRemotePartitions != null ? mRemotePartitions.size() : 0);
     }
-
-
-    /*
-
-            BaseRegion currentRange = null;
-        BaseRegion expectedRange = null;
-
-        for(SAMRecord read : mReads)
-        {
-            if(read.getReadPairedFlag() && !read.getMateUnmappedFlag())
-            {
-                if(read.getMateReferenceName().equals(chromosome))
-                {
-                    expectedRange.setStart(min(expectedRange.start(), read.getMateAlignmentStart()));
-                    expectedRange.setEnd(max(expectedRange.end(), read.getMateAlignmentStart()));
-                }
-                else
-                {
-                    chrPartitions.add(formChromosomePartition(read.getMateReferenceName(), read.getMateAlignmentStart(), partitionSize));
-                }
-            }
-
-            if(read.getSupplementaryAlignmentFlag())
-            {
-                ++suppCount;
-            }
-            else
-            {
-                ++nonSuppCount;
-            }
-
-            if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
-            {
-                if(!read.getSupplementaryAlignmentFlag())
-                {
-                    ++expectedSuppCount;
-                }
-
-                SupplementaryReadData suppData = SupplementaryReadData.from(read);
-
-                if((suppData.Chromosome.equals(chromosome)) && currentPartition.containsPosition(suppData.Position))
-                {
-                    expectedRange.setStart(min(expectedRange.start(), suppData.Position));
-                    expectedRange.setEnd(max(expectedRange.end(), suppData.Position));
-                }
-                else
-                {
-                    chrPartitions.add(formChromosomePartition(suppData.Chromosome, suppData.Position, partitionSize));
-                }
-            }
-        }
-
-        boolean isComplete = (expectedNonSuppCount == nonSuppCount) && (expectedSuppCount == suppCount);
-
-     */
-
 }

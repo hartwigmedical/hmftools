@@ -1,15 +1,17 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
-import static com.hartwig.hmftools.bamtools.markdups.Fragment.calcFragmentStatus;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
@@ -20,19 +22,11 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.bamtools.ReadGroup;
 
 import htsjdk.samtools.SAMRecord;
 
 public class FragmentUtils
 {
-    public static boolean isComplete(final ReadGroup readGroup)
-    {
-        int expectedNonSuppCount = readGroup.reads().get(0).getReadPairedFlag() ? 2 : 1;
-        long nonSuppCount = readGroup.reads().stream().filter(x -> !x.getSupplementaryAlignmentFlag()).count();
-        return expectedNonSuppCount == nonSuppCount;
-    }
-
     public static int getUnclippedPosition(final SAMRecord read)
     {
         int position;
@@ -53,6 +47,39 @@ public class FragmentUtils
         return position;
     }
 
+    public static FragmentStatus calcFragmentStatus(final Fragment first, final Fragment second)
+    {
+        if(first.unpaired() != second.unpaired())
+            return NONE;
+
+        if(first.primaryReadsPresent() && second.primaryReadsPresent())
+        {
+            if(first.unpaired())
+            {
+                return first.initialPosition() == second.initialPosition() ? DUPLICATE : NONE;
+            }
+            else
+            {
+                return first.coordinates()[SE_START] == second.coordinates()[SE_START]
+                        && first.coordinates()[SE_END] == second.coordinates()[SE_END] ? DUPLICATE : NONE;
+            }
+        }
+        else
+        {
+            if(first.initialPosition() != second.initialPosition())
+                return NONE;
+
+            // mate start positions must be within close proximity
+            SAMRecord firstRead = first.reads().get(0);
+            SAMRecord secondRead = second.reads().get(0);
+
+            if(!firstRead.getMateReferenceName().equals(secondRead.getMateReferenceName()))
+                return NONE;
+
+            return abs(firstRead.getMateAlignmentStart() - secondRead.getMateAlignmentStart()) < firstRead.getReadLength()
+                    ? UNCLEAR : NONE;
+        }
+    }
     public static void classifyFragments(
             final PositionFragments positionFragments, final List<Fragment> resolvedFragments,
             final List<PositionFragments> incompletePositionFragments)
@@ -76,9 +103,16 @@ public class FragmentUtils
         }
 
         int i = 0;
-        while(i < allFragments.size() - 1)
+        while(i < allFragments.size())
         {
             Fragment fragment1 = allFragments.get(i);
+
+            if(i == allFragments.size() - 1)
+            {
+                fragment1.setStatus(NONE);
+                resolvedFragments.add(fragment1);
+                break;
+            }
 
             PositionFragments incompleteFragments = null;
             List<Fragment> duplicateFragments = null;
@@ -91,7 +125,7 @@ public class FragmentUtils
 
                 FragmentStatus status = calcFragmentStatus(fragment1, fragment2);
 
-                if(fragment1.status() != UNSET && fragment1.status() != status)
+                if(fragment1.status() != UNSET && status != NONE && fragment1.status() != status)
                 {
                     BM_LOGGER.warn("fragment({}) has alt status({}) with other({})", fragment1, status, fragment2);
                 }
