@@ -5,10 +5,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
-import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.patientreporter.algo.CurationFunction;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;

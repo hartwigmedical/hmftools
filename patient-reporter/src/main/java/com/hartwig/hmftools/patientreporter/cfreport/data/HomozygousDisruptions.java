@@ -5,11 +5,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 
-import com.hartwig.hmftools.common.purple.loader.CopyNumberInterpretation;
-import com.hartwig.hmftools.common.purple.loader.GainLoss;
 import com.hartwig.hmftools.patientreporter.algo.CurationFunction;
 import org.jetbrains.annotations.NotNull;
 

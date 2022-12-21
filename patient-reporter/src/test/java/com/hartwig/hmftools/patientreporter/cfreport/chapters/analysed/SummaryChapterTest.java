@@ -6,7 +6,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.SummaryChapter;
 
 import org.junit.Test;
 
