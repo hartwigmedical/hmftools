@@ -61,6 +61,8 @@ data class VJReadCandidate(
 
     val anchorSequence: String get()
     {
+        if (anchorOffsetStart >= readLength || anchorOffsetEnd <= 0)
+            return String()
         return readSequence.substring(Math.max(anchorOffsetStart, 0), Math.min(anchorOffsetEnd, readLength))
     }
 

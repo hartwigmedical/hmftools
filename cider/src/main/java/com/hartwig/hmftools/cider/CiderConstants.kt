@@ -2,8 +2,6 @@ package com.hartwig.hmftools.cider
 
 object CiderConstants
 {
-    const val ASSUMED_ANCHOR_BASE_LENGTH: Int = 30
-
     // for partially rearranged VDJs, we designate that the "interesting"
     // sequence is 60 bases before the J anchor or 60 bases after the V anchor
     const val PARTIAL_VDJ_UNANCHORED_LENGTH_BASES: Int = 60
@@ -16,7 +14,7 @@ object CiderConstants
     const val CANDIDATE_MIN_PARTIAL_ANCHOR_AA_LENGTH: Int = 10
     const val VDJ_MIN_PARTIAL_ANCHOR_AA_LENGTH: Int = 1
 
-    const val MIN_CANDIDATE_READ_ANCHOR_OVERLAP: Int = 6
+    const val MAX_READ_DISTANCE_FROM_ANCHOR: Int = 50
     const val MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES: Int = 20
     const val MIN_POLY_G_TRIM_COUNT: Int = 6
     const val POLY_G_TRIM_EXTRA_BASE_COUNT: Int = 5

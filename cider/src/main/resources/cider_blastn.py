@@ -340,7 +340,7 @@ def main():
     # now merge the results back into the vdj_df
     vdj_df = vdj_df.merge(seq_gene_df, how="left", left_on="cdr3AA", right_on="qseqid").drop("qseqid", axis=1)
     vdj_df["blastnStatus"] = vdj_df["blastnStatus"].fillna("SKIPPED_BLASTN")
-    vdj_df.to_csv(args.out_tsv, sep="\t", float_format='%.10g')
+    vdj_df.to_csv(args.out_tsv, sep="\t", float_format='%.10g', index=False)
 
     elapsed_sec = time.time() - start
     minute = int(elapsed_sec / 60)

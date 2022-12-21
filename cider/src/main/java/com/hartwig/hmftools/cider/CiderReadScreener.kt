@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap
 class CiderReadScreener(// collect the reads and sort by types
     private val mCiderGeneDatastore: ICiderGeneDatastore,
     private val mAnchorBlosumSearcher: IAnchorBlosumSearcher,
-    private val mMinAnchorOverlap: Int,
+    private val mMaxReadDistanceFromAnchor: Int,
     private val mMaxFragmentLength: Int
 )
 {
@@ -137,7 +137,7 @@ class CiderReadScreener(// collect the reads and sort by types
 
         if (allowExtrapolation)
         {
-            if (!isRelevantToAnchorLocation(readLength, mapped, anchorLocation))
+            if (!isRelevantToAnchorLocation(readLength, mapped, anchorLocation, mMaxReadDistanceFromAnchor))
                 return null
         }
         else
@@ -155,8 +155,10 @@ class CiderReadScreener(// collect the reads and sort by types
         var readAnchorStart = readAnchorRange.left
         var readAnchorEnd = readAnchorRange.right
 
-        // as long as the record overlaps with the anchor location, we include it as candidate
-        if (readAnchorStart + mMinAnchorOverlap < samRecord.readLength && readAnchorEnd > mMinAnchorOverlap)
+        // anchor does not have to overlap with the read at all
+        // we apply extrapolation to get reads that do not overlap with anchor
+        if (readAnchorStart < samRecord.readLength + mMaxReadDistanceFromAnchor &&
+            readAnchorEnd > -mMaxReadDistanceFromAnchor)
         {
             if (anchorLocation.strand === Strand.REVERSE)
             {
@@ -189,7 +191,7 @@ class CiderReadScreener(// collect the reads and sort by types
         require(!read.mateUnmappedFlag)
 
         var relevantAnchorLocation: VJAnchorGenomeLocation? = null
-        var relaventConstantRegion: IgTcrConstantRegion? = null
+        var relavantConstantRegion: IgTcrConstantRegion? = null
 
         // look through anchor locations and find ones that we can use
         for (anchorLocation: VJAnchorGenomeLocation in mCiderGeneDatastore.getVjAnchorGeneLocations())
@@ -208,19 +210,19 @@ class CiderReadScreener(// collect the reads and sort by types
             {
                 if (isUnamppedReadRelevantToConstantRegion(read, constantRegion.genomeLocation, mMaxFragmentLength))
                 {
-                    relaventConstantRegion = constantRegion
+                    relavantConstantRegion = constantRegion
                     break
                 }
             }
 
-            if (relaventConstantRegion == null)
+            if (relavantConstantRegion == null)
             {
                 return false
             }
         }
 
         // get the VJ gene type we are interested in
-        val relaventVjGeneType: VJGeneType? = relevantAnchorLocation?.vjGeneType ?: relaventConstantRegion?.getCorrespondingJ()
+        val relaventVjGeneType: VJGeneType? = relevantAnchorLocation?.vjGeneType ?: relavantConstantRegion?.getCorrespondingJ()
 
         if (relaventVjGeneType == null)
         {
@@ -270,7 +272,7 @@ class CiderReadScreener(// collect the reads and sort by types
                     {
                         sLogger.info(
                             "read({}) matched from mate mapped({}:{}) near constant region({})",
-                            read, read.mateReferenceName, read.mateAlignmentStart, relaventConstantRegion
+                            read, read.mateReferenceName, read.mateAlignmentStart, relavantConstantRegion
                         )
                     }
                     return true
@@ -416,8 +418,12 @@ class CiderReadScreener(// collect the reads and sort by types
             readAnchorStart, readAnchorEnd, leftSoftClip, rightSoftClip)
 
         // set the similarity score
-        readMatch.similarityScore = BlosumSimilarityCalc.calcSimilarityScore(
-            geneType.vj, readMatch.templateAnchorSequence, readMatch.anchorSequence)
+        if (templateMatchMethod == MatchMethod.BLOSUM)
+        {
+            readMatch.similarityScore = BlosumSimilarityCalc.calcSimilarityScore(
+                geneType.vj, readMatch.templateAnchorSequence, readMatch.anchorSequence
+            )
+        }
 
         val geneNames = vjAnchorTemplates.map({ o: VJAnchorTemplate -> o.geneName }).distinct().toList()
         sLogger.debug(
@@ -451,7 +457,9 @@ class CiderReadScreener(// collect the reads and sort by types
         }
 
         // we are looking for read that can be extrapolated to the anchor location even if they do not overlap
-        fun isRelevantToAnchorLocation(readLength: Int, mapped: GenomeRegion, anchorLocation: VJAnchorGenomeLocation): Boolean
+        fun isRelevantToAnchorLocation(readLength: Int, mapped: GenomeRegion,
+                                       anchorLocation: VJAnchorGenomeLocation,
+                                       maxReadDistanceFromAnchor: Int): Boolean
         {
             if (anchorLocation.chromosome != mapped.chromosome()) return false
 
@@ -466,9 +474,9 @@ class CiderReadScreener(// collect the reads and sort by types
             // <------------J--------D----------V---------< negative strand
             //             ======           ======
             //
-            // reads mapped around the star sections are ok
+            // reads mapped around the ===== sections are ok
             // we translate it to the genome coord space.
-            val halfAnchorLength: Int = anchorLocation.baseLength() / 2
+            val anchorLength: Int = anchorLocation.baseLength()
             val isMappedAroundHere: Boolean
             if (anchorLocation.vj == VJ.V && anchorLocation.strand == Strand.FORWARD ||
                 anchorLocation.vj == VJ.J && anchorLocation.strand == Strand.REVERSE)
@@ -476,21 +484,21 @@ class CiderReadScreener(// collect the reads and sort by types
                 // here we want the anchor to be downstream
                 // we want anchor mapped to higher coord than or equal read
                 // we allow anchor to overshoot the mapped region by half the anchor length
-                //        |__read__|
-                //    |_______________________________|     allowed anchor range
-                // half anchor         read length
-                isMappedAroundHere = anchorLocation.start > mapped.start() - halfAnchorLength &&
-                        anchorLocation.end < mapped.end() + readLength
+                //           |__read__|
+                //    |_________________________________________________________|     allowed anchor range
+                //     anchor           read length + MaxReadDistanceFromAnchor
+                isMappedAroundHere = anchorLocation.start > mapped.start() - anchorLength &&
+                        anchorLocation.end < mapped.end() + readLength + maxReadDistanceFromAnchor
             } else
             {
                 // here we want the anchor to be upstream
                 // we want anchor mapped to lower coord than or equal read
                 // we allow anchor to overshoot the mapped region by half the anchor length
-                //                    |__read__|
-                // |_______________________________|     allowed anchor range
-                //   read length             half anchor
-                isMappedAroundHere = anchorLocation.end < mapped.end() + halfAnchorLength &&
-                        anchorLocation.start > mapped.start() - readLength
+                //                                            |__read__|
+                // |____________________________________________________________|    allowed anchor range
+                //   read length + MaxReadDistanceFromAnchor             anchor
+                isMappedAroundHere = anchorLocation.end < mapped.end() + anchorLength &&
+                        anchorLocation.start > mapped.start() - readLength - maxReadDistanceFromAnchor
             }
             return isMappedAroundHere
         }
@@ -502,6 +510,7 @@ class CiderReadScreener(// collect the reads and sort by types
         // 2. this function will extrapolate into other regions if reference pos is not with any
         //    alignment block. For example, for cigar 20M1000N30M, if we query for a position
         //    10 bases after the 20M block, we will get a read offset of 30 (20M + 10 bases)
+        // 3. can return negative or >= read length if the extraplated position is not within read
         fun extrapolateReadOffsetAtRefPosition(record: SAMRecord, referencePos: Int): Int
         {
             // since it is almost impossible to have 3+ alignment blocks speed should not be an issue
@@ -533,11 +542,7 @@ class CiderReadScreener(// collect the reads and sort by types
                 }
             }
 
-            // if not within read then return -1
-            return if (readOffset < 0 || readOffset >= record.readLength)
-            {
-                -1
-            } else readOffset
+            return readOffset
         }
 
         fun extrapolateAnchorReadRange(record: SAMRecord, anchorLocation: VJAnchorGenomeLocation): IntPair?
@@ -545,11 +550,8 @@ class CiderReadScreener(// collect the reads and sort by types
             // we always use the reference position to find it
             val anchorEndReferencePos: Int = anchorLocation.anchorBoundaryReferencePosition()
             val anchorEndReadOffset = extrapolateReadOffsetAtRefPosition(record, anchorEndReferencePos)
-            if (anchorEndReadOffset == -1)
-            {
-                return null
-            }
-            else if (anchorEndReferencePos == anchorLocation.start)
+
+            if (anchorEndReferencePos == anchorLocation.start)
             {
                 return IntPair(anchorEndReadOffset, anchorEndReadOffset + anchorLocation.baseLength())
             }
