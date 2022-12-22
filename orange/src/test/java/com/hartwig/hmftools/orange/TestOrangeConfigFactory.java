@@ -50,6 +50,7 @@ public final class TestOrangeConfigFactory {
     private static final String CUPPA_RESULT_CSV = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.data.csv";
     private static final String CUPPA_SUMMARY_PLOT = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.report.summary.png";
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/tumor_sample.peach.genotype.tsv";
+    private static final String SIGS_ALLOCATION_TSV = RUN_DIRECTORY + "/sigs/tumor_sample.sig.allocation.tsv";
 
     private TestOrangeConfigFactory() {
     }
@@ -82,6 +83,7 @@ public final class TestOrangeConfigFactory {
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .cuppaResultCsv(CUPPA_RESULT_CSV)
                 .cuppaSummaryPlot(CUPPA_SUMMARY_PLOT)
+                .sigsAllocationTsv(SIGS_ALLOCATION_TSV)
                 .convertGermlineToSomatic(false)
                 .limitJsonOutput(false)
                 .build();
