@@ -39,4 +39,13 @@ public final class ProtectTestFactory {
                 .evidenceType(EvidenceType.ANY_MUTATION)
                 .build();
     }
+
+    @NotNull
+    public static KnowledgebaseSource createSourceExtra(@NotNull Knowledgebase knowledgebase) {
+        return ImmutableKnowledgebaseSource.builder()
+                .name(knowledgebase)
+                .sourceEvent("ABL1")
+                .evidenceType(EvidenceType.ANY_MUTATION)
+                .build();
+    }
 }

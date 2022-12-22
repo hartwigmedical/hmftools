@@ -7,11 +7,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
+import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.serve.datamodel.EvidenceDirection;
@@ -62,6 +64,29 @@ public class EvidenceReportingFunctionsTest {
         assertEquals(2, reported(ckbFiltered).size());
     }
 
+    @Test
+    public void canSortKnowledgebaseSourceCorrectly() {
+        List<ProtectEvidence> ckbEvidences = createTestEvidencesForKnowledgebase(Knowledgebase.CKB);
+        List<ProtectEvidence> ckbFiltered = EvidenceReportingFunctions.applyReportingAlgo(ckbEvidences);
+
+        ProtectEvidence protectEvidence = findByTreatment(ckbFiltered, "treatment C");
+        List<KnowledgebaseSource> sources = new ArrayList<>(protectEvidence.sources());
+        assertEquals(2, sources.size());
+        assertEquals("ABL1", sources.get(0).sourceEvent());
+        assertEquals("any mutation", sources.get(1).sourceEvent());
+    }
+
+    @NotNull
+    private static ProtectEvidence findByTreatment(@NotNull Iterable<ProtectEvidence> evidences, @NotNull String treatment) {
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.treatment().treament().equals(treatment)) {
+                return evidence;
+            }
+        }
+
+        throw new IllegalStateException("Could not find evidence with treatment: " + treatment);
+    }
+
     @NotNull
     private static List<ProtectEvidence> createTestEvidencesForKnowledgebase(@NotNull Knowledgebase knowledgebase) {
         return Lists.newArrayList(ImmutableProtectEvidence.builder()
@@ -92,7 +117,7 @@ public class EvidenceReportingFunctionsTest {
                                 .relevantTreatmentApproaches(Sets.newHashSet("A"))
                                 .build())
                         .direction(EvidenceDirection.PREDICTED_RESPONSIVE)
-                        .sources(Sets.newHashSet(ProtectTestFactory.createSource(knowledgebase)))
+                        .sources(Sets.newHashSet(ProtectTestFactory.createSource(knowledgebase), ProtectTestFactory.createSourceExtra(knowledgebase)))
                         .build());
     }
 

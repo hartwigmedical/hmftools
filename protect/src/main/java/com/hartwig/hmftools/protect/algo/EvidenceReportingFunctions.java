@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.protect.algo;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -7,10 +8,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.protect.EvidenceComparator;
-import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
-import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.*;
 import com.hartwig.serve.datamodel.EvidenceLevel;
 import com.hartwig.serve.datamodel.Knowledgebase;
 
@@ -38,13 +36,20 @@ public final class EvidenceReportingFunctions {
         List<ProtectEvidence> result = Lists.newArrayList();
 
         for (ProtectEvidence evidence : evidences) {
+            List<KnowledgebaseSource> knowledgebaseSourceSort = new ArrayList<>(evidence.sources());
+            knowledgebaseSourceSort.sort(new KnowledgebaseSourceComparator());
+
             if (evidence.reported()) {
                 result.add(ImmutableProtectEvidence.builder()
                         .from(evidence)
                         .reported(meetsMaxReportableLevelForKnowledgebases(evidence))
+                        .sources(knowledgebaseSourceSort)
                         .build());
             } else {
-                result.add(evidence);
+                result.add(ImmutableProtectEvidence.builder()
+                        .from(evidence)
+                        .sources(knowledgebaseSourceSort)
+                        .build());
             }
         }
         return result;

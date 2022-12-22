@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.protect.evidence;
 
 import java.util.Set;
+import java.util.TreeSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
@@ -94,14 +95,14 @@ public class PersonalizedEvidenceFactory {
     }
 
     @NotNull
-    private static KnowledgebaseSource resolveProtectSource(@NotNull ActionableEvent actionable) {
+    public static KnowledgebaseSource resolveProtectSource(@NotNull ActionableEvent actionable) {
         return ImmutableKnowledgebaseSource.builder()
                 .name(actionable.source())
                 .sourceEvent(actionable.sourceEvent())
-                .sourceUrls(actionable.sourceUrls())
+                .sourceUrls(new TreeSet<String>(actionable.sourceUrls()))
                 .evidenceType(determineEvidenceType(actionable))
                 .rangeRank(determineRangeRank(actionable))
-                .evidenceUrls(actionable.evidenceUrls())
+                .evidenceUrls(new TreeSet<String>(actionable.evidenceUrls()))
                 .build();
     }
 
