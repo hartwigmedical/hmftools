@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
+import com.hartwig.hmftools.common.purple.PurpleQC;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -14,12 +14,12 @@ public abstract class PurityPloidyFit {
     @NotNull
     public abstract PurpleQC qc();
 
-    public abstract boolean hasReliableQuality();
+    public abstract boolean hasSufficientQuality();
 
     @NotNull
     public abstract FittedPurityMethod fittedPurityMethod();
 
-    public abstract boolean hasReliablePurity();
+    public abstract boolean containsTumorCells();
 
     public abstract double purity();
 

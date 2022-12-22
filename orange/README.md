@@ -212,6 +212,7 @@ investigate potential causes for QC failure.
 - Upcoming
     - (COSMIC) signatures are added to the somatic findings (new parameter: `-sigs_allocation_tsv`)
     - Unreported germline variants are no longer converted to somatic variants in case "germline to somatic conversion" is enabled.
+    - In case of NO_TUMOR, all germline variants are wiped in case "germline to somatic conversion" is enabled.
     - Populate affectedExon for intronic variants in splice regions.
     - RAD51B is added as a gene that is reported for LOH in case of HR deficiency
 - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.1)

@@ -9,6 +9,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleQC;
@@ -94,7 +95,7 @@ public class CreateShallowSeqDB {
             PurpleQC purpleQC = purityContext.qc();
 
             boolean hasReliableQuality = purpleQC.pass();
-            boolean hasReliablePurity = PurityContext.checkHasReliablePurity(purityContext);
+            boolean hasReliablePurity = purityContext.method() != FittedPurityMethod.NO_TUMOR;
             String purity = new DecimalFormat("0.00").format(purityContext.bestFit().purity());
 
             boolean inFile = false;

@@ -38,25 +38,37 @@ public final class GermlineConversion {
         return ImmutableOrangeReport.builder()
                 .from(report)
                 .germlineMVLHPerGene(null)
-                .purple(convertPurpleGermline(report.purple()))
+                .purple(convertPurpleGermline(report.purple().fit().containsTumorCells(), report.purple()))
                 .linx(convertLinxGermline(report.linx()))
                 .build();
     }
 
     @NotNull
     @VisibleForTesting
-    static PurpleInterpretedData convertPurpleGermline(@NotNull PurpleInterpretedData purple) {
+    static PurpleInterpretedData convertPurpleGermline(boolean hasReliablePurity, @NotNull PurpleInterpretedData purple) {
         // TODO Convert germline deletions into somatic deletions.
 
         // TODO Consider merging additional suspect variants as well but in practice suspect germline variants are only relevant for peach
         // and cause confusing when merged into somatic.
+
+        // In case the purity is unreliable (NO_TUMOR), we remove all germline events.
+        List<DriverCatalog> mergedDrivers;
+        List<PurpleVariant> mergedSomaticVariants;
+        if (hasReliablePurity) {
+            mergedDrivers = mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers());
+            mergedSomaticVariants =
+                    mergeGermlineVariantsIntoSomatic(purple.reportableSomaticVariants(), purple.reportableGermlineVariants());
+        } else {
+            mergedDrivers = purple.somaticDrivers();
+            mergedSomaticVariants = purple.reportableSomaticVariants();
+        }
+
         return ImmutablePurpleInterpretedData.builder()
                 .from(purple)
                 .fit(removeGermlineAberrations(purple.fit()))
-                .somaticDrivers(mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers()))
+                .somaticDrivers(mergedDrivers)
                 .germlineDrivers(null)
-                .reportableSomaticVariants(mergeGermlineVariantsIntoSomatic(purple.reportableSomaticVariants(),
-                        purple.reportableGermlineVariants()))
+                .reportableSomaticVariants(mergedSomaticVariants)
                 .allGermlineVariants(null)
                 .reportableGermlineVariants(null)
                 .additionalSuspectGermlineVariants(null)

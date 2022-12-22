@@ -91,7 +91,7 @@ public class GermlineConversionTest {
                 .addAdditionalSuspectGermlineVariants(suspectGermlineVariant)
                 .build();
 
-        PurpleInterpretedData converted = GermlineConversion.convertPurpleGermline(purple);
+        PurpleInterpretedData converted = GermlineConversion.convertPurpleGermline(true, purple);
 
         assertTrue(converted.fit().qc().germlineAberrations().isEmpty());
 
@@ -113,6 +113,13 @@ public class GermlineConversionTest {
 
         assertEquals(1, converted.additionalSuspectSomaticVariants().size());
         assertTrue(converted.additionalSuspectSomaticVariants().contains(suspectSomaticVariant));
+
+        PurpleInterpretedData unreliableConverted = GermlineConversion.convertPurpleGermline(false, purple);
+        assertEquals(1, unreliableConverted.somaticDrivers().size());
+        assertNotNull(findByDriverType(unreliableConverted.somaticDrivers(), DriverType.AMP));
+
+        assertEquals(1, unreliableConverted.reportableSomaticVariants().size());
+        assertTrue(unreliableConverted.reportableSomaticVariants().contains(reportableSomaticVariant));
     }
 
     @NotNull
