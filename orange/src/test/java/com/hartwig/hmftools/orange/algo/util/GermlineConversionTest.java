@@ -104,9 +104,8 @@ public class GermlineConversionTest {
         assertNotNull(findByDriverType(converted.somaticDrivers(), DriverType.AMP));
         assertNotNull(findByDriverType(converted.somaticDrivers(), DriverType.MUTATION));
 
-        assertEquals(2, converted.allSomaticVariants().size());
+        assertEquals(1, converted.allSomaticVariants().size());
         assertTrue(converted.allSomaticVariants().contains(somaticVariant));
-        assertTrue(converted.allSomaticVariants().contains(germlineVariant));
 
         assertEquals(2, converted.reportableSomaticVariants().size());
         assertTrue(converted.reportableSomaticVariants().contains(reportableSomaticVariant));

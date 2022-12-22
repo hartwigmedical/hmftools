@@ -55,7 +55,6 @@ public final class GermlineConversion {
                 .fit(removeGermlineAberrations(purple.fit()))
                 .somaticDrivers(mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers()))
                 .germlineDrivers(null)
-                .allSomaticVariants(mergeGermlineVariantsIntoSomatic(purple.allSomaticVariants(), purple.allGermlineVariants()))
                 .reportableSomaticVariants(mergeGermlineVariantsIntoSomatic(purple.reportableSomaticVariants(),
                         purple.reportableGermlineVariants()))
                 .allGermlineVariants(null)
@@ -72,7 +71,6 @@ public final class GermlineConversion {
                 .from(fit)
                 .qc(ImmutablePurpleQC.builder().from(fit.qc()).germlineAberrations(Sets.newHashSet()).build())
                 .build();
-
     }
 
     @NotNull
