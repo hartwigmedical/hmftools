@@ -230,12 +230,9 @@ public class ReadContextCounter implements VariantHotspot
         if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < DEFAULT_EVIDENCE_MAP_QUAL)
             return UNRELATED;
 
-        if(ignoreSoftClipAdapter(record))
-            return UNRELATED;
-
         RawContext rawContext = RawContext.create(mVariant, record);
 
-        if(rawContext.ReadIndex < 0)
+        if(rawContext.ReadIndex < 0 && !ignoreSoftClipAdapter(record))
         {
             if(rawContext.DepthSupport || rawContext.AltSupport || rawContext.RefSupport)
             {
@@ -243,6 +240,7 @@ public class ReadContextCounter implements VariantHotspot
                         rawContext.DepthSupport, rawContext.AltSupport, rawContext.RefSupport);
             }
 
+            // search for a core match within soft-clipped bases, checking if a promixmate DEL may explain the soft-clipping
             rawContext = createRawContextFromCoreMatch(record);
 
             if(rawContext.ReadIndex < 0)
