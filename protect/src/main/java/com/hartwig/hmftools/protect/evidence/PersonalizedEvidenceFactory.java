@@ -95,14 +95,19 @@ public class PersonalizedEvidenceFactory {
     }
 
     @NotNull
+    public static Set<String> sortSet(Set<String> urls) {
+        return new TreeSet<String>(urls);
+    }
+
+    @NotNull
     public static KnowledgebaseSource resolveProtectSource(@NotNull ActionableEvent actionable) {
         return ImmutableKnowledgebaseSource.builder()
                 .name(actionable.source())
                 .sourceEvent(actionable.sourceEvent())
-                .sourceUrls(new TreeSet<String>(actionable.sourceUrls()))
+                .sourceUrls(sortSet(actionable.sourceUrls()))
                 .evidenceType(determineEvidenceType(actionable))
                 .rangeRank(determineRangeRank(actionable))
-                .evidenceUrls(new TreeSet<String>(actionable.evidenceUrls()))
+                .evidenceUrls(sortSet(actionable.evidenceUrls()))
                 .build();
     }
 

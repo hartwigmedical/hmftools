@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -16,6 +17,7 @@ import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.KnowledgebaseSource;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
+import com.hartwig.hmftools.protect.evidence.PersonalizedEvidenceFactory;
 import com.hartwig.serve.datamodel.EvidenceDirection;
 import com.hartwig.serve.datamodel.EvidenceLevel;
 import com.hartwig.serve.datamodel.ImmutableTreatment;
@@ -85,6 +87,15 @@ public class EvidenceReportingFunctionsTest {
         }
 
         throw new IllegalStateException("Could not find evidence with treatment: " + treatment);
+    }
+
+    @Test
+    public void canSortUrlSet(){
+        Set<String> urls = Sets.newHashSet();
+        urls.add("def");
+        urls.add("abg");
+
+        assertEquals(Sets.newHashSet("abg", "def"),PersonalizedEvidenceFactory.sortSet(urls));
     }
 
     @NotNull
