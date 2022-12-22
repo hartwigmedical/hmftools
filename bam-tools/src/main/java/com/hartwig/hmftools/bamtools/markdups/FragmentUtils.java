@@ -92,6 +92,8 @@ public class FragmentUtils
             final List<PositionFragments> incompletePositionFragments)
     {
         // take all the fragments at this initial fragment position and classify them as duplicates, non-duplicates or unclear
+
+        // the list of fragments is copied and then reduced when duplicates or candidate duplicates are found
         List<Fragment> allFragments = Lists.newArrayList(positionFragments);
 
         if(allFragments.size() == 1)
@@ -125,6 +127,12 @@ public class FragmentUtils
 
                 FragmentStatus status = calcFragmentStatus(fragment1, fragment2);
 
+                if(status == NONE)
+                {
+                    ++j;
+                    continue;
+                }
+
                 if(fragment1.status() != UNSET && status != NONE && fragment1.status() != status)
                 {
                     BM_LOGGER.warn("fragment({}) has alt status({}) with other({})", fragment1, status, fragment2);
@@ -139,7 +147,6 @@ public class FragmentUtils
 
                     duplicateFragments.add(fragment2);
                     allFragments.remove(j);
-                    continue;
                 }
                 else if(status == UNCLEAR)
                 {
@@ -147,19 +154,16 @@ public class FragmentUtils
                     fragment2.setStatus(status);
 
                     if(incompleteFragments == null)
-                        incompleteFragments = new PositionFragments(fragment1, fragment1.initialPosition());
+                        incompleteFragments = new PositionFragments(fragment1.initialPosition(), fragment1);
 
                     incompleteFragments.Fragments.add(fragment2);
                     allFragments.remove(j);
-                    continue;
                 }
-
-                ++j;
             }
 
             if(fragment1.status().isDuplicate())
             {
-                resolvedFragments.add(fragment1);
+                resolvedFragments.addAll(duplicateFragments);
 
                 Fragment primary = findPrimaryFragment(duplicateFragments, true);
                 primary.setStatus(PRIMARY);
@@ -240,6 +244,7 @@ public class FragmentUtils
         return chromosome + CHR_PARTITION_DELIM + partition;
     }
 
+    @Deprecated
     public static void reconcileFragments(
             final Map<String,Fragment> supplementaries, final Map<String,Fragment> resolvedFragments,
             final List<PositionFragments> incompletePositionFragments)

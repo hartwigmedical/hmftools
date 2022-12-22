@@ -21,8 +21,8 @@ public final class TestUtils
 
     public static final int DEFAULT_QUAL = 37;
 
-    public void resetFragment(final Fragment fragment) { fragment.setStatus(FragmentStatus.UNSET); }
-    public void resetFragments(final List<Fragment> fragments) { fragments.forEach(x -> x.setStatus(FragmentStatus.UNSET)); }
+    public static void resetFragment(final Fragment fragment) { fragment.setStatus(FragmentStatus.UNSET); }
+    public static void resetFragments(final List<Fragment> fragments) { fragments.forEach(x -> x.setStatus(FragmentStatus.UNSET)); }
 
     public static Fragment createFragment(final String readId, final String chrStr, int readStart)
     {
@@ -40,6 +40,20 @@ public final class TestUtils
         return new Fragment(read);
     }
 
+    public static Fragment createFragmentPair(
+            final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final String mateChr,
+            int mateStart, boolean isReversed)
+    {
+        SAMRecord read = createSamRecord(readId, chrStr, readStart, readBases, cigar, mateChr, mateStart,
+                isReversed, false, null);
+
+        SAMRecord readMate = createSamRecord(readId, mateChr, mateStart, readBases, cigar, chrStr, readStart,
+                !isReversed, false, null);
+
+        Fragment fragment = new Fragment(read);
+        fragment.addRead(readMate);
+        return fragment;
+    }
 
     public static SAMRecord createSamRecord(
             final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final String mateChr,
@@ -93,6 +107,17 @@ public final class TestUtils
             record.setInferredInsertSize(0);
 
         return record;
+    }
+
+    public static void setBaseQualities(final Fragment fragment, int value)
+    {
+        fragment.reads().forEach(x -> setBaseQualities(x, value));
+    }
+
+    public static void setBaseQualities(final SAMRecord read, int value)
+    {
+        for(int i = 0; i < read.getBaseQualities().length; ++i)
+            read.getBaseQualities()[i] = (byte)value;
     }
 
 }

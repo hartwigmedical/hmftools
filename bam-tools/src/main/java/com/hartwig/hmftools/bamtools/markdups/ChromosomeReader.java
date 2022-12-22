@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosom
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.reconcileFragments;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,13 +38,12 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
     private final GroupCombiner mRemoteGroupCombiner;
+    private final GroupCombiner mLocalGroupCombiner;
     private final RecordWriter mRecordWriter;
     private final ReadPositionArray mReadPositions;
 
-    // private final GroupCombiner mLocalGroupCombiner;
-    private final Map<String,Fragment> mPartitionSupplementaries;
+    private final List<Fragment> mPartitionSupplementaries;
     private final Map<String,Fragment> mPartitionResolvedFragments;
-    private final List<PositionFragments> mPartitionIncompletePositionFragments;
 
     private final boolean mLogReadIds;
     private int mTotalRecordCount;
@@ -58,6 +58,8 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
         mConfig = config;
         mRegion = region;
         mRemoteGroupCombiner = groupCombiner;
+        mRecordWriter = recordWriter;
+        mLocalGroupCombiner = new GroupCombiner(mRecordWriter, true);
 
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
@@ -65,13 +67,11 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
         mBamSlicer = new BamSlicer(0, true, true, true);
         mBamSlicer.setKeepUnmapped();
 
-        mRecordWriter = recordWriter;
         mReadPositions = new ReadPositionArray(region.Chromosome, config.BufferSize, this);
 
         // mLocalGroupCombiner = new GroupCombiner(mRecordWriter);
-        mPartitionSupplementaries = Maps.newHashMap();
+        mPartitionSupplementaries = Lists.newArrayList();
         mPartitionResolvedFragments = Maps.newHashMap();
-        mPartitionIncompletePositionFragments = Lists.newArrayList();
 
         if(!mConfig.SpecificRegions.isEmpty())
         {
@@ -137,36 +137,33 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
     {
         mReadPositions.evictAll();
 
-        // first try to assign any supplementaries in this partition to their fragments
-        reconcileFragments(mPartitionSupplementaries, mPartitionResolvedFragments, mPartitionIncompletePositionFragments);
-
-        List<Fragment> remoteSupplementaries = mPartitionSupplementaries.values().stream().collect(Collectors.toList());
         List<Fragment> resolvedFragments = mPartitionResolvedFragments.values().stream().collect(Collectors.toList());
 
-        int i = 0;
-        while(i < resolvedFragments.size())
-        {
-            Fragment fragment = resolvedFragments.get(i);
+        List<PositionFragments> incompletePositionFragments = Lists.newArrayList();
 
-            if(fragment.allReadsPresent())
+        Map<Integer,List<Fragment>> localPositionFragments = mLocalGroupCombiner.incompleteFragmentPositionsMap().get(mCurrentStrPartition);
+
+        if(localPositionFragments != null)
+        {
+            for(Map.Entry<Integer,List<Fragment>> entry : localPositionFragments.entrySet())
             {
-                mRecordWriter.writeFragment(fragment);
-                resolvedFragments.remove(i);
-            }
-            else
-            {
-                ++i;
+                List<Fragment> unclearFragments = entry.getValue();
+                unclearFragments.forEach(x -> x.setRemotePartitions(mCurrentPartition));
+                incompletePositionFragments.add(new PositionFragments(entry.getKey(), unclearFragments));
             }
         }
 
         mRemoteGroupCombiner.processPartitionFragments(
-                mCurrentStrPartition, resolvedFragments, mPartitionIncompletePositionFragments, remoteSupplementaries);
+                mCurrentStrPartition, resolvedFragments, incompletePositionFragments, mPartitionSupplementaries);
 
         mPerfCounter.stop();
 
-        BM_LOGGER.debug("partition({}:{}) complete, cached(supps={} resolved={} incompletes={})",
+        BM_LOGGER.debug("partition({}:{}) complete, remotes cached(supps={} resolved={} incompletes={})",
                 mRegion.Chromosome, mCurrentPartition, mPartitionSupplementaries.size(), mPartitionResolvedFragments.size(),
-                mPartitionIncompletePositionFragments.size());
+                incompletePositionFragments.size());
+
+        mPartitionResolvedFragments.clear();
+        mPartitionSupplementaries.clear();
 
         if(setupNext)
         {
@@ -176,10 +173,6 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
 
             perfCounterStart();
         }
-
-        mPartitionResolvedFragments.clear();
-        mPartitionIncompletePositionFragments.clear();
-        mPartitionSupplementaries.clear();
 
         System.gc();
     }
@@ -206,17 +199,31 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
             }
         }
 
-        if(!mReadPositions.processRead(read))
+        try
         {
-            // currently only supplementaries will not be stored against their initial fragment position or in an existing fragment
-            processSupplementary(read);
+            if(!mReadPositions.processRead(read))
+            {
+                // currently only supplementaries will not be stored against their initial fragment position or in an existing fragment
+                processSupplementary(read);
+            }
+        }
+        catch(Exception e)
+        {
+            BM_LOGGER.error("read coords({}:{}) id({}) exception: {}",
+                    read.getContig(), read.getAlignmentStart(), read.getReadName(), e.toString());
+            e.printStackTrace();
         }
     }
 
     private void processSupplementary(final SAMRecord read)
     {
         Fragment fragment = new Fragment(read);
-        mPartitionSupplementaries.put(fragment.id(), fragment);
+        fragment.setRemotePartitions(mCurrentPartition);
+
+        if(fragment.hasRemotePartitions())
+            mPartitionSupplementaries.add(fragment);
+        else
+            mLocalGroupCombiner.processSupplementary(fragment, mCurrentStrPartition);
     }
 
     public void accept(final PositionFragments positionFragments)
@@ -238,10 +245,32 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
             {
                 BM_LOGGER.error("fragment({}) incorrectly in resolved list", fragment);
             }
+
+            mRecordWriter.writeFragment(fragment);
+
+            // the resolved fragment will be passed to the local group combiner and its state stored & applied
+
+            // only store it for the remote group combiner if it has remote partitions
+            fragment.setRemotePartitions(mCurrentPartition);
+
+            if(fragment.hasRemotePartitions())
+            {
+                // need to combine any remote partitions from the 2 reads
+                Fragment existingFragment = mPartitionResolvedFragments.get(fragment.id());
+
+                if(existingFragment != null)
+                {
+                    fragment.reads().forEach(x -> existingFragment.addRead(x));
+                    existingFragment.setRemotePartitions(mCurrentPartition);
+                }
+                else
+                    mPartitionResolvedFragments.put(fragment.id(), fragment);
+            }
         }
 
-        resolvedFragments.forEach(x -> mPartitionResolvedFragments.put(x.id(), x));
-        mPartitionIncompletePositionFragments.addAll(incompletePositionFragments);
+        // pass to the local combiner
+        mLocalGroupCombiner.processPartitionFragments(
+                mCurrentStrPartition, resolvedFragments, incompletePositionFragments, Collections.EMPTY_LIST);
     }
 
     private void perfCounterStart()

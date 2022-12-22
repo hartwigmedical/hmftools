@@ -11,9 +11,20 @@ public class PositionFragments
     public final int Position;
     public final List<Fragment> Fragments;
 
-    public PositionFragments(final Fragment fragment, int position)
+    public PositionFragments(final Fragment fragment)
+    {
+        this(fragment.initialPosition(), fragment);
+    }
+
+    public PositionFragments(int position, final Fragment fragment)
     {
         Fragments = Lists.newArrayList(fragment);
+        Position = position;
+    }
+
+    public PositionFragments(int position, final List<Fragment> fragments)
+    {
+        Fragments = fragments;
         Position = position;
     }
 

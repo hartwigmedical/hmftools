@@ -2,13 +2,17 @@ package com.hartwig.hmftools.bamtools.markdups;
 
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.calcFragmentStatus;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
+import static com.hartwig.hmftools.bamtools.markdups.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createFragment;
+import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createFragmentPair;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.bamtools.markdups.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
@@ -174,7 +178,44 @@ public class FragmentClassificationTest
         positionFragmentsList.clear();
         resolvedFragments.clear();
         incompletePositionFragments.clear();
+
+        // now with some duplicates
+        mReadIdGen.reset();
+
+        // the first 3 are duplicates
+        frag1 = createFragmentPair(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200, false);
+        setBaseQualities(frag1, DEFAULT_QUAL - 1);
+
+        frag2 = createFragmentPair(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200, false);
+        setBaseQualities(frag2, DEFAULT_QUAL - 1);
+
+        frag3 = createFragmentPair(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,false);
+
+        // then un-related
+        frag4 = createFragmentPair(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, 2000,false); // unmatched since mate is elsewhere
+
+        // then 2 more duplicates
+        frag5 = createFragmentPair(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3, 200, true);
+        setBaseQualities(frag5, DEFAULT_QUAL - 1);
+
+        frag6 = createFragmentPair(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3, 200, true); // unmatched since mate is elsewhere
+
+        positionFragmentsList.add(frag1);
+        positionFragmentsList.add(frag5);
+        positionFragmentsList.add(frag4);
+        positionFragmentsList.add(frag6);
+        positionFragmentsList.add(frag3);
+        positionFragmentsList.add(frag2);
+
+        classifyFragments(positionFragmentsList, resolvedFragments, incompletePositionFragments);
+
+        assertEquals(6, resolvedFragments.size());
+
+        assertEquals(DUPLICATE, frag1.status());
+        assertEquals(DUPLICATE, frag2.status());
+        assertEquals(PRIMARY, frag3.status());
+        assertEquals(NONE, frag4.status());
+        assertEquals(DUPLICATE, frag5.status());
+        assertEquals(PRIMARY, frag6.status());
     }
-
-
 }

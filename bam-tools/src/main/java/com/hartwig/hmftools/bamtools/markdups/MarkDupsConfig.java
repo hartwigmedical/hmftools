@@ -176,6 +176,11 @@ public class MarkDupsConfig
         return options;
     }
 
+    public MarkDupsConfig()
+    {
+        this(DEFAULT_PARTITION_SIZE, DEFAULT_POS_BUFFER_SIZE);
+    }
+
     public MarkDupsConfig(int partitionSize, int bufferSize)
     {
         mIsValid = true;

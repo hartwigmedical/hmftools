@@ -101,27 +101,22 @@ public class Fragment
     public boolean hasRemotePartitions() { return mRemotePartitions != null; }
     public List<String> remotePartitions() { return mRemotePartitions; }
 
-    public boolean setRemotePartitions(final BaseRegion currentPartition)
+    public void setRemotePartitions(final BaseRegion currentPartition)
     {
+        mRemotePartitions = null;
+
         // return true if links to other chromosomes
         List<String> chrPartitions = Lists.newArrayList();
         String chromosome = mReads.get(0).getContig();
         int partitionSize = currentPartition.baseLength();
 
-        boolean hasRemoteChromosomes = false;
-
         for(SAMRecord read : mReads)
         {
             if(read.getReadPairedFlag() && !read.getMateUnmappedFlag())
             {
-                if(!read.getMateReferenceName().equals(chromosome))
+                if(!read.getMateReferenceName().equals(chromosome) || !currentPartition.containsPosition(read.getMateAlignmentStart()))
                 {
-                    hasRemoteChromosomes = true;
-
-                    if(!currentPartition.containsPosition(read.getMateAlignmentStart()))
-                    {
-                        chrPartitions.add(formChromosomePartition(read.getMateReferenceName(), read.getMateAlignmentStart(), partitionSize));
-                    }
+                    chrPartitions.add(formChromosomePartition(read.getMateReferenceName(), read.getMateAlignmentStart(), partitionSize));
                 }
             }
 
@@ -129,22 +124,15 @@ public class Fragment
             {
                 SupplementaryReadData suppData = SupplementaryReadData.from(read);
 
-                if(!suppData.Chromosome.equals(chromosome))
+                if(!suppData.Chromosome.equals(chromosome) || !currentPartition.containsPosition(suppData.Position))
                 {
-                    hasRemoteChromosomes = true;
-
-                    if(!currentPartition.containsPosition(suppData.Position))
-                    {
-                        chrPartitions.add(formChromosomePartition(suppData.Chromosome, suppData.Position, partitionSize));
-                    }
+                    chrPartitions.add(formChromosomePartition(suppData.Chromosome, suppData.Position, partitionSize));
                 }
             }
         }
 
         if(!chrPartitions.isEmpty())
             mRemotePartitions = chrPartitions;
-
-        return hasRemoteChromosomes;
     }
 
     private void checkComplete()
@@ -186,7 +174,7 @@ public class Fragment
         mAllReadsPresent = (expectedNonSuppCount == nonSuppCount) && (expectedSuppCount == suppCount);
     }
 
-    public int size() { return mReads.size(); }
+    public int readCount() { return mReads.size(); }
 
     public String toString()
     {

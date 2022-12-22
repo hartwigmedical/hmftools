@@ -118,7 +118,7 @@ public class ReadPositionArray
             PositionFragments element = mForwardPositionGroups[index];
             if(element == null)
             {
-                element = new PositionFragments(fragment, fragmentPosition);
+                element = new PositionFragments(fragmentPosition, fragment);
                 mForwardPositionGroups[index] = element;
             }
             else
@@ -132,11 +132,13 @@ public class ReadPositionArray
             PositionFragments element = mReversePositionGroups.get(fragmentPosition);
             if(element == null)
             {
-                element = new PositionFragments(fragment, fragmentPosition);
+                element = new PositionFragments(fragmentPosition, fragment);
                 mReversePositionGroups.put(fragmentPosition, element);
             }
-
-            element.Fragments.add(fragment);
+            else
+            {
+                element.Fragments.add(fragment);
+            }
         }
     }
 
@@ -239,7 +241,7 @@ public class ReadPositionArray
         if(flushCount >= mCapacity)
             resetMinPosition(position);
 
-        if(!flushedReadIds.isEmpty())
+        if(flushedReadIds != null && !flushedReadIds.isEmpty())
         {
             Set<Integer> flushedPositions = Sets.newHashSet();
             for(Map.Entry<Integer, PositionFragments> entry : mReversePositionGroups.entrySet())
@@ -256,6 +258,7 @@ public class ReadPositionArray
             }
 
             flushedPositions.forEach(x -> mReversePositionGroups.remove(x));
+            flushedPositions.forEach(x -> mFragments.remove(x));
         }
     }
 

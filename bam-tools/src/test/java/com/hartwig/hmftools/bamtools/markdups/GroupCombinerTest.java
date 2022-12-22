@@ -1,0 +1,141 @@
+package com.hartwig.hmftools.bamtools.markdups;
+
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
+import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_BASES;
+import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_CIGAR;
+import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createFragment;
+import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_POS_STRAND;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Collections;
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.test.ReadIdGenerator;
+
+import org.junit.Test;
+
+public class GroupCombinerTest
+{
+    private final ReadIdGenerator mReadIdGen;
+    private final MarkDupsConfig mConfig;
+    private final RecordWriter mWriter;
+
+    private static final String LOCAL_PARTITION = "1_0";
+
+    public GroupCombinerTest()
+    {
+        mReadIdGen = new ReadIdGenerator();
+        mConfig = new MarkDupsConfig();
+        mWriter = new RecordWriter(mConfig);
+    }
+
+    @Test
+    public void testLocalFragmentReconciliationBasic()
+    {
+        GroupCombiner localGroupCombiner = new GroupCombiner(mWriter, true);
+
+        List<Fragment> testFragments = createBasicFragments();
+
+        Fragment read1 = testFragments.get(0);
+
+        List<Fragment> resolvedFragments = Lists.newArrayList(read1);
+        List<PositionFragments> incompletePositionFragments = Lists.newArrayList();
+        List<Fragment> supplementaries = Lists.newArrayList();
+
+        // test 1: resolved then supps then unclear
+
+        supplementaries.add(testFragments.get(2));
+        supplementaries.add(testFragments.get(3));
+        incompletePositionFragments.add(new PositionFragments(testFragments.get(1)));
+
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, resolvedFragments, Collections.emptyList(), Collections.emptyList());
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), Collections.emptyList(), supplementaries);
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
+
+        List<Fragment> targets = Lists.newArrayList(testFragments.get(1), testFragments.get(2), testFragments.get(3));
+        targets.forEach(x -> assertTrue(x.readWritten()));
+        targets.forEach(x -> assertEquals(NONE, x.status()));
+
+        localGroupCombiner.reset();
+
+        // reads have been merged and status changed, need to recreate
+        testFragments = createBasicFragments();
+
+        supplementaries.clear();
+        supplementaries.add(testFragments.get(2));
+        supplementaries.add(testFragments.get(3));
+        Fragment read2 = testFragments.get(1);
+        incompletePositionFragments.add(new PositionFragments(read2));
+        targets = Lists.newArrayList(testFragments.get(1), testFragments.get(2), testFragments.get(3));
+
+        // test 2: supps then unclear then resolved
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), Collections.emptyList(), supplementaries);
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, resolvedFragments, Collections.emptyList(), Collections.emptyList());
+
+        assertTrue(read2.readWritten());
+        assertEquals(NONE, read2.status());
+        assertEquals(3, read2.readCount()); // supplementaries were merged
+
+        localGroupCombiner.reset();
+
+        // test 3: unclear then supp then resolved
+        testFragments = createBasicFragments();
+
+        supplementaries.clear();
+        supplementaries.add(testFragments.get(2));
+        supplementaries.add(testFragments.get(3));
+        read2 = testFragments.get(1);
+        incompletePositionFragments.add(new PositionFragments(read2));
+        targets = Lists.newArrayList(testFragments.get(1), testFragments.get(2), testFragments.get(3));
+
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), Collections.emptyList(), supplementaries);
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, resolvedFragments, Collections.emptyList(), Collections.emptyList());
+
+        assertTrue(read2.readWritten());
+        assertEquals(NONE, read2.status());
+        assertEquals(3, read2.readCount()); // supplementaries were merged
+    }
+
+    private List<Fragment> createBasicFragments()
+    {
+        mReadIdGen.reset();
+
+        Fragment read1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
+                false, false, new SupplementaryReadData(CHR_1, 1000, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+
+        read1.setStatus(NONE);
+
+        Fragment read2 = createFragment(read1.id(), CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
+                true, false, new SupplementaryReadData(CHR_1, 1000, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+
+        read2.setStatus(UNCLEAR);
+
+        Fragment supp1 = createFragment(read1.id(), CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
+                false, true, new SupplementaryReadData(CHR_1, 2000, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+
+        Fragment supp2 = createFragment(read1.id(), CHR_1, 1000, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
+                true, true, new SupplementaryReadData(CHR_1, 2000, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+
+        return Lists.newArrayList(read1, read2, supp1, supp2);
+    }
+
+    @Test
+    public void testLocalFragmentReconciliation1()
+    {
+        // test 1:
+        // 01: resolved fragment missing unclear mate fragment and missing both supplementary
+        // 02: resolved fragment missing supplementary
+        // 03: unclear fragment missing supplementary
+        // 04: unclear fragment missing unclear mate (ie different positions) - so becomes resolved
+
+    }
+
+}
