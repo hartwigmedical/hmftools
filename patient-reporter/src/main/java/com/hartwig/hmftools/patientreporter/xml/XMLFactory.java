@@ -88,7 +88,7 @@ public class XMLFactory {
         }
         mapXml.put("itemWgsCupAnalyse",
                 ImmutableKeyXML.builder()
-                        .keyPath("wgsCupAnalyse")
+                        .keyPath("WgsCupAnalyse")
                         .valuePath(cupAnalyse == null ? null : Map.of("value", cupAnalyse))
                         .build());
 
