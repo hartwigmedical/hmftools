@@ -83,6 +83,7 @@ public class PeachApplication
             }
             //TODO: handle unlifted relevant variants properly
             //TODO: handle reference sequence differences V37 vs V38 properly
+            //TODO: maybe force at most two haplotype calls per gene in output. Maybe do this optionally. Maybe by default
         } else {
             callInputVcf = config.vcfFile;
         }

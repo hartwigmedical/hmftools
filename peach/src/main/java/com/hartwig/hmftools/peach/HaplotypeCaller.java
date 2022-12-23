@@ -6,7 +6,11 @@ import com.hartwig.hmftools.peach.haplotype.NonWildTypeHaplotype;
 import com.hartwig.hmftools.peach.haplotype.WildTypeHaplotype;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.hartwig.hmftools.peach.PeachUtils.GERMLINE_TOTAL_COPY_NUMBER;
@@ -57,7 +61,7 @@ public class HaplotypeCaller
         List<HaplotypeCombination> possibleHaplotypeCombinations = nonWildHaplotypeCombinations.stream()
                 .map(l -> getCombination(l, haplotypePanel.getWildTypeHaplotype(gene)))
                 .collect(Collectors.toList());
-        return new HaplotypeAnalysis(relevantEventIdToCount, possibleHaplotypeCombinations);
+        return new HaplotypeAnalysis(relevantEventIdToCount, possibleHaplotypeCombinations, haplotypePanel.getWildTypeHaplotype(gene).name);
     }
 
     private List<List<NonWildTypeHaplotype>> getPossibleNonWildTypeHaplotypes(

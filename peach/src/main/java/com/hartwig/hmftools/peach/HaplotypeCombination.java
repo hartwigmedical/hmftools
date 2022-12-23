@@ -35,4 +35,12 @@ public class HaplotypeCombination
     {
         return String.format("HaplotypeCombination(%s)", haplotypeNameToCount);
     }
+
+    public int getNonWildTypeCount(String wildTypeHaplotypeName)
+    {
+        return haplotypeNameToCount.entrySet().stream()
+                .filter(e -> !e.getKey().equals(wildTypeHaplotypeName))
+                .mapToInt(Map.Entry::getValue)
+                .sum();
+    }
 }
