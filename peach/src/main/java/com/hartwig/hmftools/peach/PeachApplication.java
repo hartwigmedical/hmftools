@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.peach.data_loader.HaplotypeEventLoader;
 import com.hartwig.hmftools.peach.data_loader.PanelLoader;
+import com.hartwig.hmftools.peach.output.EventsFile;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -106,6 +107,17 @@ public class PeachApplication
 
         PCH_LOGGER.info("haplotypes called: {}", geneToHaplotypeAnalysis.toString());
 
+        PCH_LOGGER.info("create output files");
+
+        try
+        {
+            EventsFile.write(config.getEventsOutputPath(), eventIdToCount);
+        }
+        catch (IOException e)
+        {
+            PCH_LOGGER.error("failed to create events output file({}): {}", config.getEventsOutputPath(), e.toString());
+            System.exit(1);
+        }
         PCH_LOGGER.info("finished running PEACH");
     }
 

@@ -91,6 +91,11 @@ public class PeachConfig
         return getExtendedFileName(outputDir, vcfFile, "liftover_reject", ".vcf");
     }
 
+    public String getEventsOutputPath()
+    {
+        return outputDir + sampleName + ".peach.events.tsv";
+    }
+
     public static String getExtendedFileName(String outputDir, String originalFileName, String addition, String addBefore)
     {
         File file = new File(originalFileName);
