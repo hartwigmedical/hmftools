@@ -10,7 +10,12 @@ import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -24,7 +29,6 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Stream;
 
-import static com.hartwig.hmftools.peach.DataLoader.*;
 import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
 import static com.hartwig.hmftools.peach.PeachUtils.getExtendedFileName;
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -59,7 +63,8 @@ public class PeachApplication
         }
 
         PCH_LOGGER.info("read haplotypes TSV");
-        HaplotypePanel haplotypePanel = loadHaplotypePanel(config.haplotypesTsv);
+        DataLoader dataLoader = new DataLoader();
+        HaplotypePanel haplotypePanel = dataLoader.loadHaplotypePanel(config.haplotypesTsv);
         String callInputVcf;
         if (config.doLiftOver)
         {
@@ -68,7 +73,7 @@ public class PeachApplication
             doLiftover(callInputVcf, rejectVcf);
 
             PCH_LOGGER.info("read bed of important regions");
-            Map<Chromosome, List<BaseRegion>> chromosomeToRelevantRegions = loadBedFile(config.liftOverBed);
+            Map<Chromosome, List<BaseRegion>> chromosomeToRelevantRegions = dataLoader.loadBedFile(config.liftOverBed);
 
             PCH_LOGGER.info("check rejected liftover variants for relevance");
             int potentiallyMissedCount = countPotentiallyRelevantVariantsMissed(rejectVcf, chromosomeToRelevantRegions);
@@ -87,7 +92,7 @@ public class PeachApplication
         } else {
             callInputVcf = config.vcfFile;
         }
-        Map<String, Integer> eventIdToCount = loadRelevantVariantHaplotypeEvents(
+        Map<String, Integer> eventIdToCount = dataLoader.loadRelevantVariantHaplotypeEvents(
                 callInputVcf, config.sampleName, haplotypePanel.getRelevantVariantPositions()
         );
 

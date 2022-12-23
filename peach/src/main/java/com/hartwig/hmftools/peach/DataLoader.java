@@ -40,7 +40,7 @@ public class DataLoader
     public static final String HAPLOTYPE_EVENT_DELIMITER = ",";
     public static final String BED_FILE_DELIMITER = "\t";
 
-    public static Map<String, Integer> loadRelevantVariantHaplotypeEvents(
+    public Map<String, Integer> loadRelevantVariantHaplotypeEvents(
             String vcf, String sampleName, Map<Chromosome, Set<Integer>> relevantVariantPositions
     )
     {
@@ -82,13 +82,13 @@ public class DataLoader
         return eventIdToCount;
     }
 
-    public static HaplotypePanel loadHaplotypePanel(String filename)
+    public HaplotypePanel loadHaplotypePanel(String filename)
     {
         Map<String, GeneHaplotypePanel> geneToGeneHaplotypePanel = loadGeneToGeneHaplotypePanel(filename);
         return new HaplotypePanel(geneToGeneHaplotypePanel);
     }
 
-    public static Map<Chromosome, List<BaseRegion>> loadBedFile(final String filename)
+    public Map<Chromosome, List<BaseRegion>> loadBedFile(final String filename)
     {
         final Map<Chromosome,List<BaseRegion>> chromosomeToRegions = Maps.newHashMap();
 
@@ -120,7 +120,7 @@ public class DataLoader
         return chromosomeToRegions;
     }
 
-    private static Integer getEventCount(GenotypeType genotypeType, String eventId)
+    private Integer getEventCount(GenotypeType genotypeType, String eventId)
     {
         Integer count = null;
         switch(genotypeType)
@@ -143,7 +143,7 @@ public class DataLoader
     }
 
     @NotNull
-    private static Map<String, GeneHaplotypePanel> loadGeneToGeneHaplotypePanel(String filename)
+    private Map<String, GeneHaplotypePanel> loadGeneToGeneHaplotypePanel(String filename)
     {
         Map<String, List<WildTypeHaplotype>> geneToWildTypeHaplotypes = new HashMap<>();
         Map<String, List<NonWildTypeHaplotype>> geneToNonWildTypeHaplotypes = new HashMap<>();
@@ -201,7 +201,7 @@ public class DataLoader
         return createGeneToGeneHaplotypePanel(geneToWildTypeHaplotypes, geneToNonWildTypeHaplotypes);
     }
 
-    private static Map<String, GeneHaplotypePanel> createGeneToGeneHaplotypePanel(
+    private Map<String, GeneHaplotypePanel> createGeneToGeneHaplotypePanel(
             Map<String, List<WildTypeHaplotype>> geneToWildTypeHaplotypes,
             Map<String, List<NonWildTypeHaplotype>> geneToNonWildTypeHaplotypes
     )
@@ -230,7 +230,7 @@ public class DataLoader
         return geneToGeneHaplotypePanel;
     }
 
-    private static ImmutableList<HaplotypeEvent> getHaplotypeEvents(String haplotypeEventsString)
+    private ImmutableList<HaplotypeEvent> getHaplotypeEvents(String haplotypeEventsString)
     {
         if (haplotypeEventsString.isEmpty())
             return ImmutableList.of();
