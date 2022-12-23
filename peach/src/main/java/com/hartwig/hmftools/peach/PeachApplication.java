@@ -2,10 +2,14 @@ package com.hartwig.hmftools.peach;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.peach.data_loader.HaplotypeEventLoader;
+import com.hartwig.hmftools.peach.data_loader.PanelLoader;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -29,6 +33,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Stream;
 
+import static com.hartwig.hmftools.peach.PeachUtils.BED_FILE_DELIMITER;
 import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
 import static com.hartwig.hmftools.peach.PeachUtils.getExtendedFileName;
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -63,8 +68,7 @@ public class PeachApplication
         }
 
         PCH_LOGGER.info("read haplotypes TSV");
-        DataLoader dataLoader = new DataLoader();
-        HaplotypePanel haplotypePanel = dataLoader.loadHaplotypePanel(config.haplotypesTsv);
+        HaplotypePanel haplotypePanel = PanelLoader.loadHaplotypePanel(config.haplotypesTsv);
         String callInputVcf;
         if (config.doLiftOver)
         {
@@ -73,7 +77,7 @@ public class PeachApplication
             doLiftover(callInputVcf, rejectVcf);
 
             PCH_LOGGER.info("read bed of important regions");
-            Map<Chromosome, List<BaseRegion>> chromosomeToRelevantRegions = dataLoader.loadBedFile(config.liftOverBed);
+            Map<Chromosome, List<BaseRegion>> chromosomeToRelevantRegions = loadRegionsToLiftover(config.liftOverBed);
 
             PCH_LOGGER.info("check rejected liftover variants for relevance");
             int potentiallyMissedCount = countPotentiallyRelevantVariantsMissed(rejectVcf, chromosomeToRelevantRegions);
@@ -92,7 +96,7 @@ public class PeachApplication
         } else {
             callInputVcf = config.vcfFile;
         }
-        Map<String, Integer> eventIdToCount = dataLoader.loadRelevantVariantHaplotypeEvents(
+        Map<String, Integer> eventIdToCount = HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(
                 callInputVcf, config.sampleName, haplotypePanel.getRelevantVariantPositions()
         );
 
@@ -204,6 +208,38 @@ public class PeachApplication
         }
 
         return adjustedChainFile;
+    }
+
+    private Map<Chromosome, List<BaseRegion>> loadRegionsToLiftover(final String filename)
+    {
+        final Map<Chromosome,List<BaseRegion>> chromosomeToRegions = Maps.newHashMap();
+
+        try
+        {
+            List<String> lines = Files.readAllLines(Paths.get(filename));
+            for(String line : lines)
+            {
+                final String[] values = line.split(BED_FILE_DELIMITER, -1);
+
+                Chromosome chromosome = HumanChromosome.fromString(values[0]);
+                int posStart = Integer.parseInt(values[1]) + 1; // as per convention
+                int posEnd = Integer.parseInt(values[2]);
+
+                if(!chromosomeToRegions.containsKey(chromosome))
+                {
+                    chromosomeToRegions.put(chromosome, Lists.newArrayList());
+                }
+
+                chromosomeToRegions.get(chromosome).add(new BaseRegion(posStart, posEnd));
+            }
+        }
+        catch(IOException e)
+        {
+            PCH_LOGGER.error("failed to load BED file({}): {}", filename, e.toString());
+            System.exit(1);
+        }
+
+        return chromosomeToRegions;
     }
 
     private String getAdjustedChainFileLine(String line)

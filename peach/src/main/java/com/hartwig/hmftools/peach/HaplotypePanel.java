@@ -60,4 +60,11 @@ public class HaplotypePanel
     {
         return Sets.newHashSet(geneToGeneHaplotypePanel.keySet());
     }
+
+    public int getHaplotypeCount()
+    {
+        return geneToGeneHaplotypePanel.values().stream()
+                .mapToInt(GeneHaplotypePanel::getHaplotypeCount)
+                .sum();
+    }
 }

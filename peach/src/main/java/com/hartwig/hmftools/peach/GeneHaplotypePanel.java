@@ -52,4 +52,9 @@ public class GeneHaplotypePanel
                 .anyMatch(e -> e.equals(event.id()));
         return !isEventToIgnore && nonWildTypeHaplotypes.stream().anyMatch(h -> h.isRelevantFor(event));
     }
+
+    public int getHaplotypeCount()
+    {
+        return nonWildTypeHaplotypes.size() + 1;
+    }
 }
