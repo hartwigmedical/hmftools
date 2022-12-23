@@ -209,6 +209,8 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 
+- Upcoming
+    - Remove warning in case a variant potentially falls in the splice region of 2 neighbouring exons
 - [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.2)
     - (COSMIC) signatures are added to the somatic findings (new parameter: `-sigs_allocation_tsv`)
     - Unreported germline variants are no longer converted to somatic variants in case "germline to somatic conversion" is enabled.

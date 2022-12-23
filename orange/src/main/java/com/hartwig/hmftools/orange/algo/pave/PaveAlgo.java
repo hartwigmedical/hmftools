@@ -72,17 +72,15 @@ public class PaveAlgo {
             }
         }
 
-        ExonData spliceExon = null;
+        // In theory an intron could be so small that a variant belongs to multiple exons.
+        // In practice this is rare enough to ignore (it does happen on position 223183490 in pseudogene CT75 though).
         for (ExonData exon : exons) {
             if (liesInExonSpliceRegion(exon, position)) {
-                if (spliceExon != null) {
-                    LOGGER.warn("Multiple splice exons detected for variant on position '{}'", position);
-                }
-                spliceExon = exon;
+                return exon;
             }
         }
 
-        return spliceExon;
+        return null;
     }
 
     @Nullable
