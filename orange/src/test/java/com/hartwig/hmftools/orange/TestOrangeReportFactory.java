@@ -21,10 +21,13 @@ import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
@@ -210,7 +213,7 @@ public final class TestOrangeReportFactory {
                 .positionUp(128841405)
                 .chromosomeDown("6")
                 .positionDown(127469792)
-                .svType("INV")
+                .svType(StructuralVariantType.INV)
                 .junctionTypeUp("KNOWN")
                 .junctionTypeDown("KNOWN")
                 .depthUp(73)
@@ -227,7 +230,7 @@ public final class TestOrangeReportFactory {
                 .positionUp(2972480)
                 .chromosomeDown("7")
                 .positionDown(140487380)
-                .svType("BND")
+                .svType(StructuralVariantType.BND)
                 .junctionTypeUp("KNOWN")
                 .junctionTypeDown("KNOWN")
                 .depthUp(9)
@@ -243,11 +246,11 @@ public final class TestOrangeReportFactory {
                 .geneName("ALK")
                 .junctionStart(50403003)
                 .junctionEnd(60403003)
-                .type("SKIPPED_EXONS")
+                .type(AltSpliceJunctionType.SKIPPED_EXONS)
                 .depthStart(12)
                 .depthEnd(14)
-                .regionStart("SPLICE_JUNC")
-                .regionEnd("SPLICE_JUNC")
+                .regionStart(AltSpliceJunctionContext.SPLICE_JUNC)
+                .regionEnd(AltSpliceJunctionContext.SPLICE_JUNC)
                 .fragmentCount(5)
                 .cohortFrequency(3)
                 .build();
@@ -257,11 +260,11 @@ public final class TestOrangeReportFactory {
                 .geneName("ALK")
                 .junctionStart(50403003)
                 .junctionEnd(60403003)
-                .type("NOVEL_INTRON")
+                .type(AltSpliceJunctionType.NOVEL_INTRON)
                 .depthStart(24)
                 .depthEnd(12)
-                .regionStart("EXONIC")
-                .regionEnd("EXONIC")
+                .regionStart(AltSpliceJunctionContext.EXONIC)
+                .regionEnd(AltSpliceJunctionContext.EXONIC)
                 .fragmentCount(43)
                 .cohortFrequency(12)
                 .build();

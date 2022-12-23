@@ -32,13 +32,13 @@ public class CuppaPredictionFactoryTest {
 
         assertEquals(36, cuppaData.predictions().size());
         assertEquals(0.996, findByCancerType(cuppaData.predictions(), "Melanoma").likelihood(), EPSILON);
-        assertEquals(0.000131, findByCancerType(cuppaData.predictions(), "Pancreas").likelihood(), EPSILON);
-        assertEquals(0.000146, findByCancerType(cuppaData.predictions(), "Lung: Non-small Cell").likelihood(), EPSILON);
+        assertEquals(0.00013, findByCancerType(cuppaData.predictions(), "Pancreas").likelihood(), EPSILON);
+        assertEquals(0.00013, findByCancerType(cuppaData.predictions(), "Lung: Non-small Cell").likelihood(), EPSILON);
 
         assertEquals(3, cuppaData.simpleDups32To200B());
         assertEquals(8, cuppaData.maxComplexSize());
         assertEquals(0, cuppaData.telomericSGLs());
-        assertEquals(4, cuppaData.LINECount());
+        assertEquals(3, cuppaData.LINECount());
     }
 
     @NotNull

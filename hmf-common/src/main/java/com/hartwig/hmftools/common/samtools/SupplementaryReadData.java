@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.common.samtools;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+
+import htsjdk.samtools.SAMRecord;
+
 public class SupplementaryReadData
 {
     public final String Chromosome;
@@ -13,6 +17,14 @@ public class SupplementaryReadData
 
     public static final char SUPP_POS_STRAND = '+';
     public static final char SUPP_NEG_STRAND = '-';
+
+    public static SupplementaryReadData from(final SAMRecord record)
+    {
+        if(!record.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
+            return null;
+
+        return from(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+    }
 
     public static SupplementaryReadData from(final String suppData)
     {

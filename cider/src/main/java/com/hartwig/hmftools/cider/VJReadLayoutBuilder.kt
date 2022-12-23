@@ -246,8 +246,9 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
 
         sLogger.info("building layouts from {} reads", layoutReads.size)
 
-        val maxToCompareBeforeAlignedPos: Int = if (geneType.vj == VJ.V) CiderConstants.ASSUMED_ANCHOR_BASE_LENGTH else -1
-        val maxToCompareAfterAlignedPos: Int = if (geneType.vj == VJ.J) CiderConstants.ASSUMED_ANCHOR_BASE_LENGTH else -1
+        // always compare the whole sequence, need to clean up and remove the old feature
+        val maxToCompareBeforeAlignedPos: Int = -1 //if (geneType.vj == VJ.V) CiderConstants.ASSUMED_ANCHOR_BASE_LENGTH else -1
+        val maxToCompareAfterAlignedPos: Int = -1 //if (geneType.vj == VJ.J) CiderConstants.ASSUMED_ANCHOR_BASE_LENGTH else -1
 
         val readLayouts: MutableList<ReadLayout> = ArrayList()
 

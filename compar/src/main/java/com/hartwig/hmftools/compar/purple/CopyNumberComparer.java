@@ -45,9 +45,9 @@ public class CopyNumberComparer implements ItemComparer
     public boolean hasReportable() { return false; }
 
     @Override
-    public void processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
     {
-        CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
     }
 
     @Override
@@ -79,7 +79,8 @@ public class CopyNumberComparer implements ItemComparer
         }
         catch(IOException e)
         {
-            CMP_LOGGER.info("sample({}) failed to read copy number data: {}", sampleId, e.toString());
+            CMP_LOGGER.warn("sample({}) failed to read copy number data: {}", sampleId, e.toString());
+            return null;
         }
 
         return comparableItems;

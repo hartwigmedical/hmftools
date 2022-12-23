@@ -25,6 +25,21 @@ public class PurpleConstants
     public static final int SNV_HOTSPOT_MAX_SNV_COUNT = 2000;
     public static final double SNV_FITTING_MAPPABILITY = 1.0;
     public static final int SNV_FITTING_MAX_REPEATS = 3;
+    public static final double SOMATIC_MIN_PURITY_DEFAULT = 0.17;
+    public static final double SOMATIC_MIN_PURITY_SPREAD_DEFAULT = 0.15;
+    public static final int SOMATIC_MIN_PEAK_DEFAULT = 4;
+    public static final int SOMATIC_MIN_VARIANTS_DEFAULT = 10;
+    public static final double SOMATIC_PENALTY_WEIGHT_DEFAULT = 1.5;
+    public static final double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.97;
+
+    public static final double CLONALITY_BIN_WIDTH = 0.05;
+    public static final double CLONALITY_MAX_PLOIDY = 10;
+    public static final int MIN_TOTAL_SV_FRAGMENT_COUNT = 1000;
+    public static final int MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT = 2000;
+
+    // somatic enrichment
+    public static final double BIALLELIC_PROBABILITY = 0.005;
+
 
     // SV recovery
     public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 300;
@@ -56,5 +71,13 @@ public class PurpleConstants
 
     public static final ChrBaseRegion CDKN2A_DELETION_REGION = new ChrBaseRegion("9", 9000000, 12000000);
     public static final double MAX_SOMATIC_FIT_DELETED_PERC = 0.003;
+
+    // somatic subclonality peaks
+    public static final int PEAK_BIN_COUNT = 10;
+    public static final double PEAK_BIN_WIDTH = 0.01;
+    public static final double PEAK_BIN_MIN_AVERAGE_WEIGHT = 0.4;
+    public static final double PEAK_BIN_CLONAL_PLOIDY = 0.85;
+    public static final double MAX_UNEXPLAINED_WEIGHT_PERCENT = 0.01;
+
 
 }

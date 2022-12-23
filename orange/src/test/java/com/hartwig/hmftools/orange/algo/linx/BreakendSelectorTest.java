@@ -7,8 +7,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionCacheTestFactory;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
@@ -38,10 +38,10 @@ public class BreakendSelectorTest {
                 threeGeneExon21,
                 otherGene);
 
-        KnownFusionData fiveData = knownFusion(KnownFusionType.PROMISCUOUS_5, "five", Strings.EMPTY);
+        KnownFusionData fiveData = KnownFusionCacheTestFactory.createPromiscuousFive("five");
         fiveData.setKnownExonData("canonical", "8;12", Strings.EMPTY);
 
-        KnownFusionData threeData = knownFusion(KnownFusionType.PROMISCUOUS_3, Strings.EMPTY, "three");
+        KnownFusionData threeData = KnownFusionCacheTestFactory.createPromiscuousThree("three");
         threeData.setKnownExonData("canonical", Strings.EMPTY, "20;21");
 
         KnownFusionCache knownFusionCache = new KnownFusionCache();
@@ -79,10 +79,5 @@ public class BreakendSelectorTest {
                 .reportedDisruption(false)
                 .disruptive(true)
                 .build();
-    }
-
-    @NotNull
-    private static KnownFusionData knownFusion(@NotNull KnownFusionType type, @NotNull String fiveGene, @NotNull String threeGene) {
-        return new KnownFusionData(type, fiveGene, threeGene, Strings.EMPTY, Strings.EMPTY);
     }
 }

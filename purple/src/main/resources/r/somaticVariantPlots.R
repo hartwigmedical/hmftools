@@ -94,6 +94,7 @@ clonality_plot <- function(somaticBuckets, clonalityModel) {
   return(pFinal)
 }
 
+maxRainfallSNVs=100000
 
 rainfall_plot <- function(somaticVariants) {
   
@@ -115,7 +116,11 @@ rainfall_plot <- function(somaticVariants) {
       prevDis = abs(pos - prevPos),
       nextDis = abs(nextPos - pos),
       distanceToNeighbour = pmin(prevDis, nextDis),
-      rank = row_number()) 
+      rank = row_number())
+
+  if(nrow(snps) > maxRainfallSNVs) {
+    snps = head(snps,maxRainfallSNVs)
+  }
   
   kataegis = snps %>% mutate(ymin = min(distanceToNeighbour), ymax = max(distanceToNeighbour)) %>% 
     filter(!is.na(kataegis)) %>% 
@@ -171,10 +176,7 @@ clonalityModel = read.table(paste0(purpleDir, "/", sample, ".purple.somatic.clon
 clonalityModelPlot = clonality_plot(somaticBuckets, clonalityModel)
 ggsave(filename = paste0(plotDir, "/", sample, ".somatic.clonality.png"), clonalityModelPlot, units = "in", height = 6, width = 8, scale = 1)
 
-totalSomatics = sum(somaticBuckets$count)
-if (totalSomatics <= 100000) {
-  vcf = readVcf(paste0(purpleDir, "/", sample, ".purple.somatic.vcf.gz"))
-  somaticVariants = vcf_data_frame(vcf)
-  rainfallPlot = rainfall_plot(somaticVariants)
-  ggsave(filename = paste0(plotDir, "/", sample, ".somatic.rainfall.png"), rainfallPlot, units = "in", height = 4, width = 8, scale = 1)
-}
+vcf = readVcf(paste0(purpleDir, "/", sample, ".purple.somatic.vcf.gz"))
+somaticVariants = vcf_data_frame(vcf)
+rainfallPlot = rainfall_plot(somaticVariants)
+ggsave(filename = paste0(plotDir, "/", sample, ".somatic.rainfall.png"), rainfallPlot, units = "in", height = 4, width = 8, scale = 1)

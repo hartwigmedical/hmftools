@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.plot;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN_INFO;
 
@@ -23,8 +25,6 @@ public class RChartData
 {
     private static final double COPY_NUMBER_BUCKET_SIZE = 1;
     private static final double VARIANT_COPY_NUMBER_BUCKET_SIZE = 0.05;
-    private static final DecimalFormat VCN_FORMAT = new DecimalFormat("0.00");
-    private static final DecimalFormat CN_FORMAT = new DecimalFormat("0");
 
     private static final String DELIMITER = "\t";
 
@@ -56,15 +56,20 @@ public class RChartData
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER, "", "").add("variantCopyNumberBucket").add("copyNumberBucket").add("count").toString();
+        return new StringJoiner(DELIMITER, "", "")
+                .add("variantCopyNumberBucket")
+                .add("copyNumberBucket")
+                .add("count")
+                .toString();
     }
 
     private static String toString(Map.Entry<String, AtomicInteger> entry)
     {
         String[] keys = entry.getKey().split(">");
 
-        return new StringJoiner(DELIMITER).add(VCN_FORMAT.format(Integer.parseInt(keys[0]) * VARIANT_COPY_NUMBER_BUCKET_SIZE))
-                .add(CN_FORMAT.format(Integer.parseInt(keys[1]) * COPY_NUMBER_BUCKET_SIZE))
+        return new StringJoiner(DELIMITER)
+                .add(format("%.2f", Integer.parseInt(keys[0]) * VARIANT_COPY_NUMBER_BUCKET_SIZE))
+                .add(format("%.0f", Integer.parseInt(keys[1]) * COPY_NUMBER_BUCKET_SIZE))
                 .add(String.valueOf(entry.getValue()))
                 .toString();
     }

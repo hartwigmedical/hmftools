@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
+import com.hartwig.hmftools.common.linx.DriverEventType;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvBreakend;

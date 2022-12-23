@@ -81,11 +81,9 @@ public class SpecialFusionsTest
         downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
 
-        FusionParameters params = new FusionParameters();
-        params.RequirePhaseMatch = true;
-        params.AllowExonSkipping = true;
+        tester.FusionAnalyser.getFusionFinder().setFusionParams(true, true, false);
 
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes);
 
         assertEquals(1, fusions.size());
         final GeneFusion fusion = fusions.get(0);
@@ -117,9 +115,7 @@ public class SpecialFusionsTest
         kfData.setKnownExonData(transName, "2;3", "5;6");
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 
-        FusionParameters params = new FusionParameters();
-        params.RequirePhaseMatch = true;
-        params.AllowExonSkipping = true;
+        tester.FusionAnalyser.getFusionFinder().setFusionParams(true, true, false);
 
         // first DEL doesn't delete a known region even though it's phased
         List<BreakendGeneData> upGenes = Lists.newArrayList();
@@ -134,7 +130,7 @@ public class SpecialFusionsTest
         downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
 
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes);
 
         // second one does
         upGenes.clear();
@@ -147,7 +143,7 @@ public class SpecialFusionsTest
         downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
 
-        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params));
+        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes));
 
         assertEquals(1, fusions.size());
         GeneFusion fusion = tester.FusionAnalyser.getFusionFinder().findTopReportableFusion(fusions);
@@ -194,7 +190,7 @@ public class SpecialFusionsTest
         downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
 
         fusions.clear();
-        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params));
+        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes));
 
         assertEquals(1, fusions.size());
         fusion = tester.FusionAnalyser.getFusionFinder().findTopReportableFusion(fusions);
@@ -274,9 +270,7 @@ public class SpecialFusionsTest
 
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 
-        FusionParameters params = new FusionParameters();
-        params.RequirePhaseMatch = true;
-        params.AllowExonSkipping = true;
+        tester.FusionAnalyser.getFusionFinder().setFusionParams(true, true, false);
 
         // a DEL linking the 2 regions
         List<BreakendGeneData> upGenes = Lists.newArrayList();
@@ -289,7 +283,7 @@ public class SpecialFusionsTest
         downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, chromosome, 9500, NEG_ORIENT, 1000));
         downGenes.get(0).setPositionalData(chromosome, 9500, NEG_ORIENT);
 
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes);
 
         upGenes.clear();
         upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, true, chromosome, 200, NEG_ORIENT, 1000));
@@ -299,7 +293,7 @@ public class SpecialFusionsTest
         downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, false, chromosome, 19500, NEG_ORIENT, 1000));
         downGenes.get(0).setPositionalData(chromosome, 20100, NEG_ORIENT);
 
-        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params));
+        fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes));
 
         assertEquals(2, fusions.size());
 
@@ -566,7 +560,7 @@ public class SpecialFusionsTest
 
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 
-        tester.FusionAnalyser.cacheSpecialFusionGenes();
+        tester.FusionAnalyser.getSpecialFusions().cacheSpecialFusionGenes();
 
         // first test a fusion which uses the expanded 3' alt mapping to gene 3
         int varId = 1;

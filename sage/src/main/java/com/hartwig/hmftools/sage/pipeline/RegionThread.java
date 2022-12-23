@@ -99,6 +99,12 @@ public class RegionThread extends Thread
                 SG_LOGGER.trace("all tasks complete");
                 break;
             }
+            catch(Exception e)
+            {
+                SG_LOGGER.error("thread execution error: {}", e.toString());
+                e.printStackTrace();
+                System.exit(1);
+            }
         }
 
         mSamSlicerFactory.close();

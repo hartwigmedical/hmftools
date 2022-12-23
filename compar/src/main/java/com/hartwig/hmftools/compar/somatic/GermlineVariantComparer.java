@@ -42,9 +42,9 @@ public class GermlineVariantComparer implements ItemComparer
     public Category category() { return GERMLINE_VARIANT; }
 
     @Override
-    public void processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
     {
-        CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
     }
 
     @Override
@@ -99,7 +99,8 @@ public class GermlineVariantComparer implements ItemComparer
         }
         catch(Exception e)
         {
-            CMP_LOGGER.error("failed to read germline VCF file({}): {}", vcfFile, e.toString());
+            CMP_LOGGER.warn("failed to read germline VCF file({}): {}", vcfFile, e.toString());
+            return null;
         }
 
         return comparableItems;

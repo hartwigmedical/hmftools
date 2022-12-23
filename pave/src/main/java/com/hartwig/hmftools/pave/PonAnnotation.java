@@ -49,7 +49,7 @@ public class PonAnnotation
         mFileReader = null;
         mCurrentChromosome = "";
         mColumnCount = -1;
-        mHasValidData = false;
+        mHasValidData = true;
 
         if(filename != null && !filename.isEmpty())
         {

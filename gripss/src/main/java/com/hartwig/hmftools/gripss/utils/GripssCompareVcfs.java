@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
+import static com.hartwig.hmftools.gripss.GripssConfig.REFERENCE;
 import static com.hartwig.hmftools.gripss.GripssConfig.SAMPLE;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
@@ -75,6 +76,7 @@ import htsjdk.variant.vcf.VCFHeader;
 public class GripssCompareVcfs
 {
     private final String mSampleId;
+    private final String mReferenceId;
     private final String mOriginalVcf;
     private final String mNewVcf;
     private final String mOutputDir;
@@ -89,7 +91,7 @@ public class GripssCompareVcfs
 
     private final boolean mIgnorePonDiff;
     private final boolean mKeyByCoords; // instead of assuming VCF Ids match
-    private final boolean mWriteAllDiffs; // instead of assuming VCF Ids match
+    private final boolean mWriteAllDiffs;
     private final boolean mGridssDiffsOnly;
 
     private final List<VcfCompareField> mVcfCheckFields;
@@ -107,6 +109,7 @@ public class GripssCompareVcfs
     public GripssCompareVcfs(final CommandLine cmd)
     {
         mSampleId = cmd.getOptionValue(SAMPLE);
+        mReferenceId = cmd.getOptionValue(REFERENCE, "");
         mOriginalVcf = cmd.getOptionValue(ORIGINAL_VCF);
         mNewVcf = cmd.getOptionValue(NEW_VCF);
         mOutputDir = parseOutputDir(cmd);
@@ -123,7 +126,6 @@ public class GripssCompareVcfs
         mGridssDiffsOnly = cmd.hasOption(GRIDSS_ONLY);
 
         mVcfCheckFields = Lists.newArrayList();
-
 
         if(!mGridssDiffsOnly)
         {
@@ -182,12 +184,15 @@ public class GripssCompareVcfs
                 vcfFile, new VCFCodec(), false);
 
         VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
-        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, "", mSampleId, false);
+        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, mReferenceId, mSampleId, false);
 
         if(genotypeIds == null)
         {
             System.exit(1);
         }
+
+        GR_LOGGER.info("genetype info: ref({}: {}) tumor({}: {})",
+                genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId, genotypeIds.TumorOrdinal, genotypeIds.TumorId);
 
         try
         {
@@ -401,7 +406,7 @@ public class GripssCompareVcfs
                 Breakend origBreakend = origSv.breakends()[se];
                 Breakend newBreakend = newSv.breakends()[se];
 
-                if(compareField.Scope == GenotypeScope.NORMAL || compareField.Scope == GenotypeScope.BOTH)
+                if(!mReferenceId.isEmpty() && (compareField.Scope == GenotypeScope.NORMAL || compareField.Scope == GenotypeScope.BOTH))
                 {
                     double origValue = getGenotypeAttributeAsDouble(origBreakend.RefGenotype, compareField.VcfTag, 0);
                     double newValue = getGenotypeAttributeAsDouble(newBreakend.RefGenotype, compareField.VcfTag, 0);

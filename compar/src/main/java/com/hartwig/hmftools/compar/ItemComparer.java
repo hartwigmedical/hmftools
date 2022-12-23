@@ -9,7 +9,7 @@ public interface ItemComparer
 {
     Category category();
 
-    void processSample(final String sampleId, final List<Mismatch> mismatches);
+    boolean processSample(final String sampleId, final List<Mismatch> mismatches);
 
     List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess);
 

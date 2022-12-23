@@ -51,17 +51,10 @@ public class ReportWriter {
     }
 
     private void writePdf(@NotNull OrangeReport report) throws IOException {
-        ReportChapter[] chapters;
-        if (report.refSample() != null) {
-            chapters = new ReportChapter[] { new FrontPageChapter(report, plotPathResolver),
-                    new SomaticFindingsChapter(report, plotPathResolver), new GermlineFindingsChapter(report),
-                    new ImmunologyChapter(report), new RNAFindingsChapter(report), new CohortComparisonChapter(report, plotPathResolver),
-                    new QualityControlChapter(report, plotPathResolver) };
-        } else {
-            chapters = new ReportChapter[] { new FrontPageChapter(report, plotPathResolver),
-                    new SomaticFindingsChapter(report, plotPathResolver), new ImmunologyChapter(report), new RNAFindingsChapter(report),
-                    new CohortComparisonChapter(report, plotPathResolver), new QualityControlChapter(report, plotPathResolver) };
-        }
+        ReportChapter[] chapters =
+                new ReportChapter[] { new FrontPageChapter(report, plotPathResolver), new SomaticFindingsChapter(report, plotPathResolver),
+                        new GermlineFindingsChapter(report), new ImmunologyChapter(report), new RNAFindingsChapter(report),
+                        new CohortComparisonChapter(report, plotPathResolver), new QualityControlChapter(report, plotPathResolver) };
 
         String platinumVersion = report.platinumVersion() != null ? report.platinumVersion() : ReportResources.NOT_AVAILABLE;
         writePdfChapters(report.sampleId(), platinumVersion, chapters);

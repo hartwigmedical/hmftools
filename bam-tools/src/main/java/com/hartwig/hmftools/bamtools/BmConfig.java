@@ -65,9 +65,9 @@ public class BmConfig
 
     // config strings
     public static final String SAMPLE = "sample";
-    private static final String BAM_FILE = "bam_file";
+    public static final String BAM_FILE = "bam_file";
     private static final String FUNCTIONS = "functions";
-    private static final String PARTITION_SIZE = "partition_size";
+    public static final String PARTITION_SIZE = "partition_size";
     private static final String MAP_QUAL_THRESHOLD = "map_qual_threshold";
     private static final String BASE_QUAL_THRESHOLD = "base_qual_threshold";
     private static final String MAX_COVERAGE = "max_coverage";
@@ -75,8 +75,8 @@ public class BmConfig
     private static final String WRITE_OLD_STYLE = "write_old_style";
     private static final String SLICE_BED = "slice_bed";
 
-    private static final String LOG_READ_IDS = "log_read_ids";
-    private static final String PERF_DEBUG = "perf_debug";
+    public static final String LOG_READ_IDS = "log_read_ids";
+    public static final String PERF_DEBUG = "perf_debug";
 
     public static final String ITEM_DELIM = ";";
 

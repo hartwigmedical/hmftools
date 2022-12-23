@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.ctdna;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.linx.DriverEventType.DEL;
+import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
@@ -11,31 +14,31 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.ctdna.CategoryType.AMP_DEL;
 import static com.hartwig.hmftools.ctdna.CategoryType.FUSION;
 import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_SV;
-import static com.hartwig.hmftools.ctdna.CategoryType.SUBCLONAL_MUTATION;
 import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
 import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_MAPPABILITY_MIN;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_REPEAT_COUNT_MAX;
+import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_SV_BREAKENDS_PER_GENE;
 import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
-import static com.hartwig.hmftools.ctdna.VariantSelection.addRegisteredLocation;
-import static com.hartwig.hmftools.ctdna.VariantSelection.isNearRegisteredLocation;
-
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.linx.LinxCommonTypes;
+import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
@@ -49,6 +52,7 @@ public class StructuralVariant extends Variant
     private final StructuralVariantData mVariant;
     private final List<LinxBreakend> mBreakends;
     private final List<LinxFusion> mFusions;
+    private boolean mAmpDelDriver;
 
     private List<String> mRefSequences;
 
@@ -58,14 +62,21 @@ public class StructuralVariant extends Variant
         mVariant = variant;
         mBreakends = breakends;
         mFusions = fusions;
+        mAmpDelDriver = false;
         mRefSequences = Lists.newArrayListWithExpectedSize(2);
     }
+
+    public StructuralVariantData variantData() { return mVariant; }
+    public void markAmpDelDriver() { mAmpDelDriver = true; }
 
     @Override
     public CategoryType categoryType()
     {
         if(!mFusions.isEmpty())
             return FUSION;
+
+        if(mAmpDelDriver)
+            return AMP_DEL;
 
         return OTHER_SV;
     }
@@ -122,6 +133,9 @@ public class StructuralVariant extends Variant
             return true;
 
         if(mBreakends.stream().anyMatch(x -> x.reportedDisruption()))
+            return true;
+
+        if(mAmpDelDriver)
             return true;
 
         return false;
@@ -294,6 +308,9 @@ public class StructuralVariant extends Variant
     @Override
     public boolean passNonReportableFilters(final PvConfig config)
     {
+        if(reported())
+            return true;
+
         if(gc() < DEFAULT_GC_THRESHOLD_MIN || gc() > DEFAULT_GC_THRESHOLD_MAX)
             return false;
 
@@ -328,6 +345,29 @@ public class StructuralVariant extends Variant
         return true;
     }
 
+    @Override
+    public boolean checkAndRegisterGeneLocation(final Map<String,Integer> geneDisruptions)
+    {
+        for(LinxBreakend breakend : mBreakends)
+        {
+            Integer breakendCount = geneDisruptions.get(breakend.gene());
+
+            if(breakendCount != null)
+            {
+                if(breakendCount >= DEFAULT_SV_BREAKENDS_PER_GENE)
+                    return false;
+
+                geneDisruptions.put(breakend.gene(), breakendCount + 1);
+            }
+            else
+            {
+                geneDisruptions.put(breakend.gene(), 1);
+            }
+        }
+
+        return true;
+    }
+
     public String toString()
     {
         return format("variant(%s) category(%s) fusion(%d) breakends(%d)", description(), categoryType(), mFusions.size(), mBreakends.size());
@@ -350,7 +390,24 @@ public class StructuralVariant extends Variant
         List<LinxSvAnnotation> annotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(linxDir, sampleId));
         List<LinxFusion> fusions = LinxFusion.read(LinxFusion.generateFilename(linxDir, sampleId));
 
+        List<LinxDriver> drivers = LinxDriver.read(LinxDriver.generateFilename(linxDir, sampleId))
+                .stream().filter(x -> x.eventType() == DEL || x.eventType() == GAIN)
+                .collect(Collectors.toList());
+
+        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
+
+        if(drivers.stream().anyMatch(x -> x.eventType() == DEL))
+        {
+            String geneCopyNumberFile = GeneCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
+            GeneCopyNumberFile.read(geneCopyNumberFile).stream()
+                    .filter(x -> drivers.stream().anyMatch(y -> y.gene().equals(x.geneName())))
+                    .forEach(x -> geneCopyNumbers.add(x));
+        }
+
         List<LinxCluster> clusters = LinxCluster.read(LinxCluster.generateFilename(linxDir, sampleId));
+
+        Map<Integer,List<StructuralVariant>> clusterSVs = Maps.newHashMap();
+        drivers.forEach(x -> clusterSVs.put(x.clusterId(), Lists.newArrayList()));
 
         for(EnrichedStructuralVariant variant : enrichedVariants)
         {
@@ -391,11 +448,71 @@ public class StructuralVariant extends Variant
 
             StructuralVariantData variantData = convertSvData(variant, annotation.svId());
 
-            variants.add(new StructuralVariant(variantData, svBreakends, svFusions));
+            StructuralVariant sv = new StructuralVariant(variantData, svBreakends, svFusions);
+            variants.add(sv);
+
+            if(clusterSVs.containsKey(cluster.clusterId()))
+            {
+                clusterSVs.get(cluster.clusterId()).add(sv);
+            }
         }
 
         PV_LOGGER.info("loaded {} structural variants from vcf({})", variants.size(), vcfFile);
 
+        // find SVs related to DEL and AMP events
+        for(LinxDriver driver : drivers)
+        {
+            List<StructuralVariant> svList = clusterSVs.get(driver.clusterId());
+            StructuralVariant driverSv = null;
+
+            if(driver.eventType() == GAIN)
+            {
+                double maxJcn = 0;
+                for(StructuralVariant sv : svList)
+                {
+                    double svJcn = max(sv.variantData().adjustedStartCopyNumberChange(), sv.variantData().adjustedEndCopyNumberChange());
+                    if(svJcn > maxJcn)
+                    {
+                        maxJcn = svJcn;
+                        driverSv = sv;
+                    }
+                }
+            }
+            else
+            {
+                GeneCopyNumber geneCopyNumber = geneCopyNumbers.stream().filter(x -> x.geneName().equals(driver.gene())).findFirst().orElse(null);
+
+                if(geneCopyNumber != null)
+                {
+                    for(StructuralVariant sv : svList)
+                    {
+                        if(matchesDelRegion(sv, geneCopyNumber))
+                            sv.markAmpDelDriver();
+                    }
+                }
+            }
+
+            if(driverSv != null)
+                driverSv.markAmpDelDriver();
+        }
+
         return variants;
+    }
+
+    public static boolean matchesDelRegion(final StructuralVariant sv, final GeneCopyNumber geneCopyNumber)
+    {
+        if(sv.variantData().startOrientation() == POS_ORIENT && abs(sv.variantData().startPosition() - geneCopyNumber.minRegionStart()) <= 1)
+            return true;
+
+        if(sv.variantData().endOrientation() == POS_ORIENT && abs(sv.variantData().endPosition() - geneCopyNumber.minRegionStart()) <= 1)
+            return true;
+
+        if(sv.variantData().startOrientation() == NEG_ORIENT && abs(sv.variantData().startPosition() - geneCopyNumber.minRegionEnd()) <= 1)
+            return true;
+
+        if(sv.variantData().endOrientation() == NEG_ORIENT && abs(sv.variantData().endPosition() - geneCopyNumber.minRegionEnd()) <= 1)
+            return true;
+
+        return false;
     }
 }

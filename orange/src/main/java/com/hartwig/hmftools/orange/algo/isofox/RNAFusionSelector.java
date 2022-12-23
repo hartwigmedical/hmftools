@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.rna.RnaFusion;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.orange.algo.linx.DNAFusionEvaluator;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,6 +18,13 @@ import org.jetbrains.annotations.Nullable;
 final class RNAFusionSelector {
 
     private static final String RNA_FUSION_NAME_DELIMITER = "_";
+    private static final Set<StructuralVariantType> ALWAYS_VALID_FOR_PROMISCUOUS = Sets.newHashSet();
+
+    static {
+        ALWAYS_VALID_FOR_PROMISCUOUS.add(StructuralVariantType.BND);
+        ALWAYS_VALID_FOR_PROMISCUOUS.add(StructuralVariantType.INV);
+        ALWAYS_VALID_FOR_PROMISCUOUS.add(StructuralVariantType.INS);
+    }
 
     private RNAFusionSelector() {
     }
@@ -43,7 +53,7 @@ final class RNAFusionSelector {
         List<RnaFusion> result = Lists.newArrayList();
 
         for (RnaFusion rnaFusion : rnaFusions) {
-            boolean isTypeMatch = rnaFusion.svType().equals("BND") || rnaFusion.svType().equals("INV") || rnaFusion.svType().equals("INS");
+            boolean isTypeMatch = ALWAYS_VALID_FOR_PROMISCUOUS.contains(rnaFusion.svType());
             boolean hasSufficientDistance = Math.abs(rnaFusion.positionUp() - rnaFusion.positionDown()) > 1E6;
 
             String geneUp = geneUp(rnaFusion);

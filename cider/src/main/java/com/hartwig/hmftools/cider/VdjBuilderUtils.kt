@@ -93,24 +93,6 @@ object VdjBuilderUtils
         return null
     }
 
-    // we already worked out where the overlaps are, we now want to work out the
-    // distance between V and J
-    fun calcVJDistance(vSeq: String, jSeq: String, vPosInVSeq: Int, jPosInJSeq: Int, overlap: Int) : Int
-    {
-        // v layout:   TGC-GAATACC-CACATCCTGA-G
-        // j layout:            CC-CACATCCTGA-GAGTG-TCAGA
-        //                 |_____|            |___|
-        //            V anchor(align)    J anchor(align)
-
-        // v layout:    GC-GAATACC-CACATCCTGA-GAGTG-TCAGA
-        // j layout: GATGC-GAATACC-CACATCCTGA-GAGTG-T
-        //                 |_____|            |___|
-        //            V anchor(align)    J anchor(align)
-        //                        |----------|
-
-        return 0
-    }
-
     // TODO write unit test
     fun vdjSequenceCompare(vdj1: VDJSequence, vdj2: VDJSequence,
                                    diffAccumulator: (Map.Entry<Char, Int>, Map.Entry<Char, Int>) -> Boolean) : Boolean

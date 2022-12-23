@@ -193,6 +193,9 @@ public class SomaticStream
             mRChartData.write();
 
             calculateVariantLoadValues();
+
+            PPL_LOGGER.debug("charting variants: total(snvs={} indels={}) downsampled({} snvMod={} indelMod={})",
+                    mSnpCount, mIndelCount, mDownsampledVariants.size(), mSnpMod, mIndelMod);
         }
         catch(IOException e)
         {

@@ -20,7 +20,7 @@ public abstract class LinxDriver
 {
     public abstract int clusterId();
     public abstract String gene();
-    public abstract String eventType();
+    public abstract DriverEventType eventType();
 
     private static final String FILE_EXTENSION = ".linx.drivers.tsv";
     private static final String CATALOG_EXTENSION = ".linx.driver.catalog.tsv";
@@ -72,7 +72,7 @@ public abstract class LinxDriver
             drivers.add(ImmutableLinxDriver.builder()
                     .clusterId(Integer.parseInt(values[fieldsIndexMap.get("clusterId")]))
                     .gene(values[fieldsIndexMap.get("gene")])
-                    .eventType(values[fieldsIndexMap.get("eventType")])
+                    .eventType(DriverEventType.valueOf(values[fieldsIndexMap.get("eventType")]))
                     .build());
         }
 

@@ -124,11 +124,9 @@ public class FusionTest
         downGenes.get(2).setPositionalData(CHR_1, 10650, NEG_ORIENT);
         downGenes.get(3).setPositionalData(CHR_1, 10850, NEG_ORIENT);
 
-        FusionParameters params = new FusionParameters();
-        params.RequirePhaseMatch = true;
-        params.AllowExonSkipping = true;
+        tester.FusionAnalyser.getFusionFinder().setFusionParams(true, true, false);
 
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes);
         fusions.forEach(x -> x.setKnownType(KNOWN_PAIR));
         tester.FusionAnalyser.getFusionFinder().findTopReportableFusion(fusions);
 

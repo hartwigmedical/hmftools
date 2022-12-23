@@ -82,12 +82,6 @@ public class RegionTask
 
     public final List<SageVariant> getVariants() { return mSageVariants; }
 
-    public final List<PerformanceCounter> getPerfCounters()
-    {
-        mPerfCounters.add(mEvidenceStage.getVariantPhaser().getPerfCounter());
-        return mPerfCounters;
-    }
-
     public void run()
     {
         SG_LOGGER.trace("{}: region({}) finding candidates", mTaskId, mRegion);
@@ -203,5 +197,6 @@ public class RegionTask
             mResults.addPerfCounters(mPerfCounters);
 
         mResults.addMaxMemory(calcMemoryUsage(false));
+        mResults.addSynCounts(mEvidenceStage.getSyncCounts());
     }
 }

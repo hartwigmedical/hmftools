@@ -34,9 +34,9 @@ public class KnownFusionData
     private int[] mFiveExonRange;
     private int[] mThreeExonRange;
 
-    // IG region
-    private ChrBaseRegion mIgRegion;
-    private byte mIgStrand;
+    // IG or other specific region
+    private ChrBaseRegion mGeneRegion;
+    private byte mGeneStrand;
 
     // 3' gene alternative mappings
     private final List<ChrBaseRegion> mThreeGeneAltRegions;
@@ -53,6 +53,7 @@ public class KnownFusionData
     private static final String FLD_OVERRIDES = "Overrides";
 
     public static final String OVERRIDE_IG_RANGE = "IG_RANGE";
+    public static final String OVERRIDE_THREE_PRIME_RANGE = "THREE_PRIME_RANGE";
     public static final String OVERRIDE_ALTS = "ALTS";
     public static final String OVERRIDE_UP_DISTANCE = "UP_GENE_DOWNSTREAM_DISTANCE";
     public static final String OVERRIDE_DOWN_DISTANCE = "DOWN_GENE_DOWNSTREAM_DISTANCE";
@@ -76,8 +77,8 @@ public class KnownFusionData
         mSpecificExonsTransName = "";
         mFiveExonRange = new int[SE_PAIR];
         mThreeExonRange = new int[SE_PAIR];
-        mIgRegion = null;
-        mIgStrand = 0;
+        mGeneRegion = null;
+        mGeneStrand = 0;
         mDownstreamDistance = new int[] {0, 0};
         mThreeGeneAltRegions = Lists.newArrayList();
 
@@ -178,11 +179,11 @@ public class KnownFusionData
                     index += 3;
                 }
             }
-            else if(overrideName.equals(OVERRIDE_IG_RANGE))
+            else if(overrideName.equals(OVERRIDE_IG_RANGE) || overrideName.equals(OVERRIDE_THREE_PRIME_RANGE))
             {
-                final String[] igRangeItems = overrideData.split(ITEM_DELIM);
-                mIgStrand = Byte.parseByte(igRangeItems[0]);
-                mIgRegion = new ChrBaseRegion(igRangeItems[1], Integer.parseInt(igRangeItems[2]), Integer.parseInt(igRangeItems[3]));
+                final String[] rangeItems = overrideData.split(ITEM_DELIM, -1);
+                mGeneStrand = Byte.parseByte(rangeItems[0]);
+                mGeneRegion = new ChrBaseRegion(rangeItems[1], Integer.parseInt(rangeItems[2]), Integer.parseInt(rangeItems[3]));
             }
         }
     }
@@ -197,110 +198,24 @@ public class KnownFusionData
     public int[] fiveGeneExonRange() { return mFiveExonRange; }
     public int[] threeGeneExonRange() { return mThreeExonRange; }
 
-    public ChrBaseRegion igRegion() { return mIgRegion; }
+    public ChrBaseRegion geneRegion() { return mGeneRegion; }
+    public byte geneStrand() { return mGeneStrand; }
 
-    public boolean withinIgRegion(final String chromosome, int position)
+    public boolean withinGeneRegion(final String chromosome, int position)
     {
-        return mIgRegion != null && mIgRegion.containsPosition(chromosome, position);
+        return mGeneRegion != null && mGeneRegion.containsPosition(chromosome, position);
     }
 
-    public boolean matchesIgGene(final String chromosome, int position, byte orientation)
+    public boolean matchesGeneRegion(final String chromosome, int position, byte orientation)
     {
-        return mIgStrand == orientation && withinIgRegion(chromosome, position);
+        return (mGeneStrand == 0 || mGeneStrand == orientation) && withinGeneRegion(chromosome, position);
     }
 
     public final List<ChrBaseRegion> getThreeGeneAltRegions() { return mThreeGeneAltRegions; }
 
     public String toString()
     {
-        return String.format("%s: genes(%s - %s) ct(%s)",
-                Type, FiveGene, ThreeGene, CancerTypes);
+        return String.format("%s: genes(%s - %s) range(%s) ct(%s)",
+                Type, FiveGene, ThreeGene, mGeneRegion != null ? mGeneRegion : "none", CancerTypes);
     }
-
-    /*
-    private void setTypeInfo()
-    {
-        if(Type == KNOWN_PAIR)
-        {
-            if(!mOtherData.isEmpty())
-                mDownstreamDistance = Integer.parseInt(mOtherData);
-        }
-        else if(Type == EXON_DEL_DUP)
-        {
-            final String[] items = mOtherData.split(ITEM_DELIM);
-            if(items.length != 5)
-            {
-                mValidData = false;
-                return;
-            }
-
-            mSpecificExonsTransName = items[0];
-            mMinFusedExons[FS_UPSTREAM] = Integer.parseInt(items[1]);
-            mMaxFusedExons[FS_UPSTREAM] = Integer.parseInt(items[2]);
-            mMinFusedExons[FS_DOWNSTREAM] = Integer.parseInt(items[3]);
-            mMaxFusedExons[FS_DOWNSTREAM] = Integer.parseInt(items[4]);
-        }
-        else if(Type == IG_KNOWN_PAIR || Type == IG_PROMISCUOUS)
-        {
-            final String[] items = mOtherData.split(ITEM_DELIM);
-
-            if(items.length != 5)
-            {
-                mValidData = false;
-                return;
-            }
-
-            mIgStrand = Byte.parseByte(items[0]);
-
-            mIgRegion = new SvRegion(items[1], Integer.parseInt(items[2]), Integer.parseInt(items[3]));
-            mDownstreamDistance = Integer.parseInt(items[4]);
-        }
-        else if(Type == KNOWN_PAIR_UNMAPPABLE_3)
-        {
-            final String[] items = mOtherData.split(ITEM_DELIM);
-
-            // non-IG example: ALT;GL0002281;20000;125000;ALT;4;190930000;191030000;ALT;10;135420000;135520000
-            // IG example: 1;14;106032614;107288051;0;ALT;GL0002281;20000;125000;ALT;4;190930000;191030000;ALT;10;135420000;135520000
-
-            if(items.length < 4)
-            {
-                mValidData = false;
-                return;
-            }
-
-            int index = 0;
-            if(!items[0].equals(ALT_DATA))
-            {
-                if(items.length < 5)
-                {
-                    mValidData = false;
-                    return;
-                }
-
-                mIgStrand = Byte.parseByte(items[0]);
-
-                mIgRegion = new SvRegion(items[1], Integer.parseInt(items[2]), Integer.parseInt(items[3]));
-                mDownstreamDistance = Integer.parseInt(items[4]);
-
-                index += 5;
-            }
-
-            while(index < items.length)
-            {
-                if(!items[index].equals(ALT_DATA) || items.length - index < 4)
-                {
-                    mValidData = false;
-                    return;
-                }
-
-                ++index;
-
-                mThreeGeneAltRegions.add(new SvRegion(items[index], Integer.parseInt(items[index+1]), Integer.parseInt(items[index+2])));
-                index += 3;
-            }
-        }
-    }
-
-    */
-
 }

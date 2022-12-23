@@ -183,7 +183,7 @@ public class ProbeVariantSelection
             if(mConfig.isMultiSample())
                 writer.write("SampleId,");
 
-            writer.write("Category,Status,Variant,CopyNumber,Vaf,TumorFrags,PhasedVariants,Gene");
+            writer.write("Category,Status,Variant,Reported,CopyNumber,Vaf,TumorFrags,PhasedVariants,Gene");
             writer.write(",Type,Sequence,GcPercent,OtherData");
             writer.newLine();
             return writer;
@@ -209,9 +209,9 @@ public class ProbeVariantSelection
 
                 String variantInfo = mConfig.isMultiSample() ? format("%s,", sampleId) : "";
 
-                variantInfo += format("%s,%s,%s,%.2f,%.2f,%d,%s,%s",
-                        variant.categoryType(), variant.selectionStatus(), variant.description(), variant.copyNumber(), variant.vaf(),
-                        variant.tumorFragments(), variant.hasPhaseVariants(), variant.gene());
+                variantInfo += format("%s,%s,%s,%s,%.2f,%.2f,%d,%s,%s",
+                        variant.categoryType(), variant.selectionStatus(), variant.description(), variant.reported(),
+                        variant.copyNumber(), variant.vaf(), variant.tumorFragments(), variant.hasPhaseVariants(), variant.gene());
 
                 mWriter.write(format("%s,%s,%s,%.2f,%s", variantInfo, "ALT", variant.sequence(), variant.gc(), variant.otherData()));
                 mWriter.newLine();

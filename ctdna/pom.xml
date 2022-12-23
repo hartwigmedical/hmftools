@@ -59,7 +59,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.svprep.SvPrepApplication
+                            <mainClass>com.hartwig.hmftools.ctdna.ProbeVariantSelection
                             </mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>

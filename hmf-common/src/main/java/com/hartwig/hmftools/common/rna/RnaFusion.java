@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.rna;
 
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
+
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -14,7 +16,7 @@ public abstract class RnaFusion
     public abstract byte orientationDown();
     public abstract String junctionTypeUp();
     public abstract String junctionTypeDown();
-    public abstract String svType();
+    public abstract StructuralVariantType svType();
     public abstract int splitFragments();
     public abstract int realignedFrags();
     public abstract int discordantFrags();

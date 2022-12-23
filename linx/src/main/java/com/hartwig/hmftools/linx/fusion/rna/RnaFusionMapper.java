@@ -36,6 +36,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.linx.fusion.FusionConfig;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.utils.sv.StartEndPair;
@@ -54,7 +55,7 @@ public class RnaFusionMapper
 
     private final FusionFinder mFusionFinder;
     private final RnaMatchWriter mWriter;
-    private final FusionParameters mFusionParams;
+    private final FusionConfig mFusionConfig;
     private final EnsemblDataCache mGeneTransCache;
     private final Map<String,List<RnaFusionData>> mSampleRnaData;
     private final RnaFusionAnnotator mAnnotator;
@@ -85,9 +86,9 @@ public class RnaFusionMapper
 
         mWriter = new RnaMatchWriter(outputDir, fileSource);
 
-        mFusionParams = new FusionParameters();
-        mFusionParams.RequirePhaseMatch = false;
-        mFusionParams.AllowExonSkipping = false;
+        mFusionConfig = new FusionConfig();
+        mFusionConfig.RequirePhaseMatch = false;
+        mFusionConfig.AllowExonSkipping = false;
     }
 
     public final Map<String, List<RnaFusionData>> getSampleRnaData() { return mSampleRnaData; }
@@ -274,7 +275,7 @@ public class RnaFusionMapper
                     if(downBreakend.getSV().isSglBreakend())
                         continue;
 
-                    GeneFusion possibleFusion = checkFusionLogic(upTrans, downTrans, mFusionParams);
+                    GeneFusion possibleFusion = checkFusionLogic(upTrans, downTrans, mFusionConfig);
                     boolean viableFusion = possibleFusion != null;
 
                     // form one any way but mark it as not meeting standard fusion rules

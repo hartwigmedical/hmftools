@@ -6,5 +6,6 @@ public enum SelectionStatus
     SELECTED,
     FILTERED,
     EXCEEDS_COUNT,
-    PROXIMATE;
+    PROXIMATE,
+    GENE_LOCATIONS;
 }

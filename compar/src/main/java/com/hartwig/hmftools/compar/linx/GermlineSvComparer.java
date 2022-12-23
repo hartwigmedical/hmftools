@@ -42,9 +42,9 @@ public class GermlineSvComparer implements ItemComparer
     }
 
     @Override
-    public void processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
     {
-        CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
     }
 
     @Override
@@ -74,8 +74,8 @@ public class GermlineSvComparer implements ItemComparer
         }
         catch(IOException e)
         {
-            CMP_LOGGER.info("sample({}) failed to load Linx germline SV data: {}", sampleId, e.toString());
-            return Lists.newArrayList();
+            CMP_LOGGER.warn("sample({}) failed to load Linx germline SV data: {}", sampleId, e.toString());
+            return null;
         }
     }
 }

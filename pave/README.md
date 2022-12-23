@@ -41,6 +41,7 @@ sample | Sample ID
 vcf_file | Input somatic variant VCF
 ref_genome | Reference genome fasta file
 ensembl_data_dir | Path to Ensembl data cache directory
+driver_gene_panel|Driver Gene Panel
 ref_genome_version | 37 (default) or 38
 output_dir | Output directory for VCF and transcript CSV
 
@@ -59,6 +60,7 @@ java -jar pave.jar
   -sample SAMPLE_ID
   -vcf_file /path_to_somatic_vcf_file/
   -ensembl_data_dir /path_to_ensembl_files/
+  -driver_gene_panel /path_to_gene_panel/
   -ref_genome /path_to_ref_genome_fasta/
   -ref_genome_version [37 or 38] 
   -output_dir /path_to_write_data_files/ 

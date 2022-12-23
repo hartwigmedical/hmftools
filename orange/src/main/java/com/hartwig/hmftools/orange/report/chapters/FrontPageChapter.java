@@ -227,6 +227,7 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String copyNumberDriverString() {
+        // TODO Add germline deletions
         if (report.purple().reportableSomaticGainsLosses().isEmpty()) {
             return NONE;
         }

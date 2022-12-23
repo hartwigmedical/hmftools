@@ -13,6 +13,9 @@ import org.jetbrains.annotations.NotNull;
 
 final class ExpressionSelector {
 
+    private static final double HIGH_EXPRESSION_PERCENTILE_CUTOFF = 0.9;
+    private static final double LOW_EXPRESSION_PERCENTILE_CUTOFF = 0.05;
+
     private ExpressionSelector() {
     }
 
@@ -23,7 +26,10 @@ final class ExpressionSelector {
 
         List<GeneExpression> result = Lists.newArrayList();
         for (GeneExpression expression : expressions) {
-            if (oncogenes.contains(expression.geneName()) && expression.percentileCohort() > 0.9 && expression.percentileCancer() > 0.9) {
+            boolean isOncogene = oncogenes.contains(expression.geneName());
+            boolean hasHighExpressionCohort = expression.percentileCohort() >= HIGH_EXPRESSION_PERCENTILE_CUTOFF;
+            boolean hasHighExpressionCancer = expression.percentileCancer() >= HIGH_EXPRESSION_PERCENTILE_CUTOFF;
+            if (isOncogene && hasHighExpressionCohort && hasHighExpressionCancer) {
                 result.add(expression);
             }
         }
@@ -38,8 +44,10 @@ final class ExpressionSelector {
 
         List<GeneExpression> result = Lists.newArrayList();
         for (GeneExpression expression : expressions) {
-            if (suppressors.contains(expression.geneName()) && expression.percentileCohort() < 0.05
-                    && expression.percentileCancer() < 0.05) {
+            boolean isTSG = suppressors.contains(expression.geneName());
+            boolean hasLowExpressionCohort = expression.percentileCohort() <= LOW_EXPRESSION_PERCENTILE_CUTOFF;
+            boolean hasLowExpressionCancer = expression.percentileCancer() <= LOW_EXPRESSION_PERCENTILE_CUTOFF;
+            if (isTSG && hasLowExpressionCohort && hasLowExpressionCancer) {
                 result.add(expression);
             }
         }

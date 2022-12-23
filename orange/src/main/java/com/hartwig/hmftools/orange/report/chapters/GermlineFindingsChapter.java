@@ -16,9 +16,9 @@ import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
+import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
-import com.hartwig.hmftools.orange.report.interpretation.VariantEntry;
-import com.hartwig.hmftools.orange.report.interpretation.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.tables.GermlineDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
@@ -62,12 +62,17 @@ public class GermlineFindingsChapter implements ReportChapter {
     public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
 
-        addGermlineVariants(document);
-        addGermlineDeletions(document);
-        addGermlineDisruptions(document);
-        addMVLHAnalysis(document);
-        addGermlineCNAberrations(document);
-        addPharmacogenetics(document);
+        if (report.refSample() != null) {
+            // TODO Show tables as NA rather than not show them in case germline data is missing while ref sample is present
+            addGermlineVariants(document);
+            addGermlineDeletions(document);
+            addGermlineDisruptions(document);
+            addMVLHAnalysis(document);
+            addGermlineCNAberrations(document);
+            addPharmacogenetics(document);
+        } else {
+            document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(ReportResources.tableContentStyle()));
+        }
     }
 
     private void addGermlineVariants(@NotNull Document document) {

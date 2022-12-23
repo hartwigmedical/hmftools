@@ -71,5 +71,4 @@ public final class VariantDedup {
         boolean matchesBestHgvsCodingImpact = variantImpactToMatch.hgvsCodingImpact().equals(uniqueHgvsCodingImpact);
         return !(matchesMinAlleleCopyNumber && matchesBestHgvsCodingImpact);
     }
-
 }

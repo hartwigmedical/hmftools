@@ -18,10 +18,11 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporti
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
+import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,27 +33,32 @@ public class PurpleInterpreter {
     private static final Logger LOGGER = LogManager.getLogger(PurpleInterpreter.class);
 
     @NotNull
+    private final PaveAlgo paveAlgo;
+    @NotNull
     private final List<DriverGene> driverGenes;
     @NotNull
     private final ChordData chord;
 
-    public PurpleInterpreter(@NotNull final List<DriverGene> driverGenes, @NotNull final ChordData chord) {
+    public PurpleInterpreter(@NotNull final PaveAlgo paveAlgo, @NotNull final List<DriverGene> driverGenes,
+            @NotNull final ChordData chord) {
+        this.paveAlgo = paveAlgo;
         this.driverGenes = driverGenes;
         this.chord = chord;
     }
 
     @NotNull
     public PurpleInterpretedData interpret(@NotNull PurpleData purple) {
-        List<PurpleVariant> allSomaticVariants = PurpleVariantFactory.create(purple.allSomaticVariants());
-        List<PurpleVariant> reportableSomaticVariants = PurpleVariantFactory.create(purple.reportableSomaticVariants());
+        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(paveAlgo);
+        List<PurpleVariant> allSomaticVariants = purpleVariantFactory.create(purple.allSomaticVariants());
+        List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.create(purple.reportableSomaticVariants());
         List<PurpleVariant> additionalSuspectSomaticVariants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(allSomaticVariants,
                         reportableSomaticVariants,
                         driverGenes);
         LOGGER.info(" Found an additional {} somatic variants that are potentially interesting", additionalSuspectSomaticVariants.size());
 
-        List<PurpleVariant> allGermlineVariants = PurpleVariantFactory.create(purple.allGermlineVariants());
-        List<PurpleVariant> reportableGermlineVariants = PurpleVariantFactory.create(purple.reportableGermlineVariants());
+        List<PurpleVariant> allGermlineVariants = purpleVariantFactory.create(purple.allGermlineVariants());
+        List<PurpleVariant> reportableGermlineVariants = purpleVariantFactory.create(purple.reportableGermlineVariants());
         List<PurpleVariant> additionalSuspectGermlineVariants =
                 GermlineVariantSelector.selectInterestingUnreportedVariants(allGermlineVariants);
         if (additionalSuspectGermlineVariants != null) {
@@ -175,9 +181,9 @@ public class PurpleInterpreter {
     private static PurityPloidyFit createFit(@NotNull PurpleData purple) {
         return ImmutablePurityPloidyFit.builder()
                 .qc(purple.purityContext().qc())
-                .hasReliableQuality(purple.purityContext().qc().pass())
+                .hasSufficientQuality(purple.purityContext().qc().pass())
                 .fittedPurityMethod(purple.purityContext().method())
-                .hasReliablePurity(PurityContext.checkHasReliablePurity(purple.purityContext()))
+                .containsTumorCells(purple.purityContext().method() != FittedPurityMethod.NO_TUMOR)
                 .purity(purple.purityContext().bestFit().purity())
                 .minPurity(purple.purityContext().score().minPurity())
                 .maxPurity(purple.purityContext().score().maxPurity())

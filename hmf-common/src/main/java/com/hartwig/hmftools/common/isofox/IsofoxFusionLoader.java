@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
 import com.hartwig.hmftools.common.rna.RnaCommon;
 import com.hartwig.hmftools.common.rna.RnaFusion;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -57,7 +58,7 @@ public final class IsofoxFusionLoader
                     .orientationDown(Byte.parseByte(items[fieldsIndexMap.get(formStreamField(FLD_ORIENT, FS_DOWN))]))
                     .junctionTypeUp(items[fieldsIndexMap.get(formStreamField(FLD_JUNC_TYPE, FS_UP))])
                     .junctionTypeDown(items[fieldsIndexMap.get(formStreamField(FLD_JUNC_TYPE, FS_DOWN))])
-                    .svType(items[fieldsIndexMap.get(FLD_SV_TYPE)])
+                    .svType(StructuralVariantType.valueOf(items[fieldsIndexMap.get(FLD_SV_TYPE)]))
                     .splitFragments(Integer.parseInt(items[fieldsIndexMap.get(FLD_SPLIT_FRAGS)]))
                     .realignedFrags(Integer.parseInt(items[fieldsIndexMap.get(FLD_REALIGN_FLAGS)]))
                     .discordantFrags(Integer.parseInt(items[fieldsIndexMap.get(FLD_DISCORD_FRAGS)]))

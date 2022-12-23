@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.common.isofox;
 
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.ImmutableGeneExpression;
 import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
 import com.hartwig.hmftools.common.rna.ImmutableRnaStatistics;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -60,7 +63,7 @@ public final class IsofoxTestFactory {
                 .orientationDown((byte) 0)
                 .junctionTypeUp(Strings.EMPTY)
                 .junctionTypeDown(Strings.EMPTY)
-                .svType(Strings.EMPTY)
+                .svType(StructuralVariantType.BND)
                 .splitFragments(0)
                 .realignedFrags(0)
                 .discordantFrags(0)
@@ -77,12 +80,12 @@ public final class IsofoxTestFactory {
                 .chromosome(Strings.EMPTY)
                 .junctionStart(0)
                 .junctionEnd(0)
-                .type(Strings.EMPTY)
+                .type(AltSpliceJunctionType.UNKNOWN)
                 .fragmentCount(0)
                 .depthStart(0)
                 .depthEnd(0)
-                .regionStart(Strings.EMPTY)
-                .regionEnd(Strings.EMPTY)
+                .regionStart(AltSpliceJunctionContext.UNKNOWN)
+                .regionEnd(AltSpliceJunctionContext.UNKNOWN)
                 .basesStart(Strings.EMPTY)
                 .basesEnd(Strings.EMPTY)
                 .cohortFrequency(0);

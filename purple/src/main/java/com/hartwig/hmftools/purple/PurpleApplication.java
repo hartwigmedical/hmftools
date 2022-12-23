@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
 import static com.hartwig.hmftools.common.purple.GeneCopyNumber.listToMap;
@@ -46,8 +47,10 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.purple.fitting.SomaticPurityFitter;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
+import com.hartwig.hmftools.purple.plot.RChartData;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
@@ -303,8 +306,7 @@ public class PurpleApplication
             boolean testSomaticFit = bestFitFactory.somaticFit() != null;
             bestFit = bestFitFactory.somaticFit() != null ? bestFitFactory.somaticFit() : bestFitFactory.bestNormalFit();
 
-            purityAdjuster = new PurityAdjuster(
-                    bestFit.fit().purity(), bestFit.fit().normFactor(), cobaltChromosomes);
+            purityAdjuster = new PurityAdjuster(bestFit.fit().purity(), bestFit.fit().normFactor(), cobaltChromosomes);
 
             buildCopyNumbers(
                     sampleData, sampleDataFiles, fittedRegionFactory, purityAdjuster, observedRegions, bestFit.fit(), copyNumbers, fittedRegions);

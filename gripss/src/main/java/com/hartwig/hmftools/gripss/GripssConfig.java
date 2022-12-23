@@ -48,7 +48,7 @@ public class GripssConfig
     public final List<String> RestrictedChromosomes;
 
     public static final String SAMPLE = "sample";
-    private static final String REFERENCE = "reference";
+    public static final String REFERENCE = "reference";
     private static final String VCF_FILE = "vcf";
     private static final String GERMLINE = "germline";
 

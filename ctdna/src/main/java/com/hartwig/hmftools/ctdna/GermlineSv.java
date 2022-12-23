@@ -125,7 +125,8 @@ public class GermlineSv extends Variant
         List<Variant> variants = Lists.newArrayList();
 
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
-        String filename = LinxGermlineSv.generateFilename(config.LinxDir, sampleId);
+        String linxDir = PvConfig.getSampleFilePath(sampleId, config.LinxDir);
+        String filename = LinxGermlineSv.generateFilename(linxDir, sampleId);
         final List<LinxGermlineSv> germlineSvs = LinxGermlineSv.read(filename);
 
         germlineSvs.stream().filter(x -> x.Reported).forEach(x -> variants.add(new GermlineSv(x)));

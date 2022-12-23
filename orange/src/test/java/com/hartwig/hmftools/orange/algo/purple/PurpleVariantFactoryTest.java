@@ -20,6 +20,8 @@ import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
+import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +33,8 @@ public class PurpleVariantFactoryTest {
 
     @Test
     public void canHandleNullVariants() {
-        assertNull(PurpleVariantFactory.create(null));
+        PurpleVariantFactory factory = createTestFactory();
+        assertNull(factory.create(null));
     }
 
     @Test
@@ -79,7 +82,8 @@ public class PurpleVariantFactoryTest {
                 .localPhaseSets(Lists.newArrayList(1, 2))
                 .build();
 
-        List<PurpleVariant> converted = PurpleVariantFactory.create(Lists.newArrayList(somaticVariant));
+        PurpleVariantFactory factory = createTestFactory();
+        List<PurpleVariant> converted = factory.create(Lists.newArrayList(somaticVariant));
         assertEquals(1, converted.size());
 
         PurpleVariant variant = converted.get(0);
@@ -137,7 +141,8 @@ public class PurpleVariantFactoryTest {
                 new AltTranscriptReportableInfo("transcript", "hgvs coding", "hgvs protein", "missense_variant", CodingEffect.MISSENSE);
         SomaticVariant somaticVariant = SomaticVariantTestFactory.builder().otherReportedEffects(info.serialise()).build();
 
-        PurpleVariant variant = PurpleVariantFactory.create(Lists.newArrayList(somaticVariant)).get(0);
+        PurpleVariantFactory factory = createTestFactory();
+        PurpleVariant variant = factory.create(Lists.newArrayList(somaticVariant)).get(0);
 
         assertEquals(1, variant.otherImpacts().size());
         PurpleTranscriptImpact impact = variant.otherImpacts().get(0);
@@ -155,5 +160,10 @@ public class PurpleVariantFactoryTest {
     @NotNull
     private static AllelicDepth createDepth(int totalReadCount, int alleleReadCount) {
         return ImmutableAllelicDepthImpl.builder().totalReadCount(totalReadCount).alleleReadCount(alleleReadCount).build();
+    }
+
+    @NotNull
+    private static PurpleVariantFactory createTestFactory() {
+        return new PurpleVariantFactory(new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache()));
     }
 }

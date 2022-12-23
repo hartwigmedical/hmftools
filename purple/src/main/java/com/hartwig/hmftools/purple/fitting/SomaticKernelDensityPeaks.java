@@ -126,7 +126,7 @@ final class SomaticKernelDensityPeaks
         return results;
     }
 
-    private static int count(double peak, @NotNull final List<Double> sample)
+    private static int count(double peak, final List<Double> sample)
     {
         return (int) sample.stream().filter(vaf -> between(peak, vaf - 0.015, vaf + 0.015)).count();
     }

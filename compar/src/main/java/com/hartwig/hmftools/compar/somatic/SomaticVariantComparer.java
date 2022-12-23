@@ -57,7 +57,7 @@ public class SomaticVariantComparer implements ItemComparer
     public Category category() { return SOMATIC_VARIANT; }
 
     @Override
-    public void processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
     {
         // use a custom method optimised for large numbers of variants
         final MatchLevel matchLevel = mConfig.Categories.get(category());
@@ -79,7 +79,12 @@ public class SomaticVariantComparer implements ItemComparer
             else
             {
                 FileSources fileSources = mConfig.FileSources.get(sourceName);
-                variants.addAll(loadVariants(sourceSampleId, FileSources.sampleInstance(fileSources, sampleId)));
+                List<SomaticVariantData> fileVariants = loadVariants(sourceSampleId, FileSources.sampleInstance(fileSources, sampleId));
+
+                if(fileVariants == null)
+                    return false;
+
+                variants.addAll(fileVariants);
             }
         }
 
@@ -157,6 +162,8 @@ public class SomaticVariantComparer implements ItemComparer
             newVariants.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
                     .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
         }
+
+        return true;
     }
 
     private Map<String,List<SomaticVariantData>> buildVariantMap(final List<SomaticVariantData> variants)
@@ -269,7 +276,8 @@ public class SomaticVariantComparer implements ItemComparer
         }
         catch(IOException e)
         {
-            CMP_LOGGER.error("failed to read somatic VCF file({}): {}", vcfFile, e.toString());
+            CMP_LOGGER.warn("failed to read somatic VCF file({}): {}", vcfFile, e.toString());
+            return null;
         }
 
         return variants;

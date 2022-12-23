@@ -30,25 +30,12 @@ public final class Cells {
     }
 
     @NotNull
-    public static Cell createTransparent(@NotNull String text) {
-        return createTransparent(new Paragraph(text));
-    }
-
-    @NotNull
     public static Cell createSpanningEntry(@NotNull Table table, @NotNull String text) {
         Cell cell = new Cell(1, table.getNumberOfColumns());
         cell.add(new Paragraph(text));
         cell.setBorder(Border.NO_BORDER);
         cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
         cell.addStyle(ReportResources.tableContentStyle());
-        return cell;
-    }
-
-    @NotNull
-    public static Cell createTransparent(@NotNull IBlockElement element) {
-        Cell cell = createBorderlessBase();
-        cell.addStyle(ReportResources.tableContentStyle());
-        cell.add(element);
         return cell;
     }
 

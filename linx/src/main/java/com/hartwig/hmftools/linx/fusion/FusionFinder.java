@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.gene.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.fusion.FusionConfig.LOG_INVALID_REASON;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
@@ -40,55 +41,59 @@ import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.gene.TranscriptProteinData;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 
-import org.apache.commons.cli.Options;
-
 public class FusionFinder
 {
+    private final FusionConfig mConfig;
     private final KnownFusionCache mKnownFusionCache;
 
     private final EnsemblDataCache mGeneTransCache;
-    public int mNextFusionId;
+    private int mNextFusionId;
+    private final List<String> mInvalidReasons;
 
-    private static boolean mLogInvalidReasons;
-
-    public FusionFinder(final EnsemblDataCache geneTransCache, final KnownFusionCache knownFusionCache)
+    public FusionFinder(final FusionConfig config, final EnsemblDataCache geneTransCache, final KnownFusionCache knownFusionCache)
     {
+        mConfig = config;
         mGeneTransCache = geneTransCache;
         mKnownFusionCache = knownFusionCache;
 
         mNextFusionId = 0;
+        mInvalidReasons = Lists.newArrayList();
 
         FusionReportability.populateRequiredProteins();
-
-        mLogInvalidReasons = false;
     }
 
     public boolean hasValidConfigData() { return mKnownFusionCache.hasValidData(); }
-    public void setLogInvalidReasons(boolean toggle) { mLogInvalidReasons = toggle; }
 
     public final KnownFusionCache getKnownFusionCache() { return mKnownFusionCache; }
+
+    public void setFusionParams(boolean requirePhaseMatch, boolean allowExonSkipping, boolean requireUpstreamBiotypes)
+    {
+        mConfig.RequirePhaseMatch = requirePhaseMatch;
+        mConfig.AllowExonSkipping = allowExonSkipping;
+        mConfig.RequireUpstreamBiotypes = requireUpstreamBiotypes;
+    }
 
     public static final String INVALID_REASON_ORIENTATION = "Orientation";
     public static final String INVALID_REASON_PHASING = "Unphased";
     public static final String INVALID_REASON_CODING_TYPE = "Coding";
 
     public void reset() { mNextFusionId = 0; }
+    public int nextFusionId() { return mNextFusionId++; }
 
-    public final List<GeneFusion> findFusions(
-            final List<BreakendGeneData> breakendGenes1, final List<BreakendGeneData> breakendGenes2, final FusionParameters params)
+    public final List<GeneFusion> findFusions(final List<BreakendGeneData> breakendGenes1, final List<BreakendGeneData> breakendGenes2)
     {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
 
         if(!hasValidConfigData())
             return potentialFusions;
 
-        for (final BreakendGeneData startGene : breakendGenes1)
+        for(final BreakendGeneData startGene : breakendGenes1)
         {
             // left is upstream, right is downstream
             boolean startUpstream = startGene.isUpstream();
             boolean startIsIgRegion = mKnownFusionCache.withinIgRegion(startGene.chromosome(), startGene.position());
 
-            for (final BreakendGeneData endGene : breakendGenes2)
+            for(final BreakendGeneData endGene : breakendGenes2)
             {
                 boolean endUpstream = endGene.isUpstream();
                 boolean endIsIgRegion = mKnownFusionCache.withinIgRegion(endGene.chromosome(), endGene.position());
@@ -104,8 +109,8 @@ public class FusionFinder
 
                 if (startUpstream == endUpstream)
                 {
-                    if(params.InvalidReasons != null && !params.InvalidReasons.contains(INVALID_REASON_ORIENTATION))
-                        params.InvalidReasons.add(INVALID_REASON_ORIENTATION);
+                    if(LOG_INVALID_REASON && !mInvalidReasons.contains(INVALID_REASON_ORIENTATION))
+                        mInvalidReasons.add(INVALID_REASON_ORIENTATION);
 
                     continue;
                 }
@@ -118,7 +123,7 @@ public class FusionFinder
 
                 for(final BreakendTransData upstreamTrans : upGene.transcripts())
                 {
-                    if(!isValidUpstreamTranscript(upstreamTrans, !knownPair, params.RequireUpstreamBiotypes))
+                    if(!isValidUpstreamTranscript(upstreamTrans, !knownPair, mConfig.RequireUpstreamBiotypes))
                     {
                         logInvalidReasonInfo(upstreamTrans, null, INVALID_REASON_CODING_TYPE, "invalid up trans");
                         continue;
@@ -132,7 +137,7 @@ public class FusionFinder
                         {
                             // no further conditions
                             fusion = new GeneFusion(upstreamTrans, downstreamTrans, true);
-                            fusion.setId(mNextFusionId++);
+                            fusion.setId(nextFusionId());
                         }
                         else
                         {
@@ -145,13 +150,13 @@ public class FusionFinder
                             boolean exonDelDupCandidate = upstreamTrans.transName().equals(downstreamTrans.transName())
                                     && mKnownFusionCache.isExonDelDupTrans(upstreamTrans.transName());
 
-                            fusion = transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, knownPair, exonDelDupCandidate);
+                            fusion = transcriptPairHasFusion(upstreamTrans, downstreamTrans, mConfig, knownPair, exonDelDupCandidate);
                         }
 
                         if(fusion == null)
                             continue;
 
-                        fusion.setId(mNextFusionId++);
+                        fusion.setId(nextFusionId());
                         setKnownFusionType(fusion);
                         potentialFusions.add(fusion);
                     }
@@ -162,9 +167,10 @@ public class FusionFinder
         return potentialFusions;
     }
 
-    private static void logInvalidReasonInfo(final BreakendTransData trans1, final BreakendTransData trans2, final String reasonType, final String reason)
+    private static void logInvalidReasonInfo(
+            final BreakendTransData trans1, final BreakendTransData trans2, final String reasonType, final String reason)
     {
-        if(!mLogInvalidReasons)
+        if(!LOG_INVALID_REASON)
             return;
 
         if(trans2 == null)
@@ -212,9 +218,9 @@ public class FusionFinder
         return true;
     }
 
-    public static GeneFusion checkFusionLogic(final BreakendTransData upstreamTrans, final BreakendTransData downstreamTrans, final FusionParameters params)
+    public static GeneFusion checkFusionLogic(final BreakendTransData upstreamTrans, final BreakendTransData downstreamTrans, final FusionConfig config)
     {
-        if(!isValidUpstreamTranscript(upstreamTrans, true, params.RequireUpstreamBiotypes))
+        if(!isValidUpstreamTranscript(upstreamTrans, true, config.RequireUpstreamBiotypes))
         {
             logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "invalid up trans");
             return null;
@@ -225,11 +231,11 @@ public class FusionFinder
             return null;
         }
 
-        return transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, false, false);
+        return transcriptPairHasFusion(upstreamTrans, downstreamTrans, config, false, false);
     }
 
     private static GeneFusion transcriptPairHasFusion(
-            final BreakendTransData upstreamTrans, final BreakendTransData downstreamTrans, final FusionParameters params,
+            final BreakendTransData upstreamTrans, final BreakendTransData downstreamTrans, final FusionConfig config,
             boolean isKnownPair, boolean exonDelDupCandidate)
     {
         // see SV Fusions document for permitted combinations
@@ -239,18 +245,21 @@ public class FusionFinder
         {
             if(upstreamTrans.isExonic() && !downstreamTrans.isExonic())
             {
-                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "precoding exonic to non-exonic");
+                logInvalidReasonInfo(
+                        upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "precoding exonic to non-exonic");
                 return null;
             }
             else if(downstreamTrans.isCoding() && !isKnownPair)
             {
-                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "pre-coding to coding");
+                logInvalidReasonInfo(
+                        upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "pre-coding to coding");
                 return null;
             }
             else if(downstreamTrans.preCoding() && upstreamTrans.gene().geneId().equals(downstreamTrans.gene().geneId()))
             {
                 // skip pre-coding to pre-coding within the same gene
-                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "pre-coding to pre-coding");
+                logInvalidReasonInfo(
+                        upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "pre-coding to pre-coding");
                 return null;
             }
         }
@@ -270,7 +279,7 @@ public class FusionFinder
 
             if(upstreamTrans.isExonic())
             {
-                if(!downstreamTrans.isExonic() && (!params.AllowExonSkipping || !downstreamTrans.isIntronic()))
+                if(!downstreamTrans.isExonic() && (!config.AllowExonSkipping || !downstreamTrans.isIntronic()))
                 {
                     logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "coding exonic to non-exonic");
                     return null;
@@ -290,7 +299,8 @@ public class FusionFinder
         {
             if(upstreamTrans.isExonic() && !downstreamTrans.isExonic() && !isKnownPair)
             {
-                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "up non-coding exonic to down non-exonic");
+                logInvalidReasonInfo(
+                        upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "up non-coding exonic to down non-exonic");
                 return null;
             }
             else if(downstreamTrans.isCoding() && !isKnownPair)
@@ -315,7 +325,8 @@ public class FusionFinder
             // all fusions to downstream exons may be excluded, but for now definitely exclude those which end in the last exon
             if(downstreamTrans.isExonic() && downstreamTrans.ExonDownstream == downstreamTrans.exonCount() && !downstreamTrans.preCoding())
             {
-                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "downstream last exon");
+                logInvalidReasonInfo(
+                        upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "downstream last exon");
                 return null;
             }
         }
@@ -329,7 +340,7 @@ public class FusionFinder
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_PHASING, "exon-exon inexact phasing");
             }
 
-            if(phaseMatched || !params.RequirePhaseMatch)
+            if(phaseMatched || !config.RequirePhaseMatch)
             {
                 return new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched);
             }
@@ -347,11 +358,11 @@ public class FusionFinder
                 phaseMatched = upstreamTrans.Phase == downstreamTrans.Phase;
             }
 
-            if(!phaseMatched && params.AllowExonSkipping
+            if(!phaseMatched && config.AllowExonSkipping
             && (!upstreamTrans.gene().geneId().equals(downstreamTrans.gene().geneId()) || exonDelDupCandidate))
             {
                 // check for a match within the alternative phasings from upstream and downstream of the breakend
-                for (Map.Entry<Integer, Integer> altPhasing : upstreamTrans.getAlternativePhasing().entrySet())
+                for(Map.Entry<Integer, Integer> altPhasing : upstreamTrans.getAlternativePhasing().entrySet())
                 {
                     if (altPhasing.getKey() == downstreamTrans.Phase)
                     {
@@ -363,7 +374,7 @@ public class FusionFinder
 
                 if(!phaseMatched)
                 {
-                    for (Map.Entry<Integer, Integer> altPhasing : downstreamTrans.getAlternativePhasing().entrySet())
+                    for(Map.Entry<Integer, Integer> altPhasing : downstreamTrans.getAlternativePhasing().entrySet())
                     {
                         if (altPhasing.getKey() == upstreamTrans.Phase)
                         {
@@ -375,7 +386,7 @@ public class FusionFinder
 
                     if(!phaseMatched)
                     {
-                        for (Map.Entry<Integer, Integer> altPhasingUp : upstreamTrans.getAlternativePhasing().entrySet())
+                        for(Map.Entry<Integer, Integer> altPhasingUp : upstreamTrans.getAlternativePhasing().entrySet())
                         {
                             for(Map.Entry<Integer, Integer> altPhasingDown : downstreamTrans.getAlternativePhasing().entrySet())
                             {
@@ -406,7 +417,7 @@ public class FusionFinder
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_PHASING, "inexact unphased");
             }
 
-            if(phaseMatched || !params.RequirePhaseMatch)
+            if(phaseMatched || !config.RequirePhaseMatch)
             {
                 GeneFusion fusion = new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched);
                 fusion.setExonsSkipped(phaseExonsSkippedUp, phaseExonsSkippedDown);
@@ -453,7 +464,7 @@ public class FusionFinder
 
         KnownFusionData kfData = mKnownFusionCache.getDataByType(IG_KNOWN_PAIR).stream()
                 .filter(x -> x.ThreeGene.equals(downGene.geneName()))
-                .filter(x -> x.withinIgRegion(igGene.chromosome(), igGene.position()))
+                .filter(x -> x.withinGeneRegion(igGene.chromosome(), igGene.position()))
                 .findFirst().orElse(null);
 
         if(kfData != null)
@@ -472,7 +483,7 @@ public class FusionFinder
         else
         {
             kfData = mKnownFusionCache.getDataByType(IG_PROMISCUOUS).stream()
-                    .filter(x -> x.withinIgRegion(igGene.chromosome(), igGene.position()))
+                    .filter(x -> x.withinGeneRegion(igGene.chromosome(), igGene.position()))
                     .findFirst().orElse(null);
 
             // check within the promiscuous region bounds
@@ -489,7 +500,7 @@ public class FusionFinder
             for(final BreakendTransData downTrans : candidateTranscripts)
             {
                 GeneFusion fusion = new GeneFusion(upTrans, downTrans, true);
-                fusion.setId(mNextFusionId++);
+                fusion.setId(nextFusionId());
                 fusion.setKnownType(knownType);
                 potentialFusions.add(fusion);
             }
@@ -500,7 +511,7 @@ public class FusionFinder
     {
         TranscriptData transData = new TranscriptData(
                 0, String.format("@%s", knownFusionData.FiveGene), gene.geneId(), false, gene.strand(),
-                knownFusionData.igRegion().start(), knownFusionData.igRegion().end(), null, null, "");
+                knownFusionData.geneRegion().start(), knownFusionData.geneRegion().end(), null, null, "");
 
         BreakendTransData transcript = new BreakendTransData(
                 gene, transData,  -1, -1, PHASE_NONE, PHASE_NONE, 0, 0);
@@ -517,7 +528,7 @@ public class FusionFinder
             return false;
 
         // skip fusions between different transcripts in the same gene,
-        if (!upTrans.transName().equals(downTrans.transName()))
+        if(!upTrans.transName().equals(downTrans.transName()))
             return true;
 
         if(upTrans.nonCoding())
@@ -575,7 +586,7 @@ public class FusionFinder
         return reportableFusion;
     }
 
-    public void setFusionProteinFeatures(GeneFusion fusion)
+    public void setFusionProteinFeatures(final GeneFusion fusion)
     {
         if(fusion.proteinFeaturesSet())
             return;
@@ -606,7 +617,7 @@ public class FusionFinder
             int featureStart = pfData.SeqStart;
             int featureEnd = pfData.SeqEnd;
 
-            for(int j = i+1; j < transProteinData.size(); ++j)
+            for(int j = i + 1; j < transProteinData.size(); ++j)
             {
                 if(transProteinData.get(j).HitDescription.equals(feature))
                     featureEnd = max(transProteinData.get(j).SeqEnd, featureEnd);
@@ -642,7 +653,7 @@ public class FusionFinder
         }
         else
         {
-            if (isDownstream)
+            if(isDownstream)
             {
                 // coding must start before the start of the feature for it to be preserved
                 int featureCodingBaseStart = featureStart * 3;

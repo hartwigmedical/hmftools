@@ -111,8 +111,6 @@ public class ClusteringPrep
                     break;
             }
         }
-
-
     }
 
     public static SvVarData mergeSglMappedInferred(final SvVarData sgl, final SvVarData inf, final SglMapping mapping, final int svId)

@@ -7,16 +7,15 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
 import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleUtils.formatPurity;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_TOTAL_SV_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_BAF_TOTAL;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MAX;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MIN;
-import static com.hartwig.hmftools.purple.config.SomaticFitConfig.MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT;
-import static com.hartwig.hmftools.purple.config.SomaticFitConfig.MIN_TOTAL_SV_FRAGMENT_COUNT;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;

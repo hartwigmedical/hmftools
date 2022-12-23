@@ -48,7 +48,9 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.ImmutableGeneExpression;
 import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
@@ -56,6 +58,7 @@ import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortCache;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -322,12 +325,12 @@ public class SampleLoaderTask implements Callable
                         .chromosome(altSJ.Chromosome)
                         .junctionStart(altSJ.SpliceJunction[SE_START])
                         .junctionEnd(altSJ.SpliceJunction[SE_END])
-                        .type(altSJ.Type.toString())
+                        .type(altSJ.Type)
                         .fragmentCount(altSJ.FragmentCount)
                         .depthStart(altSJ.DepthCounts[SE_START])
                         .depthEnd(altSJ.DepthCounts[SE_END])
-                        .regionStart(altSJ.RegionContexts[SE_START].toString())
-                        .regionEnd(altSJ.RegionContexts[SE_END].toString())
+                        .regionStart(altSJ.RegionContexts[SE_START])
+                        .regionEnd(altSJ.RegionContexts[SE_END])
                         .basesStart(altSJ.BaseContexts[SE_START])
                         .basesEnd(altSJ.BaseContexts[SE_END])
                         .cohortFrequency(cohortFrequency)
@@ -380,7 +383,7 @@ public class SampleLoaderTask implements Callable
                         .orientationDown(Byte.parseByte(items[fieldsIndexMap.get(formStreamField(FLD_ORIENT, FS_DOWN))]))
                         .junctionTypeUp(items[fieldsIndexMap.get(formStreamField(FLD_JUNC_TYPE, FS_UP))])
                         .junctionTypeDown(items[fieldsIndexMap.get(formStreamField(FLD_JUNC_TYPE, FS_DOWN))])
-                        .svType(items[fieldsIndexMap.get(FLD_SV_TYPE)])
+                        .svType(StructuralVariantType.valueOf(items[fieldsIndexMap.get(FLD_SV_TYPE)]))
                         .splitFragments(Integer.parseInt(items[fieldsIndexMap.get(FLD_SPLIT_FRAGS)]))
                         .realignedFrags(Integer.parseInt(items[fieldsIndexMap.get(FLD_REALIGN_FLAGS )]))
                         .discordantFrags(Integer.parseInt(items[fieldsIndexMap.get(FLD_DISCORD_FRAGS)]))

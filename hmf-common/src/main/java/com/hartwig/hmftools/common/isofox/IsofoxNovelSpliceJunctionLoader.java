@@ -18,7 +18,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaCommon;
@@ -80,12 +82,12 @@ public final class IsofoxNovelSpliceJunctionLoader
                     .chromosome(altSJ.Chromosome)
                     .junctionStart(altSJ.SpliceJunction[SE_START])
                     .junctionEnd(altSJ.SpliceJunction[SE_END])
-                    .type(altSJ.Type.toString())
+                    .type(AltSpliceJunctionType.valueOf(altSJ.Type.toString()))
                     .fragmentCount(altSJ.FragmentCount)
                     .depthStart(altSJ.DepthCounts[SE_START])
                     .depthEnd(altSJ.DepthCounts[SE_END])
-                    .regionStart(altSJ.RegionContexts[SE_START].toString())
-                    .regionEnd(altSJ.RegionContexts[SE_END].toString())
+                    .regionStart(AltSpliceJunctionContext.valueOf(altSJ.RegionContexts[SE_START].toString()))
+                    .regionEnd(AltSpliceJunctionContext.valueOf(altSJ.RegionContexts[SE_END].toString()))
                     .basesStart(altSJ.BaseContexts[SE_START])
                     .basesEnd(altSJ.BaseContexts[SE_END])
                     .cohortFrequency(cohortFrequency)

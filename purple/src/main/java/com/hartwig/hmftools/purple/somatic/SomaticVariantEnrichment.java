@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.purple.somatic;
 
-import static com.hartwig.hmftools.purple.config.SomaticFitConfig.CLONALITY_BIN_WIDTH;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.CLONALITY_BIN_WIDTH;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;

@@ -33,7 +33,7 @@ public final class RNAFusionTable {
             table.addCell(Cells.createContent(fusion.name()));
             table.addCell(Cells.createContent(fusion.chromosomeUp() + ":" + fusion.positionUp()));
             table.addCell(Cells.createContent(fusion.chromosomeDown() + ":" + fusion.positionDown()));
-            table.addCell(Cells.createContent(fusion.svType()));
+            table.addCell(Cells.createContent(fusion.svType().toString()));
             table.addCell(Cells.createContent(fusion.junctionTypeUp() + "/" + fusion.junctionTypeDown()));
             table.addCell(Cells.createContent(fusion.depthUp() + "/" + fusion.depthDown()));
             table.addCell(Cells.createContent(fusion.splitFragments() + "/" + fusion.realignedFrags() + "/" + fusion.discordantFrags()));

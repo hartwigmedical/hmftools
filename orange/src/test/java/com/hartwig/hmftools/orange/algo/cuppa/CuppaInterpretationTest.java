@@ -29,6 +29,11 @@ public class CuppaInterpretationTest {
         assertNull(CuppaInterpretation.rank(cuppa, 5));
     }
 
+    @Test (expected = IllegalStateException.class)
+    public void crashOnMissingPredictions() {
+        CuppaInterpretation.best(withPredictions(Lists.newArrayList()));
+    }
+
     @NotNull
     private static CuppaData withPredictions(@NotNull List<CuppaPrediction> predictions) {
         return ImmutableCuppaData.builder().from(TestCuppaFactory.createMinimalCuppaData()).predictions(predictions).build();

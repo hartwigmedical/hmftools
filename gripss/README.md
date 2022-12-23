@@ -28,6 +28,23 @@ These two files are used in purple as the structural variant recovery vcf and st
 The bed and bedpe files are available to download from [HMFTools-Resources > DNA Pipeline > sv](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/). 
 Both files need to be sorted by chromosome and start breakend start position.
 
+Germline mode:
+
+```
+java -jar gripss.jar \
+   -sample SAMPLE_N \
+   -reference SAMPLE_T \
+   -germline \
+   -ref_genome_version 37 \
+   -ref_genome /path/to/Homo_sapiens_assembly.fasta \
+   -pon_sgl_file /path/to/gridss_pon_single_breakend.bed \
+   -pon_sv_file /path/to/gridss_pon_breakpoint.bedpe \
+   -known_hotspot_file /path/to/KnownFusionPairs.bedpe \
+   -repeat_mask_file /path_to/37.fa.out.gz \
+   -vcf /path/to/SAMPLE_T.gridss.unfiltered.vcf.gz \
+   -output_dir /output_dir/ 
+```
+
 ### Mandatory Arguments
 
 Argument | Description 
