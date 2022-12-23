@@ -72,6 +72,8 @@ public class PaveAlgo {
             }
         }
 
+        // TODO Properly assign INDELs to exons in case they start too far away from the splice region but affect it nonetheless.
+
         // In theory an intron could be so small that a variant belongs to multiple exons.
         // In practice this is rare enough to ignore (it does happen on position 223183490 in pseudogene CT75 though).
         for (ExonData exon : exons) {
