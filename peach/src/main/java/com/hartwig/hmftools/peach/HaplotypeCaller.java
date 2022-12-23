@@ -22,9 +22,7 @@ public class HaplotypeCaller
         this.haplotypePanel = haplotypePanel;
     }
 
-    public Map<String, List<HaplotypeCombination>> getGeneToPossibleHaplotypes(
-            @NotNull Map<String, Integer> eventIdToCount
-    )
+    public Map<String, HaplotypeAnalysis> getGeneToHaplotypeAnalysis(@NotNull Map<String, Integer> eventIdToCount)
     {
         Optional<String> nonPositiveCountEvent = eventIdToCount.entrySet().stream()
                 .filter(e -> e.getValue() <= 0)
@@ -41,10 +39,10 @@ public class HaplotypeCaller
             throw new IllegalArgumentException(errorMsg);
         }
         return haplotypePanel.getGenes().stream()
-                .collect(Collectors.toMap(g -> g, g -> getPossibleHaplotypes(eventIdToCount, g)));
+                .collect(Collectors.toMap(g -> g, g -> getHaplotypeAnalysis(eventIdToCount, g)));
     }
 
-    private List<HaplotypeCombination> getPossibleHaplotypes(Map<String, Integer> eventIdToCount, String gene)
+    private HaplotypeAnalysis getHaplotypeAnalysis(Map<String, Integer> eventIdToCount, String gene)
     {
         PCH_LOGGER.info("handling gene: {}", gene);
         Map<String, Integer> relevantEventIdToCount = eventIdToCount.entrySet().stream()
@@ -56,9 +54,10 @@ public class HaplotypeCaller
                 relevantEventIdToCount,
                 List.copyOf(haplotypePanel.getNonWildTypeHaplotypes(gene))
         );
-        return nonWildHaplotypeCombinations.stream()
+        List<HaplotypeCombination> possibleHaplotypeCombinations = nonWildHaplotypeCombinations.stream()
                 .map(l -> getCombination(l, haplotypePanel.getWildTypeHaplotype(gene)))
                 .collect(Collectors.toList());
+        return new HaplotypeAnalysis(relevantEventIdToCount, possibleHaplotypeCombinations);
     }
 
     private List<List<NonWildTypeHaplotype>> getPossibleNonWildTypeHaplotypes(

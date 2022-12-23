@@ -93,9 +93,9 @@ public class PeachApplication
         PCH_LOGGER.info("events found: {}", eventIdToCount.toString());
 
         HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
-        Map<String, List<HaplotypeCombination>> geneToPossibleHaplotypes = caller.getGeneToPossibleHaplotypes(eventIdToCount);
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
 
-        PCH_LOGGER.info("haplotypes called: {}", geneToPossibleHaplotypes.toString());
+        PCH_LOGGER.info("haplotypes called: {}", geneToHaplotypeAnalysis.toString());
 
         PCH_LOGGER.info("finished running PEACH");
     }
