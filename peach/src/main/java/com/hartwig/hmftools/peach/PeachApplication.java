@@ -35,7 +35,6 @@ import java.util.stream.Stream;
 
 import static com.hartwig.hmftools.peach.PeachUtils.BED_FILE_DELIMITER;
 import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
-import static com.hartwig.hmftools.peach.PeachUtils.getExtendedFileName;
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 public class PeachApplication
@@ -72,8 +71,8 @@ public class PeachApplication
         String callInputVcf;
         if (config.doLiftOver)
         {
-            callInputVcf = getExtendedFileName(config.vcfFile, "liftover", ".vcf", config.outputDir);
-            String rejectVcf = getExtendedFileName(config.vcfFile, "liftover_reject", ".vcf", config.outputDir);
+            callInputVcf = config.getLiftoverOutputVcfPath();
+            String rejectVcf = config.getLiftoverRejectVcfPath();
             doLiftover(callInputVcf, rejectVcf);
 
             PCH_LOGGER.info("read bed of important regions");
@@ -113,7 +112,8 @@ public class PeachApplication
     private void doLiftover(String liftOverVcf, String rejectVcf)
     {
         PCH_LOGGER.info("create adjusted chain file");
-        String adjustedChainFile = createAdjustedChainFile(config.chainFile);
+        String adjustedChainFile = config.getAdjustedChainFilePath();
+        adjustChainFile(config.chainFile, adjustedChainFile);
 
         PCH_LOGGER.info("do lift over");
         ProcessBuilder pb = new ProcessBuilder(
@@ -190,11 +190,10 @@ public class PeachApplication
         return chromosomeToRelevantRegions.get(variantChromosome).stream().anyMatch(r -> r.overlaps(variantRegion));
     }
 
-    private String createAdjustedChainFile(String chainFile)
+    private void adjustChainFile(String sourceChainFile, String adjustedChainFile)
     {
-        String adjustedChainFile = getExtendedFileName(chainFile, "adjusted", ".over", config.outputDir);
         try (
-            Stream<String> lines = Files.lines(Paths.get(chainFile));
+            Stream<String> lines = Files.lines(Paths.get(sourceChainFile));
             PrintWriter pw = new PrintWriter(adjustedChainFile, StandardCharsets.UTF_8)
         )
         {
@@ -206,8 +205,6 @@ public class PeachApplication
             e.printStackTrace();
             System.exit(1);
         }
-
-        return adjustedChainFile;
     }
 
     private Map<Chromosome, List<BaseRegion>> loadRegionsToLiftover(final String filename)

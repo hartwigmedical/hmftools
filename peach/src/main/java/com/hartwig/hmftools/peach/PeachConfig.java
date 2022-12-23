@@ -3,6 +3,8 @@ package com.hartwig.hmftools.peach;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
+import java.io.File;
+
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -72,5 +74,28 @@ public class PeachConfig
         addLoggingOptions(options);
 
         return options;
+    }
+
+    public String getAdjustedChainFilePath()
+    {
+        return getExtendedFileName(outputDir, chainFile, "adjusted", ".over");
+    }
+
+    public String getLiftoverOutputVcfPath()
+    {
+        return getExtendedFileName(outputDir, vcfFile, "liftover", ".vcf");
+    }
+
+    public String getLiftoverRejectVcfPath()
+    {
+        return getExtendedFileName(outputDir, vcfFile, "liftover_reject", ".vcf");
+    }
+
+    public static String getExtendedFileName(String outputDir, String originalFileName, String addition, String addBefore)
+    {
+        File file = new File(originalFileName);
+        String filename = file.getName();
+        int extensionIndex = filename.indexOf(addBefore);
+        return outputDir + filename.substring(0, extensionIndex) + "." + addition + filename.substring(extensionIndex);
     }
 }
