@@ -153,6 +153,8 @@ public class MarkDupsConfig
         return filename;
     }
 
+    public boolean runReadChecks() { return RunChecks && (!SpecificChromosomes.isEmpty() || !SpecificRegions.isEmpty()); }
+
     public static Options createCmdLineOptions()
     {
         final Options options = new Options();

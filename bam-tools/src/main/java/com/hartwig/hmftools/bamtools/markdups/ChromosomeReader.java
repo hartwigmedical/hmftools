@@ -3,6 +3,7 @@ package com.hartwig.hmftools.bamtools.markdups;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.checkFragmentClassification;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.reconcileFragments;
@@ -130,7 +131,6 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
         onPartitionComplete(false);
 
         BM_LOGGER.info("chromosome({}) complete, reads({})", mRegion.Chromosome, mTotalRecordCount);
-        mReadsProcessed.clear();
     }
 
     private void onPartitionComplete(boolean setupNext)
@@ -141,17 +141,18 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
 
         List<PositionFragments> incompletePositionFragments = Lists.newArrayList();
 
-        Map<Integer,List<Fragment>> localPositionFragments = mLocalGroupCombiner.incompleteFragmentPositionsMap().get(mCurrentStrPartition);
+        Map<Integer,List<Fragment>> localPositionFragments = mLocalGroupCombiner.incompleteFragmentPositions(mCurrentStrPartition);
 
-        if(localPositionFragments != null)
+        for(Map.Entry<Integer,List<Fragment>> entry : localPositionFragments.entrySet())
         {
-            for(Map.Entry<Integer,List<Fragment>> entry : localPositionFragments.entrySet())
-            {
-                List<Fragment> unclearFragments = entry.getValue();
-                unclearFragments.forEach(x -> x.setRemotePartitions(mCurrentPartition));
-                incompletePositionFragments.add(new PositionFragments(entry.getKey(), unclearFragments));
-            }
+            List<Fragment> unclearFragments = entry.getValue();
+            unclearFragments.forEach(x -> x.setRemotePartitions(mCurrentPartition));
+            incompletePositionFragments.add(new PositionFragments(entry.getKey(), unclearFragments));
         }
+
+        // write unmatched local supplementaries
+        List<Fragment> localSupplementaries = mLocalGroupCombiner.unmatchedSupplementaries(mCurrentStrPartition);
+        localSupplementaries.forEach(x -> mRecordWriter.writeFragment(x));
 
         mRemoteGroupCombiner.processPartitionFragments(
                 mCurrentStrPartition, resolvedFragments, incompletePositionFragments, mPartitionSupplementaries);
@@ -181,7 +182,7 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
     {
         ++mTotalRecordCount;
 
-        if(BM_LOGGER.isTraceEnabled())
+        if(mConfig.runReadChecks())
             mReadsProcessed.add(read);
 
         int readStart = read.getAlignmentStart();
@@ -231,13 +232,31 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
         List<Fragment> resolvedFragments = Lists.newArrayList();
         List<PositionFragments> incompletePositionFragments = Lists.newArrayList();
 
-        classifyFragments(positionFragments, resolvedFragments, incompletePositionFragments);
+        classifyFragments(positionFragments.Fragments, resolvedFragments, incompletePositionFragments);
 
+        if(mConfig.RunChecks)
+            checkFragmentClassification(resolvedFragments, incompletePositionFragments);
+
+        // collapse unclear fragments with the same position since no benefit in keeping them separate
+        if(incompletePositionFragments.size() > 1)
+        {
+            PositionFragments first = incompletePositionFragments.get(0);
+
+            while(incompletePositionFragments.size() > 1)
+            {
+                PositionFragments next = incompletePositionFragments.get(1);
+                first.Fragments.addAll(next.Fragments);
+                incompletePositionFragments.remove(1);
+            }
+        }
+
+        /*
         int unclearFragments = incompletePositionFragments.stream().mapToInt(x -> x.Fragments.size()).sum();
         if(positionFragments.Fragments.size() != resolvedFragments.size() + unclearFragments)
         {
             BM_LOGGER.error("failed to classify all fragments");
         }
+        */
 
         for(Fragment fragment : resolvedFragments)
         {

@@ -23,6 +23,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.SAMRecord;
 
 public class FragmentUtils
@@ -80,18 +82,137 @@ public class FragmentUtils
                     ? UNCLEAR : NONE;
         }
     }
-    public static void classifyFragments(
-            final PositionFragments positionFragments, final List<Fragment> resolvedFragments,
-            final List<PositionFragments> incompletePositionFragments)
-    {
-        classifyFragments(positionFragments.Fragments, resolvedFragments, incompletePositionFragments);
-    }
+
+
+    // initial call needs to prioritise finding resolved fragments (dups or NONE), and form unclear groups from amongst the rest
+
+
+    // second call need only look for resolved fragments
 
     public static void classifyFragments(
+            final List<Fragment> fragments, final List<Fragment> resolvedFragments,
+            @Nullable final List<PositionFragments> incompletePositionFragments)
+    {
+        // take all the fragments at this initial fragment position and classify them as duplicates, non-duplicates (NONE) or unclear
+        // note: all fragments will be given a classification, and resolved fragments are removed from the input fragment list
+
+        if(fragments.size() == 1)
+        {
+            Fragment fragment = fragments.get(0);
+            fragment.setStatus(NONE);
+            resolvedFragments.add(fragment);
+            fragments.clear();
+            return;
+        }
+
+        // at most 1 position with unclear fragments will be created since having more can lead to overlapping groups
+
+        int fragmentCount = fragments.size();
+        Set<Fragment> unclearFragments = Sets.newHashSet();
+
+        int i = 0;
+        while(i < fragments.size())
+        {
+            Fragment fragment1 = fragments.get(i);
+
+            if(i == fragments.size() - 1)
+            {
+                if(!unclearFragments.contains(fragment1))
+                {
+                    fragment1.setStatus(NONE);
+                    resolvedFragments.add(fragment1);
+                    fragments.remove(i);
+                }
+                break;
+            }
+
+            List<Fragment> duplicateFragments = null;
+
+            int j = i + 1;
+            while(j < fragments.size())
+            {
+                Fragment fragment2 = fragments.get(j);
+
+                FragmentStatus status = calcFragmentStatus(fragment1, fragment2);
+
+                if(status == DUPLICATE)
+                {
+                    fragment1.setStatus(status);
+                    fragment2.setStatus(status);
+
+                    if(duplicateFragments == null)
+                        duplicateFragments = Lists.newArrayList(fragment1);
+
+                    duplicateFragments.add(fragment2);
+                    fragments.remove(j);
+                    continue;
+                }
+
+                if(fragment1.status() != DUPLICATE && status == UNCLEAR)
+                {
+                    // the pair is a candidate for duplicates but without their mates it's unclear whether they will be
+                    unclearFragments.add(fragment1);
+                    unclearFragments.add(fragment2);
+                }
+
+                ++j;
+            }
+
+            if(fragment1.status().isDuplicate())
+            {
+                resolvedFragments.addAll(duplicateFragments);
+                fragments.remove(i);
+
+                Fragment primary = findPrimaryFragment(duplicateFragments, true);
+                primary.setStatus(PRIMARY);
+            }
+            else if(unclearFragments.contains(fragment1))
+            {
+                ++i;
+            }
+            else
+            {
+                fragment1.setStatus(NONE);
+                resolvedFragments.add(fragment1);
+                fragments.remove(i);
+            }
+        }
+
+        List<Fragment> incompletes = unclearFragments.stream().filter(y -> !resolvedFragments.contains(y)).collect(Collectors.toList());
+        incompletes.forEach(x -> x.setStatus(UNCLEAR));
+
+        if(incompletePositionFragments != null && !incompletes.isEmpty())
+        {
+            incompletePositionFragments.add(new PositionFragments(incompletes.get(0).initialPosition(), incompletes));
+        }
+
+        if(incompletes.size() + resolvedFragments.size() != fragmentCount)
+        {
+            BM_LOGGER.error("failed to classify all fragments: original({}) resolved({}) unclear({})",
+                    fragmentCount, resolvedFragments.size(), incompletes.size());
+        }
+    }
+
+    public static void checkFragmentClassification(
+            final List<Fragment> resolvedFragments, final List<PositionFragments> incompletePositionFragments)
+    {
+        if(resolvedFragments.stream().anyMatch(x -> x.status() == UNSET))
+        {
+            BM_LOGGER.error("failed to classify all resolved fragments");
+        }
+
+        if(incompletePositionFragments.stream().anyMatch(x -> x.Fragments.stream().anyMatch(y -> y.status() == UNSET)))
+        {
+            BM_LOGGER.error("failed to classify all incomplete fragments");
+        }
+    }
+
+    public static void classifyFragmentsOld(
             final List<Fragment> positionFragments, final List<Fragment> resolvedFragments,
             final List<PositionFragments> incompletePositionFragments)
     {
-        // take all the fragments at this initial fragment position and classify them as duplicates, non-duplicates or unclear
+        // take all the fragments at this initial fragment position and classify them as duplicates, non-duplicates (NONE) or unclear
+        // note: all fragments will be given a classification
 
         // the list of fragments is copied and then reduced when duplicates or candidate duplicates are found
         List<Fragment> allFragments = Lists.newArrayList(positionFragments);
@@ -130,12 +251,11 @@ public class FragmentUtils
                 if(status == NONE)
                 {
                     ++j;
-                    continue;
                 }
-
-                if(fragment1.status() != UNSET && status != NONE && fragment1.status() != status)
+                else if(fragment1.status() != UNSET && fragment1.status() != status)
                 {
                     BM_LOGGER.warn("fragment({}) has alt status({}) with other({})", fragment1, status, fragment2);
+                    ++j;
                 }
                 else if(status == DUPLICATE)
                 {

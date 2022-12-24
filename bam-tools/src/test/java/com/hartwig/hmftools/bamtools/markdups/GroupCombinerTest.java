@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
+import static com.hartwig.hmftools.bamtools.markdups.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createFragment;
+import static com.hartwig.hmftools.bamtools.markdups.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 
@@ -36,7 +41,7 @@ public class GroupCombinerTest
     }
 
     @Test
-    public void testLocalFragmentReconciliationBasic()
+    public void testLocalFragmentBasic()
     {
         GroupCombiner localGroupCombiner = new GroupCombiner(mWriter, true);
 
@@ -59,7 +64,7 @@ public class GroupCombinerTest
         localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
 
         List<Fragment> targets = Lists.newArrayList(testFragments.get(1), testFragments.get(2), testFragments.get(3));
-        targets.forEach(x -> assertTrue(x.readWritten()));
+        targets.forEach(x -> assertTrue(x.readsWritten()));
         targets.forEach(x -> assertEquals(NONE, x.status()));
 
         localGroupCombiner.reset();
@@ -79,7 +84,7 @@ public class GroupCombinerTest
         localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
         localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, resolvedFragments, Collections.emptyList(), Collections.emptyList());
 
-        assertTrue(read2.readWritten());
+        assertTrue(read2.readsWritten());
         assertEquals(NONE, read2.status());
         assertEquals(3, read2.readCount()); // supplementaries were merged
 
@@ -99,7 +104,7 @@ public class GroupCombinerTest
         localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), Collections.emptyList(), supplementaries);
         localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, resolvedFragments, Collections.emptyList(), Collections.emptyList());
 
-        assertTrue(read2.readWritten());
+        assertTrue(read2.readsWritten());
         assertEquals(NONE, read2.status());
         assertEquals(3, read2.readCount()); // supplementaries were merged
     }
@@ -128,14 +133,65 @@ public class GroupCombinerTest
     }
 
     @Test
-    public void testLocalFragmentReconciliation1()
+    public void testLocalFragmentSplitReads()
     {
-        // test 1:
-        // 01: resolved fragment missing unclear mate fragment and missing both supplementary
-        // 02: resolved fragment missing supplementary
-        // 03: unclear fragment missing supplementary
-        // 04: unclear fragment missing unclear mate (ie different positions) - so becomes resolved
+        GroupCombiner localGroupCombiner = new GroupCombiner(mWriter, true);
 
+        // a collection of read pairs, all unclear and split across calls
+        mReadIdGen.reset();
+
+        // 3 initial reads at the same position, unclear candidate duplicates
+        Fragment read1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
+                false, false, null);
+
+        Fragment read2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 201,
+                false, false, null);
+        setBaseQualities(read2, DEFAULT_QUAL - 1);
+
+        Fragment read3 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 202,
+                false, false, null);
+        setBaseQualities(read3, DEFAULT_QUAL - 1);
+
+        List<Fragment> positionFragmentsList = Lists.newArrayList(read1, read2, read3);
+        List<Fragment> resolvedFragments = Lists.newArrayList();
+        List<PositionFragments> incompletePositionFragments = Lists.newArrayList();
+
+        classifyFragments(positionFragmentsList, resolvedFragments, incompletePositionFragments);
+        assertEquals(1, incompletePositionFragments.size());
+        assertEquals(3, incompletePositionFragments.get(0).Fragments.size());
+
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
+        assertEquals(1, localGroupCombiner.incompleteFragmentPositions(LOCAL_PARTITION).size());
+
+        // now process their mates one by one
+
+        // first 2 are also UNCLEAR and will resolve as duplicate with their mates
+        Fragment readMate1 = createFragment(read1.id(), CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
+                true, false, null);
+
+        Fragment readMate2 = createFragment(read2.id(), CHR_1, 201, TEST_READ_BASES.substring(0, 99), "99M", CHR_1, 100,
+                true, false, null);
+        setBaseQualities(readMate2, DEFAULT_QUAL - 1);
+
+        positionFragmentsList = Lists.newArrayList(readMate1, readMate2);
+        resolvedFragments.clear();
+        incompletePositionFragments.clear();
+
+        classifyFragments(positionFragmentsList, resolvedFragments, incompletePositionFragments);
+        assertEquals(1, incompletePositionFragments.size());
+        assertEquals(2, incompletePositionFragments.get(0).Fragments.size());
+
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
+
+        assertTrue(readMate1.readsWritten());
+        assertEquals(PRIMARY, readMate1.status());
+        assertTrue(readMate2.readsWritten());
+        assertEquals(DUPLICATE, readMate2.status());
+
+        // 3rd fragment now able to be classified as NONE since no other candidate dups exist at this position
+        assertTrue(read3.readsWritten());
+        assertEquals(NONE, read3.status());
+
+        assertTrue(localGroupCombiner.incompleteFragments(LOCAL_PARTITION).isEmpty());
     }
-
 }

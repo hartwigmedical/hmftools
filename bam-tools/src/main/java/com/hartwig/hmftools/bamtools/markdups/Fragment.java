@@ -65,7 +65,7 @@ public class Fragment
     public FragmentStatus status() { return mStatus; }
     public void setStatus(final FragmentStatus status) { mStatus = status; }
 
-    public boolean readWritten() { return mReadsWritten; }
+    public boolean readsWritten() { return mReadsWritten; }
     public void setReadWritten() { mReadsWritten = true; }
 
     public boolean unpaired() { return mUnpaired; }
@@ -178,7 +178,7 @@ public class Fragment
 
     public String toString()
     {
-        return String.format("reads(%d) status(%s) coords(%s:%d-%d) present(%s) id(%s) remotePartitions(%d)",
+        return String.format("reads(%d) status(%s) coords(%s:%d/%d) present(%s) id(%s) remotePartitions(%d)",
                 mReads.size(), mStatus, mReads.get(0).getContig(), mCoordinates[SE_START], mCoordinates[SE_END],
                 mAllReadsPresent ? "all" : (mAllPrimaryReadsPresent ? "primary" : "incomplete"), id(),
                 mRemotePartitions != null ? mRemotePartitions.size() : 0);

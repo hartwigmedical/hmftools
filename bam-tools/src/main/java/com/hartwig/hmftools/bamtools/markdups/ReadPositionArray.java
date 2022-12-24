@@ -44,23 +44,6 @@ public class ReadPositionArray
 
     public boolean processRead(final SAMRecord read)
     {
-        int readPosStart = read.getAlignmentStart();
-
-        if(mMinPosition == 0)
-            mMinPosition = readPosStart;
-
-        if(!isValidPosition(readPosStart))
-            return false;
-
-        checkFlush(readPosStart);
-
-        boolean readStored = handleRead(read);
-
-        return readStored;
-    }
-
-    private boolean handleRead(final SAMRecord read)
-    {
         /* scenarios:
             - unpaired or mate is unmapped
                 - store as potential duplicate
@@ -92,11 +75,17 @@ public class ReadPositionArray
             return true;
         }
 
-        Fragment readGroup = mFragments.get(read.getReadName());
+        Fragment fragment = mFragments.get(read.getReadName());
 
-        if(readGroup != null)
+        if(fragment != null)
         {
-            readGroup.addRead(read);
+            fragment.addRead(read);
+
+            if(fragment.readsWritten())
+            {
+                BM_LOGGER.error("fragment({}) reads written but in array", fragment);
+            }
+
             return true;
         }
 
@@ -107,9 +96,14 @@ public class ReadPositionArray
     private void storeInitialRead(final SAMRecord read)
     {
         Fragment fragment = new Fragment(read);
+        mFragments.put(read.getReadName(), fragment);
+
         int fragmentPosition = fragment.initialPosition();
 
-        mFragments.put(read.getReadName(), fragment);
+        if(mMinPosition == 0)
+            mMinPosition = fragmentPosition;
+        else
+            checkFlush(fragmentPosition);
 
         if(orientation(read) == POS_ORIENT)
         {
@@ -155,11 +149,6 @@ public class ReadPositionArray
         return false;
     }
 
-    public void evictAll()
-    {
-        checkFlush(-1);
-    }
-
     private int calcIndex(int position)
     {
         // capacity = 10, min position = 1, min index = 0, position of 10 is index 9
@@ -173,42 +162,21 @@ public class ReadPositionArray
         return distanceFromMinPosition + mMinPositionIndex - mCapacity;
     }
 
-    private boolean isValidPosition(int position)
-    {
-        if(mMinPosition > 0 && position < mMinPosition)
-        {
-            BM_LOGGER.warn("ignoring read with position({}) before prior position({})", position, mMinPosition);
-            return false;
-        }
-
-        return true;
-    }
-
     private void checkFlush(int position)
     {
-        int flushCount = 0;
+        if(mMinPosition == 0)
+        {
+            resetMinPosition(position);
+            return;
+        }
 
+        int distanceFromMinPosition = position - mMinPosition;
+
+        if(distanceFromMinPosition < mCapacity)
+            return;
+
+        int flushCount = position - mMinPosition - mCapacity + 1;
         Set<String> flushedReadIds = null;
-
-        if(position > 0)
-        {
-            if(mMinPosition == 0)
-            {
-                resetMinPosition(position);
-                return;
-            }
-
-            int distanceFromMinPosition = position - mMinPosition;
-
-            if(distanceFromMinPosition < mCapacity)
-                return;
-
-            flushCount = position - mMinPosition - mCapacity + 1;
-        }
-        else
-        {
-            flushCount = mCapacity;
-        }
 
         // only iterate at most once through the array
         for(int i = 0; i < min(flushCount, mCapacity); i++)
@@ -221,12 +189,11 @@ public class ReadPositionArray
                 if(flushedReadIds == null)
                     flushedReadIds = Sets.newHashSet();
 
-                mReadGroupHandler.accept(element);
-
                 for(Fragment fragment : element.Fragments)
                     flushedReadIds.add(fragment.id());
 
-                mForwardPositionGroups[mMinPositionIndex].Fragments.clear();
+                mReadGroupHandler.accept(element);
+
                 mForwardPositionGroups[mMinPositionIndex] = null;
             }
 
@@ -246,7 +213,7 @@ public class ReadPositionArray
             Set<Integer> flushedPositions = Sets.newHashSet();
             for(Map.Entry<Integer, PositionFragments> entry : mReversePositionGroups.entrySet())
             {
-                if(position < 0 || entry.getKey() < position)
+                if(entry.getKey() < position)
                 {
                     flushedPositions.add(entry.getKey());
 
@@ -258,8 +225,31 @@ public class ReadPositionArray
             }
 
             flushedPositions.forEach(x -> mReversePositionGroups.remove(x));
-            flushedPositions.forEach(x -> mFragments.remove(x));
+            flushedReadIds.forEach(x -> mFragments.remove(x));
         }
+    }
+
+    public void evictAll()
+    {
+        for(int i = 0; i < mCapacity; i++)
+        {
+            PositionFragments element = mForwardPositionGroups[i];
+
+            // clear and process each element and depth
+            if(element != null)
+            {
+                mReadGroupHandler.accept(element);
+                mForwardPositionGroups[i] = null;
+            }
+        }
+
+        for(Map.Entry<Integer, PositionFragments> entry : mReversePositionGroups.entrySet())
+        {
+            mReadGroupHandler.accept(entry.getValue());
+        }
+
+        mReversePositionGroups.clear();
+        mFragments.clear();
     }
 
     private void resetMinPosition(int position)
