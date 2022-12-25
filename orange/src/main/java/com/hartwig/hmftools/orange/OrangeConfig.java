@@ -69,6 +69,7 @@ public interface OrangeConfig {
     String CUPPA_SUMMARY_PLOT = "cuppa_summary_plot";
     String CUPPA_FEATURE_PLOT = "cuppa_feature_plot";
     String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
+    String SIGS_ALLOCATION_TSV = "sigs_allocation_tsv";
 
     // Some additional optional params and flags
     String CONVERT_GERMLINE_TO_SOMATIC = "convert_germline_to_somatic";
@@ -114,6 +115,7 @@ public interface OrangeConfig {
         options.addOption(CUPPA_SUMMARY_PLOT, true, "Path towards the Cuppa report summary plot PNG.");
         options.addOption(CUPPA_FEATURE_PLOT, true, "Path towards the Cuppa report feature plot PNG.");
         options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
+        options.addOption(SIGS_ALLOCATION_TSV, true, "Path towards the signatures allocation TSV.");
 
         options.addOption(CONVERT_GERMLINE_TO_SOMATIC, false, "If set, germline events are converted to somatic events");
         options.addOption(LIMIT_JSON_OUTPUT, false, "If set, limits every list in the json output to 1 entry.");
@@ -228,6 +230,9 @@ public interface OrangeConfig {
     @Nullable
     String peachGenotypeTsv();
 
+    @NotNull
+    String sigsAllocationTsv();
+
     boolean convertGermlineToSomatic();
 
     boolean limitJsonOutput();
@@ -296,6 +301,7 @@ public interface OrangeConfig {
                 .cuppaSummaryPlot(Config.nonOptionalFile(cmd, CUPPA_SUMMARY_PLOT))
                 .cuppaFeaturePlot(Config.optionalValue(cmd, CUPPA_FEATURE_PLOT))
                 .peachGenotypeTsv(Config.optionalFile(cmd, PEACH_GENOTYPE_TSV))
+                .sigsAllocationTsv(Config.optionalFile(cmd, SIGS_ALLOCATION_TSV))
                 .convertGermlineToSomatic(convertGermlineToSomatic)
                 .limitJsonOutput(limitJsonOutput)
                 .build();

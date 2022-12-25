@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
@@ -77,6 +78,9 @@ public abstract class OrangeReport {
 
     @Nullable
     public abstract List<PeachGenotype> peach();
+
+    @NotNull
+    public abstract List<SignatureAllocation> sigAllocations();
 
     @NotNull
     public abstract Map<PercentileType, Evaluation> cohortEvaluations();

@@ -18,7 +18,7 @@ Post GC normalization, COBALT is able to detect the following germline chromosom
 |---------------------------|--------|--------------------------------------------------|
 | `MOSAIC_X`                | FEMALE | X ratio < min(0.8, minAutosomeMedianDepthRatio*) |
 | `KLINEFELTER` (XXY)       | MALE   | X ratio >= 0.65                                  |
-| `TRISOMY_[X,21,13,18,15]` | BOTH   | chromosome ratio >= 1.4                          |
+| `TRISOMY_[X,21,13,18,15]` | BOTH   | chromosome ratio >= 1.35                          |
 
 *By checking against autosomes we rule out very high GC bias in the reference.  
 

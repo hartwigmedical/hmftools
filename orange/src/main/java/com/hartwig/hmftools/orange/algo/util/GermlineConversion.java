@@ -38,26 +38,37 @@ public final class GermlineConversion {
         return ImmutableOrangeReport.builder()
                 .from(report)
                 .germlineMVLHPerGene(null)
-                .purple(convertPurpleGermline(report.purple()))
+                .purple(convertPurpleGermline(report.purple().fit().containsTumorCells(), report.purple()))
                 .linx(convertLinxGermline(report.linx()))
                 .build();
     }
 
     @NotNull
     @VisibleForTesting
-    static PurpleInterpretedData convertPurpleGermline(@NotNull PurpleInterpretedData purple) {
+    static PurpleInterpretedData convertPurpleGermline(boolean containsTumorCells, @NotNull PurpleInterpretedData purple) {
         // TODO Convert germline deletions into somatic deletions.
 
         // TODO Consider merging additional suspect variants as well but in practice suspect germline variants are only relevant for peach
         // and cause confusing when merged into somatic.
+
+        // In case tumor contains no tumor cells, we remove all germline events.
+        List<DriverCatalog> mergedDrivers;
+        List<PurpleVariant> mergedSomaticVariants;
+        if (containsTumorCells) {
+            mergedDrivers = mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers());
+            mergedSomaticVariants =
+                    mergeGermlineVariantsIntoSomatic(purple.reportableSomaticVariants(), purple.reportableGermlineVariants());
+        } else {
+            mergedDrivers = purple.somaticDrivers();
+            mergedSomaticVariants = purple.reportableSomaticVariants();
+        }
+
         return ImmutablePurpleInterpretedData.builder()
                 .from(purple)
                 .fit(removeGermlineAberrations(purple.fit()))
-                .somaticDrivers(mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers()))
+                .somaticDrivers(mergedDrivers)
                 .germlineDrivers(null)
-                .allSomaticVariants(mergeGermlineVariantsIntoSomatic(purple.allSomaticVariants(), purple.allGermlineVariants()))
-                .reportableSomaticVariants(mergeGermlineVariantsIntoSomatic(purple.reportableSomaticVariants(),
-                        purple.reportableGermlineVariants()))
+                .reportableSomaticVariants(mergedSomaticVariants)
                 .allGermlineVariants(null)
                 .reportableGermlineVariants(null)
                 .additionalSuspectGermlineVariants(null)
@@ -72,7 +83,6 @@ public final class GermlineConversion {
                 .from(fit)
                 .qc(ImmutablePurpleQC.builder().from(fit.qc()).germlineAberrations(Sets.newHashSet()).build())
                 .build();
-
     }
 
     @NotNull

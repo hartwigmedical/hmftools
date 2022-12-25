@@ -18,8 +18,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporti
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
+import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
@@ -181,9 +181,9 @@ public class PurpleInterpreter {
     private static PurityPloidyFit createFit(@NotNull PurpleData purple) {
         return ImmutablePurityPloidyFit.builder()
                 .qc(purple.purityContext().qc())
-                .hasReliableQuality(purple.purityContext().qc().pass())
+                .hasSufficientQuality(purple.purityContext().qc().pass())
                 .fittedPurityMethod(purple.purityContext().method())
-                .hasReliablePurity(PurityContext.checkHasReliablePurity(purple.purityContext()))
+                .containsTumorCells(purple.purityContext().method() != FittedPurityMethod.NO_TUMOR)
                 .purity(purple.purityContext().bestFit().purity())
                 .minPurity(purple.purityContext().score().minPurity())
                 .maxPurity(purple.purityContext().score().maxPurity())

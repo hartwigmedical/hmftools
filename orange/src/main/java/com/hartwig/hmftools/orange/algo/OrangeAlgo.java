@@ -40,6 +40,8 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.sage.GeneDepthFile;
+import com.hartwig.hmftools.common.sigs.SignatureAllocation;
+import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.orange.OrangeConfig;
@@ -195,6 +197,7 @@ public class OrangeAlgo {
                 .chord(chord)
                 .cuppa(loadCuppaData(config))
                 .peach(loadPeachData(config))
+                .sigAllocations(loadSigAllocations(config))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();
@@ -453,6 +456,17 @@ public class OrangeAlgo {
         LOGGER.info(" Loaded {} PEACH genotypes from {}", peachGenotypes.size(), config.peachGenotypeTsv());
 
         return peachGenotypes;
+    }
+
+    @NotNull
+    private static List<SignatureAllocation> loadSigAllocations(@NotNull OrangeConfig config) throws IOException {
+        String sigsAllocationTsv = config.sigsAllocationTsv();
+
+        LOGGER.info("Loading Sigs from {}", new File(sigsAllocationTsv).getParent());
+        List<SignatureAllocation> sigsAllocations = SignatureAllocationFile.read(sigsAllocationTsv);
+        LOGGER.info(" Loaded {} signature allocations from {}", sigsAllocations.size(), sigsAllocationTsv);
+
+        return sigsAllocations;
     }
 
     @NotNull

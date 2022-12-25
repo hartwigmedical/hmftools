@@ -21,6 +21,7 @@ import com.hartwig.hmftools.orange.report.tables.DNAFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GeneCopyNumberTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.LossOfHeterozygosityTable;
+import com.hartwig.hmftools.orange.report.tables.SignatureAllocationTable;
 import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -71,6 +72,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         addHomozygousDisruptions(document);
         addBreakends(document);
         addLossOfHeterozygosity(document);
+        addSignatureAllocations(document);
         addStructuralDriverPlots(document);
     }
 
@@ -196,6 +198,11 @@ public class SomaticFindingsChapter implements ReportChapter {
         List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH = report.purple().suspectGeneCopyNumbersWithLOH();
         String title = "Potentially interesting LOH events in case of MSI or HRD (" + suspectGeneCopyNumbersWithLOH.size() + ")";
         document.add(LossOfHeterozygosityTable.build(title, contentWidth(), suspectGeneCopyNumbersWithLOH));
+    }
+
+    private void addSignatureAllocations(@NotNull Document document) {
+        String title = "Signature allocations (" + report.sigAllocations().size() + ")";
+        document.add(SignatureAllocationTable.build(title, contentWidth(), report.sigAllocations()));
     }
 
     private void addStructuralDriverPlots(@NotNull Document document) {

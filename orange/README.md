@@ -67,6 +67,7 @@ java -jar orange.jar \
    -chord_prediction_txt /path/to/chord_prediction.txt \
    -cuppa_result_csv /path/to/cuppa_results.tsv \
    -cuppa_summary_plot /path/to/cuppa_summary_plot \
+   -sigs_allocation_tsv /path/to/sigs.allocation.tsv 
 ```
 
 Note that `primary_tumor_doids` can be left blank (""). This parameter is used to look up cancer-type-specific percentiles for various
@@ -209,6 +210,11 @@ investigate potential causes for QC failure.
 ### Version History and Download Links
 
 - Upcoming
+    - Remove warning in case a variant potentially falls in the splice region of 2 neighbouring exons
+- [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.2)
+    - (COSMIC) signatures are added to the somatic findings (new parameter: `-sigs_allocation_tsv`)
+    - Unreported germline variants are no longer converted to somatic variants in case "germline to somatic conversion" is enabled.
+    - In case of NO_TUMOR, all germline variants are wiped in case "germline to somatic conversion" is enabled.
     - Populate affectedExon for intronic variants in splice regions.
     - RAD51B is added as a gene that is reported for LOH in case of HR deficiency
 - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.1)
