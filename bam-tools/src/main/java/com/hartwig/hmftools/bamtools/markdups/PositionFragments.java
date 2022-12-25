@@ -30,6 +30,6 @@ public class PositionFragments
 
     public String toString()
     {
-        return format("%d: reads(%d)", Position, Fragments.size());
+        return format("%d: fragments(%d)", Position, Fragments.size());
     }
 }

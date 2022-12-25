@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.Map;
@@ -17,7 +20,7 @@ import com.google.common.collect.Sets;
 
 import htsjdk.samtools.SAMRecord;
 
-public class ReadPositionArray
+public class ReadPositionsCache
 {
     // a ring buffer to store reads at each read starting position
     private final String mChromosome;
@@ -30,7 +33,7 @@ public class ReadPositionArray
 
     private final int mCapacity;
 
-    public ReadPositionArray(final String chromosome, int capacity, final Consumer<PositionFragments> evictionHandler)
+    public ReadPositionsCache(final String chromosome, int capacity, final Consumer<PositionFragments> evictionHandler)
     {
         mChromosome = chromosome;
         mReadGroupHandler = evictionHandler;
@@ -79,18 +82,62 @@ public class ReadPositionArray
 
         if(fragment != null)
         {
+            int initialPos = fragment.initialPosition();
+
             fragment.addRead(read);
 
-            if(fragment.readsWritten())
-            {
-                BM_LOGGER.error("fragment({}) reads written but in array", fragment);
-            }
+            if(initialPos != fragment.initialPosition())
+                checkStrandSwitch(fragment);
 
             return true;
         }
 
         storeInitialRead(read);
         return true;
+    }
+
+    private void checkStrandSwitch(final Fragment fragment)
+    {
+        // switch fragment from the forward to reverse strand or vice versa if still within the array bounds
+        int fragmentStart = fragment.coordinates()[SE_START];
+        int fragmentEnd = fragment.coordinates()[SE_END];
+
+        if((fragmentStart > 0) == (fragmentEnd >= 0))
+            return;
+
+        if(fragmentEnd < 0)
+        {
+            // move fragment from reverse strand to forward strand array
+            int distanceFromMinPosition = fragmentStart - mMinPosition;
+
+            if(distanceFromMinPosition >= mCapacity)
+                return; // already purged
+
+            PositionFragments existingGroup = mReversePositionGroups.get(fragmentEnd);
+
+            if(existingGroup == null)
+                return;
+
+            existingGroup.Fragments.remove(fragment);
+
+            if(existingGroup.Fragments.isEmpty())
+                mReversePositionGroups.remove(fragmentEnd);
+        }
+        else
+        {
+            int index = calcIndex(fragmentEnd);
+
+            PositionFragments element = mForwardPositionGroups[index];
+            if(element == null)
+                return;
+
+            element.Fragments.remove(fragment);
+
+            if(element.Fragments.isEmpty())
+                mForwardPositionGroups[index] = null;
+        }
+
+        storeFragment(fragment);
     }
 
     private void storeInitialRead(final SAMRecord read)
@@ -100,12 +147,22 @@ public class ReadPositionArray
 
         int fragmentPosition = fragment.initialPosition();
 
-        if(mMinPosition == 0)
-            mMinPosition = fragmentPosition;
-        else
-            checkFlush(fragmentPosition);
+        if(fragmentPosition > 0)
+        {
+            if(mMinPosition == 0)
+                mMinPosition = fragmentPosition;
+            else
+                checkFlush(fragmentPosition);
+        }
 
-        if(orientation(read) == POS_ORIENT)
+        storeFragment(fragment);
+    }
+
+    private void storeFragment(final Fragment fragment)
+    {
+        int fragmentPosition = fragment.initialPosition();
+
+        if(fragmentPosition > 0)
         {
             int index = calcIndex(fragmentPosition);
 
@@ -210,10 +267,12 @@ public class ReadPositionArray
 
         if(flushedReadIds != null && !flushedReadIds.isEmpty())
         {
+            // flush out any reverse strand position which is now earlier than the current forward strand read start position
             Set<Integer> flushedPositions = Sets.newHashSet();
             for(Map.Entry<Integer, PositionFragments> entry : mReversePositionGroups.entrySet())
             {
-                if(entry.getKey() < position)
+                int reversePosition = abs(entry.getKey());
+                if(reversePosition < position)
                 {
                     flushedPositions.add(entry.getKey());
 

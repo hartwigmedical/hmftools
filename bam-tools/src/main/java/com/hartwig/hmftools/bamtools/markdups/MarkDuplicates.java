@@ -3,6 +3,7 @@ package com.hartwig.hmftools.bamtools.markdups;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 
 import java.util.List;
@@ -107,9 +108,7 @@ public class MarkDuplicates
 
                     if(!found)
                     {
-                        BM_LOGGER.error("read({}) coords({}:{}-{}) processed but not written",
-                                readProcessed.getReadName(), readProcessed.getContig(),
-                                readProcessed.getAlignmentStart(), readProcessed.getAlignmentEnd());
+                        BM_LOGGER.error("read processed but not written: {}", readToString(readProcessed));
                     }
                 }
 
@@ -119,31 +118,9 @@ public class MarkDuplicates
                     {
                         SAMRecord read = recordsWritten.get(i);
 
-                        BM_LOGGER.error("read({}) coords({}:{}-{}) extra written",
-                                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd());
+                        BM_LOGGER.error("read extra written: {}", readToString(read));
                     }
                 }
-
-                /*
-                Set<SAMRecord> recordsWritten = recordWriter.readsWritten();
-
-                if(recordsWritten.size() != recordsProcessed.size())
-                {
-                    for(SAMRecord readProcessed : recordsProcessed)
-                    {
-                        if(recordsWritten.contains(readProcessed))
-                        {
-                            recordsWritten.remove(readProcessed);
-                        }
-                        else
-                        {
-                            BM_LOGGER.error("read({}) coords({}:{}-{}) processed but not written",
-                                    readProcessed.getReadName(), readProcessed.getContig(),
-                                    readProcessed.getAlignmentStart(), readProcessed.getAlignmentEnd());
-                        }
-                    }
-                }
-                */
             }
         }
 

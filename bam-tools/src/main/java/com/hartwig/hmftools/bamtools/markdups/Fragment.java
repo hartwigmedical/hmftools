@@ -2,10 +2,12 @@ package com.hartwig.hmftools.bamtools.markdups;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.SUPPLEMENTARY;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.getUnclippedPosition;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -78,6 +80,11 @@ public class Fragment
     public void addRead(final SAMRecord read)
     {
         mReads.add(read);
+
+        if(mReadsWritten)
+        {
+            BM_LOGGER.error("fragment({}) adding new read({}) when already written", this, readToString(read));
+        }
 
         checkComplete();
 

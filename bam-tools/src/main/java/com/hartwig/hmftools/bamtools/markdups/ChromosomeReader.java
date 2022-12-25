@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.checkFragmentClassification;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosomePartition;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.reconcileFragments;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
 
 import java.io.File;
 import java.util.Collections;
@@ -41,7 +41,7 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
     private final GroupCombiner mRemoteGroupCombiner;
     private final GroupCombiner mLocalGroupCombiner;
     private final RecordWriter mRecordWriter;
-    private final ReadPositionArray mReadPositions;
+    private final ReadPositionsCache mReadPositions;
 
     private final List<Fragment> mPartitionSupplementaries;
     private final Map<String,Fragment> mPartitionResolvedFragments;
@@ -68,7 +68,7 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
         mBamSlicer = new BamSlicer(0, true, true, true);
         mBamSlicer.setKeepUnmapped();
 
-        mReadPositions = new ReadPositionArray(region.Chromosome, config.BufferSize, this);
+        mReadPositions = new ReadPositionsCache(region.Chromosome, config.BufferSize, this);
 
         // mLocalGroupCombiner = new GroupCombiner(mRecordWriter);
         mPartitionSupplementaries = Lists.newArrayList();
@@ -196,7 +196,7 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
         {
             if(mConfig.LogReadIds.contains(read.getReadName()))
             {
-                BM_LOGGER.debug("specific readId({})", read.getReadName());
+                BM_LOGGER.debug("specific read: {}", readToString(read));
             }
         }
 
@@ -210,9 +210,9 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
         }
         catch(Exception e)
         {
-            BM_LOGGER.error("read coords({}:{}) id({}) exception: {}",
-                    read.getContig(), read.getAlignmentStart(), read.getReadName(), e.toString());
+            BM_LOGGER.error("read({}) exception: {}", readToString(read), e.toString());
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
@@ -249,14 +249,6 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
                 incompletePositionFragments.remove(1);
             }
         }
-
-        /*
-        int unclearFragments = incompletePositionFragments.stream().mapToInt(x -> x.Fragments.size()).sum();
-        if(positionFragments.Fragments.size() != resolvedFragments.size() + unclearFragments)
-        {
-            BM_LOGGER.error("failed to classify all fragments");
-        }
-        */
 
         for(Fragment fragment : resolvedFragments)
         {

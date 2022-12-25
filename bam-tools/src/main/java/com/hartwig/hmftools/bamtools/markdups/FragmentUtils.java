@@ -2,6 +2,7 @@ package com.hartwig.hmftools.bamtools.markdups;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
@@ -418,6 +419,13 @@ public class FragmentUtils
                 incompletePositionFragments.remove(positionFragments);
             }
         }
+    }
+
+    public static String readToString(final SAMRecord read)
+    {
+        return format("id(%s) coords(coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
+                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
+                read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
     }
 
     /*
