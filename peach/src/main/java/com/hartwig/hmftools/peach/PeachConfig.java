@@ -101,6 +101,11 @@ public class PeachConfig
         return outputDir + sampleName + ".peach.gene.events.tsv";
     }
 
+    public String getAllHaplotypeCombinationsOutputPath()
+    {
+        return outputDir + sampleName + ".peach.haplotypes.all.tsv";
+    }
+
     public static String getExtendedFileName(String outputDir, String originalFileName, String addition, String addBefore)
     {
         File file = new File(originalFileName);

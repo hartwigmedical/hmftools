@@ -2,6 +2,7 @@ package com.hartwig.hmftools.peach;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.hartwig.hmftools.peach.PeachUtils.GERMLINE_TOTAL_COPY_NUMBER;
@@ -34,6 +35,11 @@ public class HaplotypeCombination
     public String toString()
     {
         return String.format("HaplotypeCombination(%s)", haplotypeNameToCount);
+    }
+
+    public Map<String, Integer> getHaplotypeNameToCount()
+    {
+        return new HashMap<>(haplotypeNameToCount);
     }
 
     public int getNonWildTypeCount(String wildTypeHaplotypeName)

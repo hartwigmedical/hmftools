@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.peach.data_loader.HaplotypeEventLoader;
 import com.hartwig.hmftools.peach.data_loader.PanelLoader;
+import com.hartwig.hmftools.peach.output.AllHaplotypeCombinationsFile;
 import com.hartwig.hmftools.peach.output.EventsFile;
 import com.hartwig.hmftools.peach.output.EventsPerGeneFile;
 import htsjdk.tribble.AbstractFeatureReader;
@@ -129,6 +130,17 @@ public class PeachApplication
             PCH_LOGGER.error("failed to create events per gene output file({}): {}", config.getEventsOutputPath(), e.toString());
             System.exit(1);
         }
+        PCH_LOGGER.info("Write all haplotype combinations output file");
+        try
+        {
+            AllHaplotypeCombinationsFile.write(config.getAllHaplotypeCombinationsOutputPath(), geneToHaplotypeAnalysis);
+        }
+        catch (IOException e)
+        {
+            PCH_LOGGER.error("failed to create all haplotype combinations output file({}): {}", config.getEventsOutputPath(), e.toString());
+            System.exit(1);
+        }
+
         PCH_LOGGER.info("finished running PEACH");
     }
 

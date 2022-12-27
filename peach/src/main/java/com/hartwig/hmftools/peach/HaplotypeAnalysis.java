@@ -44,6 +44,16 @@ public class HaplotypeAnalysis
         return new ArrayList<>(eventIdToCount.keySet());
     }
 
+    public List<HaplotypeCombination> getHaplotypeCombinations()
+    {
+        return new ArrayList<>(haplotypeCombinations);
+    }
+
+    public String getWildTypeHaplotypeName()
+    {
+        return wildTypeHaplotypeName;
+    }
+
     public Optional<HaplotypeCombination> getBestHaplotypeCombination()
     {
         if (haplotypeCombinations.isEmpty())
