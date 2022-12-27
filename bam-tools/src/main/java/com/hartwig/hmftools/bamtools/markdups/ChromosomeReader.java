@@ -70,7 +70,6 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
 
         mReadPositions = new ReadPositionsCache(region.Chromosome, config.BufferSize, this);
 
-        // mLocalGroupCombiner = new GroupCombiner(mRecordWriter);
         mPartitionSupplementaries = Lists.newArrayList();
         mPartitionResolvedFragments = Maps.newHashMap();
 
@@ -141,18 +140,7 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
 
         List<PositionFragments> incompletePositionFragments = Lists.newArrayList();
 
-        Map<Integer,List<Fragment>> localPositionFragments = mLocalGroupCombiner.incompleteFragmentPositions(mCurrentStrPartition);
-
-        for(Map.Entry<Integer,List<Fragment>> entry : localPositionFragments.entrySet())
-        {
-            List<Fragment> unclearFragments = entry.getValue();
-            unclearFragments.forEach(x -> x.setRemotePartitions(mCurrentPartition));
-            incompletePositionFragments.add(new PositionFragments(entry.getKey(), unclearFragments));
-        }
-
-        // write unmatched local supplementaries
-        List<Fragment> localSupplementaries = mLocalGroupCombiner.unmatchedSupplementaries(mCurrentStrPartition);
-        localSupplementaries.forEach(x -> mRecordWriter.writeFragment(x));
+        mLocalGroupCombiner.gatherPartitionFragments(mCurrentStrPartition, mCurrentPartition, resolvedFragments, incompletePositionFragments);
 
         mRemoteGroupCombiner.processPartitionFragments(
                 mCurrentStrPartition, resolvedFragments, incompletePositionFragments, mPartitionSupplementaries);
@@ -186,6 +174,12 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
             mReadsProcessed.add(read);
 
         int readStart = read.getAlignmentStart();
+
+        if(!mConfig.SpecificRegions.isEmpty())
+        {
+            if(!mConfig.SpecificRegions.stream().anyMatch(x -> x.containsPosition(read.getContig(), readStart)))
+                return;
+        }
 
         if(readStart > mCurrentPartition.end())
         {
@@ -224,7 +218,7 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
         if(fragment.hasRemotePartitions())
             mPartitionSupplementaries.add(fragment);
         else
-            mLocalGroupCombiner.processSupplementary(fragment, mCurrentStrPartition);
+            mLocalGroupCombiner.localSupplementary(fragment, mCurrentStrPartition);
     }
 
     public void accept(final PositionFragments positionFragments)
@@ -238,7 +232,7 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
             checkFragmentClassification(resolvedFragments, incompletePositionFragments);
 
         // collapse unclear fragments with the same position since no benefit in keeping them separate
-        if(incompletePositionFragments.size() > 1)
+        if(incompletePositionFragments.size() >= 1)
         {
             PositionFragments first = incompletePositionFragments.get(0);
 
@@ -252,11 +246,6 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
 
         for(Fragment fragment : resolvedFragments)
         {
-            if(!fragment.status().isResolved())
-            {
-                BM_LOGGER.error("fragment({}) incorrectly in resolved list", fragment);
-            }
-
             mRecordWriter.writeFragment(fragment);
 
             // the resolved fragment will be passed to the local group combiner and its state stored & applied
@@ -276,6 +265,10 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
                 }
                 else
                     mPartitionResolvedFragments.put(fragment.id(), fragment);
+            }
+            else
+            {
+                // previously added the local partition to remotes, but don't see why required anymore
             }
         }
 

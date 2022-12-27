@@ -16,7 +16,10 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
@@ -80,14 +83,12 @@ public class Fragment
     public void addRead(final SAMRecord read)
     {
         mReads.add(read);
-
-        if(mReadsWritten)
-        {
-            BM_LOGGER.error("fragment({}) adding new read({}) when already written", this, readToString(read));
-        }
-
         checkComplete();
+        updateCoordindates(read);
+    }
 
+    private void updateCoordindates(final SAMRecord read)
+    {
         if(!read.getSupplementaryAlignmentFlag())
         {
             int position = getUnclippedPosition(read);
@@ -105,6 +106,30 @@ public class Fragment
         }
     }
 
+    public void merge(final Fragment other)
+    {
+        if(mReadsWritten)
+        {
+            BM_LOGGER.error("fragment({}) adding new fragment({}) when already written", this, other);
+        }
+
+        for(SAMRecord read : other.reads())
+        {
+            mReads.add(read);
+            updateCoordindates(read);
+        }
+
+        if(other.hasRemotePartitions())
+        {
+            if(mRemotePartitions == null)
+                mRemotePartitions = Lists.newArrayList();
+
+            other.remotePartitions().stream().filter(x -> !mRemotePartitions.contains(x)).forEach(x -> mRemotePartitions.add(x));
+        }
+
+        checkComplete();
+    }
+
     public boolean hasRemotePartitions() { return mRemotePartitions != null; }
     public List<String> remotePartitions() { return mRemotePartitions; }
 
@@ -112,8 +137,7 @@ public class Fragment
     {
         mRemotePartitions = null;
 
-        // return true if links to other chromosomes
-        List<String> chrPartitions = Lists.newArrayList();
+        Set<String> chrPartitions = Sets.newHashSet();
         String chromosome = mReads.get(0).getContig();
         int partitionSize = currentPartition.baseLength();
 
@@ -139,7 +163,7 @@ public class Fragment
         }
 
         if(!chrPartitions.isEmpty())
-            mRemotePartitions = chrPartitions;
+            mRemotePartitions = chrPartitions.stream().collect(Collectors.toList());
     }
 
     private void checkComplete()
@@ -185,9 +209,9 @@ public class Fragment
 
     public String toString()
     {
-        return String.format("reads(%d) status(%s) coords(%s:%d/%d) present(%s) id(%s) remotePartitions(%d)",
+        return String.format("reads(%d) status(%s) coords(%s:%d/%d) present(%s) id(%s) remotePartitions(%s)",
                 mReads.size(), mStatus, mReads.get(0).getContig(), mCoordinates[SE_START], mCoordinates[SE_END],
                 mAllReadsPresent ? "all" : (mAllPrimaryReadsPresent ? "primary" : "incomplete"), id(),
-                mRemotePartitions != null ? mRemotePartitions.size() : 0);
+                mRemotePartitions != null ? mRemotePartitions : "none");
     }
 }

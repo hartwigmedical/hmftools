@@ -362,63 +362,12 @@ public class FragmentUtils
     public static String formChromosomePartition(final String chromosome, int position, int partitionSize)
     {
         int partition = position / partitionSize;
-        return chromosome + CHR_PARTITION_DELIM + partition;
+        return chromosomeIndicator(chromosome) + partition;
     }
 
-    @Deprecated
-    public static void reconcileFragments(
-            final Map<String,Fragment> supplementaries, final Map<String,Fragment> resolvedFragments,
-            final List<PositionFragments> incompletePositionFragments)
+    public static String chromosomeIndicator(final String chromosome)
     {
-        // first add any supplementaries or incomplete fragments to resolved fragments
-
-        // link up any fragments by read ID and look for complete fragments
-        Set<PositionFragments> modifiedPositionFragments = Sets.newHashSet();
-
-        Map<String,Fragment> incompleteFragments = Maps.newHashMap();
-        incompletePositionFragments.forEach(x -> x.Fragments.forEach(y -> incompleteFragments.put(y.id(), y)));
-
-        for(Fragment fragment : resolvedFragments.values())
-        {
-            Fragment supp = supplementaries.get(fragment.id());
-
-            if(supp != null)
-            {
-                supp.reads().forEach(x -> fragment.addRead(x));
-                supplementaries.remove(supp.id());
-            }
-
-            Fragment incompleteFrag = incompleteFragments.get(fragment.id());
-
-            if(incompleteFrag != null)
-            {
-                incompleteFrag.reads().forEach(x -> fragment.addRead(x));
-                incompleteFragments.remove(supp.id());
-
-                PositionFragments positionFragments = incompletePositionFragments.stream()
-                        .filter(x -> x.Position == incompleteFrag.initialPosition()).findFirst().orElse(null);
-
-                if(positionFragments != null)
-                {
-                    positionFragments.Fragments.remove(incompleteFrag);
-                    modifiedPositionFragments.add(positionFragments);
-                }
-            }
-        }
-
-        for(PositionFragments positionFragments : modifiedPositionFragments)
-        {
-            if(positionFragments.Fragments.size() < 2)
-            {
-                for(Fragment fragment : positionFragments.Fragments)
-                {
-                    fragment.setStatus(NONE);
-                    resolvedFragments.put(fragment.id(), fragment);
-                }
-
-                incompletePositionFragments.remove(positionFragments);
-            }
-        }
+        return chromosome + CHR_PARTITION_DELIM;
     }
 
     public static String readToString(final SAMRecord read)

@@ -22,18 +22,20 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.junit.Test;
 
-public class GroupCombinerTest
+public class LocalGroupCombinerTest
 {
     private final ReadIdGenerator mReadIdGen;
     private final MarkDupsConfig mConfig;
     private final RecordWriter mWriter;
 
-    private static final String LOCAL_PARTITION = "1_0";
+    private static final String LOCAL_PARTITION_STR = "1_0";
+    private static final BaseRegion LOCAL_PARTITION = new BaseRegion(1, 1000000);
 
-    public GroupCombinerTest()
+    public LocalGroupCombinerTest()
     {
         mReadIdGen = new ReadIdGenerator();
         mConfig = new MarkDupsConfig();
@@ -48,20 +50,20 @@ public class GroupCombinerTest
         List<Fragment> testFragments = createBasicFragments();
 
         Fragment read1 = testFragments.get(0);
+        read1.setRemotePartitions(LOCAL_PARTITION);
 
         List<Fragment> resolvedFragments = Lists.newArrayList(read1);
         List<PositionFragments> incompletePositionFragments = Lists.newArrayList();
         List<Fragment> supplementaries = Lists.newArrayList();
 
         // test 1: resolved then supps then unclear
-
         supplementaries.add(testFragments.get(2));
         supplementaries.add(testFragments.get(3));
         incompletePositionFragments.add(new PositionFragments(testFragments.get(1)));
 
-        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, resolvedFragments, Collections.emptyList(), Collections.emptyList());
-        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), Collections.emptyList(), supplementaries);
-        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, resolvedFragments, Collections.emptyList(), Collections.emptyList());
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, Collections.emptyList(), Collections.emptyList(), supplementaries);
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
 
         List<Fragment> targets = Lists.newArrayList(testFragments.get(1), testFragments.get(2), testFragments.get(3));
         targets.forEach(x -> assertTrue(x.readsWritten()));
@@ -80,9 +82,9 @@ public class GroupCombinerTest
         targets = Lists.newArrayList(testFragments.get(1), testFragments.get(2), testFragments.get(3));
 
         // test 2: supps then unclear then resolved
-        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), Collections.emptyList(), supplementaries);
-        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
-        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, resolvedFragments, Collections.emptyList(), Collections.emptyList());
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, Collections.emptyList(), Collections.emptyList(), supplementaries);
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, resolvedFragments, Collections.emptyList(), Collections.emptyList());
 
         assertTrue(read2.readsWritten());
         assertEquals(NONE, read2.status());
@@ -100,9 +102,9 @@ public class GroupCombinerTest
         incompletePositionFragments.add(new PositionFragments(read2));
         targets = Lists.newArrayList(testFragments.get(1), testFragments.get(2), testFragments.get(3));
 
-        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
-        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), Collections.emptyList(), supplementaries);
-        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, resolvedFragments, Collections.emptyList(), Collections.emptyList());
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, Collections.emptyList(), Collections.emptyList(), supplementaries);
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, resolvedFragments, Collections.emptyList(), Collections.emptyList());
 
         assertTrue(read2.readsWritten());
         assertEquals(NONE, read2.status());
@@ -144,9 +146,13 @@ public class GroupCombinerTest
         Fragment read1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
                 false, false, null);
 
+        // has a supp that will be passed in later on
         Fragment read2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 201,
-                false, false, null);
+                false, false, new SupplementaryReadData(CHR_1, 1000, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
         setBaseQualities(read2, DEFAULT_QUAL - 1);
+
+        Fragment suppRead2 = createFragment(read2.id(), CHR_1, 1000, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 201,
+                false, true, new SupplementaryReadData(CHR_1, 100, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
 
         Fragment read3 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 202,
                 false, false, null);
@@ -160,8 +166,8 @@ public class GroupCombinerTest
         assertEquals(1, incompletePositionFragments.size());
         assertEquals(3, incompletePositionFragments.get(0).Fragments.size());
 
-        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
-        assertEquals(1, localGroupCombiner.incompleteFragmentPositions(LOCAL_PARTITION).size());
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
+        assertEquals(1, localGroupCombiner.getPartitionCache(LOCAL_PARTITION_STR).IncompleteFragmentPositions.size());
 
         // now process their mates one by one
 
@@ -181,7 +187,7 @@ public class GroupCombinerTest
         assertEquals(1, incompletePositionFragments.size());
         assertEquals(2, incompletePositionFragments.get(0).Fragments.size());
 
-        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
+        localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
 
         assertTrue(readMate1.readsWritten());
         assertEquals(PRIMARY, readMate1.status());
@@ -192,6 +198,12 @@ public class GroupCombinerTest
         assertTrue(read3.readsWritten());
         assertEquals(NONE, read3.status());
 
-        assertTrue(localGroupCombiner.incompleteFragments(LOCAL_PARTITION).isEmpty());
+        assertTrue(localGroupCombiner.getPartitionCache(LOCAL_PARTITION_STR).IncompleteFragments.isEmpty());
+
+        // finally pass in the supplementary which should pick up the resolved status
+        localGroupCombiner.localSupplementary(suppRead2, LOCAL_PARTITION_STR);
+
+        assertTrue(suppRead2.readsWritten());
+        assertEquals(DUPLICATE, suppRead2.status());
     }
 }

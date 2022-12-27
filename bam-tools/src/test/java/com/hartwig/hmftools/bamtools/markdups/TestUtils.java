@@ -5,13 +5,18 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import java.util.List;
+import java.util.Map;
 
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 
 public final class TestUtils
 {
@@ -20,6 +25,20 @@ public final class TestUtils
     public static final String TEST_READ_CIGAR = "100M";
 
     public static final int DEFAULT_QUAL = 37;
+
+    public static SAMSequenceDictionary SAM_DICTIONARY_V37;
+
+    static
+    {
+        SAM_DICTIONARY_V37 = new SAMSequenceDictionary();
+
+        RefGenomeCoordinates v37Coords = RefGenomeCoordinates.COORDS_37;
+
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            SAM_DICTIONARY_V37.addSequence(new SAMSequenceRecord(chromosome.toString(), v37Coords.Lengths.get(chromosome)));
+        }
+    }
 
     public static void resetFragment(final Fragment fragment) { fragment.setStatus(FragmentStatus.UNSET); }
     public static void resetFragments(final List<Fragment> fragments) { fragments.forEach(x -> x.setStatus(FragmentStatus.UNSET)); }
@@ -60,6 +79,7 @@ public final class TestUtils
             int mateStart, boolean isReversed, boolean isSupplementary, final SupplementaryReadData suppAlignment)
     {
         SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
+        recordBuilder.getHeader().setSequenceDictionary(SAM_DICTIONARY_V37);
         recordBuilder.setUnmappedHasBasesAndQualities(false);
 
         HumanChromosome chromosome = HumanChromosome.fromString(chrStr);
