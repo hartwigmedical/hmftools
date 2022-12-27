@@ -38,6 +38,11 @@ public class HaplotypeAnalysis
                 ')';
     }
 
+    public List<String> getEventIds()
+    {
+        return new ArrayList<>(eventIdToCount.keySet());
+    }
+
     public Optional<HaplotypeCombination> getBestHaplotypeCombination()
     {
         if (haplotypeCombinations.isEmpty())
@@ -54,5 +59,10 @@ public class HaplotypeAnalysis
             return Optional.of(minimumCombinations.get(0));
         else
             return Optional.empty();
+    }
+
+    public int getEventCount(String eventId)
+    {
+        return eventIdToCount.get(eventId);
     }
 }

@@ -96,6 +96,11 @@ public class PeachConfig
         return outputDir + sampleName + ".peach.events.tsv";
     }
 
+    public String getEventsPerGeneOutputPath()
+    {
+        return outputDir + sampleName + ".peach.gene.events.tsv";
+    }
+
     public static String getExtendedFileName(String outputDir, String originalFileName, String addition, String addBefore)
     {
         File file = new File(originalFileName);

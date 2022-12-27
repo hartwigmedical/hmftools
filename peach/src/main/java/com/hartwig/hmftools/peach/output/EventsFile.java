@@ -28,19 +28,18 @@ public class EventsFile
         return lines;
     }
 
-    private static String toLine(String eventId, Integer count)
-    {
-        return new StringJoiner(TSV_DELIMITER)
-                .add(eventId)
-                .add(count.toString())
-                .toString();
-    }
-
-
     private static String header() {
         return new StringJoiner(TSV_DELIMITER)
                 .add("event")
                 .add("count")
+                .toString();
+    }
+
+    private static String toLine(String eventId, int count)
+    {
+        return new StringJoiner(TSV_DELIMITER)
+                .add(eventId)
+                .add(Integer.toString(count))
                 .toString();
     }
 }
