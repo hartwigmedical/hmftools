@@ -79,37 +79,18 @@ public class PeachApplication
             callInputVcf = config.getLiftoverOutputVcfPath();
             String rejectVcf = config.getLiftoverRejectVcfPath();
             doLiftover(callInputVcf, rejectVcf);
-
-            PCH_LOGGER.info("read bed of important regions");
-            Map<Chromosome, List<BaseRegion>> chromosomeToRelevantRegions = loadRegionsToLiftover(config.liftOverBed);
-
-            PCH_LOGGER.info("check rejected liftover variants for relevance");
-            int potentiallyMissedCount = countPotentiallyRelevantVariantsMissed(rejectVcf, chromosomeToRelevantRegions);
-
-            if (potentiallyMissedCount == 0)
-            {
-                PCH_LOGGER.info("all potentially relevant variants have been lifted over");
-            }
-            else
-            {
-                PCH_LOGGER.warn("some potentially relevant variants have not been lifted over: {}", potentiallyMissedCount);
-            }
-            //TODO: handle unlifted relevant variants properly
             //TODO: handle reference sequence differences V37 vs V38 properly
-            //TODO: maybe force at most two haplotype calls per gene in output. Maybe do this optionally. Maybe by default
         } else {
             callInputVcf = config.vcfFile;
         }
+        PCH_LOGGER.info("read events");
         Map<String, Integer> eventIdToCount = HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(
                 callInputVcf, config.sampleName, haplotypePanel.getRelevantVariantPositions()
         );
 
-        PCH_LOGGER.info("events found: {}", eventIdToCount.toString());
-
+        PCH_LOGGER.info("call haplotypes");
         HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
         Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
-
-        PCH_LOGGER.info("haplotypes called: {}", geneToHaplotypeAnalysis.toString());
 
         writeOutputFiles(eventIdToCount, geneToHaplotypeAnalysis);
 
@@ -144,7 +125,7 @@ public class PeachApplication
         String adjustedChainFile = config.getAdjustedChainFilePath();
         adjustChainFile(config.chainFile, adjustedChainFile);
 
-        PCH_LOGGER.info("do lift over");
+        PCH_LOGGER.info("run Picard LiftoverVcf");
         ProcessBuilder pb = new ProcessBuilder(
                 "java",
                 "-jar",
@@ -180,6 +161,22 @@ public class PeachApplication
         {
             PCH_LOGGER.error("Picard LiftoverVcf was interrupted");
             e.printStackTrace();
+            System.exit(1);
+        }
+
+        PCH_LOGGER.info("read bed of important regions");
+        Map<Chromosome, List<BaseRegion>> chromosomeToRelevantRegions = loadRegionsToLiftover(config.liftOverBed);
+
+        PCH_LOGGER.info("check rejected liftover variants for relevance");
+        int potentiallyMissedCount = countPotentiallyRelevantVariantsMissed(rejectVcf, chromosomeToRelevantRegions);
+
+        if (potentiallyMissedCount == 0)
+        {
+            PCH_LOGGER.info("all potentially relevant variants have been lifted over");
+        }
+        else
+        {
+            PCH_LOGGER.error("some potentially relevant variants have not been lifted over: {}", potentiallyMissedCount);
             System.exit(1);
         }
     }

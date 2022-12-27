@@ -48,11 +48,10 @@ public class HaplotypeCaller
 
     private HaplotypeAnalysis getHaplotypeAnalysis(Map<String, Integer> eventIdToCount, String gene)
     {
-        PCH_LOGGER.info("handling gene: {}", gene);
+        PCH_LOGGER.info("handle gene: {}", gene);
         Map<String, Integer> relevantEventIdToCount = eventIdToCount.entrySet().stream()
                 .filter(e -> haplotypePanel.isRelevantFor(e.getKey(), gene))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        PCH_LOGGER.info("events for gene '{}': {}", gene, relevantEventIdToCount);
 
         List<List<NonWildTypeHaplotype>> nonWildHaplotypeCombinations = getPossibleNonWildTypeHaplotypes(
                 relevantEventIdToCount,
