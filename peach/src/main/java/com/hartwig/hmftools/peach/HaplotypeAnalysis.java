@@ -35,6 +35,7 @@ public class HaplotypeAnalysis
         return "HaplotypeAnalysis(" +
                 "eventIdToCount=" + eventIdToCount +
                 ", haplotypeCombinations=" + haplotypeCombinations +
+                ", wildTypeHaplotypeName=" + wildTypeHaplotypeName +
                 ')';
     }
 
