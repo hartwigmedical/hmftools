@@ -111,6 +111,11 @@ public class PeachConfig
         return outputDir + sampleName + ".peach.haplotypes.best.tsv";
     }
 
+    public String getQcStatusOutputPath()
+    {
+        return outputDir + sampleName + ".peach.qc.tsv";
+    }
+
     public static String getExtendedFileName(String outputDir, String originalFileName, String addition, String addBefore)
     {
         File file = new File(originalFileName);
