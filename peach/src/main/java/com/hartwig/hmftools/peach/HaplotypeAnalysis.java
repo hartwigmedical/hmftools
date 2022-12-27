@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.peach;
 
+import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

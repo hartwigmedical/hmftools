@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.peach;
+package com.hartwig.hmftools.peach.panel;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -6,6 +6,7 @@ import com.hartwig.hmftools.peach.event.HaplotypeEvent;
 import com.hartwig.hmftools.peach.event.HaplotypeEventFactory;
 import com.hartwig.hmftools.peach.haplotype.NonWildTypeHaplotype;
 import com.hartwig.hmftools.peach.haplotype.WildTypeHaplotype;
+import com.hartwig.hmftools.peach.panel.GeneHaplotypePanel;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;

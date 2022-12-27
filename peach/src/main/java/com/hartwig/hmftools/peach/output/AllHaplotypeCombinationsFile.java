@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.peach.output;
 
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
-import com.hartwig.hmftools.peach.HaplotypeCombination;
+import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;

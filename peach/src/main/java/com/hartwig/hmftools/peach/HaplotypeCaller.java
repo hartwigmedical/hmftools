@@ -2,8 +2,10 @@ package com.hartwig.hmftools.peach;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.peach.event.HaplotypeEvent;
+import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 import com.hartwig.hmftools.peach.haplotype.NonWildTypeHaplotype;
 import com.hartwig.hmftools.peach.haplotype.WildTypeHaplotype;
+import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

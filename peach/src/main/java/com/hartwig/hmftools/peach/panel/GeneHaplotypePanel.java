@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.peach;
+package com.hartwig.hmftools.peach.panel;
 
 import com.google.common.collect.ImmutableList;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;

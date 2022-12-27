@@ -15,6 +15,7 @@ import com.hartwig.hmftools.peach.output.BestHaplotypeCombinationsFile;
 import com.hartwig.hmftools.peach.output.EventsFile;
 import com.hartwig.hmftools.peach.output.EventsPerGeneFile;
 import com.hartwig.hmftools.peach.output.QcStatusFile;
+import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
