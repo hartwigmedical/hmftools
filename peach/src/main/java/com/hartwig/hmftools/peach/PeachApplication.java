@@ -127,7 +127,7 @@ public class PeachApplication
         }
         catch (IOException e)
         {
-            PCH_LOGGER.error("failed to create events per gene output file({}): {}", config.getEventsOutputPath(), e.toString());
+            PCH_LOGGER.error("failed to create events per gene output file({}): {}", config.getEventsPerGeneOutputPath(), e.toString());
             System.exit(1);
         }
         PCH_LOGGER.info("Write all haplotype combinations output file");
@@ -137,7 +137,7 @@ public class PeachApplication
         }
         catch (IOException e)
         {
-            PCH_LOGGER.error("failed to create all haplotype combinations output file({}): {}", config.getEventsOutputPath(), e.toString());
+            PCH_LOGGER.error("failed to create all haplotype combinations output file({}): {}", config.getAllHaplotypeCombinationsOutputPath(), e.toString());
             System.exit(1);
         }
 
