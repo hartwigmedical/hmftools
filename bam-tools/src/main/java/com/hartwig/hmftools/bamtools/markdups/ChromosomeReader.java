@@ -29,7 +29,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class ChromosomeReader implements Consumer<PositionFragments>, Callable
+public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
 {
     private final MarkDupsConfig mConfig;
     private final ChrBaseRegion mRegion;
@@ -138,18 +138,17 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
 
         List<Fragment> resolvedFragments = mPartitionResolvedFragments.values().stream().collect(Collectors.toList());
 
-        List<PositionFragments> incompletePositionFragments = Lists.newArrayList();
+        List<CandidateDuplicates> candidateDuplicates = Lists.newArrayList();
 
-        mLocalGroupCombiner.gatherPartitionFragments(mCurrentStrPartition, mCurrentPartition, resolvedFragments, incompletePositionFragments);
+        mLocalGroupCombiner.gatherPartitionFragments(mCurrentStrPartition, mCurrentPartition, resolvedFragments, candidateDuplicates);
 
-        mRemoteGroupCombiner.processPartitionFragments(
-                mCurrentStrPartition, resolvedFragments, incompletePositionFragments, mPartitionSupplementaries);
+        mRemoteGroupCombiner.processPartitionFragments(mCurrentStrPartition, resolvedFragments, candidateDuplicates, mPartitionSupplementaries);
 
         mPerfCounter.stop();
 
-        BM_LOGGER.debug("partition({}:{}) complete, remotes cached(supps={} resolved={} incompletes={})",
+        BM_LOGGER.debug("partition({}:{}) complete, remotes cached(supps={} resolved={} candidates={})",
                 mRegion.Chromosome, mCurrentPartition, mPartitionSupplementaries.size(), mPartitionResolvedFragments.size(),
-                incompletePositionFragments.size());
+                candidateDuplicates.size());
 
         mPartitionResolvedFragments.clear();
         mPartitionSupplementaries.clear();
@@ -221,26 +220,26 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
             mLocalGroupCombiner.localSupplementary(fragment, mCurrentStrPartition);
     }
 
-    public void accept(final PositionFragments positionFragments)
+    public void accept(final CandidateDuplicates candidateDuplicates)
     {
         List<Fragment> resolvedFragments = Lists.newArrayList();
-        List<PositionFragments> incompletePositionFragments = Lists.newArrayList();
+        List<CandidateDuplicates> candidateDuplicatesList = Lists.newArrayList();
 
-        classifyFragments(positionFragments.Fragments, resolvedFragments, incompletePositionFragments);
+        classifyFragments(candidateDuplicates.Fragments, resolvedFragments, candidateDuplicatesList);
 
         if(mConfig.RunChecks)
-            checkFragmentClassification(resolvedFragments, incompletePositionFragments);
+            checkFragmentClassification(resolvedFragments, candidateDuplicatesList);
 
         // collapse unclear fragments with the same position since no benefit in keeping them separate
-        if(incompletePositionFragments.size() >= 1)
+        if(candidateDuplicatesList.size() >= 1)
         {
-            PositionFragments first = incompletePositionFragments.get(0);
+            CandidateDuplicates first = candidateDuplicatesList.get(0);
 
-            while(incompletePositionFragments.size() > 1)
+            while(candidateDuplicatesList.size() > 1)
             {
-                PositionFragments next = incompletePositionFragments.get(1);
+                CandidateDuplicates next = candidateDuplicatesList.get(1);
                 first.Fragments.addAll(next.Fragments);
-                incompletePositionFragments.remove(1);
+                candidateDuplicatesList.remove(1);
             }
         }
 
@@ -273,8 +272,7 @@ public class ChromosomeReader implements Consumer<PositionFragments>, Callable
         }
 
         // pass to the local combiner
-        mLocalGroupCombiner.processPartitionFragments(
-                mCurrentStrPartition, resolvedFragments, incompletePositionFragments, Collections.EMPTY_LIST);
+        mLocalGroupCombiner.processPartitionFragments(mCurrentStrPartition, resolvedFragments, candidateDuplicatesList, Collections.EMPTY_LIST);
     }
 
     private void perfCounterStart()

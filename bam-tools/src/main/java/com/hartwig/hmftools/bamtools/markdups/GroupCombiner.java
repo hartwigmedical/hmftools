@@ -7,11 +7,9 @@ import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.chromosomeIndicator;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -50,7 +48,7 @@ public class GroupCombiner
     }
 
     public synchronized void processPartitionFragments(
-            final String chrPartition, final List<Fragment> resolvedFragments, final List<PositionFragments> incompletePositionFragments,
+            final String chrPartition, final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList,
             final List<Fragment> supplementaries)
     {
         // cache entries which are expecting further reads, otherwise combine reads from existing fragments and set resolved status
@@ -69,12 +67,12 @@ public class GroupCombiner
             handleSupplementary(fragment, partitionCache);
         }
 
-        for(PositionFragments positionFragments : incompletePositionFragments)
+        for(CandidateDuplicates candidateDuplicates : candidateDuplicatesList)
         {
-            handleIncompleteFragments(positionFragments, partitionCache, impactedPositions);
+            handleCandidateDuplicates(candidateDuplicates, partitionCache, impactedPositions);
         }
 
-        // process any cached position fragments from this set of new fragments
+        // check any candidate duplicate positions & fragments impacted by this set of new fragments
         processImpactedPositions(impactedPositions);
 
         if(!mSinglePartition)
@@ -137,7 +135,7 @@ public class GroupCombiner
         {
             // remove this position info as well
             // only this fragment, since the others may still turn out to be duplicates
-            List<Fragment> fragments = partitionCache.IncompleteFragmentPositions.get(fragment.initialPosition());
+            List<Fragment> fragments = partitionCache.CandidateDuplicatesMap.get(fragment.initialPosition());
 
             if(fragments != null)
             {
@@ -222,9 +220,8 @@ public class GroupCombiner
         }
     }
 
-    private void handleIncompleteFragments(
-            final PositionFragments positionFragments, final PartitionCache partitionCache,
-            final Map<String, Set<Integer>> impactedPositions)
+    private void handleCandidateDuplicates(
+            final CandidateDuplicates candidateDuplicates, final PartitionCache partitionCache, final Map<String,Set<Integer>> impactedPositions)
     {
         // scenarios:
         // - first time this fragment has been seen
@@ -237,16 +234,16 @@ public class GroupCombiner
 
         // first apply a resolved status if known and remove from position fragments
         int i = 0;
-        while(i < positionFragments.Fragments.size())
+        while(i < candidateDuplicates.Fragments.size())
         {
-            Fragment unclearFragment = positionFragments.Fragments.get(i);
+            Fragment unclearFragment = candidateDuplicates.Fragments.get(i);
 
             // check for a resolved status (always stored against the remote partition)
             if(checkResolvedStatus(unclearFragment, partitionCache))
             {
                 foundMatches = true;
                 resolvedFragments.add(unclearFragment);
-                positionFragments.Fragments.remove(i);
+                candidateDuplicates.Fragments.remove(i);
 
                 // no need ot add to impact positions since this is a new item
             }
@@ -259,7 +256,7 @@ public class GroupCombiner
         String chrPartition = partitionCache.ChrPartition;
 
         // next check for existing supplementaries or matched unclear fragments from amongst those previously stored
-        for(Fragment unclearFragment : positionFragments.Fragments)
+        for(Fragment unclearFragment : candidateDuplicates.Fragments)
         {
             if(!mSinglePartition && !unclearFragment.hasRemotePartitions())
                 continue;
@@ -291,7 +288,7 @@ public class GroupCombiner
                     foundMatches = true;
 
                     List<Fragment> posFragments =
-                            remotePartitionCache.IncompleteFragmentPositions.get(matchedFragment.initialPosition());
+                            remotePartitionCache.CandidateDuplicatesMap.get(matchedFragment.initialPosition());
 
                     if(posFragments != null)
                     {
@@ -307,18 +304,18 @@ public class GroupCombiner
         if(foundMatches)
         {
             // should be able to resolve some or all of the fragments at this position
-            resolveUnclearFragments(positionFragments.Fragments, partitionCache);
+            resolveUnclearFragments(candidateDuplicates.Fragments, partitionCache);
         }
 
         // only store this position's fragment if there are further remote reads expected
-        if(!positionFragments.Fragments.isEmpty())
+        if(!candidateDuplicates.Fragments.isEmpty())
         {
-            for(Fragment fragment : positionFragments.Fragments)
+            for(Fragment fragment : candidateDuplicates.Fragments)
             {
                 partitionCache.IncompleteFragments.put(fragment.id(), fragment);
             }
 
-            partitionCache.IncompleteFragmentPositions.put(positionFragments.Position, positionFragments.Fragments);
+            partitionCache.CandidateDuplicatesMap.put(candidateDuplicates.Position, candidateDuplicates.Fragments);
         }
     }
 
@@ -333,7 +330,7 @@ public class GroupCombiner
 
             for(Integer position : entry.getValue())
             {
-                List<Fragment> positionFragments = partitionCache.IncompleteFragmentPositions.get(position);
+                List<Fragment> positionFragments = partitionCache.CandidateDuplicatesMap.get(position);
 
                 if(positionFragments == null)
                     continue;
@@ -341,7 +338,7 @@ public class GroupCombiner
                 resolveUnclearFragments(positionFragments, partitionCache);
 
                 if(positionFragments.isEmpty())
-                    partitionCache.IncompleteFragmentPositions.remove(position);
+                    partitionCache.CandidateDuplicatesMap.remove(position);
             }
         }
     }
@@ -407,7 +404,7 @@ public class GroupCombiner
 
     public void gatherPartitionFragments(
             final String chrPartition, final BaseRegion partitionRegion,
-            final List<Fragment> resolvedFragments, final List<PositionFragments> incompletePositionFragments)
+            final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList)
     {
         if(!mSinglePartition)
         {
@@ -425,11 +422,11 @@ public class GroupCombiner
                 resolvedFragments.add(fragment);
         }
 
-        for(Map.Entry<Integer, List<Fragment>> entry : partitionCache.IncompleteFragmentPositions.entrySet())
+        for(Map.Entry<Integer, List<Fragment>> entry : partitionCache.CandidateDuplicatesMap.entrySet())
         {
             List<Fragment> unclearFragments = entry.getValue();
             unclearFragments.forEach(x -> x.setRemotePartitions(partitionRegion));
-            incompletePositionFragments.add(new PositionFragments(entry.getKey(), unclearFragments));
+            candidateDuplicatesList.add(new CandidateDuplicates(entry.getKey(), unclearFragments));
         }
 
         for(Fragment fragment : partitionCache.IncompleteFragments.values())

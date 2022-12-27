@@ -53,13 +53,13 @@ public class LocalGroupCombinerTest
         read1.setRemotePartitions(LOCAL_PARTITION);
 
         List<Fragment> resolvedFragments = Lists.newArrayList(read1);
-        List<PositionFragments> incompletePositionFragments = Lists.newArrayList();
+        List<CandidateDuplicates> incompletePositionFragments = Lists.newArrayList();
         List<Fragment> supplementaries = Lists.newArrayList();
 
         // test 1: resolved then supps then unclear
         supplementaries.add(testFragments.get(2));
         supplementaries.add(testFragments.get(3));
-        incompletePositionFragments.add(new PositionFragments(testFragments.get(1)));
+        incompletePositionFragments.add(new CandidateDuplicates(testFragments.get(1)));
 
         localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, resolvedFragments, Collections.emptyList(), Collections.emptyList());
         localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, Collections.emptyList(), Collections.emptyList(), supplementaries);
@@ -78,7 +78,7 @@ public class LocalGroupCombinerTest
         supplementaries.add(testFragments.get(2));
         supplementaries.add(testFragments.get(3));
         Fragment read2 = testFragments.get(1);
-        incompletePositionFragments.add(new PositionFragments(read2));
+        incompletePositionFragments.add(new CandidateDuplicates(read2));
         targets = Lists.newArrayList(testFragments.get(1), testFragments.get(2), testFragments.get(3));
 
         // test 2: supps then unclear then resolved
@@ -99,7 +99,7 @@ public class LocalGroupCombinerTest
         supplementaries.add(testFragments.get(2));
         supplementaries.add(testFragments.get(3));
         read2 = testFragments.get(1);
-        incompletePositionFragments.add(new PositionFragments(read2));
+        incompletePositionFragments.add(new CandidateDuplicates(read2));
         targets = Lists.newArrayList(testFragments.get(1), testFragments.get(2), testFragments.get(3));
 
         localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
@@ -160,14 +160,14 @@ public class LocalGroupCombinerTest
 
         List<Fragment> positionFragmentsList = Lists.newArrayList(read1, read2, read3);
         List<Fragment> resolvedFragments = Lists.newArrayList();
-        List<PositionFragments> incompletePositionFragments = Lists.newArrayList();
+        List<CandidateDuplicates> incompletePositionFragments = Lists.newArrayList();
 
         classifyFragments(positionFragmentsList, resolvedFragments, incompletePositionFragments);
         assertEquals(1, incompletePositionFragments.size());
         assertEquals(3, incompletePositionFragments.get(0).Fragments.size());
 
         localGroupCombiner.processPartitionFragments(LOCAL_PARTITION_STR, Collections.emptyList(), incompletePositionFragments, Collections.emptyList());
-        assertEquals(1, localGroupCombiner.getPartitionCache(LOCAL_PARTITION_STR).IncompleteFragmentPositions.size());
+        assertEquals(1, localGroupCombiner.getPartitionCache(LOCAL_PARTITION_STR).CandidateDuplicatesMap.size());
 
         // now process their mates one by one
 

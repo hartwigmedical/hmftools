@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.calcFragmentStatus;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragmentsOld;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_CIGAR;
@@ -105,7 +104,7 @@ public class FragmentClassificationTest
     {
         List<Fragment> positionFragmentsList = Lists.newArrayList();
         List<Fragment> resolvedFragments = Lists.newArrayList();
-        List<PositionFragments> incompletePositionFragments = Lists.newArrayList();
+        List<CandidateDuplicates> incompletePositionFragments = Lists.newArrayList();
 
         // a single fragment must be resolved as NONE
         Fragment frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100);
@@ -145,10 +144,10 @@ public class FragmentClassificationTest
 
         assertTrue(resolvedFragments.contains(frag3));
 
-        PositionFragments positionFragments = incompletePositionFragments.get(0);
-        assertNotNull(positionFragments);
-        assertTrue(positionFragments.Fragments.contains(frag1));
-        assertTrue(positionFragments.Fragments.contains(frag2));
+        CandidateDuplicates candidateDuplicates = incompletePositionFragments.get(0);
+        assertNotNull(candidateDuplicates);
+        assertTrue(candidateDuplicates.Fragments.contains(frag1));
+        assertTrue(candidateDuplicates.Fragments.contains(frag2));
 
         assertEquals(UNCLEAR, frag1.status());
         assertEquals(UNCLEAR, frag2.status());
@@ -178,10 +177,10 @@ public class FragmentClassificationTest
 
         assertTrue(resolvedFragments.contains(frag4));
 
-        positionFragments = incompletePositionFragments.get(0);
-        assertNotNull(positionFragments);
-        assertTrue(positionFragments.Fragments.contains(frag5));
-        assertTrue(positionFragments.Fragments.contains(frag6));
+        candidateDuplicates = incompletePositionFragments.get(0);
+        assertNotNull(candidateDuplicates);
+        assertTrue(candidateDuplicates.Fragments.contains(frag5));
+        assertTrue(candidateDuplicates.Fragments.contains(frag6));
 
         assertEquals(NONE, frag4.status());
         assertEquals(UNCLEAR, frag5.status());

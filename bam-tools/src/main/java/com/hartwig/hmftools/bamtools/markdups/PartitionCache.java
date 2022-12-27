@@ -10,20 +10,20 @@ public class PartitionCache
     public final String ChrPartition;
 
     // fragment status from resolved fragments, keyed by (remote) chromosome-partition then readId
-    public final Map<String, FragmentStatus> FragmentStatus;
+    public final Map<String,FragmentStatus> FragmentStatus;
 
     // incomplete fragments (unclear or supplmentaries), keyed by chromosome-partition then readId
-    public final Map<String, Fragment> IncompleteFragments;
+    public final Map<String,Fragment> IncompleteFragments;
 
     // positions with candidate duplicate fragments, keyed by chromosome-partition then initial fragment coordinate position
-    public final Map<Integer, List<Fragment>> IncompleteFragmentPositions;
+    public final Map<Integer,List<Fragment>> CandidateDuplicatesMap;
 
     public PartitionCache(final String chrPartition)
     {
         ChrPartition = chrPartition;
         FragmentStatus = Maps.newHashMap();
         IncompleteFragments = Maps.newHashMap();
-        IncompleteFragmentPositions = Maps.newHashMap();
+        CandidateDuplicatesMap = Maps.newHashMap();
     }
 
     public int incompleteFragments()
@@ -40,6 +40,6 @@ public class PartitionCache
     {
         FragmentStatus.clear();
         IncompleteFragments.clear();
-        IncompleteFragmentPositions.clear();
+        CandidateDuplicatesMap.clear();
     }
 }
