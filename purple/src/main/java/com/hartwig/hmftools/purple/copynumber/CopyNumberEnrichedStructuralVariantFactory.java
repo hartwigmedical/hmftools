@@ -34,16 +34,16 @@ public final class CopyNumberEnrichedStructuralVariantFactory
         mCopyNumbers = copyNumbers;
     }
 
-    @NotNull
-    public List<EnrichedStructuralVariant> enrich(@NotNull List<StructuralVariant> variants)
+    public List<EnrichedStructuralVariant> enrich(final List<StructuralVariant> variants)
     {
-        final StructuralVariantLegCopyNumberChangeFactory changeFactory =
-                new StructuralVariantLegCopyNumberChangeFactory(mPurityAdjuster, mCopyNumbers, variants);
+        final StructuralVariantLegCopyNumberChangeFactory changeFactory = new StructuralVariantLegCopyNumberChangeFactory(
+                mPurityAdjuster, mCopyNumbers, variants);
 
-        final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory =
-                new StructuralVariantLegPloidyFactory<>(mPurityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
-        final StructuralVariantLegCopyNumberFactory<PurpleCopyNumber> copyNumberFactory =
-                new StructuralVariantLegCopyNumberFactory<>(PurpleCopyNumber::averageTumorCopyNumber);
+        final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory = new StructuralVariantLegPloidyFactory<>(
+                mPurityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
+
+        final StructuralVariantLegCopyNumberFactory<PurpleCopyNumber> copyNumberFactory = new StructuralVariantLegCopyNumberFactory<>(
+                PurpleCopyNumber::averageTumorCopyNumber);
 
         final List<EnrichedStructuralVariant> result = Lists.newArrayList();
         for(final StructuralVariant variant : variants)
@@ -81,7 +81,7 @@ public final class CopyNumberEnrichedStructuralVariantFactory
             }
             else
             {
-                // Can't always get ploidies (if no vaf for example) but we can still get copy number info
+                // Can't always get ploidies (if no VAF for example) but we can still get copy number info
                 final StructuralVariantLegCopyNumber startCopyNumber = copyNumberFactory.create(variant.start(), mCopyNumbers);
                 startBuilder.adjustedCopyNumber((startCopyNumber.adjustedCopyNumber()));
                 startBuilder.adjustedCopyNumberChange((changeFactory.copyNumberChange(startCopyNumber)));
@@ -111,9 +111,7 @@ public final class CopyNumberEnrichedStructuralVariantFactory
     private ImmutableEnrichedStructuralVariantLeg.Builder createBuilder(@Nullable StructuralVariantLeg leg)
     {
         if(leg == null)
-        {
             return null;
-        }
 
         return ImmutableEnrichedStructuralVariantLeg.builder().from(leg);
     }

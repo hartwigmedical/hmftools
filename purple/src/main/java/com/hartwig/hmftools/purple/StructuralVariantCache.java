@@ -130,7 +130,6 @@ public class StructuralVariantCache
         }
     }
 
-    @NotNull
     private VariantContext infer(final PurpleCopyNumber copyNumber, final PurpleCopyNumber prev)
     {
         final long position;
@@ -181,7 +180,6 @@ public class StructuralVariantCache
                 VariantContextCollection enrichedCollection = getEnrichedCollection(purityAdjuster, copyNumbers);
 
                 Iterator<VariantContext> variantIter = enrichedCollection.iterator();
-                // Iterable<VariantContext> enrichedVariants = enrichedCollection.iterator();
 
                 while(variantIter.hasNext())
                 {
@@ -210,12 +208,18 @@ public class StructuralVariantCache
             svFactory.addVariantContext(variant);
         }
 
-        final CopyNumberEnrichedStructuralVariantFactory svEnricher =
-                new CopyNumberEnrichedStructuralVariantFactory(purityAdjuster, Multimaps.fromRegions(copyNumbers));
+        final CopyNumberEnrichedStructuralVariantFactory svEnricher = new CopyNumberEnrichedStructuralVariantFactory(
+                purityAdjuster, Multimaps.fromRegions(copyNumbers));
 
         VariantContextCollection enrichedCollection = new VariantContextCollection(mVcfHeader.get());
-        for(EnrichedStructuralVariant enrichedSV : svEnricher.enrich(svFactory.results()))
+
+        List<EnrichedStructuralVariant> enrichedVariants = svEnricher.enrich(svFactory.results());
+
+        for(EnrichedStructuralVariant enrichedSV : enrichedVariants)
         {
+            addEnrichedVariantContexts(enrichedCollection, enrichedSV);
+
+            /*
             final VariantContext startContext = enrichedSV.startContext();
             if(startContext != null)
             {
@@ -227,11 +231,82 @@ public class StructuralVariantCache
             {
                 enrichedCollection.add(enrich(enrichedSV, endContext, true));
             }
+            */
         }
 
         svFactory.unmatched().forEach(enrichedCollection::add);
 
         return enrichedCollection;
+    }
+
+    private void addEnrichedVariantContexts(final VariantContextCollection enrichedCollection, final EnrichedStructuralVariant variant)
+    {
+        final VariantContext startContext = variant.startContext();
+        final VariantContext endContext = variant.endContext();
+
+        List<Double> purpleAF = Lists.newArrayList();
+        List<Double> purpleCN = Lists.newArrayList();
+        List<Double> purpleCNChange = Lists.newArrayList();
+
+        if(variant.start().adjustedAlleleFrequency() != null)
+            purpleAF.add(variant.start().adjustedAlleleFrequency());
+
+        if(variant.start().adjustedCopyNumber() != null)
+            purpleCN.add(variant.start().adjustedCopyNumber());
+
+        if(variant.start().adjustedCopyNumberChange() != null)
+            purpleCNChange.add(variant.start().adjustedCopyNumberChange());
+
+        if(variant.end() != null)
+        {
+            if(variant.end().adjustedAlleleFrequency() != null)
+                purpleAF.add(variant.end().adjustedAlleleFrequency());
+
+            if(variant.end().adjustedCopyNumber() != null)
+                purpleCN.add(variant.end().adjustedCopyNumber());
+
+            if(variant.end().adjustedCopyNumberChange() != null)
+                purpleCNChange.add(variant.end().adjustedCopyNumberChange());
+        }
+
+        if(startContext != null)
+        {
+            enrichedCollection.add(buildVariantContext(startContext, purpleAF, purpleCN, purpleCNChange, variant.junctionCopyNumber()));
+        }
+
+        if(endContext != null)
+        {
+            purpleAF = Lists.newArrayList(purpleAF);
+            purpleCN = Lists.newArrayList(purpleCN);
+            purpleCNChange = Lists.newArrayList(purpleCNChange);
+
+            Collections.reverse(purpleAF);
+            Collections.reverse(purpleCN);
+            Collections.reverse(purpleCNChange);
+
+            enrichedCollection.add(buildVariantContext(endContext, purpleAF, purpleCN, purpleCNChange, variant.junctionCopyNumber()));
+        }
+    }
+
+    private VariantContext buildVariantContext(
+            final VariantContext variantContext, final List<Double> purpleAF, final List<Double> purpleCN,
+            final List<Double> purpleCNChange, final Double junctionCopyNumber)
+    {
+        VariantContextBuilder builder = new VariantContextBuilder(variantContext);
+
+        if(!purpleAF.isEmpty())
+            builder.attribute(PURPLE_AF_INFO, purpleAF);
+
+        if(!purpleCN.isEmpty())
+            builder.attribute(PURPLE_CN_INFO, purpleCN);
+
+        if(!purpleCNChange.isEmpty())
+            builder.attribute(StructuralVariantHeader.PURPLE_CN_CHANGE_INFO, purpleCNChange);
+
+        if(junctionCopyNumber != null)
+            builder.attribute(StructuralVariantHeader.PURPLE_JUNCTION_COPY_NUMBER_INFO, junctionCopyNumber);
+
+        return builder.make();
     }
 
     private VariantContext enrich(final EnrichedStructuralVariant variant, final VariantContext template, boolean reverse)
