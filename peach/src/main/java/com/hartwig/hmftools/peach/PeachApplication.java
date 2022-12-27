@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.peach.data_loader.HaplotypeEventLoader;
 import com.hartwig.hmftools.peach.data_loader.PanelLoader;
 import com.hartwig.hmftools.peach.output.AllHaplotypeCombinationsFile;
+import com.hartwig.hmftools.peach.output.BestHaplotypeCombinationsFile;
 import com.hartwig.hmftools.peach.output.EventsFile;
 import com.hartwig.hmftools.peach.output.EventsPerGeneFile;
 import htsjdk.tribble.AbstractFeatureReader;
@@ -109,39 +110,29 @@ public class PeachApplication
 
         PCH_LOGGER.info("haplotypes called: {}", geneToHaplotypeAnalysis.toString());
 
-        PCH_LOGGER.info("Write events output file");
-        try
-        {
-            EventsFile.write(config.getEventsOutputPath(), eventIdToCount);
-        }
-        catch (IOException e)
-        {
-            PCH_LOGGER.error("failed to create events output file({}): {}", config.getEventsOutputPath(), e.toString());
-            System.exit(1);
-        }
-
-        PCH_LOGGER.info("Write events per gene output file");
-        try
-        {
-            EventsPerGeneFile.write(config.getEventsPerGeneOutputPath(), geneToHaplotypeAnalysis);
-        }
-        catch (IOException e)
-        {
-            PCH_LOGGER.error("failed to create events per gene output file({}): {}", config.getEventsPerGeneOutputPath(), e.toString());
-            System.exit(1);
-        }
-        PCH_LOGGER.info("Write all haplotype combinations output file");
-        try
-        {
-            AllHaplotypeCombinationsFile.write(config.getAllHaplotypeCombinationsOutputPath(), geneToHaplotypeAnalysis);
-        }
-        catch (IOException e)
-        {
-            PCH_LOGGER.error("failed to create all haplotype combinations output file({}): {}", config.getAllHaplotypeCombinationsOutputPath(), e.toString());
-            System.exit(1);
-        }
+        writeOutputFiles(eventIdToCount, geneToHaplotypeAnalysis);
 
         PCH_LOGGER.info("finished running PEACH");
+    }
+
+    private void writeOutputFiles(Map<String, Integer> eventIdToCount, Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
+    {
+        try
+        {
+            PCH_LOGGER.info("write events output file");
+            EventsFile.write(config.getEventsOutputPath(), eventIdToCount);
+            PCH_LOGGER.info("write events per gene output file");
+            EventsPerGeneFile.write(config.getEventsPerGeneOutputPath(), geneToHaplotypeAnalysis);
+            PCH_LOGGER.info("write all haplotype combinations output file");
+            AllHaplotypeCombinationsFile.write(config.getAllHaplotypeCombinationsOutputPath(), geneToHaplotypeAnalysis);
+            PCH_LOGGER.info("write best haplotype combination output file");
+            BestHaplotypeCombinationsFile.write(config.getBestHaplotypeCombinationsOutputPath(), geneToHaplotypeAnalysis);
+        }
+        catch (IOException e)
+        {
+            PCH_LOGGER.error("failed to create all output files: {}", e.toString());
+            System.exit(1);
+        }
     }
 
     private void doLiftover(String liftOverVcf, String rejectVcf)
