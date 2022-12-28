@@ -381,7 +381,7 @@ public class StructuralVariant extends Variant
         String purpleDir = PvConfig.getSampleFilePath(sampleId, config.PurpleDir);
         String linxDir = PvConfig.getSampleFilePath(sampleId, config.LinxDir);
 
-        String vcfFile = PurpleCommon.purpleSvFile(purpleDir, sampleId);
+        String vcfFile = PurpleCommon.purpleSomaticSvFile(purpleDir, sampleId);
 
         List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(
                 StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter()));

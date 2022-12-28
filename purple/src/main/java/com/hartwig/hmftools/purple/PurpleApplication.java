@@ -3,6 +3,8 @@ package com.hartwig.hmftools.purple;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleGermlineSvFile;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFile;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
 import static com.hartwig.hmftools.common.purple.GeneCopyNumber.listToMap;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
@@ -200,8 +202,10 @@ public class PurpleApplication
                     mConfig.tumorOnlyMode(), mConfig.germlineMode());
 
             // load structural and somatic variants
+            final String outputVcf = purpleSomaticSvFile(mConfig.OutputDir, tumorId);
+
             final StructuralVariantCache svCache = createStructuralVariantCache(
-                    tumorId, sampleDataFiles, mConfig, mPurpleVersion.version(), mReferenceData);
+                    sampleDataFiles.SomaticSvVcfFile, outputVcf, mPurpleVersion.version(), mReferenceData);
 
             sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache, somaticVariantCache);
         }
@@ -246,7 +250,7 @@ public class PurpleApplication
     }
 
     private void performFit(
-            final String referenceId, final String tumorSample,
+            final String referenceId, final String tumorId,
             final SampleDataFiles sampleDataFiles, final SampleData sampleData) throws Exception
     {
         final AmberData amberData = sampleData.Amber;
@@ -372,10 +376,10 @@ public class PurpleApplication
 
             reportedGenes.addAll(somaticStream.reportedGenes());
 
-            FittedPurityRangeFile.write(mConfig.OutputDir, tumorSample, bestFit.allFits());
-            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), copyNumbers);
-            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), geneCopyNumbers);
-            PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorSample), somaticPeaks);
+            FittedPurityRangeFile.write(mConfig.OutputDir, tumorId, bestFit.allFits());
+            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), copyNumbers);
+            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), geneCopyNumbers);
+            PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), somaticPeaks);
         }
         else
         {
@@ -392,21 +396,32 @@ public class PurpleApplication
         final PurityContext purityContext = createPurity(
                 mPurpleVersion.version(), bestFit, gender, mConfig, qcChecks, copyNumbers, somaticStream, sampleData.SvCache);
 
-        PurityContextFile.write(mConfig.OutputDir, tumorSample, purityContext);
-        SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorSample), fittedRegions);
+        PurityContextFile.write(mConfig.OutputDir, tumorId, purityContext);
+        SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorId), fittedRegions);
 
         List<GermlineDeletion> germlineDeletions = Lists.newArrayList();
+
         if(mConfig.runGermline())
         {
             mGermlineVariants.processAndWrite(
-                    referenceId, tumorSample, sampleDataFiles.GermlineVcfFile, purityAdjuster, copyNumbers, reportedGenes);
+                    referenceId, tumorId, sampleDataFiles.GermlineVcfFile, purityAdjuster, copyNumbers, reportedGenes);
+
+            if(!sampleDataFiles.GermlineSvVcfFile.isEmpty())
+            {
+                final String outputVcf = purpleGermlineSvFile(mConfig.OutputDir, tumorId);
+
+                final StructuralVariantCache germlineSvCache = createStructuralVariantCache(
+                        sampleDataFiles.GermlineSvVcfFile, outputVcf, mPurpleVersion.version(), mReferenceData);
+
+                germlineSvCache.write(purityAdjuster, copyNumbers, true);
+            }
 
             GermlineDeletionDrivers germlineDeletionDrivers = new GermlineDeletionDrivers(
                     mReferenceData.DriverGenes.driverGenes(), mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
 
             germlineDeletionDrivers.findDeletions(copyNumbers, fittedRegions);
             germlineDeletions.addAll(germlineDeletionDrivers.getDeletions());
-            GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorSample), germlineDeletions);
+            GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorId), germlineDeletions);
         }
 
         if(!mConfig.germlineMode() && (mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent()))
@@ -416,7 +431,7 @@ public class PurpleApplication
             try
             {
                 mCharts.write(
-                        referenceId, tumorSample, !sampleDataFiles.SomaticVcfFile.isEmpty(),
+                        referenceId, tumorId, !sampleDataFiles.SomaticVcfFile.isEmpty(),
                         gender, copyNumbers, somaticStream.downsampledVariants(), sampleData.SvCache.variants(),
                         fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
             }
@@ -429,7 +444,7 @@ public class PurpleApplication
 
         if(mConfig.RunDrivers)
         {
-            findDrivers(tumorSample, purityContext, copyNumbers, geneCopyNumbers, fittedRegions, somaticStream);
+            findDrivers(tumorId, purityContext, copyNumbers, geneCopyNumbers, fittedRegions, somaticStream);
         }
     }
 

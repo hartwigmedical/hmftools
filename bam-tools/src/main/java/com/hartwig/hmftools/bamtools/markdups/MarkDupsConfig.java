@@ -153,6 +153,8 @@ public class MarkDupsConfig
         return filename;
     }
 
+    public boolean runReadChecks() { return RunChecks && (!SpecificChromosomes.isEmpty() || !SpecificRegions.isEmpty()); }
+
     public static Options createCmdLineOptions()
     {
         final Options options = new Options();
@@ -174,6 +176,11 @@ public class MarkDupsConfig
         options.addOption(RUN_CHECKS, false, "Run duplicate mismatch checks");
 
         return options;
+    }
+
+    public MarkDupsConfig()
+    {
+        this(DEFAULT_PARTITION_SIZE, DEFAULT_POS_BUFFER_SIZE);
     }
 
     public MarkDupsConfig(int partitionSize, int bufferSize)

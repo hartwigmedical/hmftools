@@ -2,6 +2,7 @@ package com.hartwig.hmftools.bamtools.markdups;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
@@ -15,13 +16,13 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -80,56 +81,60 @@ public class FragmentUtils
                     ? UNCLEAR : NONE;
         }
     }
-    public static void classifyFragments(
-            final PositionFragments positionFragments, final List<Fragment> resolvedFragments,
-            final List<PositionFragments> incompletePositionFragments)
-    {
-        classifyFragments(positionFragments.Fragments, resolvedFragments, incompletePositionFragments);
-    }
+
+
+    // initial call needs to prioritise finding resolved fragments (dups or NONE), and form unclear groups from amongst the rest
+
+
+    // second call need only look for resolved fragments
 
     public static void classifyFragments(
-            final List<Fragment> positionFragments, final List<Fragment> resolvedFragments,
-            final List<PositionFragments> incompletePositionFragments)
+            final List<Fragment> fragments, final List<Fragment> resolvedFragments,
+            @Nullable final List<CandidateDuplicates> candidateDuplicatesList)
     {
-        // take all the fragments at this initial fragment position and classify them as duplicates, non-duplicates or unclear
-        List<Fragment> allFragments = Lists.newArrayList(positionFragments);
+        // take all the fragments at this initial fragment position and classify them as duplicates, non-duplicates (NONE) or unclear
+        // note: all fragments will be given a classification, and resolved fragments are removed from the input fragment list
 
-        if(allFragments.size() == 1)
+        if(fragments.size() == 1)
         {
-            Fragment fragment = allFragments.get(0);
+            Fragment fragment = fragments.get(0);
             fragment.setStatus(NONE);
             resolvedFragments.add(fragment);
+            fragments.clear();
             return;
         }
 
-        int i = 0;
-        while(i < allFragments.size())
-        {
-            Fragment fragment1 = allFragments.get(i);
+        // at most 1 position with unclear fragments will be created since having more can lead to overlapping groups
 
-            if(i == allFragments.size() - 1)
+        int fragmentCount = fragments.size();
+        Set<Fragment> possibleDuplicates = Sets.newHashSet();
+
+        int i = 0;
+        while(i < fragments.size())
+        {
+            Fragment fragment1 = fragments.get(i);
+
+            if(i == fragments.size() - 1)
             {
-                fragment1.setStatus(NONE);
-                resolvedFragments.add(fragment1);
+                if(!possibleDuplicates.contains(fragment1))
+                {
+                    fragment1.setStatus(NONE);
+                    resolvedFragments.add(fragment1);
+                    fragments.remove(i);
+                }
                 break;
             }
 
-            PositionFragments incompleteFragments = null;
             List<Fragment> duplicateFragments = null;
 
             int j = i + 1;
-
-            while(j < allFragments.size())
+            while(j < fragments.size())
             {
-                Fragment fragment2 = allFragments.get(j);
+                Fragment fragment2 = fragments.get(j);
 
                 FragmentStatus status = calcFragmentStatus(fragment1, fragment2);
 
-                if(fragment1.status() != UNSET && status != NONE && fragment1.status() != status)
-                {
-                    BM_LOGGER.warn("fragment({}) has alt status({}) with other({})", fragment1, status, fragment2);
-                }
-                else if(status == DUPLICATE)
+                if(status == DUPLICATE)
                 {
                     fragment1.setStatus(status);
                     fragment2.setStatus(status);
@@ -138,20 +143,15 @@ public class FragmentUtils
                         duplicateFragments = Lists.newArrayList(fragment1);
 
                     duplicateFragments.add(fragment2);
-                    allFragments.remove(j);
+                    fragments.remove(j);
                     continue;
                 }
-                else if(status == UNCLEAR)
+
+                if(fragment1.status() != DUPLICATE && status == UNCLEAR)
                 {
-                    fragment1.setStatus(status);
-                    fragment2.setStatus(status);
-
-                    if(incompleteFragments == null)
-                        incompleteFragments = new PositionFragments(fragment1, fragment1.initialPosition());
-
-                    incompleteFragments.Fragments.add(fragment2);
-                    allFragments.remove(j);
-                    continue;
+                    // the pair is a candidate for duplicates but without their mates it's unclear whether they will be
+                    possibleDuplicates.add(fragment1);
+                    possibleDuplicates.add(fragment2);
                 }
 
                 ++j;
@@ -159,22 +159,50 @@ public class FragmentUtils
 
             if(fragment1.status().isDuplicate())
             {
-                resolvedFragments.add(fragment1);
+                resolvedFragments.addAll(duplicateFragments);
+                fragments.remove(i);
 
                 Fragment primary = findPrimaryFragment(duplicateFragments, true);
                 primary.setStatus(PRIMARY);
             }
-            else if(incompleteFragments != null)
+            else if(possibleDuplicates.contains(fragment1))
             {
-                incompletePositionFragments.add(incompleteFragments);
+                ++i;
             }
             else
             {
                 fragment1.setStatus(NONE);
                 resolvedFragments.add(fragment1);
+                fragments.remove(i);
             }
+        }
 
-            ++i;
+        List<Fragment> unclearFragments = possibleDuplicates.stream().filter(y -> !resolvedFragments.contains(y)).collect(Collectors.toList());
+        unclearFragments.forEach(x -> x.setStatus(UNCLEAR));
+
+        if(candidateDuplicatesList != null && !unclearFragments.isEmpty())
+        {
+            candidateDuplicatesList.add(new CandidateDuplicates(unclearFragments.get(0).initialPosition(), unclearFragments));
+        }
+
+        if(unclearFragments.size() + resolvedFragments.size() != fragmentCount)
+        {
+            BM_LOGGER.error("failed to classify all fragments: original({}) resolved({}) unclear({})",
+                    fragmentCount, resolvedFragments.size(), unclearFragments.size());
+        }
+    }
+
+    public static void checkFragmentClassification(
+            final List<Fragment> resolvedFragments, final List<CandidateDuplicates> incompletePositionFragments)
+    {
+        if(resolvedFragments.stream().anyMatch(x -> x.status() == UNSET))
+        {
+            BM_LOGGER.error("failed to classify all resolved fragments");
+        }
+
+        if(incompletePositionFragments.stream().anyMatch(x -> x.Fragments.stream().anyMatch(y -> y.status() == UNSET)))
+        {
+            BM_LOGGER.error("failed to classify all incomplete fragments");
         }
     }
 
@@ -237,62 +265,19 @@ public class FragmentUtils
     public static String formChromosomePartition(final String chromosome, int position, int partitionSize)
     {
         int partition = position / partitionSize;
-        return chromosome + CHR_PARTITION_DELIM + partition;
+        return chromosomeIndicator(chromosome) + partition;
     }
 
-    public static void reconcileFragments(
-            final Map<String,Fragment> supplementaries, final Map<String,Fragment> resolvedFragments,
-            final List<PositionFragments> incompletePositionFragments)
+    public static String chromosomeIndicator(final String chromosome)
     {
-        // first add any supplementaries or incomplete fragments to resolved fragments
+        return chromosome + CHR_PARTITION_DELIM;
+    }
 
-        // link up any fragments by read ID and look for complete fragments
-        Set<PositionFragments> modifiedPositionFragments = Sets.newHashSet();
-
-        Map<String,Fragment> incompleteFragments = Maps.newHashMap();
-        incompletePositionFragments.forEach(x -> x.Fragments.forEach(y -> incompleteFragments.put(y.id(), y)));
-
-        for(Fragment fragment : resolvedFragments.values())
-        {
-            Fragment supp = supplementaries.get(fragment.id());
-
-            if(supp != null)
-            {
-                supp.reads().forEach(x -> fragment.addRead(x));
-                supplementaries.remove(supp.id());
-            }
-
-            Fragment incompleteFrag = incompleteFragments.get(fragment.id());
-
-            if(incompleteFrag != null)
-            {
-                incompleteFrag.reads().forEach(x -> fragment.addRead(x));
-                incompleteFragments.remove(supp.id());
-
-                PositionFragments positionFragments = incompletePositionFragments.stream()
-                        .filter(x -> x.Position == incompleteFrag.initialPosition()).findFirst().orElse(null);
-
-                if(positionFragments != null)
-                {
-                    positionFragments.Fragments.remove(incompleteFrag);
-                    modifiedPositionFragments.add(positionFragments);
-                }
-            }
-        }
-
-        for(PositionFragments positionFragments : modifiedPositionFragments)
-        {
-            if(positionFragments.Fragments.size() < 2)
-            {
-                for(Fragment fragment : positionFragments.Fragments)
-                {
-                    fragment.setStatus(NONE);
-                    resolvedFragments.put(fragment.id(), fragment);
-                }
-
-                incompletePositionFragments.remove(positionFragments);
-            }
-        }
+    public static String readToString(final SAMRecord read)
+    {
+        return format("id(%s) coords(coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
+                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
+                read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
     }
 
     /*

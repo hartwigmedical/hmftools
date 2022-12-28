@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createSamRecord;
 
 import com.google.common.collect.Lists;
 
+import static com.hartwig.hmftools.bamtools.markdups.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 
 import static org.junit.Assert.assertEquals;
@@ -55,10 +56,7 @@ public class FragmentUtilsTest
         Fragment fragment2 = createFragment(TEST_READ_ID, CHR_1, 100);
 
         SAMRecord read2 = fragment2.reads().get(0);
-        for(int i = 0; i < read2.getReadLength(); ++i)
-        {
-            read2.getBaseQualities()[i] = DEFAULT_QUAL - 1;
-        }
+        setBaseQualities(read2, DEFAULT_QUAL - 1);
 
         assertEquals(DEFAULT_QUAL - 1, calcBaseQualTotal(fragment2));
 

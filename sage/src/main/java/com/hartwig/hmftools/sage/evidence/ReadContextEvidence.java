@@ -390,6 +390,7 @@ public class ReadContextEvidence
         final byte[] combinedBaseQualities = new byte[combinedLength];
         final byte[] combinedBases = new byte[combinedLength];
         int combinedPosStart = min(firstPosStart, secondPosStart);
+        int combinedPosEnd = max(firstPosEnd, secondPosEnd);
 
         int combinedReadIndex = 0;
         int firstReadIndex = -1;
@@ -608,7 +609,7 @@ public class ReadContextEvidence
         */
 
         combinedRecord.setMappingQuality(first.getMappingQuality());
-        combinedRecord.setInferredInsertSize(combinedEffectiveEnd - combinedEffectiveStart + 1);
+        combinedRecord.setInferredInsertSize(combinedPosEnd - combinedPosStart + 1);
 
         for(SAMRecord.SAMTagAndValue tagAndValue : first.getAttributes())
         {

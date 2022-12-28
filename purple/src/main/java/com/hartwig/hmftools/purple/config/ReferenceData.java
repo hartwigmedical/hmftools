@@ -240,7 +240,7 @@ public class ReferenceData
             List<String> additionalTransNames = Lists.newArrayList();
             OtherReportableTranscripts.values().forEach(x -> additionalTransNames.addAll(x));
 
-            PPL_LOGGER.info("loaded {} alternative transcripts from {} genes",
+            PPL_LOGGER.debug("loaded {} alternative transcripts from {} genes",
                     additionalTransNames.size(), OtherReportableTranscripts.size());
 
             GeneTransCache.setRequiredData(true, false, false, true);

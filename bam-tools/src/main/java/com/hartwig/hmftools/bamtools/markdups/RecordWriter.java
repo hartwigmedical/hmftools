@@ -72,7 +72,7 @@ public class RecordWriter
 
     public synchronized void writeFragment(final Fragment fragment)
     {
-        if(fragment.readWritten())
+        if(fragment.readsWritten())
         {
             BM_LOGGER.error("fragment({}) reads already written", fragment);
             return;
@@ -86,8 +86,18 @@ public class RecordWriter
     {
         ++mRecordWriteCount;
 
-        if(BM_LOGGER.isTraceEnabled())
-            mReadsWritten.add(read);
+        if(mConfig.runReadChecks())
+        {
+            if(mReadsWritten.contains(read))
+            {
+                BM_LOGGER.error("read({}) coords({}:{}-{}) already written",
+                        read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd());
+            }
+            else
+            {
+                mReadsWritten.add(read);
+            }
+        }
 
         writeReadData(read, fragmentStatus);
 

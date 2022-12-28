@@ -86,7 +86,7 @@ public class GermlineVariants
 
     public void processAndWrite(
             final String referenceId, final String tumorSample, final String germlineVcf, @Nullable final PurityAdjuster purityAdjuster,
-            final List<PurpleCopyNumber> copyNumbers, final Set<String> somaticReportedGenes) throws Exception
+            final List<PurpleCopyNumber> copyNumbers, final Set<String> somaticReportedGenes)
     {
         mReportableVariants.clear();
 

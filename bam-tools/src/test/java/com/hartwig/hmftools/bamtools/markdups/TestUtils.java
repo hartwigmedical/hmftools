@@ -5,13 +5,18 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import java.util.List;
+import java.util.Map;
 
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 
 public final class TestUtils
 {
@@ -21,8 +26,22 @@ public final class TestUtils
 
     public static final int DEFAULT_QUAL = 37;
 
-    public void resetFragment(final Fragment fragment) { fragment.setStatus(FragmentStatus.UNSET); }
-    public void resetFragments(final List<Fragment> fragments) { fragments.forEach(x -> x.setStatus(FragmentStatus.UNSET)); }
+    public static SAMSequenceDictionary SAM_DICTIONARY_V37;
+
+    static
+    {
+        SAM_DICTIONARY_V37 = new SAMSequenceDictionary();
+
+        RefGenomeCoordinates v37Coords = RefGenomeCoordinates.COORDS_37;
+
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            SAM_DICTIONARY_V37.addSequence(new SAMSequenceRecord(chromosome.toString(), v37Coords.Lengths.get(chromosome)));
+        }
+    }
+
+    public static void resetFragment(final Fragment fragment) { fragment.setStatus(FragmentStatus.UNSET); }
+    public static void resetFragments(final List<Fragment> fragments) { fragments.forEach(x -> x.setStatus(FragmentStatus.UNSET)); }
 
     public static Fragment createFragment(final String readId, final String chrStr, int readStart)
     {
@@ -40,12 +59,27 @@ public final class TestUtils
         return new Fragment(read);
     }
 
+    public static Fragment createFragmentPair(
+            final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final String mateChr,
+            int mateStart, boolean isReversed)
+    {
+        SAMRecord read = createSamRecord(readId, chrStr, readStart, readBases, cigar, mateChr, mateStart,
+                isReversed, false, null);
+
+        SAMRecord readMate = createSamRecord(readId, mateChr, mateStart, readBases, cigar, chrStr, readStart,
+                !isReversed, false, null);
+
+        Fragment fragment = new Fragment(read);
+        fragment.addRead(readMate);
+        return fragment;
+    }
 
     public static SAMRecord createSamRecord(
             final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final String mateChr,
             int mateStart, boolean isReversed, boolean isSupplementary, final SupplementaryReadData suppAlignment)
     {
         SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
+        recordBuilder.getHeader().setSequenceDictionary(SAM_DICTIONARY_V37);
         recordBuilder.setUnmappedHasBasesAndQualities(false);
 
         HumanChromosome chromosome = HumanChromosome.fromString(chrStr);
@@ -93,6 +127,17 @@ public final class TestUtils
             record.setInferredInsertSize(0);
 
         return record;
+    }
+
+    public static void setBaseQualities(final Fragment fragment, int value)
+    {
+        fragment.reads().forEach(x -> setBaseQualities(x, value));
+    }
+
+    public static void setBaseQualities(final SAMRecord read, int value)
+    {
+        for(int i = 0; i < read.getBaseQualities().length; ++i)
+            read.getBaseQualities()[i] = (byte)value;
     }
 
 }

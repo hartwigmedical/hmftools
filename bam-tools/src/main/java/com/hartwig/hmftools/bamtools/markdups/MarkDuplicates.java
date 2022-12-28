@@ -3,11 +3,13 @@ package com.hartwig.hmftools.bamtools.markdups;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -51,7 +53,7 @@ public class MarkDuplicates
         RefGenomeCoordinates refGenomeCoordinates = mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
         RecordWriter recordWriter = new RecordWriter(mConfig);
-        GroupCombiner groupCombiner = new GroupCombiner(recordWriter);
+        GroupCombiner groupCombiner = new GroupCombiner(recordWriter, false);
         final List<Callable> callableList = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
@@ -71,32 +73,52 @@ public class MarkDuplicates
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
 
-        long totalProcessReads = chromosomeReaders.stream().mapToLong(x -> x.totalRecordCount()).sum();
-
-        BM_LOGGER.debug("all chromosomes complete, reads processed({}) written({})", totalProcessReads, recordWriter.recordWriteCount());
-
         groupCombiner.handleRemaining();
         recordWriter.close();
 
-        if(BM_LOGGER.isTraceEnabled())
-        {
-            Set<SAMRecord> recordsWritten = recordWriter.readsWritten();
-            Set<SAMRecord> recordsProcessed = Sets.newHashSet();
-            chromosomeReaders.forEach(x -> recordsProcessed.addAll(x.readsProcessed()));
+        long totalProcessReads = chromosomeReaders.stream().mapToLong(x -> x.totalRecordCount()).sum();
 
-            if(recordsWritten.size() != recordsProcessed.size())
+        BM_LOGGER.debug("all chromosomes complete, reads processed({})", totalProcessReads);
+
+        if(totalProcessReads != recordWriter.recordWriteCount())
+        {
+            BM_LOGGER.warn("reads processed({}) vs written({}) mismatch", totalProcessReads, recordWriter.recordWriteCount());
+
+            if(mConfig.runReadChecks())
             {
+                Set<SAMRecord> recordsProcessed = Sets.newHashSet();
+                chromosomeReaders.forEach(x -> recordsProcessed.addAll(x.readsProcessed()));
+
+                List<SAMRecord> recordsWritten = recordWriter.readsWritten().stream().collect(Collectors.toList());
+
                 for(SAMRecord readProcessed : recordsProcessed)
                 {
-                    if(recordsWritten.contains(readProcessed))
+                    boolean found = false;
+                    for(int i = 0; i < recordsWritten.size(); ++i)
                     {
-                        recordsWritten.remove(readProcessed);
+                        SAMRecord read = recordsWritten.get(i);
+
+                        if(read == readProcessed)
+                        {
+                            recordsWritten.remove(i);
+                            found = true;
+                            break;
+                        }
                     }
-                    else
+
+                    if(!found)
                     {
-                        BM_LOGGER.error("read({}) coords({}:{}-{}) processed but not written",
-                                readProcessed.getReadName(), readProcessed.getContig(),
-                                readProcessed.getAlignmentStart(), readProcessed.getAlignmentEnd());
+                        BM_LOGGER.error("read processed but not written: {}", readToString(readProcessed));
+                    }
+                }
+
+                if(!recordsWritten.isEmpty())
+                {
+                    for(int i = 0; i < recordsWritten.size(); ++i)
+                    {
+                        SAMRecord read = recordsWritten.get(i);
+
+                        BM_LOGGER.error("read extra written: {}", readToString(read));
                     }
                 }
             }

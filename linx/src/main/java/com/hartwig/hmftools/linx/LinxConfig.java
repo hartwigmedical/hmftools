@@ -130,7 +130,7 @@ public class LinxConfig
 
             if(svVcfFile.isEmpty() && mSampleIds.size() == 1)
             {
-                svVcfFile = PurpleCommon.purpleSvFile(SampleDataPath, mSampleIds.get(0));
+                svVcfFile = PurpleCommon.purpleSomaticSvFile(SampleDataPath, mSampleIds.get(0));
             }
             else
             {
