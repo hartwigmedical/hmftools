@@ -18,19 +18,23 @@ import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 public class GroupCombiner
 {
-    private final boolean mSinglePartition;
+    private final boolean mSingleChromosome;
+    private final boolean mMultiChromosomes;
+    private final boolean mWriteCandidates;
     private final RecordWriter mRecordWriter;
 
     private final Map<String, PartitionCache> mPartitionCacheMap;
     private final Set<String> mProcessedPartitions;
     private final List<Fragment> mResolvedFragments;
 
-    public GroupCombiner(final RecordWriter recordWriter, final boolean singlePartition)
+    public GroupCombiner(final RecordWriter recordWriter, boolean singleChromosome, boolean writeCandidates)
     {
         mRecordWriter = recordWriter;
         mPartitionCacheMap = Maps.newHashMap();
         mProcessedPartitions = Sets.newHashSet();
-        mSinglePartition = singlePartition;
+        mSingleChromosome = singleChromosome;
+        mMultiChromosomes = !mSingleChromosome;
+        mWriteCandidates = writeCandidates;
         mResolvedFragments = Lists.newArrayList();
     }
 
@@ -75,17 +79,17 @@ public class GroupCombiner
         // check any candidate duplicate positions & fragments impacted by this set of new fragments
         processImpactedPositions(impactedPositions);
 
-        if(!mSinglePartition)
+        if(mMultiChromosomes)
             partitionComplete(chrPartition);
     }
 
-    private void handleResolvedFragment(final Fragment fragment, final String chrPartition,
-            final Map<String, Set<Integer>> impactedPositions)
+    private void handleResolvedFragment(
+            final Fragment fragment, final String chrPartition, final Map<String, Set<Integer>> impactedPositions)
     {
         if(fragment.allReadsPresent())
             return;
 
-        if(!mSinglePartition && !fragment.hasRemotePartitions())
+        if(mMultiChromosomes && !fragment.hasRemotePartitions())
             return;
 
         String fragmentChromosome = chromosomeIndicator(fragment.reads().get(0).getReferenceName());
@@ -95,14 +99,14 @@ public class GroupCombiner
         for(String remotePartition : remotePartitions)
         {
             // local GC stores and applies same chromosome partitions only and vice versa
-            if(mSinglePartition && !remotePartition.startsWith(fragmentChromosome)) // only applicable for remote GC
+            if(mSingleChromosome && !remotePartition.startsWith(fragmentChromosome)) // only applicable for remote GC
                 continue;
-            else if(!mSinglePartition && remotePartition.startsWith(fragmentChromosome)) // already applied in local GC
+            else if(mMultiChromosomes && remotePartition.startsWith(fragmentChromosome)) // already applied in local GC
                 continue;
 
             boolean isProcessed = mProcessedPartitions.contains(remotePartition);
 
-            boolean isCurrentPartition = mSinglePartition && remotePartition.equals(chrPartition);
+            boolean isCurrentPartition = mSingleChromosome && remotePartition.equals(chrPartition);
 
             if(isProcessed || isCurrentPartition)
             {
@@ -117,8 +121,8 @@ public class GroupCombiner
         }
     }
 
-    private void setResolvedStatus(final String chrPartition, final Fragment resolvedFragment,
-            final Map<String, Set<Integer>> impactedPositions)
+    private void setResolvedStatus(
+            final String chrPartition, final Fragment resolvedFragment, final Map<String, Set<Integer>> impactedPositions)
     {
         // when a fragment is resolved and there are unclear fragments for the same read ID, then write them with the resolved status
         PartitionCache partitionCache = mPartitionCacheMap.get(chrPartition);
@@ -178,13 +182,13 @@ public class GroupCombiner
 
     private void handleSupplementary(final Fragment supplementary, final PartitionCache partitionCache)
     {
-        String remotePartition = !mSinglePartition ? supplementary.remotePartitions().get(0) : partitionCache.ChrPartition;
+        String remotePartition = mMultiChromosomes ? supplementary.remotePartitions().get(0) : partitionCache.ChrPartition;
 
         boolean processedPartition = mProcessedPartitions.contains(remotePartition);
 
-        boolean storeFragment = !processedPartition || mSinglePartition;
+        boolean storeFragment = !processedPartition || mSingleChromosome;
 
-        if(processedPartition || mSinglePartition)
+        if(processedPartition || mSingleChromosome)
         {
             // check for a resolved status (always stored against the remote partition)
             if(checkResolvedStatus(supplementary, partitionCache))
@@ -210,6 +214,12 @@ public class GroupCombiner
 
         if(storeFragment)
         {
+            if(mWriteCandidates)
+            {
+                mRecordWriter.writeCachedFragment(supplementary);
+                return;
+            }
+
             // store supplementary for when this partition is processed
             Fragment fragment = partitionCache.IncompleteFragments.get(supplementary.id());
 
@@ -255,47 +265,51 @@ public class GroupCombiner
 
         String chrPartition = partitionCache.ChrPartition;
 
-        // next check for existing supplementaries or matched unclear fragments from amongst those previously stored
-        for(Fragment unclearFragment : candidateDuplicates.Fragments)
+        if(!mWriteCandidates)
         {
-            if(!mSinglePartition && !unclearFragment.hasRemotePartitions())
-                continue;
-
-            // for the local GC, only unclear fragment in the same partition are checked for resolving
-            List<String> remotePartitions = !mSinglePartition ? Lists.newArrayList(unclearFragment.remotePartitions()) : Lists.newArrayList(chrPartition);
-
-            for(String remotePartition : remotePartitions)
+            // next check for existing supplementaries or matched unclear fragments from amongst those previously stored
+            for(Fragment unclearFragment : candidateDuplicates.Fragments)
             {
-                PartitionCache remotePartitionCache = mPartitionCacheMap.get(remotePartition);
-
-                if(remotePartitionCache == null)
+                if(mMultiChromosomes && !unclearFragment.hasRemotePartitions())
                     continue;
 
-                Fragment matchedFragment = remotePartitionCache.IncompleteFragments.get(unclearFragment.id());
+                // for the local GC, only unclear fragment in the same partition are checked for resolving
+                List<String> remotePartitions =
+                        mMultiChromosomes ? Lists.newArrayList(unclearFragment.remotePartitions()) : Lists.newArrayList(chrPartition);
 
-                if(matchedFragment == null)
-                    continue;
-
-                // add the cached fragment's reads
-                unclearFragment.merge(matchedFragment);
-
-                // remove it from the remote partition and note it needs re-evaluation
-                remotePartitionCache.IncompleteFragments.remove(unclearFragment.id());
-
-                // need to remove from its remote position group as well, and then deal with that
-                if(matchedFragment.status() == UNCLEAR)
+                for(String remotePartition : remotePartitions)
                 {
-                    foundMatches = true;
+                    PartitionCache remotePartitionCache = mPartitionCacheMap.get(remotePartition);
 
-                    List<Fragment> posFragments =
-                            remotePartitionCache.CandidateDuplicatesMap.get(matchedFragment.initialPosition());
+                    if(remotePartitionCache == null)
+                        continue;
 
-                    if(posFragments != null)
+                    Fragment matchedFragment = remotePartitionCache.IncompleteFragments.get(unclearFragment.id());
+
+                    if(matchedFragment == null)
+                        continue;
+
+                    // add the cached fragment's reads
+                    unclearFragment.merge(matchedFragment);
+
+                    // remove it from the remote partition and note it needs re-evaluation
+                    remotePartitionCache.IncompleteFragments.remove(unclearFragment.id());
+
+                    // need to remove from its remote position group as well, and then deal with that
+                    if(matchedFragment.status() == UNCLEAR)
                     {
-                        posFragments.remove(matchedFragment);
+                        foundMatches = true;
 
-                        // this depletes the existing position's fragment but leaves them with a status of UNCLEAR, possibly NONE
-                        addImpactedPosition(impactedPositions, remotePartition, matchedFragment.initialPosition());
+                        List<Fragment> posFragments =
+                                remotePartitionCache.CandidateDuplicatesMap.get(matchedFragment.initialPosition());
+
+                        if(posFragments != null)
+                        {
+                            posFragments.remove(matchedFragment);
+
+                            // this depletes the existing position's fragment but leaves them with a status of UNCLEAR, possibly NONE
+                            addImpactedPosition(impactedPositions, remotePartition, matchedFragment.initialPosition());
+                        }
                     }
                 }
             }
@@ -310,12 +324,19 @@ public class GroupCombiner
         // only store this position's fragment if there are further remote reads expected
         if(!candidateDuplicates.Fragments.isEmpty())
         {
-            for(Fragment fragment : candidateDuplicates.Fragments)
+            if(mWriteCandidates)
             {
-                partitionCache.IncompleteFragments.put(fragment.id(), fragment);
+                mRecordWriter.writeCachedFragments(candidateDuplicates.Fragments);
             }
+            else
+            {
+                for(Fragment fragment : candidateDuplicates.Fragments)
+                {
+                    partitionCache.IncompleteFragments.put(fragment.id(), fragment);
+                }
 
-            partitionCache.CandidateDuplicatesMap.put(candidateDuplicates.Position, candidateDuplicates.Fragments);
+                partitionCache.CandidateDuplicatesMap.put(candidateDuplicates.Position, candidateDuplicates.Fragments);
+            }
         }
     }
 
@@ -392,7 +413,7 @@ public class GroupCombiner
         // remove fragment status since no longer required
         partitionCache.FragmentStatus.clear();
 
-        if(!mSinglePartition && (mProcessedPartitions.size() % 100) == 0)
+        if(mMultiChromosomes && (mProcessedPartitions.size() % 100) == 0)
         {
             int cachedFragments = mPartitionCacheMap.values().stream().mapToInt(x -> x.incompleteFragments()).sum();
             int cachedResolved = mPartitionCacheMap.values().stream().mapToInt(x -> x.resolvedFragments()).sum();
@@ -406,7 +427,7 @@ public class GroupCombiner
             final String chrPartition, final BaseRegion partitionRegion,
             final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList)
     {
-        if(!mSinglePartition)
+        if(mMultiChromosomes)
         {
             BM_LOGGER.error("remote GC called local function for partition({})", chrPartition);
             return;
@@ -453,9 +474,19 @@ public class GroupCombiner
 
         for(PartitionCache partitionCache : mPartitionCacheMap.values())
         {
-            for(Fragment fragment : partitionCache.IncompleteFragments.values())
+            if(mWriteCandidates)
             {
-                mRecordWriter.writeFragment(fragment);
+                for(Map.Entry<String,FragmentStatus> entry : partitionCache.FragmentStatus.entrySet())
+                {
+                    mRecordWriter.writeResolvedReadData(entry.getKey(), entry.getValue(), partitionCache.ChrPartition);
+                }
+            }
+            else
+            {
+                for(Fragment fragment : partitionCache.IncompleteFragments.values())
+                {
+                    mRecordWriter.writeFragment(fragment);
+                }
             }
         }
 

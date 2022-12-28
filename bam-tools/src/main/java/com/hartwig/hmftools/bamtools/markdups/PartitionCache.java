@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
+import static java.lang.String.format;
+
 import java.util.List;
 import java.util.Map;
 
@@ -42,4 +44,7 @@ public class PartitionCache
         IncompleteFragments.clear();
         CandidateDuplicatesMap.clear();
     }
+
+    public String toString() { return format("%s status(%d) frags(%d) positions(%d)",
+            ChrPartition, FragmentStatus.size(), IncompleteFragments.size(), CandidateDuplicatesMap.size()); }
 }

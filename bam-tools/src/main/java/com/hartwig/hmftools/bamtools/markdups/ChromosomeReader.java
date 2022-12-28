@@ -49,6 +49,7 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
 
     private final boolean mLogReadIds;
     private int mTotalRecordCount;
+    private int mPartitionRecordCount;
     private final Set<SAMRecord> mReadsProcessed;
     private final DuplicateStats mStats;
     private final PerformanceCounter mPerfCounter;
@@ -61,7 +62,7 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
         mRegion = region;
         mRemoteGroupCombiner = groupCombiner;
         mRecordWriter = recordWriter;
-        mLocalGroupCombiner = new GroupCombiner(mRecordWriter, true);
+        mLocalGroupCombiner = new GroupCombiner(mRecordWriter, true, false);
 
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
@@ -87,6 +88,7 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
 
         mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
         mTotalRecordCount = 0;
+        mPartitionRecordCount = 0;
 
         mStats = new DuplicateStats();
 
@@ -147,12 +149,13 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
 
         mPerfCounter.stop();
 
-        BM_LOGGER.debug("partition({}:{}) complete, remotes cached(supps={} resolved={} candidates={})",
-                mRegion.Chromosome, mCurrentPartition, mPartitionSupplementaries.size(), mPartitionResolvedFragments.size(),
+        BM_LOGGER.debug("partition({}:{}) complete, reads({}) remotes cached(supps={} resolved={} candidates={})",
+                mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount, mPartitionSupplementaries.size(), mPartitionResolvedFragments.size(),
                 candidateDuplicates.size());
 
         mPartitionResolvedFragments.clear();
         mPartitionSupplementaries.clear();
+        mPartitionRecordCount = 0;
 
         if(setupNext)
         {
@@ -169,6 +172,7 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
     private void processSamRecord(final SAMRecord read)
     {
         ++mTotalRecordCount;
+        ++mPartitionRecordCount;
 
         if(mConfig.runReadChecks())
             mReadsProcessed.add(read);
@@ -238,10 +242,11 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
             }
         }
 
+        if(!resolvedFragments.isEmpty())
+            mRecordWriter.writeFragments(resolvedFragments);
+
         for(Fragment fragment : resolvedFragments)
         {
-            mRecordWriter.writeFragment(fragment);
-
             // the resolved fragment will be passed to the local group combiner and its state stored & applied
 
             // only store it for the remote group combiner if it has remote partitions

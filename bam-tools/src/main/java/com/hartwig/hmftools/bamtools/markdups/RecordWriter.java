@@ -4,7 +4,10 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.BmConfig.ITEM_DELIM;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.SUPPLEMENTARY;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
 import static com.hartwig.hmftools.bamtools.markdups.ReadOutput.DUPLICATES;
 import static com.hartwig.hmftools.bamtools.markdups.ReadOutput.MISMATCHES;
 import static com.hartwig.hmftools.bamtools.markdups.ReadOutput.NONE;
@@ -15,6 +18,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -31,46 +35,104 @@ public class RecordWriter
 {
     private final MarkDupsConfig mConfig;
 
-    private int mRecordWriteCount;
-    private final SAMFileWriter mBamWriter;
+    private final BamWriter mBamWriter;
+    private final BamWriter mCandidateBamWriter;
+    private final BamWriter mSupplementaryBamWriter;
     private final BufferedWriter mReadWriter;
-    private String mOutputBam;
+    private final BufferedWriter mResolvedReadWriter;
 
-    private final Set<SAMRecord> mReadsWritten;
+    private final Set<SAMRecord> mReadsWritten; // debug only
+
+    private class BamWriter
+    {
+        private final String mFilename;
+        private final SAMFileWriter mBamWriter;
+        private int mWriteCount;
+
+        public BamWriter(final String filename)
+        {
+            mFilename = filename;
+            mBamWriter = filename != null ? initialiseBam(filename) : null;
+            mWriteCount = 0;
+        }
+
+        public void writeRecord(final SAMRecord read)
+        {
+            ++mWriteCount;
+
+            if(mBamWriter != null)
+                mBamWriter.addAlignment(read);
+        }
+
+        public String filename() { return mFilename; }
+        public int writeCount() { return mWriteCount; }
+
+        public void close()
+        {
+            if(mBamWriter != null)
+                mBamWriter.close();
+        }
+    }
 
     public RecordWriter(final MarkDupsConfig config)
     {
         mConfig = config;
-        mRecordWriteCount = 0;
-        mBamWriter = initialiseBam();
+
+        if(mConfig.WriteBam)
+        {
+            String bamFilename = formBamFilename("mark_dups");
+            BM_LOGGER.info("writing new BAM file: {}", bamFilename);
+            mBamWriter = new BamWriter(bamFilename);
+        }
+        else
+        {
+            mBamWriter = new BamWriter(null);
+        }
+
+        if(mConfig.UseInterimFiles)
+        {
+            mCandidateBamWriter = new BamWriter(formBamFilename("candidate"));
+            mSupplementaryBamWriter = new BamWriter(formBamFilename("supplementary"));
+            mResolvedReadWriter = initialiseResolvedReadWriter();
+        }
+        else
+        {
+            mCandidateBamWriter = null;
+            mSupplementaryBamWriter = null;
+            mResolvedReadWriter = null;
+        }
+
         mReadWriter = initialiseReadWriter();
         mReadsWritten = Sets.newHashSet();
     }
 
-    private SAMFileWriter initialiseBam()
+    private SAMFileWriter initialiseBam(final String filename)
     {
-        if(!mConfig.WriteBam)
-            return null;
-
         SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
-
-        mOutputBam = mConfig.OutputDir + mConfig.SampleId + ".mark_dups";
-
-        if(mConfig.OutputId != null)
-            mOutputBam += "." + mConfig.OutputId;
-
-        mOutputBam += ".bam";
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
         fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
-        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(mOutputBam));
+        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(filename));
     }
 
-    public int recordWriteCount() { return mRecordWriteCount; }
-    public Set<SAMRecord> readsWritten() { return mReadsWritten; }
+    private String formBamFilename(final String type)
+    {
+        String filename = mConfig.OutputDir + mConfig.SampleId + "." + type;
 
-    public synchronized void writeFragment(final Fragment fragment)
+        if(mConfig.OutputId != null)
+            filename += "." + mConfig.OutputId;
+
+        filename += ".bam";
+        return filename;
+    }
+
+    public int recordWriteCount() { return mBamWriter.writeCount(); }
+
+    public synchronized void writeFragments(final List<Fragment> fragments) { fragments.forEach(x -> doWriteFragment(x)); }
+    public synchronized void writeFragment(final Fragment fragment) { doWriteFragment(fragment); }
+
+    private void doWriteFragment(final Fragment fragment)
     {
         if(fragment.readsWritten())
         {
@@ -82,16 +144,31 @@ public class RecordWriter
         fragment.reads().forEach(x -> writeRecord(x, fragment.status()));
     }
 
+    public synchronized void writeCachedFragments(final List<Fragment> fragments) { fragments.forEach(x -> doWriteCachedFragment(x)); }
+    public synchronized void writeCachedFragment(final Fragment fragment) { doWriteCachedFragment(fragment); }
+
+    private void doWriteCachedFragment(final Fragment fragment)
+    {
+        if(!mConfig.UseInterimFiles)
+            return;
+
+        if(fragment.status() == SUPPLEMENTARY)
+        {
+            fragment.reads().forEach(x -> mSupplementaryBamWriter.writeRecord(x));
+        }
+        else
+        {
+            fragment.reads().forEach(x -> mCandidateBamWriter.writeRecord(x));
+        }
+    }
+
     private void writeRecord(final SAMRecord read, FragmentStatus fragmentStatus)
     {
-        ++mRecordWriteCount;
-
         if(mConfig.runReadChecks())
         {
             if(mReadsWritten.contains(read))
             {
-                BM_LOGGER.error("read({}) coords({}:{}-{}) already written",
-                        read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd());
+                BM_LOGGER.error("read({}) already written", readToString(read));
             }
             else
             {
@@ -103,8 +180,7 @@ public class RecordWriter
 
         read.setDuplicateReadFlag(fragmentStatus == DUPLICATE); // overwrite any existing status
 
-        if(mBamWriter != null)
-            mBamWriter.addAlignment(read);
+        mBamWriter.writeRecord(read);
     }
 
     private BufferedWriter initialiseReadWriter()
@@ -172,14 +248,66 @@ public class RecordWriter
         }
     }
 
+    private BufferedWriter initialiseResolvedReadWriter()
+    {
+        try
+        {
+            String filename = mConfig.formFilename("resolved_fragments");
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write("ReadId,Status,RemotePartition");
+            writer.newLine();
+
+            return writer;
+        }
+        catch(IOException e)
+        {
+            BM_LOGGER.error(" failed to create resolved fragments writer: {}", e.toString());
+        }
+
+        return null;
+    }
+
+    public void writeResolvedReadData(final String readId, final FragmentStatus status, final String chrPartition)
+    {
+        if(mResolvedReadWriter == null)
+            return;
+
+        try
+        {
+            mResolvedReadWriter.write(format("%s,%s,%s", readId, status, chrPartition));
+            mResolvedReadWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            BM_LOGGER.error(" failed to write resolved fragment: {}", e.toString());
+        }
+    }
+
+    public void closeInterimFiles()
+    {
+        if(mCandidateBamWriter != null)
+        {
+            BM_LOGGER.info("{} candidate reads written", mCandidateBamWriter.writeCount());
+            mCandidateBamWriter.close();
+        }
+
+        if(mSupplementaryBamWriter != null)
+        {
+            BM_LOGGER.info("{} supplementary reads written", mSupplementaryBamWriter.writeCount());
+            mSupplementaryBamWriter.close();
+        }
+
+        closeBufferedWriter(mResolvedReadWriter);
+    }
+
     public void close()
     {
-        if(mBamWriter != null)
-        {
-            BM_LOGGER.info("{} records written to BAM: {}", mRecordWriteCount, mOutputBam);
-            mBamWriter.close();
-        }
+        BM_LOGGER.info("{} records written to BAM", mBamWriter.writeCount());
+        mBamWriter.close();
 
         closeBufferedWriter(mReadWriter);
     }
+
+    public Set<SAMRecord> readsWritten() { return mReadsWritten; }
 }

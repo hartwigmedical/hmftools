@@ -53,7 +53,7 @@ public class MarkDuplicates
         RefGenomeCoordinates refGenomeCoordinates = mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
         RecordWriter recordWriter = new RecordWriter(mConfig);
-        GroupCombiner groupCombiner = new GroupCombiner(recordWriter, false);
+        GroupCombiner groupCombiner = new GroupCombiner(recordWriter, false, mConfig.UseInterimFiles);
         final List<Callable> callableList = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
@@ -74,6 +74,14 @@ public class MarkDuplicates
             System.exit(1);
 
         groupCombiner.handleRemaining();
+
+        if(mConfig.UseInterimFiles)
+        {
+            recordWriter.closeInterimFiles();
+
+            // routine for handling these..
+        }
+
         recordWriter.close();
 
         long totalProcessReads = chromosomeReaders.stream().mapToLong(x -> x.totalRecordCount()).sum();

@@ -47,6 +47,7 @@ public class MarkDupsConfig
     public final String OutputDir;
     public final String OutputId;
     public final boolean WriteBam;
+    public final boolean UseInterimFiles;
     public final int Threads;
 
     // debug
@@ -64,6 +65,7 @@ public class MarkDupsConfig
     private static final String READ_OUTPUTS = "read_output";
     private static final String WRITE_BAM = "write_bam";
     private static final String RUN_CHECKS = "run_checks";
+    private static final String USE_INTERIM_FILES = "use_interim_files";
 
     private static final int DEFAULT_PARTITION_SIZE = 1000000;
     private static final int DEFAULT_POS_BUFFER_SIZE = 10000;
@@ -117,6 +119,7 @@ public class MarkDupsConfig
 
         PerfDebug = cmd.hasOption(PERF_DEBUG);
         RunChecks = cmd.hasOption(RUN_CHECKS);
+        UseInterimFiles = cmd.hasOption(USE_INTERIM_FILES);
     }
 
     public boolean isValid()
@@ -143,7 +146,7 @@ public class MarkDupsConfig
     {
         String filename = OutputDir + SampleId;
 
-        filename += ".bam_" + fileType;
+        filename += "." + fileType;
 
         if(OutputId != null)
             filename += "." + OutputId;
@@ -174,6 +177,7 @@ public class MarkDupsConfig
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
         options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
         options.addOption(RUN_CHECKS, false, "Run duplicate mismatch checks");
+        options.addOption(USE_INTERIM_FILES, false, "Write candidate duplicate reads to file");
 
         return options;
     }
@@ -206,6 +210,6 @@ public class MarkDupsConfig
         Threads = 0;
         PerfDebug = false;
         RunChecks = false;
+        UseInterimFiles = false;
     }
-
 }

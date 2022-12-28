@@ -45,7 +45,7 @@ public class LocalGroupCombinerTest
     @Test
     public void testLocalFragmentBasic()
     {
-        GroupCombiner localGroupCombiner = new GroupCombiner(mWriter, true);
+        GroupCombiner localGroupCombiner = new GroupCombiner(mWriter, true, false);
 
         List<Fragment> testFragments = createBasicFragments();
 
@@ -137,7 +137,7 @@ public class LocalGroupCombinerTest
     @Test
     public void testLocalFragmentSplitReads()
     {
-        GroupCombiner localGroupCombiner = new GroupCombiner(mWriter, true);
+        GroupCombiner localGroupCombiner = new GroupCombiner(mWriter, true, false);
 
         // a collection of read pairs, all unclear and split across calls
         mReadIdGen.reset();
