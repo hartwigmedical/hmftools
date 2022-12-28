@@ -248,7 +248,7 @@ public class FileDbLoadChecker
 
                 final String geneCopyNumberFile = GeneCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
                 final String copyNumberFile = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
-                final String svVcf = PurpleCommon.purpleSvFile(purpleDir, sampleId);
+                final String svVcf = PurpleCommon.purpleSomaticSvFile(purpleDir, sampleId);
 
                 List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberFile);
                 List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(copyNumberFile);

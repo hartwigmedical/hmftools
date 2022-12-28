@@ -77,7 +77,7 @@ public class DisruptionComparer implements ItemComparer
         {
             final List<StructuralVariantData> svDataList = Lists.newArrayList();
 
-            String vcfFile = PurpleCommon.purpleSvFile(fileSources.Purple, sampleId);
+            String vcfFile = PurpleCommon.purpleSomaticSvFile(fileSources.Purple, sampleId);
             List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter());
             List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 

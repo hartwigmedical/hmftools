@@ -12,7 +12,8 @@ import org.apache.commons.cli.ParseException;
 public class SampleDataFiles
 {
     public final String SampleDataDir;
-    public final String SvVcfFile;
+    public final String SomaticSvVcfFile;
+    public final String GermlineSvVcfFile;
     public final String RecoveredSvVcfFile;
     public final String SomaticVcfFile;
     public final String GermlineVcfFile;
@@ -23,7 +24,9 @@ public class SampleDataFiles
     private static final String AMBER = "amber";
     private static final String COBALT = "cobalt";
     private static String STRUCTURAL_VARIANTS = "structural_vcf";
-    private static String STRUCTURAL_VARIANT_RECOVERY = "sv_recovery_vcf";
+    private static String SOMATIC_SV_VCF = "somatic_sv_vcf";
+    private static String GERMLINE_SV_VCF = "germline_sv_vcf";
+    private static String SV_RECOVERY_VCF = "sv_recovery_vcf";
     public static String GERMLINE_VARIANTS = "germline_vcf";
     private static String SOMATIC_VARIANTS = "somatic_vcf";
 
@@ -37,8 +40,10 @@ public class SampleDataFiles
         options.addOption(AMBER, true,
                 "Path to AMBER output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
 
-        options.addOption(STRUCTURAL_VARIANTS, true, "Optional location of structural variant vcf for more accurate segmentation");
-        options.addOption(STRUCTURAL_VARIANT_RECOVERY, true, "Optional location of failing structural variants that may be recovered");
+        options.addOption(STRUCTURAL_VARIANTS, true, "Optional location of somatic SV VCF for more accurate segmentation");
+        options.addOption(SOMATIC_SV_VCF, true, "Optional location of somatic SV VCF for more accurate segmentation");
+        options.addOption(GERMLINE_SV_VCF, true, "Optional location of germline SV VCF to annotate");
+        options.addOption(SV_RECOVERY_VCF, true, "Optional location of failing structural variants that may be recovered");
         options.addOption(GERMLINE_VARIANTS, true, "Optional location of germline variants to enrich and process in driver catalog.");
         options.addOption(SOMATIC_VARIANTS, true, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
     }
@@ -61,8 +66,14 @@ public class SampleDataFiles
         else
             throw new ParseException("missing cobalt or sample_data_dir config");
 
-        SvVcfFile = getFilename(cmd, STRUCTURAL_VARIANTS, SampleDataDir, sampleId, ".gripss.filtered.somatic.vcf.gz");
-        RecoveredSvVcfFile = getFilename(cmd, STRUCTURAL_VARIANT_RECOVERY, SampleDataDir, sampleId, ".gripss.somatic.vcf.gz");
+        if(cmd.hasOption(STRUCTURAL_VARIANTS))
+            SomaticSvVcfFile = getFilename(cmd, STRUCTURAL_VARIANTS, SampleDataDir, sampleId, ".gripss.filtered.somatic.vcf.gz");
+        else
+            SomaticSvVcfFile = getFilename(cmd, SOMATIC_SV_VCF, SampleDataDir, sampleId, ".gripss.filtered.somatic.vcf.gz");
+
+        GermlineSvVcfFile = getFilename(cmd, GERMLINE_SV_VCF, SampleDataDir, sampleId, ".gripss.filtered.germline.vcf.gz");
+
+        RecoveredSvVcfFile = getFilename(cmd, SV_RECOVERY_VCF, SampleDataDir, sampleId, ".gripss.somatic.vcf.gz");
         SomaticVcfFile = getFilename(cmd, SOMATIC_VARIANTS, SampleDataDir, sampleId, ".sage.somatic.filtered.pave.vcf.gz");
         GermlineVcfFile = getFilename(cmd, GERMLINE_VARIANTS, SampleDataDir, sampleId, ".sage.germline.filtered.pave.vcf.gz");
     }
@@ -88,5 +99,4 @@ public class SampleDataFiles
 
         return Files.exists(Paths.get(filename)) ? filename : "";
     }
-
 }

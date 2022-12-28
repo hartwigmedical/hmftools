@@ -13,6 +13,7 @@ public final class PurpleCommon
     public static final String PURPLE_SOMATIC_VCF_SUFFIX = ".purple.somatic.vcf.gz";
     public static final String PURPLE_GERMLINE_VCF_SUFFIX = ".purple.germline.vcf.gz";
     public static final String PURPLE_SV_VCF_SUFFIX = ".purple.sv.vcf.gz";
+    public static final String PURPLE_SV_GERMLINE_VCF_SUFFIX = ".purple.sv.germline.vcf.gz";
 
     public static final String DELIMITER = "\t";
 
@@ -26,9 +27,14 @@ public final class PurpleCommon
         return FileWriterUtils.checkAddDirSeparator(purpleDir) + sampleId + PURPLE_GERMLINE_VCF_SUFFIX;
     }
 
-    public static String purpleSvFile(final String purpleDir, final String sampleId)
+    public static String purpleSomaticSvFile(final String purpleDir, final String sampleId)
     {
         return FileWriterUtils.checkAddDirSeparator(purpleDir) + sampleId + PURPLE_SV_VCF_SUFFIX;
+    }
+
+    public static String purpleGermlineSvFile(final String purpleDir, final String sampleId)
+    {
+        return FileWriterUtils.checkAddDirSeparator(purpleDir) + sampleId + PURPLE_SV_GERMLINE_VCF_SUFFIX;
     }
 
     public static DecimalFormat decimalFormat(@NotNull String format)

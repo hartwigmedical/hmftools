@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSvFile;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFile;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
@@ -29,7 +29,6 @@ import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.purple.sv.StructuralRefContextEnrichment;
 import com.hartwig.hmftools.purple.copynumber.CopyNumberEnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariantHeader;
@@ -91,19 +90,16 @@ public class StructuralVariantCache
     }
 
     public static StructuralVariantCache createStructuralVariantCache(
-            final String tumorSample, final SampleDataFiles sampleDataFiles, final PurpleConfig config, final String purpleVersion,
-            final ReferenceData referenceData)
+            final String inputVcf, final String outputVcf, final String purpleVersion, final ReferenceData referenceData)
     {
-        if(sampleDataFiles.SvVcfFile.isEmpty())
-        {
+        if(inputVcf.isEmpty())
             return new StructuralVariantCache();
-        }
 
-        PPL_LOGGER.info("loading structural variants from {}", sampleDataFiles.SvVcfFile);
+        StructuralVariantCache svCache = new StructuralVariantCache(purpleVersion, inputVcf, outputVcf, referenceData);
 
-        final String outputVcf = purpleSvFile(config.OutputDir, tumorSample);
+        PPL_LOGGER.info("loaded {} structural variants from {}", svCache.variants().size(), inputVcf);
 
-        return new StructuralVariantCache(purpleVersion, sampleDataFiles.SvVcfFile, outputVcf, referenceData);
+        return svCache;
     }
 
     public void addVariant(final VariantContext variantContext)
@@ -162,37 +158,44 @@ public class StructuralVariantCache
 
     public void write(final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, boolean passOnly)
     {
-        if(mVcfHeader.isPresent())
+        if(!mVcfHeader.isPresent())
+            return;
+
+        try
         {
-            try (
-                final VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(mOutputVcfFilename)
-                        .setReferenceDictionary(mVcfHeader.get().getSequenceDictionary())
-                        .setIndexCreator(new TabixIndexCreator(mVcfHeader.get().getSequenceDictionary(), new TabixFormat()))
-                        .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
-                        .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
-                        .build())
+            final VariantContextWriter writer = new VariantContextWriterBuilder()
+                    .setOutputFile(mOutputVcfFilename)
+                    .setReferenceDictionary(mVcfHeader.get().getSequenceDictionary())
+                    .setIndexCreator(new TabixIndexCreator(mVcfHeader.get().getSequenceDictionary(), new TabixFormat()))
+                    .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
+                    .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
+                    .build();
+
+            final StructuralRefContextEnrichment refEnricher = new StructuralRefContextEnrichment(mRefGenomeFile, writer::add);
+
+            writer.writeHeader(refEnricher.enrichHeader(mVcfHeader.get()));
+
+            VariantContextCollection enrichedCollection = getEnrichedCollection(purityAdjuster, copyNumbers);
+
+            Iterator<VariantContext> variantIter = enrichedCollection.iterator();
+
+            while(variantIter.hasNext())
             {
+                VariantContext variant = variantIter.next();
 
-                final StructuralRefContextEnrichment refEnricher = new StructuralRefContextEnrichment(mRefGenomeFile, writer::add);
+                if(passOnly && variant.isFiltered())
+                    continue;
 
-                writer.writeHeader(refEnricher.enrichHeader(mVcfHeader.get()));
-
-                VariantContextCollection enrichedCollection = getEnrichedCollection(purityAdjuster, copyNumbers);
-
-                Iterator<VariantContext> variantIter = enrichedCollection.iterator();
-
-                while(variantIter.hasNext())
-                {
-                    VariantContext variant = variantIter.next();
-
-                    if(passOnly && variant.isFiltered())
-                        continue;
-
-                    refEnricher.accept(variant);
-                }
-
-                refEnricher.flush();
+                refEnricher.accept(variant);
             }
+
+            refEnricher.flush();
+
+            writer.close();
+        }
+        catch(Exception e)
+        {
+              PPL_LOGGER.error("failed to write SV VCF({}): {}", mOutputVcfFilename, e.toString());
         }
     }
 
@@ -218,20 +221,6 @@ public class StructuralVariantCache
         for(EnrichedStructuralVariant enrichedSV : enrichedVariants)
         {
             addEnrichedVariantContexts(enrichedCollection, enrichedSV);
-
-            /*
-            final VariantContext startContext = enrichedSV.startContext();
-            if(startContext != null)
-            {
-                enrichedCollection.add(enrich(enrichedSV, startContext, false));
-            }
-
-            final VariantContext endContext = enrichedSV.endContext();
-            if(endContext != null)
-            {
-                enrichedCollection.add(enrich(enrichedSV, endContext, true));
-            }
-            */
         }
 
         svFactory.unmatched().forEach(enrichedCollection::add);
@@ -305,52 +294,6 @@ public class StructuralVariantCache
 
         if(junctionCopyNumber != null)
             builder.attribute(StructuralVariantHeader.PURPLE_JUNCTION_COPY_NUMBER_INFO, junctionCopyNumber);
-
-        return builder.make();
-    }
-
-    private VariantContext enrich(final EnrichedStructuralVariant variant, final VariantContext template, boolean reverse)
-    {
-        final List<Double> purpleAF = Lists.newArrayList();
-        Optional.ofNullable(variant.start().adjustedAlleleFrequency()).ifPresent(purpleAF::add);
-        Optional.ofNullable(variant.end()).map(EnrichedStructuralVariantLeg::adjustedAlleleFrequency).ifPresent(purpleAF::add);
-
-        final List<Double> purpleCN = Lists.newArrayList();
-        Optional.ofNullable(variant.start().adjustedCopyNumber()).ifPresent(purpleCN::add);
-        Optional.ofNullable(variant.end()).map(EnrichedStructuralVariantLeg::adjustedCopyNumber).ifPresent(purpleCN::add);
-
-        final List<Double> purpleCNChange = Lists.newArrayList();
-        Optional.ofNullable(variant.start().adjustedCopyNumberChange()).ifPresent(purpleCNChange::add);
-        Optional.ofNullable(variant.end()).map(EnrichedStructuralVariantLeg::adjustedCopyNumberChange).ifPresent(purpleCNChange::add);
-
-        if(reverse)
-        {
-            Collections.reverse(purpleAF);
-            Collections.reverse(purpleCN);
-            Collections.reverse(purpleCNChange);
-        }
-
-        VariantContextBuilder builder = new VariantContextBuilder(template);
-        if(!purpleAF.isEmpty())
-        {
-            builder.attribute(PURPLE_AF_INFO, purpleAF);
-        }
-
-        if(!purpleCN.isEmpty())
-        {
-            builder.attribute(PURPLE_CN_INFO, purpleCN);
-        }
-
-        if(!purpleCNChange.isEmpty())
-        {
-            builder.attribute(StructuralVariantHeader.PURPLE_CN_CHANGE_INFO, purpleCNChange);
-        }
-
-        Double junctionCopyNumber = variant.junctionCopyNumber();
-        if(junctionCopyNumber != null)
-        {
-            builder.attribute(StructuralVariantHeader.PURPLE_JUNCTION_COPY_NUMBER_INFO, junctionCopyNumber);
-        }
 
         return builder.make();
     }

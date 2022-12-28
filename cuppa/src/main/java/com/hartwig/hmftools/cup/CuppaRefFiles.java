@@ -48,7 +48,7 @@ public class CuppaRefFiles
     public static final String purpleSvFile(final String sampleDir, final String sampleId)
     {
         String basePath = formSamplePath(sampleDir, sampleId);
-        return PurpleCommon.purpleSvFile(basePath, sampleId);
+        return PurpleCommon.purpleSomaticSvFile(basePath, sampleId);
     }
 
     public static final String purplePurityFile(final String sampleDir, final String sampleId)

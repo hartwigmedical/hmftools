@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticVcfFile;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSvFile;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFile;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -142,7 +142,7 @@ public class LoadPurpleData
         final String purityRangeFile = FittedPurityRangeFile.generateFilenameForReading(purpleDir, sampleId);
         final String somaticDriversFile = DriverCatalogFile.generateSomaticFilename(purpleDir, sampleId);
         final String somaticVcf = purpleSomaticVcfFile(purpleDir, sampleId);
-        final String svVcf = purpleSvFile(purpleDir, sampleId);
+        final String svVcf = purpleSomaticSvFile(purpleDir, sampleId);
 
         // skip loading if any files are missing
         List<String> requiredFiles = Lists.newArrayList(
