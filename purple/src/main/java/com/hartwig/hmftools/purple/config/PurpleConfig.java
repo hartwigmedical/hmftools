@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.variant.VariantTier;
 
@@ -43,7 +44,6 @@ public class PurpleConfig
     private static final String AMBER = "amber";
     private static final String COBALT = "cobalt";
 
-    public static String RUN_DRIVERS = "run_drivers";
     public static String DRIVERS_ONLY = "drivers_only";
     public static final String TIER_FILTERS = "tier_filters";
 
@@ -99,7 +99,7 @@ public class PurpleConfig
         SomaticFitting = new SomaticFitConfig(cmd);
         TargetRegionsMode = cmd.hasOption(TARGET_REGION_BED);
 
-        RunDrivers = cmd.hasOption(RUN_DRIVERS);
+        RunDrivers = DriverGenePanelConfig.isConfigured(cmd);
         DriversOnly = cmd.hasOption(DRIVERS_ONLY);
 
         PPL_LOGGER.info("reference({}) tumor({}) {}",
@@ -163,7 +163,6 @@ public class PurpleConfig
                 AMBER, true,
                 "Path to Amber output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
 
-        options.addOption(RUN_DRIVERS, false, "Run driver routine");
         options.addOption(DRIVERS_ONLY, false, "Only run the driver routine");
         options.addOption(TIER_FILTERS, true, "Variant qual filters by tier, format: TIER_A=QUAL;TIER_A=QUAL etc");
 

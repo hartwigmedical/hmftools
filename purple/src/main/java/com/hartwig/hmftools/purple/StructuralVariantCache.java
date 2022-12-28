@@ -298,7 +298,6 @@ public class StructuralVariantCache
         return builder.make();
     }
 
-    @NotNull
     public List<StructuralVariant> variants() { return mVariantCollection.segmentationVariants(); }
 
     int passingBnd()

@@ -94,7 +94,7 @@ java -jar purple.jar \
    -ref_genome_version 37 \
    -ensembl_data_dir /path_to_ensembl_data_cache/ \
    -somatic_vcf /path/COLO829/COLO829.somatic.vcf.gz \
-   -structural_vcf /path/COLO829/COLO829.sv.high_confidence.vcf.gz \
+   -somatic_sv_vcf /path/COLO829/COLO829.sv.high_confidence.vcf.gz \
    -sv_recovery_vcf /path/COLO829/COLO829.sv.low_confidence.vcf.gz \
    -circos /path/circos-0.69-6/bin/circos \
    -output_dir /output/purple/ \
@@ -124,10 +124,11 @@ A 38 equivalent is also available.
 Argument | Default | Description 
 ---|---|---
 threads | 2 | Number of threads to use for ploidy & purity fitting routine
-germline_vcf | None | Optional location of germline variants vcf. Sample names must match reference parameter. GZ files supported.
-somatic_vcf | None | Optional location of somatic variants vcf.  Sample name must match tumor parameter. GZ files supported.
-structural_vcf | None | Optional location of high confidence structural variants vcf. GZ files supported.
-sv_recovery_vcf | None | Optional location of low confidence structural variants vcf which may be recovered by PURPLE. GZ files supported.
+germline_vcf | None | Optional location of germline variants VCF. Sample names must match reference parameter. GZ files supported.
+somatic_vcf | None | Optional location of somatic variants vcf
+somatic_sv_vcf | None | Optional location of somatic structural variants VCF for fitting and annotation
+germline_sv_vcf | None | Optional location of germline structural variants variants VCF for annotation
+sv_recovery_vcf | None | Optional location of low confidence structural variants VCF which may be recovered by Purple
 germline_del_freq_file | None | Provide a cohort frequency for germline deletions
 circos | None | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot
 no_charts | NA | Disables creation of (non-circos) charts
@@ -178,10 +179,9 @@ The following arguments control the driver catalog behaviour.
 
 Argument | Description 
 ---|---
-run_drivers |  Enables the driver catalog
 somatic_hotspots | VCF of somatic hotspot locations. Mandatory if driver catalog enabled.
 germline_hotspots | VCF of germline hotspot locations. Mandatory if driver catalog enabled and germline variants supplied.
-driver_gene_panel | TSV of driver genes. Mandatory if driver catalog enabled.
+driver_gene_panel | TSV of driver genes, enables search for drivers and writing of driver catalog files
 
 The hotspot VCF used by HMF (KnownHotspots.37.vcf.gz) is available to download from [HMFTools-Resources > DNA Resources](https://resources.hartwigmedicalfoundation.nl). 
 A 38 equivalent is also available. The file is used to re-annotate all somatic variants with a HOTSPOT or NEAR_HOTSPOT flag if they are on or within 5 bases of a hotspot. 
