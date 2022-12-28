@@ -11,5 +11,5 @@ public class PeachUtils
 
     public static final String TSV_DELIMITER = "\t";
     public static final String BED_FILE_DELIMITER = "\t";
-    public static final String HAPLOTYPE_EVENT_DELIMITER = ",";
+    public static final String HAPLOTYPE_EVENT_DELIMITER = ";";
 }
