@@ -397,7 +397,7 @@ public class GroupCombiner
             int cachedFragments = mPartitionCacheMap.values().stream().mapToInt(x -> x.incompleteFragments()).sum();
             int cachedResolved = mPartitionCacheMap.values().stream().mapToInt(x -> x.resolvedFragments()).sum();
 
-            BM_LOGGER.info("group cache partitions processed({}) cached fragments({}) resolved({})",
+            BM_LOGGER.info("remote group cache partitions processed({}) cached fragments({}) resolved({})",
                     mProcessedPartitions.size(), cachedFragments, cachedResolved);
         }
     }

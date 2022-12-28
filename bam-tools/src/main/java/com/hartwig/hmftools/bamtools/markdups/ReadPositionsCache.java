@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
@@ -105,11 +106,6 @@ public class ReadPositionsCache
         if(fragmentEnd < 0)
         {
             // move fragment from reverse strand to forward strand array
-            int distanceFromMinPosition = fragmentStart - mMinPosition;
-
-            if(distanceFromMinPosition >= mCapacity)
-                return; // already purged
-
             CandidateDuplicates existingGroup = mReversePositions.get(fragmentEnd);
 
             if(existingGroup == null)
@@ -119,6 +115,8 @@ public class ReadPositionsCache
 
             if(existingGroup.Fragments.isEmpty())
                 mReversePositions.remove(fragmentEnd);
+
+            checkFlush(fragmentStart); // need to apply this since the read was initially considered on the other strand
         }
         else
         {
@@ -147,7 +145,7 @@ public class ReadPositionsCache
         if(fragmentPosition > 0)
         {
             if(mMinPosition == 0)
-                mMinPosition = fragmentPosition;
+                resetMinPosition(fragmentPosition);
             else
                 checkFlush(fragmentPosition);
         }
@@ -162,6 +160,12 @@ public class ReadPositionsCache
         if(fragmentPosition > 0)
         {
             int index = calcIndex(fragmentPosition);
+
+            if(index < 0 || index >= mCapacity)
+            {
+                BM_LOGGER.error("fragment({}) outside forward strand array bounds", fragment);
+                return;
+            }
 
             CandidateDuplicates element = mForwardPositions[index];
             if(element == null)

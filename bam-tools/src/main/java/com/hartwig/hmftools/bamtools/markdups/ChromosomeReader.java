@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.checkFragmentClassification;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosomePartition;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readInSpecifiedRegions;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
 
 import java.io.File;
@@ -174,23 +175,17 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
 
         int readStart = read.getAlignmentStart();
 
-        if(!mConfig.SpecificRegions.isEmpty())
-        {
-            if(!mConfig.SpecificRegions.stream().anyMatch(x -> x.containsPosition(read.getContig(), readStart)))
-                return;
-        }
+        if(!readInSpecifiedRegions(read, mConfig.SpecificRegions, mConfig.SpecificChromosomes))
+            return;
 
         if(readStart > mCurrentPartition.end())
         {
             onPartitionComplete(true);
         }
 
-        if(mLogReadIds) // debugging only
+        if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only
         {
-            if(mConfig.LogReadIds.contains(read.getReadName()))
-            {
-                BM_LOGGER.debug("specific read: {}", readToString(read));
-            }
+            BM_LOGGER.debug("specific read: {}", readToString(read));
         }
 
         try

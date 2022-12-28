@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -21,6 +22,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -280,29 +283,47 @@ public class FragmentUtils
                 read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
     }
 
-    /*
+    public static boolean readInSpecifiedRegions(
+            final SAMRecord read, final List<ChrBaseRegion> regions, final List<String> chromosomes)
+    {
+        if(!chromosomes.isEmpty())
+        {
+            if(chromosomes.stream().noneMatch(x -> x.equals(read.getContig())))
+                return false;
 
-                if(mConfig.RunChecks)
+            // any mates or supplementaries must also be within the regions specified
+            if(chromosomes.stream().noneMatch(x -> x.equals(read.getMateReferenceName())))
+                return false;
+        }
+
+        if(!regions.isEmpty())
+        {
+            if(regions.stream().noneMatch(x -> x.containsPosition(read.getContig(), read.getAlignmentStart())))
+                return false;
+
+            // any mates or supplementaries must also be within the regions specified
+            if(regions.stream().noneMatch(x -> x.containsPosition(read.getMateReferenceName(), read.getMateAlignmentStart())))
+                return false;
+        }
+
+        // ignore checking supplementaries since a) they aren't marked as duplicates by other tools and b) they shouldn't be a reason
+        // to ignore a primary read since that then impacts duplicate classification
+        /*
+        if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
+        {
+            SupplementaryReadData suppData = SupplementaryReadData.from(read);
+
+            if(suppData != null)
             {
-                // log discrepancies
-                ReadGroup calcPrimaryGroup = duplicateGroup.findPrimaryGroup(false);
+                if(!regions.isEmpty() && regions.stream().noneMatch(x -> x.containsPosition(suppData.Chromosome, suppData.Position)))
+                    return false;
 
-                boolean logDiscrepancy = false;
-
-                if(primaryGroup != calcPrimaryGroup && calcBaseQualTotal(primaryGroup) != calcBaseQualTotal(calcPrimaryGroup))
-                    logDiscrepancy = true;
-                else if(duplicateGroup.readGroups().stream().anyMatch(x -> hasDuplicates(x) == (x == primaryGroup)))
-                    logDiscrepancy = true;
-
-                if(logDiscrepancy)
-                {
-                    for(ReadGroup readGroup : duplicateGroup.readGroups())
-                    {
-                        BM_LOGGER.trace("readGroup({}) hasDups({}) isPrimary({}) baseQualTotal({})",
-                                readGroup.toString(), hasDuplicates(readGroup), readGroup == primaryGroup, calcBaseQualTotal(readGroup));
-                    }
-                }
+                if(!chromosomes.isEmpty() && chromosomes.stream().noneMatch(x -> x.equals(suppData.Chromosome)))
+                    return false;
             }
-     */
+        }
+        */
 
+        return true;
+    }
 }
