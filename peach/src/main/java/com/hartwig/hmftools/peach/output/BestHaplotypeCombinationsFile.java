@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.peach.PeachUtils.TSV_DELIMITER;
 
 public class BestHaplotypeCombinationsFile
 {
-    private static final String UNKNOWN_ALLELE_STRING = "UNKNOWN";
+    private static final String UNKNOWN_ALLELE_STRING = "UNRESOLVED";
 
     public static void write(@NotNull String filePath, @NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis) throws IOException
     {
