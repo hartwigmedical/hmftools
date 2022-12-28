@@ -38,7 +38,8 @@ public class BestHaplotypeCombinationsFile
         return lines;
     }
 
-    private static String header() {
+    private static String header()
+    {
         return new StringJoiner(TSV_DELIMITER)
                 .add("gene")
                 .add("allele")
