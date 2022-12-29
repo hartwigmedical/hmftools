@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -28,6 +29,7 @@ public class ReadPositionsCache
     private final Consumer<CandidateDuplicates> mReadGroupHandler;
     private int mMinPosition;
     private int mMinPositionIndex;
+    private int mLastFragmentLogCount;
 
     private final int mCapacity;
 
@@ -41,6 +43,7 @@ public class ReadPositionsCache
         mFragments = Maps.newHashMap();
         mMinPosition = 0;
         mMinPositionIndex = 0;
+        mLastFragmentLogCount = 0;
     }
 
     public boolean processRead(final SAMRecord read)
@@ -234,7 +237,7 @@ public class ReadPositionsCache
             return;
 
         int flushCount = position - mMinPosition - mCapacity + 1;
-        Set<String> flushedReadIds = null;
+        int flushedElements = 0;
 
         // only iterate at most once through the array
         for(int i = 0; i < min(flushCount, mCapacity); i++)
@@ -244,11 +247,8 @@ public class ReadPositionsCache
             // clear and process each element and depth
             if(element != null)
             {
-                if(flushedReadIds == null)
-                    flushedReadIds = Sets.newHashSet();
-
-                for(Fragment fragment : element.Fragments)
-                    flushedReadIds.add(fragment.id());
+                element.Fragments.forEach(x -> mFragments.remove(x.id()));
+                ++flushedElements;
 
                 mReadGroupHandler.accept(element);
 
@@ -266,27 +266,26 @@ public class ReadPositionsCache
         if(flushCount >= mCapacity)
             resetMinPosition(position);
 
-        if(flushedReadIds != null && !flushedReadIds.isEmpty())
+        if(flushedElements == 0)
+            return;
+
+        // flush out any reverse strand position which is now earlier than the current forward strand read start position
+        Set<Integer> flushedPositions = Sets.newHashSet();
+        for(Map.Entry<Integer, CandidateDuplicates> entry : mReversePositions.entrySet())
         {
-            // flush out any reverse strand position which is now earlier than the current forward strand read start position
-            Set<Integer> flushedPositions = Sets.newHashSet();
-            for(Map.Entry<Integer, CandidateDuplicates> entry : mReversePositions.entrySet())
+            int reversePosition = abs(entry.getKey());
+            if(reversePosition < position)
             {
-                int reversePosition = abs(entry.getKey());
-                if(reversePosition < position)
-                {
-                    flushedPositions.add(entry.getKey());
+                flushedPositions.add(entry.getKey());
 
-                    for(Fragment fragment : entry.getValue().Fragments)
-                        flushedReadIds.add(fragment.id());
+                entry.getValue().Fragments.forEach(x -> mFragments.remove(x.id()));
 
-                    mReadGroupHandler.accept(entry.getValue());
-                }
+                mReadGroupHandler.accept(entry.getValue());
             }
-
-            flushedPositions.forEach(x -> mReversePositions.remove(x));
-            flushedReadIds.forEach(x -> mFragments.remove(x));
         }
+
+        flushedPositions.forEach(x -> mReversePositions.remove(x));
+        checkFragmentLog();
     }
 
     public void evictAll()
@@ -316,5 +315,30 @@ public class ReadPositionsCache
     {
         mMinPositionIndex = 0;
         mMinPosition = max(1, position - (int)round(mCapacity * 0.5));
+    }
+
+    private static final int LOG_FRAG_COUNT = 10000;
+
+    private void checkFragmentLog()
+    {
+        if(abs(mFragments.size() - mLastFragmentLogCount) < LOG_FRAG_COUNT)
+            return;
+
+        mLastFragmentLogCount = mFragments.size();
+        BM_LOGGER.debug("{}", cacheStatsStr());
+    }
+
+    public String cacheStatsStr()
+    {
+        int forwardPositions = 0;
+
+        for(int i = 0; i < mCapacity; i++)
+        {
+            if(mForwardPositions[i] != null)
+                ++forwardPositions;
+        }
+
+        return format("read cache: fragments(%d) positions(forward=%d reverse=%d) minPosition(%d)",
+                mFragments.size(), forwardPositions, mReversePositions.size(), mMinPosition);
     }
 }

@@ -140,6 +140,8 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
 
     private void onPartitionComplete(boolean setupNext)
     {
+        String readPositionsStats = BM_LOGGER.isDebugEnabled() ? mReadPositions.cacheStatsStr() : "";
+
         mReadPositions.evictAll();
 
         List<Fragment> resolvedFragments = mPartitionResolvedFragments.values().stream().collect(Collectors.toList());
@@ -155,9 +157,9 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
 
         mPerfCounter.stop();
 
-        BM_LOGGER.debug("partition({}:{}) complete, reads({}) remotes cached(supps={} resolved={} candidates={}) maxPosFrags({})",
+        BM_LOGGER.debug("partition({}:{}) complete, reads({}) remotes cached(supps={} resolved={} candidates={}) maxPosFrags({}) {}",
                 mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount, mPartitionSupplementaries.size(), mPartitionResolvedFragments.size(),
-                candidateDuplicates.size(), mMaxPositionFragments);
+                candidateDuplicates.size(), mMaxPositionFragments, readPositionsStats);
 
         mPartitionResolvedFragments.clear();
         mPartitionSupplementaries.clear();
@@ -276,10 +278,6 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
                 }
                 else
                     mPartitionResolvedFragments.put(fragment.id(), fragment);
-            }
-            else
-            {
-                // previously added the local partition to remotes, but don't see why required anymore
             }
         }
 

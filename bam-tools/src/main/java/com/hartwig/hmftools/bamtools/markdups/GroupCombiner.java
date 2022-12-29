@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.chromosomeIndicator;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
 
 import java.util.List;
 import java.util.Map;
@@ -94,7 +95,8 @@ public class GroupCombiner
 
         String fragmentChromosome = chromosomeIndicator(fragment.reads().get(0).getReferenceName());
 
-        List<String> remotePartitions = fragment.hasRemotePartitions() ? fragment.remotePartitions() : Lists.newArrayList(chrPartition);
+        List<String> remotePartitions = mMultiChromosomes ? fragment.remotePartitions() : Lists.newArrayList(chrPartition);
+        // List<String> remotePartitions = fragment.hasRemotePartitions() ? fragment.remotePartitions() : Lists.newArrayList(chrPartition);
 
         for(String remotePartition : remotePartitions)
         {
@@ -455,7 +457,7 @@ public class GroupCombiner
             if(fragment.status() == SUPPLEMENTARY)
             {
                 mRecordWriter.writeFragment(fragment);
-                BM_LOGGER.debug("supplementary({}) in local GC unmatched", fragment);
+                BM_LOGGER.debug("supplementary({}) in local GC unmatched", readToString(fragment.reads().get(0)));
             }
         }
 
