@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -85,8 +86,22 @@ public class MarkDuplicates
         recordWriter.close();
 
         long totalProcessReads = chromosomeReaders.stream().mapToLong(x -> x.totalRecordCount()).sum();
+        BM_LOGGER.debug("all chromosome tasks complete, reads processed({})", totalProcessReads);
 
-        BM_LOGGER.debug("all chromosomes complete, reads processed({})", totalProcessReads);
+        if(BM_LOGGER.isDebugEnabled())
+        {
+            DuplicateStats combinedStats = new DuplicateStats();
+            chromosomeReaders.forEach(x -> combinedStats.merge(x.duplicateStats()));
+
+            BM_LOGGER.debug("inter-chromosomal candidates({})", combinedStats.InterPartitionUnclear);
+            List<Integer> frequencies = combinedStats.DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
+            Collections.sort(frequencies);
+
+            for(Integer frequency : frequencies)
+            {
+                BM_LOGGER.debug("duplicate frequency({}={})", frequency, combinedStats.DuplicateFrequencies.get(frequency));
+            }
+        }
 
         if(totalProcessReads != recordWriter.recordWriteCount())
         {

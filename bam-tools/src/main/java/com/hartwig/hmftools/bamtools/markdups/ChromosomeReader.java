@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
@@ -50,6 +51,7 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
     private final boolean mLogReadIds;
     private int mTotalRecordCount;
     private int mPartitionRecordCount;
+    private int mMaxPositionFragments;
     private final Set<SAMRecord> mReadsProcessed;
     private final DuplicateStats mStats;
     private final PerformanceCounter mPerfCounter;
@@ -89,6 +91,7 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
         mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
         mTotalRecordCount = 0;
         mPartitionRecordCount = 0;
+        mMaxPositionFragments = 0;
 
         mStats = new DuplicateStats();
 
@@ -145,17 +148,21 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
 
         mLocalGroupCombiner.gatherPartitionFragments(mCurrentStrPartition, mCurrentPartition, resolvedFragments, candidateDuplicates);
 
+        mStats.InterPartitionUnclear += candidateDuplicates.stream().mapToInt(x -> x.Fragments.size()).sum();
+        mStats.ReadCount += mPartitionRecordCount;
+
         mRemoteGroupCombiner.processPartitionFragments(mCurrentStrPartition, resolvedFragments, candidateDuplicates, mPartitionSupplementaries);
 
         mPerfCounter.stop();
 
-        BM_LOGGER.debug("partition({}:{}) complete, reads({}) remotes cached(supps={} resolved={} candidates={})",
+        BM_LOGGER.debug("partition({}:{}) complete, reads({}) remotes cached(supps={} resolved={} candidates={}) maxPosFrags({})",
                 mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount, mPartitionSupplementaries.size(), mPartitionResolvedFragments.size(),
-                candidateDuplicates.size());
+                candidateDuplicates.size(), mMaxPositionFragments);
 
         mPartitionResolvedFragments.clear();
         mPartitionSupplementaries.clear();
         mPartitionRecordCount = 0;
+        mMaxPositionFragments = 0;
 
         if(setupNext)
         {
@@ -224,6 +231,8 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
         List<Fragment> resolvedFragments = Lists.newArrayList();
         List<CandidateDuplicates> candidateDuplicatesList = Lists.newArrayList();
 
+        mMaxPositionFragments = max(mMaxPositionFragments, candidateDuplicates.Fragments.size());
+
         classifyFragments(candidateDuplicates.Fragments, resolvedFragments, candidateDuplicatesList);
 
         if(mConfig.RunChecks)
@@ -243,7 +252,10 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
         }
 
         if(!resolvedFragments.isEmpty())
+        {
+            mStats.addDuplicateFrequencies(resolvedFragments);
             mRecordWriter.writeFragments(resolvedFragments);
+        }
 
         for(Fragment fragment : resolvedFragments)
         {

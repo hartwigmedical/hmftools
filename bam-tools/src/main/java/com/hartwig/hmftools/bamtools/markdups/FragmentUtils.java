@@ -85,12 +85,6 @@ public class FragmentUtils
         }
     }
 
-
-    // initial call needs to prioritise finding resolved fragments (dups or NONE), and form unclear groups from amongst the rest
-
-
-    // second call need only look for resolved fragments
-
     public static void classifyFragments(
             final List<Fragment> fragments, final List<Fragment> resolvedFragments,
             @Nullable final List<CandidateDuplicates> candidateDuplicatesList)
