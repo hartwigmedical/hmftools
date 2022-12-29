@@ -14,16 +14,17 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public final class EnrichedStructuralVariantFactory {
-
-    @NotNull
-    public List<EnrichedStructuralVariant> enrich(@NotNull final List<StructuralVariant> variants) {
+public final class EnrichedStructuralVariantFactory
+{
+    public List<EnrichedStructuralVariant> enrich(final List<StructuralVariant> variants)
+    {
         final List<EnrichedStructuralVariant> result = Lists.newArrayList();
 
-        for (StructuralVariant variant : variants) {
+        for(StructuralVariant variant : variants)
+        {
             final VariantContext startContext = variant.startContext();
-            if (startContext != null) {
-
+            if(startContext != null)
+            {
                 final ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder()
                         .from(variant)
                         .junctionCopyNumber(junctionCopyNumber(startContext))
@@ -33,7 +34,8 @@ public final class EnrichedStructuralVariantFactory {
                 final StructuralVariantLeg endLeg = variant.end();
                 @Nullable
                 final VariantContext endContext = variant.endContext();
-                if (endLeg != null && endContext != null) {
+                if(endLeg != null && endContext != null)
+                {
                     builder.end(createBuilder(endContext, endLeg));
                 }
 
@@ -44,29 +46,31 @@ public final class EnrichedStructuralVariantFactory {
         return result;
     }
 
-    private static Double junctionCopyNumber(@NotNull final VariantContext startContext) {
-        if (startContext.hasAttribute(StructuralVariantHeader.PURPLE_JUNCTION_COPY_NUMBER_INFO)) {
+    private static Double junctionCopyNumber(final VariantContext startContext)
+    {
+        if(startContext.hasAttribute(StructuralVariantHeader.PURPLE_JUNCTION_COPY_NUMBER_INFO))
+        {
             return startContext.getAttributeAsDouble(StructuralVariantHeader.PURPLE_JUNCTION_COPY_NUMBER_INFO, 0);
         }
 
-        if (startContext.hasAttribute(StructuralVariantHeader.PURPLE_PLOIDY_INFO)) {
+        if(startContext.hasAttribute(StructuralVariantHeader.PURPLE_PLOIDY_INFO))
+        {
             return startContext.getAttributeAsDouble(StructuralVariantHeader.PURPLE_PLOIDY_INFO, 0);
         }
 
         return null;
     }
 
-    @NotNull
-    private ImmutableEnrichedStructuralVariantLeg createBuilder(@NotNull final VariantContext context,
-            @NotNull final StructuralVariantLeg leg) {
-        final List<Double> purpleAF =
-                context.hasAttribute(PURPLE_AF_INFO) ? context.getAttributeAsDoubleList(PURPLE_AF_INFO, 0.0) : Collections.emptyList();
+    private ImmutableEnrichedStructuralVariantLeg createBuilder(final VariantContext context, final StructuralVariantLeg leg)
+    {
+        final List<Double> purpleAF = context.hasAttribute(PURPLE_AF_INFO) ?
+                context.getAttributeAsDoubleList(PURPLE_AF_INFO, 0.0) : Collections.emptyList();
 
-        final List<Double> purpleCN =
-                context.hasAttribute(PURPLE_CN_INFO) ? context.getAttributeAsDoubleList(PURPLE_CN_INFO, 0.0) : Collections.emptyList();
+        final List<Double> purpleCN = context.hasAttribute(PURPLE_CN_INFO) ?
+                context.getAttributeAsDoubleList(PURPLE_CN_INFO, 0.0) : Collections.emptyList();
 
-        final List<Double> purpleCNChange =
-                context.hasAttribute(StructuralVariantHeader.PURPLE_CN_CHANGE_INFO) ? context.getAttributeAsDoubleList(StructuralVariantHeader.PURPLE_CN_CHANGE_INFO, 0.0) : Collections.emptyList();
+        final List<Double> purpleCNChange = context.hasAttribute(StructuralVariantHeader.PURPLE_CN_CHANGE_INFO) ?
+                context.getAttributeAsDoubleList(StructuralVariantHeader.PURPLE_CN_CHANGE_INFO, 0.0) : Collections.emptyList();
 
         final ImmutableEnrichedStructuralVariantLeg.Builder builder = ImmutableEnrichedStructuralVariantLeg.builder()
                 .from(leg)
@@ -74,6 +78,7 @@ public final class EnrichedStructuralVariantFactory {
                 .adjustedAlleleFrequency(!purpleAF.isEmpty() ? purpleAF.get(0) : null)
                 .adjustedCopyNumber(!purpleCN.isEmpty() ? purpleCN.get(0) : null)
                 .adjustedCopyNumberChange(!purpleCNChange.isEmpty() ? purpleCNChange.get(0) : null);
+
         return builder.build();
     }
 }

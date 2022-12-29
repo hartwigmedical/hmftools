@@ -9,7 +9,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.purple.SomaticVariantCache;
 import com.hartwig.hmftools.purple.fitting.ModifiableWeightedPloidy;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
 import com.hartwig.hmftools.purple.fitting.PeakModelFactory;

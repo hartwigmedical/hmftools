@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -43,7 +42,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 
-public class GermlineDeletionDrivers
+public class GermlineDeletions
 {
     private final List<DriverGene> mDriverGenes;
     private final EnsemblDataCache mGeneDataCache;
@@ -52,7 +51,7 @@ public class GermlineDeletionDrivers
     private final List<GermlineDeletion> mDeletions;
     private final List<DriverCatalog> mDrivers;
 
-    public GermlineDeletionDrivers(
+    public GermlineDeletions(
             final List<DriverGene> driverGenes, final EnsemblDataCache geneDataCache, final GermlineDeletionFrequency cohortFrequency)
     {
         mGeneDataCache = geneDataCache;
@@ -100,6 +99,8 @@ public class GermlineDeletionDrivers
             Variant = variant;
             IsStart = isStart;
         }
+
+        public int position() { return Variant.position(IsStart); }
     }
 
     public MatchedStructuralVariant[] findMatchingGermlineSVs(
@@ -275,8 +276,11 @@ public class GermlineDeletionDrivers
         if(geneDataList == null)
             return;
 
-        int regionLowerPos = region.start() - GERMLINE_DEL_GENE_BUFFER;
-        int regionHighPos = region.end() + GERMLINE_DEL_GENE_BUFFER;
+        int adjustPosStart = matchingSVs[SE_START] != null ? matchingSVs[SE_START].position() : region.start();
+        int adjustPosEnd = matchingSVs[SE_END] != null ? matchingSVs[SE_END].position() : region.end();
+
+        int regionLowerPos = adjustPosStart - GERMLINE_DEL_GENE_BUFFER;
+        int regionHighPos = adjustPosEnd + GERMLINE_DEL_GENE_BUFFER;
 
         // find overlapping driver genes
         List<GeneData> overlappingGenes = Lists.newArrayList();
@@ -369,7 +373,7 @@ public class GermlineDeletionDrivers
         for(GeneData geneData : deletedGenes)
         {
             mDeletions.add(new GermlineDeletion(
-                    geneData.GeneName, region.chromosome(), geneData.KaryotypeBand, region.start(), region.end(),
+                    geneData.GeneName, region.chromosome(), geneData.KaryotypeBand, adjustPosStart, adjustPosEnd,
                     region.depthWindowCount(), exonRankMin, exonRankMax,
                     GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorStatus, germlineCopyNumber, tumorCopyNumber,
                     filter, cohortFrequency, anyReported));

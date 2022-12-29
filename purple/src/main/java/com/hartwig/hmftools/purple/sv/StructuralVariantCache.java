@@ -1,6 +1,5 @@
-package com.hartwig.hmftools.purple;
+package com.hartwig.hmftools.purple.sv;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFile;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
@@ -19,14 +18,11 @@ import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.config.SampleDataFiles;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
-import com.hartwig.hmftools.purple.sv.StructuralRefContextEnrichment;
 import com.hartwig.hmftools.purple.copynumber.CopyNumberEnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
@@ -34,10 +30,8 @@ import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariantHeader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.purple.config.ReferenceData;
-import com.hartwig.hmftools.purple.sv.VariantContextCollection;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.tribble.index.tabix.TabixFormat;
@@ -110,7 +104,7 @@ public class StructuralVariantCache
         }
     }
 
-    protected void inferMissingVariant(final List<PurpleCopyNumber> copyNumbers)
+    public void inferMissingVariant(final List<PurpleCopyNumber> copyNumbers)
     {
         if(enabled())
         {
@@ -300,7 +294,7 @@ public class StructuralVariantCache
 
     public List<StructuralVariant> variants() { return mVariantCollection.segmentationVariants(); }
 
-    int passingBnd()
+    public int passingBnd()
     {
         return (int) mVariantCollection.segmentationVariants()
                 .stream()

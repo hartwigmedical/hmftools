@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.config;
 
-import com.hartwig.hmftools.purple.SomaticVariantCache;
-import com.hartwig.hmftools.purple.StructuralVariantCache;
+import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;
+import com.hartwig.hmftools.purple.sv.StructuralVariantCache;
 
 public class SampleData
 {

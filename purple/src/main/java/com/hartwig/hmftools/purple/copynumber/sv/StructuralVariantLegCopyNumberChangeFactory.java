@@ -25,13 +25,13 @@ public class StructuralVariantLegCopyNumberChangeFactory
 {
     private final Map<GenomePosition, CopyNumberChange> mCopyNumberChangeMap;
 
-    public StructuralVariantLegCopyNumberChangeFactory(@NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers, @NotNull final Collection<StructuralVariant> variants)
+    public StructuralVariantLegCopyNumberChangeFactory(final PurityAdjuster purityAdjuster,
+            final Multimap<Chromosome, PurpleCopyNumber> copyNumbers, final Collection<StructuralVariant> variants)
     {
         mCopyNumberChangeMap = copyNumberChangeMap(purityAdjuster, copyNumbers, variants);
     }
 
-    public double copyNumberChange(@NotNull final StructuralVariantLegPloidy leg)
+    public double copyNumberChange(final StructuralVariantLegPloidy leg)
     {
         GenomePosition cnaPosition = GenomePositions.create(leg.chromosome(), leg.cnaPosition());
 
@@ -44,7 +44,7 @@ public class StructuralVariantLegCopyNumberChangeFactory
     }
 
     @Nullable
-    public Double copyNumberChange(@NotNull final StructuralVariantLegCopyNumber copyNumber)
+    public Double copyNumberChange(final StructuralVariantLegCopyNumber copyNumber)
     {
         if(!mCopyNumberChangeMap.containsKey(GenomePositions.create(copyNumber.chromosome(), copyNumber.cnaPosition())))
         {
@@ -54,9 +54,9 @@ public class StructuralVariantLegCopyNumberChangeFactory
         return null;
     }
 
-    @NotNull
-    private static Map<GenomePosition, CopyNumberChange> copyNumberChangeMap(@NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers, @NotNull final Collection<StructuralVariant> variants)
+    private static Map<GenomePosition, CopyNumberChange> copyNumberChangeMap(
+            final PurityAdjuster purityAdjuster, final Multimap<Chromosome, PurpleCopyNumber> copyNumbers,
+            final Collection<StructuralVariant> variants)
     {
 
         final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory =
@@ -85,8 +85,7 @@ public class StructuralVariantLegCopyNumberChangeFactory
         return copyNumberChangeMap;
     }
 
-    @NotNull
-    private static Set<StructuralVariant> variantsAtDuplicateLocations(@NotNull final Collection<StructuralVariant> variants)
+    private static Set<StructuralVariant> variantsAtDuplicateLocations(final Collection<StructuralVariant> variants)
     {
         Set<StructuralVariant> result = Sets.newHashSet();
         Multimap<GenomePosition, StructuralVariant> cnaMap = cnaMap(variants);
@@ -102,8 +101,7 @@ public class StructuralVariantLegCopyNumberChangeFactory
         return result;
     }
 
-    @NotNull
-    private static ListMultimap<GenomePosition, StructuralVariant> cnaMap(@NotNull final Collection<StructuralVariant> variants)
+    private static ListMultimap<GenomePosition,StructuralVariant> cnaMap(final Collection<StructuralVariant> variants)
     {
         final ListMultimap<GenomePosition, StructuralVariant> result = ArrayListMultimap.create();
         for(final StructuralVariant variant : variants)
@@ -122,5 +120,4 @@ public class StructuralVariantLegCopyNumberChangeFactory
         return result;
 
     }
-
 }
