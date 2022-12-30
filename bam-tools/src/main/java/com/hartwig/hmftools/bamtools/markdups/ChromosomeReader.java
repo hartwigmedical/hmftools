@@ -4,8 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.checkFragmentClassification;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readInSpecifiedRegions;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
@@ -31,7 +30,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
+public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 {
     private final MarkDupsConfig mConfig;
     private final ChrBaseRegion mRegion;
@@ -146,20 +145,19 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
 
         List<Fragment> resolvedFragments = mPartitionResolvedFragments.values().stream().collect(Collectors.toList());
 
-        List<CandidateDuplicates> candidateDuplicates = Lists.newArrayList();
+        //mLocalGroupCombiner.gatherPartitionFragments(mCurrentStrPartition, mCurrentPartition, resolvedFragments);
+        mLocalGroupCombiner.localPartitionComplete(mCurrentStrPartition);
 
-        mLocalGroupCombiner.gatherPartitionFragments(mCurrentStrPartition, mCurrentPartition, resolvedFragments, candidateDuplicates);
-
-        mStats.InterPartitionUnclear += candidateDuplicates.stream().mapToInt(x -> x.Fragments.size()).sum();
+        // mStats.Duplicates += candidateDuplicates.stream().mapToInt(x -> x.Fragments.size()).sum();
         mStats.ReadCount += mPartitionRecordCount;
 
-        mRemoteGroupCombiner.processPartitionFragments(mCurrentStrPartition, resolvedFragments, candidateDuplicates, mPartitionSupplementaries);
+        mRemoteGroupCombiner.processPartitionFragments(mCurrentStrPartition, resolvedFragments, mPartitionSupplementaries);
 
         mPerfCounter.stop();
 
-        BM_LOGGER.debug("partition({}:{}) complete, reads({}) remotes cached(supps={} resolved={} candidates={}) maxPosFrags({}) {}",
+        BM_LOGGER.debug("partition({}:{}) complete, reads({}) remotes cached(supps={} resolved={}) maxPosFrags({}) {}",
                 mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount, mPartitionSupplementaries.size(), mPartitionResolvedFragments.size(),
-                candidateDuplicates.size(), mMaxPositionFragments, readPositionsStats);
+                mMaxPositionFragments, readPositionsStats);
 
         mPartitionResolvedFragments.clear();
         mPartitionSupplementaries.clear();
@@ -203,10 +201,20 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
 
         try
         {
-            if(!mReadPositions.processRead(read))
+            if(read.getSupplementaryAlignmentFlag())
             {
                 // currently only supplementaries will not be stored against their initial fragment position or in an existing fragment
                 processSupplementary(read);
+            }
+            else
+            {
+                if(!mReadPositions.processRead(read))
+                {
+                    // the mate came earlier on this chromosome, so retrieve its status and write
+                    String matePartitionStr = formChromosomePartition(read.getMateReferenceName(), read.getMateAlignmentStart(), mConfig.PartitionSize);
+                    FragmentStatus status = mLocalGroupCombiner.findFragmentStatus(matePartitionStr, read.getReadName());
+                    mRecordWriter.writeRecord(read, status);
+                }
             }
         }
         catch(Exception e)
@@ -228,6 +236,47 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
             mLocalGroupCombiner.localSupplementary(fragment, mCurrentStrPartition);
     }
 
+    public void accept(final List<Fragment> resolvedFragments)
+    {
+        mMaxPositionFragments = max(mMaxPositionFragments, resolvedFragments.size());
+
+        // any fragment not set to PRIMARY is not a duplicate
+        resolvedFragments.stream().filter(x -> !x.status().isResolved()).forEach(x -> x.setStatus(NONE));
+
+        if(!resolvedFragments.isEmpty())
+        {
+            // no longer ordered in duplicate groups - either re-evaluate or store by coordinate key or track some other way
+            mStats.addDuplicateFrequencies(resolvedFragments);
+            mRecordWriter.writeFragments(resolvedFragments);
+        }
+
+        for(Fragment fragment : resolvedFragments)
+        {
+            // the resolved fragment will be passed to the local group combiner and its state stored & applied
+
+            fragment.setRemotePartitions(mCurrentPartition);
+
+            if(fragment.hasRemotePartitions())
+            {
+                // only store it for the remote group combiner if it has remote partitions
+                // need to combine any remote partitions from the 2 reads
+                Fragment existingFragment = mPartitionResolvedFragments.get(fragment.id());
+
+                if(existingFragment != null)
+                {
+                    fragment.reads().forEach(x -> existingFragment.addRead(x));
+                    existingFragment.setRemotePartitions(mCurrentPartition);
+                }
+                else
+                    mPartitionResolvedFragments.put(fragment.id(), fragment);
+            }
+        }
+
+        // pass to the local combiner
+        mLocalGroupCombiner.processPartitionFragments(mCurrentStrPartition, resolvedFragments, Collections.EMPTY_LIST);
+    }
+
+    /*
     public void accept(final CandidateDuplicates candidateDuplicates)
     {
         List<Fragment> resolvedFragments = Lists.newArrayList();
@@ -235,7 +284,10 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
 
         mMaxPositionFragments = max(mMaxPositionFragments, candidateDuplicates.Fragments.size());
 
-        classifyFragments(candidateDuplicates.Fragments, resolvedFragments, candidateDuplicatesList);
+        // any fragment not set to PRIMARY is not a duplicate
+
+
+        // classifyFragments(candidateDuplicates.Fragments, resolvedFragments, candidateDuplicatesList);
 
         if(mConfig.RunChecks)
             checkFragmentClassification(resolvedFragments, candidateDuplicatesList);
@@ -282,8 +334,9 @@ public class ChromosomeReader implements Consumer<CandidateDuplicates>, Callable
         }
 
         // pass to the local combiner
-        mLocalGroupCombiner.processPartitionFragments(mCurrentStrPartition, resolvedFragments, candidateDuplicatesList, Collections.EMPTY_LIST);
+        mLocalGroupCombiner.processPartitionFragments(mCurrentStrPartition, resolvedFragments, Collections.EMPTY_LIST);
     }
+    */
 
     private void perfCounterStart()
     {

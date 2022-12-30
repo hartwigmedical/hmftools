@@ -68,10 +68,7 @@ public class MarkDupsConfig
     private static final String USE_INTERIM_FILES = "use_interim_files";
 
     private static final int DEFAULT_PARTITION_SIZE = 1000000;
-    private static final int DEFAULT_POS_BUFFER_SIZE = 10000;
-
-    // matching constants
-    public static final int MAX_INSERT_SIZE_DIFF = 5;
+    private static final int DEFAULT_POS_BUFFER_SIZE = 1000;
 
     public MarkDupsConfig(final CommandLine cmd)
     {

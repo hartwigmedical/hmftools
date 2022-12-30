@@ -5,24 +5,17 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentCoordinates.formCoordinate;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.jetbrains.annotations.Nullable;
@@ -51,6 +44,130 @@ public class FragmentUtils
         return position;
     }
 
+
+    public static FragmentCoordinates getFragmentCoordinates(final SAMRecord read)
+    {
+        boolean readForwardStrand = orientation(read) == POS_ORIENT;
+
+        int readCoordinate = read.getCigar() != null ?
+                getUnclippedPosition(read) : getUnclippedPosition(read.getAlignmentStart(), read.getCigarString(), readForwardStrand);
+
+        int readStrandPosition = readForwardStrand ? readCoordinate : -readCoordinate;
+        String readCoordStr = formCoordinate(read.getReferenceName(), readCoordinate, readForwardStrand);
+
+        if(!read.getReadPairedFlag() || !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
+            return new FragmentCoordinates(readCoordStr, readStrandPosition);
+
+        String mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+        boolean mateForwardStrand = !read.getMateNegativeStrandFlag();
+        int mateCoordinate = getUnclippedPosition(read.getMateAlignmentStart(), mateCigar, mateForwardStrand);
+        int mateStrandPosition = mateForwardStrand ? mateCoordinate : -mateCoordinate;
+
+        boolean readLowerPos;
+        if(read.getReferenceIndex() == read.getMateReferenceIndex())
+        {
+            readLowerPos = readCoordinate <= mateCoordinate;
+        }
+        else
+        {
+            readLowerPos = read.getReferenceIndex() < read.getMateReferenceIndex();
+        }
+
+        String mateCoordStr = formCoordinate(read.getMateReferenceName(), mateCoordinate, mateForwardStrand);
+
+        return readLowerPos ?
+                new FragmentCoordinates(readCoordStr + "_" + mateCoordStr, readStrandPosition)
+                : new FragmentCoordinates(mateCoordStr + "_" + readCoordStr, mateStrandPosition);
+    }
+
+    public static int getUnclippedPosition(final int readStart, final String cigarStr, final boolean forwardStrand)
+    {
+        int currentPosition = readStart;
+        int elementLength = 0;
+
+        for(int i = 0; i < cigarStr.length(); ++i)
+        {
+            char c = cigarStr.charAt(i);
+            boolean isAddItem = (c == 'D' || c == 'M' || c == 'S');
+
+            if(isAddItem)
+            {
+                if(forwardStrand)
+                {
+                    // back out the left clip if present
+                    return c == 'S' ? readStart - elementLength : readStart;
+                }
+
+                if(c == 'S' && readStart == currentPosition)
+                {
+                    // ignore left-clip when getting reverse strand position
+                }
+                else
+                {
+                    currentPosition += elementLength;
+                }
+
+                elementLength = 0;
+                continue;
+            }
+
+            int digit = c - '0';
+            if (digit >= 0 && digit <= 9)
+            {
+                elementLength = elementLength * 10 + digit;
+            }
+            else
+            {
+                elementLength = 0;
+            }
+        }
+
+        // always pointing to the start of the next element, so need to move back a base
+        return currentPosition - 1;
+    }
+
+    @Nullable
+    public static Fragment checkDuplicateFragments(final Fragment fragment, final List<Fragment> fragments)
+    {
+        // checks this fragment for any duplicate match
+        // if not found, then store
+        // if found then return the lower average base qual, and store the other
+        for(int i = 0; i < fragments.size(); ++i)
+        {
+            Fragment other = fragments.get(i);
+
+            if(other.coordinates().Key.equals(fragment.coordinates().Key))
+            {
+                int dupCount = other.duplicateCount() + 1;
+                other.setDuplicateCount(dupCount);
+                fragment.setDuplicateCount(dupCount);
+                fragment.setAverageBaseQual(calcBaseQualAverage(fragment));
+
+                if(other.status() == UNSET)
+                    other.setAverageBaseQual(calcBaseQualAverage(other));
+
+                if(fragment.averageBaseQual() > other.averageBaseQual())
+                {
+                    fragment.setStatus(PRIMARY);
+                    fragments.set(i, fragment);
+                    other.setStatus(DUPLICATE);
+                    return other;
+                }
+                else
+                {
+                    other.setStatus(PRIMARY);
+                    fragment.setStatus(DUPLICATE);
+                    return fragment;
+                }
+            }
+        }
+
+        //  no match so store this fragment
+        fragments.add(fragment);
+        return null;
+    }
+
+    /*
     public static FragmentStatus calcFragmentStatus(final Fragment first, final Fragment second)
     {
         if(first.unpaired() != second.unpaired())
@@ -84,7 +201,9 @@ public class FragmentUtils
                     ? UNCLEAR : NONE;
         }
     }
+    */
 
+    /*
     public static void classifyFragments(
             final List<Fragment> fragments, final List<Fragment> resolvedFragments,
             @Nullable final List<CandidateDuplicates> candidateDuplicatesList)
@@ -202,6 +321,7 @@ public class FragmentUtils
             BM_LOGGER.error("failed to classify all incomplete fragments");
         }
     }
+    */
 
     private static boolean hasDuplicates(final Fragment fragment)
     {
@@ -221,11 +341,11 @@ public class FragmentUtils
 
         // otherwise choose the group with the highest base quality
         Fragment maxFragment = null;
-        int maxBaseQual = 0;
+        double maxBaseQual = 0;
 
         for(Fragment fragment : fragments)
         {
-            int groupBaseQual = calcBaseQualTotal(fragment);
+            double groupBaseQual = calcBaseQualAverage(fragment);
 
             if(groupBaseQual > maxBaseQual)
             {
@@ -237,7 +357,7 @@ public class FragmentUtils
         return maxFragment;
     }
 
-    public static int calcBaseQualTotal(final Fragment fragment)
+    public static double calcBaseQualAverage(final Fragment fragment)
     {
         int readBaseCount = 0;
         int readBaseQualTotal = 0;

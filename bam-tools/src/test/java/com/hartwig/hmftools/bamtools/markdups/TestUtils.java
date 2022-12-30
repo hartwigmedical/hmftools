@@ -2,6 +2,7 @@ package com.hartwig.hmftools.bamtools.markdups;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import java.util.List;
@@ -56,6 +57,18 @@ public final class TestUtils
     {
         SAMRecord read = createSamRecord(readId, chrStr, readStart, readBases, cigar, mateChr, mateStart,
                 isReversed, isSupplementary, suppAlignment);
+        return new Fragment(read);
+    }
+
+    public static Fragment createFragment(
+            final String readId, final String chrStr, int readStart, final String cigar, boolean isReversed,
+            final String mateChr, int mateStart, boolean mateReversed, final String mateCigar)
+    {
+        SAMRecord read = createSamRecord(
+                readId, chrStr, readStart, TEST_READ_BASES, cigar, mateChr, mateStart, isReversed, false, null);
+
+        read.setAttribute(MATE_CIGAR_ATTRIBUTE, mateCigar);
+        read.setMateNegativeStrandFlag(mateReversed);
         return new Fragment(read);
     }
 

@@ -1,19 +1,11 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
-import static java.lang.Math.abs;
-
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.SUPPLEMENTARY;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosomePartition;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.getUnclippedPosition;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.getFragmentCoordinates;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
 import java.util.Set;
@@ -30,35 +22,38 @@ public class Fragment
 {
     private FragmentStatus mStatus;
     private final List<SAMRecord> mReads;
-    private final int[] mCoordinates; // negative/reverse strand positions are negated
+    private final FragmentCoordinates mCoordinates;
     private final boolean mUnpaired;
     private boolean mAllReadsPresent;
     private boolean mAllPrimaryReadsPresent;
     private List<String> mRemotePartitions; // partitions outside of the initial read's partition
     private boolean mReadsWritten;
 
+    private double mAverageBaseQual;
+    private int mDuplicateCount;
+
     public Fragment(final SAMRecord read)
     {
-        mCoordinates = new int[SE_PAIR];
         mUnpaired = !read.getReadPairedFlag();
 
         if(!read.getSupplementaryAlignmentFlag())
         {
-            int position = getUnclippedPosition(read);
-            int strandPosition = orientation(read) == POS_ORIENT ? position : -position;
-            mCoordinates[SE_START] = strandPosition;
+            mCoordinates = getFragmentCoordinates(read);
             mStatus = UNSET;
             mAllPrimaryReadsPresent = mUnpaired;
             mAllReadsPresent = mUnpaired && !read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE);
         }
         else
         {
+            mCoordinates = null; // don't bother working it out
             mStatus = SUPPLEMENTARY;
             mAllPrimaryReadsPresent = false;
             mAllReadsPresent = false;
         }
 
-        mReads = Lists.newArrayListWithCapacity(2);
+        mReads = Lists.newArrayListWithCapacity(1); // most will only store the initial read
+        mAverageBaseQual = 0;
+        mDuplicateCount = 0;
         mRemotePartitions = null;
         mReads.add(read);
         mReadsWritten = false;
@@ -77,33 +72,19 @@ public class Fragment
     public boolean allReadsPresent() { return mAllReadsPresent; }
     public boolean primaryReadsPresent() { return mAllPrimaryReadsPresent; }
 
-    public int[] coordinates() { return mCoordinates; }
-    public int initialPosition() { return mCoordinates[SE_START]; }
+    public FragmentCoordinates coordinates() { return mCoordinates; }
+    public int initialPosition() { return mCoordinates.InitialPosition; }
+
+    public double averageBaseQual() { return mAverageBaseQual; }
+    public void setAverageBaseQual(double qual) { mAverageBaseQual = qual; }
+
+    public int duplicateCount() { return mDuplicateCount; }
+    public void setDuplicateCount(int count) { mDuplicateCount = count; }
 
     public void addRead(final SAMRecord read)
     {
         mReads.add(read);
         checkComplete();
-        updateCoordindates(read);
-    }
-
-    private void updateCoordindates(final SAMRecord read)
-    {
-        if(!read.getSupplementaryAlignmentFlag())
-        {
-            int position = getUnclippedPosition(read);
-            int strandPosition = orientation(read) == POS_ORIENT ? position : -position;
-
-            if(abs(mCoordinates[SE_START]) <= position)
-            {
-                mCoordinates[SE_END] = strandPosition;
-            }
-            else
-            {
-                mCoordinates[SE_END] = mCoordinates[SE_START];
-                mCoordinates[SE_START] = strandPosition;
-            }
-        }
     }
 
     public void merge(final Fragment other)
@@ -116,7 +97,6 @@ public class Fragment
         for(SAMRecord read : other.reads())
         {
             mReads.add(read);
-            updateCoordindates(read);
         }
 
         if(other.hasRemotePartitions())
@@ -143,6 +123,7 @@ public class Fragment
 
         for(SAMRecord read : mReads)
         {
+            /*
             if(read.getReadPairedFlag() && !read.getMateUnmappedFlag())
             {
                 if(!read.getMateReferenceName().equals(chromosome) || !currentPartition.containsPosition(read.getMateAlignmentStart()))
@@ -150,6 +131,7 @@ public class Fragment
                     chrPartitions.add(formChromosomePartition(read.getMateReferenceName(), read.getMateAlignmentStart(), partitionSize));
                 }
             }
+            */
 
             if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
             {
@@ -205,13 +187,10 @@ public class Fragment
         mAllReadsPresent = (expectedNonSuppCount == nonSuppCount) && (expectedSuppCount == suppCount);
     }
 
-    public int readCount() { return mReads.size(); }
-
     public String toString()
     {
-        return String.format("reads(%d) status(%s) coords(%s:%d/%d) present(%s) id(%s) remotePartitions(%s)",
-                mReads.size(), mStatus, mReads.get(0).getContig(), mCoordinates[SE_START], mCoordinates[SE_END],
-                mAllReadsPresent ? "all" : (mAllPrimaryReadsPresent ? "primary" : "incomplete"), id(),
-                mRemotePartitions != null ? mRemotePartitions : "none");
+        return String.format("reads(%d) status(%s) coords(%s) present(%s) id(%s) remotePartitions(%s)",
+                mReads.size(), mStatus, mCoordinates.Key, mAllReadsPresent ? "all" : (mAllPrimaryReadsPresent ? "primary" : "incomplete"),
+                id(), mRemotePartitions != null ? mRemotePartitions : "none");
     }
 }

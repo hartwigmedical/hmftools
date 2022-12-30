@@ -93,7 +93,7 @@ public class MarkDuplicates
             DuplicateStats combinedStats = new DuplicateStats();
             chromosomeReaders.forEach(x -> combinedStats.merge(x.duplicateStats()));
 
-            BM_LOGGER.debug("inter-chromosomal candidates({})", combinedStats.InterPartitionUnclear);
+            BM_LOGGER.debug("inter-chromosomal candidates({})", combinedStats.Duplicates);
             List<Integer> frequencies = combinedStats.DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
             Collections.sort(frequencies);
 

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.bamtools.markdups;
 
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
@@ -13,21 +14,21 @@ import com.google.common.collect.Maps;
 public class DuplicateStats
 {
     public int ReadCount;
-    public int InterPartitionUnclear;
+    public int Duplicates;
 
     public Map<Integer,Integer> DuplicateFrequencies;
 
     public DuplicateStats()
     {
         ReadCount = 0;
-        InterPartitionUnclear = 0;
+        Duplicates = 0;
         DuplicateFrequencies = Maps.newHashMap();
     }
 
     public void merge(final DuplicateStats other)
     {
         ReadCount += other.ReadCount;
-        InterPartitionUnclear += other.InterPartitionUnclear;
+        Duplicates += other.Duplicates;
 
         for(Map.Entry<Integer,Integer> entry : other.DuplicateFrequencies.entrySet())
         {
@@ -55,46 +56,6 @@ public class DuplicateStats
 
     public void addDuplicateFrequencies(final List<Fragment> fragments)
     {
-        if(fragments.stream().noneMatch(x -> x.status() == FragmentStatus.DUPLICATE))
-            return;
-
-        for(int i = 0; i < fragments.size() - 1;)
-        {
-            Fragment first = fragments.get(i);
-
-            if(!first.status().isDuplicate())
-            {
-                ++i;
-                continue;
-            }
-
-            int duplicateCount = 1;
-
-            int j = i + 1;
-            for(; j < fragments.size(); ++j)
-            {
-                Fragment second = fragments.get(j);
-
-                if(!second.status().isDuplicate())
-                    break;
-
-                if(first.coordinates()[SE_START] == second.coordinates()[SE_START]
-                && first.coordinates()[SE_END] == second.coordinates()[SE_END])
-                {
-                    ++duplicateCount;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            if(duplicateCount > 1)
-            {
-                addFrequency(duplicateCount);
-            }
-
-            i = j;
-        }
+        fragments.stream().filter(x -> x.status() == PRIMARY).forEach(x -> addFrequency(x.duplicateCount() + 1));
     }
 }

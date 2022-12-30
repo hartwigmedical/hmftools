@@ -1,25 +1,19 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.calcFragmentStatus;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.checkDuplicateFragments;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.DEFAULT_QUAL;
-import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createFragment;
-import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createFragmentPair;
-import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
@@ -37,6 +31,7 @@ public class FragmentClassificationTest
         mReadIdGen = new ReadIdGenerator();
     }
 
+    /*
     @Test
     public void testFragmentPairStatus()
     {
@@ -98,129 +93,76 @@ public class FragmentClassificationTest
 
         assertEquals(DUPLICATE, calcFragmentStatus(frag1, frag2));
     }
+    */
 
     @Test
-    public void testFragmentClassification()
+    public void testFragmentDuplicates()
     {
-        List<Fragment> positionFragmentsList = Lists.newArrayList();
-        List<Fragment> resolvedFragments = Lists.newArrayList();
-        List<CandidateDuplicates> incompletePositionFragments = Lists.newArrayList();
+        List<Fragment> fragments = Lists.newArrayList();
 
-        // a single fragment must be resolved as NONE
-        Fragment frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100);
-        positionFragmentsList.add(frag1);
+        Fragment read1 = createFragment(
+                mReadIdGen.nextId(), CHR_1, 100, TEST_READ_CIGAR, false, CHR_1, 300, true, TEST_READ_CIGAR);
 
-        classifyFragments(positionFragmentsList, resolvedFragments, incompletePositionFragments);
+        Fragment dupFragment = checkDuplicateFragments(read1, fragments);
+        assertNull(dupFragment);
+        assertEquals(1, fragments.size());
 
-        assertEquals(1, resolvedFragments.size());
-        assertEquals(NONE, frag1.status());
+        // different from the first
+        Fragment read2 = createFragment(
+                mReadIdGen.nextId(), CHR_1, 100, TEST_READ_CIGAR, false, CHR_1, 400, true, TEST_READ_CIGAR);
+        setBaseQualities(read2, DEFAULT_QUAL - 1);
 
-        positionFragmentsList.clear();
-        resolvedFragments.clear();
-        incompletePositionFragments.clear();
+        dupFragment = checkDuplicateFragments(read2, fragments);
+        assertNull(dupFragment);
+        assertEquals(2, fragments.size());
 
-        // a collection of fragments without their mates, all NONE or UNCLEAR
-        mReadIdGen.reset();
+        // duplicate of the first, lower qual
+        Fragment read3 = createFragment(
+                mReadIdGen.nextId(), CHR_1, 100, TEST_READ_CIGAR, false, CHR_1, 300, true, TEST_READ_CIGAR);
+        setBaseQualities(read3, DEFAULT_QUAL - 1);
 
-        // paired without mates
-        frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
-            false, false, null);
+        dupFragment = checkDuplicateFragments(read3, fragments);
+        assertNotNull(dupFragment);
+        assertEquals(2, fragments.size());
+        assertEquals(DUPLICATE, dupFragment.status());
 
-        Fragment frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 201,
-                false, false, null);
+        // duplicate of the second, higher qual so swaps out
+        Fragment read4 = createFragment(
+                mReadIdGen.nextId(), CHR_1, 100, TEST_READ_CIGAR, false, CHR_1, 400, true, TEST_READ_CIGAR);
 
-        // unmatched since mate is elsewhere
-        Fragment frag3 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 2000,
-                false, false, null);
+        dupFragment = checkDuplicateFragments(read4, fragments);
+        assertEquals(dupFragment, read2);
+        assertEquals(2, fragments.size());
 
-        positionFragmentsList.add(frag1);
-        positionFragmentsList.add(frag3);
-        positionFragmentsList.add(frag2);
+        // no duplicates
+        Fragment read5 = createFragment(
+                mReadIdGen.nextId(), CHR_1, 100, TEST_READ_CIGAR, false, CHR_2, 300, true, TEST_READ_CIGAR);
 
-        classifyFragments(positionFragmentsList, resolvedFragments, incompletePositionFragments);
+        dupFragment = checkDuplicateFragments(read5, fragments);
+        assertNull(dupFragment);
 
-        assertEquals(1, resolvedFragments.size());
-        assertEquals(1, incompletePositionFragments.size());
+        assertEquals(PRIMARY, read1.status());
+        assertEquals(PRIMARY, read4.status());
+        assertEquals(UNSET, read5.status());
+        assertEquals(1, read1.duplicateCount());
+        assertEquals(1, read4.duplicateCount());
 
-        assertTrue(resolvedFragments.contains(frag3));
+        // duplicates of the second, lower qual
+        Fragment read6 = createFragment(
+                mReadIdGen.nextId(), CHR_1, 100, TEST_READ_CIGAR, false, CHR_1, 400, true, TEST_READ_CIGAR);
+        setBaseQualities(read6, DEFAULT_QUAL - 2);
 
-        CandidateDuplicates candidateDuplicates = incompletePositionFragments.get(0);
-        assertNotNull(candidateDuplicates);
-        assertTrue(candidateDuplicates.Fragments.contains(frag1));
-        assertTrue(candidateDuplicates.Fragments.contains(frag2));
+        dupFragment = checkDuplicateFragments(read6, fragments);
+        assertEquals(dupFragment, read6);
 
-        assertEquals(UNCLEAR, frag1.status());
-        assertEquals(UNCLEAR, frag2.status());
-        assertEquals(NONE, frag3.status());
+        Fragment read7 = createFragment(
+                mReadIdGen.nextId(), CHR_1, 100, TEST_READ_CIGAR, false, CHR_1, 400, true, TEST_READ_CIGAR);
+        setBaseQualities(read7, DEFAULT_QUAL - 2);
 
-        // on the reverse strand
-        mReadIdGen.reset();
+        dupFragment = checkDuplicateFragments(read7, fragments);
+        assertEquals(dupFragment, read7);
 
-        Fragment frag4 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, 200,
-                false, false, null); // unmatched since mate is elsewhere
-
-        // matched on reverse strand
-        Fragment frag5 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, "100M", CHR_3, 200,
-                true, false, null);
-
-        Fragment frag6 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, "95M5S", CHR_3, 199,
-                true, false, null); // unmatched since mate is elsewhere
-
-        positionFragmentsList = Lists.newArrayList(frag6, frag5, frag4);
-        resolvedFragments.clear();
-        incompletePositionFragments.clear();
-
-        classifyFragments(positionFragmentsList, resolvedFragments, incompletePositionFragments);
-
-        assertEquals(1, resolvedFragments.size());
-        assertEquals(1, incompletePositionFragments.size());
-
-        assertTrue(resolvedFragments.contains(frag4));
-
-        candidateDuplicates = incompletePositionFragments.get(0);
-        assertNotNull(candidateDuplicates);
-        assertTrue(candidateDuplicates.Fragments.contains(frag5));
-        assertTrue(candidateDuplicates.Fragments.contains(frag6));
-
-        assertEquals(NONE, frag4.status());
-        assertEquals(UNCLEAR, frag5.status());
-        assertEquals(UNCLEAR, frag6.status());
-
-        // now with some duplicates
-        mReadIdGen.reset();
-
-        // the first 3 are duplicates
-        frag1 = createFragmentPair(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200, false);
-        setBaseQualities(frag1, DEFAULT_QUAL - 2);
-
-        frag2 = createFragmentPair(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200, false);
-        setBaseQualities(frag2, DEFAULT_QUAL - 3);
-
-        frag3 = createFragmentPair(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,false);
-        setBaseQualities(frag5, DEFAULT_QUAL - 1);
-
-        // then un-related
-        frag4 = createFragmentPair(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, 2000,false); // unmatched since mate is elsewhere
-
-        // then 2 more duplicates
-        frag5 = createFragmentPair(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3, 200, false);
-        setBaseQualities(frag5, DEFAULT_QUAL - 1);
-
-        frag6 = createFragmentPair(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3, 200, false); // unmatched since mate is elsewhere
-
-        positionFragmentsList = Lists.newArrayList(frag1, frag5, frag4, frag6, frag3, frag2);
-        resolvedFragments.clear();
-        incompletePositionFragments.clear();
-
-        classifyFragments(positionFragmentsList, resolvedFragments, incompletePositionFragments);
-
-        assertEquals(6, resolvedFragments.size());
-
-        assertEquals(DUPLICATE, frag1.status());
-        assertEquals(DUPLICATE, frag2.status());
-        assertEquals(DUPLICATE, frag3.status());
-        assertEquals(NONE, frag4.status());
-        assertEquals(DUPLICATE, frag5.status());
-        assertEquals(PRIMARY, frag6.status());
+        assertEquals(PRIMARY, read4.status());
+        assertEquals(3, read4.duplicateCount());
     }
 }

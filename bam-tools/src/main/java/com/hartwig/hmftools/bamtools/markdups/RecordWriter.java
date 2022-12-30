@@ -141,7 +141,7 @@ public class RecordWriter
         }
 
         fragment.setReadWritten();
-        fragment.reads().forEach(x -> writeRecord(x, fragment.status()));
+        fragment.reads().forEach(x -> doWriteRecord(x, fragment.status()));
     }
 
     public synchronized void writeCachedFragments(final List<Fragment> fragments) { fragments.forEach(x -> doWriteCachedFragment(x)); }
@@ -162,7 +162,12 @@ public class RecordWriter
         }
     }
 
-    private void writeRecord(final SAMRecord read, FragmentStatus fragmentStatus)
+    public synchronized void writeRecord(final SAMRecord read, FragmentStatus fragmentStatus)
+    {
+        doWriteRecord(read, fragmentStatus);
+    }
+
+    private void doWriteRecord(final SAMRecord read, FragmentStatus fragmentStatus)
     {
         if(mConfig.runReadChecks())
         {
