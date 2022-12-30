@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentCoordinates.NO_COORDS;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.SUPPLEMENTARY;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosomePartition;
@@ -11,8 +12,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
@@ -23,10 +24,7 @@ public class Fragment
     private FragmentStatus mStatus;
     private final List<SAMRecord> mReads;
     private final FragmentCoordinates mCoordinates;
-    private final boolean mUnpaired;
-    private boolean mAllReadsPresent;
-    private boolean mAllPrimaryReadsPresent;
-    private List<String> mRemotePartitions; // partitions outside of the initial read's partition
+    private List<String> mRemotePartitions; // partitions outside of the initial read's partition. currently only used for supplementaries
     private boolean mReadsWritten;
 
     private double mAverageBaseQual;
@@ -34,21 +32,15 @@ public class Fragment
 
     public Fragment(final SAMRecord read)
     {
-        mUnpaired = !read.getReadPairedFlag();
-
         if(!read.getSupplementaryAlignmentFlag())
         {
-            mCoordinates = getFragmentCoordinates(read);
+            mCoordinates = getFragmentCoordinates(read, false);
             mStatus = UNSET;
-            mAllPrimaryReadsPresent = mUnpaired;
-            mAllReadsPresent = mUnpaired && !read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE);
         }
         else
         {
-            mCoordinates = null; // don't bother working it out
+            mCoordinates = NO_COORDS; // don't bother working it out
             mStatus = SUPPLEMENTARY;
-            mAllPrimaryReadsPresent = false;
-            mAllReadsPresent = false;
         }
 
         mReads = Lists.newArrayListWithCapacity(1); // most will only store the initial read
@@ -68,10 +60,6 @@ public class Fragment
     public boolean readsWritten() { return mReadsWritten; }
     public void setReadWritten() { mReadsWritten = true; }
 
-    public boolean unpaired() { return mUnpaired; }
-    public boolean allReadsPresent() { return mAllReadsPresent; }
-    public boolean primaryReadsPresent() { return mAllPrimaryReadsPresent; }
-
     public FragmentCoordinates coordinates() { return mCoordinates; }
     public int initialPosition() { return mCoordinates.InitialPosition; }
 
@@ -84,7 +72,6 @@ public class Fragment
     public void addRead(final SAMRecord read)
     {
         mReads.add(read);
-        checkComplete();
     }
 
     public void merge(final Fragment other)
@@ -106,8 +93,6 @@ public class Fragment
 
             other.remotePartitions().stream().filter(x -> !mRemotePartitions.contains(x)).forEach(x -> mRemotePartitions.add(x));
         }
-
-        checkComplete();
     }
 
     public boolean hasRemotePartitions() { return mRemotePartitions != null; }
@@ -136,11 +121,7 @@ public class Fragment
             if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
             {
                 SupplementaryReadData suppData = SupplementaryReadData.from(read);
-
-                if(!suppData.Chromosome.equals(chromosome) || !currentPartition.containsPosition(suppData.Position))
-                {
-                    chrPartitions.add(formChromosomePartition(suppData.Chromosome, suppData.Position, partitionSize));
-                }
+                chrPartitions.add(formChromosomePartition(suppData.Chromosome, suppData.Position, partitionSize));
             }
         }
 
@@ -148,49 +129,9 @@ public class Fragment
             mRemotePartitions = chrPartitions.stream().collect(Collectors.toList());
     }
 
-    private void checkComplete()
-    {
-        if(mAllReadsPresent)
-            return;
-
-        int suppCount = 0;
-        int nonSuppCount = 0;
-        int expectedSuppCount = 0;
-        int expectedNonSuppCount = 1;
-
-        for(SAMRecord read : mReads)
-        {
-            if(read.getReadPairedFlag() && !read.getMateUnmappedFlag())
-            {
-                expectedNonSuppCount = 2;
-            }
-
-            if(read.getSupplementaryAlignmentFlag())
-            {
-                ++suppCount;
-            }
-            else
-            {
-                ++nonSuppCount;
-            }
-
-            if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
-            {
-                if(!read.getSupplementaryAlignmentFlag())
-                {
-                    ++expectedSuppCount;
-                }
-            }
-        }
-
-        mAllPrimaryReadsPresent = expectedNonSuppCount == nonSuppCount;
-        mAllReadsPresent = (expectedNonSuppCount == nonSuppCount) && (expectedSuppCount == suppCount);
-    }
-
     public String toString()
     {
-        return String.format("reads(%d) status(%s) coords(%s) present(%s) id(%s) remotePartitions(%s)",
-                mReads.size(), mStatus, mCoordinates.Key, mAllReadsPresent ? "all" : (mAllPrimaryReadsPresent ? "primary" : "incomplete"),
-                id(), mRemotePartitions != null ? mRemotePartitions : "none");
+        return String.format("reads(%d) status(%s) coords(%s) id(%s) remotePartitions(%s)",
+                mReads.size(), mStatus, mCoordinates.Key, id(), mRemotePartitions != null ? mRemotePartitions : "none");
     }
 }

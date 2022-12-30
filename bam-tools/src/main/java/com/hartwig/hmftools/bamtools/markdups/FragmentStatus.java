@@ -4,7 +4,6 @@ public enum FragmentStatus
 {
     UNSET,
     NONE,
-    UNCLEAR,
     PRIMARY,
     DUPLICATE,
     SUPPLEMENTARY;

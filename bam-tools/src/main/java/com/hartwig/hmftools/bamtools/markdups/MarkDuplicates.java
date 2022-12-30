@@ -88,12 +88,13 @@ public class MarkDuplicates
         long totalProcessReads = chromosomeReaders.stream().mapToLong(x -> x.totalRecordCount()).sum();
         BM_LOGGER.debug("all chromosome tasks complete, reads processed({})", totalProcessReads);
 
+        DuplicateStats combinedStats = new DuplicateStats();
+        chromosomeReaders.forEach(x -> combinedStats.merge(x.duplicateStats()));
+
+        BM_LOGGER.info("stats: duplicates({}) missingMateCigar({})", combinedStats.Duplicates, combinedStats.NoMateCigar);
+
         if(BM_LOGGER.isDebugEnabled())
         {
-            DuplicateStats combinedStats = new DuplicateStats();
-            chromosomeReaders.forEach(x -> combinedStats.merge(x.duplicateStats()));
-
-            BM_LOGGER.debug("inter-chromosomal candidates({})", combinedStats.Duplicates);
             List<Integer> frequencies = combinedStats.DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
             Collections.sort(frequencies);
 
@@ -106,45 +107,7 @@ public class MarkDuplicates
         if(totalProcessReads != recordWriter.recordWriteCount())
         {
             BM_LOGGER.warn("reads processed({}) vs written({}) mismatch", totalProcessReads, recordWriter.recordWriteCount());
-
-            if(mConfig.runReadChecks())
-            {
-                Set<SAMRecord> recordsProcessed = Sets.newHashSet();
-                chromosomeReaders.forEach(x -> recordsProcessed.addAll(x.readsProcessed()));
-
-                List<SAMRecord> recordsWritten = recordWriter.readsWritten().stream().collect(Collectors.toList());
-
-                for(SAMRecord readProcessed : recordsProcessed)
-                {
-                    boolean found = false;
-                    for(int i = 0; i < recordsWritten.size(); ++i)
-                    {
-                        SAMRecord read = recordsWritten.get(i);
-
-                        if(read == readProcessed)
-                        {
-                            recordsWritten.remove(i);
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if(!found)
-                    {
-                        BM_LOGGER.error("read processed but not written: {}", readToString(readProcessed));
-                    }
-                }
-
-                if(!recordsWritten.isEmpty())
-                {
-                    for(int i = 0; i < recordsWritten.size(); ++i)
-                    {
-                        SAMRecord read = recordsWritten.get(i);
-
-                        BM_LOGGER.error("read extra written: {}", readToString(read));
-                    }
-                }
-            }
+            checkMissingReads(chromosomeReaders, recordWriter);
         }
 
         PerformanceCounter combinedPerfCounter = chromosomeReaders.get(0).perfCounter();
@@ -163,6 +126,48 @@ public class MarkDuplicates
         double timeTakeMins = timeTakenMs / 60000.0;
 
         BM_LOGGER.info("Mark duplicates complete, mins({})", format("%.3f", timeTakeMins));
+    }
+
+    private void checkMissingReads(final List<ChromosomeReader> chromosomeReaders, final RecordWriter recordWriter)
+    {
+        if(!mConfig.runReadChecks())
+            return;
+
+        Set<SAMRecord> recordsProcessed = Sets.newHashSet();
+        chromosomeReaders.forEach(x -> recordsProcessed.addAll(x.readsProcessed()));
+
+        List<SAMRecord> recordsWritten = recordWriter.readsWritten().stream().collect(Collectors.toList());
+
+        for(SAMRecord readProcessed : recordsProcessed)
+        {
+            boolean found = false;
+            for(int i = 0; i < recordsWritten.size(); ++i)
+            {
+                SAMRecord read = recordsWritten.get(i);
+
+                if(read == readProcessed)
+                {
+                    recordsWritten.remove(i);
+                    found = true;
+                    break;
+                }
+            }
+
+            if(!found)
+            {
+                BM_LOGGER.error("read processed but not written: {}", readToString(readProcessed));
+            }
+        }
+
+        if(!recordsWritten.isEmpty())
+        {
+            for(int i = 0; i < recordsWritten.size(); ++i)
+            {
+                SAMRecord read = recordsWritten.get(i);
+
+                BM_LOGGER.error("read extra written: {}", readToString(read));
+            }
+        }
     }
 
     public static void main(@NotNull final String[] args)

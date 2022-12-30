@@ -77,39 +77,33 @@ public class GroupCombiner
 
     private void handleResolvedFragment(final Fragment fragment, final String chrPartition)
     {
-        if(fragment.allReadsPresent())
-            return;
-
-        if(mMultiChromosomes && !fragment.hasRemotePartitions())
+        if(!fragment.hasRemotePartitions())
             return;
 
         String fragmentChromosome = chromosomeIndicator(fragment.reads().get(0).getReferenceName());
 
-        List<String> otherPartitions = mMultiChromosomes ? fragment.remotePartitions() : Lists.newArrayList(chrPartition);
-
-        for(String remotePartition : otherPartitions)
+        for(String remotePartition : fragment.remotePartitions())
         {
-            // local GC stores and applies same chromosome partitions only and vice versa
-            if(mSingleChromosome && !remotePartition.startsWith(fragmentChromosome)) // only applicable for remote GC
-                continue;
-            else if(mMultiChromosomes && remotePartition.startsWith(fragmentChromosome)) // already applied in local GC
+            // ignore the local partition which may also have a supplementary for this fragment
+            if(mMultiChromosomes && remotePartition.startsWith(fragmentChromosome))
                 continue;
 
-            boolean isProcessed = mProcessedPartitions.contains(remotePartition);
-
-            boolean isCurrentPartition = mSingleChromosome && remotePartition.equals(chrPartition);
-
-            if(isProcessed || isCurrentPartition)
+            if(mProcessedPartitions.contains(remotePartition))
             {
                 setResolvedStatus(remotePartition, fragment);
             }
-
-            if(!isProcessed || isCurrentPartition)
+            else
             {
                 // store status against the remote partition, not the current one
                 storeResolvedStatus(remotePartition, fragment);
             }
         }
+    }
+
+    public void localResolvedFragment(final String chrPartition, final Fragment fragment)
+    {
+        setResolvedStatus(chrPartition, fragment);
+        storeResolvedStatus(chrPartition, fragment);
     }
 
     private void setResolvedStatus(final String chrPartition, final Fragment resolvedFragment)
@@ -136,13 +130,6 @@ public class GroupCombiner
         partitionCache.FragmentStatus.put(resolvedFragment.id(), resolvedFragment.status());
     }
 
-    public void localSupplementary(final Fragment supplementary, final String chrPartition)
-    {
-        // not synchronised since only called locally
-        PartitionCache partitionCache = getOrCreatePartitionCache(chrPartition);
-        handleSupplementary(supplementary, partitionCache);
-    }
-
     private boolean checkResolvedStatus(final Fragment fragment, final PartitionCache partitionCache)
     {
         FragmentStatus status = partitionCache.FragmentStatus.get(fragment.id());
@@ -155,6 +142,13 @@ public class GroupCombiner
         }
 
         return false;
+    }
+
+    public void localSupplementary(final String chrPartition, final Fragment supplementary)
+    {
+        // not synchronised since only called locally
+        PartitionCache partitionCache = getOrCreatePartitionCache(chrPartition);
+        handleSupplementary(supplementary, partitionCache);
     }
 
     private void handleSupplementary(final Fragment supplementary, final PartitionCache partitionCache)
@@ -187,7 +181,7 @@ public class GroupCombiner
             Fragment fragment = partitionCache.Supplementaries.get(supplementary.id());
 
             if(fragment != null)
-                fragment.merge(supplementary);
+                supplementary.reads().forEach(x -> fragment.addRead(x));
             else
                 partitionCache.Supplementaries.put(supplementary.id(), supplementary);
         }
@@ -202,7 +196,6 @@ public class GroupCombiner
     {
         mProcessedPartitions.add(chrPartition);
 
-        // write unmatched local supplementaries
         PartitionCache partitionCache = getOrCreatePartitionCache(chrPartition);
 
         // remove fragment status since no longer required
@@ -210,6 +203,7 @@ public class GroupCombiner
 
         if(mSingleChromosome)
         {
+            // write unmatched local supplementaries
             for(Fragment fragment : partitionCache.Supplementaries.values())
             {
                 if(fragment.status() == SUPPLEMENTARY)
@@ -233,35 +227,6 @@ public class GroupCombiner
             }
         }
     }
-
-    /*
-    public void gatherPartitionFragments(
-            final String chrPartition, final BaseRegion partitionRegion, final List<Fragment> resolvedFragments)
-    {
-        if(mMultiChromosomes)
-        {
-            BM_LOGGER.error("remote GC called local function for partition({})", chrPartition);
-            return;
-        }
-
-        PartitionCache partitionCache = getOrCreatePartitionCache(chrPartition);
-
-        for(Fragment fragment : partitionCache.Supplementaries.values())
-        {
-            if(fragment.status() == SUPPLEMENTARY)
-            {
-                mRecordWriter.writeFragment(fragment);
-                BM_LOGGER.debug("supplementary({}) in local GC unmatched", readToString(fragment.reads().get(0)));
-            }
-        }
-
-        partitionCache.Supplementaries.clear();
-
-        // partitionCache.clear(); // keep resolved status for subsequent reads
-
-        mProcessedPartitions.add(chrPartition);
-    }
-    */
 
     public void handleRemaining()
     {

@@ -64,7 +64,7 @@ public class FragmentUtilsTest
         read.setMateNegativeStrandFlag(true);
         read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
 
-        FragmentCoordinates fragmentCoords = getFragmentCoordinates(read);
+        FragmentCoordinates fragmentCoords = getFragmentCoordinates(read, true);
         assertEquals("1_100_1_299_R", fragmentCoords.Key);
         assertEquals(100, fragmentCoords.InitialPosition);
 
@@ -74,9 +74,13 @@ public class FragmentUtilsTest
         read.setMateNegativeStrandFlag(false);
         read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
 
-        fragmentCoords = getFragmentCoordinates(read);
+        fragmentCoords = getFragmentCoordinates(read, true);
         assertEquals("1_200_2_100", fragmentCoords.Key);
         assertEquals(200, fragmentCoords.InitialPosition);
+
+        fragmentCoords = getFragmentCoordinates(read, false);
+        assertEquals("2_100_1_200", fragmentCoords.Key);
+        assertEquals(100, fragmentCoords.InitialPosition);
 
         // mate in earlier position
         read = createSamRecord(TEST_READ_ID, CHR_1, 200, TEST_READ_BASES, "100M", CHR_1, 100,
@@ -84,7 +88,7 @@ public class FragmentUtilsTest
         read.setMateNegativeStrandFlag(true);
         read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
 
-        fragmentCoords = getFragmentCoordinates(read);
+        fragmentCoords = getFragmentCoordinates(read, true);
         assertEquals("1_199_R_1_200", fragmentCoords.Key);
         assertEquals(-199, fragmentCoords.InitialPosition);
     }

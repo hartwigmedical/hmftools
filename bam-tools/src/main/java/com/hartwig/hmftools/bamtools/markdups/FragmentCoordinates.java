@@ -7,6 +7,8 @@ public class FragmentCoordinates
     public final String Key;
     public final int InitialPosition; // negative/reverse strand positions are negated
 
+    public static final FragmentCoordinates NO_COORDS = new FragmentCoordinates("", 0);
+
     public FragmentCoordinates(final String key, final int initialPosition)
     {
         Key = key;

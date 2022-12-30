@@ -4,13 +4,13 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
-import static com.hartwig.hmftools.bamtools.BmConfig.ITEM_DELIM;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.SUPPLEMENTARY;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
 import static com.hartwig.hmftools.bamtools.markdups.ReadOutput.DUPLICATES;
 import static com.hartwig.hmftools.bamtools.markdups.ReadOutput.MISMATCHES;
 import static com.hartwig.hmftools.bamtools.markdups.ReadOutput.NONE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -141,10 +141,9 @@ public class RecordWriter
         }
 
         fragment.setReadWritten();
-        fragment.reads().forEach(x -> doWriteRecord(x, fragment.status()));
+        fragment.reads().forEach(x -> writeRecord(x, fragment.status()));
     }
 
-    public synchronized void writeCachedFragments(final List<Fragment> fragments) { fragments.forEach(x -> doWriteCachedFragment(x)); }
     public synchronized void writeCachedFragment(final Fragment fragment) { doWriteCachedFragment(fragment); }
 
     private void doWriteCachedFragment(final Fragment fragment)
@@ -162,12 +161,7 @@ public class RecordWriter
         }
     }
 
-    public synchronized void writeRecord(final SAMRecord read, FragmentStatus fragmentStatus)
-    {
-        doWriteRecord(read, fragmentStatus);
-    }
-
-    private void doWriteRecord(final SAMRecord read, FragmentStatus fragmentStatus)
+    private void writeRecord(final SAMRecord read, FragmentStatus fragmentStatus)
     {
         if(mConfig.runReadChecks())
         {
@@ -199,7 +193,7 @@ public class RecordWriter
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("ReadId,Chromosome,PosStart,PosEnd,Cigar");
-            writer.write(",InsertSize,MateChr,MatePosStart,Duplicate,CalcDuplicate,MapQual,SuppData,Flags");
+            writer.write(",InsertSize,MateChr,MatePosStart,Duplicate,CalcDuplicate,MateCigar,MapQual,SuppData,Flags");
             writer.write(",FirstInPair,ReadReversed,Proper,Unmapped,MateUnmapped,Supplementary,Secondary");
 
             writer.newLine();
@@ -237,9 +231,10 @@ public class RecordWriter
 
             SupplementaryReadData suppData = SupplementaryReadData.from(read.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
-            mReadWriter.write(format(",%d,%s,%d,%s,%s,%d,%s,%d",
-                    abs(read.getInferredInsertSize()), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getDuplicateReadFlag(),
-                    fragmentStatus, read.getMappingQuality(), suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
+            mReadWriter.write(format(",%d,%s,%d,%s,%s,%s,%d,%s,%d",
+                    abs(read.getInferredInsertSize()), read.getMateReferenceName(), read.getMateAlignmentStart(),
+                    read.getDuplicateReadFlag(), fragmentStatus, read.hasAttribute(MATE_CIGAR_ATTRIBUTE),
+                    read.getMappingQuality(), suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
 
             mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s",
                     read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), read.getProperPairFlag(), read.getReadUnmappedFlag(),

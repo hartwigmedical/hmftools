@@ -12,24 +12,11 @@ public class CandidateDuplicates
     public final int Position;
     public final List<Fragment> Fragments;
 
-    public CandidateDuplicates(final Fragment fragment)
-    {
-        this(fragment.initialPosition(), fragment);
-    }
-
     public CandidateDuplicates(int position, final Fragment fragment)
     {
         Fragments = Lists.newArrayList(fragment);
         Position = position;
     }
-
-    /*
-    public CandidateDuplicates(int position, final List<Fragment> fragments)
-    {
-        Fragments = fragments;
-        Position = position;
-    }
-    */
 
     public String toString()
     {

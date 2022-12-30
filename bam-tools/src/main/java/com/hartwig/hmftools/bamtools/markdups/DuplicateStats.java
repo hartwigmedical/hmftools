@@ -3,8 +3,6 @@ package com.hartwig.hmftools.bamtools.markdups;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.List;
 import java.util.Map;
@@ -13,8 +11,9 @@ import com.google.common.collect.Maps;
 
 public class DuplicateStats
 {
-    public int ReadCount;
-    public int Duplicates;
+    public long ReadCount;
+    public long Duplicates;
+    public long NoMateCigar;
 
     public Map<Integer,Integer> DuplicateFrequencies;
 
@@ -22,6 +21,7 @@ public class DuplicateStats
     {
         ReadCount = 0;
         Duplicates = 0;
+        NoMateCigar = 0;
         DuplicateFrequencies = Maps.newHashMap();
     }
 
@@ -29,6 +29,7 @@ public class DuplicateStats
     {
         ReadCount += other.ReadCount;
         Duplicates += other.Duplicates;
+        NoMateCigar += other.NoMateCigar;
 
         for(Map.Entry<Integer,Integer> entry : other.DuplicateFrequencies.entrySet())
         {
@@ -54,8 +55,15 @@ public class DuplicateStats
         DuplicateFrequencies.put(rounded, count == null ? 1 : count + 1);
     }
 
-    public void addDuplicateFrequencies(final List<Fragment> fragments)
+    public void addDuplicateInfo(final List<Fragment> fragments)
     {
-        fragments.stream().filter(x -> x.status() == PRIMARY).forEach(x -> addFrequency(x.duplicateCount() + 1));
+        for(Fragment fragment : fragments)
+        {
+            if(fragment.status() == PRIMARY)
+                addFrequency(fragment.duplicateCount() + 1);
+
+            if(fragment.status().isDuplicate())
+                ++Duplicates;
+        }
     }
 }
