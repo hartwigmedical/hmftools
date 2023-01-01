@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
+import static com.hartwig.hmftools.bamtools.markdups.FragmentCoordinates.NO_COORDS;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.calcBaseQualAverage;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.findPrimaryFragment;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.getFragmentCoordinates;
@@ -48,6 +49,7 @@ public class FragmentUtilsTest
         ucPos = getUnclippedPosition(read);
         assertEquals(194, ucPos);
 
+        // test coordinates from CIGAR strings
         String cigarStr = "5S100M5S";
         ucPos = getUnclippedPosition(100, cigarStr, true);
         assertEquals(95, ucPos);
@@ -59,6 +61,16 @@ public class FragmentUtilsTest
         ucPos = getUnclippedPosition(100, cigarStr, false);
         assertEquals(154, ucPos);
 
+        // RNA
+        cigarStr = "5S60M2000N40M10S";
+        ucPos = getUnclippedPosition(100, cigarStr, true); // -5
+        assertEquals(95, ucPos);
+
+        ucPos = getUnclippedPosition(100, cigarStr, false); // +60, +2000, +40, +10
+        assertEquals(2209, ucPos);
+
+
+        // test coordinates from reads
         read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "100M", CHR_1, 200,
                 false, false, null);
         read.setMateNegativeStrandFlag(true);
@@ -91,6 +103,21 @@ public class FragmentUtilsTest
         fragmentCoords = getFragmentCoordinates(read, true);
         assertEquals("1_199_R_1_200", fragmentCoords.Key);
         assertEquals(-199, fragmentCoords.InitialPosition);
+
+        // unmapped mate
+        read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "100M", "", 0,
+                false, false, null);
+
+        fragmentCoords = getFragmentCoordinates(read, true);
+        assertEquals("1_100", fragmentCoords.Key);
+        assertEquals(100, fragmentCoords.InitialPosition);
+
+        // missing mate CIGAR attribute
+        read = createSamRecord(TEST_READ_ID, CHR_1, 200, TEST_READ_BASES, "100M", CHR_1, 100,
+                false, false, null);
+
+        fragmentCoords = getFragmentCoordinates(read, true);
+        assertEquals(NO_COORDS, fragmentCoords);
     }
 
     @Test

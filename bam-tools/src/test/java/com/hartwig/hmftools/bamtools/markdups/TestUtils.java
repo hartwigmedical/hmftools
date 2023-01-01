@@ -72,21 +72,6 @@ public final class TestUtils
         return new Fragment(read);
     }
 
-    public static Fragment createFragmentPair(
-            final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final String mateChr,
-            int mateStart, boolean isReversed)
-    {
-        SAMRecord read = createSamRecord(readId, chrStr, readStart, readBases, cigar, mateChr, mateStart,
-                isReversed, false, null);
-
-        SAMRecord readMate = createSamRecord(readId, mateChr, mateStart, readBases, cigar, chrStr, readStart,
-                !isReversed, false, null);
-
-        Fragment fragment = new Fragment(read);
-        fragment.addRead(readMate);
-        return fragment;
-    }
-
     public static SAMRecord createSamRecord(
             final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final String mateChr,
             int mateStart, boolean isReversed, boolean isSupplementary, final SupplementaryReadData suppAlignment)

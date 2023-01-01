@@ -141,7 +141,7 @@ public class RecordWriter
         }
 
         fragment.setReadWritten();
-        fragment.reads().forEach(x -> writeRecord(x, fragment.status()));
+        fragment.reads().forEach(x -> writeRead(x, fragment));
     }
 
     public synchronized void writeCachedFragment(final Fragment fragment) { doWriteCachedFragment(fragment); }
@@ -161,7 +161,7 @@ public class RecordWriter
         }
     }
 
-    private void writeRecord(final SAMRecord read, FragmentStatus fragmentStatus)
+    private void writeRead(final SAMRecord read, final Fragment fragment)
     {
         if(mConfig.runReadChecks())
         {
@@ -175,9 +175,9 @@ public class RecordWriter
             }
         }
 
-        writeReadData(read, fragmentStatus);
+        writeReadData(read, fragment);
 
-        read.setDuplicateReadFlag(fragmentStatus == DUPLICATE); // overwrite any existing status
+        read.setDuplicateReadFlag(fragment.status() == DUPLICATE); // overwrite any existing status
 
         mBamWriter.writeRecord(read);
     }
@@ -193,8 +193,8 @@ public class RecordWriter
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("ReadId,Chromosome,PosStart,PosEnd,Cigar");
-            writer.write(",InsertSize,MateChr,MatePosStart,Duplicate,CalcDuplicate,MateCigar,MapQual,SuppData,Flags");
-            writer.write(",FirstInPair,ReadReversed,Proper,Unmapped,MateUnmapped,Supplementary,Secondary");
+            writer.write(",InsertSize,MateChr,MatePosStart,Duplicate,CalcDuplicate,MateCigar,Coords,AvgBaseQual,MapQual,SuppData");
+            writer.write(",Flags,FirstInPair,ReadReversed,Proper,Unmapped,MateUnmapped,Supplementary,Secondary");
 
             writer.newLine();
 
@@ -208,19 +208,19 @@ public class RecordWriter
         return null;
     }
 
-    private void writeReadData(final SAMRecord read, FragmentStatus fragmentStatus)
+    private void writeReadData(final SAMRecord read, final Fragment fragment)
     {
         if(mReadWriter == null)
             return;
 
         if(mConfig.LogReadType == DUPLICATES)
         {
-            if(!read.getDuplicateReadFlag() && fragmentStatus == FragmentStatus.NONE)
+            if(!read.getDuplicateReadFlag() && !fragment.status().isDuplicate())
                 return;
         }
         else if(mConfig.LogReadType == MISMATCHES)
         {
-            if(read.getDuplicateReadFlag() == (fragmentStatus == DUPLICATE))
+            if(read.getDuplicateReadFlag() == (fragment.status() == DUPLICATE))
                 return;
         }
 
@@ -231,10 +231,10 @@ public class RecordWriter
 
             SupplementaryReadData suppData = SupplementaryReadData.from(read.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
-            mReadWriter.write(format(",%d,%s,%d,%s,%s,%s,%d,%s,%d",
+            mReadWriter.write(format(",%d,%s,%d,%s,%s,%s,%s,%.2f,%d,%s,%d",
                     abs(read.getInferredInsertSize()), read.getMateReferenceName(), read.getMateAlignmentStart(),
-                    read.getDuplicateReadFlag(), fragmentStatus, read.hasAttribute(MATE_CIGAR_ATTRIBUTE),
-                    read.getMappingQuality(), suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
+                    read.getDuplicateReadFlag(), fragment.status(), read.hasAttribute(MATE_CIGAR_ATTRIBUTE), fragment.coordinates().Key,
+                    fragment.averageBaseQual(), read.getMappingQuality(), suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
 
             mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s",
                     read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), read.getProperPairFlag(), read.getReadUnmappedFlag(),

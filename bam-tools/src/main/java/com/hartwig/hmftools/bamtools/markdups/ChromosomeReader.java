@@ -222,7 +222,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
                     */
                 }
 
-                if(!read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
+                if(read.getReadPairedFlag() && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
                     ++mStats.NoMateCigar;
             }
         }

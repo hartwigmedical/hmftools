@@ -95,7 +95,7 @@ public class FragmentUtils
         for(int i = 0; i < cigarStr.length(); ++i)
         {
             char c = cigarStr.charAt(i);
-            boolean isAddItem = (c == 'D' || c == 'M' || c == 'S');
+            boolean isAddItem = (c == 'D' || c == 'M' || c == 'S' || c == 'N');
 
             if(isAddItem)
             {
@@ -225,7 +225,7 @@ public class FragmentUtils
             }
         }
 
-        return readBaseCount > 0 ? (int)round(readBaseQualTotal / (double)readBaseCount) : 0;
+        return readBaseCount > 0 ? readBaseQualTotal / (double)readBaseCount : 0;
     }
 
     private static final String CHR_PARTITION_DELIM = "_";
