@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
 import static com.hartwig.hmftools.bamtools.markdups.ResolvedFragmentState.fragmentState;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import java.util.Collections;
 import java.util.List;
@@ -103,17 +102,13 @@ public class PartitionData
                 return;
         }
 
-        int processedReads = fragment.readCount();
-        int expectedReads = fragment.expectedReadCount();
+        ResolvedFragmentState resolvedState = fragmentState(fragment);
 
-        if(processedReads >= expectedReads)
+        if(!resolvedState.isValid())
         {
-            BM_LOGGER.error("fragment({}) invalid state: reads expected({}) processed({})",
-                    fragment, expectedReads, processedReads);
-            return;
+            BM_LOGGER.error("fragment({}) invalid state({})", fragment, resolvedState);
         }
 
-        ResolvedFragmentState resolvedState = fragmentState(fragment);
         mFragmentStatus.put(fragment.id(), resolvedState);
     }
 
@@ -243,7 +238,13 @@ public class PartitionData
             // store this new resolved state if more reads are expected for the fragment
             if(!fragment.allReadsPresent())
             {
-                ResolvedFragmentState resolvedState = fragmentState(fragment);;
+                ResolvedFragmentState resolvedState = fragmentState(fragment);
+
+                if(!resolvedState.isValid())
+                {
+                    BM_LOGGER.error("fragment({}) invalid state({})", fragment, resolvedState);
+                }
+
                 mFragmentStatus.put(fragment.id(), resolvedState);
             }
         }
@@ -258,7 +259,7 @@ public class PartitionData
 
         // not under lock since called only when all partitions are complete
         BM_LOGGER.debug("final partition({}) state: incomplete({}) positions({}) resolved({})",
-                mIncompleteFragments.size(), mCandidateDuplicatesMap.size(), mFragmentStatus.size());
+                mChrPartition, mIncompleteFragments.size(), mCandidateDuplicatesMap.size(), mFragmentStatus.size());
 
         List<Fragment> remainingFragments = mIncompleteFragments.values().stream().collect(Collectors.toList());
 

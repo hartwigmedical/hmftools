@@ -41,19 +41,14 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private final RecordWriter mRecordWriter;
     private final ReadPositionsCache mReadPositions;
 
-    // supplementaries and higher mater reads with primary reads (and their duplicate status) in another partition
-    private final List<Fragment> mPartitionIncompleteFragments;
-
-    // resolved fragments with supplementaries in another partition
-    private final Map<String,Fragment> mPartitionResolvedFragments;
-
     private final boolean mLogReadIds;
     private int mTotalRecordCount;
     private int mPartitionRecordCount;
     private int mMaxPositionFragments;
-    private final Set<SAMRecord> mReadsProcessed;
     private final DuplicateStats mStats;
     private final PerformanceCounter mPerfCounter;
+
+    private final Set<SAMRecord> mReadsProcessed; // for debug only when running checks
 
     public ChromosomeReader(
             final ChrBaseRegion region, final MarkDupsConfig config, final RecordWriter recordWriter,
@@ -71,9 +66,6 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mBamSlicer.setKeepUnmapped();
 
         mReadPositions = new ReadPositionsCache(region.Chromosome, config.BufferSize, this);
-
-        mPartitionIncompleteFragments = Lists.newArrayList();
-        mPartitionResolvedFragments = Maps.newHashMap();
 
         if(!mConfig.SpecificRegions.isEmpty())
         {
@@ -144,12 +136,9 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         mPerfCounter.stop();
 
-        BM_LOGGER.debug("partition({}:{}) complete, reads({}) remotes cached(supps={} resolved={}) maxPosFrags({})",
-                mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount, mPartitionIncompleteFragments.size(), mPartitionResolvedFragments.size(),
-                mMaxPositionFragments);
+        BM_LOGGER.debug("partition({}:{}) complete, reads({}) maxPosFrags({})",
+                mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount, mMaxPositionFragments);
 
-        mPartitionResolvedFragments.clear();
-        mPartitionIncompleteFragments.clear();
         mPartitionRecordCount = 0;
         mMaxPositionFragments = 0;
 

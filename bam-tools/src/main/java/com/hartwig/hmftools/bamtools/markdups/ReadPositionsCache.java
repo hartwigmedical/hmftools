@@ -170,6 +170,8 @@ public class ReadPositionsCache
             {
                 ++flushedElements;
 
+                element.Fragments.forEach(x -> mFragments.remove(x.id())); // need remove frags first since the processing can remove elements
+
                 mReadGroupHandler.accept(element.Fragments);
 
                 mForwardPositions[mMinPositionIndex] = null;
@@ -198,6 +200,7 @@ public class ReadPositionsCache
             {
                 flushedPositions.add(entry.getKey());
 
+                entry.getValue().Fragments.forEach(x -> mFragments.remove(x.id()));
                 mReadGroupHandler.accept(entry.getValue().Fragments);
             }
         }

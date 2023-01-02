@@ -76,6 +76,13 @@ class ResolvedFragmentState
         }
     }
 
+    public boolean isValid()
+    {
+        // can receive a supplementary for a mate before the mate is received
+        return ProcessedSupplementaries <= 2 && ExpectedSupplementaries <= 2;
+        // return ProcessedSupplementaries <= ExpectedSupplementaries && ExpectedSupplementaries <= 2;
+    }
+
     public String toString() { return format("status(%s) mate(%s) supps(%d/%d)",
             Status, MateReceived ? "received" : "pending", ProcessedSupplementaries, ExpectedSupplementaries); }
 }

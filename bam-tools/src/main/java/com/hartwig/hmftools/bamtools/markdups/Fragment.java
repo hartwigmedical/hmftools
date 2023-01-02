@@ -27,11 +27,6 @@ public class Fragment
     private final List<SAMRecord> mReads; // consider making an array of 4 (or less for BNDs)
     private FragmentCoordinates mCoordinates;
 
-    // private String mBasePartition; // partition of the lowest non-supplementary read
-
-    @Deprecated
-    private List<String> mRemotePartitions; // partitions outside of the initial read's partition. currently only used for supplementaries
-
     private boolean mReadsWritten;
 
     private double mAverageBaseQual;
@@ -43,8 +38,6 @@ public class Fragment
 
         mReads = Lists.newArrayListWithCapacity(2);
         mReads.add(read);
-
-        // mBasePartition = null;
 
         if(!read.getSupplementaryAlignmentFlag())
         {
@@ -74,7 +67,6 @@ public class Fragment
 
         mAverageBaseQual = 0;
         mDuplicateCount = 0;
-        mRemotePartitions = null;
         mReadsWritten = false;
     }
 
@@ -113,12 +105,6 @@ public class Fragment
         checkComplete();
     }
 
-    // public String basePartition() { return mBasePartition; }
-    // public void setBasePartition(final String partition) { mBasePartition = partition; }
-
-    public boolean hasRemotePartitions() { return mRemotePartitions != null; }
-    public List<String> remotePartitions() { return mRemotePartitions; }
-
     public static String getBasePartition(final SAMRecord read, final int partitionSize)
     {
         if(read.getSupplementaryAlignmentFlag())
@@ -145,58 +131,6 @@ public class Fragment
         return readLowerPos ?
                 formChromosomePartition(read.getReferenceName(), read.getAlignmentStart(), partitionSize)
                 : formChromosomePartition(read.getMateReferenceName(), read.getMateAlignmentStart(), partitionSize);
-    }
-
-    public void setRemotePartitions(final BaseRegion currentPartition)
-    {
-        mRemotePartitions = null;
-
-        Set<String> chrPartitions = Sets.newHashSet();
-        String chromosome = mReads.get(0).getContig();
-        int partitionSize = currentPartition.baseLength();
-
-        for(SAMRecord read : mReads)
-        {
-            /*
-            if(read.getReadPairedFlag() && !read.getMateUnmappedFlag())
-            {
-                if(!read.getMateReferenceName().equals(chromosome) || !currentPartition.containsPosition(read.getMateAlignmentStart()))
-                {
-                    chrPartitions.add(formChromosomePartition(read.getMateReferenceName(), read.getMateAlignmentStart(), partitionSize));
-                }
-            }
-            */
-
-            if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
-            {
-                SupplementaryReadData suppData = SupplementaryReadData.from(read);
-                chrPartitions.add(formChromosomePartition(suppData.Chromosome, suppData.Position, partitionSize));
-            }
-        }
-
-        if(!chrPartitions.isEmpty())
-            mRemotePartitions = chrPartitions.stream().collect(Collectors.toList());
-    }
-
-    public int expectedReadCount()
-    {
-        int expectedSuppCount = 0;
-        int expectedNonSuppCount = 1;
-
-        for(SAMRecord read : mReads)
-        {
-            if(read.getReadPairedFlag() && !read.getMateUnmappedFlag())
-            {
-                expectedNonSuppCount = 2;
-            }
-
-            if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE) && !read.getSupplementaryAlignmentFlag())
-            {
-                ++expectedSuppCount;
-            }
-        }
-
-        return expectedNonSuppCount + expectedSuppCount;
     }
 
     private void checkComplete()
@@ -242,9 +176,8 @@ public class Fragment
 
     public String toString()
     {
-        return String.format("id(%s) reads(%d) status(%s) coords(%s) present(%s) remotePartitions(%s)",
+        return String.format("id(%s) reads(%d) status(%s) coords(%s) present(%s)",
                 id(), mReads.size(), mStatus, mCoordinates.Key,
-                mAllReadsPresent ? "all" : (mAllPrimaryReadsPresent ? "primary" : "incomplete"),
-                mRemotePartitions != null ? mRemotePartitions : "none");
+                mAllReadsPresent ? "all" : (mAllPrimaryReadsPresent ? "primary" : "incomplete"));
     }
 }
