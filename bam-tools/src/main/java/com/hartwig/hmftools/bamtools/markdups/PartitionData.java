@@ -9,10 +9,12 @@ import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragm
 import static com.hartwig.hmftools.bamtools.markdups.ResolvedFragmentState.fragmentState;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -249,23 +251,23 @@ public class PartitionData
         return resolvedFragments;
     }
 
-    /*
-    public List<Fragment> extractResolvedFragments()
+    public List<Fragment> extractRemainingFragments()
     {
-        try
-        {
-            List<Fragment> resolvedFragments = Lists.newArrayList(mResolvedFragments);
-            mResolvedFragments.clear();
+        if(mIncompleteFragments.isEmpty())
+            return Collections.EMPTY_LIST;
 
-            resolvedFragments.addAll(findResolvedFragments());
-            return resolvedFragments;
-        }
-        finally
-        {
-            mLock.unlock();
-        }
+        // not under lock since called only when all partitions are complete
+        BM_LOGGER.debug("final partition({}) state: incomplete({}) positions({}) resolved({})",
+                mIncompleteFragments.size(), mCandidateDuplicatesMap.size(), mFragmentStatus.size());
+
+        List<Fragment> remainingFragments = mIncompleteFragments.values().stream().collect(Collectors.toList());
+
+        mFragmentStatus.clear();
+        mIncompleteFragments.clear();
+        mCandidateDuplicatesMap.clear();
+
+        return remainingFragments;
     }
-    */
 
     public void clear()
     {

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 
@@ -35,6 +36,8 @@ public class PartitionDataStore
 
         return partitionCache;
     }
+
+    public List<PartitionData> partitions() {return mPartitionDataMap.values().stream().collect(Collectors.toList()); }
 
     public synchronized void checkPartitions()
     {

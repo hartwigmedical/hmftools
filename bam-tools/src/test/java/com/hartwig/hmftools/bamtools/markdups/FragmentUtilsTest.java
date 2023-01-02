@@ -48,10 +48,14 @@ public class FragmentUtilsTest
 
         ucPos = getUnclippedPosition(read);
         assertEquals(194, ucPos);
+    }
 
+    @Test
+    public void testFragmentCoordsFromCigars()
+    {
         // test coordinates from CIGAR strings
         String cigarStr = "5S100M5S";
-        ucPos = getUnclippedPosition(100, cigarStr, true);
+        int ucPos = getUnclippedPosition(100, cigarStr, true);
         assertEquals(95, ucPos);
 
         ucPos = getUnclippedPosition(100, cigarStr, false);
@@ -69,9 +73,8 @@ public class FragmentUtilsTest
         ucPos = getUnclippedPosition(100, cigarStr, false); // +60, +2000, +40, +10
         assertEquals(2209, ucPos);
 
-
         // test coordinates from reads
-        read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "100M", CHR_1, 200,
+        SAMRecord read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "100M", CHR_1, 200,
                 false, false, null);
         read.setMateNegativeStrandFlag(true);
         read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");

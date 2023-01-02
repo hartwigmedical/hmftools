@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -39,8 +38,6 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
     private final PartitionDataStore mPartitionDataStore;
-    private final GroupCombiner mRemoteGroupCombiner;
-    private final GroupCombiner mLocalGroupCombiner;
     private final RecordWriter mRecordWriter;
     private final ReadPositionsCache mReadPositions;
 
@@ -60,14 +57,12 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
     public ChromosomeReader(
             final ChrBaseRegion region, final MarkDupsConfig config, final RecordWriter recordWriter,
-            final GroupCombiner groupCombiner, PartitionDataStore partitionDataStore)
+            final PartitionDataStore partitionDataStore)
     {
         mConfig = config;
         mRegion = region;
         mPartitionDataStore = partitionDataStore;
-        mRemoteGroupCombiner = groupCombiner;
         mRecordWriter = recordWriter;
-        mLocalGroupCombiner = new GroupCombiner(mRecordWriter, true, false);
 
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
@@ -145,12 +140,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     {
         mReadPositions.evictAll();
 
-        // List<Fragment> resolvedFragments = mPartitionResolvedFragments.values().stream().collect(Collectors.toList());
-        // mLocalGroupCombiner.localPartitionComplete(mCurrentStrPartition);
-
         mStats.ReadCount += mPartitionRecordCount;
-
-        // mRemoteGroupCombiner.processPartitionFragments(mCurrentStrPartition, resolvedFragments, mPartitionIncompleteFragments);
 
         mPerfCounter.stop();
 
@@ -202,12 +192,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         {
             if(read.getSupplementaryAlignmentFlag() || !mReadPositions.processRead(read))
             {
-                // currently only supplementaries will not be stored against their initial fragment position or in an existing fragment
-                // processSupplementary(read);
-
                 Fragment fragment = new Fragment(read);
                 String basePartition = Fragment.getBasePartition(read, mConfig.PartitionSize);
-                // fragment.setBasePartition(basePartition);
 
                 PartitionData partitionData = mPartitionDataStore.getOrCreatePartitionData(basePartition);
                 List<Fragment> resolvedFragments = partitionData.processIncompleteFragment(fragment);
@@ -224,32 +210,6 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
             BM_LOGGER.error("read({}) exception: {}", readToString(read), e.toString());
             e.printStackTrace();
             System.exit(1);
-        }
-    }
-
-    private void processSupplementary(final SAMRecord read)
-    {
-        // supplementaries either get a resolved status from their primary, or are stored until it is available
-        Fragment fragment = new Fragment(read);
-        fragment.setRemotePartitions(mCurrentPartition);
-
-        if(fragment.hasRemotePartitions())
-        {
-            mPartitionIncompleteFragments.add(fragment);
-        }
-        else
-        {
-            // ERROR: means it won't be written??
-            Fragment existingFragment = mPartitionResolvedFragments.get(fragment.id());
-
-            if(existingFragment != null)
-            {
-                fragment.reads().forEach(x -> existingFragment.addRead(x));
-            }
-            else
-            {
-                mLocalGroupCombiner.localSupplementary(mCurrentStrPartition, fragment);
-            }
         }
     }
 
@@ -272,59 +232,6 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
             mStats.addDuplicateInfo(resolvedFragments);
             mRecordWriter.writeFragments(resolvedFragments);
         }
-
-
-        /*
-        if(candidateDuplicates != null)
-        {
-            candidateDuplicates.Fragments.forEach(x -> x.setBasePartition(mCurrentStrPartition));
-        }
-        */
-
-        /*
-        for(Fragment fragment : resolvedFragments)
-        {
-            if(fragment.allReadsPresent())
-                continue;
-
-            // fragment.setBasePartition(mCurrentStrPartition);
-
-
-            // resolved status is required for supplementaries only since mate reads are either in the same fragment or will
-            // be processed independently
-
-            // the resolved fragment will be passed to the local group combiner and its state stored & applied
-            fragment.setRemotePartitions(mCurrentPartition);
-
-            if(fragment.hasRemotePartitions())
-            {
-                if(!fragment.remotePartitions().stream().anyMatch(x -> x.equals(mCurrentPartition)))
-                {
-                    // only store it for the remote group combiner if it has remote partitions
-                    Fragment existingFragment = mPartitionResolvedFragments.get(fragment.id());
-
-                    if(existingFragment != null)
-                    {
-                        fragment.reads().forEach(x -> existingFragment.addRead(x));
-                        existingFragment.setRemotePartitions(mCurrentPartition);
-                    }
-                    else
-                    {
-                        mPartitionResolvedFragments.put(fragment.id(), fragment);
-                    }
-                }
-
-                if(fragment.remotePartitions().stream().anyMatch(x -> x.equals(mCurrentPartition)))
-                {
-                    // pass to the local combiner
-                    mLocalGroupCombiner.localResolvedFragment(mCurrentStrPartition, fragment);
-                }
-        }
-        */
-
-        // pass to the local combiner
-        // mLocalGroupCombiner.processPartitionFragments(mCurrentStrPartition, resolvedFragments, candidateDuplicatesList, Collections.EMPTY_LIST);
-
     }
 
     private void perfCounterStart()

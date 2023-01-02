@@ -263,11 +263,12 @@ public class FragmentUtils
 
         for(Fragment fragment : fragments)
         {
-            double groupBaseQual = calcBaseQualAverage(fragment);
+            double avgBaseQual = calcBaseQualAverage(fragment);
+            fragment.setAverageBaseQual(avgBaseQual);
 
-            if(groupBaseQual > maxBaseQual)
+            if(avgBaseQual > maxBaseQual)
             {
-                maxBaseQual = groupBaseQual;
+                maxBaseQual = avgBaseQual;
                 maxFragment = fragment;
             }
         }

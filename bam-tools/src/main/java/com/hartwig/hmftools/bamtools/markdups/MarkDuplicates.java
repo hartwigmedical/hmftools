@@ -54,7 +54,6 @@ public class MarkDuplicates
         RefGenomeCoordinates refGenomeCoordinates = mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
         RecordWriter recordWriter = new RecordWriter(mConfig);
-        GroupCombiner groupCombiner = new GroupCombiner(recordWriter, false, mConfig.UseInterimFiles);
         PartitionDataStore partitionDataStore = new PartitionDataStore(recordWriter);
         final List<Callable> callableList = Lists.newArrayList();
 
@@ -67,7 +66,7 @@ public class MarkDuplicates
 
             ChrBaseRegion chrBaseRegion = new ChrBaseRegion(chromosomeStr, 1, refGenomeCoordinates.Lengths.get(chromosome));
 
-            ChromosomeReader chromosomeReader = new ChromosomeReader(chrBaseRegion, mConfig, recordWriter, groupCombiner, partitionDataStore);
+            ChromosomeReader chromosomeReader = new ChromosomeReader(chrBaseRegion, mConfig, recordWriter, partitionDataStore);
             chromosomeReaders.add(chromosomeReader);
             callableList.add(chromosomeReader);
         }
@@ -75,8 +74,11 @@ public class MarkDuplicates
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
 
-        // groupCombiner.handleRemaining();
-        partitionDataStore.checkPartitions(); // final call
+        for(PartitionData partitionData : partitionDataStore.partitions())
+        {
+            List<Fragment> fragments = partitionData.extractRemainingFragments();
+            recordWriter.writeFragments(fragments);
+        }
 
         if(mConfig.UseInterimFiles)
         {
