@@ -18,6 +18,12 @@ public class CandidateDuplicates
         Position = position;
     }
 
+    public CandidateDuplicates(int position, final List<Fragment> fragments)
+    {
+        Fragments = fragments;
+        Position = position;
+    }
+
     public String toString()
     {
         return format("%d: fragments(%d)", Position, Fragments.size());

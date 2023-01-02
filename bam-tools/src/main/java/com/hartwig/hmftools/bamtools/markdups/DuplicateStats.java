@@ -13,7 +13,6 @@ public class DuplicateStats
 {
     public long ReadCount;
     public long Duplicates;
-    public long NoMateCigar;
 
     public Map<Integer,Integer> DuplicateFrequencies;
 
@@ -21,7 +20,6 @@ public class DuplicateStats
     {
         ReadCount = 0;
         Duplicates = 0;
-        NoMateCigar = 0;
         DuplicateFrequencies = Maps.newHashMap();
     }
 
@@ -29,7 +27,6 @@ public class DuplicateStats
     {
         ReadCount += other.ReadCount;
         Duplicates += other.Duplicates;
-        NoMateCigar += other.NoMateCigar;
 
         for(Map.Entry<Integer,Integer> entry : other.DuplicateFrequencies.entrySet())
         {
@@ -60,7 +57,7 @@ public class DuplicateStats
         for(Fragment fragment : fragments)
         {
             if(fragment.status() == PRIMARY)
-                addFrequency(fragment.duplicateCount() + 1);
+                addFrequency(fragment.duplicateCount());
 
             if(fragment.status().isDuplicate())
                 ++Duplicates;

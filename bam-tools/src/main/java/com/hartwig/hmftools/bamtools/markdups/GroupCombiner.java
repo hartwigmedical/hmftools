@@ -9,10 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 public class GroupCombiner
 {
@@ -48,7 +46,9 @@ public class GroupCombiner
     }
 
     public synchronized void processPartitionFragments(
-            final String chrPartition, final List<Fragment> resolvedFragments, final List<Fragment> supplementaries)
+            final String chrPartition, final List<Fragment> resolvedFragments,
+            final List<CandidateDuplicates> candidateDuplicatesList,
+            final List<Fragment> supplementaries)
     {
         // cache entries which are expecting further reads, otherwise combine reads from existing fragments and set resolved status
 
@@ -57,6 +57,11 @@ public class GroupCombiner
         for(Fragment fragment : resolvedFragments)
         {
             handleResolvedFragment(fragment, chrPartition);
+        }
+
+        for(CandidateDuplicates candidateDuplicates : candidateDuplicatesList)
+        {
+            // handleCandidateDuplicates(candidateDuplicates, partitionCache);
         }
 
         for(Fragment fragment : supplementaries)
@@ -77,6 +82,9 @@ public class GroupCombiner
 
     private void handleResolvedFragment(final Fragment fragment, final String chrPartition)
     {
+        if(fragment.allReadsPresent())
+            return;
+
         if(!fragment.hasRemotePartitions())
             return;
 
@@ -114,14 +122,14 @@ public class GroupCombiner
         if(partitionCache == null)
             return;
 
-        Fragment fragment = partitionCache.Supplementaries.get(resolvedFragment.id());
+        Fragment fragment = partitionCache.IncompleteFragments.get(resolvedFragment.id());
 
         if(fragment == null)
             return;
 
         fragment.setStatus(resolvedFragment.status());
         mRecordWriter.writeFragment(fragment);
-        partitionCache.Supplementaries.remove(resolvedFragment.id());
+        partitionCache.IncompleteFragments.remove(resolvedFragment.id());
     }
 
     private void storeResolvedStatus(final String chrPartition, final Fragment resolvedFragment)
@@ -153,7 +161,7 @@ public class GroupCombiner
 
     private void handleSupplementary(final Fragment supplementary, final PartitionCache partitionCache)
     {
-        String remotePartition = mMultiChromosomes ? supplementary.remotePartitions().get(0) : partitionCache.ChrPartition;
+        String remotePartition = mMultiChromosomes ? supplementary.remotePartitions().get(0) : partitionCache.mChrPartition;
 
         boolean processedPartition = mProcessedPartitions.contains(remotePartition);
 
@@ -178,12 +186,12 @@ public class GroupCombiner
             }
 
             // store supplementary for when this partition is processed
-            Fragment fragment = partitionCache.Supplementaries.get(supplementary.id());
+            Fragment fragment = partitionCache.IncompleteFragments.get(supplementary.id());
 
             if(fragment != null)
                 supplementary.reads().forEach(x -> fragment.addRead(x));
             else
-                partitionCache.Supplementaries.put(supplementary.id(), supplementary);
+                partitionCache.IncompleteFragments.put(supplementary.id(), supplementary);
         }
     }
 
@@ -204,7 +212,7 @@ public class GroupCombiner
         if(mSingleChromosome)
         {
             // write unmatched local supplementaries
-            for(Fragment fragment : partitionCache.Supplementaries.values())
+            for(Fragment fragment : partitionCache.IncompleteFragments.values())
             {
                 if(fragment.status() == SUPPLEMENTARY)
                 {
@@ -213,7 +221,7 @@ public class GroupCombiner
                 }
             }
 
-            partitionCache.Supplementaries.clear();
+            partitionCache.IncompleteFragments.clear();
         }
         else
         {
@@ -242,12 +250,12 @@ public class GroupCombiner
             {
                 for(Map.Entry<String,FragmentStatus> entry : partitionCache.FragmentStatus.entrySet())
                 {
-                    mRecordWriter.writeResolvedReadData(entry.getKey(), entry.getValue(), partitionCache.ChrPartition);
+                    mRecordWriter.writeResolvedReadData(entry.getKey(), entry.getValue(), partitionCache.mChrPartition);
                 }
             }
             else
             {
-                for(Fragment fragment : partitionCache.Supplementaries.values())
+                for(Fragment fragment : partitionCache.IncompleteFragments.values())
                 {
                     mRecordWriter.writeFragment(fragment);
                 }

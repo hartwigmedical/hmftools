@@ -1,22 +1,25 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentCoordinates.NO_COORDS;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentCoordinates.formCoordinate;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.jetbrains.annotations.Nullable;
@@ -45,41 +48,57 @@ public class FragmentUtils
         return position;
     }
 
-
-    public static FragmentCoordinates getFragmentCoordinates(final SAMRecord read, boolean orderCoordinates)
+    public static FragmentCoordinates getFragmentCoordinates(final List<SAMRecord> reads)
     {
-        boolean readForwardStrand = orientation(read) == POS_ORIENT;
+        SAMRecord firstRead = null;
+        SAMRecord mateRead = null;
 
-        int readCoordinate = read.getCigar() != null ?
-                getUnclippedPosition(read) : getUnclippedPosition(read.getAlignmentStart(), read.getCigarString(), readForwardStrand);
+        for(SAMRecord read : reads)
+        {
+            if(read.getSupplementaryAlignmentFlag())
+                continue;
+
+            if(firstRead == null)
+            {
+                firstRead = read;
+            }
+            else
+            {
+                mateRead = read;
+                break;
+            }
+        }
+
+        boolean readForwardStrand = orientation(firstRead) == POS_ORIENT;
+
+        int readCoordinate = firstRead.getCigar() != null ?
+                getUnclippedPosition(firstRead) : getUnclippedPosition(firstRead.getAlignmentStart(), firstRead.getCigarString(), readForwardStrand);
 
         int readStrandPosition = readForwardStrand ? readCoordinate : -readCoordinate;
-        String readCoordStr = formCoordinate(read.getReferenceName(), readCoordinate, readForwardStrand);
+        String readCoordStr = formCoordinate(firstRead.getReferenceName(), readCoordinate, readForwardStrand);
 
-        if(!read.getReadPairedFlag())
+        if(!firstRead.getReadPairedFlag())
             return new FragmentCoordinates(readCoordStr, readStrandPosition);
 
-        if(!read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
-            return NO_COORDS;
+        if(mateRead == null)
+            return new FragmentCoordinates(readCoordStr, readStrandPosition, true);
 
-        String mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
-        boolean mateForwardStrand = !read.getMateNegativeStrandFlag();
-        int mateCoordinate = getUnclippedPosition(read.getMateAlignmentStart(), mateCigar, mateForwardStrand);
+        boolean mateForwardStrand = orientation(mateRead) == POS_ORIENT;
+
+        int mateCoordinate = mateRead.getCigar() != null ?
+                getUnclippedPosition(mateRead) : getUnclippedPosition(mateRead.getAlignmentStart(), mateRead.getCigarString(), mateForwardStrand);
+
         int mateStrandPosition = mateForwardStrand ? mateCoordinate : -mateCoordinate;
-
-        String mateCoordStr = formCoordinate(read.getMateReferenceName(), mateCoordinate, mateForwardStrand);
-
-        if(!orderCoordinates)
-            return new FragmentCoordinates(readCoordStr + "_" + mateCoordStr, readStrandPosition);
+        String mateCoordStr = formCoordinate(mateRead.getReferenceName(), mateCoordinate, mateForwardStrand);
 
         boolean readLowerPos;
-        if(read.getReferenceIndex() == read.getMateReferenceIndex())
+        if(firstRead.getReferenceIndex() == firstRead.getMateReferenceIndex())
         {
             readLowerPos = readCoordinate <= mateCoordinate;
         }
         else
         {
-            readLowerPos = read.getReferenceIndex() < read.getMateReferenceIndex();
+            readLowerPos = firstRead.getReferenceIndex() < firstRead.getMateReferenceIndex();
         }
 
         return readLowerPos ?
@@ -87,91 +106,139 @@ public class FragmentUtils
                 : new FragmentCoordinates(mateCoordStr + "_" + readCoordStr, mateStrandPosition);
     }
 
-    public static int getUnclippedPosition(final int readStart, final String cigarStr, final boolean forwardStrand)
+    // public static final int PROXIMATE_MATE_INSERT_DIFF = 100;
+
+    public static FragmentStatus calcFragmentStatus(final Fragment first, final Fragment second)
     {
-        int currentPosition = readStart;
-        int elementLength = 0;
+        if(first.unpaired() != second.unpaired())
+            return NONE;
 
-        for(int i = 0; i < cigarStr.length(); ++i)
+        if(first.primaryReadsPresent() && second.primaryReadsPresent())
+            return first.coordinates().Key.equals(second.coordinates().Key) ? DUPLICATE : NONE;
+
+        if(first.initialPosition() != second.initialPosition())
+            return NONE;
+
+        // mate start positions must be within close proximity
+        SAMRecord firstRead = first.reads().get(0);
+        SAMRecord secondRead = second.reads().get(0);
+
+        if(!firstRead.getMateReferenceName().equals(secondRead.getMateReferenceName()))
+            return NONE;
+
+        if(firstRead.getMateNegativeStrandFlag() != secondRead.getMateNegativeStrandFlag())
+            return NONE;
+
+        return abs(firstRead.getMateAlignmentStart() - secondRead.getMateAlignmentStart()) < firstRead.getReadLength()
+                ? UNCLEAR : NONE;
+    }
+
+    public static void classifyFragments(
+            final List<Fragment> fragments, final List<Fragment> resolvedFragments,
+            @Nullable final List<CandidateDuplicates> candidateDuplicatesList)
+    {
+        // take all the fragments at this initial fragment position and classify them as duplicates, non-duplicates (NONE) or unclear
+        // note: all fragments will be given a classification, and resolved fragments are removed from the input fragment list
+
+        if(fragments.size() == 1)
         {
-            char c = cigarStr.charAt(i);
-            boolean isAddItem = (c == 'D' || c == 'M' || c == 'S' || c == 'N');
+            Fragment fragment = fragments.get(0);
+            fragment.setStatus(NONE);
+            resolvedFragments.add(fragment);
+            fragments.clear();
+            return;
+        }
 
-            if(isAddItem)
+        int fragmentCount = fragments.size();
+        Set<Fragment> possibleDuplicates = Sets.newHashSet();
+
+        int i = 0;
+        while(i < fragments.size())
+        {
+            Fragment fragment1 = fragments.get(i);
+
+            if(i == fragments.size() - 1)
             {
-                if(forwardStrand)
+                if(!possibleDuplicates.contains(fragment1))
                 {
-                    // back out the left clip if present
-                    return c == 'S' ? readStart - elementLength : readStart;
+                    fragment1.setStatus(NONE);
+                    resolvedFragments.add(fragment1);
+                    fragments.remove(i);
                 }
-
-                if(c == 'S' && readStart == currentPosition)
-                {
-                    // ignore left-clip when getting reverse strand position
-                }
-                else
-                {
-                    currentPosition += elementLength;
-                }
-
-                elementLength = 0;
-                continue;
+                break;
             }
 
-            int digit = c - '0';
-            if (digit >= 0 && digit <= 9)
+            List<Fragment> duplicateFragments = null;
+
+            int j = i + 1;
+            while(j < fragments.size())
             {
-                elementLength = elementLength * 10 + digit;
+                Fragment fragment2 = fragments.get(j);
+
+                FragmentStatus status = calcFragmentStatus(fragment1, fragment2);
+
+                if(status == DUPLICATE)
+                {
+                    fragment1.setStatus(status);
+                    fragment2.setStatus(status);
+
+                    if(duplicateFragments == null)
+                        duplicateFragments = Lists.newArrayList(fragment1);
+
+                    duplicateFragments.add(fragment2);
+                    fragments.remove(j);
+                    continue;
+                }
+
+                if(fragment1.status() != DUPLICATE && status == UNCLEAR)
+                {
+                    // the pair is a candidate for duplicates but without their mates it's unclear whether they will be
+                    possibleDuplicates.add(fragment1);
+                    possibleDuplicates.add(fragment2);
+                }
+
+                ++j;
+            }
+
+            if(fragment1.status().isDuplicate())
+            {
+                int dupCount = duplicateFragments.size();
+                duplicateFragments.forEach(x -> x.setDuplicateCount(dupCount));
+
+                resolvedFragments.addAll(duplicateFragments);
+                fragments.remove(i);
+
+                Fragment primary = findPrimaryFragment(duplicateFragments, true);
+                primary.setStatus(PRIMARY);
+
+                // apply UMI logic and create a consensus read here
+
+            }
+            else if(possibleDuplicates.contains(fragment1))
+            {
+                ++i;
             }
             else
             {
-                elementLength = 0;
+                fragment1.setStatus(NONE);
+                resolvedFragments.add(fragment1);
+                fragments.remove(i);
             }
         }
 
-        // always pointing to the start of the next element, so need to move back a base
-        return currentPosition - 1;
-    }
+        List<Fragment> unclearFragments = possibleDuplicates.stream().filter(y -> !resolvedFragments.contains(y)).collect(Collectors.toList());
+        unclearFragments.forEach(x -> x.setStatus(UNCLEAR));
 
-    @Nullable
-    public static Fragment checkDuplicateFragments(final Fragment fragment, final List<Fragment> fragments)
-    {
-        // checks this fragment for any duplicate match
-        // if not found, then store
-        // if found then return the lower average base qual, and store the other
-        for(int i = 0; i < fragments.size(); ++i)
+        if(candidateDuplicatesList != null && !unclearFragments.isEmpty())
         {
-            Fragment other = fragments.get(i);
-
-            if(other.coordinates().Key.equals(fragment.coordinates().Key))
-            {
-                int dupCount = other.duplicateCount() + 1;
-                other.setDuplicateCount(dupCount);
-                fragment.setDuplicateCount(dupCount);
-                fragment.setAverageBaseQual(calcBaseQualAverage(fragment));
-
-                if(other.status() == UNSET)
-                    other.setAverageBaseQual(calcBaseQualAverage(other));
-
-                if(fragment.averageBaseQual() > other.averageBaseQual())
-                {
-                    fragment.setStatus(PRIMARY);
-                    fragments.set(i, fragment);
-                    other.setStatus(DUPLICATE);
-                    return other;
-                }
-                else
-                {
-                    other.setStatus(PRIMARY);
-                    fragment.setStatus(DUPLICATE);
-                    return fragment;
-                }
-            }
+            candidateDuplicatesList.add(new CandidateDuplicates(unclearFragments.get(0).initialPosition(), unclearFragments));
         }
 
-        //  no match so store this fragment
-        fragments.add(fragment);
-        return null;
+        if(unclearFragments.size() + resolvedFragments.size() != fragmentCount)
+        {
+            BM_LOGGER.error("failed to classify all fragments: original({}) resolved({}) unclear({})",
+                    fragmentCount, resolvedFragments.size(), unclearFragments.size());
+        }
     }
 
     private static boolean hasDuplicates(final Fragment fragment)
@@ -290,5 +357,93 @@ public class FragmentUtils
         */
 
         return true;
+    }
+
+    // methods which are reliant on having mate CIGAR:
+    public static FragmentCoordinates getFragmentCoordinates(final SAMRecord read, boolean orderCoordinates)
+    {
+        boolean readForwardStrand = orientation(read) == POS_ORIENT;
+
+        int readCoordinate = read.getCigar() != null ?
+                getUnclippedPosition(read) : getUnclippedPosition(read.getAlignmentStart(), read.getCigarString(), readForwardStrand);
+
+        int readStrandPosition = readForwardStrand ? readCoordinate : -readCoordinate;
+        String readCoordStr = formCoordinate(read.getReferenceName(), readCoordinate, readForwardStrand);
+
+        if(!read.getReadPairedFlag())
+            return new FragmentCoordinates(readCoordStr, readStrandPosition);
+
+        if(!read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
+            return NO_COORDS;
+
+        String mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+        boolean mateForwardStrand = !read.getMateNegativeStrandFlag();
+        int mateCoordinate = getUnclippedPosition(read.getMateAlignmentStart(), mateCigar, mateForwardStrand);
+        int mateStrandPosition = mateForwardStrand ? mateCoordinate : -mateCoordinate;
+
+        String mateCoordStr = formCoordinate(read.getMateReferenceName(), mateCoordinate, mateForwardStrand);
+
+        if(!orderCoordinates)
+            return new FragmentCoordinates(readCoordStr + "_" + mateCoordStr, readStrandPosition);
+
+        boolean readLowerPos;
+        if(read.getReferenceIndex() == read.getMateReferenceIndex())
+        {
+            readLowerPos = readCoordinate <= mateCoordinate;
+        }
+        else
+        {
+            readLowerPos = read.getReferenceIndex() < read.getMateReferenceIndex();
+        }
+
+        return readLowerPos ?
+                new FragmentCoordinates(readCoordStr + "_" + mateCoordStr, readStrandPosition)
+                : new FragmentCoordinates(mateCoordStr + "_" + readCoordStr, mateStrandPosition);
+    }
+
+    public static int getUnclippedPosition(final int readStart, final String cigarStr, final boolean forwardStrand)
+    {
+        int currentPosition = readStart;
+        int elementLength = 0;
+
+        for(int i = 0; i < cigarStr.length(); ++i)
+        {
+            char c = cigarStr.charAt(i);
+            boolean isAddItem = (c == 'D' || c == 'M' || c == 'S' || c == 'N');
+
+            if(isAddItem)
+            {
+                if(forwardStrand)
+                {
+                    // back out the left clip if present
+                    return c == 'S' ? readStart - elementLength : readStart;
+                }
+
+                if(c == 'S' && readStart == currentPosition)
+                {
+                    // ignore left-clip when getting reverse strand position
+                }
+                else
+                {
+                    currentPosition += elementLength;
+                }
+
+                elementLength = 0;
+                continue;
+            }
+
+            int digit = c - '0';
+            if (digit >= 0 && digit <= 9)
+            {
+                elementLength = elementLength * 10 + digit;
+            }
+            else
+            {
+                elementLength = 0;
+            }
+        }
+
+        // always pointing to the start of the next element, so need to move back a base
+        return currentPosition - 1;
     }
 }

@@ -1,23 +1,18 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.checkDuplicateFragments;
-import static com.hartwig.hmftools.bamtools.markdups.TestUtils.DEFAULT_QUAL;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.calcFragmentStatus;
+import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createFragment;
-import static com.hartwig.hmftools.bamtools.markdups.TestUtils.setBaseQualities;
+import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 
 import org.junit.Test;
@@ -31,7 +26,6 @@ public class FragmentClassificationTest
         mReadIdGen = new ReadIdGenerator();
     }
 
-    /*
     @Test
     public void testFragmentPairStatus()
     {
@@ -63,6 +57,13 @@ public class FragmentClassificationTest
         frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, "101M", CHR_1, 201,
                 true, false, null);
 
+        // diff mate orientations
+        frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_CIGAR, false,
+                CHR_1, 200, false, TEST_READ_CIGAR);
+
+        frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_CIGAR, false,
+                CHR_1, 200, true, TEST_READ_CIGAR);
+
         assertEquals(NONE, calcFragmentStatus(frag1, frag2));
 
         // unpaired matching
@@ -93,8 +94,8 @@ public class FragmentClassificationTest
 
         assertEquals(DUPLICATE, calcFragmentStatus(frag1, frag2));
     }
-    */
 
+    /*
     @Test
     public void testFragmentDuplicates()
     {
@@ -165,4 +166,5 @@ public class FragmentClassificationTest
         assertEquals(PRIMARY, read4.status());
         assertEquals(3, read4.duplicateCount());
     }
+    */
 }

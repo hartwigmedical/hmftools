@@ -55,6 +55,7 @@ public class MarkDuplicates
 
         RecordWriter recordWriter = new RecordWriter(mConfig);
         GroupCombiner groupCombiner = new GroupCombiner(recordWriter, false, mConfig.UseInterimFiles);
+        PartitionDataStore partitionDataStore = new PartitionDataStore(recordWriter);
         final List<Callable> callableList = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
@@ -66,7 +67,7 @@ public class MarkDuplicates
 
             ChrBaseRegion chrBaseRegion = new ChrBaseRegion(chromosomeStr, 1, refGenomeCoordinates.Lengths.get(chromosome));
 
-            ChromosomeReader chromosomeReader = new ChromosomeReader(chrBaseRegion, mConfig, recordWriter, groupCombiner);
+            ChromosomeReader chromosomeReader = new ChromosomeReader(chrBaseRegion, mConfig, recordWriter, groupCombiner, partitionDataStore);
             chromosomeReaders.add(chromosomeReader);
             callableList.add(chromosomeReader);
         }
@@ -74,7 +75,8 @@ public class MarkDuplicates
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
 
-        groupCombiner.handleRemaining();
+        // groupCombiner.handleRemaining();
+        partitionDataStore.checkPartitions(); // final call
 
         if(mConfig.UseInterimFiles)
         {
@@ -91,7 +93,7 @@ public class MarkDuplicates
         DuplicateStats combinedStats = new DuplicateStats();
         chromosomeReaders.forEach(x -> combinedStats.merge(x.duplicateStats()));
 
-        BM_LOGGER.info("stats: duplicates({}) missingMateCigar({})", combinedStats.Duplicates, combinedStats.NoMateCigar);
+        BM_LOGGER.info("stats: duplicates({})", combinedStats.Duplicates);
 
         if(BM_LOGGER.isDebugEnabled())
         {

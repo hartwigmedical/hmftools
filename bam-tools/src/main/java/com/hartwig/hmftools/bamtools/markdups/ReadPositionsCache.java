@@ -4,20 +4,14 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentCoordinates.NO_COORDS;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.checkDuplicateFragments;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -31,14 +25,11 @@ public class ReadPositionsCache
     private final Map<Integer,CandidateDuplicates> mReversePositions;
     private final Map<String,Fragment> mFragments;
     private final Consumer<List<Fragment>> mReadGroupHandler;
-    private final List<Fragment> mResolvedFragments;
     private int mMinPosition;
     private int mMinPositionIndex;
     private int mLastFragmentLogCount;
     private int mLastLogReadCount;
     private final int mCapacity;
-
-    private final boolean mCombineFragments = false;
 
     public ReadPositionsCache(final String chromosome, int capacity, final Consumer<List<Fragment>> evictionHandler)
     {
@@ -48,7 +39,6 @@ public class ReadPositionsCache
         mForwardPositions = new CandidateDuplicates[mCapacity];
         mReversePositions = Maps.newHashMap();
         mFragments = Maps.newHashMap();
-        mResolvedFragments = Lists.newArrayList();
         mMinPosition = 0;
         mMinPositionIndex = 0;
         mLastFragmentLogCount = 0;
@@ -60,38 +50,27 @@ public class ReadPositionsCache
         // supplementaries aren't processed
         // check for an existing mate if on the same chromosome
         // store in a group of fragments with a matching first fragment coordinate
-        // check for duplicates with existing fragments, and if a duplicate the don't store and write immediately
+        // if the mate has a lower position or is on a lower chromosome, don't add it to a position group
         if(!read.getReadPairedFlag() || read.getMateUnmappedFlag())
         {
             storeInitialRead(read);
             return true;
         }
 
-        // mate is elsewhere so store this primary read
-        if(!read.getMateReferenceName().equals(mChromosome))
+        // skip if mate is on a lower chromosome
+        if(!read.getMateReferenceName().equals(mChromosome) && read.getReferenceIndex() > read.getMateReferenceIndex())
+            return false;
+
+        Fragment fragment = mFragments.get(read.getReadName());
+
+        if(fragment != null) // add to fragment is in a current group
         {
-            storeInitialRead(read);
+            fragment.addRead(read);
             return true;
         }
 
-        // check for the mate already cached and nearby
-        if(mCombineFragments)
-        {
-            Fragment fragment = mFragments.get(read.getReadName());
-
-            if(fragment != null)
-            {
-                fragment.addRead(read);
-                return true;
-            }
-
-            // if the mate was already processed earlier, then could skip checking its duplicate status again
-            // but for the sake of UMIs, they still need to be grouped with their duplicate reads
-            /*
-            if(read.getAlignmentStart() > read.getMateAlignmentStart())
-                return false;
-            */
-        }
+        if(read.getAlignmentStart() > read.getMateAlignmentStart()) // mate already processed and evicted
+            return false;
 
         storeInitialRead(read);
         return true;
@@ -99,29 +78,10 @@ public class ReadPositionsCache
 
     private void storeInitialRead(final SAMRecord read)
     {
+        ++mLastLogReadCount;
+
         Fragment fragment = new Fragment(read);
 
-        if(fragment.coordinates() == NO_COORDS)
-        {
-            // need to understand why this isn't set for some fragments
-            if(fragment.reads().get(0).getDuplicateReadFlag())
-                fragment.setStatus(DUPLICATE);
-            else
-                fragment.setStatus(NONE);
-
-            mResolvedFragments.add(fragment);
-
-            // store this fragment if its mate is in the same partition
-            if(mCombineFragments)
-            {
-                if(read.getMateReferenceName().equals(mChromosome))
-                    mFragments.put(read.getReadName(), fragment);
-            }
-
-            return;
-        }
-
-        ++mLastLogReadCount;
         int fragmentPosition = fragment.initialPosition();
 
         if(fragmentPosition > 0)
@@ -132,24 +92,7 @@ public class ReadPositionsCache
                 checkFlush(fragmentPosition);
         }
 
-        Fragment duplicateFragment = handleInitialFragment(fragment);
-
-        if(duplicateFragment != null)
-            mResolvedFragments.add(duplicateFragment);
-
-        if(mCombineFragments)
-        {
-            // store this fragment if its mate is in the same partition
-            if(read.getMateReferenceName().equals(mChromosome))
-                mFragments.put(read.getReadName(), fragment);
-        }
-    }
-
-    private Fragment handleInitialFragment(final Fragment fragment)
-    {
-        int fragmentPosition = fragment.initialPosition();
-
-        CandidateDuplicates element = null;
+        mFragments.put(read.getReadName(), fragment);
 
         if(fragmentPosition > 0)
         {
@@ -158,31 +101,34 @@ public class ReadPositionsCache
             if(index < 0 || index >= mCapacity)
             {
                 BM_LOGGER.error("fragment({}) outside forward strand array bounds", fragment);
-                return null;
+                return;
             }
 
-            element = mForwardPositions[index];
+            CandidateDuplicates element = mForwardPositions[index];
             if(element == null)
             {
                 element = new CandidateDuplicates(fragmentPosition, fragment);
                 mForwardPositions[index] = element;
-                return null;
+            }
+            else
+            {
+                element.Fragments.add(fragment);
             }
         }
         else
         {
             // store in reverse strand map
-            element = mReversePositions.get(fragmentPosition);
+            CandidateDuplicates element = mReversePositions.get(fragmentPosition);
             if(element == null)
             {
                 element = new CandidateDuplicates(fragmentPosition, fragment);
                 mReversePositions.put(fragmentPosition, element);
-                return null;
+            }
+            else
+            {
+                element.Fragments.add(fragment);
             }
         }
-
-        // check new fragment against existing for this position
-        return checkDuplicateFragments(fragment, element.Fragments);
     }
 
     private int calcIndex(int position)
@@ -224,7 +170,7 @@ public class ReadPositionsCache
             {
                 ++flushedElements;
 
-                mResolvedFragments.addAll(element.Fragments);
+                mReadGroupHandler.accept(element.Fragments);
 
                 mForwardPositions[mMinPositionIndex] = null;
             }
@@ -252,37 +198,11 @@ public class ReadPositionsCache
             {
                 flushedPositions.add(entry.getKey());
 
-                List<Fragment> fragments = entry.getValue().Fragments;
-
-                mResolvedFragments.addAll(fragments);
+                mReadGroupHandler.accept(entry.getValue().Fragments);
             }
         }
 
         flushedPositions.forEach(x -> mReversePositions.remove(x));
-
-        if(mCombineFragments)
-        {
-            // remove fragments if their mate isn't still expected on this chromosome
-            for(Fragment fragment : mResolvedFragments)
-            {
-                boolean keepFragment = false;
-
-                if(fragment.reads().size() == 1)
-                {
-                    SAMRecord read = fragment.reads().get(0);
-                    keepFragment = read.getReadPairedFlag() && read.getMateReferenceName().equals(mChromosome)
-                            && read.getAlignmentStart() <= read.getMateAlignmentStart();
-                }
-
-                if(!keepFragment)
-                    mFragments.remove(fragment.id());
-
-            }
-        }
-
-        mReadGroupHandler.accept(mResolvedFragments);
-
-        mResolvedFragments.clear();
 
         checkFragmentLog();
     }
@@ -296,16 +216,13 @@ public class ReadPositionsCache
             // clear and process each element and depth
             if(element != null)
             {
-                mResolvedFragments.addAll(element.Fragments);
+                mReadGroupHandler.accept(element.Fragments);
                 mForwardPositions[i] = null;
             }
         }
 
-        mReversePositions.values().forEach(x -> mResolvedFragments.addAll(x.Fragments));
+        mReversePositions.values().forEach(x -> mReadGroupHandler.accept(x.Fragments));
 
-        mReadGroupHandler.accept(mResolvedFragments);
-
-        mResolvedFragments.clear();
         mReversePositions.clear();
         mFragments.clear();
     }
