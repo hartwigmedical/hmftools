@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.findPrimaryFragment;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readInSpecifiedRegions;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
@@ -32,8 +33,6 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 {
     private final MarkDupsConfig mConfig;
     private final ChrBaseRegion mRegion;
-    private final BaseRegion mCurrentPartition;
-    private String mCurrentStrPartition;
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
@@ -41,10 +40,14 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private final RecordWriter mRecordWriter;
     private final ReadPositionsCache mReadPositions;
 
+    private final BaseRegion mCurrentPartition;
+    private String mCurrentStrPartition;
+    private PartitionData mCurrentPartitionData;
+    private final List<Fragment> mPendingIncompleteReads;
+
     private final boolean mLogReadIds;
     private int mTotalRecordCount;
     private int mPartitionRecordCount;
-    private int mMaxPositionFragments;
     private final DuplicateStats mStats;
     private final PerformanceCounter mPerfCounter;
 
@@ -79,9 +82,12 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         }
 
         mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
+        mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
+
+        mPendingIncompleteReads = Lists.newArrayList();
+
         mTotalRecordCount = 0;
         mPartitionRecordCount = 0;
-        mMaxPositionFragments = 0;
 
         mStats = new DuplicateStats();
 
@@ -132,21 +138,24 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     {
         mReadPositions.evictAll();
 
+        processIncompletes();
+
         mStats.ReadCount += mPartitionRecordCount;
 
         mPerfCounter.stop();
 
-        BM_LOGGER.debug("partition({}:{}) complete, reads({}) maxPosFrags({})",
-                mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount, mMaxPositionFragments);
+        BM_LOGGER.debug("partition({}:{}) complete, reads({})", mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount);
+
+        mCurrentPartitionData.logCacheCounts();
 
         mPartitionRecordCount = 0;
-        mMaxPositionFragments = 0;
 
         if(setupNext)
         {
             mCurrentPartition.setStart(mCurrentPartition.end() + 1);
             mCurrentPartition.setEnd(mCurrentPartition.start() + mConfig.PartitionSize);
             mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
+            mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
 
             perfCounterStart();
         }
@@ -182,17 +191,13 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
             if(read.getSupplementaryAlignmentFlag() || !mReadPositions.processRead(read))
             {
                 Fragment fragment = new Fragment(read);
-                String basePartition = Fragment.getBasePartition(read, mConfig.PartitionSize);
-
-                PartitionData partitionData = mPartitionDataStore.getOrCreatePartitionData(basePartition);
-                List<Fragment> resolvedFragments = partitionData.processIncompleteFragment(fragment);
-
-                if(fragment.status().isResolved())
-                    mRecordWriter.writeFragment(fragment);
-
-                if(resolvedFragments != null)
-                    mRecordWriter.writeFragments(resolvedFragments);
+                processIncompleteRead(fragment);
             }
+        }
+        catch(IllegalMonitorStateException e)
+        {
+            // cache this read and try again later on
+            mPendingIncompleteReads.add(new Fragment(read));
         }
         catch(Exception e)
         {
@@ -202,18 +207,76 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         }
     }
 
+    private void processIncompleteRead(final Fragment fragment)
+    {
+        String basePartition = Fragment.getBasePartition(fragment.reads().get(0), mConfig.PartitionSize);
+
+        PartitionData partitionData = basePartition.equals(mCurrentStrPartition) ?
+                mCurrentPartitionData : mPartitionDataStore.getOrCreatePartitionData(basePartition);
+
+        List<Fragment> resolvedFragments = partitionData.processIncompleteFragment(fragment);
+
+        if(fragment.status().isResolved())
+            mRecordWriter.writeFragment(fragment);
+
+        if(resolvedFragments != null)
+            mRecordWriter.writeFragments(resolvedFragments);
+    }
+
+    private void processIncompletes()
+    {
+        if(mPendingIncompleteReads.isEmpty())
+            return;
+
+        BM_LOGGER.debug("partition({}) processing {} pending incomplete fragment", mRegion, mPendingIncompleteReads.size());
+
+        for(Fragment fragment : mPendingIncompleteReads)
+        {
+            try
+            {
+                processIncompleteRead(fragment);
+            }
+            catch(Exception e)
+            {
+                BM_LOGGER.error("failed to process pending incomplete read({})", readToString(fragment.reads().get(0)));
+                mRecordWriter.writeFragment(fragment);
+            }
+        }
+
+        mPendingIncompleteReads.clear();
+    }
+
     public void accept(final List<Fragment> positionFragments)
     {
-        mMaxPositionFragments = max(mMaxPositionFragments, positionFragments.size());
-
         List<Fragment> resolvedFragments = Lists.newArrayList();
         List<CandidateDuplicates> candidateDuplicatesList = Lists.newArrayList();
 
+        int posFragmentCount = positionFragments.size();
+        boolean logDetails = posFragmentCount > 10000;
+        long startTimeMs = 0;
+        int position = 0;
+
+        if(logDetails)
+        {
+            position = positionFragments.get(0).initialPosition();
+            startTimeMs = System.currentTimeMillis();
+        }
+
         classifyFragments(positionFragments, resolvedFragments, candidateDuplicatesList);
+
+        if(logDetails)
+        {
+            long timeTakenMs = System.currentTimeMillis() - startTimeMs;
+
+            BM_LOGGER.debug("position({}:{}) fragments({}) resolved({}) candidates({}) time({})",
+                    mRegion.Chromosome, position, posFragmentCount, resolvedFragments.size(),
+                    candidateDuplicatesList != null && !candidateDuplicatesList.isEmpty() ?
+                            candidateDuplicatesList.get(0).Fragments.size() : "0", format("%.1fs", timeTakenMs / 1000.0));
+        }
 
         CandidateDuplicates candidateDuplicates = !candidateDuplicatesList.isEmpty() ? candidateDuplicatesList.get(0) : null;
 
-        mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition).processPrimaryFragments(resolvedFragments, candidateDuplicates);
+        mCurrentPartitionData.processPrimaryFragments(resolvedFragments, candidateDuplicates);
 
         if(!resolvedFragments.isEmpty())
         {

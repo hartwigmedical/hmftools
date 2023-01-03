@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
@@ -11,6 +12,7 @@ import static com.hartwig.hmftools.bamtools.markdups.ResolvedFragmentState.fragm
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -34,9 +36,8 @@ public class PartitionData
     // positions with candidate duplicate fragments, keyed by initial fragment coordinate position
     private final Map<Integer,List<Fragment>> mCandidateDuplicatesMap;
 
+    // any update to the maps is done under a lock
     private Lock mLock;
-
-    private static int MAX_FRAGMENT_READS = 4;
 
     public PartitionData(final String chrPartition)
     {
@@ -45,15 +46,6 @@ public class PartitionData
         mIncompleteFragments = Maps.newHashMap();
         mCandidateDuplicatesMap = Maps.newHashMap();
         mLock = new ReentrantLock();
-    }
-
-    public int incompleteFragments()
-    {
-        return mIncompleteFragments.size();
-    }
-    public int resolvedFragments()
-    {
-        return mFragmentStatus.size();
     }
 
     public void processPrimaryFragments(final List<Fragment> resolvedFragments, @Nullable final CandidateDuplicates candidateDuplicates)
@@ -79,6 +71,7 @@ public class PartitionData
         }
         finally
         {
+            checkCachedCounts();
             mLock.unlock();
         }
     }
@@ -112,14 +105,32 @@ public class PartitionData
         mFragmentStatus.put(fragment.id(), resolvedState);
     }
 
-    public List<Fragment> processIncompleteFragment(final Fragment fragment)
+    private boolean acquireLock()
     {
-        // a supplementary or higher mate read - returns any resolved fragments resulting from add this new read
-        List<Fragment> resolvedFragments = null;
-
         try
         {
-            mLock.lock();
+            return mLock.tryLock(2, TimeUnit.SECONDS);
+        }
+        catch(InterruptedException e)
+        {
+            BM_LOGGER.error(" partition({}) lock error: {}", mChrPartition, e.toString());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public List<Fragment> processIncompleteFragment(final Fragment fragment)
+    {
+        try
+        {
+            if(!acquireLock())
+            {
+                BM_LOGGER.warn("partition({}) process primary failed to acquire lock within time", mChrPartition);
+                return null;
+            }
+
+            // a supplementary or higher mate read - returns any resolved fragments resulting from add this new read
+            List<Fragment> resolvedFragments = null;
 
             // first look for a resolved status
             ResolvedFragmentState resolvedState = mFragmentStatus.get(fragment.id());
@@ -270,6 +281,40 @@ public class PartitionData
         return remainingFragments;
     }
 
+    private static final int LOG_CACHE_COUNT = 10000;
+    private long mLastCacheCount;
+
+    private void checkCachedCounts()
+    {
+        if(mLastCacheCount < LOG_CACHE_COUNT)
+            return;
+
+        long cacheCount = mIncompleteFragments.size() + mFragmentStatus.size();
+
+        if(abs(mLastCacheCount - cacheCount) < LOG_CACHE_COUNT)
+            return;
+
+        mLastCacheCount = cacheCount;
+
+        BM_LOGGER.debug("partition({}) state: incomplete({}) positions({}) resolved({})",
+                mChrPartition, mIncompleteFragments.size(), mCandidateDuplicatesMap.size(), mFragmentStatus.size());
+    }
+
+    public void logCacheCounts()
+    {
+        try
+        {
+            mLock.lock();
+
+            BM_LOGGER.debug("partition({}) state: incomplete({}) positions({}) resolved({})",
+                    mChrPartition, mIncompleteFragments.size(), mCandidateDuplicatesMap.size(), mFragmentStatus.size());
+        }
+        finally
+        {
+            mLock.unlock();
+        }
+    }
+
     public void clear()
     {
         try
@@ -286,12 +331,6 @@ public class PartitionData
         }
     }
 
-    public String toString()
-    {
-        return format("%s status(%d) frags(%d) positions(%d)",
-            mChrPartition, mFragmentStatus.size(), mIncompleteFragments.size(), mCandidateDuplicatesMap.size());
-    }
-
     @VisibleForTesting
     public Map<String,ResolvedFragmentState> fragmentStatusMap() { return mFragmentStatus; }
 
@@ -300,4 +339,12 @@ public class PartitionData
 
     @VisibleForTesting
     public Map<Integer,List<Fragment>> candidateDuplicatesMap() { return mCandidateDuplicatesMap; }
+
+        /*
+    public String toString()
+    {
+        return format("%s status(%d) frags(%d) positions(%d)",
+            mChrPartition, mFragmentStatus.size(), mIncompleteFragments.size(), mCandidateDuplicatesMap.size());
+    }
+    */
 }

@@ -266,7 +266,7 @@ public class ReadPositionsCache
 
         mLastFragmentLogCount = fragmentSize;
 
-        BM_LOGGER.debug("read cache: chr({} minPos={}) fragments({}) forward({}} frags={}) reverse({}} frags{}})",
+        BM_LOGGER.debug("read cache: chr({} minPos={}) fragments({}) forward({} frags={}) reverse({} frags={})",
                 mChromosome, mMinPosition, fragmentSize, forwardPositions, forwardFrags, mReversePositions.size(), reverseFrags);
     }
 }

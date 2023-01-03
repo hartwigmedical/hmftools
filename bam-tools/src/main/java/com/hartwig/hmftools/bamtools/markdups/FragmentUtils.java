@@ -133,6 +133,8 @@ public class FragmentUtils
                 ? UNCLEAR : NONE;
     }
 
+    private static final int HIGH_DEPTH_THRESHOLD = 10000;
+
     public static void classifyFragments(
             final List<Fragment> fragments, final List<Fragment> resolvedFragments,
             @Nullable final List<CandidateDuplicates> candidateDuplicatesList)
@@ -151,6 +153,8 @@ public class FragmentUtils
 
         int fragmentCount = fragments.size();
         Set<Fragment> possibleDuplicates = Sets.newHashSet();
+
+        boolean applyHighDepthLogic = fragmentCount > HIGH_DEPTH_THRESHOLD;
 
         int i = 0;
         while(i < fragments.size())
@@ -176,6 +180,9 @@ public class FragmentUtils
                 Fragment fragment2 = fragments.get(j);
 
                 FragmentStatus status = calcFragmentStatus(fragment1, fragment2);
+
+                if(applyHighDepthLogic && status == UNCLEAR && proximateFragmentSizes(fragment1, fragment2))
+                    status = DUPLICATE;
 
                 if(status == DUPLICATE)
                 {
@@ -239,6 +246,11 @@ public class FragmentUtils
             BM_LOGGER.error("failed to classify all fragments: original({}) resolved({}) unclear({})",
                     fragmentCount, resolvedFragments.size(), unclearFragments.size());
         }
+    }
+
+    private static boolean proximateFragmentSizes(final Fragment first, final Fragment second)
+    {
+        return abs(abs(first.reads().get(0).getInferredInsertSize()) - abs(second.reads().get(0).getInferredInsertSize())) <= 10;
     }
 
     private static boolean hasDuplicates(final Fragment fragment)
