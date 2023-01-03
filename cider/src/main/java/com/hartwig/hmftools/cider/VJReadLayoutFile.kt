@@ -17,7 +17,7 @@ object VJReadLayoutFile
     }
 
     @JvmStatic
-    fun writeLayouts(outputDir: String, sampleId: String, overlayMap: Map<VJGeneType, List<ReadLayout>>, minSoftClipBases: Int)
+    fun writeLayouts(outputDir: String, sampleId: String, overlayMap: Map<VJGeneType, List<ReadLayout>>)
     {
         val filePath = generateFilename(outputDir, sampleId)
 
@@ -55,17 +55,13 @@ object VJReadLayoutFile
         val numSplitReads10Bases = layout.reads.map { o -> vjReadLayoutAdaptor.toReadCandidate(o) }
             .count { o -> Math.max(o.leftSoftClip, o.rightSoftClip) >= 10 }
 
-        val anchorRange = vjReadLayoutAdaptor.getAnchorRange(geneType, layout)
-
-        // if there is no anchor within this layout then don't write it
-        if (anchorRange == null)
-            return
+        val anchorRange = vjReadLayoutAdaptor.getExtrapolatedAnchorRange(geneType.vj, layout)
 
         var sequence = layout.consensusSequence()
         var support = layout.highQualSupportString()
 
         // make sure aligned to codon
-        val codonAlignedSeq = sequence.drop(anchorRange.first % 3)
+        val codonAlignedSeq = sequence.drop(Math.floorMod(anchorRange.first, 3))
         val aa = insertDashes(Codons.aminoAcidFromBases(codonAlignedSeq), IntRange(anchorRange.first / 3, (anchorRange.last + 1) / 3 - 1))
 
         // insert - into the sequence and support

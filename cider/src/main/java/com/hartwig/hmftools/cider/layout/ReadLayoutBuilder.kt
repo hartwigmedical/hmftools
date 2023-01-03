@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cider.layout
 
+import com.hartwig.hmftools.cider.CiderConstants
 import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.collections.ArrayList
@@ -117,7 +118,8 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
                 return false
 
             // we only compare the CDR3 DNA part, the other part we ignore
-            return sequenceMatch(layout.highQualSequence, readData.sequence,
+            return sequenceMatch(layout.highConfidenceSequence(CiderConstants.MIN_VJ_LAYOUT_HIGH_QUAL_READ_FRACTION),
+                readData.sequence,
                 null, readData.baseQualities,
                 layoutOffsetStart, readOffsetStart,
                 n,

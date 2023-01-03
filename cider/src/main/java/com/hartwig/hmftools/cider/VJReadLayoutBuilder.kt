@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.layout.LayoutTree
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import htsjdk.samtools.SAMRecord
 import org.apache.logging.log4j.LogManager
@@ -8,12 +9,28 @@ import kotlin.collections.ArrayList
 
 // helper class to convert from the outer VJ classes to the layout classes
 // create an interface to make it easier to test
-interface IVJReadLayoutAdaptor
+abstract class IVJReadLayoutAdaptor
 {
     //fun toReadCandidate(read: ReadLayout.Read) : VJReadCandidate
-    fun getAnchorMatchMethod(layout: ReadLayout) : VJReadCandidate.MatchMethod
-    fun getTemplateAnchorSequence(layout: ReadLayout) : String
+    abstract fun getAnchorMatchMethod(layout: ReadLayout) : VJReadCandidate.MatchMethod
+    abstract fun getTemplateAnchorSequence(layout: ReadLayout) : String
+
+    // anchor range that can be outside the layout, by extrapolating it to what
+    // position the anchor should be
+    abstract fun getExtrapolatedAnchorRange(vj: VJ, layout: ReadLayout) : IntRange
+
+    // returns the part of the anchor range that is inside the layout, null if it is not
+    // inside
     fun getAnchorRange(vj: VJ, layout: ReadLayout) : IntRange?
+    {
+        val anchorRange = getExtrapolatedAnchorRange(vj, layout)
+
+        if (anchorRange.first >= layout.length || anchorRange.last < 0)
+            return null
+
+        // protect against 0 and end
+        return Math.max(0, anchorRange.first) until Math.min(anchorRange.last + 1, layout.length)
+    }
 }
 
 // This class is the mapper between the candidate reads and the layout object
@@ -30,7 +47,7 @@ interface IVJReadLayoutAdaptor
 //                                                          |___________________|
 //                                                                 J anchor
 // Most functions here rely on this.
-class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality: Int) : IVJReadLayoutAdaptor
+class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality: Int) : IVJReadLayoutAdaptor()
 {
     private class VjLayoutRead private constructor(
         val layoutReadSlice: ReadSlice,
@@ -176,7 +193,8 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         return readCandidates.maxByOrNull({ r -> r.similarityScore })?.templateAnchorSequence ?: ""
     }
 
-    override fun getAnchorRange(vj: VJ, layout: ReadLayout) : IntRange?
+    // NOTE: the anchor range could be outside the layout
+    override fun getExtrapolatedAnchorRange(vj: VJ, layout: ReadLayout) : IntRange
     {
         val layoutReads = layout.reads.map { o: ReadLayout.Read -> toReadCandidate(o) }
             .toList()
@@ -186,27 +204,19 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
 
         val anchorRange =
         // for V read we align to last base of anchor, for J read we align to first base of the anchor
-        if (vj == VJ.V)
-            layout.alignedPosition - anchorLength + 1 .. layout.alignedPosition
-        else if (vj == VJ.J)
-            layout.alignedPosition until layout.alignedPosition + anchorLength
-        else
-            return null
+        when (vj)
+        {
+            VJ.V -> layout.alignedPosition - anchorLength + 1..layout.alignedPosition
+            VJ.J -> layout.alignedPosition until layout.alignedPosition + anchorLength
+        }
 
-        if (anchorRange.first >= layout.length || anchorRange.last < 0)
-            return null
-
-        // protect against 0 and end
-        return Math.max(0, anchorRange.first) until Math.min(anchorRange.last + 1, layout.length)
+        return anchorRange
     }
 
-    fun getAnchorRange(geneType: VJGeneType, layout: ReadLayout) : IntRange?
-    {
-        return getAnchorRange(geneType.vj, layout)
-    }
-
+    // Build layouts using layout tree
+    // TODO: merge layouts where differences are outside of the anchor
     fun buildLayouts(geneType: VJGeneType, readCandidates: List<VJReadCandidate>,
-                     minMatchedBases: Int, minMatchRatio: Double)
+                     minMatchedBases: Int)
     : List<ReadLayout>
     {
         sLogger.info("building {} layouts from {} reads", geneType, readCandidates.size)
@@ -220,77 +230,27 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
                 layoutReads.add(layoutRead)
         }
 
-        if (geneType.vj == VJ.V)
-        {
-            // we want to cluster them based on aligned position so the sequence is built up from
-            // longest to shortest, highest quality first
-            layoutReads.sortWith(
-                Collections.reverseOrder(
-                Comparator.comparingInt({ r: ReadLayout.Read -> r.alignedPosition + r.sequence.length })
-                    .thenComparingDouble({ r: ReadLayout.Read -> r.baseQualities.average() }) // handle the highest quality ones first
-                    .thenComparingInt({ r: ReadLayout.Read -> r.alignedPosition })
-                    .thenComparing({ r: ReadLayout.Read -> r.readKey.readName }) // lastly we use read Id just in case
-            ))
-        }
-        else
-        {
-            // start with sequences that are longest, highest quality first
-            layoutReads.sortWith(
-                Collections.reverseOrder(
+        // always build from left to right
+        layoutReads.sortWith(
+            Collections.reverseOrder(
                 Comparator.comparingInt({ r: ReadLayout.Read -> r.alignedPosition })
                     .thenComparingDouble({ r: ReadLayout.Read -> r.baseQualities.average() }) // handle the highest quality ones first
                     .thenComparingInt({ r: ReadLayout.Read -> r.alignedPosition + r.sequence.length })
                     .thenComparing({ r: ReadLayout.Read -> r.readKey.readName }) // lastly we use read Id just in case
             ))
-        }
 
         sLogger.info("building layouts from {} reads", layoutReads.size)
 
-        // always compare the whole sequence, need to clean up and remove the old feature
-        val maxToCompareBeforeAlignedPos: Int = -1 //if (geneType.vj == VJ.V) CiderConstants.ASSUMED_ANCHOR_BASE_LENGTH else -1
-        val maxToCompareAfterAlignedPos: Int = -1 //if (geneType.vj == VJ.J) CiderConstants.ASSUMED_ANCHOR_BASE_LENGTH else -1
-
-        val readLayouts: MutableList<ReadLayout> = ArrayList()
+        val layoutTree = LayoutTree(minBaseQuality.toByte(), minMatchedBases)
 
         // go through the read data list, and add one by one to the list of clusters
         // if there are multiple clusters that matches, we choose the highest one
-        for (readData in layoutReads)
+        for (read in layoutReads)
         {
-            var matchedLayout: ReadLayout? = null
-
-            for (i in readLayouts.indices)
-            {
-                val readLayout = readLayouts[i]
-
-                if (matchedLayout != null && matchedLayout.reads.size > readLayout.reads.size)
-                {
-                    // no need to try this one
-                    continue
-                }
-
-                // test the read against this overlay
-                if (readMatchesLayout(readData, readLayout, minMatchedBases, minBaseQuality.toByte(),
-                        maxToCompareBeforeAlignedPos, maxToCompareAfterAlignedPos))
-                {
-                    //sLogger.info("match found")
-                    matchedLayout = readLayout
-                }
-            }
-
-            if (matchedLayout == null)
-            {
-                val layout = ReadLayout()
-                layout.addRead(readData, minBaseQuality.toByte())
-                readLayouts.add(layout)
-            }
-            else
-            {
-                // add to all layouts that match
-                // for (l in matchedLayouts)
-                //addToOverlay(l, readData, minBaseQuality)
-                matchedLayout.addRead(readData, minBaseQuality.toByte())
-            }
+            layoutTree.tryAddRead(LayoutTree.Read(read, read.sequence, read.baseQualities, read.alignedPosition))
         }
+
+        val readLayouts: List<ReadLayout> = layoutTree.buildReadLayouts({ read: LayoutTree.Read -> read.source as VjLayoutRead })
 
         sLogger.info("built {} layouts from {} reads", readLayouts.size, layoutReads.size)
 
@@ -300,87 +260,5 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
     companion object
     {
         private val sLogger = LogManager.getLogger(VJReadLayoutBuilder::class.java)
-
-        //
-        fun readMatchesLayout(readData: ReadLayout.Read, layout: ReadLayout,
-                              minMatchedBases: Int, minBaseQuality: Byte,
-                              maxToCompareBeforeAlignedPos: Int, // -1 means compare all
-                              maxToCompareAfterAlignedPos: Int // -1 means compare all
-        ): Boolean
-        {
-            require(maxToCompareBeforeAlignedPos >= 0 || maxToCompareBeforeAlignedPos == -1)
-            require(maxToCompareAfterAlignedPos >= 0 || maxToCompareAfterAlignedPos == -1)
-
-            // NOTE: alignedPosition is with respect to itself.
-            // i.e. for a layout it is the position from layout start
-            // for a read it is position from the read sequence start
-            // it can actually be negative or larger than the sequence
-
-            var startPosAdj = Math.min(layout.alignedPosition, readData.alignedPosition)
-
-            if (maxToCompareBeforeAlignedPos != -1)
-            {
-                startPosAdj = Math.min(startPosAdj, maxToCompareBeforeAlignedPos)
-            }
-
-            // this will work also if the position is negative, i.e. before the sequence
-            val layoutOffsetStart: Int = layout.alignedPosition - startPosAdj
-            val readOffsetStart: Int = readData.alignedPosition - startPosAdj
-
-            var layoutEnd: Int = layout.length
-            var readEnd: Int = readData.readLength
-
-            if (maxToCompareAfterAlignedPos != -1)
-            {
-                layoutEnd = Math.min(layoutEnd, layout.alignedPosition + maxToCompareAfterAlignedPos)
-                readEnd = Math.min(readEnd, readData.alignedPosition + maxToCompareAfterAlignedPos)
-            }
-
-            // n is the number of bases overlap
-            val n: Int = Math.min(layoutEnd - layoutOffsetStart, readEnd - readOffsetStart)
-
-            if (n < minMatchedBases)
-                return false
-
-            var i1: Int = layoutOffsetStart
-            var i2: Int = readOffsetStart
-            var comparedCount: Int = 0
-            var matchCount: Int = 0
-
-            if (layoutOffsetStart + n > layout.length)
-            {
-                throw RuntimeException("read1StartOffset + n > read1Seq.length")
-            }
-
-            if (readOffsetStart + n > readData.readLength)
-            {
-                throw RuntimeException("read2StartOffset + n > read2Seq.length")
-            }
-
-            for (i in 0 until n)
-            {
-                val b1: Char = layout.highQualSequence[i1]
-                val b2: Char = readData.sequence[i2]
-
-                if (b1 == b2)
-                {
-                    // TODO: check with Peter
-                    ++comparedCount
-                    ++matchCount
-                }
-                else if ((readData.baseQualities[i2] >= minBaseQuality) &&
-                    b1 != 'N' && b2 != 'N')
-                {
-                    // if both high quality and no N then we say this is a real mismatch
-                    ++comparedCount
-                    return false
-                }
-
-                ++i1
-                ++i2
-            }
-
-            return true
-        }
     }
 }
