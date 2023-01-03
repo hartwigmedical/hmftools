@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
 import static java.lang.Math.abs;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.bamtools.markdups.ResolvedFragmentState.fragmentState;
 
 import java.util.Collections;
@@ -18,10 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.jetbrains.annotations.Nullable;
 
 public class PartitionData
 {
@@ -33,11 +27,14 @@ public class PartitionData
     // supplmentary and candidate duplicate reads, keyed by readId
     private final Map<String,Fragment> mIncompleteFragments;
 
-    // positions with candidate duplicate fragments, keyed by initial fragment coordinate position
-    private final Map<Integer,List<Fragment>> mCandidateDuplicatesMap;
+    // positions with candidate duplicate fragments, keyed by a unique position-based key for the group
+    private final Map<String,CandidateDuplicates> mCandidateDuplicatesMap;
 
     // any update to the maps is done under a lock
     private Lock mLock;
+    private long mLastCacheCount;
+
+    private static final int LOG_CACHE_COUNT = 1000;
 
     public PartitionData(final String chrPartition)
     {
@@ -48,7 +45,7 @@ public class PartitionData
         mLock = new ReentrantLock();
     }
 
-    public void processPrimaryFragments(final List<Fragment> resolvedFragments, @Nullable final CandidateDuplicates candidateDuplicates)
+    public void processPrimaryFragments(final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList)
     {
         // gather any cached mate reads, attempt to resolve any candidate duplicates and feed back the resultant set of resolved fragments
         try
@@ -60,13 +57,13 @@ public class PartitionData
                 processResolvedFragment(fragment);
             }
 
-            if(candidateDuplicates != null)
+            for(CandidateDuplicates candidateDuplicates : candidateDuplicatesList)
             {
-                List<Fragment> resolvedCandidates = processCandidateDuplicates(candidateDuplicates);
+                processCandidateDuplicates(candidateDuplicates);
 
                 // add any additional resolved fragments after gathering mate reads
-                if(resolvedCandidates != null)
-                    resolvedFragments.addAll(resolvedCandidates);
+                if(candidateDuplicates.finalised())
+                    resolvedFragments.addAll(candidateDuplicates.fragments());
             }
         }
         finally
@@ -109,7 +106,14 @@ public class PartitionData
     {
         try
         {
-            return mLock.tryLock(2, TimeUnit.SECONDS);
+            boolean acquired = mLock.tryLock(200, TimeUnit.MILLISECONDS);
+
+            if(!acquired)
+            {
+                BM_LOGGER.warn("partition({}) process incomplete failed to acquire lock within time", mChrPartition);
+            }
+
+            return acquired;
         }
         catch(InterruptedException e)
         {
@@ -124,13 +128,9 @@ public class PartitionData
         try
         {
             if(!acquireLock())
-            {
-                BM_LOGGER.warn("partition({}) process primary failed to acquire lock within time", mChrPartition);
                 return null;
-            }
 
             // a supplementary or higher mate read - returns any resolved fragments resulting from add this new read
-            List<Fragment> resolvedFragments = null;
 
             // first look for a resolved status
             ResolvedFragmentState resolvedState = mFragmentStatus.get(fragment.id());
@@ -155,13 +155,21 @@ public class PartitionData
             {
                 fragment.reads().forEach(x -> existingFragment.addRead(x));
 
-                if(existingFragment.status() == UNCLEAR)
+                if(existingFragment.status() == CANDIDATE)
                 {
-                    // check for a now complete group
-                    resolvedFragments = findResolvedFragments(existingFragment);
+                    // check if the set of candidates is now complete and ready for classification
+                    CandidateDuplicates candidateDuplicates = mCandidateDuplicatesMap.get(existingFragment.candidateDupKey());
+
+                    if(candidateDuplicates != null)
+                    {
+                        checkResolveCandidateDuplicates(candidateDuplicates);
+
+                        if(candidateDuplicates.finalised())
+                            return candidateDuplicates.fragments();
+                    }
                 }
 
-                return resolvedFragments;
+                return null;
             }
 
             // store the new fragment
@@ -174,29 +182,14 @@ public class PartitionData
         }
     }
 
-    private List<Fragment> findResolvedFragments(final Fragment candidateDuplicate)
-    {
-        List<Fragment> candidateFragments = mCandidateDuplicatesMap.get(candidateDuplicate.initialPosition());
-
-        if(candidateFragments == null)
-            return null;
-
-        List<Fragment> resolvedFragments = resolveCandidateDuplicates(candidateFragments);
-
-        if(candidateFragments.isEmpty())
-            mCandidateDuplicatesMap.remove(candidateDuplicate.initialPosition());
-
-        return resolvedFragments;
-    }
-
-    private List<Fragment> processCandidateDuplicates(final CandidateDuplicates candidateDuplicates)
+    private void processCandidateDuplicates(final CandidateDuplicates candidateDuplicates)
     {
         // this position cannot already exist
         // the resolved status cannot be known since this contains the lower reads
         // there may be mate reads and supplementaries to add to the fragments it contains
         boolean hasCompleteReads = false;
 
-        for(Fragment fragment : candidateDuplicates.Fragments)
+        for(Fragment fragment : candidateDuplicates.fragments())
         {
             Fragment existingFragment = mIncompleteFragments.get(fragment.id());
 
@@ -210,39 +203,31 @@ public class PartitionData
             }
         }
 
-        List<Fragment> resolvedFragments = null;
-
         if(hasCompleteReads)
         {
-            resolvedFragments = resolveCandidateDuplicates(candidateDuplicates.Fragments);
+            checkResolveCandidateDuplicates(candidateDuplicates);
         }
 
-        if(!candidateDuplicates.Fragments.isEmpty())
+        if(!candidateDuplicates.finalised())
         {
-            for(Fragment fragment : candidateDuplicates.Fragments)
+            for(Fragment fragment : candidateDuplicates.fragments())
             {
                 if(!mIncompleteFragments.containsValue(fragment.id()))
                     mIncompleteFragments.put(fragment.id(), fragment);
             }
 
-            mCandidateDuplicatesMap.put(candidateDuplicates.Position, candidateDuplicates.Fragments);
+            mCandidateDuplicatesMap.put(candidateDuplicates.key(), candidateDuplicates);
         }
-
-        return resolvedFragments;
     }
 
-    private List<Fragment> resolveCandidateDuplicates(final List<Fragment> positionFragments)
+    private void checkResolveCandidateDuplicates(final CandidateDuplicates candidateDuplicates)
     {
-        if(positionFragments.isEmpty())
-            return null;
+        if(!candidateDuplicates.allFragmentsReady())
+            return;
 
-        List<Fragment> resolvedFragments = Lists.newArrayList();
+        candidateDuplicates.finaliseFragmentStatus();
 
-        positionFragments.forEach(x -> x.setStatus(UNSET)); // reset before evaluation
-
-        classifyFragments(positionFragments, resolvedFragments, null);
-
-        for(Fragment fragment : resolvedFragments)
+        for(Fragment fragment : candidateDuplicates.fragments())
         {
             mIncompleteFragments.remove(fragment.id());
 
@@ -260,7 +245,7 @@ public class PartitionData
             }
         }
 
-        return resolvedFragments;
+        mCandidateDuplicatesMap.remove(candidateDuplicates.key());
     }
 
     public List<Fragment> extractRemainingFragments()
@@ -269,7 +254,7 @@ public class PartitionData
             return Collections.EMPTY_LIST;
 
         // not under lock since called only when all partitions are complete
-        BM_LOGGER.debug("final partition({}) state: incomplete({}) positions({}) resolved({})",
+        BM_LOGGER.debug("final partition({}) state: incomplete({}) candidateGroups({}) resolved({})",
                 mChrPartition, mIncompleteFragments.size(), mCandidateDuplicatesMap.size(), mFragmentStatus.size());
 
         List<Fragment> remainingFragments = mIncompleteFragments.values().stream().collect(Collectors.toList());
@@ -280,9 +265,6 @@ public class PartitionData
 
         return remainingFragments;
     }
-
-    private static final int LOG_CACHE_COUNT = 10000;
-    private long mLastCacheCount;
 
     private void checkCachedCounts()
     {
@@ -296,7 +278,7 @@ public class PartitionData
 
         mLastCacheCount = cacheCount;
 
-        BM_LOGGER.debug("partition({}) state: incomplete({}) positions({}) resolved({})",
+        BM_LOGGER.debug("partition({}) state: incomplete({}) candidateGroups({}) resolved({})",
                 mChrPartition, mIncompleteFragments.size(), mCandidateDuplicatesMap.size(), mFragmentStatus.size());
     }
 
@@ -306,7 +288,7 @@ public class PartitionData
         {
             mLock.lock();
 
-            BM_LOGGER.debug("partition({}) state: incomplete({}) positions({}) resolved({})",
+            BM_LOGGER.debug("partition({}) state: incomplete({}) candidateGroups({}) resolved({})",
                     mChrPartition, mIncompleteFragments.size(), mCandidateDuplicatesMap.size(), mFragmentStatus.size());
         }
         finally
@@ -338,13 +320,5 @@ public class PartitionData
     public Map<String,Fragment> incompleteFragmentMap() { return mIncompleteFragments; }
 
     @VisibleForTesting
-    public Map<Integer,List<Fragment>> candidateDuplicatesMap() { return mCandidateDuplicatesMap; }
-
-        /*
-    public String toString()
-    {
-        return format("%s status(%d) frags(%d) positions(%d)",
-            mChrPartition, mFragmentStatus.size(), mIncompleteFragments.size(), mCandidateDuplicatesMap.size());
-    }
-    */
+    public Map<String,CandidateDuplicates> candidateDuplicatesMap() { return mCandidateDuplicatesMap; }
 }

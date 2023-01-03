@@ -2,30 +2,129 @@ package com.hartwig.hmftools.bamtools.markdups;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.bamtools.markdups.FragmentCoordinates.formCoordinate;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.calcFragmentStatus;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.findPrimaryFragment;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import htsjdk.samtools.SAMRecord;
+
 public class CandidateDuplicates
 {
     // incomplete fragments (ie missing a mate read) with a matching fragment coordinate, and so candidates for being duplicates
-    public final int Position;
-    public final List<Fragment> Fragments;
+    private final String mKey;
+    private final List<Fragment> mFragments;
 
-    public CandidateDuplicates(int position, final Fragment fragment)
+    private boolean mFinalised;
+
+    public CandidateDuplicates(final String key, final Fragment fragment)
     {
-        Fragments = Lists.newArrayList(fragment);
-        Position = position;
+        mKey = key;
+        mFragments = Lists.newArrayList();
+        addFragment(fragment);
+        mFinalised = false;
     }
 
-    public CandidateDuplicates(int position, final List<Fragment> fragments)
+    public static CandidateDuplicates from(final Fragment fragment)
     {
-        Fragments = fragments;
-        Position = position;
+        final SAMRecord read = fragment.reads().get(0);
+        boolean mateForwardStrand = !read.getMateNegativeStrandFlag();
+
+        String key = format("%d_%s",
+                fragment.initialPosition(), formCoordinate(read.getMateReferenceName(), read.getMateAlignmentStart(), mateForwardStrand));
+
+        return new CandidateDuplicates(key, fragment);
+    }
+
+    public String key() { return mKey; }
+
+    public List<Fragment> fragments() { return mFragments; }
+    public int fragmentCount() { return mFragments.size(); }
+
+    public void addFragment(final Fragment fragment)
+    {
+        mFragments.add(fragment);
+        fragment.setCandidateDupKey(mKey);
+    }
+
+    public boolean allFragmentsReady() { return mFragments.stream().allMatch(x -> x.primaryReadsPresent()); }
+    public boolean finalised() { return mFinalised; }
+
+    public void finaliseFragmentStatus()
+    {
+        if(mFinalised || !allFragmentsReady())
+            return;
+
+        mFinalised = true;
+
+        if(mFragments.size() == 1)
+        {
+            Fragment fragment = mFragments.get(0);
+            fragment.setStatus(NONE);
+            return;
+        }
+
+        for(int i = 0; i < mFragments.size(); ++i)
+        {
+            Fragment fragment1 = mFragments.get(i);
+
+            if(fragment1.status().isDuplicate()) // already a part of a group
+                continue;
+
+            if(i == mFragments.size() - 1)
+            {
+                fragment1.setStatus(NONE);
+                break;
+            }
+
+            List<Fragment> duplicateFragments = null;
+
+            for(int j = i + 1; j < mFragments.size(); ++j)
+            {
+                Fragment fragment2 = mFragments.get(j);
+
+                if(fragment2.status().isDuplicate()) // already a part of a group
+                    continue;
+
+                FragmentStatus status = calcFragmentStatus(fragment1, fragment2);
+
+                if(status == DUPLICATE)
+                {
+                    fragment1.setStatus(status);
+                    fragment2.setStatus(status);
+
+                    if(duplicateFragments == null)
+                        duplicateFragments = Lists.newArrayList(fragment1);
+
+                    duplicateFragments.add(fragment2);
+                }
+            }
+
+            if(fragment1.status().isDuplicate())
+            {
+                int dupCount = duplicateFragments.size();
+                duplicateFragments.forEach(x -> x.setDuplicateCount(dupCount));
+
+                Fragment primary = findPrimaryFragment(duplicateFragments, false);
+                primary.setStatus(PRIMARY);
+
+                // apply UMI logic and create a consensus read here
+            }
+            else
+            {
+                fragment1.setStatus(NONE);
+            }
+        }
     }
 
     public String toString()
     {
-        return format("%d: fragments(%d)", Position, Fragments.size());
+        return format("%s: fragments(%d) finalised(%s)", mKey, mFragments.size(), finalised());
     }
 }

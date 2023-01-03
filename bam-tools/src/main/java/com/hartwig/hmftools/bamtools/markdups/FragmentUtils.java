@@ -9,20 +9,21 @@ import static com.hartwig.hmftools.bamtools.markdups.FragmentCoordinates.formCoo
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -130,14 +131,14 @@ public class FragmentUtils
             return NONE;
 
         return abs(firstRead.getMateAlignmentStart() - secondRead.getMateAlignmentStart()) < firstRead.getReadLength()
-                ? UNCLEAR : NONE;
+                ? CANDIDATE : NONE;
     }
 
     private static final int HIGH_DEPTH_THRESHOLD = 10000;
 
     public static void classifyFragments(
             final List<Fragment> fragments, final List<Fragment> resolvedFragments,
-            @Nullable final List<CandidateDuplicates> candidateDuplicatesList)
+            final List<CandidateDuplicates> candidateDuplicatesList)
     {
         // take all the fragments at this initial fragment position and classify them as duplicates, non-duplicates (NONE) or unclear
         // note: all fragments will be given a classification, and resolved fragments are removed from the input fragment list
@@ -152,9 +153,10 @@ public class FragmentUtils
         }
 
         int fragmentCount = fragments.size();
-        Set<Fragment> possibleDuplicates = Sets.newHashSet();
-
         boolean applyHighDepthLogic = fragmentCount > HIGH_DEPTH_THRESHOLD;
+
+        Map<Fragment,List<Fragment>> possibleDuplicates = Maps.newHashMap();
+        Map<Fragment,Fragment> linkedDuplicates = Maps.newHashMap();
 
         int i = 0;
         while(i < fragments.size())
@@ -163,7 +165,7 @@ public class FragmentUtils
 
             if(i == fragments.size() - 1)
             {
-                if(!possibleDuplicates.contains(fragment1))
+                if(!possibleDuplicates.containsKey(fragment1) && !linkedDuplicates.containsKey(fragment1))
                 {
                     fragment1.setStatus(NONE);
                     resolvedFragments.add(fragment1);
@@ -174,6 +176,12 @@ public class FragmentUtils
 
             List<Fragment> duplicateFragments = null;
 
+            Fragment existingLinkedFragment1 = linkedDuplicates.get(fragment1);
+
+            boolean isCandidateDup = existingLinkedFragment1 != null;
+
+            List<Fragment> candidateFragments = existingLinkedFragment1 != null ? possibleDuplicates.get(existingLinkedFragment1) : null;
+
             int j = i + 1;
             while(j < fragments.size())
             {
@@ -181,7 +189,7 @@ public class FragmentUtils
 
                 FragmentStatus status = calcFragmentStatus(fragment1, fragment2);
 
-                if(applyHighDepthLogic && status == UNCLEAR && proximateFragmentSizes(fragment1, fragment2))
+                if(applyHighDepthLogic && status == CANDIDATE && proximateFragmentSizes(fragment1, fragment2))
                     status = DUPLICATE;
 
                 if(status == DUPLICATE)
@@ -197,11 +205,55 @@ public class FragmentUtils
                     continue;
                 }
 
-                if(fragment1.status() != DUPLICATE && status == UNCLEAR)
+                if(fragment1.status() != DUPLICATE && status == CANDIDATE)
                 {
+                    isCandidateDup = true;
+
                     // the pair is a candidate for duplicates but without their mates it's unclear whether they will be
-                    possibleDuplicates.add(fragment1);
-                    possibleDuplicates.add(fragment2);
+                    Fragment existingLinkedFragment2 = linkedDuplicates.get(fragment2);
+
+                    if(existingLinkedFragment1 != null && existingLinkedFragment1 == existingLinkedFragment2)
+                    {
+                        // already a part of the same candidate group
+                    }
+                    else if(existingLinkedFragment2 != null)
+                    {
+                        List<Fragment> existingGroup = possibleDuplicates.get(existingLinkedFragment2);
+
+                        if(candidateFragments == null)
+                        {
+                            existingGroup.add(fragment1);
+                        }
+                        else
+                        {
+                            // take this fragment's candidates and move them to the existing group
+                            for(Fragment fragment : candidateFragments)
+                            {
+                                if(!existingGroup.contains(fragment))
+                                    existingGroup.add(fragment);
+
+                                linkedDuplicates.put(fragment, existingLinkedFragment2);
+                            }
+
+                            possibleDuplicates.remove(existingLinkedFragment1);
+                        }
+
+                        linkedDuplicates.put(fragment1, existingLinkedFragment2);
+                        existingLinkedFragment1 = existingLinkedFragment2;
+                        candidateFragments = existingGroup;
+                    }
+                    else
+                    {
+                        if(candidateFragments == null)
+                        {
+                            candidateFragments = Lists.newArrayList(fragment1);
+                            possibleDuplicates.put(fragment1, candidateFragments);
+                            existingLinkedFragment1 = fragment1;
+                        }
+
+                        candidateFragments.add(fragment2);
+                        linkedDuplicates.put(fragment2, existingLinkedFragment1);
+                    }
                 }
 
                 ++j;
@@ -209,19 +261,26 @@ public class FragmentUtils
 
             if(fragment1.status().isDuplicate())
             {
+                if(isCandidateDup && possibleDuplicates.containsKey(fragment1))
+                {
+                    // clean-up
+                    candidateFragments.forEach(x -> linkedDuplicates.remove(x));
+                    possibleDuplicates.remove(fragment1);
+                }
+
                 int dupCount = duplicateFragments.size();
                 duplicateFragments.forEach(x -> x.setDuplicateCount(dupCount));
 
                 resolvedFragments.addAll(duplicateFragments);
                 fragments.remove(i);
 
-                Fragment primary = findPrimaryFragment(duplicateFragments, true);
+                Fragment primary = findPrimaryFragment(duplicateFragments, false);
                 primary.setStatus(PRIMARY);
 
                 // apply UMI logic and create a consensus read here
 
             }
-            else if(possibleDuplicates.contains(fragment1))
+            else if(isCandidateDup)
             {
                 ++i;
             }
@@ -233,18 +292,37 @@ public class FragmentUtils
             }
         }
 
-        List<Fragment> unclearFragments = possibleDuplicates.stream().filter(y -> !resolvedFragments.contains(y)).collect(Collectors.toList());
-        unclearFragments.forEach(x -> x.setStatus(UNCLEAR));
-
-        if(candidateDuplicatesList != null && !unclearFragments.isEmpty())
+        if(!possibleDuplicates.isEmpty())
         {
-            candidateDuplicatesList.add(new CandidateDuplicates(unclearFragments.get(0).initialPosition(), unclearFragments));
+            for(List<Fragment> candidateFragments : possibleDuplicates.values())
+            {
+                List<Fragment> unresolvedFragments = candidateFragments.stream().filter(x -> !x.status().isResolved()).collect(Collectors.toList());
+
+                if(unresolvedFragments.size() >= 2)
+                {
+                    CandidateDuplicates candidateDuplicates = CandidateDuplicates.from(unresolvedFragments.get(0));
+                    candidateDuplicatesList.add(candidateDuplicates);
+
+                    for(int index = 1; index < unresolvedFragments.size(); ++index)
+                    {
+                        candidateDuplicates.addFragment(unresolvedFragments.get(index));
+                    }
+                }
+            }
         }
 
-        if(unclearFragments.size() + resolvedFragments.size() != fragmentCount)
+        int candidateCount = 0;
+        for(CandidateDuplicates candidateDuplicates : candidateDuplicatesList)
         {
-            BM_LOGGER.error("failed to classify all fragments: original({}) resolved({}) unclear({})",
-                    fragmentCount, resolvedFragments.size(), unclearFragments.size());
+            candidateDuplicates.fragments().forEach(x -> x.setStatus(CANDIDATE));
+            candidateDuplicates.fragments().forEach(x -> x.setCandidateDupKey(candidateDuplicates.key()));
+            candidateCount += candidateDuplicates.fragmentCount();
+        }
+
+        if(candidateCount + resolvedFragments.size() != fragmentCount)
+        {
+            BM_LOGGER.error("failed to classify all fragments: original({}) resolved({}) candidates({})",
+                    fragmentCount, resolvedFragments.size(), candidateCount);
         }
     }
 
@@ -329,7 +407,7 @@ public class FragmentUtils
     }
 
     public static boolean readInSpecifiedRegions(
-            final SAMRecord read, final List<ChrBaseRegion> regions, final List<String> chromosomes)
+            final SAMRecord read, final List<ChrBaseRegion> regions, final List<String> chromosomes, boolean checkSupplementaries)
     {
         if(!chromosomes.isEmpty())
         {
@@ -351,10 +429,9 @@ public class FragmentUtils
                 return false;
         }
 
-        // ignore checking supplementaries since a) they aren't marked as duplicates by other tools and b) they shouldn't be a reason
-        // to ignore a primary read since that then impacts duplicate classification
-        /*
-        if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
+        // by default ignore checking supplementaries since a) they aren't marked as duplicates by other tools and b) they shouldn't be
+        // a reason to ignore a primary read since that then impacts duplicate classification
+        if(checkSupplementaries)
         {
             SupplementaryReadData suppData = SupplementaryReadData.from(read);
 
@@ -367,7 +444,6 @@ public class FragmentUtils
                     return false;
             }
         }
-        */
 
         return true;
     }

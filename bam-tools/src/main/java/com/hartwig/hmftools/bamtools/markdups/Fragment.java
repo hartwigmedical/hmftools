@@ -8,13 +8,10 @@ import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.getFragmentCo
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -26,6 +23,7 @@ public class Fragment
     private boolean mAllPrimaryReadsPresent;
     private final List<SAMRecord> mReads; // consider making an array of 4 (or less for BNDs)
     private FragmentCoordinates mCoordinates;
+    private String mCandidateDupKey;
 
     private boolean mReadsWritten;
 
@@ -68,6 +66,7 @@ public class Fragment
         mAverageBaseQual = 0;
         mDuplicateCount = 0;
         mReadsWritten = false;
+        mCandidateDupKey = null;
     }
 
     public final String id() { return mReads.get(0).getReadName(); }
@@ -88,6 +87,9 @@ public class Fragment
 
     public int duplicateCount() { return mDuplicateCount; }
     public void setDuplicateCount(int count) { mDuplicateCount = count; }
+
+    public String candidateDupKey() { return mCandidateDupKey; }
+    public void setCandidateDupKey(final String key) { mCandidateDupKey = key; }
 
     public boolean readsWritten() { return mReadsWritten; }
     public void setReadWritten() { mReadsWritten = true; }
@@ -111,11 +113,19 @@ public class Fragment
         {
             SupplementaryReadData suppData = SupplementaryReadData.from(read);
             if(suppData != null)
+            {
+                if(!HumanChromosome.contains(suppData.Chromosome))
+                    return null;
+
                 return formChromosomePartition(suppData.Chromosome, suppData.Position, partitionSize);
+            }
         }
 
         if(!read.getReadPairedFlag())
             return formChromosomePartition(read.getReferenceName(), read.getAlignmentStart(), partitionSize);
+
+        if(!HumanChromosome.contains(read.getMateReferenceName()))
+            return null;
 
         // take the lower of the read and its mate
         boolean readLowerPos;
@@ -176,8 +186,9 @@ public class Fragment
 
     public String toString()
     {
-        return String.format("id(%s) reads(%d) status(%s) coords(%s) present(%s)",
+        return String.format("id(%s) reads(%d) status(%s) coords(%s) present(%s) mate(%s:%d)",
                 id(), mReads.size(), mStatus, mCoordinates.Key,
-                mAllReadsPresent ? "all" : (mAllPrimaryReadsPresent ? "primary" : "incomplete"));
+                mAllReadsPresent ? "all" : (mAllPrimaryReadsPresent ? "primary" : "incomplete"),
+                mReads.get(0).getMateReferenceName(), mReads.get(0).getMateAlignmentStart());
     }
 }

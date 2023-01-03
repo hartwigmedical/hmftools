@@ -6,7 +6,7 @@ public enum FragmentStatus
     NONE,
     PRIMARY,
     DUPLICATE,
-    UNCLEAR,
+    CANDIDATE,
     SUPPLEMENTARY;
 
     public boolean isResolved() { return this == PRIMARY || this == DUPLICATE || this == NONE; }

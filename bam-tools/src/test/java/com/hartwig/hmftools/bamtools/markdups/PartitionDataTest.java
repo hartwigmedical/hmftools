@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.SUPPLEMENTARY;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNCLEAR;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_BASES;
@@ -20,12 +20,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.junit.Test;
 
@@ -36,7 +36,6 @@ public class PartitionDataTest
     private final RecordWriter mWriter;
 
     private static final String LOCAL_PARTITION_STR = "1_0";
-    private static final BaseRegion LOCAL_PARTITION = new BaseRegion(1, 1000000);
 
     public PartitionDataTest()
     {
@@ -60,7 +59,7 @@ public class PartitionDataTest
 
         // test 1: resolved then mate then supp
         List<Fragment> resolvedFragments = Lists.newArrayList(read);
-        partitionData.processPrimaryFragments(resolvedFragments, null);
+        partitionData.processPrimaryFragments(resolvedFragments, Collections.EMPTY_LIST);
         assertEquals(1, resolvedFragments.size());
 
         ResolvedFragmentState resolvedState = partitionData.fragmentStatusMap().get(read.id());
@@ -101,7 +100,7 @@ public class PartitionDataTest
         assertTrue(partitionData.incompleteFragmentMap().containsValue(mateRead));
 
         resolvedFragments = Lists.newArrayList(read);
-        partitionData.processPrimaryFragments(resolvedFragments, null);
+        partitionData.processPrimaryFragments(resolvedFragments, Collections.EMPTY_LIST);
         assertEquals(1, resolvedFragments.size());
         assertEquals(2, read.readCount());
         assertFalse(partitionData.incompleteFragmentMap().containsValue(mateRead));
@@ -138,7 +137,7 @@ public class PartitionDataTest
         assertFalse(partitionData.incompleteFragmentMap().containsValue(mateRead));
 
         resolvedFragments = Lists.newArrayList(read);
-        partitionData.processPrimaryFragments(resolvedFragments, null);
+        partitionData.processPrimaryFragments(resolvedFragments, Collections.EMPTY_LIST);
         assertEquals(1, resolvedFragments.size());
         assertEquals(3, read.readCount());
         assertFalse(partitionData.incompleteFragmentMap().containsValue(supp));
@@ -179,8 +178,10 @@ public class PartitionDataTest
         Fragment mateRead2 = testFragments.get(4);
 
         List<Fragment> resolvedFragments = Lists.newArrayList();
-        CandidateDuplicates candidateDuplicates = new CandidateDuplicates(read1.initialPosition(), Lists.newArrayList(read1, read2));
-        partitionData.processPrimaryFragments(resolvedFragments, candidateDuplicates);
+        CandidateDuplicates candidateDuplicates = CandidateDuplicates.from(read1);
+        candidateDuplicates.addFragment(read2);
+        List<CandidateDuplicates> candidateDuplicatesList = Lists.newArrayList(candidateDuplicates);
+        partitionData.processPrimaryFragments(resolvedFragments, candidateDuplicatesList);
         assertEquals(0, resolvedFragments.size());
 
         assertTrue(partitionData.incompleteFragmentMap().containsValue(read1));
@@ -188,7 +189,7 @@ public class PartitionDataTest
 
         // now send through the mate reads in turn
         resolvedFragments = partitionData.processIncompleteFragment(mateRead1);
-        assertTrue(resolvedFragments.isEmpty());
+        assertTrue(resolvedFragments == null || resolvedFragments.isEmpty());
         assertEquals(2, read1.readCount());
         assertTrue(partitionData.incompleteFragmentMap().containsValue(read1));
 
@@ -225,7 +226,7 @@ public class PartitionDataTest
         Fragment read1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
                 false, false, new SupplementaryReadData(CHR_1, 1000, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
 
-        read1.setStatus(UNCLEAR);
+        read1.setStatus(CANDIDATE);
 
         Fragment mateRead1 = createFragment(read1.id(), CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
                 true, false, null);
@@ -236,7 +237,7 @@ public class PartitionDataTest
         Fragment read2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
                 false, false, null);
 
-        read2.setStatus(UNCLEAR);
+        read2.setStatus(CANDIDATE);
         setBaseQualities(read2, DEFAULT_QUAL - 1);
 
         Fragment mateRead2 = createFragment(read2.id(), CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,

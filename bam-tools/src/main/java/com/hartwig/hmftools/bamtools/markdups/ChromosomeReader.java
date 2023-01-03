@@ -1,24 +1,20 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
-import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.findPrimaryFragment;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readInSpecifiedRegions;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -78,7 +74,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         }
         else
         {
-            mCurrentPartition = new BaseRegion(1, mConfig.PartitionSize);
+            mCurrentPartition = new BaseRegion(1, mConfig.PartitionSize - 1);
         }
 
         mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
@@ -153,7 +149,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         if(setupNext)
         {
             mCurrentPartition.setStart(mCurrentPartition.end() + 1);
-            mCurrentPartition.setEnd(mCurrentPartition.start() + mConfig.PartitionSize);
+            mCurrentPartition.setEnd(mCurrentPartition.start() + mConfig.PartitionSize - 1);
             mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
             mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
 
@@ -167,7 +163,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     {
         int readStart = read.getAlignmentStart();
 
-        if(!readInSpecifiedRegions(read, mConfig.SpecificRegions, mConfig.SpecificChromosomes))
+        if(!readInSpecifiedRegions(read, mConfig.SpecificRegions, mConfig.SpecificChromosomes, false))
             return;
 
         ++mTotalRecordCount;
@@ -211,6 +207,13 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     {
         String basePartition = Fragment.getBasePartition(fragment.reads().get(0), mConfig.PartitionSize);
 
+        if(basePartition == null)
+        {
+            // mate or supp is on a non-human chromsome, meaning it won't be retrieved - so write this immediately
+            mRecordWriter.writeFragment(fragment);
+            return;
+        }
+
         PartitionData partitionData = basePartition.equals(mCurrentStrPartition) ?
                 mCurrentPartitionData : mPartitionDataStore.getOrCreatePartitionData(basePartition);
 
@@ -228,7 +231,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         if(mPendingIncompleteReads.isEmpty())
             return;
 
-        BM_LOGGER.debug("partition({}) processing {} pending incomplete fragment", mRegion, mPendingIncompleteReads.size());
+        BM_LOGGER.debug("partition({}:{}) processing {} pending incomplete fragment",
+                mRegion.Chromosome, mCurrentPartition, mPendingIncompleteReads.size());
 
         for(Fragment fragment : mPendingIncompleteReads)
         {
@@ -252,7 +256,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         List<CandidateDuplicates> candidateDuplicatesList = Lists.newArrayList();
 
         int posFragmentCount = positionFragments.size();
-        boolean logDetails = posFragmentCount > 10000;
+        boolean logDetails = mConfig.PerfDebug && posFragmentCount > 10000;
         long startTimeMs = 0;
         int position = 0;
 
@@ -266,17 +270,32 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         if(logDetails)
         {
-            long timeTakenMs = System.currentTimeMillis() - startTimeMs;
+            double timeTakenSec = (System.currentTimeMillis() - startTimeMs) / 1000.0;
 
-            BM_LOGGER.debug("position({}:{}) fragments({}) resolved({}) candidates({}) time({})",
-                    mRegion.Chromosome, position, posFragmentCount, resolvedFragments.size(),
-                    candidateDuplicatesList != null && !candidateDuplicatesList.isEmpty() ?
-                            candidateDuplicatesList.get(0).Fragments.size() : "0", format("%.1fs", timeTakenMs / 1000.0));
+            if(timeTakenSec >= 1.0)
+            {
+                BM_LOGGER.debug("position({}:{}) fragments({}) resolved({}) candidates({}) time({})",
+                        mRegion.Chromosome, position, posFragmentCount, resolvedFragments.size(),
+                        candidateDuplicatesList.stream().mapToInt(x -> x.fragmentCount()).sum(),
+                        format("%.1fs", timeTakenSec));
+            }
         }
 
-        CandidateDuplicates candidateDuplicates = !candidateDuplicatesList.isEmpty() ? candidateDuplicatesList.get(0) : null;
+        if(logDetails)
+            startTimeMs = System.currentTimeMillis();
 
-        mCurrentPartitionData.processPrimaryFragments(resolvedFragments, candidateDuplicates);
+        mCurrentPartitionData.processPrimaryFragments(resolvedFragments, candidateDuplicatesList);
+
+        if(logDetails)
+        {
+            double timeTakenSec = (System.currentTimeMillis() - startTimeMs) / 1000.0;
+
+            if(timeTakenSec >= 1.0)
+            {
+                BM_LOGGER.debug("position({}:{}) fragments({}) partition processing time({})",
+                        mRegion.Chromosome, position, posFragmentCount, format("%.1fs", timeTakenSec));
+            }
+        }
 
         if(!resolvedFragments.isEmpty())
         {
