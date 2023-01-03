@@ -15,7 +15,14 @@ object CiderConstants
     const val VDJ_MIN_PARTIAL_ANCHOR_AA_LENGTH: Int = 1
 
     const val MAX_READ_DISTANCE_FROM_ANCHOR: Int = 50
+
+    // minimum amount of bases a read must overlap with a layout for it to be added
+    const val LAYOUT_MIN_READ_OVERLAP_BASES: Int = 20
     const val MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES: Int = 20
+    const val MIN_ANCHOR_LENGTH_BASES: Int = 3
+
+    // minimum fraction of reads that support a certain base in a layout
+    const val MIN_VJ_LAYOUT_HIGH_QUAL_READ_FRACTION: Double = 0.02
     const val MIN_POLY_G_TRIM_COUNT: Int = 6
     const val POLY_G_TRIM_EXTRA_BASE_COUNT: Int = 5
     const val MIN_CDR3_LENGTH_BASES: Int = 9

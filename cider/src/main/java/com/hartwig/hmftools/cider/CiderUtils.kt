@@ -49,7 +49,7 @@ object CiderUtils
         for (i in dashPos.size - 1 downTo 0)
         {
             val pos = dashPos[i]
-            if (pos < str.length && pos != 0)
+            if (pos < str.length && pos >= 0)
             {
                 stringBuilder.insert(pos, '-')
             }
@@ -118,7 +118,7 @@ object CiderUtils
             val numGs = numTrailingPolyG(read.readString, sliceEnd)
             if (numGs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
             {
-                sLogger.debug("read({}) strand(+) poly G tail of length({}) found({})",
+                sLogger.trace("read({}) strand(+) poly G tail of length({}) found({})",
                     read, numGs, read.readString)
                 sliceEnd -= numGs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
             }
@@ -128,7 +128,7 @@ object CiderUtils
             val numCs = numLeadingPolyC(read.readString, sliceStart)
             if (numCs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
             {
-                sLogger.debug("read({}) strand(-) poly G tail of length({}) found({})",
+                sLogger.trace("read({}) strand(-) poly G tail of length({}) found({})",
                     read, numCs, read.readString)
                 sliceStart += numCs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
             }

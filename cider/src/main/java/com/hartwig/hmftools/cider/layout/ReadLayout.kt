@@ -40,7 +40,7 @@ open class ReadLayout(var id: String = String())
     val length: Int get() { return allSequenceSupport.support.size }
 
     // high qual sequence would contain N if there is no high quality base at a position
-    val highQualSequence: String get() { return highQualSequenceSupport.sequence }
+    // val highQualSequence: String get() { return highQualSequenceSupport.sequence }
 
     // consensus sequence is high qual sequence but N replace with
     // the low quality sequence
@@ -49,6 +49,32 @@ open class ReadLayout(var id: String = String())
         if (sequenceCache == null)
             updateConsensusSequence()
         return sequenceCache!!
+    }
+
+    //
+    // highQualReadFraction is the % number of high quality reads supports each base
+    // i.e. if there are 1000 reads in this layout, and highQualReadFraction = 0.01
+    //      then each base needs to be supported by 10 high quality reads or it will be set
+    //      to N
+    fun highConfidenceSequence(highQualReadFraction: Double): String
+    {
+        val minHighQualCount = Math.max((reads.size * highQualReadFraction).toInt(), 1)
+        val highQualCounts = highQualSupportCounts()
+        val stringBuilder = StringBuilder(highQualSequenceSupport.sequence.length)
+        for (i in highQualSequenceSupport.sequence.indices)
+        {
+            val base = highQualSequenceSupport.sequence[i]
+
+            if (highQualCounts[i] >= minHighQualCount)
+            {
+                stringBuilder.append(base)
+            }
+            else
+            {
+                stringBuilder.append('N')
+            }
+        }
+        return stringBuilder.toString()
     }
 
     fun highQualSupportString(): String
