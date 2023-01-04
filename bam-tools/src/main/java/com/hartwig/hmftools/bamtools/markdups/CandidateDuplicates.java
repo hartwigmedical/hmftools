@@ -111,7 +111,7 @@ public class CandidateDuplicates
                 int dupCount = duplicateFragments.size();
                 duplicateFragments.forEach(x -> x.setDuplicateCount(dupCount));
 
-                Fragment primary = findPrimaryFragment(duplicateFragments, false);
+                Fragment primary = findPrimaryFragment(duplicateFragments, true);
                 primary.setStatus(PRIMARY);
 
                 // apply UMI logic and create a consensus read here

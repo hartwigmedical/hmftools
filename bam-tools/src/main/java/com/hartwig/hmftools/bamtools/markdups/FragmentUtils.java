@@ -274,7 +274,7 @@ public class FragmentUtils
                 resolvedFragments.addAll(duplicateFragments);
                 fragments.remove(i);
 
-                Fragment primary = findPrimaryFragment(duplicateFragments, false);
+                Fragment primary = findPrimaryFragment(duplicateFragments, true);
                 primary.setStatus(PRIMARY);
 
                 // apply UMI logic and create a consensus read here

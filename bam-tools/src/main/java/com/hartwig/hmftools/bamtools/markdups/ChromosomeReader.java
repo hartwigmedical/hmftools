@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
@@ -10,11 +11,13 @@ import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -39,7 +42,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private BaseRegion mCurrentPartition;
     private String mCurrentStrPartition;
     private PartitionData mCurrentPartitionData;
-    private final List<Fragment> mPendingIncompleteReads;
+
+    private final Map<String,List<Fragment>> mPendingIncompleteReads;
 
     private final boolean mLogReadIds;
     private int mTotalRecordCount;
@@ -80,7 +84,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
         mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
 
-        mPendingIncompleteReads = Lists.newArrayList();
+        mPendingIncompleteReads = Maps.newHashMap();
 
         mTotalRecordCount = 0;
         mPartitionRecordCount = 0;
@@ -134,7 +138,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     {
         mReadPositions.evictAll();
 
-        processIncompletes();
+        processPendingIncompletes();
 
         mStats.ReadCount += mPartitionRecordCount;
 
@@ -142,12 +146,14 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         BM_LOGGER.debug("partition({}:{}) complete, reads({})", mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount);
 
-        mCurrentPartitionData.logCacheCounts();
+        if(mConfig.PerfDebug)
+            mCurrentPartitionData.logCacheCounts();
 
         mPartitionRecordCount = 0;
 
         if(setupNext)
         {
+            // move ahead to the next partition, until the end of the chromosome is reached
             int regionStart = mCurrentPartition.end() + 1;
 
             if(regionStart > mRegion.end())
@@ -172,8 +178,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     {
         int readStart = read.getAlignmentStart();
 
-        if(!readInSpecifiedRegions(read, mConfig.SpecificRegions, mConfig.SpecificChromosomes, false))
-            return;
+        //if(!readInSpecifiedRegions(read, mConfig.SpecificRegions, mConfig.SpecificChromosomes, false))
+        //    return;
 
         ++mTotalRecordCount;
         ++mPartitionRecordCount;
@@ -201,14 +207,18 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         {
             if(read.getSupplementaryAlignmentFlag() || !mReadPositions.processRead(read))
             {
+                String basePartition = Fragment.getBasePartition(read, mConfig.PartitionSize);
                 Fragment fragment = new Fragment(read);
-                processIncompleteRead(fragment);
+
+                if(basePartition == null)
+                {
+                    // mate or supp is on a non-human chromsome, meaning it won't be retrieved - so write this immediately
+                    mRecordWriter.writeFragment(fragment);
+                    return;
+                }
+
+                processIncompleteRead(fragment, basePartition);
             }
-        }
-        catch(IllegalMonitorStateException e)
-        {
-            // cache this read and try again later on
-            mPendingIncompleteReads.add(new Fragment(read));
         }
         catch(Exception e)
         {
@@ -218,48 +228,59 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         }
     }
 
-    private void processIncompleteRead(final Fragment fragment)
+    private void processIncompleteRead(final Fragment fragment, final String basePartition)
     {
-        String basePartition = Fragment.getBasePartition(fragment.reads().get(0), mConfig.PartitionSize);
-
-        if(basePartition == null)
+        if(basePartition.equals(mCurrentStrPartition))
         {
-            // mate or supp is on a non-human chromsome, meaning it won't be retrieved - so write this immediately
-            mRecordWriter.writeFragment(fragment);
-            return;
+            // String callerInfo = format("%s_incomplete_%d", mCurrentStrPartition, abs(fragment.initialPosition()));
+            List<Fragment> resolvedFragments = mCurrentPartitionData.processIncompleteFragment(fragment);
+
+            if(fragment.status().isResolved())
+                mRecordWriter.writeFragment(fragment);
+
+            if(resolvedFragments != null)
+                mRecordWriter.writeFragments(resolvedFragments);
         }
+        else
+        {
+            // cache this read and send through as groups when the partition is complete
+            List<Fragment> pendingFragments = mPendingIncompleteReads.get(basePartition);
 
-        PartitionData partitionData = basePartition.equals(mCurrentStrPartition) ?
-                mCurrentPartitionData : mPartitionDataStore.getOrCreatePartitionData(basePartition);
+            if(pendingFragments == null)
+            {
+                pendingFragments = Lists.newArrayList();
+                mPendingIncompleteReads.put(basePartition, pendingFragments);
+            }
 
-        String callerInfo = format("%s_incomplete_%d", mCurrentStrPartition, fragment.initialPosition());
-        List<Fragment> resolvedFragments = partitionData.processIncompleteFragment(fragment, callerInfo);
-
-        if(fragment.status().isResolved())
-            mRecordWriter.writeFragment(fragment);
-
-        if(resolvedFragments != null)
-            mRecordWriter.writeFragments(resolvedFragments);
+            pendingFragments.add(fragment);
+        }
     }
 
-    private void processIncompletes()
+    private void processPendingIncompletes()
     {
         if(mPendingIncompleteReads.isEmpty())
             return;
 
-        BM_LOGGER.debug("partition({}:{}) processing {} pending incomplete fragment",
-                mRegion.Chromosome, mCurrentPartition, mPendingIncompleteReads.size());
-
-        for(Fragment fragment : mPendingIncompleteReads)
+        if(mPendingIncompleteReads.size() > 100)
         {
-            try
+            BM_LOGGER.debug("partition({}:{}) processing {} pending incomplete fragments",
+                    mRegion.Chromosome, mCurrentPartition, mPendingIncompleteReads.values().stream().mapToInt(x -> x.size()).sum());
+        }
+
+        for(Map.Entry<String,List<Fragment>> entry : mPendingIncompleteReads.entrySet())
+        {
+            String basePartition = entry.getKey();
+            List<Fragment> fragments = entry.getValue();
+
+            // String callerInfo = format("%s_pending_incomplete_%d", mCurrentStrPartition, fragments.size());
+
+            PartitionData partitionData = mPartitionDataStore.getOrCreatePartitionData(basePartition);
+
+            List<Fragment> resolvedFragments = partitionData.processIncompleteFragments(fragments);
+
+            if(resolvedFragments != null)
             {
-                processIncompleteRead(fragment);
-            }
-            catch(Exception e)
-            {
-                BM_LOGGER.error("failed to process pending incomplete read({})", readToString(fragment.reads().get(0)));
-                mRecordWriter.writeFragment(fragment);
+                mRecordWriter.writeFragments(resolvedFragments);
             }
         }
 
