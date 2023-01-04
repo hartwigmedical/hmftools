@@ -161,7 +161,7 @@ $ perl $BLAST_INSTALL/bin/update_blastdb.pl --passive --decompress human_genome
 - **Reads mapped to other locations** - We only use reads where the alignment overlaps a known V or J anchor sequence coordinate which means the program is fast. We could also look for more reads with sequences that precisely or partially match known anchors but which have not been mapped to the expected locations.    
 - **Mate overlap** - Where fragment lengths are short the reads may overlap (particularly relevant for RNA). For each extracted read pair test for overlap by searching for an exact match for the innermost 10 bases of each read (allowing for differences if base quality < 25). If a match is found then check that the full overlapped region is identical (again allowing for base quality trimming). Create a consensus sequence for the 2 reads, using the highest base quality where the sequences differ.  
 - **Fragments with both reads unmapped reads** - these are not queried and extracted.
-- **Extrapolation of anchor location inside soft clipped part of read needs more thought.
+- **Extrapolation of anchor location inside soft clipped part of read** - needs more thought.
 
 ### CDR3 calling:
 - **Full receptor sequence** - We could assemble outwards from the CDR3 to predict the full receptor sequence.  We should also search for rearrangements that delete both anchor sequeneces
@@ -169,7 +169,6 @@ $ perl $BLAST_INSTALL/bin/update_blastdb.pl --passive --decompress human_genome
 - **Error tolerance in collapsing** - We collapse sequences with up to 1 high quality sequencing difference across the anchors + CDR3 sequence. We still see a small number of artefacts from very highly supported sequences which could be cleaned up further. 
 - **Extension of incomplete TCR** - For TCR regions it may be possible to predict a full CDR3 sequence from the germline using a parital frgament.  For IG this is likely dangerous due to hypermutation 
 - **Multiple CDR3s in consensus sequence** - A single consensus sequence may have 2 anchor locations that lead to plausible high scoring CDR3 sequences. Currently we choose the highest scoring, but both could be functional. 
-
 
 # Version History and Download Links
 - [0.4](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.4)
