@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.SUPPLEMENTARY;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
 import static com.hartwig.hmftools.bamtools.markdups.ReadOutput.DUPLICATES;
 import static com.hartwig.hmftools.bamtools.markdups.ReadOutput.MISMATCHES;
@@ -220,8 +221,11 @@ public class RecordWriter
         }
         else if(mConfig.LogReadType == MISMATCHES)
         {
-            if(read.getDuplicateReadFlag() == (fragment.status() == DUPLICATE))
-                return;
+            if(fragment.status() != UNSET)
+            {
+                if(read.getDuplicateReadFlag() == (fragment.status() == DUPLICATE))
+                    return;
+            }
         }
 
         try

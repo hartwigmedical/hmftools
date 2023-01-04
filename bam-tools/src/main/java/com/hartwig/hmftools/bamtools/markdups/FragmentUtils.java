@@ -308,6 +308,12 @@ public class FragmentUtils
                         candidateDuplicates.addFragment(unresolvedFragments.get(index));
                     }
                 }
+                else if(unresolvedFragments.size() == 1)
+                {
+                    Fragment fragment = unresolvedFragments.get(0);
+                    fragment.setStatus(NONE);
+                    resolvedFragments.add(fragment);
+                }
             }
         }
 
@@ -323,6 +329,19 @@ public class FragmentUtils
         {
             BM_LOGGER.error("failed to classify all fragments: original({}) resolved({}) candidates({})",
                     fragmentCount, resolvedFragments.size(), candidateCount);
+
+            for(Fragment fragment : resolvedFragments)
+            {
+                BM_LOGGER.error("resolved fragment: {}", fragment);
+            }
+
+            for(CandidateDuplicates candidateDuplicates : candidateDuplicatesList)
+            {
+                for(Fragment fragment : candidateDuplicates.fragments())
+                {
+                    BM_LOGGER.error("candidate dup fragment: {}", fragment);
+                }
+            }
         }
     }
 

@@ -36,7 +36,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private final RecordWriter mRecordWriter;
     private final ReadPositionsCache mReadPositions;
 
-    private final BaseRegion mCurrentPartition;
+    private BaseRegion mCurrentPartition;
     private String mCurrentStrPartition;
     private PartitionData mCurrentPartitionData;
     private final List<Fragment> mPendingIncompleteReads;
@@ -148,8 +148,17 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         if(setupNext)
         {
-            mCurrentPartition.setStart(mCurrentPartition.end() + 1);
-            mCurrentPartition.setEnd(mCurrentPartition.start() + mConfig.PartitionSize - 1);
+            int regionStart = mCurrentPartition.end() + 1;
+
+            if(regionStart > mRegion.end())
+            {
+                mCurrentPartition = null;
+                return;
+            }
+
+            mCurrentPartition.setStart(regionStart);
+            mCurrentPartition.setEnd(regionStart + mConfig.PartitionSize - 1);
+
             mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
             mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
 
@@ -172,9 +181,15 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         if(mConfig.runReadChecks())
             mReadsProcessed.add(read);
 
-        if(readStart > mCurrentPartition.end())
+        while(mCurrentPartition != null && readStart > mCurrentPartition.end())
         {
             onPartitionComplete(true);
+
+            if(mCurrentPartition == null)
+            {
+                mRecordWriter.writeFragment(new Fragment(read));
+                return;
+            }
         }
 
         if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only
@@ -217,7 +232,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         PartitionData partitionData = basePartition.equals(mCurrentStrPartition) ?
                 mCurrentPartitionData : mPartitionDataStore.getOrCreatePartitionData(basePartition);
 
-        List<Fragment> resolvedFragments = partitionData.processIncompleteFragment(fragment);
+        String callerInfo = format("%s_incomplete_%d", mCurrentStrPartition, fragment.initialPosition());
+        List<Fragment> resolvedFragments = partitionData.processIncompleteFragment(fragment, callerInfo);
 
         if(fragment.status().isResolved())
             mRecordWriter.writeFragment(fragment);
@@ -257,14 +273,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         int posFragmentCount = positionFragments.size();
         boolean logDetails = mConfig.PerfDebug && posFragmentCount > 10000;
-        long startTimeMs = 0;
-        int position = 0;
-
-        if(logDetails)
-        {
-            position = positionFragments.get(0).initialPosition();
-            startTimeMs = System.currentTimeMillis();
-        }
+        long startTimeMs = System.currentTimeMillis();
+        int position = positionFragments.get(0).initialPosition();
 
         classifyFragments(positionFragments, resolvedFragments, candidateDuplicatesList);
 
@@ -281,10 +291,10 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
             }
         }
 
-        if(logDetails)
-            startTimeMs = System.currentTimeMillis();
+        startTimeMs = System.currentTimeMillis();
+        String callerInfo = format("%s_primary_%d_%d", mCurrentStrPartition, position, posFragmentCount);
 
-        mCurrentPartitionData.processPrimaryFragments(resolvedFragments, candidateDuplicatesList);
+        mCurrentPartitionData.processPrimaryFragments(resolvedFragments, candidateDuplicatesList, callerInfo);
 
         if(logDetails)
         {

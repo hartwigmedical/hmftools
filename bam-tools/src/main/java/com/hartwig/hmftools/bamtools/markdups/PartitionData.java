@@ -33,6 +33,7 @@ public class PartitionData
     // any update to the maps is done under a lock
     private Lock mLock;
     private long mLastCacheCount;
+    private String mCurrentCaller;
 
     private static final int LOG_CACHE_COUNT = 1000;
 
@@ -43,14 +44,17 @@ public class PartitionData
         mIncompleteFragments = Maps.newHashMap();
         mCandidateDuplicatesMap = Maps.newHashMap();
         mLock = new ReentrantLock();
+        mCurrentCaller = null;
     }
 
-    public void processPrimaryFragments(final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList)
+    public void processPrimaryFragments(
+            final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList, final String caller)
     {
         // gather any cached mate reads, attempt to resolve any candidate duplicates and feed back the resultant set of resolved fragments
         try
         {
             mLock.lock();
+            mCurrentCaller = caller;
 
             for(Fragment fragment : resolvedFragments)
             {
@@ -110,7 +114,7 @@ public class PartitionData
 
             if(!acquired)
             {
-                BM_LOGGER.warn("partition({}) process incomplete failed to acquire lock within time", mChrPartition);
+                BM_LOGGER.warn("partition({}) lock unacquired within time, caller({})", mChrPartition, mCurrentCaller);
             }
 
             return acquired;
@@ -123,12 +127,14 @@ public class PartitionData
         }
     }
 
-    public List<Fragment> processIncompleteFragment(final Fragment fragment)
+    public List<Fragment> processIncompleteFragment(final Fragment fragment, final String caller)
     {
         try
         {
             if(!acquireLock())
                 return null;
+
+            mCurrentCaller = caller;
 
             // a supplementary or higher mate read - returns any resolved fragments resulting from add this new read
 
@@ -321,4 +327,16 @@ public class PartitionData
 
     @VisibleForTesting
     public Map<String,CandidateDuplicates> candidateDuplicatesMap() { return mCandidateDuplicatesMap; }
+
+    @VisibleForTesting
+    public List<Fragment> processIncompleteFragment(final Fragment fragment)
+    {
+        return processIncompleteFragment(fragment, null);
+    }
+
+    @VisibleForTesting
+    public void processPrimaryFragments(final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList)
+    {
+        processPrimaryFragments(resolvedFragments, candidateDuplicatesList, null);
+    }
 }

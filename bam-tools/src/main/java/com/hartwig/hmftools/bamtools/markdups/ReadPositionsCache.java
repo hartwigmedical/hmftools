@@ -166,10 +166,26 @@ public class ReadPositionsCache
 
         int distanceFromMinPosition = position - mMinPosition;
 
+        int flushCount = 0;
         if(distanceFromMinPosition < mCapacity)
+        {
             return;
 
-        int flushCount = position - mMinPosition - mCapacity + 1;
+            /*
+            if(mFragments.size() < 100000)
+                return;
+
+            // attempt to reduce the cache prior to it being full
+            flushCount = 100;
+            BM_LOGGER.debug("read cache: chr({} minPos={}) fragments({}) partial flush",
+                    mChromosome, mMinPosition, mFragments.size());
+            */
+        }
+        else
+        {
+            flushCount = position - mMinPosition - mCapacity + 1;
+        }
+
         int flushedElements = 0;
 
         // only iterate at most once through the array
@@ -240,6 +256,8 @@ public class ReadPositionsCache
 
         mReversePositions.clear();
         mFragments.clear();
+        mLastLogReadCount = 0;
+        mLastFragmentLogCount = 0;
     }
 
     private void resetMinPosition(int position)
