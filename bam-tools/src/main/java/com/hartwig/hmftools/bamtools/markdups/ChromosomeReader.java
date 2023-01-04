@@ -273,7 +273,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         int posFragmentCount = positionFragments.size();
         boolean logDetails = mConfig.PerfDebug && posFragmentCount > 10000;
-        long startTimeMs = System.currentTimeMillis();
+        long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
         int position = positionFragments.get(0).initialPosition();
 
         classifyFragments(positionFragments, resolvedFragments, candidateDuplicatesList);
@@ -296,15 +296,12 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         mCurrentPartitionData.processPrimaryFragments(resolvedFragments, candidateDuplicatesList, callerInfo);
 
-        if(logDetails)
-        {
-            double timeTakenSec = (System.currentTimeMillis() - startTimeMs) / 1000.0;
+        double timeTakenSec = (System.currentTimeMillis() - startTimeMs) / 1000.0;
 
-            if(timeTakenSec >= 1.0)
-            {
-                BM_LOGGER.debug("position({}:{}) fragments({}) partition processing time({})",
-                        mRegion.Chromosome, position, posFragmentCount, format("%.1fs", timeTakenSec));
-            }
+        if(timeTakenSec >= 1.0)
+        {
+            BM_LOGGER.debug("position({}:{}) fragments({}) partition processing time({})",
+                    mRegion.Chromosome, position, posFragmentCount, format("%.1fs", timeTakenSec));
         }
 
         if(!resolvedFragments.isEmpty())

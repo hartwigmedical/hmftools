@@ -274,9 +274,6 @@ public class PartitionData
 
     private void checkCachedCounts()
     {
-        if(mLastCacheCount < LOG_CACHE_COUNT)
-            return;
-
         long cacheCount = mIncompleteFragments.size() + mFragmentStatus.size();
 
         if(abs(mLastCacheCount - cacheCount) < LOG_CACHE_COUNT)
