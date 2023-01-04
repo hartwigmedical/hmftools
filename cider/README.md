@@ -127,13 +127,15 @@ weed out false positives.
 To run the tool
 ```
 python cider_blastn.py \
-    --in_tsv=COLO829.cider.vdj_seq.tsv \
-    --out_tsv=COLO829.cider.vdj_seq_blastn.tsv \
+    --in_tsv=COLO829.cider.vdj.tsv.gz \
+    --out_tsv=COLO829.cider.vdj_blastn.tsv \
     --blastn=/bin/blastn \
     --ensembl=/path/data/ensembl_data_cache/38/ensembl_gene_data.csv
 ```
 
-This will create a new file `COLO829.cider.vdj_seq_blastn.tsv` with the original file `COLO829.cider.vdj_seq.tsv` plus the following
+Note that we must use the v38 of ensembl file since the human genome blast database is v38. 
+
+This will create a new file `COLO829.cider.vdj_blastn.tsv` with the original file `COLO829.cider.vdj.tsv.gz` plus the following
 additional fields added:
 
 | Field                                 | Explanation                                                                    | 
