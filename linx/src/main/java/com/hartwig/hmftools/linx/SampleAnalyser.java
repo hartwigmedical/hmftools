@@ -181,7 +181,16 @@ public class SampleAnalyser implements Callable
         {
             mPerfCounters.get(PERF_COUNTER_TOTAL).start();
 
-            processSample(mSampleIds.get(i));
+            try
+            {
+                processSample(mSampleIds.get(i));
+            }
+            catch(Exception e)
+            {
+                LNX_LOGGER.error("sample({}) processing failed: {}", mSampleIds.get(i), e.toString());
+                e.printStackTrace();
+                System.exit(1);
+            }
 
             if(i > 10 && (i % 10) == 0)
             {
