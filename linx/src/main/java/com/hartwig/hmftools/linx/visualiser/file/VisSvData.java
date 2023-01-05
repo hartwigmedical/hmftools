@@ -111,7 +111,7 @@ public class VisSvData
     @NotNull
     public static List<VisSvData> read(final String filePath) throws IOException
     {
-        return fromLines(Files.readAllLines(new File(filePath).toPath()));
+        return fromLines(Files. readAllLines(new File(filePath).toPath()));
     }
 
     public static void write(@NotNull final String filename, @NotNull List<VisSvData> svDataList) throws IOException

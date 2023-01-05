@@ -207,8 +207,8 @@ public class SpecialFusions
             gene.setSvData(var.getSvData(), var.jcn());
 
             TranscriptData transData = new TranscriptData(
-                    0, "", knownFusionData.ThreeGene, false, POS_STRAND, geneRegion.start(), geneRegion.end(),
-                    null, null, "");
+                    0, "", knownFusionData.ThreeGene, false, knownFusionData.geneStrand(),
+                    geneRegion.start(), geneRegion.end(), null, null, "");
 
             BreakendTransData transcript = new BreakendTransData(
                     gene, transData,  1, 1, PHASE_NONE, PHASE_NONE, 0, 0);
@@ -221,7 +221,6 @@ public class SpecialFusions
         }
 
         GeneFusion fusion = new GeneFusion(upTrans, downTrans, false);
-        // fusion.setReportable(true);
         fusion.setId(mFusionFinder.nextFusionId());
         fusion.setKnownType(PROMISCUOUS_ENHANCER_TARGET);
 
