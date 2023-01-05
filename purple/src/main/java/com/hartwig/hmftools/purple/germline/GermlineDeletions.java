@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_DEL_GE
 import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_DEL_NORMAL_RATIO;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_DEL_REGION_MATCH_BUFFER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_DEL_REGION_MIN;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -133,17 +134,20 @@ public class GermlineDeletions
                     regionStart = region.end();
                     regionEnd = region.end();
                 }
+            }
 
-                // first check if the matched SV for the start also matches at the end
-                if(matchingSVs[SE_START] != null && matchingSVs[SE_START].Variant.end() != null)
+            regionStart -= WINDOW_SIZE;
+            regionEnd += WINDOW_SIZE;
+
+            // first check if the matched SV for the start also matches at the end
+            if(matchingSVs[SE_START] != null && matchingSVs[SE_START].Variant.end() != null)
+            {
+                StructuralVariant sv = matchingSVs[SE_START].Variant;
+
+                if(sv.orientation(false) == requiredOrientation && positionWithin(sv.end().position(), regionStart, regionEnd))
                 {
-                    StructuralVariant sv = matchingSVs[SE_START].Variant;
-
-                    if(sv.orientation(false) == requiredOrientation && positionWithin(sv.end().position(), regionStart, regionEnd))
-                    {
-                        matchingSVs[SE_END] = new MatchedStructuralVariant(sv, false);
-                        break;
-                    }
+                    matchingSVs[SE_END] = new MatchedStructuralVariant(sv, false);
+                    break;
                 }
             }
 
@@ -163,6 +167,9 @@ public class GermlineDeletions
                         break;
                     }
                 }
+
+                if(matchingSVs[se] != null)
+                    break;
             }
         }
 

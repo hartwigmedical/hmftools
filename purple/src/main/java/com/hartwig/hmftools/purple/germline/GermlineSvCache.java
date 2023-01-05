@@ -90,7 +90,6 @@ public class GermlineSvCache
 
         PPL_LOGGER.info("loaded {} germline SVs from {}", mVariantCollection.variants().size(), inputVcf);
 
-
         vcfReader.close();
     }
 
@@ -98,7 +97,7 @@ public class GermlineSvCache
 
     public void write()
     {
-        if(!mVcfHeader.isPresent())
+        if(!mVcfHeader.isPresent() || mOutputVcfFilename.isEmpty())
             return;
 
         try
@@ -165,6 +164,11 @@ public class GermlineSvCache
 
             ObservedRegion fittedRegion = fittedRegions[se];
             PurpleCopyNumber copyNumber = copyNumbers[se];
+
+            // initialise all values
+            legBuilder.adjustedAlleleFrequency(0.0);
+            legBuilder.adjustedCopyNumber(0.0);
+            legBuilder.adjustedCopyNumberChange(0.0);
 
             if(copyNumber != null)
             {

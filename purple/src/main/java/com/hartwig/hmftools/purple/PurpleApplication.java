@@ -582,21 +582,25 @@ public class PurpleApplication
             germlineDeletions = new GermlineDeletions(
                     mReferenceData.DriverGenes.driverGenes(), mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
 
-            germlineDeletions.findDeletions(copyNumbers, fittedRegions, Collections.EMPTY_LIST);
-
-            // TEMP logic only
-            // process germline SV, though these do not currently contribute to drivers since only DELs would be considered
             final String germlineSvVcf = purpleGermlineSvFile(purpleDataPath, tumorId);
+            final List<StructuralVariant> germlineSVs = Lists.newArrayList();
+
             if(Files.exists(Paths.get(germlineSvVcf)))
             {
-                String germlineSvAnnotatedVcf = PurpleCommon.PURPLE_SV_GERMLINE_VCF_SUFFIX .replaceAll("germline", "germline_annotated");
-                final String outputVcf = FileWriterUtils.checkAddDirSeparator(purpleDataPath) + tumorId + germlineSvAnnotatedVcf;
+                // TEMP logic for testing germline SV annotation
+                //String germlineSvAnnotatedVcf = PurpleCommon.PURPLE_SV_GERMLINE_VCF_SUFFIX.replaceAll("germline", "germline_annotated");
+                //String germlineSvOutputVcf = FileWriterUtils.checkAddDirSeparator(purpleDataPath) + tumorId + germlineSvAnnotatedVcf;
+                String germlineSvOutputVcf = "";
 
                 GermlineSvCache germlineSvCache = new GermlineSvCache(
-                        germlineSvVcf, outputVcf, mPurpleVersion.version(), mReferenceData, fittedRegions, copyNumbers, purityContext);
+                        mPurpleVersion.version(), germlineSvVcf, germlineSvOutputVcf, mReferenceData, fittedRegions, copyNumbers, purityContext);
 
-                germlineSvCache.write();
+                germlineSVs.addAll(germlineSvCache.variants());
+
+                // germlineSvCache.write();
             }
+
+            germlineDeletions.findDeletions(copyNumbers, fittedRegions, germlineSVs);
         }
 
         findDrivers(tumorId, purityContext, geneCopyNumbers, somaticStream, germlineDeletions);
