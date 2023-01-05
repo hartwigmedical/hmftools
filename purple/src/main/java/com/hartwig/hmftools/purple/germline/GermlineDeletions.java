@@ -42,6 +42,8 @@ import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 
+import org.jetbrains.annotations.Nullable;
+
 public class GermlineDeletions
 {
     private final List<DriverGene> mDriverGenes;
@@ -80,7 +82,7 @@ public class GermlineDeletions
             PurpleCopyNumber matchedCopyNumber = findMatchingCopyNumber(region, copyNumbers, copyNumberSearchState);
 
             ObservedRegion nextRegion = i < fittedRegions.size() - 1 ? fittedRegions.get(i + 1) : null;
-            if(!nextRegion.chromosome().equals(region.chromosome()))
+            if(nextRegion != null && !nextRegion.chromosome().equals(region.chromosome()))
                 nextRegion = null;
 
             MatchedStructuralVariant[] matchingSVs = findMatchingGermlineSVs(region, nextRegion, germlineSVs);
@@ -104,7 +106,7 @@ public class GermlineDeletions
     }
 
     public MatchedStructuralVariant[] findMatchingGermlineSVs(
-            final ObservedRegion region, final ObservedRegion nextRegion, final List<StructuralVariant> germlineSVs)
+            final ObservedRegion region, @Nullable final ObservedRegion nextRegion, final List<StructuralVariant> germlineSVs)
     {
         MatchedStructuralVariant[] matchingSVs = new MatchedStructuralVariant[] { null, null };
 

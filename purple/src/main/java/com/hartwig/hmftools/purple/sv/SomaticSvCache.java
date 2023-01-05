@@ -45,7 +45,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class StructuralVariantCache
+public class SomaticSvCache
 {
     private static final Allele REF_ALLELE = Allele.create("N", true);
     private static final Allele INCREASING_ALLELE = Allele.create(".N", false);
@@ -58,7 +58,7 @@ public class StructuralVariantCache
 
     private int mNextVarId = 0;
 
-    public StructuralVariantCache()
+    public SomaticSvCache()
     {
         mVcfHeader = Optional.empty();
         mOutputVcfFilename = Strings.EMPTY;
@@ -66,11 +66,11 @@ public class StructuralVariantCache
         mRefGenomeFile = null;
     }
 
-    public StructuralVariantCache(
-            final String version, final String templateVCF, final String outputVCF, final ReferenceData referenceData)
+    public SomaticSvCache(
+            final String version, final String inputVcf, final String outputVcf, final ReferenceData referenceData)
     {
-        final VCFFileReader vcfReader = new VCFFileReader(new File(templateVCF), false);
-        mOutputVcfFilename = outputVCF;
+        final VCFFileReader vcfReader = new VCFFileReader(new File(inputVcf), false);
+        mOutputVcfFilename = outputVcf;
         mVcfHeader = Optional.of(generateOutputHeader(version, vcfReader.getFileHeader()));
         mVariantCollection = new VariantContextCollection(mVcfHeader.get());
         mRefGenomeFile = referenceData.RefGenome;
@@ -81,23 +81,13 @@ public class StructuralVariantCache
         }
 
         vcfReader.close();
-    }
 
-    public static StructuralVariantCache createStructuralVariantCache(
-            final String inputVcf, final String outputVcf, final String purpleVersion, final ReferenceData referenceData)
-    {
-        if(inputVcf.isEmpty())
-            return new StructuralVariantCache();
-
-        StructuralVariantCache svCache = new StructuralVariantCache(purpleVersion, inputVcf, outputVcf, referenceData);
-
-        PPL_LOGGER.info("loaded {} structural variants from {}", svCache.variants().size(), inputVcf);
-
-        return svCache;
+        PPL_LOGGER.info("loaded {} somatic SVs from {}", variants().size(), inputVcf);
     }
 
     public void addVariant(final VariantContext variantContext)
     {
+        // called for recovered SVs only
         if(enabled())
         {
             mVariantCollection.add(variantContext);
@@ -144,7 +134,7 @@ public class StructuralVariantCache
                 .attribute(StructuralVariantFactory.IMPRECISE, true)
                 .id("purple_" + mNextVarId++)
                 .attribute(CIPOS, Lists.newArrayList(lowerRange, upperRange))
-                .attribute(SVTYPE, "BND")
+                .attribute(SVTYPE, StructuralVariantType.BND.toString())
                 .attribute(INFERRED, true)
                 .noGenotypes()
                 .make();
@@ -222,7 +212,7 @@ public class StructuralVariantCache
         return enrichedCollection;
     }
 
-    private void addEnrichedVariantContexts(final VariantContextCollection enrichedCollection, final EnrichedStructuralVariant variant)
+    public static void addEnrichedVariantContexts(final VariantContextCollection enrichedCollection, final EnrichedStructuralVariant variant)
     {
         final VariantContext startContext = variant.startContext();
         final VariantContext endContext = variant.endContext();
@@ -271,7 +261,7 @@ public class StructuralVariantCache
         }
     }
 
-    private VariantContext buildVariantContext(
+    public static VariantContext buildVariantContext(
             final VariantContext variantContext, final List<Double> purpleAF, final List<Double> purpleCN,
             final List<Double> purpleCNChange, final Double junctionCopyNumber)
     {
@@ -292,11 +282,11 @@ public class StructuralVariantCache
         return builder.make();
     }
 
-    public List<StructuralVariant> variants() { return mVariantCollection.segmentationVariants(); }
+    public List<StructuralVariant> variants() { return mVariantCollection.variants(); }
 
     public int passingBnd()
     {
-        return (int) mVariantCollection.segmentationVariants()
+        return (int) mVariantCollection.variants()
                 .stream()
                 .filter(x -> x.filter() == null || Objects.equals(x.filter(), PASS))
                 .filter(x -> !x.type().equals(StructuralVariantType.INF))

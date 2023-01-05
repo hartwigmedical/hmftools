@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
-import com.hartwig.hmftools.purple.sv.StructuralVariantCache;
+import com.hartwig.hmftools.purple.sv.SomaticSvCache;
 
 public final class PurpleSummaryData
 {
@@ -59,7 +59,7 @@ public final class PurpleSummaryData
 
     public static PurityContext createPurity(
             final String version, final BestFit bestFit, final Gender gender, final PurpleConfig config, final PurpleQC qcChecks,
-            final List<PurpleCopyNumber> copyNumbers, final SomaticStream somaticStream, final StructuralVariantCache svCache)
+            final List<PurpleCopyNumber> copyNumbers, final SomaticStream somaticStream, final SomaticSvCache svCache)
     {
         return ImmutablePurityContext.builder()
                 .version(version)
