@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT;
 import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.writeImpactDetails;
 
@@ -65,7 +65,7 @@ public final class TestUtils
         double variantCopyNumber = 2 * vaf;
         double adjustedCopyNumber = 2;
 
-        context.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, variantCopyNumber);
+        context.getCommonInfo().putAttribute(PURPLE_VARIANT_CN, variantCopyNumber);
 
         //context.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, );
         //context.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, );

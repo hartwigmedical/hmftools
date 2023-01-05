@@ -175,6 +175,7 @@ public class PurpleApplication
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         PPL_LOGGER.info("Purple complete, runTime({})", format("%.1fs", timeTakenMs/1000.0));
+        mExecutorService.shutdown();
     }
 
     private SampleData loadSampleData(final String referenceId, final String tumorId, final SampleDataFiles sampleDataFiles) throws Exception

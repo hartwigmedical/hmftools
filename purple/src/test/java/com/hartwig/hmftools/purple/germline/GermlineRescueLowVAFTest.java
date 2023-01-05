@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 
 import static org.junit.Assert.assertTrue;
 
@@ -42,7 +42,7 @@ public class GermlineRescueLowVAFTest
     private static VariantContext createVariant(double variantCopyNumber, int alleleReadCount)
     {
         final String line =
-                "11\t1000\tCOSM123;COSM456\tG\tA\t100\t" + GermlineGenotypeEnrichment.LOW_VAF_FILTER + "\t" + PURPLE_VARIANT_CN_INFO + "="
+                "11\t1000\tCOSM123;COSM456\tG\tA\t100\t" + GermlineGenotypeEnrichment.LOW_VAF_FILTER + "\t" + PURPLE_VARIANT_CN + "="
                         + variantCopyNumber + ";NEAR_HOTSPOT\tGT:AD:DP\t0/1:73," + alleleReadCount + ":91";
 
         return VariantContextFromString.decode(line);

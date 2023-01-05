@@ -4,6 +4,10 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_COUNT;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_CHANGE;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_JUNCTION_COPY_NUMBER;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
 
@@ -17,13 +21,14 @@ import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
-import com.hartwig.hmftools.common.sv.StructuralVariantFile;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.linx.germline.GermlineFilter;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
 import org.apache.commons.cli.CommandLine;
+
+import htsjdk.variant.variantcontext.VariantContext;
 
 public final class SvFileLoader
 {
@@ -85,6 +90,8 @@ public final class SvFileLoader
         catch(Exception e)
         {
             LNX_LOGGER.error("failed to load SVs from VCF: {}", e.toString());
+            e.printStackTrace();
+            System.exit(1);
         }
 
         return svDataList;
@@ -107,8 +114,20 @@ public final class SvFileLoader
         return svDataItems;
     }
 
+    private static double extractPurpleArrayValue(final VariantContext context, final String vcfTag)
+    {
+        if(context == null)
+            return 0;
+
+        List<Double> array = context.getAttributeAsDoubleList(vcfTag, 0);
+        return array != null && !array.isEmpty() ? array.get(0) : 0;
+    }
+
     public static StructuralVariantData convertGermlineSvData(final StructuralVariant var, int svId)
     {
+        final VariantContext contextStart = var.startContext();
+        final VariantContext contextEnd = var.endContext();
+
         return ImmutableStructuralVariantData.builder()
                 .id(svId)
                 .startChromosome(var.chromosome(true))
@@ -119,15 +138,15 @@ public final class SvFileLoader
                 .endOrientation(var.end() == null ? (byte) 0 : var.orientation(false))
                 .startHomologySequence(var.start().homology())
                 .endHomologySequence(var.end() == null ? "" : var.end().homology())
-                .junctionCopyNumber(1)
+                .junctionCopyNumber(contextStart.getAttributeAsDouble(PURPLE_JUNCTION_COPY_NUMBER, 0))
                 .startAF(DatabaseUtil.valueNotNull(var.start().alleleFrequency()))
                 .endAF(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().alleleFrequency()))
-                .adjustedStartAF(DatabaseUtil.valueNotNull(var.start().alleleFrequency()))
-                .adjustedEndAF(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().alleleFrequency()))
-                .adjustedStartCopyNumber(DatabaseUtil.valueNotNull(1))
-                .adjustedEndCopyNumber(var.end() == null ? 0 : 1)
-                .adjustedStartCopyNumberChange(1)
-                .adjustedEndCopyNumberChange(var.end() == null ? 0 : 1)
+                .adjustedStartAF(extractPurpleArrayValue(contextStart, PURPLE_AF))
+                .adjustedEndAF(extractPurpleArrayValue(contextEnd, PURPLE_AF))
+                .adjustedStartCopyNumber(extractPurpleArrayValue(contextStart, PURPLE_CN))
+                .adjustedEndCopyNumber(extractPurpleArrayValue(contextEnd, PURPLE_CN))
+                .adjustedStartCopyNumberChange(extractPurpleArrayValue(contextStart, PURPLE_CN_CHANGE))
+                .adjustedEndCopyNumberChange(extractPurpleArrayValue(contextEnd, PURPLE_CN_CHANGE))
                 .insertSequence(var.insertSequence())
                 .type(var.type())
                 .filter(var.filter())

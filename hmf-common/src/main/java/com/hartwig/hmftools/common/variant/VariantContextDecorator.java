@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_FLAG;
@@ -165,12 +165,12 @@ public class VariantContextDecorator implements GenomePosition
 
     public double adjustedCopyNumber()
     {
-        return mContext.getAttributeAsDouble(PURPLE_CN_INFO, 0);
+        return mContext.getAttributeAsDouble(PURPLE_CN, 0);
     }
 
     public double adjustedVaf()
     {
-        return mContext.getAttributeAsDouble(PURPLE_AF_INFO, 0);
+        return mContext.getAttributeAsDouble(PURPLE_AF, 0);
     }
 
     public boolean biallelic()
@@ -185,7 +185,7 @@ public class VariantContextDecorator implements GenomePosition
 
     public double variantCopyNumber()
     {
-        return mContext.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, 0);
+        return mContext.getAttributeAsDouble(PURPLE_VARIANT_CN, 0);
     }
 
     @Nullable

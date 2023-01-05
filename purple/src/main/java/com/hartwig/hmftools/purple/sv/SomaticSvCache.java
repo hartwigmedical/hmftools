@@ -4,8 +4,10 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SVTYPE;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF_INFO;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_CHANGE;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_JUNCTION_COPY_NUMBER;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
@@ -268,16 +270,16 @@ public class SomaticSvCache
         VariantContextBuilder builder = new VariantContextBuilder(variantContext);
 
         if(!purpleAF.isEmpty())
-            builder.attribute(PURPLE_AF_INFO, purpleAF);
+            builder.attribute(PURPLE_AF, purpleAF);
 
         if(!purpleCN.isEmpty())
-            builder.attribute(PURPLE_CN_INFO, purpleCN);
+            builder.attribute(PURPLE_CN, purpleCN);
 
         if(!purpleCNChange.isEmpty())
-            builder.attribute(StructuralVariantHeader.PURPLE_CN_CHANGE_INFO, purpleCNChange);
+            builder.attribute(PURPLE_CN_CHANGE, purpleCNChange);
 
         if(junctionCopyNumber != null)
-            builder.attribute(StructuralVariantHeader.PURPLE_JUNCTION_COPY_NUMBER_INFO, junctionCopyNumber);
+            builder.attribute(PURPLE_JUNCTION_COPY_NUMBER, junctionCopyNumber);
 
         return builder.make();
     }

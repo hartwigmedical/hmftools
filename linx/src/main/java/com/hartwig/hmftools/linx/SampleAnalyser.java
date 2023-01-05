@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import javax.sound.midi.SysexMessage;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -396,6 +398,8 @@ public class SampleAnalyser implements Callable
             catch (IOException e)
             {
                 LNX_LOGGER.error("failed to write sample SV data: {}", e.toString());
+                e.printStackTrace();
+                System.exit(1);
             }
         }
 

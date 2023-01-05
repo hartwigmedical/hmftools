@@ -176,27 +176,27 @@ public class GermlineSvCache
                     double cnChange = adjustedCN - fittedRegion.refNormalisedCopyNumber();
 
                     legBuilder.adjustedCopyNumberChange(cnChange);
+                }
 
-                    double purity = mPurityContext.bestFit().purity();
+                double purity = mPurityContext.bestFit().purity();
 
-                    if(context.getGenotypes().size() > 1 && purity > 0)
-                    {
-                        // [tumorAF*[2*(1-purity)+adjCNStart*purity] -refAF*2*(1-purity)]/adjCNStart/purity = adjAFStart
-                        // rearranged from tumorAF = [refAF*2*(1-purity) + adjAFStart*purity*adjCNStart] / [2*(1-purity) + purity*adjCNStart]
-                        Genotype refGenotype = context.getGenotype(0);
-                        Genotype tumorGenotype = context.getGenotype(1);
+                if(context.getGenotypes().size() > 1 && purity > 0)
+                {
+                    // [tumorAF*[2*(1-purity)+adjCNStart*purity] -refAF*2*(1-purity)]/adjCNStart/purity = adjAFStart
+                    // rearranged from tumorAF = [refAF*2*(1-purity) + adjAFStart*purity*adjCNStart] / [2*(1-purity) + purity*adjCNStart]
+                    Genotype refGenotype = context.getGenotype(0);
+                    Genotype tumorGenotype = context.getGenotype(1);
 
-                        double refAF = getGenotypeAttributeAsDouble(refGenotype, ALLELE_FRACTION, 0);
-                        double tumorAF = getGenotypeAttributeAsDouble(tumorGenotype, ALLELE_FRACTION, 0);
+                    double refAF = getGenotypeAttributeAsDouble(refGenotype, ALLELE_FRACTION, 0);
+                    double tumorAF = getGenotypeAttributeAsDouble(tumorGenotype, ALLELE_FRACTION, 0);
 
-                        double refPurity = 2 * (1 - purity);
-                        double adjustedAF = (tumorAF * (refPurity + adjustedCN * purity) - refAF * refPurity) / (adjustedCN * purity);
+                    double refPurity = 2 * (1 - purity);
+                    double adjustedAF = (tumorAF * (refPurity + adjustedCN * purity) - refAF * refPurity) / (adjustedCN * purity);
 
-                        legBuilder.adjustedAlleleFrequency(adjustedAF);
+                    legBuilder.adjustedAlleleFrequency(adjustedAF);
 
-                        ++legCount;
-                        junctionCopyNumberTotal += adjustedAF * adjustedCN;
-                    }
+                    ++legCount;
+                    junctionCopyNumberTotal += adjustedAF * adjustedCN;
                 }
             }
 
