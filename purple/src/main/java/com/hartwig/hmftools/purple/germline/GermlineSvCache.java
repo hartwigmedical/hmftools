@@ -4,6 +4,10 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.AMPLIFICATION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READPAIR_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READ_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -11,6 +15,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.purple.sv.SomaticSvCache.addEnrichedVariantContexts;
@@ -191,8 +196,8 @@ public class GermlineSvCache
                     Genotype refGenotype = context.getGenotype(0);
                     Genotype tumorGenotype = context.getGenotype(1);
 
-                    double refAF = getGenotypeAttributeAsDouble(refGenotype, ALLELE_FRACTION, 0);
-                    double tumorAF = getGenotypeAttributeAsDouble(tumorGenotype, ALLELE_FRACTION, 0);
+                    double refAF = getOrCalculateAlleleFrequency(refGenotype);
+                    double tumorAF = getOrCalculateAlleleFrequency(tumorGenotype);
 
                     double refPurity = 2 * (1 - purity);
                     double adjustedAF = (tumorAF * (refPurity + adjustedCN * purity) - refAF * refPurity) / (adjustedCN * purity);
@@ -214,6 +219,21 @@ public class GermlineSvCache
         builder.junctionCopyNumber(junctionCopyNumber);
 
         addEnrichedVariantContexts(mVariantCollection, builder.build());
+    }
+
+    private double getOrCalculateAlleleFrequency(final Genotype genotype)
+    {
+        if(genotype.hasExtendedAttribute(ALLELE_FRACTION))
+            return getGenotypeAttributeAsDouble(genotype, ALLELE_FRACTION, 0);
+
+        int totalReadCoverage = getGenotypeAttributeAsInt(genotype, REFERENCE_BREAKEND_READ_COVERAGE, 0)
+                + getGenotypeAttributeAsInt(genotype, REFERENCE_BREAKEND_READPAIR_COVERAGE, 0);
+
+        int variantFrags = getGenotypeAttributeAsInt(genotype, VARIANT_FRAGMENT_BREAKPOINT_COVERAGE, 0) +
+                getGenotypeAttributeAsInt(genotype, VARIANT_FRAGMENT_BREAKEND_COVERAGE, 0);
+
+        double total = variantFrags + totalReadCoverage;
+        return variantFrags / total;
     }
 
     private void annotateVariant(final StructuralVariant variant)
