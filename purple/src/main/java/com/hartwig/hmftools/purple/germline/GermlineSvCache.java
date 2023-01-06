@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.germline;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.purple.GermlineStatus.AMPLIFICATION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
@@ -145,16 +147,21 @@ public class GermlineSvCache
         catch(Exception e)
         {
             PPL_LOGGER.error("failed to write germline SV VCF({}): {}", mOutputVcfFilename, e.toString());
+            e.printStackTrace();
+            System.exit(1);
         }
     }
 
     private void annotateVariant(
-            final StructuralVariant variant, final ObservedRegion[] fittedRegions, final PurpleCopyNumber[] copyNumbers)
+            final StructuralVariant variant, final RegionMatchInfo[] fittedRegions, final PurpleCopyNumber[] copyNumbers)
     {
         ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder().from(variant);
 
         double junctionCopyNumberTotal = 0;
         int legCount = 0;
+
+        boolean hasInvalidRegions = (fittedRegions[SE_START] == null && fittedRegions[SE_END] == null)
+                || (fittedRegions[SE_START] != null && fittedRegions[SE_START].matches(fittedRegions[SE_END]));
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
@@ -167,7 +174,7 @@ public class GermlineSvCache
 
             ImmutableEnrichedStructuralVariantLeg.Builder legBuilder = ImmutableEnrichedStructuralVariantLeg.builder().from(leg);
 
-            ObservedRegion fittedRegion = fittedRegions[se];
+            ObservedRegion fittedRegion = fittedRegions[se] != null ? fittedRegions[se].Region : null;
             PurpleCopyNumber copyNumber = copyNumbers[se];
 
             // initialise all values
@@ -180,9 +187,9 @@ public class GermlineSvCache
                 double adjustedCN = copyNumber.averageTumorCopyNumber();
                 legBuilder.adjustedCopyNumber(copyNumber.averageTumorCopyNumber());
 
-                if(fittedRegion != null)
+                if(fittedRegion != null && !hasInvalidRegions)
                 {
-                    double cnChange = adjustedCN - fittedRegion.refNormalisedCopyNumber();
+                    double cnChange = abs(adjustedCN - fittedRegion.refNormalisedCopyNumber());
 
                     legBuilder.adjustedCopyNumberChange(cnChange);
                 }
@@ -236,13 +243,33 @@ public class GermlineSvCache
         return variantFrags / total;
     }
 
+    private class RegionMatchInfo
+    {
+        public final ObservedRegion Region;
+        public final boolean MatchesStart;
+
+        public RegionMatchInfo(final ObservedRegion region, final boolean matchesStart)
+        {
+            Region = region;
+            MatchesStart = matchesStart;
+        }
+
+        public boolean matches(final RegionMatchInfo other)
+        {
+            if(other == null)
+                return false;
+
+            return Region == other.Region && MatchesStart == other.MatchesStart;
+        }
+    }
+
     private void annotateVariant(final StructuralVariant variant)
     {
         // not expecting too may germline SVs so just search the full collections for each one
         int copyNumberIndex = 0;
         int regionIndex = 0;
 
-        ObservedRegion[] matchedFittedRegions = new ObservedRegion[SE_PAIR];
+        RegionMatchInfo[] matchedFittedRegions = new RegionMatchInfo[SE_PAIR];
         PurpleCopyNumber[] matchedCopyNumbers = new PurpleCopyNumber[SE_PAIR];
 
         for(int se = SE_START; se <= SE_END; ++se)
@@ -282,11 +309,11 @@ public class GermlineSvCache
                 if(nextRegion != null && !nextRegion.chromosome().equals(region.chromosome()))
                     nextRegion = null;
 
-                ObservedRegion breakendRegion = breakendMatchesRegion(leg, region, nextRegion);
+                Boolean matchesStart = breakendMatchesRegion(leg, region, nextRegion);
 
-                if(breakendRegion != null)
+                if(matchesStart != null)
                 {
-                    matchedFittedRegions[se] = breakendRegion;
+                    matchedFittedRegions[se] = new RegionMatchInfo(region, matchesStart);
                     break;
                 }
             }
@@ -305,7 +332,7 @@ public class GermlineSvCache
         return region.germlineStatus() == HOM_DELETION || region.germlineStatus() == HET_DELETION || region.germlineStatus() == AMPLIFICATION;
     }
 
-    private ObservedRegion breakendMatchesRegion(final StructuralVariantLeg leg, final ObservedRegion region, final ObservedRegion nextRegion)
+    private Boolean breakendMatchesRegion(final StructuralVariantLeg leg, final ObservedRegion region, final ObservedRegion nextRegion)
     {
         // try to match on the start region or the end region, matching on orientation and within max 1 depth window
 
@@ -345,7 +372,7 @@ public class GermlineSvCache
 
             if(positionWithin(leg.position(), regionStart, regionEnd))
             {
-                return region;
+                return se == SE_START ? true : false;
             }
         }
 
