@@ -23,21 +23,28 @@ import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 public class SummaryStats
 {
     public static RnaStatistics createSummaryStats(
-            final FragmentTypeCounts fragmentTypeCounts, long enrichedGeneFragCount,
+            final FragmentTypeCounts fragmentTypeCounts, long enrichedGeneFragCount, int spliceGeneCount,
             double medianGCRatio, final List<FragmentSize> fragmentLengths, int maxReadLength)
     {
-        double totalFragments = fragmentTypeCounts.typeCount(TOTAL);
-        double enrichedGenePercent = totalFragments > 0 ? enrichedGeneFragCount / totalFragments : 0;
+        long totalFragments = fragmentTypeCounts.typeCount(TOTAL);
+        long duplicateFragments = fragmentTypeCounts.typeCount(DUPLICATE);
+
+        double totalFragmentsDenom = totalFragments;
+
+        double enrichedGenePercent = totalFragments > 0 ? enrichedGeneFragCount / totalFragmentsDenom : 0;
 
         final List<Double> fragLengths = FragmentSizeCalcs.calcPercentileData(fragmentLengths, Lists.newArrayList(0.05, 0.5, 0.95));
 
+        String qcStatus = RnaStatistics.calcQcStatus(totalFragments, duplicateFragments, spliceGeneCount);
+
         return ImmutableRnaStatistics.builder()
-                .totalFragments(fragmentTypeCounts.typeCount(TOTAL))
-                .duplicateFragments(fragmentTypeCounts.typeCount(DUPLICATE))
-                .splicedFragmentPerc(fragmentTypeCounts.typeCount(TRANS_SUPPORTING) / totalFragments)
-                .unsplicedFragmentPerc(fragmentTypeCounts.typeCount(UNSPLICED) / totalFragments)
-                .altFragmentPerc(fragmentTypeCounts.typeCount(ALT) / totalFragments)
-                .chimericFragmentPerc(fragmentTypeCounts.typeCount(CHIMERIC) / totalFragments)
+                .qcStatus(qcStatus)
+                .totalFragments(totalFragments)
+                .duplicateFragments(duplicateFragments)
+                .splicedFragmentPerc(fragmentTypeCounts.typeCount(TRANS_SUPPORTING) / totalFragmentsDenom)
+                .unsplicedFragmentPerc(fragmentTypeCounts.typeCount(UNSPLICED) / totalFragmentsDenom)
+                .altFragmentPerc(fragmentTypeCounts.typeCount(ALT) / totalFragmentsDenom)
+                .chimericFragmentPerc(fragmentTypeCounts.typeCount(CHIMERIC) / totalFragmentsDenom)
                 .readLength(maxReadLength)
                 .fragmentLength5thPercent(!fragLengths.isEmpty() ? fragLengths.get(0) : 0)
                 .fragmentLength50thPercent(!fragLengths.isEmpty() ? fragLengths.get(1) : 0)
@@ -58,7 +65,7 @@ public class SummaryStats
                 return null;
             }
 
-            return RnaStatistics.fromCsv(lines.get(1));
+            return RnaStatistics.fromCsv(lines);
         }
         catch(IOException e)
         {

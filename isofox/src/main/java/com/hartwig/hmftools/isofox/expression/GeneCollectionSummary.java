@@ -38,6 +38,8 @@ public class GeneCollectionSummary
         mFitResiduals = 0;
     }
 
+    public int spliceGenesCount() { return (int)GeneResults.stream().filter(x -> x.getSplicedAlloc() > 0).count(); }
+
     public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
     public double getFitResiduals() { return mFitResiduals; }
 

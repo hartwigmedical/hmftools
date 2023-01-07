@@ -200,7 +200,7 @@ public class SampleLoaderTask implements Callable
                 return;
             }
 
-            final RnaStatistics statistics = RnaStatistics.fromCsv(lines.get(1));
+            final RnaStatistics statistics = RnaStatistics.fromCsv(lines);
 
             ISF_LOGGER.debug("sample({}) writing summary statistics to DB", sampleId);
             mRnaDAO.writeRnaStatistics(sampleId, statistics);
