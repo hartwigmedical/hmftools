@@ -31,7 +31,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
-import com.hartwig.hmftools.isofox.BamFragmentAllocator;
+import com.hartwig.hmftools.isofox.FragmentAllocator;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.common.BamReadCounter;
@@ -142,7 +142,7 @@ public class ResultsWriter
                 if(mConfig.runFunction(READ_COUNTS))
                     mReadDataWriter = BamReadCounter.createReadDataWriter(mConfig);
                 else
-                    mReadDataWriter = BamFragmentAllocator.createReadDataWriter(mConfig);
+                    mReadDataWriter = FragmentAllocator.createReadDataWriter(mConfig);
             }
 
             if(mConfig.WriteSpliceSiteData)

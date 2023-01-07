@@ -78,7 +78,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class BamFragmentAllocator
+public class FragmentAllocator
 {
     private final IsofoxConfig mConfig;
     private final SamReader mSamReader;
@@ -113,7 +113,7 @@ public class BamFragmentAllocator
     private static final int GENE_LOG_COUNT = 5000000;
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
 
-    public BamFragmentAllocator(final IsofoxConfig config, final ResultsWriter resultsWriter)
+    public FragmentAllocator(final IsofoxConfig config, final ResultsWriter resultsWriter)
     {
         mConfig = config;
 
@@ -620,7 +620,7 @@ public class BamFragmentAllocator
 
         if(!read1.isSecondaryAlignment() && !read2.isSecondaryAlignment())
         {
-            mCurrentGenes.addCount(fragmentType, 0);
+            mCurrentGenes.addCount(fragmentType, 1);
         }
 
         if(mConfig.WriteReadData && mReadDataWriter != null)

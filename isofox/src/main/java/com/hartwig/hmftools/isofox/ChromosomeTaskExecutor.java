@@ -33,7 +33,6 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -59,7 +58,7 @@ public class ChromosomeTaskExecutor implements Callable
     private final EnsemblDataCache mGeneTransCache;
     private final ResultsWriter mResultsWriter;
 
-    private final BamFragmentAllocator mBamFragmentAllocator;
+    private final FragmentAllocator mBamFragmentAllocator;
     private final TranscriptExpression mExpTransRates;
     private final GcTranscriptCalculator mTranscriptGcRatios;
     private final ExpectedCountsCache mExpectedCountsCache;
@@ -103,7 +102,7 @@ public class ChromosomeTaskExecutor implements Callable
 
         mExpectedCountsCache = expectedCountsCache;
 
-        mBamFragmentAllocator = new BamFragmentAllocator(mConfig, resultsWriter);
+        mBamFragmentAllocator = new FragmentAllocator(mConfig, resultsWriter);
         mBamFragmentAllocator.registerKnownFusionPairs(mGeneTransCache);
 
         mGcRatioCounts = mBamFragmentAllocator.getGcRatioCounts();
