@@ -45,6 +45,7 @@ public class SummaryStats
                 .unsplicedFragmentPerc(fragmentTypeCounts.typeCount(UNSPLICED) / totalFragmentsDenom)
                 .altFragmentPerc(fragmentTypeCounts.typeCount(ALT) / totalFragmentsDenom)
                 .chimericFragmentPerc(fragmentTypeCounts.typeCount(CHIMERIC) / totalFragmentsDenom)
+                .splicedGeneCount(spliceGeneCount)
                 .readLength(maxReadLength)
                 .fragmentLength5thPercent(!fragLengths.isEmpty() ? fragLengths.get(0) : 0)
                 .fragmentLength50thPercent(!fragLengths.isEmpty() ? fragLengths.get(1) : 0)

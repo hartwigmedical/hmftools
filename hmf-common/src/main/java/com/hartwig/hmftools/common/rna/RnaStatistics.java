@@ -2,6 +2,10 @@ package com.hartwig.hmftools.common.rna;
 
 import static com.hartwig.hmftools.common.rna.RnaCommon.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.getDoubleValue;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.getIntValue;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.getLongValue;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.getValue;
 
 import java.util.List;
 import java.util.Map;
@@ -20,6 +24,7 @@ public abstract class RnaStatistics
     public abstract double unsplicedFragmentPerc();
     public abstract double altFragmentPerc();
     public abstract double chimericFragmentPerc();
+    public abstract int splicedGeneCount();
 
     public abstract int readLength();
 
@@ -56,12 +61,14 @@ public abstract class RnaStatistics
                 .add("UnsplicedFragmentPerc")
                 .add("AltFragmentPerc")
                 .add("ChimericFragmentPerc")
+                .add("SplicedGeneCount")
                 .add("ReadLength")
                 .add("FragLength5th")
                 .add("FragLength50th")
                 .add("FragLength95th")
                 .add("EnrichedGenePercent")
-                .add("MedianGCRatio").toString();
+                .add("MedianGCRatio")
+                .toString();
     }
 
     public String toCsv(final String sampleId)
@@ -75,6 +82,7 @@ public abstract class RnaStatistics
                 .add(String.format("%.3f", unsplicedFragmentPerc()))
                 .add(String.format("%.3f", altFragmentPerc()))
                 .add(String.format("%.3f", chimericFragmentPerc()))
+                .add(String.valueOf(splicedGeneCount()))
                 .add(String.valueOf(readLength()))
                 .add(String.format("%.0f", fragmentLength5thPercent()))
                 .add(String.format("%.0f", fragmentLength50thPercent()))
@@ -92,8 +100,11 @@ public abstract class RnaStatistics
 
         ImmutableRnaStatistics.Builder builder = ImmutableRnaStatistics.builder();
 
-        long totalFragments = Long.parseLong(values[fieldsIndexMap.get("TotalFragments")]);
-        long duplicateFragments = Long.parseLong(values[fieldsIndexMap.get("DuplicateFragments")]);
+        long totalFragments = getLongValue(fieldsIndexMap, "TotalFragments", values);
+        long duplicateFragments = getLongValue(fieldsIndexMap, "DuplicateFragments", values);
+
+        int splicedGeneCount = fieldsIndexMap.containsValue("SplicedGeneCount") ?
+                getIntValue(fieldsIndexMap, "SplicedGeneCount", values) : -1;
 
         String qcStatus;
 
@@ -103,23 +114,24 @@ public abstract class RnaStatistics
         }
         else
         {
-            qcStatus = calcQcStatus(totalFragments, duplicateFragments, -1);
+            qcStatus = calcQcStatus(totalFragments, duplicateFragments, splicedGeneCount);
         }
 
         return ImmutableRnaStatistics.builder()
                 .qcStatus(qcStatus)
                 .totalFragments(totalFragments)
                 .duplicateFragments(duplicateFragments)
-                .splicedFragmentPerc(Double.parseDouble(values[fieldsIndexMap.get("SplicedFragmentPerc")]))
-                .unsplicedFragmentPerc(Double.parseDouble(values[fieldsIndexMap.get("UnsplicedFragmentPerc")]))
-                .altFragmentPerc(Double.parseDouble(values[fieldsIndexMap.get("AltFragmentPerc")]))
-                .chimericFragmentPerc(Double.parseDouble(values[fieldsIndexMap.get("ChimericFragmentPerc")]))
-                .readLength(Integer.parseInt(values[fieldsIndexMap.get("ReadLength")]))
-                .fragmentLength5thPercent(Double.parseDouble(values[fieldsIndexMap.get("FragLength5th")]))
-                .fragmentLength50thPercent(Double.parseDouble(values[fieldsIndexMap.get("FragLength50th")]))
-                .fragmentLength95thPercent(Double.parseDouble(values[fieldsIndexMap.get("FragLength95th")]))
-                .enrichedGenePercent(Double.parseDouble(values[fieldsIndexMap.get("EnrichedGenePercent")]))
-                .medianGCRatio(Double.parseDouble(values[fieldsIndexMap.get("MedianGCRatio")]))
+                .splicedFragmentPerc(getDoubleValue(fieldsIndexMap, "SplicedFragmentPerc", values))
+                .unsplicedFragmentPerc(getDoubleValue(fieldsIndexMap, "UnsplicedFragmentPerc", values))
+                .altFragmentPerc(getDoubleValue(fieldsIndexMap, "AltFragmentPerc", values))
+                .chimericFragmentPerc(getDoubleValue(fieldsIndexMap, "ChimericFragmentPerc", values))
+                .splicedGeneCount(getValue(fieldsIndexMap, "SplicedGeneCount", 0, values))
+                .readLength(getIntValue(fieldsIndexMap, "ReadLength", values))
+                .fragmentLength5thPercent(getDoubleValue(fieldsIndexMap, "FragLength5th", values))
+                .fragmentLength50thPercent(getDoubleValue(fieldsIndexMap, "FragLength50th", values))
+                .fragmentLength95thPercent(getDoubleValue(fieldsIndexMap, "FragLength95th", values))
+                .enrichedGenePercent(getDoubleValue(fieldsIndexMap, "EnrichedGenePercent", values))
+                .medianGCRatio(getDoubleValue(fieldsIndexMap, "MedianGCRatio", values))
                 .build();
     }
 
