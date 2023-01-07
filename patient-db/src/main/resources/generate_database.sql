@@ -1189,7 +1189,7 @@ CREATE TABLE rnaStatistics
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(50) NOT NULL,
-    qcStatus varchar(50) NOT NULL,
+    qcStatus varchar(100) NOT NULL,
     readLength int NOT NULL,
     totalFragments int NOT NULL,
     duplicates int NOT NULL,

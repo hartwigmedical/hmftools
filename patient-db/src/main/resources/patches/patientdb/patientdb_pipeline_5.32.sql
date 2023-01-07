@@ -37,3 +37,8 @@ ALTER TABLE structuralVariantGermline
     ADD COLUMN adjustedCopyNumberChangeStart DOUBLE PRECISION after adjustedCopyNumberEnd,
     ADD COLUMN adjustedCopyNumberChangeEnd DOUBLE PRECISION after adjustedCopyNumberChangeStart;
 
+# Isofox
+ALTER TABLE rnaStatistics
+	CHANGE COLUMN qcStatus qcStatus varchar(100);
+
+
