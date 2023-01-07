@@ -27,7 +27,7 @@ public class SummaryStats
             double medianGCRatio, final List<FragmentSize> fragmentLengths, int maxReadLength)
     {
         double totalFragments = fragmentTypeCounts.typeCount(TOTAL);
-        double enrichedGenePercent = totalFragments > 0 ? enrichedGeneFragCount / (double)totalFragments : 0;
+        double enrichedGenePercent = totalFragments > 0 ? enrichedGeneFragCount / totalFragments : 0;
 
         final List<Double> fragLengths = FragmentSizeCalcs.calcPercentileData(fragmentLengths, Lists.newArrayList(0.05, 0.5, 0.95));
 
