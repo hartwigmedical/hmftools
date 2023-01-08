@@ -104,7 +104,7 @@ class CiderApplication
         val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher)
         val vdjAnnotations: List<VdjAnnotation> = vdjAnnotator.sortAndAnnotateVdjs(vdjSequences, primerMatchList)
 
-        writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjAnnotations, true)
+        writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjAnnotations, mParams.reportMatchRefSeq, true)
 
         val finish = Instant.now()
         val seconds = Duration.between(start, finish).seconds
@@ -203,10 +203,10 @@ class CiderApplication
         val sLogger = LogManager.getLogger(CiderApplication::class.java)
         private fun readerFactory(params: CiderParams): SamReaderFactory
         {
-            val readerFactory = SamReaderFactory.make().validationStringency(params.stringency)
+            val readerFactory = SamReaderFactory.make()
             return if (params.refGenomePath != null)
             {
-                readerFactory.referenceSource(ReferenceSource(File(params.refGenomePath)))
+                readerFactory.referenceSource(ReferenceSource(File(params.refGenomePath!!)))
             } else readerFactory
         }
 

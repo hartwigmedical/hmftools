@@ -170,13 +170,19 @@ $ perl $BLAST_INSTALL/bin/update_blastdb.pl --passive --decompress human_genome
 - **PON** - We should filter sequences found in a large number of samples 
 - **Error tolerance in collapsing** - We collapse sequences with up to 1 high quality sequencing difference across the anchors + CDR3 sequence. We still see a small number of artefacts from very highly supported sequences which could be cleaned up further. 
 - **Extension of incomplete TCR** - For TCR regions it may be possible to predict a full CDR3 sequence from the germline using a parital frgament.  For IG this is likely dangerous due to hypermutation 
-- **Multiple CDR3s in consensus sequence** - A single consensus sequence may have 2 anchor locations that lead to plausible high scoring CDR3 sequences. Currently we choose the highest scoring, but both could be functional. 
+- **Multiple CDR3s in consensus sequence** - A single consensus sequence may have 2 anchor locations that lead to plausible high scoring CDR3 sequences. Currently we choose the highest scoring, but both could be functional.
+
+### Other:
+- Support AIRR format output.
 
 # Version History and Download Links
+- [0.5](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.5)
+  - By default do not report VDJ sequences that match reference genome. 
+  - Add command line argument `report_match_ref_seq`.
 - [0.4](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.4)
-    - Use a layout tree to construct layouts. This ensures that reads are assigned correctly. 
-    - When constructing VDJ by overlapping V aligned and J aligned layouts, only the high confidence sequence have to match. 
-    - Fixed crashes in the building of VDJ sequences.
-    - Changed vdj_seq.tsv output file extension to vdj.tsv.gz
+  - Use a layout tree to construct layouts. This ensures that reads are assigned correctly. 
+  - When constructing VDJ by overlapping V aligned and J aligned layouts, only the high confidence sequence have to match. 
+  - Fixed crashes in the building of VDJ sequences.
+  - Changed vdj_seq.tsv output file extension to vdj.tsv.gz
 - [0.3](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.3)
-    - First public release 
+  - First public release 
