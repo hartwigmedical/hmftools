@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
-import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.markdups.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosomePartition;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readInSpecifiedRegions;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
 
 import java.io.File;
@@ -72,6 +71,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         if(!mConfig.SpecificRegions.isEmpty())
         {
+            // NOTE: doesn't currently handle multiple regions on the same chromosome
             ChrBaseRegion firstRegion = mConfig.SpecificRegions.stream().filter(x -> x.Chromosome.equals(mRegion.Chromosome)).findFirst().orElse(mRegion);
             int partitionStart = (firstRegion.start() / mConfig.PartitionSize) * mConfig.PartitionSize;
             mCurrentPartition = new BaseRegion(partitionStart, partitionStart + mConfig.PartitionSize - 1);
@@ -176,16 +176,16 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
     private void processSamRecord(final SAMRecord read)
     {
-        int readStart = read.getAlignmentStart();
-
-        //if(!readInSpecifiedRegions(read, mConfig.SpecificRegions, mConfig.SpecificChromosomes, false))
-        //    return;
+        if(readOutsideSpecifiedRegions(read, mConfig.SpecificRegions, mConfig.SpecificChromosomes, mConfig.SpecificRegionsFilterType))
+            return;
 
         ++mTotalRecordCount;
         ++mPartitionRecordCount;
 
         if(mConfig.runReadChecks())
             mReadsProcessed.add(read);
+
+        int readStart = read.getAlignmentStart();
 
         while(mCurrentPartition != null && readStart > mCurrentPartition.end())
         {

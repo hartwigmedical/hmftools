@@ -425,48 +425,6 @@ public class FragmentUtils
                 read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
     }
 
-    public static boolean readInSpecifiedRegions(
-            final SAMRecord read, final List<ChrBaseRegion> regions, final List<String> chromosomes, boolean checkSupplementaries)
-    {
-        if(!chromosomes.isEmpty())
-        {
-            if(chromosomes.stream().noneMatch(x -> x.equals(read.getContig())))
-                return false;
-
-            // any mates or supplementaries must also be within the regions specified
-            if(chromosomes.stream().noneMatch(x -> x.equals(read.getMateReferenceName())))
-                return false;
-        }
-
-        if(!regions.isEmpty())
-        {
-            if(regions.stream().noneMatch(x -> x.containsPosition(read.getContig(), read.getAlignmentStart())))
-                return false;
-
-            // any mates or supplementaries must also be within the regions specified
-            if(regions.stream().noneMatch(x -> x.containsPosition(read.getMateReferenceName(), read.getMateAlignmentStart())))
-                return false;
-        }
-
-        // by default ignore checking supplementaries since a) they aren't marked as duplicates by other tools and b) they shouldn't be
-        // a reason to ignore a primary read since that then impacts duplicate classification
-        if(checkSupplementaries)
-        {
-            SupplementaryReadData suppData = SupplementaryReadData.from(read);
-
-            if(suppData != null)
-            {
-                if(!regions.isEmpty() && regions.stream().noneMatch(x -> x.containsPosition(suppData.Chromosome, suppData.Position)))
-                    return false;
-
-                if(!chromosomes.isEmpty() && chromosomes.stream().noneMatch(x -> x.equals(suppData.Chromosome)))
-                    return false;
-            }
-        }
-
-        return true;
-    }
-
     // methods which are reliant on having mate CIGAR:
     public static FragmentCoordinates getFragmentCoordinates(final SAMRecord read, boolean orderCoordinates)
     {

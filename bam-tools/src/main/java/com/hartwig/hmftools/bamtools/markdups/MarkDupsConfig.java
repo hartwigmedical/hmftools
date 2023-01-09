@@ -54,6 +54,7 @@ public class MarkDupsConfig
     public final List<String> SpecificChromosomes;
     public final List<String> LogReadIds;
     public final List<ChrBaseRegion> SpecificRegions;
+    public final FilterReadsType SpecificRegionsFilterType;
     public final ReadOutput LogReadType;
     public final boolean PerfDebug;
     public final boolean RunChecks;
@@ -66,6 +67,7 @@ public class MarkDupsConfig
     private static final String WRITE_BAM = "write_bam";
     private static final String RUN_CHECKS = "run_checks";
     private static final String USE_INTERIM_FILES = "use_interim_files";
+    private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
 
     private static final int DEFAULT_PARTITION_SIZE = 1000000;
     private static final int DEFAULT_POS_BUFFER_SIZE = 1000;
@@ -105,6 +107,10 @@ public class MarkDupsConfig
         {
             mIsValid = false;
         }
+
+        SpecificRegionsFilterType = !SpecificChromosomes.isEmpty() || !SpecificRegions.isEmpty() ?
+                FilterReadsType.valueOf(cmd.getOptionValue(SPECIFIC_REGION_FILTER_TYPE, FilterReadsType.READ.toString())) :
+                FilterReadsType.NONE;
 
         WriteBam = cmd.hasOption(WRITE_BAM) || !cmd.hasOption(READ_OUTPUTS);
         LogReadType = ReadOutput.valueOf(cmd.getOptionValue(READ_OUTPUTS, ReadOutput.NONE.toString()));
@@ -175,6 +181,7 @@ public class MarkDupsConfig
         options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
         options.addOption(RUN_CHECKS, false, "Run duplicate mismatch checks");
         options.addOption(USE_INTERIM_FILES, false, "Write candidate duplicate reads to file");
+        options.addOption(SPECIFIC_REGION_FILTER_TYPE, true, "Used with specific regions, to filter mates or supps");
 
         return options;
     }
@@ -199,6 +206,7 @@ public class MarkDupsConfig
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
+        SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;
 
         WriteBam = false;
         LogReadType = ReadOutput.NONE;
