@@ -5,11 +5,16 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.AMPLIFICATION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.UNKNOWN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READPAIR_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READ_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -35,6 +40,7 @@ import com.hartwig.hmftools.common.sv.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantHeader;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.sv.StructuralRefContextEnrichment;
@@ -152,6 +158,15 @@ public class GermlineSvCache
         }
     }
 
+    private void annotateVariant(final StructuralVariant variant)
+    {
+        RegionMatchInfo[] fittedRegions = matchFittedRegions(variant);
+
+        PurpleCopyNumber[] copyNumbers = matchCopyNumbers(variant);
+
+        annotateVariant(variant, fittedRegions, copyNumbers);
+    }
+
     private void annotateVariant(
             final StructuralVariant variant, final RegionMatchInfo[] fittedRegions, final PurpleCopyNumber[] copyNumbers)
     {
@@ -159,9 +174,6 @@ public class GermlineSvCache
 
         double junctionCopyNumberTotal = 0;
         int legCount = 0;
-
-        boolean hasInvalidRegions = (fittedRegions[SE_START] == null && fittedRegions[SE_END] == null)
-                || (fittedRegions[SE_START] != null && fittedRegions[SE_START].matches(fittedRegions[SE_END]));
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
@@ -185,14 +197,19 @@ public class GermlineSvCache
             if(copyNumber != null)
             {
                 double adjustedCN = copyNumber.averageTumorCopyNumber();
-                legBuilder.adjustedCopyNumber(copyNumber.averageTumorCopyNumber());
 
-                if(fittedRegion != null && !hasInvalidRegions)
+                if(fittedRegion != null)
                 {
-                    double cnChange = abs(adjustedCN - fittedRegion.refNormalisedCopyNumber());
+                    double cnChange = abs(fittedRegions[se].CopyNumberChange);
 
                     legBuilder.adjustedCopyNumberChange(cnChange);
+
+                    // take the higher of the ref CN regions
+                    if(fittedRegion.germlineStatus() == AMPLIFICATION)
+                        adjustedCN += cnChange;
                 }
+
+                legBuilder.adjustedCopyNumber(adjustedCN);
 
                 double purity = mPurityContext.bestFit().purity();
 
@@ -246,30 +263,124 @@ public class GermlineSvCache
     private class RegionMatchInfo
     {
         public final ObservedRegion Region;
-        public final boolean MatchesStart;
+        public final double CopyNumberChange;
 
-        public RegionMatchInfo(final ObservedRegion region, final boolean matchesStart)
+        public RegionMatchInfo(final ObservedRegion region, final double copyNumberChange)
         {
             Region = region;
-            MatchesStart = matchesStart;
-        }
-
-        public boolean matches(final RegionMatchInfo other)
-        {
-            if(other == null)
-                return false;
-
-            return Region == other.Region && MatchesStart == other.MatchesStart;
+            CopyNumberChange = copyNumberChange;
         }
     }
 
-    private void annotateVariant(final StructuralVariant variant)
+    private static boolean isShortLocalVariant(final StructuralVariant variant)
+    {
+        if(variant.type() == DEL || variant.type() == DUP || variant.type() == INV || variant.type() == INS)
+        {
+            int length = variant.position(false) - variant.position(true);
+            return length <= WINDOW_SIZE * 1.5;
+        }
+
+        return false;
+    }
+
+    private RegionMatchInfo[] matchFittedRegions(final StructuralVariant variant)
+    {
+        RegionMatchInfo[] matchedFittedRegions = new RegionMatchInfo[SE_PAIR];
+
+        if(isShortLocalVariant(variant))
+            return matchedFittedRegions;
+
+        int regionIndex = 0;
+        boolean regionChrMatched = false;
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            StructuralVariantLeg leg = se == SE_START ? variant.start() : variant.end();
+
+            if(leg == null)
+                continue;
+
+            if(se == SE_END && !leg.chromosome().equals(variant.chromosome(true)))
+                regionChrMatched = false;
+
+            for(; regionIndex < mFittedRegions.size(); ++regionIndex)
+            {
+                ObservedRegion region = mFittedRegions.get(regionIndex);
+
+                if(!regionChrMatched && region.chromosome().equals(leg.chromosome()))
+                    regionChrMatched = true;
+
+                if(regionChrMatched && region.start() > leg.position() + WINDOW_SIZE) // stop searching and keep index in place
+                    break;
+
+                if(regionIndex == 0)
+                    continue;
+
+                if(region.germlineStatus() == UNKNOWN)
+                    continue;
+
+                if(!breakendMatchesRegion(leg, region))
+                    continue;
+
+                // find the preceding region (again not UNKNOWN)
+                int prevIndex = regionIndex - 1;
+                ObservedRegion prevRegion = mFittedRegions.get(prevIndex);
+
+                while(prevRegion.germlineStatus() == UNKNOWN)
+                {
+                    --prevIndex;
+
+                    if(prevIndex < 0)
+                    {
+                        prevRegion = null;
+                        break;
+                    }
+
+                    prevRegion = mFittedRegions.get(prevIndex);
+                }
+
+                if(prevRegion == null)
+                    continue;
+
+                double refCnChange = region.refNormalisedCopyNumber() - prevRegion.refNormalisedCopyNumber();
+                byte impliedOrientation = refCnChange > 0 ? NEG_ORIENT : POS_ORIENT;
+
+                if(impliedOrientation != leg.orientation())
+                    continue;
+
+                ObservedRegion germlineRegion = isValidRegion(region) ? region : prevRegion;
+
+                matchedFittedRegions[se] = new RegionMatchInfo(germlineRegion, refCnChange);
+                break;
+            }
+        }
+
+        return matchedFittedRegions;
+    }
+
+    private static boolean isValidRegion(final ObservedRegion region)
+    {
+        return region.germlineStatus() == HOM_DELETION || region.germlineStatus() == HET_DELETION || region.germlineStatus() == AMPLIFICATION;
+    }
+
+    private boolean breakendMatchesRegion(final StructuralVariantLeg leg, final ObservedRegion region)
+    {
+        if(!leg.chromosome().equals(region.chromosome()))
+            return false;
+
+        // try to match on the start region within max 1 depth window
+        int regionStart = region.minStart() - WINDOW_SIZE;
+        int regionEnd = region.maxStart() + WINDOW_SIZE;
+
+        return positionWithin(leg.position(), regionStart, regionEnd);
+    }
+
+    private PurpleCopyNumber[] matchCopyNumbers(final StructuralVariant variant)
     {
         // not expecting too may germline SVs so just search the full collections for each one
         int copyNumberIndex = 0;
-        int regionIndex = 0;
+        boolean copyNumberChrMatched = false;
 
-        RegionMatchInfo[] matchedFittedRegions = new RegionMatchInfo[SE_PAIR];
         PurpleCopyNumber[] matchedCopyNumbers = new PurpleCopyNumber[SE_PAIR];
 
         for(int se = SE_START; se <= SE_END; ++se)
@@ -278,6 +389,9 @@ public class GermlineSvCache
 
             if(leg == null)
                 continue;
+
+            if(se == SE_END && !leg.chromosome().equals(variant.chromosome(true)))
+                copyNumberChrMatched = false;
 
             if(matchedCopyNumbers[SE_START] != null && breakendMatchesCopyNumber(leg, matchedCopyNumbers[SE_START]))
             {
@@ -290,93 +404,27 @@ public class GermlineSvCache
                 {
                     PurpleCopyNumber copyNumber = mCopyNumbers.get(copyNumberIndex);
 
+                    if(!copyNumberChrMatched && copyNumber.chromosome().equals(leg.chromosome()))
+                        copyNumberChrMatched = true;
+
                     if(breakendMatchesCopyNumber(leg, copyNumber))
                     {
                         matchedCopyNumbers[se] = copyNumber;
                         break;
                     }
-                }
-            }
 
-            for(; regionIndex < mFittedRegions.size(); ++regionIndex)
-            {
-                ObservedRegion region = mFittedRegions.get(regionIndex);
-
-                if(!isValidRegion(region))
-                    continue;
-
-                ObservedRegion nextRegion = regionIndex < mFittedRegions.size() - 1 ? mFittedRegions.get(regionIndex + 1) : null;
-                if(nextRegion != null && !nextRegion.chromosome().equals(region.chromosome()))
-                    nextRegion = null;
-
-                Boolean matchesStart = breakendMatchesRegion(leg, region, nextRegion);
-
-                if(matchesStart != null)
-                {
-                    matchedFittedRegions[se] = new RegionMatchInfo(region, matchesStart);
-                    break;
+                    if(copyNumberChrMatched && copyNumber.start() > leg.position())
+                        break;
                 }
             }
         }
 
-        annotateVariant(variant, matchedFittedRegions, matchedCopyNumbers);
+        return matchedCopyNumbers;
     }
 
     private static boolean breakendMatchesCopyNumber(final StructuralVariantLeg leg, final PurpleCopyNumber copyNumber)
     {
         return copyNumber.chromosome().equals(leg.chromosome()) && positionWithin(leg.position(), copyNumber.start(), copyNumber.end());
-    }
-
-    private static boolean isValidRegion(final ObservedRegion region)
-    {
-        return region.germlineStatus() == HOM_DELETION || region.germlineStatus() == HET_DELETION || region.germlineStatus() == AMPLIFICATION;
-    }
-
-    private Boolean breakendMatchesRegion(final StructuralVariantLeg leg, final ObservedRegion region, final ObservedRegion nextRegion)
-    {
-        // try to match on the start region or the end region, matching on orientation and within max 1 depth window
-
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            int regionStart;
-            int regionEnd;
-            byte regionOrientation;
-
-            if(se == SE_START)
-            {
-                regionStart = region.minStart();
-                regionEnd = region.maxStart();
-                regionOrientation = region.germlineStatus() == AMPLIFICATION ? NEG_ORIENT : POS_ORIENT;
-            }
-            else
-            {
-                regionOrientation = region.germlineStatus() == AMPLIFICATION ? POS_ORIENT : NEG_ORIENT;
-
-                if(nextRegion != null)
-                {
-                    regionStart = nextRegion.minStart() - 1;
-                    regionEnd = nextRegion.maxStart() - 1;
-                }
-                else
-                {
-                    regionStart = region.end();
-                    regionEnd = region.end();
-                }
-            }
-
-            if(leg.orientation() != regionOrientation)
-                continue;
-
-            regionStart -= WINDOW_SIZE;
-            regionEnd += WINDOW_SIZE;
-
-            if(positionWithin(leg.position(), regionStart, regionEnd))
-            {
-                return se == SE_START ? true : false;
-            }
-        }
-
-        return null;
     }
 
     private static VCFHeader generateOutputHeader(final String purpleVersion, final VCFHeader template)

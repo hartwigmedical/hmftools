@@ -588,16 +588,15 @@ public class PurpleApplication
             if(Files.exists(Paths.get(germlineSvVcf)))
             {
                 // TEMP logic for testing germline SV annotation
-                //String germlineSvAnnotatedVcf = PurpleCommon.PURPLE_SV_GERMLINE_VCF_SUFFIX.replaceAll("germline", "germline_annotated");
-                //String germlineSvOutputVcf = FileWriterUtils.checkAddDirSeparator(purpleDataPath) + tumorId + germlineSvAnnotatedVcf;
-                String germlineSvOutputVcf = "";
+                String germlineSvAnnotatedVcf = PurpleCommon.PURPLE_SV_GERMLINE_VCF_SUFFIX.replaceAll("germline", "germline_annotated");
+                String germlineSvOutputVcf = FileWriterUtils.checkAddDirSeparator(purpleDataPath) + tumorId + germlineSvAnnotatedVcf;
+                // String germlineSvOutputVcf = "";
 
                 GermlineSvCache germlineSvCache = new GermlineSvCache(
                         mPurpleVersion.version(), germlineSvVcf, germlineSvOutputVcf, mReferenceData, fittedRegions, copyNumbers, purityContext);
 
                 germlineSVs.addAll(germlineSvCache.variants());
-
-                // germlineSvCache.write();
+                germlineSvCache.write();
             }
 
             germlineDeletions.findDeletions(copyNumbers, fittedRegions, germlineSVs);
