@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.findPrimaryFragment;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -7,13 +10,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
-public class UmiGroupUtils
+public class DuplicateGroupUtils
 {
     public static final int MAX_UMI_BASE_DIFF = 1;
-
-    private static final String READ_ID_DELIM = ":";
 
     public static boolean exceedsUmiIdDiff(final String first, final String second)
     {
@@ -35,29 +35,51 @@ public class UmiGroupUtils
         return false;
     }
 
-    public static String extractUmiId(final String readId)
+    public static void processDuplicateGroups(final List<List<Fragment>> duplicateGroups, final UmiConfig umiConfig)
     {
-        String[] items = readId.split(READ_ID_DELIM, -1);
-        return items[items.length - 1];
-    }
+        if(duplicateGroups == null)
+            return;
 
-    private class UmiGroupCluster
-    {
-        public final List<UmiGroup> Groups;
-
-        public UmiGroupCluster(final UmiGroup group)
+        if(umiConfig.Enabled)
         {
-            Groups = Lists.newArrayList(group);
+            for(List<Fragment> fragments : duplicateGroups)
+            {
+                List<UmiGroup> umiGroups = buildUmiGroups(fragments, umiConfig);
+
+                for(UmiGroup umiGroup : umiGroups)
+                {
+                    umiGroup.Fragments.forEach(x -> x.setUmiId(umiGroup.UmiId));
+
+                    setDuplicateGroupProperties(umiGroup.Fragments);
+                }
+            }
+        }
+        else
+        {
+            for(List<Fragment> fragments : duplicateGroups)
+            {
+                setDuplicateGroupProperties(fragments);
+            }
         }
     }
 
-    public static List<UmiGroup> buildUmiGroups(final List<Fragment> fragments)
+    private static void setDuplicateGroupProperties(final List<Fragment> duplicateFragments)
+    {
+        int dupCount = duplicateFragments.size();
+        duplicateFragments.forEach(x -> x.setDuplicateCount(dupCount));
+
+        Fragment primary = findPrimaryFragment(duplicateFragments, false);
+        primary.setStatus(PRIMARY);
+    }
+
+
+    public static List<UmiGroup> buildUmiGroups(final List<Fragment> fragments, final UmiConfig config)
     {
         Map<String,UmiGroup> groups = Maps.newHashMap();
 
         for(Fragment fragment : fragments)
         {
-            String umiId = extractUmiId(fragment.id());
+            String umiId = config.extractUmiId(fragment.id());
 
             UmiGroup group = groups.get(umiId);
 

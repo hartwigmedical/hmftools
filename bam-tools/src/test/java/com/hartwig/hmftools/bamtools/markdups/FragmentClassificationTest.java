@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.calcFragmentStatus;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.findDuplicateFragments;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createFragment;
@@ -123,8 +123,9 @@ public class FragmentClassificationTest
 
         List<Fragment> resolvedFragments = Lists.newArrayList();
         List<CandidateDuplicates> candidateDuplicatesList = Lists.newArrayList();
+        List<List<Fragment>> duplicateGroups = Lists.newArrayList();
 
-        classifyFragments(fragments, resolvedFragments, candidateDuplicatesList);
+        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
 
         assertEquals(1, resolvedFragments.size());
         assertEquals(frag3, resolvedFragments.get(0));
@@ -140,8 +141,9 @@ public class FragmentClassificationTest
 
         resolvedFragments.clear();
         candidateDuplicatesList.clear();
+        duplicateGroups.clear();
 
-        classifyFragments(fragments, resolvedFragments, candidateDuplicatesList);
+        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
 
         assertEquals(1, resolvedFragments.size());
         assertEquals(frag3, resolvedFragments.get(0));
@@ -175,7 +177,7 @@ public class FragmentClassificationTest
         resolvedFragments.clear();
         candidateDuplicatesList.clear();
 
-        classifyFragments(fragments, resolvedFragments, candidateDuplicatesList);
+        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
 
         assertEquals(0, resolvedFragments.size());
 
@@ -218,8 +220,9 @@ public class FragmentClassificationTest
 
         resolvedFragments.clear();
         candidateDuplicatesList.clear();
+        duplicateGroups.clear();
 
-        classifyFragments(fragments, resolvedFragments, candidateDuplicatesList);
+        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
 
         assertEquals(0, resolvedFragments.size());
         assertEquals(1, candidateDuplicatesList.size());
@@ -262,8 +265,9 @@ public class FragmentClassificationTest
 
         resolvedFragments.clear();
         candidateDuplicatesList.clear();
+        duplicateGroups.clear();
 
-        classifyFragments(fragments, resolvedFragments, candidateDuplicatesList);
+        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
 
         assertEquals(1, resolvedFragments.size());
         assertTrue(resolvedFragments.contains(frag9));
@@ -285,5 +289,4 @@ public class FragmentClassificationTest
         assertTrue(candidateDuplicates.fragments().contains(frag7));
         assertTrue(candidateDuplicates.fragments().contains(frag8));
     }
-
 }

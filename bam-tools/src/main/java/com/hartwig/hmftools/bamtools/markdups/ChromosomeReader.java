@@ -4,7 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 import static com.hartwig.hmftools.bamtools.markdups.FilterReadsType.readOutsideSpecifiedRegions;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.classifyFragments;
+import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.findDuplicateFragments;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
 
@@ -272,8 +272,6 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
             String basePartition = entry.getKey();
             List<Fragment> fragments = entry.getValue();
 
-            // String callerInfo = format("%s_pending_incomplete_%d", mCurrentStrPartition, fragments.size());
-
             PartitionData partitionData = mPartitionDataStore.getOrCreatePartitionData(basePartition);
 
             List<Fragment> resolvedFragments = partitionData.processIncompleteFragments(fragments);
@@ -289,15 +287,22 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
     public void accept(final List<Fragment> positionFragments)
     {
+        if(positionFragments.isEmpty())
+            return;
+
         List<Fragment> resolvedFragments = Lists.newArrayList();
         List<CandidateDuplicates> candidateDuplicatesList = Lists.newArrayList();
+        List<List<Fragment>> duplicateGroups = Lists.newArrayList();
 
         int posFragmentCount = positionFragments.size();
         boolean logDetails = mConfig.PerfDebug && posFragmentCount > 10000;
         long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
+
         int position = positionFragments.get(0).initialPosition();
 
-        classifyFragments(positionFragments, resolvedFragments, candidateDuplicatesList);
+        findDuplicateFragments(positionFragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
+
+        DuplicateGroupUtils.processDuplicateGroups(duplicateGroups, mConfig.UMIs);
 
         if(logDetails)
         {
@@ -313,9 +318,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         }
 
         startTimeMs = System.currentTimeMillis();
-        String callerInfo = format("%s_primary_%d_%d", mCurrentStrPartition, position, posFragmentCount);
 
-        mCurrentPartitionData.processPrimaryFragments(resolvedFragments, candidateDuplicatesList, callerInfo);
+        mCurrentPartitionData.processPrimaryFragments(resolvedFragments, candidateDuplicatesList);
 
         double timeTakenSec = (System.currentTimeMillis() - startTimeMs) / 1000.0;
 

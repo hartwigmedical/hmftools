@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.getFragmentCo
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_BASES;
+import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createFragment;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createSamRecord;
@@ -48,6 +49,26 @@ public class FragmentUtilsTest
 
         ucPos = getUnclippedPosition(read);
         assertEquals(194, ucPos);
+
+        // test a read pair with one read unmapped
+
+        read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "*", CHR_1, 100,
+                false, false, null);
+
+        read.setReadUnmappedFlag(true);
+
+        Fragment fragment = new Fragment(read);
+
+        assertEquals("1_100", fragment.coordinates().Key);
+
+        SAMRecord mateRead = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
+                false, false, null);
+
+        mateRead.setMateUnmappedFlag(true);
+
+        fragment.addRead(mateRead);
+
+        assertEquals("1_100", fragment.coordinates().Key);
     }
 
     @Test

@@ -23,12 +23,14 @@ public class Fragment
     private boolean mAllPrimaryReadsPresent;
     private final List<SAMRecord> mReads; // consider making an array of 4 (or less for BNDs)
     private FragmentCoordinates mCoordinates;
-    private String mCandidateDupKey;
 
     private boolean mReadsWritten;
 
+    // duplicate read info
     private double mAverageBaseQual;
     private int mDuplicateCount;
+    private String mCandidateDupKey;
+    private String mUmiId;
 
     public Fragment(final SAMRecord read)
     {
@@ -67,6 +69,7 @@ public class Fragment
         mDuplicateCount = 0;
         mReadsWritten = false;
         mCandidateDupKey = null;
+        mUmiId = null;
     }
 
     public final String id() { return mReads.get(0).getReadName(); }
@@ -90,6 +93,9 @@ public class Fragment
 
     public String candidateDupKey() { return mCandidateDupKey; }
     public void setCandidateDupKey(final String key) { mCandidateDupKey = key; }
+
+    public String umiId() { return mUmiId; }
+    public void setUmiId(final String umiId) { mUmiId = umiId; }
 
     public boolean readsWritten() { return mReadsWritten; }
     public void setReadWritten() { mReadsWritten = true; }

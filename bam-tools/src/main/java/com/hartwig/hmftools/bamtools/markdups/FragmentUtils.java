@@ -16,14 +16,10 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -70,6 +66,12 @@ public class FragmentUtils
             }
         }
 
+        if(firstRead.getReadUnmappedFlag() && mateRead != null)
+        {
+            firstRead = mateRead;
+            mateRead = null;
+        }
+
         boolean readForwardStrand = orientation(firstRead) == POS_ORIENT;
 
         int readCoordinate = firstRead.getCigar() != null ?
@@ -78,7 +80,7 @@ public class FragmentUtils
         int readStrandPosition = readForwardStrand ? readCoordinate : -readCoordinate;
         String readCoordStr = formCoordinate(firstRead.getReferenceName(), readCoordinate, readForwardStrand);
 
-        if(!firstRead.getReadPairedFlag())
+        if(!firstRead.getReadPairedFlag() || firstRead.getReadUnmappedFlag() || firstRead.getMateUnmappedFlag())
             return new FragmentCoordinates(readCoordStr, readStrandPosition);
 
         if(mateRead == null)
@@ -107,8 +109,6 @@ public class FragmentUtils
                 : new FragmentCoordinates(mateCoordStr + "_" + readCoordStr, mateStrandPosition);
     }
 
-    // public static final int PROXIMATE_MATE_INSERT_DIFF = 100;
-
     public static FragmentStatus calcFragmentStatus(final Fragment first, final Fragment second)
     {
         if(first.unpaired() != second.unpaired())
@@ -136,9 +136,9 @@ public class FragmentUtils
 
     private static final int HIGH_DEPTH_THRESHOLD = 10000;
 
-    public static void classifyFragments(
+    public static void findDuplicateFragments(
             final List<Fragment> fragments, final List<Fragment> resolvedFragments,
-            final List<CandidateDuplicates> candidateDuplicatesList)
+            final List<List<Fragment>> duplicateGroups, final List<CandidateDuplicates> candidateDuplicatesList)
     {
         // take all the fragments at this initial fragment position and classify them as duplicates, non-duplicates (NONE) or unclear
         // note: all fragments will be given a classification, and resolved fragments are removed from the input fragment list
@@ -274,11 +274,7 @@ public class FragmentUtils
                 resolvedFragments.addAll(duplicateFragments);
                 fragments.remove(i);
 
-                Fragment primary = findPrimaryFragment(duplicateFragments, true);
-                primary.setStatus(PRIMARY);
-
-                // apply UMI logic and create a consensus read here
-
+                duplicateGroups.add(duplicateFragments);
             }
             else if(isCandidateDup)
             {

@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createFragment;
-import static com.hartwig.hmftools.bamtools.markdups.UmiGroupUtils.buildUmiGroups;
-import static com.hartwig.hmftools.bamtools.markdups.UmiGroupUtils.exceedsUmiIdDiff;
-import static com.hartwig.hmftools.bamtools.markdups.UmiGroupUtils.extractUmiId;
+import static com.hartwig.hmftools.bamtools.markdups.DuplicateGroupUtils.buildUmiGroups;
+import static com.hartwig.hmftools.bamtools.markdups.DuplicateGroupUtils.exceedsUmiIdDiff;
+import static com.hartwig.hmftools.bamtools.markdups.UmiConfig.extractUmiIdFromReadId;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 
 import static org.junit.Assert.assertEquals;
@@ -20,12 +20,17 @@ public class UmiGroupsTest
 {
     private static final String FIXED_READ_ID = "123:ABC:1:4455:";
 
+    private static final UmiConfig UMI_CONFIG = new UmiConfig(true, false);
+
     @Test
     public void testUmiUtils()
     {
         String umiId = "TATCGC";
         String readId = FIXED_READ_ID + umiId;
-        assertEquals(umiId, extractUmiId(readId));
+        assertEquals(umiId, extractUmiIdFromReadId(readId));
+
+        short umiLength = (short)umiId.length();
+        assertEquals(umiId, UMI_CONFIG.extractUmiId(readId, umiLength));
 
         String readId1 = FIXED_READ_ID + "TATCGC";
         String readId2 = FIXED_READ_ID + "TATCGG";
@@ -53,7 +58,7 @@ public class UmiGroupsTest
         Fragment frag6 = createFragment(FIXED_READ_ID + "TATGGG", CHR_1, 100);
 
         List<Fragment> fragments = Lists.newArrayList(frag1, frag2, frag3, frag4, frag5, frag6);
-        List<UmiGroup> groups = buildUmiGroups(fragments);
+        List<UmiGroup> groups = buildUmiGroups(fragments, UMI_CONFIG);
         assertEquals(2, groups.size());
 
         UmiGroup group = groups.stream().filter(x -> x.Fragments.contains(frag1)).findFirst().orElse(null);
@@ -82,7 +87,7 @@ public class UmiGroupsTest
                 frag15, frag15, frag15, frag15, frag15,
                 frag16);
 
-        groups = buildUmiGroups(fragments);
+        groups = buildUmiGroups(fragments, UMI_CONFIG);
         assertEquals(2, groups.size());
         assertEquals(fragments.size(), groups.stream().mapToInt(x -> x.fragmentCount()).sum());
 
@@ -96,4 +101,37 @@ public class UmiGroupsTest
         group = groups.stream().filter(x -> x.Fragments.contains(frag15)).findFirst().orElse(null);
         assertEquals(5, group.fragmentCount());
     }
+
+    /*
+    @Test
+    public void testPerfUmiIdExtraction()
+    {
+        String umiId = "TATCGC";
+        String readId = FIXED_READ_ID + umiId;
+        short umiLength = (short) umiId.length();
+
+        int testIterations = 1000000;
+        long startTimeMs = System.currentTimeMillis();
+
+        for(int i = 0; i < testIterations; ++i)
+        {
+            extractUmiId(readId);
+        }
+
+        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
+
+        BM_LOGGER.info("slow time: {}", timeTakenMs);
+
+        startTimeMs = System.currentTimeMillis();
+
+        for(int i = 0; i < testIterations; ++i)
+        {
+            extractUmiId(readId, umiLength);
+        }
+
+        long timeTakenMs2 = System.currentTimeMillis() - startTimeMs;
+
+        BM_LOGGER.info("fast time: {}", timeTakenMs2);
+    }
+    */
 }

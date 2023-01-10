@@ -56,10 +56,10 @@ public class CandidateDuplicates
     public boolean allFragmentsReady() { return mFragments.stream().allMatch(x -> x.primaryReadsPresent()); }
     public boolean finalised() { return mFinalised; }
 
-    public void finaliseFragmentStatus()
+    public List<List<Fragment>> finaliseFragmentStatus()
     {
         if(mFinalised || !allFragmentsReady())
-            return;
+            return null;
 
         mFinalised = true;
 
@@ -67,8 +67,10 @@ public class CandidateDuplicates
         {
             Fragment fragment = mFragments.get(0);
             fragment.setStatus(NONE);
-            return;
+            return null;
         }
+
+        List<List<Fragment>> duplicateGroups = null;
 
         for(int i = 0; i < mFragments.size(); ++i)
         {
@@ -108,19 +110,18 @@ public class CandidateDuplicates
 
             if(fragment1.status().isDuplicate())
             {
-                int dupCount = duplicateFragments.size();
-                duplicateFragments.forEach(x -> x.setDuplicateCount(dupCount));
+                if(duplicateGroups == null)
+                    duplicateGroups = Lists.newArrayList();
 
-                Fragment primary = findPrimaryFragment(duplicateFragments, true);
-                primary.setStatus(PRIMARY);
-
-                // apply UMI logic and create a consensus read here
+                duplicateGroups.add(duplicateFragments);
             }
             else
             {
                 fragment1.setStatus(NONE);
             }
         }
+
+        return duplicateGroups;
     }
 
     public String toString()

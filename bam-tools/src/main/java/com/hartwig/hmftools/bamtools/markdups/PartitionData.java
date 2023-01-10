@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.bamtools.markdups.ResolvedFragmentState.fragm
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -33,31 +32,30 @@ public class PartitionData
     // positions with candidate duplicate fragments, keyed by a unique position-based key for the group
     private final Map<String,CandidateDuplicates> mCandidateDuplicatesMap;
 
+    private final UmiConfig mUmiConfig;
+
     // any update to the maps is done under a lock
     private Lock mLock;
     private long mLastCacheCount;
-    private String mCurrentCaller;
 
     private static final int LOG_CACHE_COUNT = 1000;
 
-    public PartitionData(final String chrPartition)
+    public PartitionData(final String chrPartition, final UmiConfig umiConfig)
     {
         mChrPartition = chrPartition;
         mFragmentStatus = Maps.newHashMap();
         mIncompleteFragments = Maps.newHashMap();
         mCandidateDuplicatesMap = Maps.newHashMap();
+        mUmiConfig = umiConfig;
         mLock = new ReentrantLock();
-        mCurrentCaller = "";
     }
 
-    public void processPrimaryFragments(
-            final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList, final String caller)
+    public void processPrimaryFragments(final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList)
     {
         // gather any cached mate reads, attempt to resolve any candidate duplicates and feed back the resultant set of resolved fragments
         try
         {
             mLock.lock();
-            mCurrentCaller = caller;
 
             for(Fragment fragment : resolvedFragments)
             {
@@ -111,11 +109,9 @@ public class PartitionData
 
     public List<Fragment> processIncompleteFragments(final List<Fragment> fragments)
     {
-        // makes a blocking call unlike the single incomplete call
         try
         {
             mLock.lock();
-            // mCurrentCaller = caller;
 
             List<Fragment> resolvedFragments = null;
 
@@ -148,11 +144,7 @@ public class PartitionData
     {
         try
         {
-            //if(!acquireLock(caller))
-            //    return null;
             mLock.lock();
-            // mCurrentCaller = caller;
-
             return handleIncompleteFragment(fragment);
         }
         finally
@@ -253,7 +245,9 @@ public class PartitionData
         if(!candidateDuplicates.allFragmentsReady())
             return;
 
-        candidateDuplicates.finaliseFragmentStatus();
+        List<List<Fragment>> duplicateGroups = candidateDuplicates.finaliseFragmentStatus();
+
+        DuplicateGroupUtils.processDuplicateGroups(duplicateGroups, mUmiConfig);
 
         for(Fragment fragment : candidateDuplicates.fragments())
         {
@@ -305,28 +299,6 @@ public class PartitionData
         BM_LOGGER.debug("partition({}) check state: {}}", mChrPartition, cacheCountsStr());
     }
 
-    private boolean acquireLock(final String caller)
-    {
-        try
-        {
-            boolean acquired = mLock.tryLock(200, TimeUnit.MILLISECONDS);
-
-            if(!acquired)
-            {
-                BM_LOGGER.debug("partition({}) new caller({}) lock unacquired, existing caller({})",
-                        mChrPartition, caller, mCurrentCaller);
-            }
-
-            return acquired;
-        }
-        catch(InterruptedException e)
-        {
-            BM_LOGGER.error(" partition({}) lock error: {}", mChrPartition, e.toString());
-            e.printStackTrace();
-            return false;
-        }
-    }
-
     private String cacheCountsStr()
     {
         long incompleteSupp = mIncompleteFragments.values().stream().filter(x -> x.status() == SUPPLEMENTARY).count();
@@ -344,7 +316,6 @@ public class PartitionData
         try
         {
             mLock.lock();
-            mCurrentCaller = "";
 
             BM_LOGGER.debug("partition({}) log state: {}", mChrPartition, cacheCountsStr());
         }
@@ -378,18 +349,4 @@ public class PartitionData
 
     @VisibleForTesting
     public Map<String,CandidateDuplicates> candidateDuplicatesMap() { return mCandidateDuplicatesMap; }
-
-    @VisibleForTesting
-    public void processPrimaryFragments(final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList)
-    {
-        processPrimaryFragments(resolvedFragments, candidateDuplicatesList, null);
-    }
-
-    /*
-    @VisibleForTesting
-    public List<Fragment> processIncompleteFragment(final Fragment fragment)
-    {
-        return handleIncompleteFragment(fragment);
-    }
-    */
 }

@@ -54,7 +54,7 @@ public class MarkDuplicates
         RefGenomeCoordinates refGenomeCoordinates = mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
         RecordWriter recordWriter = new RecordWriter(mConfig);
-        PartitionDataStore partitionDataStore = new PartitionDataStore();
+        PartitionDataStore partitionDataStore = new PartitionDataStore(mConfig);
         final List<Callable> callableList = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())

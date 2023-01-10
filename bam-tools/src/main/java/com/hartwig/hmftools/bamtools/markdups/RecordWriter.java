@@ -194,8 +194,12 @@ public class RecordWriter
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("ReadId,Chromosome,PosStart,PosEnd,Cigar");
-            writer.write(",InsertSize,MateChr,MatePosStart,Duplicate,CalcDuplicate,MateCigar,Coords,AvgBaseQual,MapQual,SuppData");
-            writer.write(",Flags,FirstInPair,ReadReversed,Proper,Unmapped,MateUnmapped,Supplementary,Secondary");
+            writer.write(",InsertSize,MateChr,MatePosStart,Duplicate,CalcDuplicate,MateCigar,Coords");
+
+            if(mConfig.UMIs.Enabled)
+                writer.write(",UmiId");
+
+            writer.write(",AvgBaseQual,MapQual,SuppData,Flags,FirstInPair,ReadReversed,Unmapped,MateUnmapped,Supplementary,Secondary");
 
             writer.newLine();
 
@@ -235,13 +239,20 @@ public class RecordWriter
 
             SupplementaryReadData suppData = SupplementaryReadData.from(read.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
-            mReadWriter.write(format(",%d,%s,%d,%s,%s,%s,%s,%.2f,%d,%s,%d",
+            mReadWriter.write(format(",%d,%s,%d,%s,%s,%s,%s",
                     abs(read.getInferredInsertSize()), read.getMateReferenceName(), read.getMateAlignmentStart(),
-                    read.getDuplicateReadFlag(), fragment.status(), read.hasAttribute(MATE_CIGAR_ATTRIBUTE), fragment.coordinates().Key,
+                    read.getDuplicateReadFlag(), fragment.status(), read.hasAttribute(MATE_CIGAR_ATTRIBUTE), fragment.coordinates().Key));
+
+            if(mConfig.UMIs.Enabled)
+            {
+                mReadWriter.write(format(",%s", fragment.umiId() != null ? fragment.umiId() : ""));
+            }
+
+            mReadWriter.write(format(",%.2f,%d,%s,%d",
                     fragment.averageBaseQual(), read.getMappingQuality(), suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
 
-            mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s",
-                    read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), read.getProperPairFlag(), read.getReadUnmappedFlag(),
+            mReadWriter.write(format(",%s,%s,%s,%s,%s,%s",
+                    read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), read.getReadUnmappedFlag(),
                     read.getMateUnmappedFlag(), read.getSupplementaryAlignmentFlag(), read.isSecondaryAlignment()));
 
             mReadWriter.newLine();

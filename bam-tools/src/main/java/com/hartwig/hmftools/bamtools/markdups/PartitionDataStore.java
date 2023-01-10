@@ -11,9 +11,11 @@ import com.google.common.collect.Maps;
 public class PartitionDataStore
 {
     private final Map<String,PartitionData> mPartitionDataMap;
+    private final MarkDupsConfig mConfig;
 
-    public PartitionDataStore()
+    public PartitionDataStore(final MarkDupsConfig config)
     {
+        mConfig = config;
         mPartitionDataMap = Maps.newHashMap();
     }
 
@@ -23,7 +25,7 @@ public class PartitionDataStore
 
         if(partitionCache == null)
         {
-            partitionCache = new PartitionData(chrPartition);
+            partitionCache = new PartitionData(chrPartition, mConfig.UMIs);
             mPartitionDataMap.put(chrPartition, partitionCache);
         }
 
