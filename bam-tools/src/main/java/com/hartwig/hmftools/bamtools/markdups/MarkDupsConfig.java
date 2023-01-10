@@ -44,6 +44,9 @@ public class MarkDupsConfig
     public final int PartitionSize;
     public final int BufferSize;
 
+    // UMI group config
+    public final boolean SpliUMIs;
+
     public final String OutputDir;
     public final String OutputId;
     public final boolean WriteBam;
@@ -65,6 +68,7 @@ public class MarkDupsConfig
     private static final String BUFFER_SIZE = "buffer_size";
     private static final String READ_OUTPUTS = "read_output";
     private static final String WRITE_BAM = "write_bam";
+    private static final String SPLIT_UMIS = "split_umis";
     private static final String RUN_CHECKS = "run_checks";
     private static final String USE_INTERIM_FILES = "use_interim_files";
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
@@ -95,6 +99,7 @@ public class MarkDupsConfig
 
         PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_PARTITION_SIZE)));
         BufferSize = Integer.parseInt(cmd.getOptionValue(BUFFER_SIZE, String.valueOf(DEFAULT_POS_BUFFER_SIZE)));
+        SpliUMIs = cmd.hasOption(SPLIT_UMIS);
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
@@ -174,6 +179,7 @@ public class MarkDupsConfig
         options.addOption(BUFFER_SIZE, true, "Read buffer size, default: " + DEFAULT_POS_BUFFER_SIZE);
         options.addOption(READ_OUTPUTS, true, "Write reads: NONE (default), 'MISMATCHES', 'DUPLICATES', 'ALL'");
         options.addOption(WRITE_BAM, false, "Write BAM, default true if not write read output");
+        options.addOption(SPLIT_UMIS, false, "Split duplicate groups by UMI");
         addThreadOptions(options);
 
         addSpecificChromosomesRegionsConfig(options);
@@ -203,6 +209,7 @@ public class MarkDupsConfig
 
         PartitionSize = partitionSize;
         BufferSize = bufferSize;
+        SpliUMIs = false;
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
