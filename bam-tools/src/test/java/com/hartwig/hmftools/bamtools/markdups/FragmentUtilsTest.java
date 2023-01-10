@@ -76,7 +76,7 @@ public class FragmentUtilsTest
 
     private static FragmentCoordinates getFragmentCoordinates(final SAMRecord read)
     {
-        return FragmentUtils.getFragmentCoordinates(Lists.newArrayList(read));
+        return FragmentUtils.getFragmentCoordinates(Lists.newArrayList(read), true);
     }
 
     @Test

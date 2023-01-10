@@ -28,9 +28,11 @@ public class ReadPositionsCache
     private final Consumer<List<Fragment>> mReadGroupHandler;
     private int mMinPosition;
     private int mMinPositionIndex;
+    private final int mCapacity;
+    private final boolean mUseMateCigar;
+
     private int mLastFragmentLogCount;
     private int mLastLogReadCount;
-    private final int mCapacity;
 
     private class FragmentGroup
     {
@@ -43,7 +45,8 @@ public class ReadPositionsCache
         }
     }
 
-    public ReadPositionsCache(final String chromosome, int capacity, final Consumer<List<Fragment>> evictionHandler)
+    public ReadPositionsCache(
+            final String chromosome, int capacity, boolean useMateCigar, final Consumer<List<Fragment>> evictionHandler)
     {
         mChromosome = chromosome;
         mReadGroupHandler = evictionHandler;
@@ -53,6 +56,8 @@ public class ReadPositionsCache
         mFragments = Maps.newHashMap();
         mMinPosition = 0;
         mMinPositionIndex = 0;
+        mUseMateCigar = useMateCigar;
+
         mLastFragmentLogCount = 0;
         mLastLogReadCount = 0;
     }
@@ -93,7 +98,7 @@ public class ReadPositionsCache
         ++mLastLogReadCount;
 
         Fragment fragment = new Fragment(read);
-        fragment.intialiseCoordinates();
+        fragment.intialiseCoordinates(mUseMateCigar);
 
         int fragmentPosition = fragment.initialPosition();
 

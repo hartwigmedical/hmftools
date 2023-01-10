@@ -281,7 +281,7 @@ public class PartitionData
             return Collections.EMPTY_LIST;
 
         // not under lock since called only when all partitions are complete
-        BM_LOGGER.debug("partition({}) final state: {}}", mChrPartition, cacheCountsStr());
+        BM_LOGGER.debug("partition({}) final state: {}", mChrPartition, cacheCountsStr());
 
         List<Fragment> remainingFragments = mIncompleteFragments.values().stream().collect(Collectors.toList());
 

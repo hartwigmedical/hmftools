@@ -82,7 +82,9 @@ public class Fragment
 
     public FragmentCoordinates coordinates() { return mCoordinates; }
     public int initialPosition() { return mCoordinates.InitialPosition; }
-    public void intialiseCoordinates() { mCoordinates = getFragmentCoordinates(mReads); }
+
+    public void intialiseCoordinates(boolean useMateCigar) { mCoordinates = getFragmentCoordinates(mReads, useMateCigar); }
+    public void intialiseCoordinates() { intialiseCoordinates(true); }
 
     public double averageBaseQual() { return mAverageBaseQual; }
     public void setAverageBaseQual(double qual) { mAverageBaseQual = qual; }
@@ -108,7 +110,7 @@ public class Fragment
             mAllPrimaryReadsPresent = true;
 
             if(mCoordinates.Incomplete)
-                mCoordinates = getFragmentCoordinates(mReads);
+                mCoordinates = getFragmentCoordinates(mReads, false);
         }
 
         checkComplete();

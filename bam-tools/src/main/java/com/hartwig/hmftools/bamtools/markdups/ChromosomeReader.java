@@ -68,7 +68,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mBamSlicer = new BamSlicer(0, true, true, true);
         mBamSlicer.setKeepUnmapped();
 
-        mReadPositions = new ReadPositionsCache(region.Chromosome, config.BufferSize, this);
+        mReadPositions = new ReadPositionsCache(region.Chromosome, config.BufferSize, !config.NoMateCigar, this);
 
         if(!mConfig.SpecificRegions.isEmpty())
         {

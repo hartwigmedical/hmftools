@@ -39,7 +39,7 @@ public class FragmentUtils
         return position;
     }
 
-    public static FragmentCoordinates getFragmentCoordinates(final List<SAMRecord> reads)
+    public static FragmentCoordinates getFragmentCoordinates(final List<SAMRecord> reads, final boolean useMateCigar)
     {
         SAMRecord firstRead = null;
         SAMRecord mateRead = null;
@@ -77,8 +77,11 @@ public class FragmentUtils
         if(!firstRead.getReadPairedFlag() || firstRead.getReadUnmappedFlag() || firstRead.getMateUnmappedFlag())
             return new FragmentCoordinates(readCoordStr, readStrandPosition);
 
-        if(mateRead == null && !firstRead.hasAttribute(MATE_CIGAR_ATTRIBUTE))
-            return new FragmentCoordinates(readCoordStr, readStrandPosition, true);
+        if(mateRead == null)
+        {
+            if(!useMateCigar || !firstRead.hasAttribute(MATE_CIGAR_ATTRIBUTE))
+                return new FragmentCoordinates(readCoordStr, readStrandPosition, true);
+        }
 
         boolean mateForwardStrand = !firstRead.getMateNegativeStrandFlag();
         int mateCoordinate;
