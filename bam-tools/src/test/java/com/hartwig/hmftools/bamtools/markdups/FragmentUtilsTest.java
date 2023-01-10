@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
+import static com.hartwig.hmftools.bamtools.markdups.DuplicateGroupUtils.calcBaseQualAverage;
+import static com.hartwig.hmftools.bamtools.markdups.DuplicateGroupUtils.findPrimaryFragment;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentCoordinates.NO_COORDS;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.calcBaseQualAverage;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.findPrimaryFragment;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.getFragmentCoordinates;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.DEFAULT_QUAL;
@@ -20,6 +20,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
@@ -59,7 +61,7 @@ public class FragmentUtilsTest
 
         Fragment fragment = new Fragment(read);
 
-        assertEquals("1_100", fragment.coordinates().Key);
+        assertEquals(NO_COORDS, fragment.coordinates());
 
         SAMRecord mateRead = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
                 false, false, null);
@@ -69,6 +71,12 @@ public class FragmentUtilsTest
         fragment.addRead(mateRead);
 
         assertEquals("1_100", fragment.coordinates().Key);
+        assertFalse(fragment.coordinates().Incomplete);
+    }
+
+    private static FragmentCoordinates getFragmentCoordinates(final SAMRecord read)
+    {
+        return FragmentUtils.getFragmentCoordinates(Lists.newArrayList(read));
     }
 
     @Test
@@ -100,7 +108,7 @@ public class FragmentUtilsTest
         read.setMateNegativeStrandFlag(true);
         read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
 
-        FragmentCoordinates fragmentCoords = getFragmentCoordinates(read, true);
+        FragmentCoordinates fragmentCoords = getFragmentCoordinates(read);
         assertEquals("1_100_1_299_R", fragmentCoords.Key);
         assertEquals(100, fragmentCoords.InitialPosition);
 
@@ -110,13 +118,9 @@ public class FragmentUtilsTest
         read.setMateNegativeStrandFlag(false);
         read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
 
-        fragmentCoords = getFragmentCoordinates(read, true);
+        fragmentCoords = getFragmentCoordinates(read);
         assertEquals("1_200_2_100", fragmentCoords.Key);
         assertEquals(200, fragmentCoords.InitialPosition);
-
-        fragmentCoords = getFragmentCoordinates(read, false);
-        assertEquals("2_100_1_200", fragmentCoords.Key);
-        assertEquals(100, fragmentCoords.InitialPosition);
 
         // mate in earlier position
         read = createSamRecord(TEST_READ_ID, CHR_1, 200, TEST_READ_BASES, "100M", CHR_1, 100,
@@ -124,7 +128,7 @@ public class FragmentUtilsTest
         read.setMateNegativeStrandFlag(true);
         read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
 
-        fragmentCoords = getFragmentCoordinates(read, true);
+        fragmentCoords = getFragmentCoordinates(read);
         assertEquals("1_199_R_1_200", fragmentCoords.Key);
         assertEquals(-199, fragmentCoords.InitialPosition);
 
@@ -132,7 +136,7 @@ public class FragmentUtilsTest
         read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "100M", "", 0,
                 false, false, null);
 
-        fragmentCoords = getFragmentCoordinates(read, true);
+        fragmentCoords = getFragmentCoordinates(read);
         assertEquals("1_100", fragmentCoords.Key);
         assertEquals(100, fragmentCoords.InitialPosition);
 
@@ -140,8 +144,9 @@ public class FragmentUtilsTest
         read = createSamRecord(TEST_READ_ID, CHR_1, 200, TEST_READ_BASES, "100M", CHR_1, 100,
                 false, false, null);
 
-        fragmentCoords = getFragmentCoordinates(read, true);
-        assertEquals(NO_COORDS, fragmentCoords);
+        fragmentCoords = getFragmentCoordinates(read);
+        assertEquals("1_200", fragmentCoords.Key);
+        assertTrue(fragmentCoords.Incomplete);
     }
 
     @Test

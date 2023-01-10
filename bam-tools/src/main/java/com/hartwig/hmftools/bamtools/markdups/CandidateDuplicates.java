@@ -5,9 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentCoordinates.formCoordinate;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.calcFragmentStatus;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.findPrimaryFragment;
 
 import java.util.List;
 

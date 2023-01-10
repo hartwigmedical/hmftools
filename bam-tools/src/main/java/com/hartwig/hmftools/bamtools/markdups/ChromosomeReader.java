@@ -3,10 +3,12 @@ package com.hartwig.hmftools.bamtools.markdups;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.markdups.DuplicateGroupUtils.findDuplicateFragments;
+import static com.hartwig.hmftools.bamtools.markdups.DuplicateGroupUtils.processDuplicateGroups;
 import static com.hartwig.hmftools.bamtools.markdups.FilterReadsType.readOutsideSpecifiedRegions;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.findDuplicateFragments;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.readToString;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 
 import java.io.File;
 import java.util.List;
@@ -45,9 +47,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private final Map<String,List<Fragment>> mPendingIncompleteReads;
 
     private final boolean mLogReadIds;
-    private int mTotalRecordCount;
     private int mPartitionRecordCount;
-    private final DuplicateStats mStats;
+    private final Statistics mStats;
     private final PerformanceCounter mPerfCounter;
 
     private final Set<SAMRecord> mReadsProcessed; // for debug only when running checks
@@ -86,20 +87,18 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         mPendingIncompleteReads = Maps.newHashMap();
 
-        mTotalRecordCount = 0;
         mPartitionRecordCount = 0;
 
-        mStats = new DuplicateStats();
+        mStats = new Statistics();
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
         mReadsProcessed = Sets.newHashSet();
         mPerfCounter = new PerformanceCounter("Slice");
     }
 
-    public int totalRecordCount() { return mTotalRecordCount; }
     public Set<SAMRecord> readsProcessed() { return mReadsProcessed; }
     public PerformanceCounter perfCounter() { return mPerfCounter; }
-    public DuplicateStats duplicateStats() { return mStats; }
+    public Statistics statistics() { return mStats; }
 
     @Override
     public Long call()
@@ -131,7 +130,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         onPartitionComplete(false);
 
-        BM_LOGGER.info("chromosome({}) complete, reads({})", mRegion.Chromosome, mTotalRecordCount);
+        BM_LOGGER.info("chromosome({}) complete, reads({})", mRegion.Chromosome, mStats.TotalReads);
     }
 
     private void onPartitionComplete(boolean setupNext)
@@ -139,8 +138,6 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mReadPositions.evictAll();
 
         processPendingIncompletes();
-
-        mStats.ReadCount += mPartitionRecordCount;
 
         mPerfCounter.stop();
 
@@ -179,7 +176,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         if(readOutsideSpecifiedRegions(read, mConfig.SpecificRegions, mConfig.SpecificChromosomes, mConfig.SpecificRegionsFilterType))
             return;
 
-        ++mTotalRecordCount;
+        ++mStats.TotalReads;
         ++mPartitionRecordCount;
 
         if(mConfig.runReadChecks())
@@ -203,10 +200,18 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
             BM_LOGGER.debug("specific read: {}", readToString(read));
         }
 
+        if(!mConfig.NoMateCigar && read.getReadPairedFlag() && !read.getMateUnmappedFlag() && !read.getSupplementaryAlignmentFlag()
+        && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
+        {
+            ++mStats.MissingMateCigar;
+        }
+
         try
         {
             if(read.getSupplementaryAlignmentFlag() || !mReadPositions.processRead(read))
             {
+                ++mStats.Incomplete;
+
                 String basePartition = Fragment.getBasePartition(read, mConfig.PartitionSize);
                 Fragment fragment = new Fragment(read);
 
@@ -243,6 +248,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         }
         else
         {
+            ++mStats.InterPartition;
+
             // cache this read and send through as groups when the partition is complete
             List<Fragment> pendingFragments = mPendingIncompleteReads.get(basePartition);
 
@@ -302,7 +309,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         findDuplicateFragments(positionFragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
 
-        DuplicateGroupUtils.processDuplicateGroups(duplicateGroups, mConfig.UMIs);
+        processDuplicateGroups(duplicateGroups, mConfig.UMIs, mStats);
 
         if(logDetails)
         {
@@ -331,9 +338,9 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         if(!resolvedFragments.isEmpty())
         {
-            // no longer ordered in duplicate groups - either re-evaluate or store by coordinate key or track some other way
-            mStats.addDuplicateInfo(resolvedFragments);
             mRecordWriter.writeFragments(resolvedFragments);
+
+            mStats.LocalComplete += (int)resolvedFragments.stream().filter(x -> x.allReadsPresent()).count();
         }
     }
 

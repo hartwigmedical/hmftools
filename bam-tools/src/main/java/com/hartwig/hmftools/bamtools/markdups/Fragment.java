@@ -41,7 +41,6 @@ public class Fragment
 
         if(!read.getSupplementaryAlignmentFlag())
         {
-            // mCoordinates = getFragmentCoordinates(read, false);
             mStatus = UNSET;
 
             if(mUnpaired)
@@ -54,16 +53,15 @@ public class Fragment
                 mAllPrimaryReadsPresent = false;
                 mAllReadsPresent = false;
             }
-
-            mCoordinates = getFragmentCoordinates(mReads);
         }
         else
         {
-            mCoordinates = NO_COORDS; // don't bother working it out
             mStatus = SUPPLEMENTARY;
             mAllPrimaryReadsPresent = false;
             mAllReadsPresent = false;
         }
+
+        mCoordinates = NO_COORDS; // unset for non primary reads
 
         mAverageBaseQual = 0;
         mDuplicateCount = 0;
@@ -84,6 +82,7 @@ public class Fragment
 
     public FragmentCoordinates coordinates() { return mCoordinates; }
     public int initialPosition() { return mCoordinates.InitialPosition; }
+    public void intialiseCoordinates() { mCoordinates = getFragmentCoordinates(mReads); }
 
     public double averageBaseQual() { return mAverageBaseQual; }
     public void setAverageBaseQual(double qual) { mAverageBaseQual = qual; }
@@ -107,7 +106,9 @@ public class Fragment
         if(!read.getSupplementaryAlignmentFlag())
         {
             mAllPrimaryReadsPresent = true;
-            mCoordinates = getFragmentCoordinates(mReads);
+
+            if(mCoordinates.Incomplete)
+                mCoordinates = getFragmentCoordinates(mReads);
         }
 
         checkComplete();

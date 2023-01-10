@@ -34,6 +34,8 @@ public class PartitionData
 
     private final UmiConfig mUmiConfig;
 
+    private final Statistics mStats;
+
     // any update to the maps is done under a lock
     private Lock mLock;
     private long mLastCacheCount;
@@ -47,8 +49,11 @@ public class PartitionData
         mIncompleteFragments = Maps.newHashMap();
         mCandidateDuplicatesMap = Maps.newHashMap();
         mUmiConfig = umiConfig;
+        mStats = new Statistics();
         mLock = new ReentrantLock();
     }
+
+    public Statistics statistics() { return mStats; }
 
     public void processPrimaryFragments(final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList)
     {
@@ -247,7 +252,7 @@ public class PartitionData
 
         List<List<Fragment>> duplicateGroups = candidateDuplicates.finaliseFragmentStatus();
 
-        DuplicateGroupUtils.processDuplicateGroups(duplicateGroups, mUmiConfig);
+        DuplicateGroupUtils.processDuplicateGroups(duplicateGroups, mUmiConfig, mStats);
 
         for(Fragment fragment : candidateDuplicates.fragments())
         {

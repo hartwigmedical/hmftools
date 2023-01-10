@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
+import static com.hartwig.hmftools.bamtools.markdups.DuplicateGroupUtils.findDuplicateFragments;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.NONE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.calcFragmentStatus;
-import static com.hartwig.hmftools.bamtools.markdups.FragmentUtils.findDuplicateFragments;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.bamtools.markdups.TestUtils.createFragment;
@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -38,55 +37,67 @@ public class FragmentClassificationTest
     {
         Fragment frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
                 false, false, null);
+        frag1.intialiseCoordinates();
 
         Fragment frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 201,
                 false, false, null);
+        frag2.intialiseCoordinates();
 
         assertEquals(CANDIDATE, calcFragmentStatus(frag1, frag2));
 
         frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 201,
                 true, false, null);
+        frag2.intialiseCoordinates();
 
         assertEquals(NONE, calcFragmentStatus(frag1, frag2));
 
         frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
                 true, false, null);
+        frag1.intialiseCoordinates();
 
         frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 201,
                 true, false, null);
+        frag2.intialiseCoordinates();
 
         assertEquals(CANDIDATE, calcFragmentStatus(frag1, frag2));
 
         // diff positions at end
         frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, "100M", CHR_1, 200,
                 true, false, null);
+        frag1.intialiseCoordinates();
 
         frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, "101M", CHR_1, 201,
                 true, false, null);
+        frag2.intialiseCoordinates();
 
         assertEquals(NONE, calcFragmentStatus(frag1, frag2));
 
         // diff mate orientations
         frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_CIGAR, false,
                 CHR_1, 200, false, TEST_READ_CIGAR);
+        frag1.intialiseCoordinates();
 
         frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_CIGAR, false,
                 CHR_1, 200, true, TEST_READ_CIGAR);
+        frag2.intialiseCoordinates();
 
         assertEquals(NONE, calcFragmentStatus(frag1, frag2));
 
         // unpaired matching
         frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, "", 0,
                 false, false, null);
+        frag1.intialiseCoordinates();
 
         frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, "", 0,
                 false, false, null);
+        frag2.intialiseCoordinates();
 
         assertEquals(DUPLICATE, calcFragmentStatus(frag1, frag2));
 
         // mates present and matching
         frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1000,
                 false, false, null);
+        frag1.intialiseCoordinates();
 
         frag1.addRead(createSamRecord(mReadIdGen.currentId(), CHR_1, 1000, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
                 true, false, null));
@@ -95,6 +106,7 @@ public class FragmentClassificationTest
 
         frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 201,
                 false, false, null);
+        frag2.intialiseCoordinates();
 
         frag2.addRead(createSamRecord(mReadIdGen.currentId(), CHR_1, 1000, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100,
                 true, false, null));

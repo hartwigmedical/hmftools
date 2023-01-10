@@ -89,28 +89,17 @@ public class MarkDuplicates
 
         recordWriter.close();
 
-        long totalProcessReads = chromosomeReaders.stream().mapToLong(x -> x.totalRecordCount()).sum();
-        BM_LOGGER.debug("all chromosome tasks complete, reads processed({})", totalProcessReads);
+        BM_LOGGER.debug("all chromosome tasks complete");
 
-        DuplicateStats combinedStats = new DuplicateStats();
-        chromosomeReaders.forEach(x -> combinedStats.merge(x.duplicateStats()));
+        Statistics combinedStats = new Statistics();
+        chromosomeReaders.forEach(x -> combinedStats.merge(x.statistics()));
+        partitionDataStore.partitions().forEach(x -> combinedStats.merge(x.statistics()));
 
-        BM_LOGGER.info("stats: duplicates({})", combinedStats.Duplicates);
+        combinedStats.logStats();
 
-        if(BM_LOGGER.isDebugEnabled())
+        if(combinedStats.TotalReads != recordWriter.recordWriteCount())
         {
-            List<Integer> frequencies = combinedStats.DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
-            Collections.sort(frequencies);
-
-            for(Integer frequency : frequencies)
-            {
-                BM_LOGGER.debug("duplicate frequency({}={})", frequency, combinedStats.DuplicateFrequencies.get(frequency));
-            }
-        }
-
-        if(totalProcessReads != recordWriter.recordWriteCount())
-        {
-            BM_LOGGER.warn("reads processed({}) vs written({}) mismatch", totalProcessReads, recordWriter.recordWriteCount());
+            BM_LOGGER.warn("reads processed({}) vs written({}) mismatch", combinedStats.TotalReads, recordWriter.recordWriteCount());
             checkMissingReads(chromosomeReaders, recordWriter);
         }
 

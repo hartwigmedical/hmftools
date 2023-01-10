@@ -50,6 +50,7 @@ public class MarkDupsConfig
     public final String OutputDir;
     public final String OutputId;
     public final boolean WriteBam;
+    public final boolean NoMateCigar;
     public final boolean UseInterimFiles;
     public final int Threads;
 
@@ -67,6 +68,7 @@ public class MarkDupsConfig
     // config strings
     private static final String BUFFER_SIZE = "buffer_size";
     private static final String READ_OUTPUTS = "read_output";
+    private static final String NO_MATE_CIGAR = "no_mate_cigar";
     private static final String WRITE_BAM = "write_bam";
     private static final String RUN_CHECKS = "run_checks";
     private static final String USE_INTERIM_FILES = "use_interim_files";
@@ -98,6 +100,7 @@ public class MarkDupsConfig
 
         PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_PARTITION_SIZE)));
         BufferSize = Integer.parseInt(cmd.getOptionValue(BUFFER_SIZE, String.valueOf(DEFAULT_POS_BUFFER_SIZE)));
+        NoMateCigar = cmd.hasOption(NO_MATE_CIGAR);
 
         UMIs = UmiConfig.from(cmd);
 
@@ -179,6 +182,7 @@ public class MarkDupsConfig
         options.addOption(BUFFER_SIZE, true, "Read buffer size, default: " + DEFAULT_POS_BUFFER_SIZE);
         options.addOption(READ_OUTPUTS, true, "Write reads: NONE (default), 'MISMATCHES', 'DUPLICATES', 'ALL'");
         options.addOption(WRITE_BAM, false, "Write BAM, default true if not write read output");
+        options.addOption(NO_MATE_CIGAR, false, "Mate CIGAR not set by aligner, make no attempt to use it");
         UmiConfig.addCommandLineOptions(options);
         addThreadOptions(options);
 
@@ -210,6 +214,7 @@ public class MarkDupsConfig
         PartitionSize = partitionSize;
         BufferSize = bufferSize;
         UMIs = new UmiConfig(false, false);
+        NoMateCigar = false;
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();

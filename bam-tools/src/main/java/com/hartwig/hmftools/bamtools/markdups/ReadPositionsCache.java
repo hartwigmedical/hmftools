@@ -63,14 +63,11 @@ public class ReadPositionsCache
         // check for an existing mate if on the same chromosome
         // store in a group of fragments with a matching first fragment coordinate
         // if the mate has a lower position or is on a lower chromosome, don't add it to a position group
-        if(!read.getReadPairedFlag() || read.getMateUnmappedFlag())
-        {
-            storeInitialRead(read);
-            return true;
-        }
+        boolean mateUnmapped = read.getMateUnmappedFlag();
+        boolean readUnmapped = read.getReadUnmappedFlag();
 
         // skip if mate is on a lower chromosome
-        if(!read.getMateReferenceName().equals(mChromosome) && read.getReferenceIndex() > read.getMateReferenceIndex())
+        if(!mateUnmapped && !read.getMateReferenceName().equals(mChromosome) && read.getReferenceIndex() > read.getMateReferenceIndex())
             return false;
 
         Fragment fragment = mFragments.get(read.getReadName());
@@ -81,7 +78,10 @@ public class ReadPositionsCache
             return true;
         }
 
-        if(read.getAlignmentStart() > read.getMateAlignmentStart()) // mate already processed and evicted
+        if(readUnmapped)
+            return false;
+
+        if(!mateUnmapped && read.getAlignmentStart() > read.getMateAlignmentStart()) // mate already processed and evicted
             return false;
 
         storeInitialRead(read);
@@ -93,6 +93,7 @@ public class ReadPositionsCache
         ++mLastLogReadCount;
 
         Fragment fragment = new Fragment(read);
+        fragment.intialiseCoordinates();
 
         int fragmentPosition = fragment.initialPosition();
 

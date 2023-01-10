@@ -22,7 +22,10 @@ public class FragmentCoordinates
         Incomplete = incomplete;
     }
 
-    public String toString() { return Key; }
+    public String toString()
+    {
+        return Incomplete ? format("%s incomplete", Key) : Key;
+    }
 
     public static String formCoordinate(final String chromosome, final int position, final boolean isForward)
     {
