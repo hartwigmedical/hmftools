@@ -22,7 +22,7 @@ The table below has links for the full functional detail and configuration for e
 | [Sage](./sage/README.md)      | Point mutation variant calling and filtering                           | [3.2.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.2.2)  |
 | [Teal](./teal/README.md)      | Measures telomere content and estimates telomeric length               | [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.0.1)  |
 | [SvPrep](./sv-prep/README.md) | Pre-GRIDSS BAM filtering                                               | [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.0.1) |
-| [Cider](./cider/README.md)    | TCR/BCR V(D)J recombination sequence detection                         | [0.4](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.4)     |
+| [Cider](./cider/README.md)    | TCR/BCR V(D)J recombination sequence detection                         | [0.5](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.5)     |
 
 The following external tools are used in the pipeline:
 

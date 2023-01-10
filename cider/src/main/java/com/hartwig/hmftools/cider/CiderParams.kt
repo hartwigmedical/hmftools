@@ -5,7 +5,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.utils.config.RefGenomeVersionConverter
-import htsjdk.samtools.ValidationStringency
 
 class CiderParams
 {
@@ -28,9 +27,6 @@ class CiderParams
                 + "This directory will be created if it does not already exist."
     )
     lateinit var outputDir: String
-
-    @Parameter(names = ["-validation_stringency"], description = "SAM validation strategy")
-    var stringency = ValidationStringency.DEFAULT_STRINGENCY
 
     @Parameter(names = ["-threads"], description = "Number of threads")
     var threadCount = DEFAULT_THREADS
@@ -56,6 +52,9 @@ class CiderParams
 
     @Parameter(names = ["-write_cider_bam"], description = "Write a output BAM file containing all CDR3 reads")
     var writeFilteredBam = false
+
+    @Parameter(names = ["-report_match_ref_seq"], description = "Report VDJ sequences that match reference genome")
+    var reportMatchRefSeq = false
 
     @Parameter(names = ["-num_trim_bases"], description = "Number of bases to trim on each side of reads")
     var numBasesToTrim = 0

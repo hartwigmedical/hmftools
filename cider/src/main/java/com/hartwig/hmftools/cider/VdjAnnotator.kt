@@ -11,6 +11,7 @@ import kotlin.collections.HashMap
 // some annotation that we want to print out
 data class VdjAnnotation(val vdj: VDJSequence,
                          val filters: List<String>,
+                         val matchesRef: Boolean,
                          val vAlignedReads: Int,
                          val jAlignedReads: Int,
                          val vNonSplitReads: Int,
@@ -79,7 +80,11 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
         val vNonSplitReads: Int = countNonSplitReads(vdj, VJ.V)
         val jNonSplitReads: Int = countNonSplitReads(vdj, VJ.J)
         val cdr3SupportMin: Int = calcCdr3SupportMin(vdj)
-        val filterReasons = annotateFilterReasons(vdj, isDuplicate, vAlignedReads, jAlignedReads, vNonSplitReads, jNonSplitReads)
+
+        val matchesRef: Boolean = vdjMatchesRef(vdj, vAlignedReads = vAlignedReads, jAlignedReads = jAlignedReads,
+                                                vNonSplitReads = vNonSplitReads, jNonSplitReads = jNonSplitReads)
+
+        val filterReasons = annotateFilterReasons(vdj, isDuplicate, matchesRef)
 
         val vSimilarityScore: Int? = if (vdj.vAnchor != null) calcAnchorSimilarity(vdj, vdj.vAnchor) else null
         val jSimilarityScore: Int? = if (vdj.jAnchor != null) calcAnchorSimilarity(vdj, vdj.jAnchor) else null
@@ -89,7 +94,7 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
         val vPrimerMatchCount = primerMatches.filter({ o -> o.vdj === vdj && o.primer.vj == VJ.V}).size
         val jPrimerMatchCount = primerMatches.filter({ o -> o.vdj === vdj && o.primer.vj == VJ.J}).size
 
-        return VdjAnnotation(vdj, filterReasons,
+        return VdjAnnotation(vdj, filterReasons, matchesRef = matchesRef,
             vAlignedReads = vAlignedReads, jAlignedReads = jAlignedReads,
             vNonSplitReads = vNonSplitReads, jNonSplitReads = jNonSplitReads,
             cdr3SupportMin = cdr3SupportMin,
@@ -192,6 +197,14 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
         return nonSplitReadCount
     }
 
+    fun vdjMatchesRef(vdj: VDJSequence, vAlignedReads: Int, jAlignedReads: Int,
+                      vNonSplitReads: Int, jNonSplitReads: Int) : Boolean
+    {
+        val maxNonSplitReads = Math.min(MAX_NONSPLIT_READS, Math.max(vdj.numReads / 2, 1))
+        return ((vAlignedReads == 0 || jAlignedReads == 0) &&
+            (jNonSplitReads + vNonSplitReads) >= maxNonSplitReads)
+    }
+
     companion object
     {
         const val CDR3_FILTER_AA_MIN_LENGTH = 5
@@ -229,15 +242,11 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
             }
         }
 
-        fun annotateFilterReasons(vdj: VDJSequence, isDuplicate: Boolean,
-                         vAlignedReads: Int, jAlignedReads: Int,
-                        vNonSplitReads: Int, jNonSplitReads: Int): List<String>
+        fun annotateFilterReasons(vdj: VDJSequence, isDuplicate: Boolean, matchesRef: Boolean): List<String>
         {
             val filters = ArrayList<String>()
 
-            val maxNonSplitReads = Math.min(MAX_NONSPLIT_READS, Math.max(vdj.numReads / 2, 1))
-            if ((vAlignedReads == 0 || jAlignedReads == 0) &&
-                (jNonSplitReads + vNonSplitReads) >= maxNonSplitReads)
+            if (matchesRef)
             {
                 filters.add("MATCHES_REF")
             }

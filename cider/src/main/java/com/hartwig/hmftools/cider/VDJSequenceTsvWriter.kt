@@ -55,7 +55,7 @@ object VDJSequenceTsvWriter
 
     @JvmStatic
     fun writeVDJSequences(
-        basePath: String, sample: String, vdjAnnotations: List<VdjAnnotation>, reportPartialSeq: Boolean)
+        basePath: String, sample: String, vdjAnnotations: List<VdjAnnotation>, reportMatchRefVdj: Boolean, reportPartialSeq: Boolean)
     {
         val filePath = generateFilename(basePath, sample)
 
@@ -67,7 +67,8 @@ object VDJSequenceTsvWriter
         csvFormat.print(FileWriterUtils.createGzipBufferedWriter(filePath)).use { printer: CSVPrinter ->
             for (vdjAnn in vdjAnnotations)
             {
-                if (reportPartialSeq || vdjAnn.vdj.isFullyRearranged)
+                if ((reportMatchRefVdj || !vdjAnn.matchesRef) &&
+                    (reportPartialSeq || vdjAnn.vdj.isFullyRearranged))
                 {
                     writeVDJSequence(printer, vdjAnn)
                 }
