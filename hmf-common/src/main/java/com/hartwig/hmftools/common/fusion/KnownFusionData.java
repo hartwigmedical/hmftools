@@ -206,11 +206,6 @@ public class KnownFusionData
         return mGeneRegion != null && mGeneRegion.containsPosition(chromosome, position);
     }
 
-    public boolean matchesGeneRegion(final String chromosome, int position, byte orientation)
-    {
-        return (mGeneStrand == 0 || mGeneStrand == orientation) && withinGeneRegion(chromosome, position);
-    }
-
     public final List<ChrBaseRegion> getThreeGeneAltRegions() { return mThreeGeneAltRegions; }
 
     public String toString()

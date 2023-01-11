@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_ENHANCER_TARGET;
@@ -147,7 +148,12 @@ public class SpecialFusions
     private GeneFusion formEnhancerTargetFusion(
             final KnownFusionData knownFusionData, final SvVarData var, final SvBreakend breakend, int seIndex)
     {
-        if(!knownFusionData.matchesGeneRegion(breakend.chromosome(), breakend.position(), breakend.orientation()))
+        // note that these are configured to have the 'gene strand' being the required orientation of the 3' breakend
+        // whereas the gene strand is actually the opposite
+        byte requiredOrientation = knownFusionData.geneStrand();
+        byte geneStrand = knownFusionData.geneStrand() == POS_STRAND ? NEG_STRAND : POS_STRAND;
+
+        if(breakend.orientation() != requiredOrientation || !knownFusionData.withinGeneRegion(breakend.chromosome(), breakend.position()))
             return null;
 
         if(var.type() != BND && var.length() < ENHANCER_PROMISCUOUS_MIN_DISTANCE)
@@ -200,14 +206,14 @@ public class SpecialFusions
         {
             ChrBaseRegion geneRegion = knownFusionData.geneRegion();
             GeneData geneData = new GeneData(
-                    "", knownFusionData.ThreeGene, geneRegion.chromosome(), knownFusionData.geneStrand(),
+                    "", knownFusionData.ThreeGene, geneRegion.chromosome(), geneStrand,
                     geneRegion.start(), geneRegion.end(), "");
 
             BreakendGeneData gene = new BreakendGeneData(var.id(), seIndex == SE_START, geneData);
             gene.setSvData(var.getSvData(), var.jcn());
 
             TranscriptData transData = new TranscriptData(
-                    0, "", knownFusionData.ThreeGene, false, knownFusionData.geneStrand(),
+                    0, "", knownFusionData.ThreeGene, false, geneStrand,
                     geneRegion.start(), geneRegion.end(), null, null, "");
 
             BreakendTransData transcript = new BreakendTransData(
