@@ -5,6 +5,8 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.drivercatalog.AmplificationDrivers.MAX_COPY_NUMBER_DEL;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -40,6 +42,7 @@ import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 
@@ -144,7 +147,7 @@ public class GermlineDeletions
             {
                 StructuralVariant sv = matchingSVs[SE_START].Variant;
 
-                if(sv.orientation(false) == requiredOrientation && positionWithin(sv.end().position(), regionStart, regionEnd))
+                if(legMatchesRegion(sv.end(), region.chromosome(), regionStart, regionEnd, requiredOrientation))
                 {
                     matchingSVs[SE_END] = new MatchedStructuralVariant(sv, false);
                     break;
@@ -161,19 +164,34 @@ public class GermlineDeletions
                     if(leg == null)
                         continue;
 
-                    if(variant.orientation(isStart) == requiredOrientation && positionWithin(leg.position(), regionStart, regionEnd))
+                    if(!legMatchesRegion(leg, region.chromosome(), regionStart, regionEnd, requiredOrientation))
+                        continue;
+
+                    if(matchingSVs[se] == null
+                    || (matchingSVs[se] != null && selectNewBySvType(variant.type(), matchingSVs[se].Variant.type())))
                     {
                         matchingSVs[se] = new MatchedStructuralVariant(variant, isStart);
-                        break;
                     }
                 }
-
-                if(matchingSVs[se] != null)
-                    break;
             }
         }
 
         return matchingSVs;
+    }
+
+    private static boolean legMatchesRegion(
+            final StructuralVariantLeg leg, final String regionChr, int regionStart, int regionEnd,  byte requiredOrientation)
+    {
+        return leg.chromosome().equals(regionChr) && positionWithin(leg.position(), regionStart, regionEnd)
+                && leg.orientation() == requiredOrientation;
+    }
+
+    private static boolean selectNewBySvType(final StructuralVariantType newType, final StructuralVariantType existingType)
+    {
+        if(existingType == DEL)
+            return false;
+
+        return newType == DEL;
     }
 
     private class CopyNumberSearchState
