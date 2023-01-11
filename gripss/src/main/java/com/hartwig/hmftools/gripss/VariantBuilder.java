@@ -164,7 +164,7 @@ public class VariantBuilder
         return new SvData(sv, genotypeIds);
     }
 
-    private final StructuralVariant popLastSv()
+    private StructuralVariant popLastSv()
     {
         if(mSvFactory.results().isEmpty())
             return null;
