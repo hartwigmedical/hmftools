@@ -79,7 +79,7 @@ public class LinxApplication
             config.setSampleIds(samplesList);
         }
 
-        if (samplesList.isEmpty())
+        if(samplesList.isEmpty())
         {
             LNX_LOGGER.info("not samples loaded, exiting");
             System.exit(1);

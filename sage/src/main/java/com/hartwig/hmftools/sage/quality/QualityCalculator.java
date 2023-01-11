@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.sage.quality;
 
 import static java.lang.Math.round;
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.common.IndexedBases;
@@ -56,8 +59,8 @@ public class QualityCalculator
         int mapQuality = record.getMappingQuality();
         boolean properPairFlag = record.getReadPairedFlag() && record.getProperPairFlag();
         int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), mapQuality, numberOfEvents, properPairFlag);
-        double modifiedBaseQuality = modifiedBaseQuality(mConfig, baseQuality, distanceFromReadEdge);
 
+        double modifiedBaseQuality = modifiedBaseQuality(mConfig, baseQuality, distanceFromReadEdge);
         return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
     }
 

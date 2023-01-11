@@ -1,0 +1,434 @@
+package com.hartwig.hmftools.purple.germline;
+
+import static java.lang.Math.abs;
+
+import static com.hartwig.hmftools.common.purple.GermlineStatus.AMPLIFICATION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.UNKNOWN;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READPAIR_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READ_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
+import static com.hartwig.hmftools.purple.sv.SomaticSvCache.addEnrichedVariantContexts;
+
+import java.io.File;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.sv.ImmutableEnrichedStructuralVariant;
+import com.hartwig.hmftools.common.sv.ImmutableEnrichedStructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantHeader;
+import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.purple.config.ReferenceData;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
+import com.hartwig.hmftools.purple.sv.StructuralRefContextEnrichment;
+import com.hartwig.hmftools.purple.sv.VariantContextCollection;
+
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.tribble.index.tabix.TabixFormat;
+import htsjdk.tribble.index.tabix.TabixIndexCreator;
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.writer.Options;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
+
+public class GermlineSvCache
+{
+    private final String mOutputVcfFilename;
+    private final Optional<VCFHeader> mVcfHeader;
+    private final VariantContextCollection mVariantCollection;
+    private final IndexedFastaSequenceFile mRefGenomeFile;
+
+    private final PurityContext mPurityContext;
+    private final List<ObservedRegion> mFittedRegions;
+    private final List<PurpleCopyNumber> mCopyNumbers;
+
+    public GermlineSvCache()
+    {
+        mVcfHeader = Optional.empty();
+        mOutputVcfFilename = Strings.EMPTY;
+        mVariantCollection = new VariantContextCollection(null);
+        mRefGenomeFile = null;
+        mPurityContext = null;
+        mFittedRegions = null;
+        mCopyNumbers = null;
+    }
+
+    public GermlineSvCache(
+            final String version, final String inputVcf, final String outputVcf, final ReferenceData referenceData,
+            final List<ObservedRegion> fittedRegions, final List<PurpleCopyNumber> copyNumbers, final PurityContext purityContext)
+    {
+        mPurityContext = purityContext;
+        mFittedRegions = fittedRegions;
+        mCopyNumbers = copyNumbers;
+
+        final VCFFileReader vcfReader = new VCFFileReader(new File(inputVcf), false);
+        mOutputVcfFilename = outputVcf;
+        mVcfHeader = Optional.of(generateOutputHeader(version, vcfReader.getFileHeader()));
+        mVariantCollection = new VariantContextCollection(mVcfHeader.get());
+        mRefGenomeFile = referenceData.RefGenome;
+
+        for(VariantContext context : vcfReader)
+        {
+            mVariantCollection.add(context);
+        }
+
+        PPL_LOGGER.info("loaded {} germline SVs from {}", mVariantCollection.variants().size(), inputVcf);
+
+        vcfReader.close();
+    }
+
+    public List<StructuralVariant> variants() { return mVariantCollection.variants(); }
+
+    public void write()
+    {
+        if(!mVcfHeader.isPresent() || mOutputVcfFilename.isEmpty())
+            return;
+
+        try
+        {
+            final VariantContextWriter writer = new VariantContextWriterBuilder()
+                    .setOutputFile(mOutputVcfFilename)
+                    .setReferenceDictionary(mVcfHeader.get().getSequenceDictionary())
+                    .setIndexCreator(new TabixIndexCreator(mVcfHeader.get().getSequenceDictionary(), new TabixFormat()))
+                    .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
+                    .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
+                    .build();
+
+            final StructuralRefContextEnrichment refEnricher = new StructuralRefContextEnrichment(mRefGenomeFile, writer::add);
+
+            writer.writeHeader(refEnricher.enrichHeader(mVcfHeader.get()));
+
+            // may be no reason to use the enriched collection, unsure if it adds any value
+            for(StructuralVariant variant : mVariantCollection.variants())
+            {
+                annotateVariant(variant);
+            }
+
+            // now write the variants
+            Iterator<VariantContext> variantIter = mVariantCollection.iterator();
+
+            while(variantIter.hasNext())
+            {
+                VariantContext variant = variantIter.next();
+
+                if(variant.isFiltered())
+                    continue;
+
+                refEnricher.accept(variant);
+            }
+
+            refEnricher.flush();
+
+            writer.close();
+        }
+        catch(Exception e)
+        {
+            PPL_LOGGER.error("failed to write germline SV VCF({}): {}", mOutputVcfFilename, e.toString());
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    private void annotateVariant(final StructuralVariant variant)
+    {
+        RegionMatchInfo[] fittedRegions = matchFittedRegions(variant);
+
+        PurpleCopyNumber[] copyNumbers = matchCopyNumbers(variant);
+
+        annotateVariant(variant, fittedRegions, copyNumbers);
+    }
+
+    private void annotateVariant(
+            final StructuralVariant variant, final RegionMatchInfo[] fittedRegions, final PurpleCopyNumber[] copyNumbers)
+    {
+        ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder().from(variant);
+
+        double junctionCopyNumberTotal = 0;
+        int legCount = 0;
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            StructuralVariantLeg leg = se == SE_START ? variant.start() : variant.end();
+
+            if(leg == null)
+                continue;
+
+            VariantContext context = se == SE_START ? variant.startContext() : variant.endContext();
+
+            ImmutableEnrichedStructuralVariantLeg.Builder legBuilder = ImmutableEnrichedStructuralVariantLeg.builder().from(leg);
+
+            ObservedRegion fittedRegion = fittedRegions[se] != null ? fittedRegions[se].Region : null;
+            PurpleCopyNumber copyNumber = copyNumbers[se];
+
+            // initialise all values
+            legBuilder.adjustedAlleleFrequency(0.0);
+            legBuilder.adjustedCopyNumber(0.0);
+            legBuilder.adjustedCopyNumberChange(0.0);
+
+            if(copyNumber != null)
+            {
+                double adjustedCN = copyNumber.averageTumorCopyNumber();
+
+                if(fittedRegion != null)
+                {
+                    double cnChange = abs(fittedRegions[se].CopyNumberChange);
+
+                    legBuilder.adjustedCopyNumberChange(cnChange);
+
+                    // take the higher of the ref CN regions
+                    if(fittedRegion.germlineStatus() == AMPLIFICATION)
+                        adjustedCN += cnChange;
+                }
+
+                legBuilder.adjustedCopyNumber(adjustedCN);
+
+                double purity = mPurityContext.bestFit().purity();
+
+                if(context.getGenotypes().size() > 1 && purity > 0)
+                {
+                    // [tumorAF*[2*(1-purity)+adjCNStart*purity] -refAF*2*(1-purity)]/adjCNStart/purity = adjAFStart
+                    // rearranged from tumorAF = [refAF*2*(1-purity) + adjAFStart*purity*adjCNStart] / [2*(1-purity) + purity*adjCNStart]
+                    Genotype refGenotype = context.getGenotype(0);
+                    Genotype tumorGenotype = context.getGenotype(1);
+
+                    double refAF = getOrCalculateAlleleFrequency(refGenotype);
+                    double tumorAF = getOrCalculateAlleleFrequency(tumorGenotype);
+
+                    double refPurity = 2 * (1 - purity);
+                    double adjustedAF = (tumorAF * (refPurity + adjustedCN * purity) - refAF * refPurity) / (adjustedCN * purity);
+
+                    legBuilder.adjustedAlleleFrequency(adjustedAF);
+
+                    ++legCount;
+                    junctionCopyNumberTotal += adjustedAF * adjustedCN;
+                }
+            }
+
+            if(se == SE_START)
+                builder.start(legBuilder.build());
+            else
+                builder.end(legBuilder.build());
+        }
+
+        double junctionCopyNumber = legCount > 0 ? junctionCopyNumberTotal / legCount : 0;
+        builder.junctionCopyNumber(junctionCopyNumber);
+
+        addEnrichedVariantContexts(mVariantCollection, builder.build());
+    }
+
+    private double getOrCalculateAlleleFrequency(final Genotype genotype)
+    {
+        if(genotype.hasExtendedAttribute(ALLELE_FRACTION))
+            return getGenotypeAttributeAsDouble(genotype, ALLELE_FRACTION, 0);
+
+        int totalReadCoverage = getGenotypeAttributeAsInt(genotype, REFERENCE_BREAKEND_READ_COVERAGE, 0)
+                + getGenotypeAttributeAsInt(genotype, REFERENCE_BREAKEND_READPAIR_COVERAGE, 0);
+
+        int variantFrags = getGenotypeAttributeAsInt(genotype, VARIANT_FRAGMENT_BREAKPOINT_COVERAGE, 0) +
+                getGenotypeAttributeAsInt(genotype, VARIANT_FRAGMENT_BREAKEND_COVERAGE, 0);
+
+        double total = variantFrags + totalReadCoverage;
+        return variantFrags / total;
+    }
+
+    private class RegionMatchInfo
+    {
+        public final ObservedRegion Region;
+        public final double CopyNumberChange;
+
+        public RegionMatchInfo(final ObservedRegion region, final double copyNumberChange)
+        {
+            Region = region;
+            CopyNumberChange = copyNumberChange;
+        }
+    }
+
+    private static boolean isShortLocalVariant(final StructuralVariant variant)
+    {
+        if(variant.type() == DEL || variant.type() == DUP || variant.type() == INV || variant.type() == INS)
+        {
+            int length = variant.position(false) - variant.position(true);
+            return length <= WINDOW_SIZE * 1.5;
+        }
+
+        return false;
+    }
+
+    private RegionMatchInfo[] matchFittedRegions(final StructuralVariant variant)
+    {
+        RegionMatchInfo[] matchedFittedRegions = new RegionMatchInfo[SE_PAIR];
+
+        if(isShortLocalVariant(variant))
+            return matchedFittedRegions;
+
+        int regionIndex = 0;
+        boolean regionChrMatched = false;
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            StructuralVariantLeg leg = se == SE_START ? variant.start() : variant.end();
+
+            if(leg == null)
+                continue;
+
+            if(se == SE_END && !leg.chromosome().equals(variant.chromosome(true)))
+                regionChrMatched = false;
+
+            for(; regionIndex < mFittedRegions.size(); ++regionIndex)
+            {
+                ObservedRegion region = mFittedRegions.get(regionIndex);
+
+                if(!regionChrMatched && region.chromosome().equals(leg.chromosome()))
+                    regionChrMatched = true;
+
+                if(regionChrMatched && region.start() > leg.position() + WINDOW_SIZE) // stop searching and keep index in place
+                    break;
+
+                if(regionIndex == 0)
+                    continue;
+
+                if(region.germlineStatus() == UNKNOWN)
+                    continue;
+
+                if(!breakendMatchesRegion(leg, region))
+                    continue;
+
+                // find the preceding region (again not UNKNOWN)
+                int prevIndex = regionIndex - 1;
+                ObservedRegion prevRegion = mFittedRegions.get(prevIndex);
+
+                while(prevRegion.germlineStatus() == UNKNOWN)
+                {
+                    --prevIndex;
+
+                    if(prevIndex < 0)
+                    {
+                        prevRegion = null;
+                        break;
+                    }
+
+                    prevRegion = mFittedRegions.get(prevIndex);
+                }
+
+                if(prevRegion == null)
+                    continue;
+
+                double refCnChange = region.refNormalisedCopyNumber() - prevRegion.refNormalisedCopyNumber();
+                byte impliedOrientation = refCnChange > 0 ? NEG_ORIENT : POS_ORIENT;
+
+                if(impliedOrientation != leg.orientation())
+                    continue;
+
+                ObservedRegion germlineRegion = isValidRegion(region) ? region : prevRegion;
+
+                matchedFittedRegions[se] = new RegionMatchInfo(germlineRegion, refCnChange);
+                break;
+            }
+        }
+
+        return matchedFittedRegions;
+    }
+
+    private static boolean isValidRegion(final ObservedRegion region)
+    {
+        return region.germlineStatus() == HOM_DELETION || region.germlineStatus() == HET_DELETION || region.germlineStatus() == AMPLIFICATION;
+    }
+
+    private boolean breakendMatchesRegion(final StructuralVariantLeg leg, final ObservedRegion region)
+    {
+        if(!leg.chromosome().equals(region.chromosome()))
+            return false;
+
+        // try to match on the start region within max 1 depth window
+        int regionStart = region.minStart() - WINDOW_SIZE;
+        int regionEnd = region.maxStart() + WINDOW_SIZE;
+
+        return positionWithin(leg.position(), regionStart, regionEnd);
+    }
+
+    private PurpleCopyNumber[] matchCopyNumbers(final StructuralVariant variant)
+    {
+        // not expecting too may germline SVs so just search the full collections for each one
+        int copyNumberIndex = 0;
+        boolean copyNumberChrMatched = false;
+
+        PurpleCopyNumber[] matchedCopyNumbers = new PurpleCopyNumber[SE_PAIR];
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            StructuralVariantLeg leg = se == SE_START ? variant.start() : variant.end();
+
+            if(leg == null)
+                continue;
+
+            if(se == SE_END && !leg.chromosome().equals(variant.chromosome(true)))
+                copyNumberChrMatched = false;
+
+            if(matchedCopyNumbers[SE_START] != null && breakendMatchesCopyNumber(leg, matchedCopyNumbers[SE_START]))
+            {
+                // other breakend is within the same CN segment
+                matchedCopyNumbers[SE_END] = matchedCopyNumbers[SE_START];
+            }
+            else
+            {
+                for(; copyNumberIndex < mCopyNumbers.size(); ++copyNumberIndex)
+                {
+                    PurpleCopyNumber copyNumber = mCopyNumbers.get(copyNumberIndex);
+
+                    if(!copyNumberChrMatched && copyNumber.chromosome().equals(leg.chromosome()))
+                        copyNumberChrMatched = true;
+
+                    if(breakendMatchesCopyNumber(leg, copyNumber))
+                    {
+                        matchedCopyNumbers[se] = copyNumber;
+                        break;
+                    }
+
+                    if(copyNumberChrMatched && copyNumber.start() > leg.position())
+                        break;
+                }
+            }
+        }
+
+        return matchedCopyNumbers;
+    }
+
+    private static boolean breakendMatchesCopyNumber(final StructuralVariantLeg leg, final PurpleCopyNumber copyNumber)
+    {
+        return copyNumber.chromosome().equals(leg.chromosome()) && positionWithin(leg.position(), copyNumber.start(), copyNumber.end());
+    }
+
+    private static VCFHeader generateOutputHeader(final String purpleVersion, final VCFHeader template)
+    {
+        return StructuralVariantHeader.generateHeader(purpleVersion, template);
+    }
+}

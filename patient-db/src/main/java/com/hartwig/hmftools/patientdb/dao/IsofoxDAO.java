@@ -67,7 +67,7 @@ public class IsofoxDAO
         inserter.values(
                 timestamp,
                 sampleId,
-                statistics.qcStatus(),
+                DatabaseUtil.checkStringLength(statistics.qcStatus(), RNASTATISTICS.QCSTATUS),
                 statistics.readLength(),
                 statistics.totalFragments(),
                 statistics.duplicateFragments(),

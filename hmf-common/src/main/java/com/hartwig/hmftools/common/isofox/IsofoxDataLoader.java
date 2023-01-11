@@ -26,7 +26,7 @@ public final class IsofoxDataLoader {
         LOGGER.info("Loading ISOFOX data from {} using cancer type '{}'", new File(isofoxSummaryCsv).getParent(), isofoxCancerType);
 
         List<String> summaryLines = Files.readAllLines(Paths.get(isofoxSummaryCsv));
-        RnaStatistics summary = RnaStatistics.fromCsv(summaryLines.get(1));
+        RnaStatistics summary = RnaStatistics.fromCsv(summaryLines);
 
         LOGGER.info((" Loaded summary from " + isofoxSummaryCsv));
 

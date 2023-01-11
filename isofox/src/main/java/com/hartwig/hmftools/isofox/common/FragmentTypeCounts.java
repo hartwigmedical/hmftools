@@ -2,7 +2,7 @@ package com.hartwig.hmftools.isofox.common;
 
 public class FragmentTypeCounts
 {
-    private long[] mTypeCounts;
+    private final long[] mTypeCounts;
 
     public FragmentTypeCounts()
     {

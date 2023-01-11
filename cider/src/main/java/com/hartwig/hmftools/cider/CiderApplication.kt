@@ -26,8 +26,8 @@ import java.io.IOException
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter.ISO_ZONED_DATE_TIME
 import java.util.*
-import java.util.stream.Collectors
 import kotlin.collections.ArrayList
 
 class CiderApplication
@@ -45,7 +45,9 @@ class CiderApplication
     {
         mLoggingOptions.setLogLevel()
         val versionInfo = VersionInfo("cider.version")
-        sLogger.info("Cider version: {}, build timestamp: {}", versionInfo.version(), versionInfo.buildTime()!!.toLocalTime())
+        sLogger.info("Cider version: {}, build timestamp: {}",
+            versionInfo.version(),
+            versionInfo.buildTime()!!.format(ISO_ZONED_DATE_TIME))
 
         if (!mParams.isValid)
         {
@@ -102,7 +104,7 @@ class CiderApplication
         val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher)
         val vdjAnnotations: List<VdjAnnotation> = vdjAnnotator.sortAndAnnotateVdjs(vdjSequences, primerMatchList)
 
-        writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjAnnotations, true)
+        writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjAnnotations, mParams.reportMatchRefSeq, true)
 
         val finish = Instant.now()
         val seconds = Duration.between(start, finish).seconds
@@ -149,40 +151,32 @@ class CiderApplication
         // now build the consensus overlay sequences
         //var geneTypes = new VJGeneType[] { VJGeneType.IGHV, VJGeneType.IGHJ };
         val geneTypes = VJGeneType.values()
-        val layoutMap: MutableMap<VJGeneType, List<ReadLayout>> = HashMap()
+
+        // use a EnumMap such that the keys are ordered by the declaration
+        val layoutMap: MutableMap<VJGeneType, List<ReadLayout>> = EnumMap(VJGeneType::class.java)
+
         for (geneType in geneTypes)
         {
             val readsOfGeneType = readCandidates
                 .filter({ o: VJReadCandidate -> o.vjGeneType === geneType })
                 .toList()
 
-            for (read in readsOfGeneType)
-            {
-                if (read.anchorOffsetEnd - read.anchorOffsetStart > 30)
-                {
-                    sLogger.info("anchor length > 30: read: {}, cigar: {}", read, read.read.cigarString)
-                }
-            }
             val readLayouts = vjReadLayoutAdaptor.buildLayouts(
-                geneType, readsOfGeneType, 10, 1.0
-            )
+                geneType, readsOfGeneType, CiderConstants.LAYOUT_MIN_READ_OVERLAP_BASES)
 
-            layoutMap[geneType] = readLayouts
+            layoutMap[geneType] = readLayouts.sortedByDescending({ layout: ReadLayout -> layout.reads.size })
         }
-
-        // use flatMap to turn many lists to one
-        val allLayouts = layoutMap.values.stream().flatMap { obj: List<ReadLayout> -> obj.stream() }.collect(Collectors.toList())
-
-        // sort from most number of reads to lowest
-        allLayouts.sortWith(Collections.reverseOrder(Comparator.comparing { layout: ReadLayout -> layout.reads.size }))
 
         // give each an ID
         var nextId = 1
-        for (layout in allLayouts)
+        for ((_, layoutList) in layoutMap)
         {
-            layout.id = (nextId++).toString()
+            for (layout in layoutList)
+            {
+                layout.id = (nextId++).toString()
+            }
         }
-        writeLayouts(mParams.outputDir, mParams.sampleId, layoutMap, 5)
+        writeLayouts(mParams.outputDir, mParams.sampleId, layoutMap)
         return layoutMap
     }
 
@@ -209,10 +203,10 @@ class CiderApplication
         val sLogger = LogManager.getLogger(CiderApplication::class.java)
         private fun readerFactory(params: CiderParams): SamReaderFactory
         {
-            val readerFactory = SamReaderFactory.make().validationStringency(params.stringency)
+            val readerFactory = SamReaderFactory.make()
             return if (params.refGenomePath != null)
             {
-                readerFactory.referenceSource(ReferenceSource(File(params.refGenomePath)))
+                readerFactory.referenceSource(ReferenceSource(File(params.refGenomePath!!)))
             } else readerFactory
         }
 

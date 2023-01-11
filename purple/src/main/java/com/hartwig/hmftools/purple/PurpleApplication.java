@@ -1,14 +1,13 @@
 package com.hartwig.hmftools.purple;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleGermlineSvFile;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleGermlineVcfFile;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFile;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
 import static com.hartwig.hmftools.common.purple.GeneCopyNumber.listToMap;
-import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
-import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
@@ -17,7 +16,6 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
 import static com.hartwig.hmftools.purple.Segmentation.validateObservedRegions;
-import static com.hartwig.hmftools.purple.StructuralVariantCache.createStructuralVariantCache;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_SOMATIC_FIT_DELETED_PERC;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;
 import static com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory.calculateDeletedDepthWindows;
@@ -29,13 +27,13 @@ import static com.hartwig.hmftools.purple.purity.FittedPurityFactory.createFitte
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.ArrayListMultimap;
@@ -49,10 +47,9 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.utils.FileWriterUtils;
 import com.hartwig.hmftools.purple.fitting.SomaticPurityFitter;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
-import com.hartwig.hmftools.purple.plot.RChartData;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
@@ -80,7 +77,7 @@ import com.hartwig.hmftools.purple.config.SampleData;
 import com.hartwig.hmftools.purple.config.SampleDataFiles;
 import com.hartwig.hmftools.purple.config.SomaticFitConfig;
 import com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory;
-import com.hartwig.hmftools.purple.germline.GermlineDeletionDrivers;
+import com.hartwig.hmftools.purple.germline.GermlineDeletions;
 import com.hartwig.hmftools.purple.germline.GermlineDrivers;
 import com.hartwig.hmftools.purple.fitting.BestFitFactory;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
@@ -93,6 +90,9 @@ import com.hartwig.hmftools.purple.somatic.SomaticPeakStream;
 import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
+import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;
+import com.hartwig.hmftools.purple.germline.GermlineSvCache;
+import com.hartwig.hmftools.purple.sv.SomaticSvCache;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -171,17 +171,11 @@ public class PurpleApplication
     {
         long startTimeMs = System.currentTimeMillis();
 
-        try
-        {
-            processSample(mConfig.ReferenceId, mConfig.TumorId);
-        }
-        finally
-        {
-            mExecutorService.shutdown();
-        }
+        processSample(mConfig.ReferenceId, mConfig.TumorId);
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         PPL_LOGGER.info("Purple complete, runTime({})", format("%.1fs", timeTakenMs/1000.0));
+        mExecutorService.shutdown();
     }
 
     private SampleData loadSampleData(final String referenceId, final String tumorId, final SampleDataFiles sampleDataFiles) throws Exception
@@ -204,8 +198,9 @@ public class PurpleApplication
             // load structural and somatic variants
             final String outputVcf = purpleSomaticSvFile(mConfig.OutputDir, tumorId);
 
-            final StructuralVariantCache svCache = createStructuralVariantCache(
-                    sampleDataFiles.SomaticSvVcfFile, outputVcf, mPurpleVersion.version(), mReferenceData);
+            final SomaticSvCache svCache = !sampleDataFiles.SomaticSvVcfFile.isEmpty() ?
+                    new SomaticSvCache(mPurpleVersion.version(), sampleDataFiles.SomaticSvVcfFile, outputVcf, mReferenceData)
+                    : new SomaticSvCache();
 
             sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache, somaticVariantCache);
         }
@@ -220,30 +215,30 @@ public class PurpleApplication
         return sampleData;
     }
 
-    private void processSample(final String referenceId, final String tumorSample)
+    private void processSample(final String referenceId, final String tumorId)
     {
         try
         {
             if(mConfig.DriversOnly)
             {
-                findDrivers(tumorSample);
+                findDrivers(tumorId);
             }
             else
             {
-                final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, tumorSample);
-                final SampleData sampleData = loadSampleData(referenceId, tumorSample, sampleDataFiles);
+                final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, tumorId, referenceId);
+                final SampleData sampleData = loadSampleData(referenceId, tumorId, sampleDataFiles);
 
                 if(sampleData == null)
                     System.exit(1);
 
                 PPL_LOGGER.debug("post-data-loading memory({}mb)", calcMemoryUsage());
 
-                performFit(referenceId, tumorSample, sampleDataFiles, sampleData);
+                performFit(referenceId, tumorId, sampleDataFiles, sampleData);
             }
         }
         catch(Exception e)
         {
-            PPL_LOGGER.error("failed processing sample({}): {}", tumorSample, e.toString());
+            PPL_LOGGER.error("failed processing sample({}): {}", tumorId, e.toString());
             e.printStackTrace();
             System.exit(1);
         }
@@ -399,29 +394,36 @@ public class PurpleApplication
         PurityContextFile.write(mConfig.OutputDir, tumorId, purityContext);
         SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorId), fittedRegions);
 
-        List<GermlineDeletion> germlineDeletions = Lists.newArrayList();
+        GermlineDeletions germlineDeletions = null;
 
         if(mConfig.runGermline())
         {
             mGermlineVariants.processAndWrite(
                     referenceId, tumorId, sampleDataFiles.GermlineVcfFile, purityAdjuster, copyNumbers, reportedGenes);
 
+            GermlineSvCache germlineSvCache;
+
             if(!sampleDataFiles.GermlineSvVcfFile.isEmpty())
             {
                 final String outputVcf = purpleGermlineSvFile(mConfig.OutputDir, tumorId);
 
-                final StructuralVariantCache germlineSvCache = createStructuralVariantCache(
-                        sampleDataFiles.GermlineSvVcfFile, outputVcf, mPurpleVersion.version(), mReferenceData);
+                germlineSvCache = new GermlineSvCache(
+                        mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, outputVcf, mReferenceData,
+                        fittedRegions, copyNumbers, purityContext);
 
-                germlineSvCache.write(purityAdjuster, copyNumbers, true);
+                germlineSvCache.write();
+            }
+            else
+            {
+                germlineSvCache = new GermlineSvCache();
             }
 
-            GermlineDeletionDrivers germlineDeletionDrivers = new GermlineDeletionDrivers(
+            germlineDeletions = new GermlineDeletions(
                     mReferenceData.DriverGenes.driverGenes(), mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
 
-            germlineDeletionDrivers.findDeletions(copyNumbers, fittedRegions);
-            germlineDeletions.addAll(germlineDeletionDrivers.getDeletions());
-            GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorId), germlineDeletions);
+            germlineDeletions.findDeletions(copyNumbers, fittedRegions, germlineSvCache.variants());
+
+            GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorId), germlineDeletions.getDeletions());
         }
 
         if(!mConfig.germlineMode() && (mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent()))
@@ -438,13 +440,14 @@ public class PurpleApplication
             catch(Exception e)
             {
                 PPL_LOGGER.error("charting error: {}", e.toString());
+                e.printStackTrace();
                 System.exit(1);
             }
         }
 
         if(mConfig.RunDrivers)
         {
-            findDrivers(tumorId, purityContext, copyNumbers, geneCopyNumbers, fittedRegions, somaticStream);
+            findDrivers(tumorId, purityContext, geneCopyNumbers, somaticStream, germlineDeletions);
         }
     }
 
@@ -537,14 +540,25 @@ public class PurpleApplication
         }
     }
 
-    private void findDrivers(final String tumorSample) throws Exception
+    private void findDrivers(final String tumorId) throws Exception
     {
         final String purpleDataPath = mConfig.OutputDir;
         SomaticStream somaticStream = null;
+        GermlineDeletions germlineDeletions = null;
+
+        final PurityContext purityContext = PurityContextFile.read(purpleDataPath, tumorId);
+
+        final List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(
+                PurpleCopyNumberFile.generateFilenameForReading(purpleDataPath, tumorId));
+
+        final List<ObservedRegion> fittedRegions = SegmentFile.read(SegmentFile.generateFilename(purpleDataPath, tumorId));
+
+        final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(
+                GeneCopyNumberFile.generateFilenameForReading(purpleDataPath, tumorId));
 
         if(mConfig.runTumor())
         {
-            String somaticVcf = PurpleCommon.purpleSomaticVcfFile(purpleDataPath, tumorSample);
+            String somaticVcf = purpleSomaticVcfFile(purpleDataPath, tumorId);
 
             SomaticVariantCache somaticVariantCache = new SomaticVariantCache(mConfig);
             ListMultimap<Chromosome, VariantHotspot> emptyHotspots = ArrayListMultimap.create(); // already annotated in VCF
@@ -556,34 +570,44 @@ public class PurpleApplication
 
         if(mConfig.runGermline())
         {
-            final String germlineVcf = PurpleCommon.purpleGermlineVcfFile(purpleDataPath, tumorSample);
+            final String germlineVcf = purpleGermlineVcfFile(purpleDataPath, tumorId);
 
             if(Files.exists(Paths.get(germlineVcf)))
             {
                 mGermlineVariants.loadReportableVariants(germlineVcf);
                 PPL_LOGGER.info("loaded {} reportable germline variants", mGermlineVariants.reportableVariants().size());
             }
+
+            // find germline deletions since these contribute to drivers
+            germlineDeletions = new GermlineDeletions(
+                    mReferenceData.DriverGenes.driverGenes(), mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
+
+            final String germlineSvVcf = purpleGermlineSvFile(purpleDataPath, tumorId);
+            final List<StructuralVariant> germlineSVs = Lists.newArrayList();
+
+            if(Files.exists(Paths.get(germlineSvVcf)))
+            {
+                // TEMP logic for testing germline SV annotation
+                String germlineSvAnnotatedVcf = PurpleCommon.PURPLE_SV_GERMLINE_VCF_SUFFIX.replaceAll("germline", "germline_annotated");
+                String germlineSvOutputVcf = FileWriterUtils.checkAddDirSeparator(purpleDataPath) + tumorId + germlineSvAnnotatedVcf;
+                // String germlineSvOutputVcf = "";
+
+                GermlineSvCache germlineSvCache = new GermlineSvCache(
+                        mPurpleVersion.version(), germlineSvVcf, germlineSvOutputVcf, mReferenceData, fittedRegions, copyNumbers, purityContext);
+
+                germlineSVs.addAll(germlineSvCache.variants());
+                germlineSvCache.write();
+            }
+
+            germlineDeletions.findDeletions(copyNumbers, fittedRegions, germlineSVs);
         }
 
-        final PurityContext purityContext = PurityContextFile.read(purpleDataPath, tumorSample);
-
-        final List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(
-                PurpleCopyNumberFile.generateFilenameForReading(purpleDataPath, tumorSample));
-
-        final List<ObservedRegion> fittedRegions = SegmentFile.read(SegmentFile.generateFilename(purpleDataPath, tumorSample)).stream()
-                .filter(x -> x.germlineStatus() == HET_DELETION || x.germlineStatus() == HOM_DELETION)
-                .collect(Collectors.toList());
-
-        final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(
-                GeneCopyNumberFile.generateFilenameForReading(purpleDataPath, tumorSample));
-
-        findDrivers(tumorSample, purityContext, copyNumbers, geneCopyNumbers, fittedRegions, somaticStream);
+        findDrivers(tumorId, purityContext, geneCopyNumbers, somaticStream, germlineDeletions);
     }
 
     private void findDrivers(
-            final String tumorSample, final PurityContext purityContext, final List<PurpleCopyNumber> copyNumbers,
-            final List<GeneCopyNumber> geneCopyNumbers, final List<ObservedRegion> fittedRegions,
-            @Nullable final SomaticStream somaticStream) throws IOException
+            final String tumorSample, final PurityContext purityContext,  final List<GeneCopyNumber> geneCopyNumbers,
+            @Nullable final SomaticStream somaticStream, @Nullable GermlineDeletions germlineDeletions) throws IOException
     {
         final List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();
         final List<DriverCatalog> germlineDriverCatalog = Lists.newArrayList();
@@ -613,12 +637,8 @@ public class PurpleApplication
             final GermlineDrivers germlineDrivers = new GermlineDrivers(mReferenceData.DriverGenes.driverGenes());
             germlineDriverCatalog.addAll(germlineDrivers.findDrivers(mGermlineVariants.reportableVariants(), geneCopyNumberMap));
 
-            GermlineDeletionDrivers germlineDeletionDrivers = new GermlineDeletionDrivers(
-                    mReferenceData.DriverGenes.driverGenes(), mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
-
-            germlineDeletionDrivers.findDeletions(copyNumbers, fittedRegions);
-
-            germlineDriverCatalog.addAll(germlineDeletionDrivers.getDrivers());
+            if(germlineDeletions != null)
+                germlineDriverCatalog.addAll(germlineDeletions.getDrivers());
 
             DriverCatalogFile.write(DriverCatalogFile.generateGermlineFilename(mConfig.OutputDir, tumorSample), germlineDriverCatalog);
         }

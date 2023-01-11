@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.purple.region;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;

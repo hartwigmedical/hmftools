@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.germline;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
@@ -232,7 +232,7 @@ public class GermlineReportedEnrichmentTest
         final String line2 =
                 "11\t1000\tCOSM123;COSM456\tG\tA\t100\t" + filter + "\t" + PURPLE_BIALLELIC_FLAG + "=" + biallelic + ";" + hotspotFlag
                         + ";" + VAR_IMPACT + "=" + impactToString(impact) + ";CLNSIG=" + clinSig + ";"
-                        + PURPLE_VARIANT_CN_INFO + "=" + variantCopyNumber + ";\"\tGT:AD:DP\t0/1:73,17:91";
+                        + PURPLE_VARIANT_CN + "=" + variantCopyNumber + ";\"\tGT:AD:DP\t0/1:73,17:91";
 
         return new GermlineVariant(VariantContextFromString.decode(line2));
     }
@@ -248,7 +248,7 @@ public class GermlineReportedEnrichmentTest
         String line2 =
                 "11\t1000\tCOSM123;COSM456\tG\tA\t100\t" + filter + "\t" + PURPLE_BIALLELIC_FLAG + "=" + biallelic + ";" + hotspotFlag
                         + ";" + VAR_IMPACT + "=" + impactToString(impact) + ";CLNSIG=" + clinSig + ";"
-                        + PURPLE_VARIANT_CN_INFO + "=" + variantCopyNumber + ";" + LOCAL_PHASE_SET + "=" + localPhaseSet
+                        + PURPLE_VARIANT_CN + "=" + variantCopyNumber + ";" + LOCAL_PHASE_SET + "=" + localPhaseSet
                         + "\tGT:AD:DP\t0/1:73,17:91";
 
         return new GermlineVariant(VariantContextFromString.decode(line2));

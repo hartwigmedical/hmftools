@@ -59,7 +59,7 @@
 
         <amber.version>3.9</amber.version>
         <bam-tools.version>1.0</bam-tools.version>
-        <cider.version>0.3</cider.version>
+        <cider.version>0.5</cider.version>
         <cobalt.version>1.13</cobalt.version>
         <compar.version>1.1</compar.version>
         <ctdna.version>1.0</ctdna.version>
@@ -68,9 +68,9 @@
         <gripss.version>2.3.3</gripss.version>
         <health-checker.version>3.3</health-checker.version>
         <hmf-id-generator.version>3.0</hmf-id-generator.version>
-        <isofox.version>1.6</isofox.version>
+        <isofox.version>1.6.1</isofox.version>
         <lilac.version>1.4.3</lilac.version>
-        <linx.version>1.23</linx.version>
+        <linx.version>1.23.1</linx.version>
         <neo.version>1.0</neo.version>
         <orange.version>2.2</orange.version>
         <paddle.version>1.0</paddle.version>

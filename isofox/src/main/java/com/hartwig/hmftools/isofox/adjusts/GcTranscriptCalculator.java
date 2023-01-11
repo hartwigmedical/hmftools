@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.adjusts;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVectors;
@@ -155,7 +156,7 @@ public class GcTranscriptCalculator implements Callable
             }
         }
 
-        writeExpectedGcRatios(mWriter, String.format("CHR_%s", mChromosome), mTotalExpectedCounts);
+        writeExpectedGcRatios(mWriter, format("CHR_%s", mChromosome), mTotalExpectedCounts);
 
         ISF_LOGGER.info("chromosome({}) GC ratio generation complete", mChromosome);
     }
@@ -314,7 +315,7 @@ public class GcTranscriptCalculator implements Callable
 
         if(expectedFrequencyTotal == 0 || actualFrequencyTotal == 0)
         {
-            ISF_LOGGER.error("invalid expected({}) or actual({}) totals", expectedFrequencyTotal, actualFrequencyTotal);
+            ISF_LOGGER.error(format("invalid expected(%.0f) or actual(%.0f) totals", expectedFrequencyTotal, actualFrequencyTotal));
             return;
         }
 
@@ -338,7 +339,7 @@ public class GcTranscriptCalculator implements Callable
             else
                 mGcRatioAdjustments[i] = MIN_ADJUST_FACTOR;
 
-            ISF_LOGGER.debug(String.format("ratio(%.2f) actual(%.6f) expected(%.6f) adjustment(%.3f)",
+            ISF_LOGGER.debug(format("ratio(%.2f) actual(%.6f) expected(%.6f) adjustment(%.3f)",
                     globalGcCounts.getRatios()[i], actualPerc, expectedPerc, mGcRatioAdjustments[i]));
         }
     }
@@ -403,7 +404,7 @@ public class GcTranscriptCalculator implements Callable
     {
         try
         {
-            String outputFileName = String.format("%sread_%d_%s", mConfig.OutputDir, mConfig.ReadLength, "exp_gc_ratios.csv");
+            String outputFileName = format("%sread_%d_%s", mConfig.OutputDir, mConfig.ReadLength, "exp_gc_ratios.csv");
 
             mWriter = createBufferedWriter(outputFileName, false);
 
@@ -413,7 +414,7 @@ public class GcTranscriptCalculator implements Callable
 
             for(Double gcRatio : tmp.getRatios())
             {
-                mWriter.write(String.format(",Gcr_%.2f", gcRatio));
+                mWriter.write(format(",Gcr_%.2f", gcRatio));
             }
 
             mWriter.newLine();
@@ -431,7 +432,7 @@ public class GcTranscriptCalculator implements Callable
 
         try
         {
-            writer.write(String.format("%s", transName));
+            writer.write(format("%s", transName));
 
             // convert to percentages before writing
             double frequencyTotal = sumVector(counts);
@@ -441,7 +442,7 @@ public class GcTranscriptCalculator implements Callable
                 if(frequency == 0)
                     writer.write(",0");
                 else
-                    writer.write(String.format(",%.6f", frequency/frequencyTotal));
+                    writer.write(format(",%.6f", frequency/frequencyTotal));
             }
 
             writer.newLine();

@@ -65,13 +65,14 @@ public class VariantContextCollection
         return removed;
     }
 
-    public List<StructuralVariant> segmentationVariants()
+    public List<StructuralVariant> variants()
     {
         if(mVariantContexts == null)
             return Collections.emptyList();
 
         if(mModified)
         {
+            // converts variant contexts into structural variants
             mModified = false;
             final StructuralVariantFactory factory = new StructuralVariantFactory(new SegmentationVariantsFilter());
             mVariantContexts.forEach(factory::addVariantContext);
@@ -90,11 +91,6 @@ public class VariantContextCollection
 
     private static class VCComparator extends VariantContextComparator
     {
-        VCComparator(final List<String> contigs)
-        {
-            super(contigs);
-        }
-
         VCComparator(final SAMSequenceDictionary dictionary)
         {
             super(dictionary);

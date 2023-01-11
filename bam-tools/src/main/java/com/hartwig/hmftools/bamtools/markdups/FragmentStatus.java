@@ -4,9 +4,9 @@ public enum FragmentStatus
 {
     UNSET,
     NONE,
-    UNCLEAR,
     PRIMARY,
     DUPLICATE,
+    CANDIDATE,
     SUPPLEMENTARY;
 
     public boolean isResolved() { return this == PRIMARY || this == DUPLICATE || this == NONE; }

@@ -358,7 +358,9 @@ public class SvVisualiser implements AutoCloseable
 
         if(plotChromosome)
         {
-            return new ChromosomeRangeExecution(sample, outputFileName, mConfig.OutputConfPath, mConfig.OutputPlotPath).executeR(mCircosConfig, rLabelSize);
+            return new ChromosomeRangeExecution(
+                    sample, mConfig.RefGenVersion, outputFileName, mConfig.OutputConfPath, mConfig.OutputPlotPath)
+                    .executeR(mCircosConfig, rLabelSize);
         }
 
         return circosResult;

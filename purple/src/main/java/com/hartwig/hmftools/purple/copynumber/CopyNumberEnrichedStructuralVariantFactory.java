@@ -51,9 +51,6 @@ public final class CopyNumberEnrichedStructuralVariantFactory
             ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder().from(variant);
             ImmutableEnrichedStructuralVariantLeg.Builder startBuilder = createBuilder(variant.start());
 
-            // Every SV should have a start, while end is optional.
-            assert startBuilder != null;
-
             @Nullable
             final StructuralVariantLeg endLeg = variant.end();
             ImmutableEnrichedStructuralVariantLeg.Builder endBuilder = createBuilder(endLeg);
@@ -73,7 +70,6 @@ public final class CopyNumberEnrichedStructuralVariantFactory
 
                 if(endPloidy != null)
                 {
-                    assert endBuilder != null;
                     endBuilder.adjustedAlleleFrequency((endPloidy.adjustedVaf()));
                     endBuilder.adjustedCopyNumber((endPloidy.adjustedCopyNumber()));
                     endBuilder.adjustedCopyNumberChange((changeFactory.copyNumberChange(endPloidy)));
@@ -94,7 +90,6 @@ public final class CopyNumberEnrichedStructuralVariantFactory
 
                 if(endLeg != null)
                 {
-                    assert endBuilder != null;
                     final StructuralVariantLegCopyNumber endCopyNumber = copyNumberFactory.create(endLeg, mCopyNumbers);
                     endBuilder.adjustedCopyNumber((endCopyNumber.adjustedCopyNumber()));
                     endBuilder.adjustedCopyNumberChange((changeFactory.copyNumberChange(endCopyNumber)));

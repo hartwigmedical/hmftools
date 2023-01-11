@@ -54,6 +54,12 @@ class VDJSequence(
     val vAnchor: VJAnchor?,
     val jAnchor: VJAnchor?)
 {
+    init
+    {
+        require(layoutSliceStart >= 0)
+        require(layoutSliceEnd <= layout.length)
+    }
+
     val numReads: Int get() = layout.reads.size
 
     val length: Int get()
@@ -83,12 +89,17 @@ class VDJSequence(
 
     val sequenceFormatted: String get()
     {
-        return CiderUtils.insertDashes(sequence, vAnchorBoundary ?: 0, jAnchorBoundary ?: length)
+        val l = ArrayList<Int>()
+        if (vAnchorBoundary != null)
+            l.add(vAnchorBoundary!!)
+        if (jAnchorBoundary != null)
+            l.add(jAnchorBoundary!!)
+        return CiderUtils.insertDashes(sequence, *l.toIntArray())
     }
 
     val aminoAcidSequence: String get()
     {
-        val codonAlignedSeq = sequence.drop((vAnchorBoundary ?: jAnchorBoundary ?: 0) % 3)
+        val codonAlignedSeq = sequence.drop(Math.floorMod(vAnchorBoundary ?: jAnchorBoundary ?: 0, 3))
         return Codons.aminoAcidFromBases(codonAlignedSeq)
     }
 
@@ -101,21 +112,21 @@ class VDJSequence(
 
             // if there is no v anchor, we have to align to j anchor
             // also align to codon boundary for the J anchor
-            val codonAlignedSeq = sequence.substring(jAnchor.anchorBoundary % 3)
+            val codonAlignedSeq = sequence.substring(Math.floorMod(jAnchor.anchorBoundary, 3))
             val dashPos = jAnchor.anchorBoundary / 3
             return CiderUtils.insertDashes(Codons.aminoAcidFromBases(codonAlignedSeq), dashPos)
         }
         else if (jAnchor == null)
         {
             // if no j anchor, we just need to align to V anchor
-            val codonAlignedSeq = sequence.substring(vAnchor.anchorBoundary % 3)
+            val codonAlignedSeq = sequence.substring(Math.floorMod(vAnchor.anchorBoundary, 3))
             val dashPos = vAnchor.anchorBoundary / 3
             return CiderUtils.insertDashes(Codons.aminoAcidFromBases(codonAlignedSeq), dashPos)
         }
 
         // we print the pre J anchor part first then the J anchor. This ensures that if J anchor is not aligned to codon
         // it will still get printed the way we want it
-        val codonAlignedSeqBeforeJ = sequence.substring(vAnchor.anchorBoundary % 3, jAnchor.anchorBoundary)
+        val codonAlignedSeqBeforeJ = sequence.substring(Math.floorMod(vAnchor.anchorBoundary, 3), jAnchor.anchorBoundary)
         val dashPos = vAnchor.anchorBoundary / 3
 
         return CiderUtils.insertDashes(Codons.aminoAcidFromBases(codonAlignedSeqBeforeJ), dashPos) +
@@ -148,7 +159,7 @@ class VDJSequence(
         val vAnchorSeq = vAnchorSequence
 
         // codon align
-        return Codons.aminoAcidFromBases(vAnchorSeq.drop(vAnchorSeq.length % 3))
+        return Codons.aminoAcidFromBases(vAnchorSeq.drop(Math.floorMod(vAnchorSeq.length, 3)))
     }
 
     val jAnchorAA: String get()
@@ -166,7 +177,7 @@ class VDJSequence(
         if (jAnchorBoundary != null)
         {
             // we need to aligned it to the jAnchor boundary, avoid it being out of frame
-            return sequence.substring(jAnchorBoundary!! % 3, jAnchorBoundary!!)
+            return sequence.substring(Math.floorMod(jAnchorBoundary!!, 3), jAnchorBoundary!!)
         }
         // shouldn't get here
         return sequence
@@ -181,7 +192,7 @@ class VDJSequence(
         if (jAnchorBoundary != null)
         {
             // we need to aligned it to the jAnchor boundary, avoid it being out of frame
-            return jAnchorBoundary!! % 3
+            return Math.floorMod(jAnchorBoundary!!, 3)
         }
         // shouldn't get here
         return 0
@@ -215,7 +226,7 @@ class VDJSequence(
             // must be in frame if either is null
             return true
         }
-        return ((jAnchorBoundary!! - vAnchorBoundary!!) % 3) == 0
+        return Math.floorMod(jAnchorBoundary!! - vAnchorBoundary!!, 3) == 0
     }
 
     fun getSupportAt(index: Int) : Map.Entry<Char, Int>

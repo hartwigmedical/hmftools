@@ -35,8 +35,8 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion>
         this(0, 0, purityAdjuster, copyNumberExtractor);
     }
 
-    public StructuralVariantLegPloidyFactory(int averageReadDepth, double averageCopyNumber, @NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final Function<T, Double> copyNumberExtractor)
+    public StructuralVariantLegPloidyFactory(int averageReadDepth, double averageCopyNumber, final PurityAdjuster purityAdjuster,
+            final Function<T, Double> copyNumberExtractor)
     {
         mAverageCopyNumber = averageCopyNumber;
         mAverageReadDepth = averageReadDepth;
@@ -44,8 +44,7 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion>
         mCopyNumberFactory = new StructuralVariantLegCopyNumberFactory<>(copyNumberExtractor);
     }
 
-    @NotNull
-    public List<StructuralVariantLegPloidy> create(@NotNull final StructuralVariant variant, @NotNull final Multimap<Chromosome, T> copyNumbers)
+    public List<StructuralVariantLegPloidy> create(final StructuralVariant variant, final Multimap<Chromosome, T> copyNumbers)
     {
         final List<StructuralVariantLegPloidy> result = Lists.newArrayList();
         final List<StructuralVariantLegs> allLegs = StructuralVariantLegsFactory.create(variant);
@@ -59,9 +58,7 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion>
         return result;
     }
 
-    @NotNull
-    public List<StructuralVariantLegPloidy> create(@NotNull final List<StructuralVariant> variants,
-            @NotNull final Multimap<Chromosome, T> copyNumbers)
+    public List<StructuralVariantLegPloidy> create(final List<StructuralVariant> variants, final Multimap<Chromosome, T> copyNumbers)
     {
         final List<StructuralVariantLegPloidy> result = Lists.newArrayList();
         final List<StructuralVariantLegs> allLegs = StructuralVariantLegsFactory.create(variants);
@@ -75,9 +72,7 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion>
         return result;
     }
 
-    @NotNull
-    public List<StructuralVariantLegPloidy> create(@NotNull final StructuralVariantLegs legs,
-            @NotNull final Multimap<Chromosome, T> copyNumbers)
+    public List<StructuralVariantLegPloidy> create(final StructuralVariantLegs legs, final Multimap<Chromosome, T> copyNumbers)
     {
         final Optional<ModifiableStructuralVariantLegPloidy> start =
                 legs.start().flatMap(x -> create(x, GenomeRegionSelectorFactory.createImproved(copyNumbers)));
@@ -109,26 +104,23 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion>
         return result;
     }
 
-    @NotNull
-    public Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg,
-            @NotNull final GenomeRegionSelector<T> selector)
+    public Optional<ModifiableStructuralVariantLegPloidy> create(final StructuralVariantLeg leg,
+            final GenomeRegionSelector<T> selector)
     {
         final StructuralVariantLegCopyNumber legCopyNumber = mCopyNumberFactory.create(leg, selector);
         return create(leg, legCopyNumber.leftCopyNumber(), legCopyNumber.rightCopyNumber());
     }
 
-    @NotNull
-    public Optional<StructuralVariantLegPloidy> singleLegPloidy(@NotNull final StructuralVariantLeg leg, double leftCopyNumber,
-            double rightCopyNumber)
+    public Optional<StructuralVariantLegPloidy> singleLegPloidy(
+            final StructuralVariantLeg leg, double leftCopyNumber, double rightCopyNumber)
     {
         Optional<ModifiableStructuralVariantLegPloidy> modifiable = create(leg, Optional.of(leftCopyNumber), Optional.of(rightCopyNumber));
         modifiable.ifPresent(x -> x.setAverageImpliedPloidy(x.unweightedImpliedPloidy()));
         return modifiable.map(x -> x);
     }
 
-    @NotNull
-    private Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg,
-            @NotNull Optional<Double> leftCopyNumber, Optional<Double> rightCopyNumber)
+    private Optional<ModifiableStructuralVariantLegPloidy> create(
+            final StructuralVariantLeg leg, Optional<Double> leftCopyNumber, Optional<Double> rightCopyNumber)
     {
         final Optional<Double> largerCopyNumber;
         final Optional<Double> smallerCopyNumber;

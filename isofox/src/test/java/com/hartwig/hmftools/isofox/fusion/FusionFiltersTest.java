@@ -26,11 +26,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.isofox.BamFragmentAllocator;
+import com.hartwig.hmftools.isofox.FragmentAllocator;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
-import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
@@ -188,7 +186,7 @@ public class FusionFiltersTest
         final GeneCollection gc5 =
                 createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_5)));
 
-        BamFragmentAllocator bamReader1 = new BamFragmentAllocator(config, new ResultsWriter(config));
+        FragmentAllocator bamReader1 = new FragmentAllocator(config, new ResultsWriter(config));
 
         FusionTaskManager fusionTaskManager = new FusionTaskManager(config, geneTransCache);
 
@@ -256,7 +254,7 @@ public class FusionFiltersTest
         assertTrue(finderChr1.getFusionCandidates().isEmpty());
 
         // now chromosome 2
-        BamFragmentAllocator bamReader2 = new BamFragmentAllocator(config, new ResultsWriter(config));
+        FragmentAllocator bamReader2 = new FragmentAllocator(config, new ResultsWriter(config));
         bamReader2.processReadRecords(gc3, Lists.newArrayList(readPair1[1]));
         bamReader2.processReadRecords(gc3, Lists.newArrayList(readPair2[1]));
         bamReader2.processReadRecords(gc3, Lists.newArrayList(readPair3[1]));

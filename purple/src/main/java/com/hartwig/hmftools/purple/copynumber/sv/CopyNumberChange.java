@@ -14,10 +14,8 @@ public class CopyNumberChange
     private final double mDownOffset;
     private final double mUpOffset;
 
-    public CopyNumberChange(@NotNull final List<StructuralVariantLegPloidy> structuralVariants)
+    public CopyNumberChange(final List<StructuralVariantLegPloidy> structuralVariants)
     {
-        assert (!structuralVariants.isEmpty());
-
         final StructuralVariantLegPloidy template = structuralVariants.get(0);
         double copyNumberDifference = copyNumberDifference(template);
 
@@ -72,7 +70,7 @@ public class CopyNumberChange
         }
     }
 
-    public double copyNumberChange(@NotNull final StructuralVariantLegPloidy leg)
+    public double copyNumberChange(final StructuralVariantLegPloidy leg)
     {
         return isPositive(leg) ? mDownOffset + mDownScale * ploidy(leg) : mUpOffset + mUpScale * ploidy(leg);
     }
@@ -87,7 +85,7 @@ public class CopyNumberChange
         return Math.max(0, ploidy.averageImpliedPloidy());
     }
 
-    static double copyNumberChangeSimple(@NotNull final StructuralVariantLegCopyNumber copyNumber)
+    static double copyNumberChangeSimple(final StructuralVariantLegCopyNumber copyNumber)
     {
         double leftCopyNumber = copyNumber.leftCopyNumber().orElse(0D);
         double rightCopyNumber = copyNumber.rightCopyNumber().orElse(0D);
@@ -95,7 +93,7 @@ public class CopyNumberChange
         return copyNumber.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
     }
 
-    private static double copyNumberDifference(@NotNull final StructuralVariantLegPloidy leg)
+    private static double copyNumberDifference(final StructuralVariantLegPloidy leg)
     {
         return leg.rightCopyNumber().orElse(0D) - leg.leftCopyNumber().orElse(0D);
     }

@@ -1,27 +1,66 @@
 package com.hartwig.hmftools.bamtools.markdups;
 
-import static java.lang.Math.min;
+import static java.lang.Math.round;
+
+import static com.hartwig.hmftools.bamtools.markdups.FragmentStatus.PRIMARY;
+
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.Maps;
 
 public class DuplicateStats
 {
-    public int MarkedCount;
-    public int IdentifiedCount;
-    public int MisMatches;
-    public int PartiallyMarked;
+    public long ReadCount;
+    public long Duplicates;
 
-    public int[] FrequencyCounts;
+    public Map<Integer,Integer> DuplicateFrequencies;
 
     public DuplicateStats()
     {
-        MarkedCount = 0;
-        IdentifiedCount = 0;
-        MisMatches = 0;
-        PartiallyMarked = 0;
-        FrequencyCounts = new int[100];
+        ReadCount = 0;
+        Duplicates = 0;
+        DuplicateFrequencies = Maps.newHashMap();
+    }
+
+    public void merge(final DuplicateStats other)
+    {
+        ReadCount += other.ReadCount;
+        Duplicates += other.Duplicates;
+
+        for(Map.Entry<Integer,Integer> entry : other.DuplicateFrequencies.entrySet())
+        {
+            Integer count = DuplicateFrequencies.get(entry.getKey());
+            DuplicateFrequencies.put(entry.getKey(), count == null ? entry.getValue() : count + entry.getValue());
+        }
     }
 
     public void addFrequency(int frequency)
     {
-        ++FrequencyCounts[min(frequency, FrequencyCounts.length - 1)];
+        int rounded;
+
+        if(frequency <= 10)
+            rounded = frequency;
+        else if(frequency <= 100)
+            rounded = round(frequency/10) * 10;
+        else if(frequency <= 1000)
+            rounded = round(frequency/100) * 100;
+        else
+            rounded = round(frequency/1000) * 1000;
+
+        Integer count = DuplicateFrequencies.get(rounded);
+        DuplicateFrequencies.put(rounded, count == null ? 1 : count + 1);
+    }
+
+    public void addDuplicateInfo(final List<Fragment> fragments)
+    {
+        for(Fragment fragment : fragments)
+        {
+            if(fragment.status() == PRIMARY)
+                addFrequency(fragment.duplicateCount());
+
+            if(fragment.status().isDuplicate())
+                ++Duplicates;
+        }
     }
 }

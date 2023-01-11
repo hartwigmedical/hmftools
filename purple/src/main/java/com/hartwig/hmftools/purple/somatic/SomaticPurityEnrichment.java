@@ -2,14 +2,13 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_PROBABILITY;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_VAF_PROBABILITY;
 
 import java.util.List;
 import java.util.Optional;
@@ -79,10 +78,10 @@ public class SomaticPurityEnrichment
 
         VariantContext variantContext = variant.context();
 
-        variantContext.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, variantCopyNumber);
-        variantContext.getCommonInfo().putAttribute(PURPLE_CN_INFO, copyNumber);
+        variantContext.getCommonInfo().putAttribute(PURPLE_VARIANT_CN, variantCopyNumber);
+        variantContext.getCommonInfo().putAttribute(PURPLE_CN, copyNumber);
 
-        variantContext.getCommonInfo().putAttribute(PURPLE_AF_INFO, String.format("%.4f", vaf));
+        variantContext.getCommonInfo().putAttribute(PURPLE_AF, String.format("%.4f", vaf));
         variantContext.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_CN_INFO, purpleCopyNumber.minorAlleleCopyNumber());
         variantContext.getCommonInfo().putAttribute(PURPLE_BIALLELIC_FLAG, biallelic);
     }

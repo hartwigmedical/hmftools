@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.config;
 
-import com.hartwig.hmftools.purple.SomaticVariantCache;
-import com.hartwig.hmftools.purple.StructuralVariantCache;
+import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;
+import com.hartwig.hmftools.purple.sv.SomaticSvCache;
 
 public class SampleData
 {
@@ -10,12 +10,12 @@ public class SampleData
 
     public final AmberData Amber;
     public final CobaltData Cobalt;
-    public final StructuralVariantCache SvCache;
+    public final SomaticSvCache SvCache;
     public final SomaticVariantCache SomaticCache;
 
     public SampleData(
             final String referenceId, final String sampleId, final AmberData amber, final CobaltData cobalt,
-            final StructuralVariantCache svCache, final SomaticVariantCache somaticCache)
+            final SomaticSvCache svCache, final SomaticVariantCache somaticCache)
     {
         ReferenceId = referenceId;
         SampleId = sampleId;

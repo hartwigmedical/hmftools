@@ -237,7 +237,7 @@ object VdjBuilderUtils
 
         val jAnchorLength: Int = Math.max(vdj1.jAnchorLength, vdj2.jAnchorLength)
 
-        if (vdj1.numReads > vdj2.numReads)
+        if (vdj1.numReads > vdj2.numReads || (vdj1.numReads == vdj2.numReads && vdj1.length > vdj2.length))
         {
             vdjPrimary = vdj1
             vdjSecondary = vdj2
@@ -273,37 +273,45 @@ object VdjBuilderUtils
         // +++++++-------V-------------------J-------+++++++ merged layout
         //        |                                  |
         //
-        val posStartWithinLayout: Int = vdjPrimary.layoutSliceStart +
+        val layoutSliceStart: Int = vdjPrimary.layoutSliceStart +
                 boundaryPosDiff + // adjust for boundary position difference
                 mergedLayout.alignedPosition - vdjPrimary.layout.alignedPosition // adjust for align position difference
-        val posEndWithinLayout: Int
 
         require(vAnchor != null || jAnchor != null)
+
+        var layoutSliceEnd: Int
 
         if (jAnchor == null)
         {
             val postVLength = Math.max(vdjPrimary.length - vdjPrimary.vAnchorBoundary!!, vdjSecondary.length - vdjSecondary.vAnchorBoundary!!)
-            posEndWithinLayout = posStartWithinLayout + vAnchor!!.anchorBoundary + postVLength
+            layoutSliceEnd = layoutSliceStart + vAnchor!!.anchorBoundary + postVLength
         }
         else
         {
-            posEndWithinLayout = posStartWithinLayout + jAnchor!!.anchorBoundary + jAnchorLength
+            layoutSliceEnd = layoutSliceStart + jAnchor.anchorBoundary + jAnchorLength
         }
 
-        sLogger.debug("primary start: {}, primary v anchor: {}, v anchor: {}, layout aligned pos: {}, primary aligned pos: {}",
+        if (layoutSliceStart < 0)
+        {
+            // abandon the merge and just return the primary. Otherwise we have to shift the V and J anchor boundary as well
+            // This likely occur when both VDJ contain the same read with different alignment and hard clip length.
+            sLogger.info("unable to merge {} and {}, returning one of the vdj: {}",
+                vdj1.aminoAcidSequenceFormatted, vdj2.aminoAcidSequenceFormatted, vdjPrimary.aminoAcidSequenceFormatted)
+
+            return vdjPrimary
+        }
+
+        layoutSliceEnd = Math.min(layoutSliceEnd, mergedLayout.length)
+
+        sLogger.trace("primary start: {}, primary v anchor: {}, v anchor: {}, layout aligned pos: {}, primary aligned pos: {}",
             vdjPrimary.layoutSliceStart, vdjPrimary.vAnchor?.anchorBoundary, vAnchor?.anchorBoundary,
             mergedLayout.alignedPosition, vdjPrimary.layout.alignedPosition)
 
-        sLogger.debug("layout: {}, aligned pos: {}, pos within layout: {}-{}, v: {}, j: {}",
-            mergedLayout.consensusSequence(), mergedLayout.alignedPosition, posStartWithinLayout, posEndWithinLayout,
+        sLogger.trace("layout: {}, aligned pos: {}, layout slice: {}-{}, v: {}, j: {}",
+            mergedLayout.consensusSequence(), mergedLayout.alignedPosition, layoutSliceStart, layoutSliceEnd,
             vAnchor?.anchorBoundary, jAnchor?.anchorBoundary)
 
-        /*assert(supports.size > jAnchor.anchorBoundary)
-
-        if (supports.size < jAnchorBoundary)
-            throw RuntimeException()*/
-
-        val combinedVDJ = VDJSequence(mergedLayout, posStartWithinLayout, posEndWithinLayout, vAnchor, jAnchor)
+        val combinedVDJ = VDJSequence(mergedLayout, layoutSliceStart, layoutSliceEnd, vAnchor, jAnchor)
 
         sLogger.debug("merge: {}(v:{}, j:{}, read count: {}) and {}(v:{}, j:{}, read count: {}) together, merged: {}(v:{}, j:{}), 2ndary aligned pos shift: {}",
             vdj1.aminoAcidSequenceFormatted, vdj1.vAnchor?.matchMethod, vdj1.jAnchor?.matchMethod, vdj1.numReads,

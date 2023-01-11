@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider
 
 import com.google.common.collect.ArrayListMultimap
+import com.hartwig.hmftools.cider.CiderConstants.MIN_ANCHOR_LENGTH_BASES
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
 import org.apache.logging.log4j.LogManager
@@ -154,25 +155,22 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         if (anchorBlosumMatch == null)
             return null
 
-        var vAnchorRange: IntRange?
-        var jAnchorRange: IntRange?
+        var vAnchorRange: IntRange
+        var jAnchorRange: IntRange
 
         if (layoutGeneType.vj == VJ.V)
         {
-            vAnchorRange = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)
+            vAnchorRange = layoutAnchorRange
             jAnchorRange = anchorBlosumMatch.anchorStart until anchorBlosumMatch.anchorEnd
         }
         else
         {
             vAnchorRange = anchorBlosumMatch.anchorStart until anchorBlosumMatch.anchorEnd
-            jAnchorRange = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)
+            jAnchorRange = layoutAnchorRange
         }
 
-        if (vAnchorRange == null || jAnchorRange == null)
-            return null
-
-        val layoutStart = vAnchorRange.first
-        val layoutEnd = jAnchorRange.last + 1 // inclusive to exclusive
+        val layoutStart = Math.max(vAnchorRange.first, 0)
+        val layoutEnd = Math.min(jAnchorRange.last + 1, layout.length) // inclusive to exclusive
 
         // make sure we shift the anchor ranges as well now we trimmed the left
         vAnchorRange = vAnchorRange.first - layoutStart .. vAnchorRange.last - layoutStart
@@ -236,8 +234,8 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             return null
         }
 
-        val vLayoutSeq = vLayout.highQualSequence
-        val jLayoutSeq = jLayout.highQualSequence
+        val vLayoutSeq = vLayout.highConfidenceSequence(CiderConstants.MIN_VJ_LAYOUT_HIGH_QUAL_READ_FRACTION)
+        val jLayoutSeq = jLayout.highConfidenceSequence(CiderConstants.MIN_VJ_LAYOUT_HIGH_QUAL_READ_FRACTION)
 
         val vjLayoutOverlap: VdjBuilderUtils.SequenceOverlap? = VdjBuilderUtils.findSequenceOverlap(vLayoutSeq, jLayoutSeq, minOverlappedBases)
 
@@ -260,15 +258,23 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         val jAlignedPositionShift = (vjLayoutOverlap.seq1Offset + vLayout.alignedPosition) -
                                     (vjLayoutOverlap.seq2Offset + jLayout.alignedPosition)
 
-        val combinedVjLayout: ReadLayout = ReadLayout.merge(jLayout, vLayout, jAlignedPositionShift, 0, minBaseQuality)
-        combinedVjLayout.id = "${vLayout.id},${jLayout.id}"
+        val combinedVjLayout: ReadLayout = ReadLayout.merge(vLayout, jLayout, 0, jAlignedPositionShift, minBaseQuality)
+        combinedVjLayout.id = "${vLayout.id};${jLayout.id}"
 
         // next we want to work out where the anchor ranges are in the combined layout
-        var vAnchorRange: IntRange? = vjLayoutAdaptor.getAnchorRange(VJ.V, vLayout)
-        var jAnchorRange: IntRange? = vjLayoutAdaptor.getAnchorRange(VJ.J, jLayout)
-
-        if (vAnchorRange == null || jAnchorRange == null)
-            return null
+        // we use "extrapolated" anchor range, the reason is that the layout might contain only half
+        // of the anchor, if we do not use extrapolated anchor range then the final anchor length
+        // could be wrong
+        // for example:
+        // v layout:   TGC-GAATACC-CACATCCTGA-GAGTGG-TCAGATA
+        // j layout:                              GG-TCAGATAACT
+        //                 |_____|            |____|
+        //            V anchor(align)    J anchor(align)
+        // here the J layout only contains the first 2 bases of the J anchor. Using extrapolated anchor
+        // range, we get anchor range of (-4, 2), and we can get the full j anchor in the merged
+        // layout.
+        var vAnchorRange: IntRange = vjLayoutAdaptor.getExtrapolatedAnchorRange(VJ.V, vLayout)
+        var jAnchorRange: IntRange = vjLayoutAdaptor.getExtrapolatedAnchorRange(VJ.J, jLayout)
 
         // now we use the aligned position of the combined layout
         val vAnchorShift = combinedVjLayout.alignedPosition - vLayout.alignedPosition
@@ -277,25 +283,29 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         val jAnchorShift = combinedVjLayout.alignedPosition - jLayout.alignedPosition - jAlignedPositionShift
         jAnchorRange = jAnchorRange.first + jAnchorShift .. jAnchorRange.last + jAnchorShift
 
-        sLogger.debug("overlap: {}, jAlignShift: {}, vLayout: {}, jLayout: {}, combinedLayout: {}",
-            vjLayoutOverlap, jAlignedPositionShift,
+        sLogger.debug("overlap: {}, jAlignShift: {}, vAnchor: {}, jAnchor: {}, vLayout: {}, jLayout: {}, combinedLayout: {}",
+            vjLayoutOverlap, jAlignedPositionShift, vAnchorRange, jAnchorRange,
             vLayout.consensusSequence(), jLayout.consensusSequence(), combinedVjLayout.consensusSequence())
 
         val layoutSliceStart: Int
-        val layoutSliceEnd = jAnchorRange.last + 1 // inclusive to exclusive
+        val layoutSliceEnd = Math.min(jAnchorRange.last + 1, combinedVjLayout.length) // inclusive to exclusive
 
         var vAnchorBoundary = vAnchorRange.last + 1
         var jAnchorBoundary = jAnchorRange.first
+
+        // we need to have at least 3 bases in the anchor
+        if (vAnchorBoundary < MIN_ANCHOR_LENGTH_BASES || vAnchorBoundary > combinedVjLayout.length - MIN_ANCHOR_LENGTH_BASES ||
+            jAnchorBoundary < MIN_ANCHOR_LENGTH_BASES || jAnchorBoundary > combinedVjLayout.length - MIN_ANCHOR_LENGTH_BASES)
+            return null
 
         // construct a VDJ sequence
         val vAnchor: VJAnchor?
         val jAnchor: VJAnchor
 
         //if (jAnchorBoundary - vAnchorBoundary >= 0)
-        if (vAnchorRange.first < jAnchorRange.first &&
-            vAnchorRange.last < jAnchorRange.last)
+        if (vAnchorRange.last < jAnchorRange.first)
         {
-            layoutSliceStart = vAnchorRange.first
+            layoutSliceStart = Math.max(vAnchorRange.first, 0)
             vAnchorBoundary -= layoutSliceStart
             jAnchorBoundary -= layoutSliceStart
 
@@ -308,7 +318,6 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         {
             // if the V and J anchor overlap, we remove the V anchor
             // reason is that J rearrangement happens more. But maybe we should rethink this
-
             vAnchor = null
             // we no longer trim to the v anchor start
             layoutSliceStart = 0
@@ -347,12 +356,9 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
         if (layoutGeneType.vj == VJ.V)
         {
-            val vAnchorRange = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)
+            val vAnchorRange = layoutAnchorRange
 
-            if (vAnchorRange == null)
-                return null
-
-            val layoutStart = vAnchorRange.first
+            val layoutStart = Math.max(vAnchorRange.first, 0)
 
             // we limit one sided VDJ post V anchor length
             val layoutEnd = Math.min(layout.length, vAnchorRange.last + 1 + CiderConstants.PARTIAL_VDJ_UNANCHORED_LENGTH_BASES)
@@ -370,14 +376,11 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         }
         else
         {
-            val jAnchorRange = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)
-
-            if (jAnchorRange == null)
-                return null
+            val jAnchorRange = layoutAnchorRange
 
             // we limit one sided VDJ pre J anchor length
             val layoutStart = Math.max(0, jAnchorRange.first - CiderConstants.PARTIAL_VDJ_UNANCHORED_LENGTH_BASES)
-            val layoutEnd = jAnchorRange.last + 1
+            val layoutEnd = Math.min(layout.length, jAnchorRange.last + 1)
 
             jAnchor = createVJAnchorByReadMatch(
                 anchorBoundary = jAnchorRange.first - layoutStart,

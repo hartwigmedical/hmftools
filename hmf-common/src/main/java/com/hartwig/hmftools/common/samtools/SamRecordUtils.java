@@ -25,6 +25,7 @@ public final class SamRecordUtils
     public static final int PHRED_OFFSET = 33;
 
     public static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
+    public static final String MATE_CIGAR_ATTRIBUTE = "MC";
     public static final String SECONDARY_ATTRIBUTE = "HI";
     public static final String NO_MATE_CHROMOSOME = "*";
 

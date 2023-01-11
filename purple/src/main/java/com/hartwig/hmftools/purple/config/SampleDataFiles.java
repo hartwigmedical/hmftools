@@ -48,7 +48,7 @@ public class SampleDataFiles
         options.addOption(SOMATIC_VARIANTS, true, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
     }
 
-    public SampleDataFiles(final CommandLine cmd, final String sampleId) throws ParseException
+    public SampleDataFiles(final CommandLine cmd, final String sampleId, final String referenceId) throws ParseException
     {
         SampleDataDir = cmd.hasOption(SAMPLE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DIR)) : null;
 
@@ -71,7 +71,7 @@ public class SampleDataFiles
         else
             SomaticSvVcfFile = getFilename(cmd, SOMATIC_SV_VCF, SampleDataDir, sampleId, ".gripss.filtered.somatic.vcf.gz");
 
-        GermlineSvVcfFile = getFilename(cmd, GERMLINE_SV_VCF, SampleDataDir, sampleId, ".gripss.filtered.germline.vcf.gz");
+        GermlineSvVcfFile = getFilename(cmd, GERMLINE_SV_VCF, SampleDataDir, referenceId, ".gripss.filtered.germline.vcf.gz");
 
         RecoveredSvVcfFile = getFilename(cmd, SV_RECOVERY_VCF, SampleDataDir, sampleId, ".gripss.somatic.vcf.gz");
         SomaticVcfFile = getFilename(cmd, SOMATIC_VARIANTS, SampleDataDir, sampleId, ".sage.somatic.filtered.pave.vcf.gz");

@@ -244,26 +244,21 @@ public class Isofox
     {
         FragmentTypeCounts totalFragmentCounts = new FragmentTypeCounts();
 
-        chrTasks.forEach(x -> totalFragmentCounts.combine(x.getCombinedCounts()));
-
-        long enrichedGeneFragCount = chrTasks.stream().mapToLong(x -> x.getEnrichedGenesFragmentCount()).sum();
-
+        long enrichedGeneFragCount = 0;
         GcRatioCounts nonEnrichedGcRatioCounts = new GcRatioCounts();
-        chrTasks.forEach(x -> nonEnrichedGcRatioCounts.mergeRatioCounts(x.getNonEnrichedGcRatioCounts().getCounts()));
-        double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
+
+        for(ChromosomeTaskExecutor chrTask : chrTasks)
+        {
+            totalFragmentCounts.combine(chrTask.getCombinedCounts());
+
+            enrichedGeneFragCount += chrTask.getEnrichedGenesFragmentCount();
+
+            nonEnrichedGcRatioCounts.mergeRatioCounts(chrTask.getNonEnrichedGcRatioCounts().getCounts());
+        }
 
         if(mConfig.applyGcBiasAdjust())
         {
             applyGcAdjustments(chrTasks, callableList, nonEnrichedGcRatioCounts);
-        }
-
-        if(mConfig.runFunction(IsofoxFunction.TRANSCRIPT_COUNTS) || mConfig.runFunction(IsofoxFunction.STATISTICS))
-        {
-            final RnaStatistics summaryStats = createSummaryStats(
-                    totalFragmentCounts, enrichedGeneFragCount,
-                    medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength);
-
-            mResultsWriter.writeSummaryStats(summaryStats);
         }
 
         if(mConfig.WriteGcData)
@@ -300,9 +295,30 @@ public class Isofox
         chrTasks.stream().forEach(x -> geneSummaryData.addAll(x.getGeneCollectionSummaryData()));
 
         double[] tpmFactors = calcTpmFactors(geneSummaryData, mConfig.Filters.EnrichedGeneIds);
-        chrTasks.forEach(x -> setTranscriptsPerMillion(x.getGeneCollectionSummaryData(), tpmFactors));
 
-        chrTasks.forEach(x -> x.writeResults());
+        int spliceGeneCount = 0;
+
+        for(ChromosomeTaskExecutor chrTask : chrTasks)
+        {
+            setTranscriptsPerMillion(chrTask.getGeneCollectionSummaryData(), tpmFactors);
+
+            spliceGeneCount += chrTask.getGeneCollectionSummaryData().stream().mapToInt(x -> x.spliceGenesCount()).sum();
+
+            chrTask.writeResults();
+        }
+
+        // write summary statistics
+        if(mConfig.runFunction(IsofoxFunction.TRANSCRIPT_COUNTS) || mConfig.runFunction(IsofoxFunction.STATISTICS))
+        {
+            double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
+
+            final RnaStatistics summaryStats = createSummaryStats(
+                    totalFragmentCounts, enrichedGeneFragCount, spliceGeneCount,
+                    medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength);
+
+            mResultsWriter.writeSummaryStats(summaryStats);
+        }
+
         mResultsWriter.close();
     }
 

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox;
 
-import static com.hartwig.hmftools.isofox.BamFragmentAllocator.calcFragmentLength;
+import static com.hartwig.hmftools.isofox.FragmentAllocator.calcFragmentLength;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
@@ -225,7 +225,7 @@ public class TransClassificationTest
         IsofoxConfig config = createIsofoxConfig();
         config.Functions.clear();
         config.Functions.add(TRANSCRIPT_COUNTS);
-        BamFragmentAllocator bamReader = new BamFragmentAllocator(config, new ResultsWriter(config));
+        FragmentAllocator bamReader = new FragmentAllocator(config, new ResultsWriter(config));
 
         String transName1 = "TRANS01";
 

@@ -26,6 +26,15 @@ public final class LinxGermlineSv
     public final String Filter;
     public final String EventId;
     public final double QualScore;
+    public final String HomologyStart;
+    public final String HomologyEnd;
+    public final double JunctionCopyNumber;
+    public final double AdjustedAFStart;
+    public final double AdjustedAFEnd;
+    public final double AdjustedCopyNumberStart;
+    public final double AdjustedCopyNumberEnd;
+    public final double AdjustedCopyNumberChangeStart;
+    public final double AdjustedCopyNumberChangeEnd;
     public final int GermlineFragments;
     public final int GermlineReferenceFragmentsStart;
     public final int GermlineReferenceFragmentsEnd;
@@ -49,6 +58,9 @@ public final class LinxGermlineSv
             final String chromosomeStart, final String chromosomeEnd, final int positionStart, final int positionEnd,
             final byte orientStart, final byte orientEnd, final String geneName, final StructuralVariantType type,
             final String filter, final String eventId, final double qualScore,
+            final String homologyStart, final String homologyEnd, final double junctionCopyNumber,
+            final double adjustedAFStart, final double adjustedAFEnd, final double adjustedCopyNumberStart, final double adjustedCopyNumberEnd,
+            final double adjustedCopyNumberChangeStart, final double adjustedCopyNumberChangeEnd,
             final int germlineFragments, final int germlineReferenceFragmentsStart, final int germlineReferenceFragmentsEnd,
             final int tumorFragments, final int tumorReferenceFragmentsStart, final int tumorReferenceFragmentsEnd,
             final String insSeq, final String insSeqAlignments, final String insSeqRepeatClass, final String insSeqRepeatType,
@@ -66,6 +78,15 @@ public final class LinxGermlineSv
         Filter = filter;
         EventId = eventId;
         QualScore = qualScore;
+        HomologyStart = homologyStart;
+        HomologyEnd = homologyEnd;
+        JunctionCopyNumber = junctionCopyNumber;
+        AdjustedAFStart = adjustedAFStart;
+        AdjustedAFEnd = adjustedAFEnd;
+        AdjustedCopyNumberStart = adjustedCopyNumberStart;
+        AdjustedCopyNumberEnd = adjustedCopyNumberEnd;
+        AdjustedCopyNumberChangeStart = adjustedCopyNumberChangeStart;
+        AdjustedCopyNumberChangeEnd = adjustedCopyNumberChangeEnd;
         GermlineFragments = germlineFragments;
         GermlineReferenceFragmentsStart = germlineReferenceFragmentsStart;
         GermlineReferenceFragmentsEnd = germlineReferenceFragmentsEnd;
@@ -124,6 +145,15 @@ public final class LinxGermlineSv
                 .add("filter")
                 .add("event")
                 .add("qualScore")
+                .add("homologySequenceStart")
+                .add("homologySequenceEnd")
+                .add("junctionCopyNumber")
+                .add("adjustedAFStart")
+                .add("adjustedAFEnd")
+                .add("adjustedCopyNumberStart")
+                .add("adjustedCopyNumberEnd")
+                .add("adjustedCopyNumberChangeStart")
+                .add("adjustedCopyNumberChangeEnd")
                 .add("germlineFragments")
                 .add("germlineReferenceFragmentsStart")
                 .add("germlineReferenceFragmentsEnd")
@@ -158,6 +188,15 @@ public final class LinxGermlineSv
                 .add(disruption.Filter)
                 .add(disruption.EventId)
                 .add(String.valueOf(disruption.QualScore))
+                .add(disruption.HomologyStart)
+                .add(disruption.HomologyEnd)
+                .add(String.valueOf(disruption.JunctionCopyNumber))
+                .add(String.valueOf(disruption.AdjustedAFStart))
+                .add(String.valueOf(disruption.AdjustedAFEnd))
+                .add(String.valueOf(disruption.AdjustedCopyNumberStart))
+                .add(String.valueOf(disruption.AdjustedCopyNumberEnd))
+                .add(String.valueOf(disruption.AdjustedCopyNumberChangeStart))
+                .add(String.valueOf(disruption.AdjustedCopyNumberChangeEnd))
                 .add(String.valueOf(disruption.GermlineFragments))
                 .add(String.valueOf(disruption.GermlineReferenceFragmentsStart))
                 .add(String.valueOf(disruption.GermlineReferenceFragmentsEnd))
@@ -196,6 +235,14 @@ public final class LinxGermlineSv
                     values[fieldsIndexMap.get("gene")], StructuralVariantType.valueOf(values[fieldsIndexMap.get("type")]),
                     values[fieldsIndexMap.get("filter")], values[fieldsIndexMap.get("event")],
                     Double.parseDouble(values[fieldsIndexMap.get("qualScore")]),
+                    values[fieldsIndexMap.get("homologySequenceStart")], values[fieldsIndexMap.get("homologySequenceEnd")],
+                    Double.parseDouble(values[fieldsIndexMap.get("junctionCopyNumber")]),
+                    Double.parseDouble(values[fieldsIndexMap.get("adjustedAFStart")]),
+                    Double.parseDouble(values[fieldsIndexMap.get("adjustedAFEnd")]),
+                    Double.parseDouble(values[fieldsIndexMap.get("adjustedCopyNumberStart")]),
+                    Double.parseDouble(values[fieldsIndexMap.get("adjustedCopyNumberEnd")]),
+                    Double.parseDouble(values[fieldsIndexMap.get("adjustedCopyNumberChangeStart")]),
+                    Double.parseDouble(values[fieldsIndexMap.get("adjustedCopyNumberChangeEnd")]),
                     Integer.parseInt(values[fieldsIndexMap.get("germlineFragments")]),
                     Integer.parseInt(values[fieldsIndexMap.get("germlineReferenceFragmentsStart")]),
                     Integer.parseInt(values[fieldsIndexMap.get("germlineReferenceFragmentsEnd")]),

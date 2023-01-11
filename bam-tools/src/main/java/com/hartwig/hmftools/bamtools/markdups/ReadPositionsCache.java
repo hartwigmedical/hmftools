@@ -5,13 +5,14 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -21,152 +22,104 @@ public class ReadPositionsCache
 {
     // a ring buffer to store reads at each read starting position
     private final String mChromosome;
-    private final CandidateDuplicates[] mForwardPositions;
-    private final Map<Integer,CandidateDuplicates> mReversePositions;
+    private final FragmentGroup[] mForwardPositions;
+    private final Map<Integer,FragmentGroup> mReversePositions;
     private final Map<String,Fragment> mFragments;
-    private final Consumer<CandidateDuplicates> mReadGroupHandler;
+    private final Consumer<List<Fragment>> mReadGroupHandler;
     private int mMinPosition;
     private int mMinPositionIndex;
-
+    private int mLastFragmentLogCount;
+    private int mLastLogReadCount;
     private final int mCapacity;
 
-    public ReadPositionsCache(final String chromosome, int capacity, final Consumer<CandidateDuplicates> evictionHandler)
+    private class FragmentGroup
+    {
+        // fragments with a matching start position
+        public final List<Fragment> Fragments;
+
+        public FragmentGroup(final Fragment fragment)
+        {
+            Fragments = Lists.newArrayList(fragment);
+        }
+    }
+
+    public ReadPositionsCache(final String chromosome, int capacity, final Consumer<List<Fragment>> evictionHandler)
     {
         mChromosome = chromosome;
         mReadGroupHandler = evictionHandler;
         mCapacity = capacity;
-        mForwardPositions = new CandidateDuplicates[mCapacity];
+        mForwardPositions = new FragmentGroup[mCapacity];
         mReversePositions = Maps.newHashMap();
         mFragments = Maps.newHashMap();
         mMinPosition = 0;
         mMinPositionIndex = 0;
+        mLastFragmentLogCount = 0;
+        mLastLogReadCount = 0;
     }
 
     public boolean processRead(final SAMRecord read)
     {
-        /* scenarios:
-            - unpaired or mate is unmapped
-                - store as potential duplicate
-                - supplementaries - store if within range, to avoid processing later
-            - read's mate is on another chromosome - store since can still evaluate if duplicate (from both chromosomes)
-            - lower pos with mate higher on same chromosome - store regardless
-            - higher pos with mate lower on same chromosome
-                - mate within current range - look up and add
-                - mate already flushed, return unhandled
-            - supplementary
-                - with mate within current range - look up and add
-                - otherwise return unhandled
-        */
-
-        // for supplementaries, add the read if the non-supplmentaries have already been stored
-        if(read.getSupplementaryAlignmentFlag())
-            return storeAdditionalRead(read);
-
+        // supplementaries aren't processed
+        // check for an existing mate if on the same chromosome
+        // store in a group of fragments with a matching first fragment coordinate
+        // if the mate has a lower position or is on a lower chromosome, don't add it to a position group
         if(!read.getReadPairedFlag() || read.getMateUnmappedFlag())
         {
             storeInitialRead(read);
             return true;
         }
 
-        // mate is elsewhere so store this primary read
-        if(!read.getMateReferenceName().equals(mChromosome))
-        {
-            storeInitialRead(read);
-            return true;
-        }
+        // skip if mate is on a lower chromosome
+        if(!read.getMateReferenceName().equals(mChromosome) && read.getReferenceIndex() > read.getMateReferenceIndex())
+            return false;
 
         Fragment fragment = mFragments.get(read.getReadName());
 
-        if(fragment != null)
+        if(fragment != null) // add to fragment is in a current group
         {
-            int initialPos = fragment.initialPosition();
-
             fragment.addRead(read);
-
-            if(initialPos != fragment.initialPosition())
-                checkStrandSwitch(fragment);
-
             return true;
         }
+
+        if(read.getAlignmentStart() > read.getMateAlignmentStart()) // mate already processed and evicted
+            return false;
 
         storeInitialRead(read);
         return true;
     }
 
-    private void checkStrandSwitch(final Fragment fragment)
-    {
-        // switch fragment from the forward to reverse strand or vice versa if still within the array bounds
-        int fragmentStart = fragment.coordinates()[SE_START];
-        int fragmentEnd = fragment.coordinates()[SE_END];
-
-        if((fragmentStart > 0) == (fragmentEnd >= 0))
-            return;
-
-        if(fragmentEnd < 0)
-        {
-            // move fragment from reverse strand to forward strand array
-            int distanceFromMinPosition = fragmentStart - mMinPosition;
-
-            if(distanceFromMinPosition >= mCapacity)
-                return; // already purged
-
-            CandidateDuplicates existingGroup = mReversePositions.get(fragmentEnd);
-
-            if(existingGroup == null)
-                return;
-
-            existingGroup.Fragments.remove(fragment);
-
-            if(existingGroup.Fragments.isEmpty())
-                mReversePositions.remove(fragmentEnd);
-        }
-        else
-        {
-            int index = calcIndex(fragmentEnd);
-
-            CandidateDuplicates element = mForwardPositions[index];
-            if(element == null)
-                return;
-
-            element.Fragments.remove(fragment);
-
-            if(element.Fragments.isEmpty())
-                mForwardPositions[index] = null;
-        }
-
-        storeFragment(fragment);
-    }
-
     private void storeInitialRead(final SAMRecord read)
     {
+        ++mLastLogReadCount;
+
         Fragment fragment = new Fragment(read);
-        mFragments.put(read.getReadName(), fragment);
 
         int fragmentPosition = fragment.initialPosition();
 
         if(fragmentPosition > 0)
         {
             if(mMinPosition == 0)
-                mMinPosition = fragmentPosition;
+                resetMinPosition(fragmentPosition);
             else
                 checkFlush(fragmentPosition);
         }
 
-        storeFragment(fragment);
-    }
-
-    private void storeFragment(final Fragment fragment)
-    {
-        int fragmentPosition = fragment.initialPosition();
+        mFragments.put(read.getReadName(), fragment);
 
         if(fragmentPosition > 0)
         {
             int index = calcIndex(fragmentPosition);
 
-            CandidateDuplicates element = mForwardPositions[index];
+            if(index < 0 || index >= mCapacity)
+            {
+                BM_LOGGER.error("fragment({}) outside forward strand array bounds", fragment);
+                return;
+            }
+
+            FragmentGroup element = mForwardPositions[index];
             if(element == null)
             {
-                element = new CandidateDuplicates(fragmentPosition, fragment);
+                element = new FragmentGroup(fragment);
                 mForwardPositions[index] = element;
             }
             else
@@ -177,10 +130,10 @@ public class ReadPositionsCache
         else
         {
             // store in reverse strand map
-            CandidateDuplicates element = mReversePositions.get(fragmentPosition);
+            FragmentGroup element = mReversePositions.get(fragmentPosition);
             if(element == null)
             {
-                element = new CandidateDuplicates(fragmentPosition, fragment);
+                element = new FragmentGroup(fragment);
                 mReversePositions.put(fragmentPosition, element);
             }
             else
@@ -188,19 +141,6 @@ public class ReadPositionsCache
                 element.Fragments.add(fragment);
             }
         }
-    }
-
-    private boolean storeAdditionalRead(final SAMRecord read)
-    {
-        Fragment fragment = mFragments.get(read.getReadName());
-
-        if(fragment != null)
-        {
-            fragment.addRead(read);
-            return true;
-        }
-
-        return false;
     }
 
     private int calcIndex(int position)
@@ -226,27 +166,41 @@ public class ReadPositionsCache
 
         int distanceFromMinPosition = position - mMinPosition;
 
+        int flushCount = 0;
         if(distanceFromMinPosition < mCapacity)
+        {
             return;
 
-        int flushCount = position - mMinPosition - mCapacity + 1;
-        Set<String> flushedReadIds = null;
+            /*
+            if(mFragments.size() < 100000)
+                return;
+
+            // attempt to reduce the cache prior to it being full
+            flushCount = 100;
+            BM_LOGGER.debug("read cache: chr({} minPos={}) fragments({}) partial flush",
+                    mChromosome, mMinPosition, mFragments.size());
+            */
+        }
+        else
+        {
+            flushCount = position - mMinPosition - mCapacity + 1;
+        }
+
+        int flushedElements = 0;
 
         // only iterate at most once through the array
         for(int i = 0; i < min(flushCount, mCapacity); i++)
         {
-            CandidateDuplicates element = mForwardPositions[mMinPositionIndex];
+            FragmentGroup element = mForwardPositions[mMinPositionIndex];
 
             // clear and process each element and depth
             if(element != null)
             {
-                if(flushedReadIds == null)
-                    flushedReadIds = Sets.newHashSet();
+                ++flushedElements;
 
-                for(Fragment fragment : element.Fragments)
-                    flushedReadIds.add(fragment.id());
+                element.Fragments.forEach(x -> mFragments.remove(x.id())); // need remove frags first since the processing can remove elements
 
-                mReadGroupHandler.accept(element);
+                mReadGroupHandler.accept(element.Fragments);
 
                 mForwardPositions[mMinPositionIndex] = null;
             }
@@ -262,55 +216,87 @@ public class ReadPositionsCache
         if(flushCount >= mCapacity)
             resetMinPosition(position);
 
-        if(flushedReadIds != null && !flushedReadIds.isEmpty())
+        if(flushedElements == 0)
+            return;
+
+        // flush out any reverse strand position which is now earlier than the current forward strand read start position
+        Set<Integer> flushedPositions = Sets.newHashSet();
+        for(Map.Entry<Integer,FragmentGroup> entry : mReversePositions.entrySet())
         {
-            // flush out any reverse strand position which is now earlier than the current forward strand read start position
-            Set<Integer> flushedPositions = Sets.newHashSet();
-            for(Map.Entry<Integer, CandidateDuplicates> entry : mReversePositions.entrySet())
+            int reversePosition = abs(entry.getKey());
+            if(reversePosition < position)
             {
-                int reversePosition = abs(entry.getKey());
-                if(reversePosition < position)
-                {
-                    flushedPositions.add(entry.getKey());
+                flushedPositions.add(entry.getKey());
 
-                    for(Fragment fragment : entry.getValue().Fragments)
-                        flushedReadIds.add(fragment.id());
-
-                    mReadGroupHandler.accept(entry.getValue());
-                }
+                entry.getValue().Fragments.forEach(x -> mFragments.remove(x.id()));
+                mReadGroupHandler.accept(entry.getValue().Fragments);
             }
-
-            flushedPositions.forEach(x -> mReversePositions.remove(x));
-            flushedReadIds.forEach(x -> mFragments.remove(x));
         }
+
+        flushedPositions.forEach(x -> mReversePositions.remove(x));
+
+        checkFragmentLog();
     }
 
     public void evictAll()
     {
         for(int i = 0; i < mCapacity; i++)
         {
-            CandidateDuplicates element = mForwardPositions[i];
+            FragmentGroup element = mForwardPositions[i];
 
             // clear and process each element and depth
             if(element != null)
             {
-                mReadGroupHandler.accept(element);
+                mReadGroupHandler.accept(element.Fragments);
                 mForwardPositions[i] = null;
             }
         }
 
-        for(Map.Entry<Integer, CandidateDuplicates> entry : mReversePositions.entrySet())
-        {
-            mReadGroupHandler.accept(entry.getValue());
-        }
+        mReversePositions.values().forEach(x -> mReadGroupHandler.accept(x.Fragments));
 
         mReversePositions.clear();
         mFragments.clear();
+        mLastLogReadCount = 0;
+        mLastFragmentLogCount = 0;
     }
 
     private void resetMinPosition(int position)
     {
         mMinPositionIndex = 0;
         mMinPosition = max(1, position - (int)round(mCapacity * 0.5));
+    }
+
+    private static final int LOG_FRAG_COUNT = 10000;
+
+    private void checkFragmentLog()
+    {
+        if(mLastLogReadCount < LOG_FRAG_COUNT)
+            return;
+
+        mLastLogReadCount = 0;
+
+        int forwardPositions = 0;
+        int forwardFrags = 0;
+
+        for(int i = 0; i < mCapacity; i++)
+        {
+            if(mForwardPositions[i] != null)
+            {
+                forwardFrags += mForwardPositions[i].Fragments.size();
+                ++forwardPositions;
+            }
+        }
+
+        int reverseFrags = mReversePositions.values().stream().mapToInt(x -> x.Fragments.size()).sum();
+
+        int fragmentSize = forwardFrags + reverseFrags;
+
+        if(abs(fragmentSize - mLastFragmentLogCount) < LOG_FRAG_COUNT)
+            return;
+
+        mLastFragmentLogCount = fragmentSize;
+
+        BM_LOGGER.debug("read cache: chr({} minPos={}) fragments({}) forward({} frags={}) reverse({} frags={})",
+                mChromosome, mMinPosition, fragmentSize, forwardPositions, forwardFrags, mReversePositions.size(), reverseFrags);
     }
 }

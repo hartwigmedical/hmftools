@@ -1,37 +1,165 @@
 package com.hartwig.hmftools.cider.layout
 
-import com.hartwig.hmftools.cider.ReadKey
-import htsjdk.samtools.util.SequenceUtil
 import org.apache.logging.log4j.LogManager
-import java.util.IdentityHashMap
+import java.util.*
+import kotlin.collections.ArrayList
 
-/*
-
+//
+// This class creates a tree to help layout the reads from the most probable to least
+//
+// The problem it is trying to solve is
+//
+// Say we have 3 reads that support the following:
+//   ACTG
+// next read we get is
+//   ACTGG
+// but the last G is actually an error, such that we get
+//   ACTGG   <--- error
+//   ACTGT
+//   ACTGT
+//   ACTGT
+//
+// Using the old method of sequentially building layouts, we cannot recover from this G error,
+// and all the reads up to G will be assigned to this layout. Which gives incorrect impression that
+// this G is highly supported.
+// We need to be able to recover from the error and assign those reads to the ACTGT layout instead
+//
+// To solve this problem, we build a tree, which looks like this when we have the first 3 ACTG reads:
+//
+// root
+//  |
+//  A3-C3-T3-G3
+//
+// the number denotes the read count at each node.
+// When we get the ACTGG read, the G is added as a child:
+// root
+//  |
+//  A4-C4-T4-G4-G1
+//
+// And when the 3 ACTGT reads are added, the last T do not match, so it is added as a branch node:
+//
+// root
+//  |
+//  A7-C7-T7-G7-G1
+//            \
+//             T3   <---- the last T do not match the existing G
+//
+// Note that there is a constraint where there must be reads that ends at the G at the 4th position.
+// We cannot create a branch if we have the following reads: ATACTGG, ACTGT. It may look like the last
+// base can be either G or T, but since ATACTGG is a full read, the only possibility is ATACTGG, and
+// ATACTGT is not possible, since it will involve taking first 6 bases of first read and 1 base of 2nd read.
+//
+// When we extract the layout from the tree, we start from the leaf nodes that follows the path of
+// highest support. In this case, the leaf node at T3 will be built first since it has highest support,
+// and all reads except the one with error will be assigned to this layout.
+//
+// There is another problem we have to consider, from the above tree:
+//
+// root
+//  |
+//  A7-C7-T7-G7-G1
+//            \
+//             T3
+//
+// Say we build it out further, and they both follow same path, and we want to add 3 reads of CCA, i.e.
+//
+// root
+//  |
+//  A7-C7-T7-G7-G2-C1-C1-A1
+//             \
+//              T3-C3-C1-A1
+//
+// When a new read of CCA is added, we want to put it at the branch with highest support, i.e. the bottom
+// T branch instead. Even though CCA matches with both.
+//
+// To solve this problem, we keep track of all the nodes that start on a given level. And when a new read
+// is added that can match multiple branches, we use the one with highest support
+//
+// Now consider another read of TCCT, we can add it to the above tree and get:
+//
+// root
+//  |
+//  A7-C7-T7-G7-G2-C1-C1-A1
+//             \
+//              T4-C4-C2-A1
+//                     \
+//                      T1
+// However, if we have another read of ACCA, we cannot add it to the tree. Since it does not overlap with
+// any of the existing branches. We have to create a totally new branch from the root where the
+// earlier nodes are empty, i.e.
+//
+// root
+//  | \
+//  | A7-C7-T7-G7-G2-C1-C1-A1
+//  |            \
+//  |             T4-C4-C2-A1
+//  |                     \
+//  |                      T1
+//  |-------------A1-C1-C1-A1
+// Next consider we have a read CCA, where should it be added? It should be added to the top branch
+// since top branch has higher support. We have to test both branches when it can go to more than one place
+//
 class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
 {
     class Read (
         // have a source that allows us to refer back to where this comes from
         val source: Any,
-        val readKey: ReadKey,
         val sequence: String,
         val baseQualities: ByteArray,
-        val layoutPosition: Int) // position relative to layout start
+        val alignedPosition: Int) // where in the read is the aligned position
 
     // each node has a base and their associated count
-    class Node(val level: Int, var parent: Node?)
+    class Node(var position: Int, var parent: Node?) : Comparable<Node>
     {
         internal var base: Char = UNKNOWN_BASE
         internal var highQualBase: Char = UNKNOWN_BASE
         internal var highQualityCount: Int = 0
         val reads: MutableList<Read> = ArrayList()
         val children: MutableList<Node> = ArrayList()
+
+        override fun compareTo(other: Node): Int
+        {
+            return compare(this, other)
+        }
+
+        companion object
+        {
+            // compare the support, if they have the same support then compare the parents
+            private fun compare(node1: Node, node2: Node): Int
+            {
+                var n1: Node? = node1
+                var n2: Node? = node2
+
+                while (n1 != null && n2 != null)
+                {
+                    if (n1 === n2)
+                        return 0
+                    if (n1.highQualityCount < n2.highQualityCount)
+                        return -1
+                    if (n1.highQualityCount > n2.highQualityCount)
+                        return 1
+                    n1 = n1.parent
+                    n2 = n2.parent
+                }
+                return 0
+            }
+        }
     }
 
-    // root does not correspond to any node level
+    // root does not correspond to any read position
     val root: Node = Node(-1, null)
+    var alignedPosition: Int = Int.MIN_VALUE
+
+    // we store the nodes of each level. This is used primarily to allow us to
+    // jump to a level where a read starts.
     private val levelNodes: MutableList<MutableList<Node>> = ArrayList()
 
     val numLevels: Int get() { return levelNodes.size }
+
+    fun toLayoutPosition(readAlignedPos: Int) : Int
+    {
+        return alignedPosition - readAlignedPos
+    }
 
     fun matchesNode(node: Node, base: Char, baseQuality: Byte) : Boolean
     {
@@ -47,83 +175,166 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
         return levelNodes[level]
     }
 
-    fun tryAddRead(read: Read) : Boolean
+    private fun checkUpdateAlignedPosition(readAlignedPos: Int)
     {
-        if (read.layoutPosition == 0)
+        if (readAlignedPos <= alignedPosition)
         {
-            // we can start at the root
-            addReadToBranch(read, root)
-            return true
+            return
         }
-        else
+
+        val diff = readAlignedPos - alignedPosition
+
+        // insert levels in the level nodes list
+        if (levelNodes.isNotEmpty())
         {
-            val level = read.layoutPosition
-            if (levelNodes.size <= level + minOverlapLength)
+            for (nodeList in levelNodes)
             {
-                // we are not up to this level yet, cannot possibly build from here
-                return false
+                nodeList.forEach({ n -> n.position += diff })
             }
 
-            // we start from all the potential parents
-            var added = false
-            val branches: List<Node> = levelNodes[level - 1]
-
-            for (branch in branches)
+            for (i in 0 until diff)
             {
-                if (overlapsBranch(read, branch))
-                {
-                    addReadToBranch(read, branch)
-                    added = true
-                }
+                levelNodes.add(0, ArrayList())
             }
-            return added
+
+            sLogger.warn("WARNING: adding reads in wrong order. Reads should be added from largest alignedPosition to smallest")
         }
+
+        alignedPosition = readAlignedPos
     }
 
-    // we want to test that this read overlaps this branch
+    fun tryAddRead(read: Read) : Boolean
+    {
+        checkUpdateAlignedPosition(read.alignedPosition)
+
+        val readLayoutPos = toLayoutPosition(read.alignedPosition)
+
+        if (levelNodes.size >= readLayoutPos + minOverlapLength)
+        {
+            // find the branch that overlaps with this read, and choose
+            // the one with highest support
+            var bestBranch: Node? = null
+
+            for (branch in levelNodes[readLayoutPos])
+            {
+                if ((bestBranch == null || branch > bestBranch) && overlapsBranch(read, branch))
+                {
+                    // this branch has higher support and overlaps with the read
+                    bestBranch = branch
+                }
+            }
+
+            if (bestBranch != null)
+            {
+                addReadToBranch(read, bestBranch)
+                return true
+            }
+        }
+
+        // add this read to root
+        // create a new one
+        val branchRoot = Node(readLayoutPos, root)
+        root.children.add(branchRoot)
+        getOrCreateLevelNodes(readLayoutPos).add(branchRoot)
+        branchRoot.base = read.sequence[0]
+        branchRoot.highQualBase = if (read.baseQualities[0] >= minBaseQuality) branchRoot.base else UNKNOWN_BASE
+        addReadToBranch(read, branchRoot)
+        return true
+    }
+
+    // branchRoot is the place where the first base of the read can
+    // be added.
+    // We test to see if the first minOverlapLength bases matches with this branch
+    // The definition of matching is either the base is low quality, or the bases must be the
+    // same if both are high quality.
     private fun overlapsBranch(read: Read, branchRoot: Node) : Boolean
     {
-        assert(read.layoutPosition > 0)
-        assert(branchRoot.level == read.layoutPosition - 1)
+        val readLayoutPos = toLayoutPosition(read.alignedPosition)
+        require(branchRoot !== root)
+        require(readLayoutPos >= 0)
+        require(branchRoot.position == readLayoutPos)
 
         var currentNode = branchRoot
-        for (i in 0 until Math.min(minOverlapLength, read.sequence.length))
+
+        if (!matchesNode(branchRoot, read.sequence[0], read.baseQualities[0]))
+        {
+            return false
+        }
+
+        loop@ for (i in 1 until Math.min(minOverlapLength, read.sequence.length))
         {
             val baseQual: Byte = read.baseQualities[i]
             val base: Char = read.sequence[i]
             val highQualBase: Char = if (baseQual >= minBaseQuality) base else UNKNOWN_BASE
-            val childNode: Node? = chooseChildNode(currentNode, base, highQualBase)
 
-            if (childNode == null)
-                return false
+            for (node in currentNode.children)
+            {
+                if (node.base == base)
+                {
+                    // we found a node we can assign to
+                    currentNode = node
+                    continue@loop
+                }
+            }
 
-            currentNode = childNode
+            if (highQualBase == UNKNOWN_BASE)
+            {
+                // can't really match anything, match the one with highest number of support
+                // if there is no children then return false
+                currentNode = currentNode.children.maxOrNull() ?: return false
+                continue@loop
+            }
+            else
+            {
+                // if we cannot find one then see if any is unknown base match
+                for (node in currentNode.children)
+                {
+                    if (node.highQualBase == UNKNOWN_BASE)
+                    {
+                        // we found a node we can assign to
+                        currentNode = node
+                        continue@loop
+                    }
+                }
+            }
+
+            // cannot find a child
+            return false
         }
         return true
     }
 
     private fun addReadToBranch(read: Read, branchRoot: Node)
     {
-        val leafNodes = ArrayList<Node>()
+        // we have already established that this reads overlaps with this branch
 
-        findMatchingLeafNodes(read, branchRoot, -1, leafNodes)
+        val leafNodes = ArrayList<Node>()
+        val readLayoutPos = toLayoutPosition(read.alignedPosition)
+
+        // first we see if there are any leaf node that matches this read and
+        // can be simply extended
+        // if there are more than one, we add to the one with highest support
+        // this step is unfortunately necessary, since we support low qual base
+        // that might mean a read can match with multiple leaf
+        findMatchingLeafNodes(read, branchRoot, 0, leafNodes)
 
         if (leafNodes.isNotEmpty())
         {
-            val leaf = leafNodes[0]
+            // if there are more than one we choose the longest, i.e. the highest position
+            val leaf = leafNodes.maxByOrNull({ n -> n.position })!!
 
             assert(leaf.children.isEmpty())
 
             var current = leaf
 
             // add all necessary child nodes
-            for (i in leaf.level - read.layoutPosition + 1 until read.sequence.length)
+            for (i in leaf.position - readLayoutPos + 1 until read.sequence.length)
             {
                 val baseQual: Byte = read.baseQualities[i]
                 val base: Char = read.sequence[i]
                 val highQualBase: Char = if (baseQual >= minBaseQuality) base else UNKNOWN_BASE
 
-                current = createChild(current)
+                current = createChild(current, readLayoutPos + i)
                 current.base = base
 
                 if (highQualBase != UNKNOWN_BASE)
@@ -135,11 +346,18 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
 
             current.reads.add(read)
 
-            // update all nodes from leaf to root
+            // update all nodes from leaf
             current = leaf
             while (current != root)
             {
-                val i = read.layoutPosition + current.level
+                val i = current.position - readLayoutPos
+
+                if (i < 0)
+                {
+                    // the read might not lead all the way back to root
+                    break
+                }
+
                 val baseQual: Byte = read.baseQualities[i]
                 val base: Char = read.sequence[i]
                 val highQualBase: Char = if (baseQual >= minBaseQuality) base else UNKNOWN_BASE
@@ -152,7 +370,8 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
                         current.base = highQualBase
                         current.highQualBase = highQualBase
 
-                        // now we have to try to merge it with parents, which is also a bit of work
+                        // any time a base go from N to known base we have to see if such
+                        // branch already exist and if so, merge them
                         tryMergeWithSibling(current)
                     }
                 }
@@ -162,12 +381,13 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
             return
         }
 
-        // add a new branch
+        // the read does not match any leaf node. This means that we can follow this branch
+        // until a mismatch occur and we create a new sub branch from there.
         var currentNode = branchRoot
-        for (i in read.sequence.indices)
+        for (i in 1 until read.sequence.length)
         {
-            val level = read.layoutPosition + i
-            assert(currentNode.level + 1 == level)
+            val level = readLayoutPos + i
+            assert(currentNode.position + 1 == level)
             val baseQual: Byte = read.baseQualities[i]
             val base: Char = read.sequence[i]
             val highQualBase: Char = if (baseQual >= minBaseQuality) base else UNKNOWN_BASE
@@ -179,7 +399,7 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
                 // this is the secret sauce here. We always create a new child node if
                 // we have a low qual base. This allow subsequence reads to match here even
                 // if this base does not match
-                currentNode = createChild(currentNode)
+                currentNode = createChild(currentNode, level)
                 currentNode.base = base
                 continue
             }
@@ -198,7 +418,7 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
             if (child == null)
             {
                 // create a new one
-                child = createChild(currentNode)
+                child = createChild(currentNode, level)
                 child.base = base
                 child.highQualBase = highQualBase
                 child.highQualityCount++
@@ -211,38 +431,39 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
         currentNode.reads.add(read)
     }
 
-    private fun findMatchingLeafNodes(read: Read, node: Node, i: Int, leafNodes: MutableList<Node>)
+    private fun findMatchingLeafNodes(read: Read, node: Node, readIndex: Int, leafNodes: MutableList<Node>)
     {
-        if (i >= 0)
+        val level = toLayoutPosition(read.alignedPosition) + readIndex
+        assert(node.position == level)
+        val baseQual: Byte = read.baseQualities[readIndex]
+        val base: Char = read.sequence[readIndex]
+
+        if (!matchesNode(node, base, baseQual))
         {
-            val level = read.layoutPosition + i
-            assert(node.level == level)
-            val baseQual: Byte = read.baseQualities[i]
-            val base: Char = read.sequence[i]
-
-            if (!matchesNode(node, base, baseQual))
-            {
-                return
-            }
-
-            if (node.children.isEmpty())
-            {
-                leafNodes.add(node)
-                return
-            }
+            return
         }
+
+        if (node.children.isEmpty())
+        {
+            leafNodes.add(node)
+            return
+        }
+
+        if (readIndex + 1 == read.sequence.length)
+            return
 
         for (child in node.children)
         {
-            findMatchingLeafNodes(read, child, i + 1, leafNodes)
+            findMatchingLeafNodes(read, child, readIndex + 1, leafNodes)
         }
     }
 
     // we have a node that we just went from unknown / low qual base to high qual base
-    // we try to merge it with sibling
+    // we try to merge it with sibling.
     private fun tryMergeWithSibling(node: Node)
     {
-        if (node.parent == null)
+        // we cannot merge children of root. They can have different positions
+        if (node.parent == null || node.parent === root)
             return
 
         for (sibling in node.parent!!.children)
@@ -261,6 +482,8 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
 
     private fun mergeNodes(nodeTo: Node, nodeFrom: Node)
     {
+        require(nodeTo.position == nodeFrom.position)
+
         nodeTo.highQualityCount += nodeFrom.highQualityCount
         nodeTo.parent!!.children.removeIf({ n -> n === nodeFrom })
 
@@ -294,46 +517,10 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
         }
     }
 
-    fun chooseChildNode(parent: Node, base: Char, highQualBase: Char) : Node?
+    fun createChild(parent: Node, lvl: Int) : Node
     {
-        for (node in parent.children)
-        {
-            if (node.base == base)
-            {
-                // we found a node we can assign to
-                return node
-            }
-        }
-
-        if (highQualBase == UNKNOWN_BASE)
-        {
-            // can't really match anything, just match first one. Should not be too much of issue
-            if (parent.children.size > 0)
-            {
-                return parent.children[0]
-            }
-            // if there is no children then can't do anything
-            return null
-        }
-        else
-        {
-            // if we cannot find one then see if any is unknown base match
-            for (node in parent.children)
-            {
-                if (node.highQualBase == UNKNOWN_BASE)
-                {
-                    // we found a node we can assign to
-                    return node
-                }
-            }
-            return null
-        }
-    }
-
-    fun createChild(parent: Node) : Node
-    {
-        val lvl = parent.level + 1
-        val child = Node(parent.level + 1, parent)
+        require(parent === root || lvl == parent.position + 1)
+        val child = Node(lvl, parent)
         parent.children.add(child)
         getOrCreateLevelNodes(lvl).add(child)
         return child
@@ -372,14 +559,59 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
         }
     }
 
-    fun buildReadLayouts(useReverseComp: Boolean = false) : List<ReadLayout>
+    // for every node we sort the children descending order by highQualityCount
+    fun sortNodeChildren()
     {
+        sLogger.info("sorting children")
+
+        // depth first traversal
+        val indexStack = Stack<Int>()
+        var current: Node? = root
+        indexStack.push(0)
+
+        while (current != null)
+        {
+            val childIndex: Int = indexStack.peek()
+            if (childIndex == current.children.size)
+            {
+                // finished with this node
+                indexStack.pop()
+                current = current.parent
+                continue
+            }
+
+            if (childIndex == 0)
+            {
+                // first time we visit this node, sort all children
+                current.children.sortByDescending( { n -> n.highQualityCount } )
+            }
+            // update current node index
+            indexStack.push(indexStack.pop() + 1)
+
+            // add child node index
+            indexStack.push(0)
+            current = current.children[childIndex]
+        }
+
+        sLogger.info("finished sorting children")
+    }
+
+    // we do depth first traversal, by following the path with highest support
+    // after a read is used we remove it. This means that the reads will tend
+    // to go towards the highest supported branch.
+    fun buildReadLayouts(layoutReadCreate: (read: Read) -> ReadLayout.Read) : List<ReadLayout>
+    {
+        // first have to sort every node children from highest to lowest support
+        sortNodeChildren()
+
         val layouts = ArrayList<ReadLayout>()
 
-        // depth first traversal, we visit every leaf node and build a layout from it
         val leafNodes = ArrayList<Node>()
-        val levelChildIndex = IntArray(levelNodes.size, { 0 })
+
+        // depth first traversal, we visit every leaf node and build a layout from it
+        val indexStack = Stack<Int>()
         var current: Node? = root
+        indexStack.push(0)
 
         while (current != null)
         {
@@ -387,51 +619,49 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
             {
                 // this is a leaf
                 leafNodes.add(current)
-                // go back up one level
+            }
+
+            // which child are we up to?
+            val childIndex: Int = indexStack.peek()
+            if (childIndex == current.children.size)
+            {
+                // finished with this node
+                indexStack.pop()
                 current = current.parent
             }
             else
             {
-                // which child are we up to?
-                val childIndex = levelChildIndex[current.level + 1]
-                if (childIndex == current.children.size)
-                {
-                    // finished with this node
-                    levelChildIndex[current.level + 1] = 0
-                    current = current.parent
-                }
-                else
-                {
-                    levelChildIndex[current.level + 1] += 1
-                    current = current.children[childIndex]
-                }
+                // update current node index
+                indexStack.push(indexStack.pop() + 1)
+
+                // add child node index
+                indexStack.push(0)
+
+                current = current.children[childIndex]
             }
         }
 
-        sLogger.info("layout tree: found {} leaf nodes", leafNodes.size)
+        sLogger.trace("layout tree: found {} leaf nodes", leafNodes.size)
 
-        // we want to avoid creating too many read objects. We want to share them
-        val readToLayoutReadMap = IdentityHashMap<Read, ReadLayout.Read>()
+        // a set to keep track of reads that we have already used
+        val usedReadSet: MutableSet<Read> = Collections.newSetFromMap(IdentityHashMap())
 
         for (leaf in leafNodes)
         {
-            layouts.add(buildReadLayout(leaf, readToLayoutReadMap, useReverseComp))
+            layouts.add(buildLayoutFromLeaf(leaf, layoutReadCreate, usedReadSet))
         }
 
-        sLogger.info("built {} layouts from layout tree", layouts.size)
+        sLogger.trace("built {} layouts from layout tree", layouts.size)
 
         return layouts
     }
 
     // create a layout from the leaf node
-    fun buildReadLayout(leafNode: Node,
-                        layoutReadCreate: (readKey: ReadKey,
-                                        sequence: String,
-                                        baseQualities: ByteArray,
-                                        alignedPosition: Int) -> ReadLayout.Read,
-                        useReverseComp: Boolean = false) : ReadLayout
+    fun buildLayoutFromLeaf(leafNode: Node,
+                        layoutReadCreate: (read: Read) -> ReadLayout.Read,
+                        usedReadSet: MutableSet<Read>) : ReadLayout
     {
-        sLogger.debug("building layout from node")
+        sLogger.trace("building layout from node")
 
         if (leafNode.children.isNotEmpty())
         {
@@ -439,9 +669,6 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
         }
 
         val reads = ArrayList<ReadLayout.Read>()
-        val readKeys = HashSet<ReadKey>()
-
-        val layoutLength = leafNode.level + 1
 
         var current: Node? = leafNode
         while (current != null && current != root)
@@ -449,36 +676,24 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
             // building it from leaf, we get all the reads
             for (r in current.reads)
             {
-                // NOTE: it would only make sense to add read that ends here
-
-                if (readKeys.add(r.readKey))
+                // NOTE one way or the other we must ensure the read is not added
+                // multiple times into a layout. Since a read exists in many levels we
+                // need to have a check
+                if (!usedReadSet.add(r))
                 {
-                    var layoutRead = readToLayoutReadMap[r]
-
-                    if (layoutRead == null)
-                    {
-                        // we need to create layout read from this read
-                        if (useReverseComp)
-                        {
-                            layoutRead = layoutReadCreate(
-                                r.readKey, SequenceUtil.reverseComplement(r.sequence),
-                                r.baseQualities.reversed().toByteArray(),
-                                r.sequence.length - r.layoutPosition - 1)
-                        }
-                        else
-                        {
-                            layoutRead = layoutReadCreate(
-                                r.readKey, r.sequence,
-                                r.baseQualities,
-                                r.layoutPosition)
-                        }
-                        readToLayoutReadMap[r] = layoutRead
-                    }
-                    reads.add(layoutRead)
+                    continue
                 }
+
+                // we need to create layout read from this read
+                val layoutRead: ReadLayout.Read = layoutReadCreate(r)
+                reads.add(layoutRead)
             }
             current = current.parent
         }
+
+        // we want to build the reads the reverse way, i.e. from leftmost
+        // to rightmost
+        reads.reverse()
 
         val layout = ReadLayout()
 
@@ -487,7 +702,7 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
             layout.addRead(r, minBaseQuality)
         }
 
-        sLogger.debug("layout: num reads({}) seq({}) support({})", layout.reads.size, layout.consensusSequence(), layout.highQualSupportString())
+        sLogger.trace("layout: num reads({}) seq({}) support({})", layout.reads.size, layout.consensusSequence(), layout.highQualSupportString())
 
         return layout
     }
@@ -498,5 +713,3 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
         const val UNKNOWN_BASE: Char = 'N'
     }
 }
-
- */

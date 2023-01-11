@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.READ_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.UNMAPPED_READS;
@@ -79,7 +78,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class BamFragmentAllocator
+public class FragmentAllocator
 {
     private final IsofoxConfig mConfig;
     private final SamReader mSamReader;
@@ -114,7 +113,7 @@ public class BamFragmentAllocator
     private static final int GENE_LOG_COUNT = 5000000;
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
 
-    public BamFragmentAllocator(final IsofoxConfig config, final ResultsWriter resultsWriter)
+    public FragmentAllocator(final IsofoxConfig config, final ResultsWriter resultsWriter)
     {
         mConfig = config;
 
@@ -284,7 +283,10 @@ public class BamFragmentAllocator
         ++mGeneReadCount;
 
         // count each fragment once by only taking the first read, and supplmentaries are ignored
-        if(!record.getFirstOfPairFlag() || record.getSupplementaryAlignmentFlag() || record.isSecondaryAlignment())
+        if(record.getSupplementaryAlignmentFlag() || record.isSecondaryAlignment())
+            return;
+
+        if(!record.getMateUnmappedFlag() && !record.getFirstOfPairFlag())
             return;
 
         mCurrentGenes.addCount(TOTAL, 1);
@@ -305,13 +307,8 @@ public class BamFragmentAllocator
             System.gc(); // attempting to reduce allocation to discarded SAMRecords and ReadRecords
         }
 
-        if(mConfig.GeneReadLimit > 0 && mGeneReadCount >= mConfig.GeneReadLimit)
-        {
-            mBamSlicer.haltProcessing();
-            ISF_LOGGER.warn("chr({}) genes({}) readCount({}) exceeds max read count",
-                    mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
+        if(reachedGeneReadLimit())
             return;
-        }
 
         final List<RegionReadData> overlappingRegions = findOverlappingRegions(mCurrentGenes.getExonRegions(), read);
 
@@ -325,7 +322,7 @@ public class BamFragmentAllocator
         checkFragmentRead(read);
     }
 
-    private boolean checkFragmentRead(ReadRecord read)
+    private boolean checkFragmentRead(final ReadRecord read)
     {
         // check if the 2 reads from a fragment exist and if so handle them a pair, returning true
         ReadRecord otherRead = mFragmentReads.checkRead(read);
@@ -621,7 +618,10 @@ public class BamFragmentAllocator
             mExpressionReadTracker.processUnsplicedGenes(comboTransMatchType, overlapGenes, validTranscripts, commonMappings, minMapQuality);
         }
 
-        mCurrentGenes.addCount(fragmentType, 1);
+        if(!read1.isSecondaryAlignment() && !read2.isSecondaryAlignment())
+        {
+            mCurrentGenes.addCount(fragmentType, 1);
+        }
 
         if(mConfig.WriteReadData && mReadDataWriter != null)
         {
@@ -703,6 +703,17 @@ public class BamFragmentAllocator
         return GeneRegionFilters.inExcludedRegion(mConfig.Filters.ExcludedRegion, record);
     }
 
+    private boolean reachedGeneReadLimit()
+    {
+        if(mConfig.GeneReadLimit == 0 || mGeneReadCount < mConfig.GeneReadLimit)
+            return false;
+
+        mBamSlicer.haltProcessing();
+        ISF_LOGGER.warn("chr({}) genes({}) readCount({}) exceeds max read count",
+                mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
+        return true;
+    }
+
     private void processEnrichedRegionRead(final SAMRecord record)
     {
         if(mGeneReadCount >= mNextGeneCountLog)
@@ -713,22 +724,27 @@ public class BamFragmentAllocator
             System.gc();
         }
 
-        if(mConfig.GeneReadLimit > 0 && mGeneReadCount >= mConfig.GeneReadLimit)
-        {
-            mBamSlicer.haltProcessing();
-            ISF_LOGGER.warn("chr({}) genes({}) readCount({}) exceeds max read count",
-                    mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
+        if(reachedGeneReadLimit())
             return;
-        }
 
-        if(record.getFirstOfPairFlag())
-        {
-            // no further classification of fragment is performed - ie they are considered supporting
-            ++mEnrichedGeneFragments;
+        // check criteria for using the read for expression
+        if(!record.getReadPairedFlag() || record.isSecondaryAlignment() || record.getSupplementaryAlignmentFlag())
+            return;
 
-            // add to overall counts - since these are within a single exon, consider them supporting the transcript + unspliced
-            mCurrentGenes.addCount(TRANS_SUPPORTING, 1);
-        }
+        if(record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag())
+            return;
+
+        if(!record.getReferenceName().equals(record.getMateReferenceName()))
+            return;
+
+        if(!record.getFirstOfPairFlag()) // only count 1 read per fragment
+            return;
+
+        // no further classification of fragment is performed - ie they are considered supporting
+        ++mEnrichedGeneFragments;
+
+        // add to overall counts - since these are within a single exon, consider them supporting the transcript + unspliced
+        mCurrentGenes.addCount(TRANS_SUPPORTING, 1);
     }
 
     public List<CategoryCountsData> getTransComboData() { return mExpressionReadTracker.getTransComboData(); }

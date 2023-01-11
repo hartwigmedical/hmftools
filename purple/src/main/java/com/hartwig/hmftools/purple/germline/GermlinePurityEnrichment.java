@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
-import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.common.variant.PurpleVcfTags;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
@@ -52,9 +51,9 @@ public class GermlinePurityEnrichment
     {
         if(mPurityAdjuster == null)
         {
-            variant.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, 1);
-            variant.getCommonInfo().putAttribute(PURPLE_CN_INFO, 2);
-            variant.getCommonInfo().putAttribute(PURPLE_AF_INFO, 0.5);
+            variant.getCommonInfo().putAttribute(PURPLE_VARIANT_CN, 1);
+            variant.getCommonInfo().putAttribute(PURPLE_CN, 2);
+            variant.getCommonInfo().putAttribute(PURPLE_AF, 0.5);
             variant.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_CN_INFO, 1);
             variant.getCommonInfo().putAttribute(PURPLE_BIALLELIC_FLAG, false);
             return;
@@ -77,9 +76,9 @@ public class GermlinePurityEnrichment
                 double variantCopyNumber = Math.max(0, vaf * copyNumber);
                 boolean biallelic = Doubles.lessOrEqual(copyNumber, 0) || Doubles.greaterOrEqual(variantCopyNumber, copyNumber - 0.5);
 
-                variant.getCommonInfo().putAttribute(PURPLE_VARIANT_CN_INFO, variantCopyNumber);
-                variant.getCommonInfo().putAttribute(PURPLE_CN_INFO, copyNumber);
-                variant.getCommonInfo().putAttribute(PURPLE_AF_INFO, String.format("%.4f", vaf));
+                variant.getCommonInfo().putAttribute(PURPLE_VARIANT_CN, variantCopyNumber);
+                variant.getCommonInfo().putAttribute(PURPLE_CN, copyNumber);
+                variant.getCommonInfo().putAttribute(PURPLE_AF, String.format("%.4f", vaf));
                 variant.getCommonInfo().putAttribute(PURPLE_MINOR_ALLELE_CN_INFO, purpleCopyNumber.minorAlleleCopyNumber());
                 variant.getCommonInfo().putAttribute(PURPLE_BIALLELIC_FLAG, biallelic);
             }

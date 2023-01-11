@@ -410,8 +410,6 @@ public class GermlineDisruptions
             int ponCount = getPonCount(var);
             boolean reportable = isReportable(disruptionData);
 
-            // TODO: switch tumor for normal fragment counts until GRIPSS writes them both
-
             String filters = svData.filter();
 
             if(disruptionData.isPseudogeneDeletion())
@@ -427,6 +425,10 @@ public class GermlineDisruptions
                     var.position(true), var.position(false),
                     var.orientation(true), var.orientation(false),
                     gene.GeneName, var.type(), filters, svData.event(), svData.qualityScore(),
+                    svData.startHomologySequence(), svData.endHomologySequence(),
+                    svData.junctionCopyNumber(), svData.adjustedStartAF(), svData.adjustedEndAF(),
+                    svData.adjustedStartCopyNumber(), svData.adjustedEndCopyNumber(),
+                    svData.adjustedStartCopyNumberChange(), svData.adjustedEndCopyNumberChange(),
                     svData.startNormalVariantFragmentCount(), svData.startNormalReferenceFragmentCount(), svData.endNormalReferenceFragmentCount(),
                     svData.startTumorVariantFragmentCount(), svData.startTumorReferenceFragmentCount(), svData.endTumorReferenceFragmentCount(),
                     svData.insertSequence(), svData.insertSequenceAlignments(), svData.insertSequenceRepeatClass(), svData.insertSequenceRepeatType(),

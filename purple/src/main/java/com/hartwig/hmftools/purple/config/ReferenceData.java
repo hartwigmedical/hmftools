@@ -137,12 +137,6 @@ public class ReferenceData
 
         if(config.RunDrivers || config.DriversOnly)
         {
-            if(!DriverGenePanelConfig.isConfigured(cmd))
-            {
-                mIsValid = false;
-                PPL_LOGGER.error(DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION + " is a mandatory argument when running drivers");
-            }
-
             if(!config.germlineMode())
             {
                 if(somaticHotspotVcf.isEmpty())
@@ -154,7 +148,7 @@ public class ReferenceData
                 if(!new File(somaticHotspotVcf).exists())
                 {
                     mIsValid = false;
-                    PPL_LOGGER.error("Unable to open " + SOMATIC_HOTSPOT + " file " + somaticHotspotVcf);
+                    PPL_LOGGER.error("unable to open " + SOMATIC_HOTSPOT + " file " + somaticHotspotVcf);
                 }
             }
 
@@ -167,7 +161,7 @@ public class ReferenceData
             catch(IOException e)
             {
                 mIsValid = false;
-                PPL_LOGGER.error("Unable to load driver genes: {}", e.toString());
+                PPL_LOGGER.error("unable to load driver genes: {}", e.toString());
             }
 
             DriverGenes = DriverGenePanelFactory.create(driverGenes);
@@ -183,7 +177,7 @@ public class ReferenceData
                 if(!new File(germlineHotspotVcf).exists())
                 {
                     mIsValid = false;
-                    PPL_LOGGER.error("Unable to open " + GERMLINE_HOTSPOT + " file " + germlineHotspotVcf);
+                    PPL_LOGGER.error("unable to open " + GERMLINE_HOTSPOT + " file " + germlineHotspotVcf);
                 }
             }
         }

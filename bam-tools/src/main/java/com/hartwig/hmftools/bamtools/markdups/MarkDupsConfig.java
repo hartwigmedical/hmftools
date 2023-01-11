@@ -44,15 +44,20 @@ public class MarkDupsConfig
     public final int PartitionSize;
     public final int BufferSize;
 
+    // UMI group config
+    public final UmiConfig UMIs;
+
     public final String OutputDir;
     public final String OutputId;
     public final boolean WriteBam;
+    public final boolean UseInterimFiles;
     public final int Threads;
 
     // debug
     public final List<String> SpecificChromosomes;
     public final List<String> LogReadIds;
     public final List<ChrBaseRegion> SpecificRegions;
+    public final FilterReadsType SpecificRegionsFilterType;
     public final ReadOutput LogReadType;
     public final boolean PerfDebug;
     public final boolean RunChecks;
@@ -64,12 +69,11 @@ public class MarkDupsConfig
     private static final String READ_OUTPUTS = "read_output";
     private static final String WRITE_BAM = "write_bam";
     private static final String RUN_CHECKS = "run_checks";
+    private static final String USE_INTERIM_FILES = "use_interim_files";
+    private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
 
     private static final int DEFAULT_PARTITION_SIZE = 1000000;
-    private static final int DEFAULT_POS_BUFFER_SIZE = 10000;
-
-    // matching constants
-    public static final int MAX_INSERT_SIZE_DIFF = 5;
+    private static final int DEFAULT_POS_BUFFER_SIZE = 1000;
 
     public MarkDupsConfig(final CommandLine cmd)
     {
@@ -95,6 +99,8 @@ public class MarkDupsConfig
         PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_PARTITION_SIZE)));
         BufferSize = Integer.parseInt(cmd.getOptionValue(BUFFER_SIZE, String.valueOf(DEFAULT_POS_BUFFER_SIZE)));
 
+        UMIs = UmiConfig.from(cmd);
+
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
 
@@ -107,6 +113,10 @@ public class MarkDupsConfig
             mIsValid = false;
         }
 
+        SpecificRegionsFilterType = !SpecificChromosomes.isEmpty() || !SpecificRegions.isEmpty() ?
+                FilterReadsType.valueOf(cmd.getOptionValue(SPECIFIC_REGION_FILTER_TYPE, FilterReadsType.READ.toString())) :
+                FilterReadsType.NONE;
+
         WriteBam = cmd.hasOption(WRITE_BAM) || !cmd.hasOption(READ_OUTPUTS);
         LogReadType = ReadOutput.valueOf(cmd.getOptionValue(READ_OUTPUTS, ReadOutput.NONE.toString()));
 
@@ -117,6 +127,7 @@ public class MarkDupsConfig
 
         PerfDebug = cmd.hasOption(PERF_DEBUG);
         RunChecks = cmd.hasOption(RUN_CHECKS);
+        UseInterimFiles = cmd.hasOption(USE_INTERIM_FILES);
     }
 
     public boolean isValid()
@@ -143,7 +154,7 @@ public class MarkDupsConfig
     {
         String filename = OutputDir + SampleId;
 
-        filename += ".bam_" + fileType;
+        filename += "." + fileType;
 
         if(OutputId != null)
             filename += "." + OutputId;
@@ -168,12 +179,15 @@ public class MarkDupsConfig
         options.addOption(BUFFER_SIZE, true, "Read buffer size, default: " + DEFAULT_POS_BUFFER_SIZE);
         options.addOption(READ_OUTPUTS, true, "Write reads: NONE (default), 'MISMATCHES', 'DUPLICATES', 'ALL'");
         options.addOption(WRITE_BAM, false, "Write BAM, default true if not write read output");
+        UmiConfig.addCommandLineOptions(options);
         addThreadOptions(options);
 
         addSpecificChromosomesRegionsConfig(options);
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
         options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
         options.addOption(RUN_CHECKS, false, "Run duplicate mismatch checks");
+        options.addOption(USE_INTERIM_FILES, false, "Write candidate duplicate reads to file");
+        options.addOption(SPECIFIC_REGION_FILTER_TYPE, true, "Used with specific regions, to filter mates or supps");
 
         return options;
     }
@@ -195,9 +209,11 @@ public class MarkDupsConfig
 
         PartitionSize = partitionSize;
         BufferSize = bufferSize;
+        UMIs = new UmiConfig(false, false);
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
+        SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;
 
         WriteBam = false;
         LogReadType = ReadOutput.NONE;
@@ -206,6 +222,6 @@ public class MarkDupsConfig
         Threads = 0;
         PerfDebug = false;
         RunChecks = false;
+        UseInterimFiles = false;
     }
-
 }

@@ -7,8 +7,8 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public interface StructuralVariant {
-
+public interface StructuralVariant
+{
     @Nullable
     Integer primaryKey();
 
@@ -31,30 +31,42 @@ public interface StructuralVariant {
     VariantContext endContext();
 
     @Nullable
-    default String chromosome(boolean isStart) {
-        if (isStart) {
+    default String chromosome(boolean isStart)
+    {
+        if(isStart)
+        {
             return start().chromosome();
-        } else {
+        }
+        else
+        {
             StructuralVariantLeg endLeg = end();
             return endLeg != null ? endLeg.chromosome() : null;
         }
     }
 
     @Nullable
-    default Integer position(boolean isStart) {
-        if (isStart) {
+    default Integer position(boolean isStart)
+    {
+        if(isStart)
+        {
             return start().position();
-        } else {
+        }
+        else
+        {
             StructuralVariantLeg endLeg = end();
             return endLeg != null ? endLeg.position() : null;
         }
     }
 
     @Nullable
-    default Byte orientation(boolean isStart) {
-        if (isStart) {
+    default Byte orientation(boolean isStart)
+    {
+        if(isStart)
+        {
             return start().orientation();
-        } else {
+        }
+        else
+        {
             StructuralVariantLeg endLeg = end();
             return endLeg != null ? endLeg.orientation() : null;
         }

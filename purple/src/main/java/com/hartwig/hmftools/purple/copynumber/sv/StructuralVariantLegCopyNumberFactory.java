@@ -16,24 +16,20 @@ import org.jetbrains.annotations.NotNull;
 
 public class StructuralVariantLegCopyNumberFactory<T extends GenomeRegion>
 {
-    @NotNull
     private final Function<T, Double> mCopyNumberExtractor;
 
-    public StructuralVariantLegCopyNumberFactory(@NotNull final Function<T, Double> copyNumberExtractor)
+    public StructuralVariantLegCopyNumberFactory(final Function<T, Double> copyNumberExtractor)
     {
         this.mCopyNumberExtractor = copyNumberExtractor;
     }
 
-    @NotNull
-    public StructuralVariantLegCopyNumber create(@NotNull final StructuralVariantLeg leg,
-            @NotNull final Multimap<Chromosome, T> copyNumbers)
+    public StructuralVariantLegCopyNumber create(final StructuralVariantLeg leg, final Multimap<Chromosome, T> copyNumbers)
     {
         return create(leg, GenomeRegionSelectorFactory.createImproved(copyNumbers));
 
     }
 
-    @NotNull
-    public StructuralVariantLegCopyNumber create(@NotNull final StructuralVariantLeg leg, @NotNull final GenomeRegionSelector<T> selector)
+    public StructuralVariantLegCopyNumber create(final StructuralVariantLeg leg, final GenomeRegionSelector<T> selector)
     {
         final GenomePosition svPositionLeft = GenomePositions.create(leg.chromosome(), leg.cnaPosition() - 1);
         final GenomePosition svPositionRight = GenomePositions.create(leg.chromosome(), leg.cnaPosition());

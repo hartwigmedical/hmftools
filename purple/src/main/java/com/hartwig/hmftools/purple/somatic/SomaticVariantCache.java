@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple;
+package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
@@ -88,7 +88,7 @@ public class SomaticVariantCache
             }
         }
 
-        PPL_LOGGER.info("loaded somatic variants({}) from {}", mVariants.size(), somaticVcf);
+        PPL_LOGGER.info("loaded {} somatic variants from {}", mVariants.size(), somaticVcf);
     }
 
     public VCFHeader getVcfHeader() { return mVcfHeader; }

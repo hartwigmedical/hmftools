@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.sv;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_CONTEXT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.relativePositionAndRef;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.function.Consumer;
 
@@ -41,6 +42,13 @@ public class StructuralRefContextEnrichment implements VariantContextEnrichment
     @Override
     public void accept(final VariantContext context)
     {
+        if(context.hasAttribute(REF_CONTEXT_FLAG))
+        {
+            PPL_LOGGER.debug("variant({}:{}) already has ref-context set", context.getContig(), context.getStart());
+            mConsumer.accept(context);
+            return;
+        }
+
         final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(mRefGenome, context);
         if(relativePositionAndRef.getFirst() > -1)
         {

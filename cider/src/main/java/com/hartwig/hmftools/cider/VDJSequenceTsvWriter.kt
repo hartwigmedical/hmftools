@@ -45,7 +45,7 @@ object VDJSequenceTsvWriter
         fullSeq
     }
 
-    private const val FILE_EXTENSION = ".cider.vdj_seq.tsv"
+    private const val FILE_EXTENSION = ".cider.vdj.tsv.gz"
 
     @JvmStatic
     fun generateFilename(basePath: String, sample: String): String
@@ -55,7 +55,7 @@ object VDJSequenceTsvWriter
 
     @JvmStatic
     fun writeVDJSequences(
-        basePath: String, sample: String, vdjAnnotations: List<VdjAnnotation>, reportPartialSeq: Boolean)
+        basePath: String, sample: String, vdjAnnotations: List<VdjAnnotation>, reportMatchRefVdj: Boolean, reportPartialSeq: Boolean)
     {
         val filePath = generateFilename(basePath, sample)
 
@@ -64,10 +64,11 @@ object VDJSequenceTsvWriter
             .setHeader(Column::class.java)
             .build()
 
-        csvFormat.print(FileWriterUtils.createBufferedWriter(filePath)).use { printer: CSVPrinter ->
+        csvFormat.print(FileWriterUtils.createGzipBufferedWriter(filePath)).use { printer: CSVPrinter ->
             for (vdjAnn in vdjAnnotations)
             {
-                if (reportPartialSeq || vdjAnn.vdj.isFullyRearranged)
+                if ((reportMatchRefVdj || !vdjAnn.matchesRef) &&
+                    (reportPartialSeq || vdjAnn.vdj.isFullyRearranged))
                 {
                     writeVDJSequence(printer, vdjAnn)
                 }

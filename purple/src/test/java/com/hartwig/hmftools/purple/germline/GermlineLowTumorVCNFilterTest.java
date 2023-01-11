@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.germline;
 
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNFilter.MIN_QUAL_HOTSPOT;
 import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNFilter.MIN_QUAL_OTHER;
 import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNFilter.MIN_TUMOR_VCN;
@@ -60,7 +60,7 @@ public class GermlineLowTumorVCNFilterTest
     private static VariantContext createVariant(double qual, double variantCopyNumber, boolean isHotspot)
     {
         final String hotspotFlag = isHotspot ? HOTSPOT_FLAG : NEAR_HOTSPOT_FLAG;
-        final String line = "11\t1000\tCOSM123;COSM456\tG\tA\t" + qual + "\tPASS\t" + PURPLE_VARIANT_CN_INFO + "=" + variantCopyNumber + ";"
+        final String line = "11\t1000\tCOSM123;COSM456\tG\tA\t" + qual + "\tPASS\t" + PURPLE_VARIANT_CN + "=" + variantCopyNumber + ";"
                 + hotspotFlag + "\tGT:AD:DP\t0/1:73,17:91";
         return VariantContextFromString.decode(line);
     }

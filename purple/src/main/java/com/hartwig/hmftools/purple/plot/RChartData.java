@@ -2,13 +2,12 @@ package com.hartwig.hmftools.purple.plot;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -77,8 +76,8 @@ public class RChartData
     private void somaticVariantCopyNumberPdf(final VariantContext somaticVariant)
     {
         CommonInfo commonInfo = somaticVariant.getCommonInfo();
-        double copyNumber = commonInfo.getAttributeAsDouble(PURPLE_CN_INFO, 0.0);
-        double variantCopyNumber = commonInfo.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, 0.0);
+        double copyNumber = commonInfo.getAttributeAsDouble(PURPLE_CN, 0.0);
+        double variantCopyNumber = commonInfo.getAttributeAsDouble(PURPLE_VARIANT_CN, 0.0);
 
         int copyNumberBucket = bucket(copyNumber, COPY_NUMBER_BUCKET_SIZE);
         int variantCopyNumberBucket = bucket(variantCopyNumber, VARIANT_COPY_NUMBER_BUCKET_SIZE);

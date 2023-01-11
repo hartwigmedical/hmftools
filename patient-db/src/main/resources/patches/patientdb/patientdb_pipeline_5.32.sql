@@ -23,3 +23,22 @@ CREATE TABLE driverGenePanel
     reportPGX BOOLEAN NOT NULL,
     PRIMARY KEY (gene)
 );
+
+# Germline SVs
+
+ALTER TABLE structuralVariantGermline
+    ADD COLUMN homologySequenceStart varchar(255) not null after qualScore,
+    ADD COLUMN homologySequenceEnd varchar(255) after startHomologySequence,
+    ADD COLUMN junctionCopyNumber DOUBLE PRECISION after endHomologySequence,
+    ADD COLUMN adjustedAFStart DOUBLE PRECISION after junctionCopyNumber,
+    ADD COLUMN adjustedAFEnd DOUBLE PRECISION after adjustedAFStart,
+    ADD COLUMN adjustedCopyNumberStart DOUBLE PRECISION after adjustedAFEnd,
+    ADD COLUMN adjustedCopyNumberEnd DOUBLE PRECISION after adjustedCopyNumberStart,
+    ADD COLUMN adjustedCopyNumberChangeStart DOUBLE PRECISION after adjustedCopyNumberEnd,
+    ADD COLUMN adjustedCopyNumberChangeEnd DOUBLE PRECISION after adjustedCopyNumberChangeStart;
+
+# Isofox
+ALTER TABLE rnaStatistics
+	CHANGE COLUMN qcStatus qcStatus varchar(100);
+
+
