@@ -1,4 +1,4 @@
-chrom   chromStart  chromEnd    name    gieStain
+chrom	chromStart	chromEnd	name	gieStain
 chr1	0	2300000	p36.33	gneg
 chr1	2300000	5400000	p36.32	gpos15
 chr1	5400000	7200000	p36.31	gneg
