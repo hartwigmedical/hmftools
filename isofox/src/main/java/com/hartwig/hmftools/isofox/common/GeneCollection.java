@@ -262,7 +262,7 @@ public class GeneCollection
     public int[][] getTranscriptReadCount(final int transId)
     {
         int[][] counts = mTranscriptReadCounts.get(transId);
-        return counts != null ? counts : new int[FragmentMatchType.MAX_FRAG_TYPE][UNIQUE_TRANS_COUNT+1];
+        return counts != null ? counts : new int[FragmentMatchType.values().length][UNIQUE_TRANS_COUNT+1];
     }
 
     public void addTranscriptReadMatch(int transId, boolean isUnique, FragmentMatchType type)
@@ -270,16 +270,16 @@ public class GeneCollection
         int[][] counts = mTranscriptReadCounts.get(transId);
         if(counts == null)
         {
-            counts = new int[FragmentMatchType.MAX_FRAG_TYPE][UNIQUE_TRANS_COUNT+1];
+            counts = new int[FragmentMatchType.values().length][UNIQUE_TRANS_COUNT+1];
             mTranscriptReadCounts.put(transId,  counts);
         }
 
         if(isUnique)
         {
-            ++counts[FragmentMatchType.typeAsInt(type)][UNIQUE_TRANS_COUNT];
+            ++counts[type.ordinal()][UNIQUE_TRANS_COUNT];
         }
 
-        ++counts[FragmentMatchType.typeAsInt(type)][TRANS_COUNT];
+        ++counts[type.ordinal()][TRANS_COUNT];
     }
 
     public void addTranscriptReadMatch(int transId, FragmentMatchType type)
@@ -287,11 +287,11 @@ public class GeneCollection
         int[][] counts = mTranscriptReadCounts.get(transId);
         if(counts == null)
         {
-            counts = new int[FragmentMatchType.MAX_FRAG_TYPE][UNIQUE_TRANS_COUNT+1];
+            counts = new int[FragmentMatchType.values().length][UNIQUE_TRANS_COUNT+1];
             mTranscriptReadCounts.put(transId,  counts);
         }
 
-        ++counts[FragmentMatchType.typeAsInt(type)][TRANS_COUNT];
+        ++counts[type.ordinal()][TRANS_COUNT];
     }
 
     public final FragmentTypeCounts fragmentTypeCounts() { return mFragmentCounts; }

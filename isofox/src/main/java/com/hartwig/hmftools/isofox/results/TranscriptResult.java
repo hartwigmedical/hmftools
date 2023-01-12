@@ -91,9 +91,9 @@ public class TranscriptResult
         UniqueSpliceJunctionsSupported = uniqueSpliceJunctionsSupported;
 
         final int[][] supportingFragments = geneCollection.getTranscriptReadCount(transData.TransId);
-        UniqueSpliceJunctionFragments = supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.SPLICED)][UNIQUE_TRANS_COUNT];
-        UniqueNonSJFragments = supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.LONG)][UNIQUE_TRANS_COUNT];
-        DiscordantFragments = supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.DISCORDANT)][TRANS_COUNT];
+        UniqueSpliceJunctionFragments = supportingFragments[FragmentMatchType.SPLICED.ordinal()][UNIQUE_TRANS_COUNT];
+        UniqueNonSJFragments = supportingFragments[FragmentMatchType.LONG.ordinal()][UNIQUE_TRANS_COUNT];
+        DiscordantFragments = supportingFragments[FragmentMatchType.DISCORDANT.ordinal()][TRANS_COUNT];
 
         EffectiveLength = calcEffectiveLength(exonicBases, expRateFragmentLengths);
 

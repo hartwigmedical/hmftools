@@ -8,6 +8,5 @@ public enum FragmentType
     UNSPLICED,
     CHIMERIC,
     DUPLICATE,
-    LOW_MAP_QUAL,
-    MAX;
+    LOW_MAP_QUAL;
 }
