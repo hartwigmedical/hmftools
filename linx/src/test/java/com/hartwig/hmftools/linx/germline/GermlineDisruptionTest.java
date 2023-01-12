@@ -27,6 +27,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.linx.fusion.DisruptionFinder;
 import com.hartwig.hmftools.linx.fusion.SvDisruptionData;
@@ -230,8 +231,9 @@ public class GermlineDisruptionTest
         List<SvDisruptionData> standardDisruptions = mDisruptionFinder.getDisruptions();
         List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
         List<DriverCatalog> drivers = Lists.newArrayList();
+        List<LinxBreakend> breakends = Lists.newArrayList();
 
-        mDisruptionFinder.germlineDisruptions().populateGermlineSVs(standardDisruptions, germlineSVs, drivers);
+        mDisruptionFinder.germlineDisruptions().populateGermlineSVs(standardDisruptions, germlineSVs, breakends, drivers);
         return germlineSVs;
     }
 

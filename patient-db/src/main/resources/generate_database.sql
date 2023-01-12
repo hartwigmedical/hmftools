@@ -1023,7 +1023,6 @@ CREATE TABLE structuralVariantGermline
     positionEnd int,
     orientationStart tinyint not null,
     orientationEnd tinyint,
-    gene varchar(50) NOT NULL,
     type varchar(10) NOT NULL,
     filter varchar(50) NOT NULL,
     event varchar(50),
@@ -1055,8 +1054,7 @@ CREATE TABLE structuralVariantGermline
     cohortFrequency int not null,
     reported BOOLEAN NOT NULL,
     PRIMARY KEY (id),
-    INDEX(sampleId, gene),
-    INDEX(gene)
+    INDEX(sampleId)
 );
 
 DROP TABLE IF EXISTS signature;

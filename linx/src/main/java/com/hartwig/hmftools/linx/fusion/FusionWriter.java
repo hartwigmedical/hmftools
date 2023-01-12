@@ -2,6 +2,8 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_DOWNSTREAM;
+import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -57,7 +59,7 @@ public class FusionWriter implements CohortFileInterface
                     .gene(transcript.geneName())
                     .transcriptId(transcript.transName())
                     .canonical(transcript.isCanonical())
-                    .geneOrientation(transcript.isUpstream() ? "Upstream" : "Downstream")
+                    .geneOrientation(transcript.isUpstream() ? BREAKEND_ORIENTATION_UPSTREAM : BREAKEND_ORIENTATION_DOWNSTREAM)
                     .disruptive(transcript.isDisruptive())
                     .reportedDisruption(transcript.reportableDisruption())
                     .junctionCopyNumber(gene.jcn())

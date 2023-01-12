@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.FileReaderUtils;
 
 import org.immutables.value.Value;
 
@@ -125,7 +126,7 @@ public abstract class RnaStatistics
                 .unsplicedFragmentPerc(getDoubleValue(fieldsIndexMap, "UnsplicedFragmentPerc", values))
                 .altFragmentPerc(getDoubleValue(fieldsIndexMap, "AltFragmentPerc", values))
                 .chimericFragmentPerc(getDoubleValue(fieldsIndexMap, "ChimericFragmentPerc", values))
-                .splicedGeneCount(getValue(fieldsIndexMap, "SplicedGeneCount", 0, values))
+                .splicedGeneCount(FileReaderUtils.getIntValue(fieldsIndexMap, "SplicedGeneCount", 0, values))
                 .readLength(getIntValue(fieldsIndexMap, "ReadLength", values))
                 .fragmentLength5thPercent(getDoubleValue(fieldsIndexMap, "FragLength5th", values))
                 .fragmentLength50thPercent(getDoubleValue(fieldsIndexMap, "FragLength50th", values))

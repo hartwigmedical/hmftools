@@ -20,11 +20,6 @@ public class FileReaderUtils
         return fieldsIndexMap;
     }
 
-    public static String getValue(final Map<String,Integer> fieldsIndexMap, final String field, final String[] values)
-    {
-        return getValue(fieldsIndexMap, field, values);
-    }
-
     public static String getValue(
             final Map<String,Integer> fieldsIndexMap, final String field, final String defaultValue, final String[] values)
     {
@@ -36,10 +31,10 @@ public class FileReaderUtils
 
     public static int getIntValue(final Map<String,Integer> fieldsIndexMap, final String field, final String[] values)
     {
-        return getValue(fieldsIndexMap, field, 0, values);
+        return getIntValue(fieldsIndexMap, field, 0, values);
     }
 
-    public static int getValue(
+    public static int getIntValue(
             final Map<String,Integer> fieldsIndexMap, final String field, final int defaultValue, final String[] values)
     {
         if(!fieldsIndexMap.containsKey(field))
@@ -51,10 +46,10 @@ public class FileReaderUtils
     public static long getLongValue(
             final Map<String,Integer> fieldsIndexMap, final String field, final String[] values)
     {
-        return getValue(fieldsIndexMap, field, (long)0, values);
+        return getLongValue(fieldsIndexMap, field, (long)0, values);
     }
 
-    public static long getValue(
+    public static long getLongValue(
             final Map<String,Integer> fieldsIndexMap, final String field, final long defaultValue, final String[] values)
     {
         if(!fieldsIndexMap.containsKey(field))
@@ -66,10 +61,10 @@ public class FileReaderUtils
     public static double getDoubleValue(
             final Map<String,Integer> fieldsIndexMap, final String field, final String[] values)
     {
-        return getValue(fieldsIndexMap, field, 0.0, values);
+        return getDoubleValue(fieldsIndexMap, field, 0.0, values);
     }
 
-    public static double getValue(
+    public static double getDoubleValue(
             final Map<String,Integer> fieldsIndexMap, final String field, final double defaultValue, final String[] values)
     {
         if(!fieldsIndexMap.containsKey(field))

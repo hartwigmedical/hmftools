@@ -2,6 +2,9 @@ package com.hartwig.hmftools.common.linx;
 
 import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.getDoubleValue;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.getIntValue;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.getValue;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +24,6 @@ public final class LinxGermlineSv
     public final int PositionEnd;
     public final byte OrientStart;
     public final byte OrientEnd;
-    public final String GeneName;
     public final StructuralVariantType Type;
     public final String Filter;
     public final String EventId;
@@ -56,7 +58,7 @@ public final class LinxGermlineSv
 
     public LinxGermlineSv(
             final String chromosomeStart, final String chromosomeEnd, final int positionStart, final int positionEnd,
-            final byte orientStart, final byte orientEnd, final String geneName, final StructuralVariantType type,
+            final byte orientStart, final byte orientEnd, final StructuralVariantType type,
             final String filter, final String eventId, final double qualScore,
             final String homologyStart, final String homologyEnd, final double junctionCopyNumber,
             final double adjustedAFStart, final double adjustedAFEnd, final double adjustedCopyNumberStart, final double adjustedCopyNumberEnd,
@@ -73,7 +75,6 @@ public final class LinxGermlineSv
         PositionEnd = positionEnd;
         OrientStart = orientStart;
         OrientEnd = orientEnd;
-        GeneName = geneName;
         Type = type;
         Filter = filter;
         EventId = eventId;
@@ -140,7 +141,6 @@ public final class LinxGermlineSv
                 .add("positionEnd")
                 .add("orientStart")
                 .add("orientEnd")
-                .add("gene")
                 .add("type")
                 .add("filter")
                 .add("event")
@@ -183,7 +183,6 @@ public final class LinxGermlineSv
                 .add(String.valueOf(disruption.PositionEnd))
                 .add(String.valueOf(disruption.OrientStart))
                 .add(String.valueOf(disruption.OrientEnd))
-                .add(disruption.GeneName)
                 .add(String.valueOf(disruption.Type))
                 .add(disruption.Filter)
                 .add(disruption.EventId)
@@ -229,32 +228,40 @@ public final class LinxGermlineSv
             String[] values = line.split(DELIMITER, -1);
 
             deletions.add(new LinxGermlineSv(
-                    values[fieldsIndexMap.get("chromosomeStart")], values[fieldsIndexMap.get("chromosomeEnd")],
-                    Integer.parseInt(values[fieldsIndexMap.get("positionStart")]), Integer.parseInt(values[fieldsIndexMap.get("positionEnd")]),
-                    Byte.parseByte(values[fieldsIndexMap.get("orientStart")]), Byte.parseByte(values[fieldsIndexMap.get("orientEnd")]),
-                    values[fieldsIndexMap.get("gene")], StructuralVariantType.valueOf(values[fieldsIndexMap.get("type")]),
+                    values[fieldsIndexMap.get("chromosomeStart")],
+                    values[fieldsIndexMap.get("chromosomeEnd")],
+                    getIntValue(fieldsIndexMap, "positionStart", values),
+                    getIntValue(fieldsIndexMap, "positionEnd", values),
+                    Byte.parseByte(values[fieldsIndexMap.get("orientStart")]),
+                    Byte.parseByte(values[fieldsIndexMap.get("orientEnd")]),
+                    StructuralVariantType.valueOf(values[fieldsIndexMap.get("type")]),
                     values[fieldsIndexMap.get("filter")], values[fieldsIndexMap.get("event")],
-                    Double.parseDouble(values[fieldsIndexMap.get("qualScore")]),
-                    values[fieldsIndexMap.get("homologySequenceStart")], values[fieldsIndexMap.get("homologySequenceEnd")],
-                    Double.parseDouble(values[fieldsIndexMap.get("junctionCopyNumber")]),
-                    Double.parseDouble(values[fieldsIndexMap.get("adjustedAFStart")]),
-                    Double.parseDouble(values[fieldsIndexMap.get("adjustedAFEnd")]),
-                    Double.parseDouble(values[fieldsIndexMap.get("adjustedCopyNumberStart")]),
-                    Double.parseDouble(values[fieldsIndexMap.get("adjustedCopyNumberEnd")]),
-                    Double.parseDouble(values[fieldsIndexMap.get("adjustedCopyNumberChangeStart")]),
-                    Double.parseDouble(values[fieldsIndexMap.get("adjustedCopyNumberChangeEnd")]),
-                    Integer.parseInt(values[fieldsIndexMap.get("germlineFragments")]),
-                    Integer.parseInt(values[fieldsIndexMap.get("germlineReferenceFragmentsStart")]),
-                    Integer.parseInt(values[fieldsIndexMap.get("germlineReferenceFragmentsEnd")]),
-                    Integer.parseInt(values[fieldsIndexMap.get("tumorFragments")]),
-                    Integer.parseInt(values[fieldsIndexMap.get("tumorReferenceFragmentsStart")]),
-                    Integer.parseInt(values[fieldsIndexMap.get("tumorReferenceFragmentsEnd")]),
-                    values[fieldsIndexMap.get("insertSequence")], values[fieldsIndexMap.get("insertSequenceAlignments")],
-                    values[fieldsIndexMap.get("insertSequenceRepeatClass")], values[fieldsIndexMap.get("insertSequenceRepeatType")],
-                    Integer.parseInt(values[fieldsIndexMap.get("clusterId")]), Integer.parseInt(values[fieldsIndexMap.get("clusterCount")]),
+                    getDoubleValue(fieldsIndexMap, "qualScore", values),
+                    getValue(fieldsIndexMap, "homologySequenceStart", "", values),
+                    getValue(fieldsIndexMap, "homologySequenceEnd", "", values),
+                    getDoubleValue(fieldsIndexMap, "junctionCopyNumber", 0, values),
+                    getDoubleValue(fieldsIndexMap, "adjustedAFStart", 0, values),
+                    getDoubleValue(fieldsIndexMap, "adjustedAFEnd", 0, values),
+                    getDoubleValue(fieldsIndexMap, "adjustedCopyNumberStart", 0, values),
+                    getDoubleValue(fieldsIndexMap, "adjustedCopyNumberEnd", 0, values),
+                    getDoubleValue(fieldsIndexMap, "adjustedCopyNumberChangeStart", 0, values),
+                    getDoubleValue(fieldsIndexMap, "adjustedCopyNumberChangeEnd", 0, values),
+                    getIntValue(fieldsIndexMap, "germlineFragments", values),
+                    getIntValue(fieldsIndexMap, "germlineReferenceFragmentsStart", values),
+                    getIntValue(fieldsIndexMap, "germlineReferenceFragmentsEnd", values),
+                    getIntValue(fieldsIndexMap, "tumorFragments", values),
+                    getIntValue(fieldsIndexMap, "tumorReferenceFragmentsStart", values),
+                    getIntValue(fieldsIndexMap, "tumorReferenceFragmentsEnd", values),
+                    values[fieldsIndexMap.get("insertSequence")],
+                    values[fieldsIndexMap.get("insertSequenceAlignments")],
+                    values[fieldsIndexMap.get("insertSequenceRepeatClass")],
+                    values[fieldsIndexMap.get("insertSequenceRepeatType")],
+                    getIntValue(fieldsIndexMap, "clusterId", values),
+                    getIntValue(fieldsIndexMap, "clusterCount", values),
                     values[fieldsIndexMap.get("resolvedType")],
-                    values[fieldsIndexMap.get("linkedByStart")], values[fieldsIndexMap.get("linkedByEnd")],
-                    Integer.parseInt(values[fieldsIndexMap.get("cohortFrequency")]),
+                    values[fieldsIndexMap.get("linkedByStart")],
+                    values[fieldsIndexMap.get("linkedByEnd")],
+                    getIntValue(fieldsIndexMap, "cohortFrequency", values),
                     Boolean.parseBoolean(values[fieldsIndexMap.get("reported")])));
         }
 

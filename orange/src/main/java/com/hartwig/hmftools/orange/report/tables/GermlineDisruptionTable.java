@@ -28,7 +28,7 @@ public final class GermlineDisruptionTable {
                         Cells.createHeader("Type") });
 
         for (LinxGermlineSv disruption  : sort(disruptions)) {
-            table.addCell(Cells.createContent(disruption.GeneName));
+            table.addCell(Cells.createContent(""));
             table.addCell(Cells.createContent(disruption.ChromosomeStart + ":" + disruption.PositionStart));
             table.addCell(Cells.createContent(disruption.ChromosomeEnd + ":" + disruption.PositionEnd));
             table.addCell(Cells.createContent(disruption.Type.toString()));
@@ -40,7 +40,7 @@ public final class GermlineDisruptionTable {
     @NotNull
     private static List<LinxGermlineSv> sort(@NotNull List<LinxGermlineSv> disruptions) {
         return disruptions.stream().sorted((disruption1, disruption2) -> {
-            int geneCompare = disruption1.GeneName.compareTo(disruption2.GeneName);
+            int geneCompare = 0; // disruption1.GeneName.compareTo(disruption2.GeneName);
             if (geneCompare != 0) {
                 return geneCompare;
             }

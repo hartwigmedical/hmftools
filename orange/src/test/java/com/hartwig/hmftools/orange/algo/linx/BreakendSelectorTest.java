@@ -61,12 +61,12 @@ public class BreakendSelectorTest {
 
     @NotNull
     private static LinxBreakend createFive(@NotNull String gene, @NotNull String transcript, int exon) {
-        return create(gene, transcript, BreakendSelector.UPSTREAM_ORIENTATION, exon);
+        return create(gene, transcript, LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM, exon);
     }
 
     @NotNull
     private static LinxBreakend createThree(@NotNull String gene, @NotNull String transcript, int exon) {
-        return create(gene, transcript, BreakendSelector.DOWNSTREAM_ORIENTATION, exon);
+        return create(gene, transcript, LinxBreakend.BREAKEND_ORIENTATION_DOWNSTREAM, exon);
     }
 
     @NotNull

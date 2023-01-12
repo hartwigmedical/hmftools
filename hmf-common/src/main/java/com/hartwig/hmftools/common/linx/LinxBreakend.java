@@ -50,10 +50,19 @@ public abstract class LinxBreakend
     public abstract double junctionCopyNumber();
 
     private static final String FILE_EXTENSION = ".linx.breakend.tsv";
+    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.breakend.tsv";
+
+    public static final String BREAKEND_ORIENTATION_UPSTREAM = "Upstream";
+    public static final String BREAKEND_ORIENTATION_DOWNSTREAM = "Downstream";
 
     public static String generateFilename(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + FILE_EXTENSION;
+    }
+
+    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
+    {
+        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
     }
 
     public static List<LinxBreakend> read(final String filePath) throws IOException

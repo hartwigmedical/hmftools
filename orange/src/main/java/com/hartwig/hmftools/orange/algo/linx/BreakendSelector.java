@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
+import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_DOWNSTREAM;
+import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -13,9 +16,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 final class BreakendSelector {
-
-    static final String DOWNSTREAM_ORIENTATION = "Downstream";
-    static final String UPSTREAM_ORIENTATION = "Upstream";
 
     private BreakendSelector() {
     }
@@ -42,7 +42,7 @@ final class BreakendSelector {
                 findByThreeGene(knownFusionCache.getDataByType(KnownFusionType.PROMISCUOUS_3), breakend.gene(), breakend.transcriptId());
         if (three != null) {
             boolean hasReportableFusion = hasReportableThreeFusion(reportableFusions, breakend.gene(), nextExon);
-            boolean hasDownstreamOrientation = breakend.geneOrientation().equals(DOWNSTREAM_ORIENTATION);
+            boolean hasDownstreamOrientation = breakend.geneOrientation().equals(BREAKEND_ORIENTATION_DOWNSTREAM);
             boolean isWithinExonRange = isWithinExonRange(three.threeGeneExonRange(), nextExon);
             if (isWithinExonRange && hasDownstreamOrientation && !hasReportableFusion) {
                 return true;
@@ -53,7 +53,7 @@ final class BreakendSelector {
                 findByFiveGene(knownFusionCache.getDataByType(KnownFusionType.PROMISCUOUS_5), breakend.gene(), breakend.transcriptId());
         if (five != null) {
             boolean hasReportableFusion = hasReportableFiveFusion(reportableFusions, breakend.gene(), nextExon);
-            boolean hasUpstreamOrientation = breakend.geneOrientation().equals(UPSTREAM_ORIENTATION);
+            boolean hasUpstreamOrientation = breakend.geneOrientation().equals(BREAKEND_ORIENTATION_UPSTREAM);
             boolean isWithinExonRange = isWithinExonRange(five.fiveGeneExonRange(), nextExon);
 
             if (isWithinExonRange && hasUpstreamOrientation && !hasReportableFusion) {

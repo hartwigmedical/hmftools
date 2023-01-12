@@ -27,6 +27,7 @@ CREATE TABLE driverGenePanel
 # Germline SVs
 
 ALTER TABLE structuralVariantGermline
+    DROP COLUMN gene,
     ADD COLUMN homologySequenceStart varchar(255) not null after qualScore,
     ADD COLUMN homologySequenceEnd varchar(255) after startHomologySequence,
     ADD COLUMN junctionCopyNumber DOUBLE PRECISION after endHomologySequence,
