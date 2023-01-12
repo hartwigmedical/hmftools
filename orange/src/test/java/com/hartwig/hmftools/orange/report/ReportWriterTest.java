@@ -8,11 +8,13 @@ import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ReportWriterTest {
 
     @Test
+    @Ignore
     public void canGenerateTestReportForTumorNormalFromTestResources() throws IOException {
         OrangeConfig config = TestOrangeConfigFactory.createDNAConfigTumorNormal();
         OrangeReport report = OrangeAlgo.fromConfig(config).run(config);

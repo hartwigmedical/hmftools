@@ -1,12 +1,5 @@
 package com.hartwig.hmftools.common.doid;
 
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonArray;
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonObject;
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalString;
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalStringList;
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.string;
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.stringList;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
@@ -25,6 +18,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.*;
 
 public final class DiseaseOntology {
 
@@ -240,6 +235,8 @@ public final class DiseaseOntology {
 
         ImmutableDoidMetadata.Builder doidMetadataBuilder = ImmutableDoidMetadata.builder();
         doidMetadataBuilder.synonyms(extractDoidSynonyms(optionalJsonArray(metadataObject, "synonyms")));
+        doidMetadataBuilder.deprecated(optionalBool(metadataObject, "deprecated"));
+        doidMetadataBuilder.comments(optionalStringList(metadataObject, "comments"));
         doidMetadataBuilder.basicPropertyValues(extractBasicPropertyValues(optionalJsonArray(metadataObject, "basicPropertyValues")));
         doidMetadataBuilder.doidDefinition(extractDoidDefinition(optionalJsonObject(metadataObject, "definition")));
         doidMetadataBuilder.subsets(optionalStringList(metadataObject, "subsets"));

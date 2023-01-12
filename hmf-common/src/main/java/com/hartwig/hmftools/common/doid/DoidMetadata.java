@@ -15,8 +15,6 @@ public abstract class DoidMetadata {
 
     private static final Logger LOGGER = LogManager.getLogger(DoidMetadata.class);
 
-    // TODO Consider adding Boolean deprecated() and List<String> comments() which have been added between 201015 and 220302
-
     @Nullable
     public abstract DoidDefinition doidDefinition();
 
@@ -31,6 +29,12 @@ public abstract class DoidMetadata {
 
     @Nullable
     public abstract List<DoidBasicPropertyValue> basicPropertyValues();
+
+    @Nullable
+    public abstract Boolean deprecated();
+
+    @Nullable
+    public abstract List<String> comments();
 
     @Nullable
     @Value.Derived
