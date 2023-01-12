@@ -61,6 +61,7 @@ import com.hartwig.hmftools.isofox.common.GeneRegionFilters;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
+import com.hartwig.hmftools.isofox.common.TransExonRef;
 import com.hartwig.hmftools.isofox.common.TransMatchType;
 import com.hartwig.hmftools.isofox.expression.CategoryCountsData;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
@@ -598,14 +599,33 @@ public class FragmentAllocator
                 mCurrentGenes.addTranscriptReadMatch(transId, isUniqueTrans, transMatchType);
 
                 // separately record discordant reads spanning 2+ exons
-                if(!read1.containsSplit() && read2.containsSplit())
+                if(!read1.containsSplit() && !read2.containsSplit())
                 {
-                    final RegionReadData region1 =
-                            read1.getMappedRegions().keySet().stream().filter(x -> x.hasTransId(transId)).findFirst().orElse(null);
-                    final RegionReadData region2 =
-                            read2.getMappedRegions().keySet().stream().filter(x -> x.hasTransId(transId)).findFirst().orElse(null);
+                    boolean hasExonRankMatch = false;
 
-                    if(region1 != region2 && region1.getExonRank(transId) != region2.getExonRank(transId))
+                    for(RegionReadData region1 : read1.getMappedRegions().keySet())
+                    {
+                        TransExonRef transExonRef1 = region1.getTransExonRefs().stream().filter(x -> x.TransId == transId).findFirst().orElse(null);
+
+                        if(transExonRef1 == null)
+                            continue;
+
+                        for(RegionReadData region2 : read2.getMappedRegions().keySet())
+                        {
+                            TransExonRef transExonRef2 = region2.getTransExonRefs().stream().filter(x -> x.TransId == transId).findFirst().orElse(null);
+
+                            if(transExonRef2 != null && transExonRef1.ExonRank == transExonRef2.ExonRank)
+                            {
+                                hasExonRankMatch = true;
+                                break;
+                            }
+                        }
+
+                        if(hasExonRankMatch)
+                            break;
+                    }
+
+                    if(!hasExonRankMatch) // region1 != region2 && region1.getExonRank(transId) != region2.getExonRank(transId)
                     {
                         mCurrentGenes.addTranscriptReadMatch(transId, DISCORDANT);
                     }
