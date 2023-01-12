@@ -35,7 +35,7 @@ public class PurpleConstants
     public static final double CLONALITY_BIN_WIDTH = 0.05;
     public static final double CLONALITY_MAX_PLOIDY = 10;
     public static final int MIN_TOTAL_SV_FRAGMENT_COUNT = 1000;
-    public static final int MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT = 2000;
+    public static final int MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT = 1000;
 
     // somatic enrichment
     public static final double BIALLELIC_PROBABILITY = 0.005;
