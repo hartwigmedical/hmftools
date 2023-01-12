@@ -128,4 +128,22 @@ public final class JsonFunctions {
 
         return nullableString(object, field);
     }
+
+    @Nullable
+    public static Boolean optionalBool(@NotNull JsonObject object, @NotNull String field) {
+        return object.has(field) ? nullableBool(object, field) : null;
+    }
+
+    @Nullable
+    public static Boolean nullableBool(@NotNull JsonObject object, @NotNull String field) {
+        return !isNull(object, field) ? bool(object, field) : null;
+    }
+
+    public static boolean bool(@NotNull JsonObject object, @NotNull String field) {
+        return object.get(field).getAsJsonPrimitive().getAsBoolean();
+    }
+
+    private static boolean isNull(@NotNull JsonObject object, @NotNull String field) {
+        return object.get(field).isJsonNull();
+    }
 }

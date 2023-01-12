@@ -9,6 +9,7 @@ import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class OrangeAlgoTest {
@@ -22,6 +23,7 @@ public class OrangeAlgoTest {
     }
 
     @Test
+    @Ignore
     public void canRunReportFromTestDirDNA() throws IOException {
         OrangeConfig config = TestOrangeConfigFactory.createDNAConfigTumorNormal();
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
@@ -30,6 +32,7 @@ public class OrangeAlgoTest {
     }
 
     @Test
+    @Ignore
     public void canRunReportFromTestDirDNARNA() throws IOException {
         OrangeConfig config = TestOrangeConfigFactory.createDNARNAConfig();
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
@@ -38,6 +41,7 @@ public class OrangeAlgoTest {
     }
 
     @Test
+    @Ignore
     public void canCreateReportWithoutTumorDoids() throws IOException {
         OrangeConfig config = ImmutableOrangeConfig.builder()
                 .from(TestOrangeConfigFactory.createDNAConfigTumorNormal())

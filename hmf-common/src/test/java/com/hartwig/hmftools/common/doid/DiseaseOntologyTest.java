@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.common.doid;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -10,6 +7,8 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class DiseaseOntologyTest {
 
@@ -72,12 +71,11 @@ public class DiseaseOntologyTest {
         assertEquals("DOID:8965", doidBasicPropertyValue1.val());
 
         DoidBasicPropertyValue doidBasicPropertyValue2 = doidNode1.doidMetadata().basicPropertyValues().get(1);
-        assertEquals("http://www.w3.org/2002/07/owl#deprecated", doidBasicPropertyValue2.pred());
-        assertEquals("true", doidBasicPropertyValue2.val());
+        assertEquals("http://www.geneontology.org/formats/oboInOwl#hasOBONamespace", doidBasicPropertyValue2.pred());
+        assertEquals("disease_ontology", doidBasicPropertyValue2.val());
 
-        DoidBasicPropertyValue doidBasicPropertyValue3 = doidNode1.doidMetadata().basicPropertyValues().get(2);
-        assertEquals("http://www.geneontology.org/formats/oboInOwl#hasOBONamespace", doidBasicPropertyValue3.pred());
-        assertEquals("disease_ontology", doidBasicPropertyValue3.val());
+        assertTrue(doidNode1.doidMetadata().deprecated());
+        assertEquals(Lists.newArrayList(), doidNode1.doidMetadata().comments());
 
         DoidNode doidNode2 = doidNodes.get(1);
         assertEquals("8717", doidNode2.doid());
@@ -98,8 +96,8 @@ public class DiseaseOntologyTest {
         assertEquals(ImmutableDoidXref.builder().val("NCI:C50706").build(), doidXrefs.get(0));
         assertEquals(ImmutableDoidXref.builder().val("MESH:D003668").build(), doidXrefs.get(1));
         assertEquals(ImmutableDoidXref.builder().val("ICD9CM:707.0").build(), doidXrefs.get(2));
-        assertEquals(ImmutableDoidXref.builder().val("UMLS_CUI:C0011127").build(), doidXrefs.get(3));
-        assertEquals(ImmutableDoidXref.builder().val("SNOMEDCT_US_2020_03_01:28103007").build(), doidXrefs.get(4));
+        assertEquals(ImmutableDoidXref.builder().val("SNOMEDCT_US_2021_09_01:28103007").build(), doidXrefs.get(3));
+        assertEquals(ImmutableDoidXref.builder().val("UMLS_CUI:C0011127").build(), doidXrefs.get(4));
         assertEquals(ImmutableDoidXref.builder().val("ICD10CM:L89").build(), doidXrefs.get(5));
 
         DoidSynonym doid2Synonym1 = doidNode2.doidMetadata().synonyms().get(0);
@@ -146,5 +144,8 @@ public class DiseaseOntologyTest {
         DoidBasicPropertyValue doid2BasicPropertyValue5 = doidNode2.doidMetadata().basicPropertyValues().get(4);
         assertEquals("http://www.geneontology.org/formats/oboInOwl#hasAlternativeId", doid2BasicPropertyValue5.pred());
         assertEquals("DOID:9002", doid2BasicPropertyValue5.val());
+
+        assertNull(doidNode2.doidMetadata().deprecated());
+        assertEquals(Lists.newArrayList("Xref MGI.\nOMIM mapping confirmed by DO. [SN]."), doidNode2.doidMetadata().comments());
     }
 }
