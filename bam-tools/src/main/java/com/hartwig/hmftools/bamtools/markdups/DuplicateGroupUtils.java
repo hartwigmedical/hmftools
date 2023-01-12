@@ -374,7 +374,7 @@ public class DuplicateGroupUtils
 
                 for(UmiGroup existing : cluster)
                 {
-                    if(existing.fragmentCount() > second.fragmentCount() && !exceedsUmiIdDiff(existing.UmiId, second.UmiId))
+                    if(existing.fragmentCount() >= second.fragmentCount() && !exceedsUmiIdDiff(existing.UmiId, second.UmiId))
                     {
                         merged = true;
                         break;
@@ -389,6 +389,9 @@ public class DuplicateGroupUtils
                 {
                     orderedGroups.remove(j);
                     cluster.add(second);
+
+                    // restart the search since a newly added group may be close enough to a skipped one
+                    j = i + 1;
                 }
             }
 
