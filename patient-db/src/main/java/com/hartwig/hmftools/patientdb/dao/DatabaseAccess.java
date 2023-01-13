@@ -420,6 +420,10 @@ public class DatabaseAccess implements AutoCloseable {
         germlineVariantDAO.writeGermlineSVs(sample, germlineSvs);
     }
 
+    public void writeGermlineBreakends(@NotNull String sample, @NotNull List<LinxBreakend> germlineBreakends) {
+        germlineVariantDAO.writeGermlineBreakends(sample, germlineBreakends);
+    }
+
     public void writeSignatures(@NotNull String sample, @NotNull List<SignatureAllocation> sigAllocations) {
         signatureDAO.write(sample, sigAllocations);
     }

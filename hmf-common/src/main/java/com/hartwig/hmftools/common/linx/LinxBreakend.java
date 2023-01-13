@@ -92,12 +92,12 @@ public abstract class LinxBreakend
         List<LinxBreakend> breakends = Lists.newArrayList();
 
         // backwards compatibility on old column name
-        Integer codingTypeIndex = fieldsIndexMap.containsValue("codingType") ?
+        Integer codingTypeIndex = fieldsIndexMap.containsKey("codingType") ?
                 fieldsIndexMap.get("codingType") : fieldsIndexMap.get("codingContext");
 
-        for(int i = 0; i < lines.size(); ++i)
+        for (String line : lines)
         {
-            String[] values = lines.get(i).split(DELIMITER);
+            String[] values = line.split(DELIMITER);
 
             breakends.add(ImmutableLinxBreakend.builder()
                     .id(Integer.parseInt(values[fieldsIndexMap.get("id")]))

@@ -80,7 +80,7 @@ public class LoadLinxData {
         final String svAnnotationFile = LinxSvAnnotation.generateFilename(linxDir, sampleId, false);
         final String svClusterFile = LinxCluster.generateFilename(linxDir, sampleId, false);
         final String svLinkFile = LinxLink.generateFilename(linxDir, sampleId, false);
-        final String svBreakendFile = LinxBreakend.generateFilename(linxDir, sampleId);
+        final String svBreakendFile = LinxBreakend.generateFilename(linxDir, sampleId, false);
         final String svFusionFile = LinxFusion.generateFilename(linxDir, sampleId);
         final String svDriverFile = LinxDriver.generateFilename(linxDir, sampleId);
         final String driverCatalogFile = LinxDriver.generateCatalogFilename(linxDir, sampleId, true);
@@ -130,9 +130,10 @@ public class LoadLinxData {
         LOGGER.info("sample({}) loading Linx germline data", sampleId);
 
         final String germlineSvFile = LinxGermlineSv.generateFilename(linxDir, sampleId);
+        final String germlineBreakendFile = LinxBreakend.generateFilename(linxDir, sampleId, true);
         final String driverCatalogFile = LinxDriver.generateCatalogFilename(linxDir, sampleId, false);
 
-        List<String> requiredFiles = Lists.newArrayList(germlineSvFile, driverCatalogFile);
+        List<String> requiredFiles = Lists.newArrayList(germlineSvFile, germlineBreakendFile, driverCatalogFile);
 
         if(requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x))))
         {
@@ -150,6 +151,10 @@ public class LoadLinxData {
         List<LinxGermlineSv> germlineSVs = LinxGermlineSv.read(germlineSvFile);
         LOGGER.info("sample({}) loading {} germline SV records", sampleId, germlineSVs.size());
         dbAccess.writeGermlineSVs(sampleId, germlineSVs);
+
+        List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendFile);
+        LOGGER.info("sample({}) loading {} germline breakend records", sampleId, germlineBreakends.size());
+        dbAccess.writeGermlineBreakends(sampleId, germlineBreakends);
     }
 
     @NotNull
