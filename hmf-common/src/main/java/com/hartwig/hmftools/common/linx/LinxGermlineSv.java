@@ -47,7 +47,7 @@ public final class LinxGermlineSv
     public final String InsertSequenceAlignments;
     public final String InsertSequenceRepeatClass;
     public final String InsertSequenceRepeatType;
-
+    public final String GeneName;
     public final int ClusterId;
     public final int ClusterCount;
     public final String ResolvedType;
@@ -66,7 +66,7 @@ public final class LinxGermlineSv
             final int germlineFragments, final int germlineReferenceFragmentsStart, final int germlineReferenceFragmentsEnd,
             final int tumorFragments, final int tumorReferenceFragmentsStart, final int tumorReferenceFragmentsEnd,
             final String insSeq, final String insSeqAlignments, final String insSeqRepeatClass, final String insSeqRepeatType,
-            final int clusterId, final int clusterCount, final String resolvedType,
+            final String geneName, final int clusterId, final int clusterCount, final String resolvedType,
             final String linkedByStart, final String linkedByEnd, final int cohortFrequency, final boolean reported)
     {
         ChromosomeStart = chromosomeStart;
@@ -98,6 +98,7 @@ public final class LinxGermlineSv
         InsertSequenceAlignments = insSeqAlignments;
         InsertSequenceRepeatClass = insSeqRepeatClass;
         InsertSequenceRepeatType = insSeqRepeatType;
+        GeneName = geneName;
         ClusterId = clusterId;
         ClusterCount = clusterCount;
         ResolvedType = resolvedType;
@@ -164,6 +165,7 @@ public final class LinxGermlineSv
                 .add("insertSequenceAlignments")
                 .add("insertSequenceRepeatClass")
                 .add("insertSequenceRepeatType")
+                .add("gene")
                 .add("clusterId")
                 .add("clusterCount")
                 .add("resolvedType")
@@ -206,6 +208,7 @@ public final class LinxGermlineSv
                 .add(disruption.InsertSequenceAlignments)
                 .add(disruption.InsertSequenceRepeatClass)
                 .add(disruption.InsertSequenceRepeatType)
+                .add(disruption.GeneName)
                 .add(String.valueOf(disruption.ClusterId))
                 .add(String.valueOf(disruption.ClusterCount))
                 .add(disruption.ResolvedType)
@@ -256,6 +259,7 @@ public final class LinxGermlineSv
                     values[fieldsIndexMap.get("insertSequenceAlignments")],
                     values[fieldsIndexMap.get("insertSequenceRepeatClass")],
                     values[fieldsIndexMap.get("insertSequenceRepeatType")],
+                    getValue(fieldsIndexMap, "gene", "", values),
                     getIntValue(fieldsIndexMap, "clusterId", values),
                     getIntValue(fieldsIndexMap, "clusterCount", values),
                     values[fieldsIndexMap.get("resolvedType")],

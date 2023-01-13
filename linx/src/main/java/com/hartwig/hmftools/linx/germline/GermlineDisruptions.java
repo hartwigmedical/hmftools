@@ -388,6 +388,7 @@ public class GermlineDisruptions
 
             boolean anyReportable = false;
             Set<String> allFilters = Sets.newHashSet(svData.filter());
+            String geneName = "";
 
             for(SvDisruptionData disruptionData : entry.getValue())
             {
@@ -480,6 +481,8 @@ public class GermlineDisruptions
                             .maxCopyNumber(0)
                             .build());
                 }
+
+                geneName = gene.GeneName;
             }
 
             StringJoiner filters = new StringJoiner(";");
@@ -497,7 +500,7 @@ public class GermlineDisruptions
                     svData.startNormalVariantFragmentCount(), svData.startNormalReferenceFragmentCount(), svData.endNormalReferenceFragmentCount(),
                     svData.startTumorVariantFragmentCount(), svData.startTumorReferenceFragmentCount(), svData.endTumorReferenceFragmentCount(),
                     svData.insertSequence(), svData.insertSequenceAlignments(), svData.insertSequenceRepeatClass(), svData.insertSequenceRepeatType(),
-                    cluster.id(), cluster.getSvCount(), cluster.getResolvedType().toString(),
+                    geneName, cluster.id(), cluster.getSvCount(), cluster.getResolvedType().toString(),
                     svData.startLinkedBy(), svData.endLinkedBy(), ponCount, anyReportable));
         }
     }
