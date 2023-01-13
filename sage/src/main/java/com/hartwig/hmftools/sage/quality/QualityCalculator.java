@@ -28,14 +28,14 @@ public class QualityCalculator
     }
 
     public static int modifiedMapQuality(
-            final QualityConfig config, final GenomePosition position, int mapQuality, double readEvents, boolean properPairFlag)
+            final QualityConfig config, final GenomePosition position, int mapQuality, double readEvents, boolean isImproperPair)
     {
         if(config.isHighlyPolymorphic(position))
         {
             return Math.min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - config.FixedPenalty);
         }
 
-        int improperPairPenalty = config.ImproperPairPenalty * (properPairFlag ? 0 : 1);
+        int improperPairPenalty = isImproperPair ? config.ImproperPairPenalty : 0;
         int eventPenalty = (int)round(Math.max(0, readEvents - 1) * config.ReadEventsPenalty);
         return mapQuality - config.FixedPenalty - improperPairPenalty - eventPenalty;
     }
@@ -57,12 +57,14 @@ public class QualityCalculator
         double baseQuality = baseQuality(readContextCounter, readBaseIndex, record);
 
         int mapQuality = record.getMappingQuality();
-        boolean properPairFlag = record.getReadPairedFlag() && record.getProperPairFlag();
-        int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), mapQuality, numberOfEvents, properPairFlag);
+        boolean isImproperPair = isImproperPair(record);
+        int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), mapQuality, numberOfEvents, isImproperPair);
 
         double modifiedBaseQuality = modifiedBaseQuality(mConfig, baseQuality, distanceFromReadEdge);
         return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
     }
+
+    public static boolean isImproperPair(final SAMRecord record) { return record.getReadPairedFlag() && !record.getProperPairFlag(); }
 
     public void logReadQualCalcs(
             final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents)
@@ -72,8 +74,8 @@ public class QualityCalculator
         double rawBaseQual = rawBaseQuality(readContextCounter, readBaseIndex, record);
 
         int mapQuality = record.getMappingQuality();
-        boolean properPairFlag = record.getReadPairedFlag() && record.getProperPairFlag();
-        int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), mapQuality, numberOfEvents, properPairFlag);
+        boolean isImproperPair = isImproperPair(record);
+        int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), mapQuality, numberOfEvents, isImproperPair);
 
         double modifiedBaseQuality = modifiedBaseQuality(mConfig, baseQuality, distanceFromReadEdge);
 

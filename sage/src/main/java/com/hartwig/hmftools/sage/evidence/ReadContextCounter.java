@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.sage.evidence.RealignedType.CORE_PARTIAL;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.jitterPenalty;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -71,7 +72,7 @@ public class ReadContextCounter implements VariantHotspot
 
     private double mJitterPenalty;
 
-    private int mImproperPair;
+    private int mImproperPairCount;
 
     private int mRawDepth;
     private int mRawAltSupport;
@@ -120,7 +121,7 @@ public class ReadContextCounter implements VariantHotspot
 
         mJitterPenalty = 0;
 
-        mImproperPair = 0;
+        mImproperPairCount = 0;
 
         mRawDepth = 0;
         mRawAltSupport = 0;
@@ -185,7 +186,7 @@ public class ReadContextCounter implements VariantHotspot
     }
 
     public int strandDepth() { return mForwardStrand + mReverseStrand; }
-    public int improperPair() { return mImproperPair; }
+    public int improperPairCount() { return mImproperPairCount; }
 
     public int rawDepth() { return mRawDepth; }
     public int rawAltSupport() { return mRawAltSupport; }
@@ -702,9 +703,9 @@ public class ReadContextCounter implements VariantHotspot
 
     private void checkImproperCount(final SAMRecord record)
     {
-        if(!record.getReadPairedFlag() || !record.getProperPairFlag() || record.getSupplementaryAlignmentFlag())
+        if(isImproperPair(record) || record.getSupplementaryAlignmentFlag())
         {
-            mImproperPair++;
+            mImproperPairCount++;
         }
     }
 }

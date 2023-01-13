@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERL
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_SC_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
 
 import static htsjdk.samtools.CigarOperator.M;
 
@@ -241,7 +242,7 @@ public class RefContextConsumer
 
         int eventPenalty = (int)round((numberOfEvents - 1) * mConfig.Quality.ReadEventsPenalty);
 
-        int improperPenalty = !record.getReadPairedFlag() || !record.getProperPairFlag() || record.getSupplementaryAlignmentFlag() ?
+        int improperPenalty = isImproperPair(record) || record.getSupplementaryAlignmentFlag() ?
                 mConfig.Quality.ImproperPairPenalty : 0;
 
         return record.getMappingQuality() - mConfig.Quality.FixedPenalty - eventPenalty - improperPenalty;

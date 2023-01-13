@@ -90,7 +90,7 @@ public final class VariantContextFactory
                 .AD(new int[] { counter.refSupport(), counter.altSupport() })
                 .attribute(READ_CONTEXT_QUALITY, counter.quality())
                 .attribute(READ_CONTEXT_COUNT, counter.counts())
-                .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPair())
+                .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPairCount())
                 .attribute(READ_CONTEXT_JITTER, counter.jitter())
                 .attribute(RAW_ALLELIC_DEPTH, new int[] { counter.rawRefSupport(), counter.rawAltSupport() })
                 .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { counter.rawRefBaseQuality(), counter.rawAltBaseQuality() })
