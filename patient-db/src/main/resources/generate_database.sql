@@ -1057,6 +1057,35 @@ CREATE TABLE structuralVariantGermline
     INDEX(sampleId)
 );
 
+DROP TABLE IF EXISTS svBreakendGermline;
+CREATE TABLE svBreakendGermline
+(   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(50) NOT NULL,
+    svId INT NOT NULL,
+    startBreakend BOOLEAN NOT NULL,
+    gene VARCHAR(50) NOT NULL, # length here comes from ensembl db schema
+    transcriptId VARCHAR(128) NOT NULL, # length here comes from ensembl db schema
+    canonicalTranscript BOOLEAN NOT NULL,
+    geneOrientation VARCHAR(20) NOT NULL,
+    disruptive BOOLEAN NOT NULL,
+    reportedDisruption BOOLEAN NOT NULL,
+    undisruptedCopyNumber DOUBLE PRECISION,
+    regionType VARCHAR(20) NOT NULL,
+    codingType VARCHAR(20),
+    biotype VARCHAR(255),
+    exonicBasePhase TINYINT,
+    nextSpliceExonRank TINYINT UNSIGNED,
+    nextSpliceExonPhase TINYINT,
+    nextSpliceDistance INT,
+    totalExonCount SMALLINT NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId, svId),
+    INDEX(gene),
+    INDEX(transcriptId)
+);
+
+
 DROP TABLE IF EXISTS signature;
 CREATE TABLE signature
 (   id int NOT NULL AUTO_INCREMENT,
