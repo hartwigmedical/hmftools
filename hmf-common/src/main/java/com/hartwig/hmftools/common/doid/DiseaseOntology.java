@@ -1,5 +1,13 @@
 package com.hartwig.hmftools.common.doid;
 
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalBool;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonArray;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonObject;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalStringList;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.string;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.stringList;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
@@ -19,8 +27,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.*;
-
 public final class DiseaseOntology {
 
     private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
@@ -33,11 +39,10 @@ public final class DiseaseOntology {
 
     @NotNull
     public static DoidEntry readDoidOwlEntryFromDoidJson(@NotNull String doidJsonFile) throws IOException {
-        JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
         reader.setLenient(true);
 
-        JsonObject doidObject = parser.parse(reader).getAsJsonObject();
+        JsonObject doidObject = JsonParser.parseReader(reader).getAsJsonObject();
         JsonDatamodelChecker doidObjectChecker = DoidDatamodelCheckerFactory.doidObjectChecker();
         doidObjectChecker.check(doidObject);
 
