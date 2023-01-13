@@ -64,6 +64,24 @@ public class QualityCalculator
         return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
     }
 
+    public void logReadQualCalcs(
+            final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents)
+    {
+        int distanceFromReadEdge = readDistanceFromEdge(readContextCounter, readBaseIndex, record);
+        double baseQuality = baseQuality(readContextCounter, readBaseIndex, record);
+        double rawBaseQual = rawBaseQuality(readContextCounter, readBaseIndex, record);
+
+        int mapQuality = record.getMappingQuality();
+        boolean properPairFlag = record.getReadPairedFlag() && record.getProperPairFlag();
+        int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), mapQuality, numberOfEvents, properPairFlag);
+
+        double modifiedBaseQuality = modifiedBaseQuality(mConfig, baseQuality, distanceFromReadEdge);
+
+        SG_LOGGER.trace(format("variant(%s) read(%s) distFromEdge(%d) events(%.1f) qual(map=%d rawBase=%.1f base=%.1f) modified(map=%d base=%.1f)",
+                readContextCounter.varString(), record.getReadName(), distanceFromReadEdge, numberOfEvents,
+                mapQuality, rawBaseQual, baseQuality, modifiedMapQuality, modifiedBaseQuality));
+    }
+
     public double baseQuality(final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record)
     {
         return !readContextCounter.variant().isIndel()

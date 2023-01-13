@@ -95,7 +95,7 @@ public class ReadContextEvidence
         for(ReadContextCounter readContextCounter : mReadCounters)
         {
             int maxCloseDel = deleteCandidates.stream()
-                    .filter(x -> abs(x.position() - x.position()) < 50)
+                    .filter(x -> abs(x.position() - readContextCounter.position()) < 50)
                     .mapToInt(x -> x.variant().ref().length() - 1).max().orElse(0);
 
             if(maxCloseDel >= 5)

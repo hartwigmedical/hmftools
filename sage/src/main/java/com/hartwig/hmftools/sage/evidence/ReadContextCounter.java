@@ -216,7 +216,7 @@ public class ReadContextCounter implements VariantHotspot
                 mId, varString(), mReadContext.toString(), mCounts[RC_FULL], mCounts[RC_PARTIAL], mCounts[RC_CORE]);
     }
 
-    private String varString()
+    public String varString()
     {
         return format("%s:%d %s>%s", mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
     }
@@ -325,14 +325,13 @@ public class ReadContextCounter implements VariantHotspot
                 mSupportAltBaseQualityTotal += rawBaseQuality;
 
                 registerRawSupport(rawContext);
+
                 logReadEvidence(sampleId, record, match.toString(), readIndex);
 
-                /*
-                SG_LOGGER.trace("var({}) readContext({}-{}-{}) support({}) read(idx={} posStart={} cigar={} id={}) readBases({})",
-                        varString(), mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
-                        mReadContext.indexedBases().RightCoreIndex, match, readIndex, record.getAlignmentStart(), record.getCigarString(),
-                        record.getReadName(), record.getReadString());
-                */
+                if(SG_LOGGER.isTraceEnabled() && sampleId != null)
+                {
+                    qualityCalc.logReadQualCalcs(this, readIndex, record, adjustedNumOfEvents);
+                }
 
                 countStrandedness(record);
                 checkImproperCount(record);
@@ -438,7 +437,7 @@ public class ReadContextCounter implements VariantHotspot
         if(sampleId == null)
             return;
 
-        // Variant,MatchType,ReadId,ReadStart,Cigar,LeftCore,Index,RightCore,ReadIndex
+            // Variant,MatchType,ReadId,ReadStart,Cigar,LeftCore,Index,RightCore,ReadIndex
         SG_LOGGER.trace("READ_EV,{},{},{},{},{},{},{},{},{},{},{},{},{}",
                 sampleId, chromosome(), position(), ref(), alt(),
                 matchType, record.getReadName(), record.getAlignmentStart(), record.getCigarString(),
