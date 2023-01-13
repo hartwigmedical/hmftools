@@ -2,6 +2,8 @@
 
 This repository contains the suite of tools used in the Hartwig Medical Foundation whole genome,targeted DNA and whole transcriptome analysis pipeline.  
 
+Check out [_what's new_](https://github.com/hartwigmedical/hmftools/wiki/What's-new).
+
 ## DNA Pipeline Components
 
 ![HMF_Pipeline](./pipeline/hmf_tools_pipeline.png)
