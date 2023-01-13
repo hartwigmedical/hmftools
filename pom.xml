@@ -13,8 +13,8 @@
         <module>bam-tools</module>
         <module>cider</module>
         <module>cobalt</module>
-<!--        <module>compar</module>-->
-<!--        <module>ctdna</module>-->
+        <module>compar</module>
+        <module>ctdna</module>
         <module>cuppa</module>
         <module>fastq-stats</module>
         <module>gene-utils</module>
