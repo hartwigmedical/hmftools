@@ -62,6 +62,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortCache;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 import com.hartwig.hmftools.patientdb.dao.IsofoxDAO;
 
 import org.jooq.Record;
@@ -164,7 +165,8 @@ public class SampleLoaderTask implements Callable
 
             for(Record record : result)
             {
-                primaryTumorLocation = record.getValue("primaryTumorLocation").toString();
+                Object ptLocation = record.getValue("primaryTumorLocation");
+                primaryTumorLocation = ptLocation != null ? ptLocation.toString() : CANCER_TYPE_OTHER;
                 break;
             }
 
