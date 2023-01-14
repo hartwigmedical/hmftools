@@ -25,6 +25,7 @@
         <module>isofox</module>
         <module>lilac</module>
         <module>linx</module>
+        <module>mark-dups</module>
         <module>neo</module>
         <module>orange</module>
         <module>paddle</module>
@@ -70,6 +71,7 @@
         <isofox.version>1.6.1</isofox.version>
         <lilac.version>1.4.3</lilac.version>
         <linx.version>1.23.1</linx.version>
+        <mark-dups.version>1.0</mark-dups.version>
         <neo.version>1.0</neo.version>
         <orange.version>2.3</orange.version>
         <paddle.version>1.0</paddle.version>
