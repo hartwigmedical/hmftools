@@ -141,7 +141,7 @@ public class SummaryChapter implements ReportChapter {
             div.add(new Paragraph(text).setWidth(contentWidth()).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(11));
             div.add(new Paragraph(
                     "\nFurther interpretation of these results within the patient’s clinical context is required " +
-                            "by a clinician with support of a molecular tumor board..").addStyle(ReportResources.subTextStyle()));
+                            "by a clinician with support of a molecular tumor board.").addStyle(ReportResources.subTextStyle()));
 
             reportDocument.add(div);
         }
