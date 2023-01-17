@@ -20,16 +20,18 @@ public final class IsofoxTestFactory {
     public static IsofoxData createMinimalIsofoxTestData() {
         return ImmutableIsofoxData.builder().summary(IsofoxTestFactory.rnaStatisticsBuilder().build()).build();
     }
-    
+
     @NotNull
     public static ImmutableRnaStatistics.Builder rnaStatisticsBuilder() {
         return ImmutableRnaStatistics.builder()
                 .totalFragments(0)
+                .qcStatus("PASS")
                 .duplicateFragments(0)
                 .splicedFragmentPerc(0D)
                 .unsplicedFragmentPerc(0D)
                 .altFragmentPerc(0D)
                 .chimericFragmentPerc(0D)
+                .splicedGeneCount(0)
                 .readLength(0)
                 .fragmentLength5thPercent(0D)
                 .fragmentLength50thPercent(0D)

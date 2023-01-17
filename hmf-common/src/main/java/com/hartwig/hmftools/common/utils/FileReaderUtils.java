@@ -20,6 +20,59 @@ public class FileReaderUtils
         return fieldsIndexMap;
     }
 
+    public static String getValue(
+            final Map<String,Integer> fieldsIndexMap, final String field, final String defaultValue, final String[] values)
+    {
+        if(!fieldsIndexMap.containsKey(field))
+            return defaultValue;
+
+        return values[fieldsIndexMap.get(field)];
+    }
+
+    public static int getIntValue(final Map<String,Integer> fieldsIndexMap, final String field, final String[] values)
+    {
+        return getIntValue(fieldsIndexMap, field, 0, values);
+    }
+
+    public static int getIntValue(
+            final Map<String,Integer> fieldsIndexMap, final String field, final int defaultValue, final String[] values)
+    {
+        if(!fieldsIndexMap.containsKey(field))
+            return defaultValue;
+
+        return Integer.parseInt(values[fieldsIndexMap.get(field)]);
+    }
+
+    public static long getLongValue(
+            final Map<String,Integer> fieldsIndexMap, final String field, final String[] values)
+    {
+        return getLongValue(fieldsIndexMap, field, 0, values);
+    }
+
+    public static long getLongValue(
+            final Map<String,Integer> fieldsIndexMap, final String field, final long defaultValue, final String[] values)
+    {
+        if(!fieldsIndexMap.containsKey(field))
+            return defaultValue;
+
+        return Long.parseLong(values[fieldsIndexMap.get(field)]);
+    }
+
+    public static double getDoubleValue(
+            final Map<String,Integer> fieldsIndexMap, final String field, final String[] values)
+    {
+        return getDoubleValue(fieldsIndexMap, field, 0.0, values);
+    }
+
+    public static double getDoubleValue(
+            final Map<String,Integer> fieldsIndexMap, final String field, final double defaultValue, final String[] values)
+    {
+        if(!fieldsIndexMap.containsKey(field))
+            return defaultValue;
+
+        return Double.parseDouble(values[fieldsIndexMap.get(field)]);
+    }
+
     public static String getValue(final List<String> lines, final String field, final String defaultValue, final String delimiter)
     {
         for(String line : lines)

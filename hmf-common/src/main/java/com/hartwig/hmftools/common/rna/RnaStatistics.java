@@ -1,8 +1,17 @@
 package com.hartwig.hmftools.common.rna;
 
 import static com.hartwig.hmftools.common.rna.RnaCommon.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.getDoubleValue;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.getIntValue;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.getLongValue;
 
+import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.FileReaderUtils;
 
 import org.immutables.value.Value;
 
@@ -15,6 +24,7 @@ public abstract class RnaStatistics
     public abstract double unsplicedFragmentPerc();
     public abstract double altFragmentPerc();
     public abstract double chimericFragmentPerc();
+    public abstract int splicedGeneCount();
 
     public abstract int readLength();
 
@@ -29,42 +39,50 @@ public abstract class RnaStatistics
     // Median GC (excluding 7 highly expressed genes)
     public abstract double medianGCRatio();
 
+    public abstract String qcStatus();
+
     private static final int LOW_COVERAGE_THRESHOLD = 2500000;
+    private static final int SPLICE_GENE_THRESHOLD = 17000;
     private static final double HIGH_DUPLICATES_THRESHOLD = 0.9;
 
-    public static final String FILTER_PASS = "PASS";
-    public static final String FILTER_LOW_COVERAGE = "FAIL_LOW_COVERAGE";
-    public static final String FILTER_DUPLICATES = "WARN_DUPLICATE_RATE";
-
-    public String qcStatus()
-    {
-        if(totalFragments() - duplicateFragments() < LOW_COVERAGE_THRESHOLD)
-            return FILTER_LOW_COVERAGE;
-
-        if(totalFragments() > 0 && duplicateFragments() / (double)totalFragments() > HIGH_DUPLICATES_THRESHOLD)
-            return FILTER_DUPLICATES;
-
-        return FILTER_PASS;
-    }
+    public static final String QC_PASS = "PASS";
+    public static final String QC_FAIL_LOW_COVERAGE = "FAIL_LOW_COVERAGE";
+    public static final String QC_WARN_DUPLICATES = "WARN_DUPLICATE_RATE";
+    public static final String QC_WARN_LOW_SPLICE_GENES = "WARN_SPLICED_GENE_COVERAGE";
 
     public static String csvHeader()
     {
-        return "SampleId,TotalFragments,DuplicateFragments"
-                + ",SplicedFragmentPerc,UnsplicedFragmentPerc,AltFragmentPerc,ChimericFragmentPerc"
-                + ",ReadLength,FragLength5th,FragLength50th,FragLength95th"
-                + ",EnrichedGenePercent,MedianGCRatio";
+        return new StringJoiner(DELIMITER)
+                .add("SampleId")
+                .add("QcStatus")
+                .add("TotalFragments")
+                .add("DuplicateFragments")
+                .add("SplicedFragmentPerc")
+                .add("UnsplicedFragmentPerc")
+                .add("AltFragmentPerc")
+                .add("ChimericFragmentPerc")
+                .add("SplicedGeneCount")
+                .add("ReadLength")
+                .add("FragLength5th")
+                .add("FragLength50th")
+                .add("FragLength95th")
+                .add("EnrichedGenePercent")
+                .add("MedianGCRatio")
+                .toString();
     }
 
     public String toCsv(final String sampleId)
     {
         return new StringJoiner(DELIMITER)
                 .add(sampleId)
+                .add(qcStatus())
                 .add(String.valueOf(totalFragments()))
                 .add(String.valueOf(duplicateFragments()))
                 .add(String.format("%.3f", splicedFragmentPerc()))
                 .add(String.format("%.3f", unsplicedFragmentPerc()))
                 .add(String.format("%.3f", altFragmentPerc()))
                 .add(String.format("%.3f", chimericFragmentPerc()))
+                .add(String.valueOf(splicedGeneCount()))
                 .add(String.valueOf(readLength()))
                 .add(String.format("%.0f", fragmentLength5thPercent()))
                 .add(String.format("%.0f", fragmentLength50thPercent()))
@@ -74,24 +92,68 @@ public abstract class RnaStatistics
                 .toString();
     }
 
-    public static RnaStatistics fromCsv(final String input)
+    public static RnaStatistics fromCsv(final List<String> lines)
     {
-        final String[] items = input.split(DELIMITER);
-        int index = 1;
+        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+
+        final String[] values = lines.get(1).split(DELIMITER);
+
+        long totalFragments = getLongValue(fieldsIndexMap, "TotalFragments", values);
+        long duplicateFragments = getLongValue(fieldsIndexMap, "DuplicateFragments", values);
+
+        int splicedGeneCount = fieldsIndexMap.containsKey("SplicedGeneCount") ?
+                getIntValue(fieldsIndexMap, "SplicedGeneCount", values) : -1;
+
+        String qcStatus;
+
+        if(fieldsIndexMap.containsKey("QcStatus"))
+        {
+            qcStatus = values[fieldsIndexMap.get("QcStatus")];
+        }
+        else
+        {
+            qcStatus = calcQcStatus(totalFragments, duplicateFragments, splicedGeneCount);
+        }
 
         return ImmutableRnaStatistics.builder()
-                .totalFragments(Long.parseLong(items[index++]))
-                .duplicateFragments(Long.parseLong(items[index++]))
-                .splicedFragmentPerc(Double.parseDouble(items[index++]))
-                .unsplicedFragmentPerc(Double.parseDouble(items[index++]))
-                .altFragmentPerc(Double.parseDouble(items[index++]))
-                .chimericFragmentPerc(Double.parseDouble(items[index++]))
-                .readLength(Integer.parseInt(items[index++]))
-                .fragmentLength5thPercent(Double.parseDouble(items[index++]))
-                .fragmentLength50thPercent(Double.parseDouble(items[index++]))
-                .fragmentLength95thPercent(Double.parseDouble(items[index++]))
-                .enrichedGenePercent(Double.parseDouble(items[index++]))
-                .medianGCRatio(Double.parseDouble(items[index++]))
+                .qcStatus(qcStatus)
+                .totalFragments(totalFragments)
+                .duplicateFragments(duplicateFragments)
+                .splicedFragmentPerc(getDoubleValue(fieldsIndexMap, "SplicedFragmentPerc", values))
+                .unsplicedFragmentPerc(getDoubleValue(fieldsIndexMap, "UnsplicedFragmentPerc", values))
+                .altFragmentPerc(getDoubleValue(fieldsIndexMap, "AltFragmentPerc", values))
+                .chimericFragmentPerc(getDoubleValue(fieldsIndexMap, "ChimericFragmentPerc", values))
+                .splicedGeneCount(FileReaderUtils.getIntValue(fieldsIndexMap, "SplicedGeneCount", 0, values))
+                .readLength(getIntValue(fieldsIndexMap, "ReadLength", values))
+                .fragmentLength5thPercent(getDoubleValue(fieldsIndexMap, "FragLength5th", values))
+                .fragmentLength50thPercent(getDoubleValue(fieldsIndexMap, "FragLength50th", values))
+                .fragmentLength95thPercent(getDoubleValue(fieldsIndexMap, "FragLength95th", values))
+                .enrichedGenePercent(getDoubleValue(fieldsIndexMap, "EnrichedGenePercent", values))
+                .medianGCRatio(getDoubleValue(fieldsIndexMap, "MedianGCRatio", values))
                 .build();
     }
+
+    public static String calcQcStatus(long totalFragments, long duplicateFragments, int splicedGenes)
+    {
+        if(totalFragments - duplicateFragments < LOW_COVERAGE_THRESHOLD)
+            return QC_FAIL_LOW_COVERAGE;
+
+        List<String> warnings = Lists.newArrayList();
+
+        double duplicatePerc = totalFragments > 0 ? duplicateFragments / (double)totalFragments : 0;
+
+        if(duplicatePerc > HIGH_DUPLICATES_THRESHOLD)
+            warnings.add(QC_WARN_DUPLICATES);
+
+        if(splicedGenes >= 0 && splicedGenes < SPLICE_GENE_THRESHOLD)
+            warnings.add(QC_WARN_LOW_SPLICE_GENES);
+
+        if(warnings.isEmpty())
+            return QC_PASS;
+
+        StringJoiner sj = new StringJoiner(";");
+        warnings.forEach(x -> sj.add(x));
+        return sj.toString();
+    }
+
 }
