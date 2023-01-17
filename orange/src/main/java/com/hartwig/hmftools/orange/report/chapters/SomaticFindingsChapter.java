@@ -151,13 +151,13 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addFusions(@NotNull Document document) {
-        String titleDrivers = "Driver fusions (" + report.linx().reportableFusions().size() + ")";
-        document.add(DNAFusionTable.build(titleDrivers, contentWidth(), report.linx().reportableFusions(), report.isofox()));
+        String titleDrivers = "Driver fusions (" + report.linx().reportableSomaticFusions().size() + ")";
+        document.add(DNAFusionTable.build(titleDrivers, contentWidth(), report.linx().reportableSomaticFusions(), report.isofox()));
 
-        String titleNonDrivers = "Other potentially interesting fusions (" + report.linx().additionalSuspectFusions().size() + ")";
+        String titleNonDrivers = "Other potentially interesting fusions (" + report.linx().additionalSuspectSomaticFusions().size() + ")";
         document.add(DNAFusionTable.build(titleNonDrivers,
                 contentWidth(),
-                max10(report.linx().additionalSuspectFusions()),
+                max10(report.linx().additionalSuspectSomaticFusions()),
                 report.isofox()));
     }
 
@@ -177,19 +177,19 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addHomozygousDisruptions(@NotNull Document document) {
-        String title = "Homozygous disruptions (" + report.linx().homozygousDisruptions().size() + ")";
-        document.add(HomozygousDisruptionTable.build(title, contentWidth(), report.linx().homozygousDisruptions()));
+        String title = "Homozygous disruptions (" + report.linx().somaticHomozygousDisruptions().size() + ")";
+        document.add(HomozygousDisruptionTable.build(title, contentWidth(), report.linx().somaticHomozygousDisruptions()));
     }
 
     private void addBreakends(@NotNull Document document) {
         List<BreakendEntry> reportableBreakends =
-                BreakendEntryFactory.create(report.linx().reportableBreakends(), report.linx().allStructuralVariants());
+                BreakendEntryFactory.create(report.linx().reportableSomaticBreakends(), report.linx().allSomaticStructuralVariants());
 
         String titleDriver = "Driver gene disruptions (" + reportableBreakends.size() + ")";
         document.add(BreakendTable.build(titleDriver, contentWidth(), reportableBreakends));
 
         List<BreakendEntry> additionalSuspectBreakends =
-                BreakendEntryFactory.create(report.linx().additionalSuspectBreakends(), report.linx().allStructuralVariants());
+                BreakendEntryFactory.create(report.linx().additionalSuspectSomaticBreakends(), report.linx().allSomaticStructuralVariants());
         String titleNonDrivers = "Other potentially interesting gene disruptions (" + additionalSuspectBreakends.size() + ")";
         document.add(BreakendTable.build(titleNonDrivers, contentWidth(), additionalSuspectBreakends));
     }

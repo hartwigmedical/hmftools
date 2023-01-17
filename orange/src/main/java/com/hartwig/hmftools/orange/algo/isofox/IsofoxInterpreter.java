@@ -31,15 +31,15 @@ public final class IsofoxInterpreter {
         LOGGER.info(" Found {} genes with low expression", lowExpressionGenes.size());
 
         List<RnaFusion> novelKnownFusions =
-                RNAFusionSelector.selectNovelKnownFusions(isofox.fusions(), linx.allFusions(), knownFusionCache);
+                RNAFusionSelector.selectNovelKnownFusions(isofox.fusions(), linx.allSomaticFusions(), knownFusionCache);
         LOGGER.info(" Found {} novel known fusions in RNA", novelKnownFusions.size());
 
         List<RnaFusion> novelPromiscuousFusions =
-                RNAFusionSelector.selectNovelPromiscuousFusions(isofox.fusions(), linx.allFusions(), knownFusionCache);
+                RNAFusionSelector.selectNovelPromiscuousFusions(isofox.fusions(), linx.allSomaticFusions(), knownFusionCache);
         LOGGER.info(" Found {} novel promiscuous fusions in RNA", novelPromiscuousFusions.size());
 
         List<NovelSpliceJunction> suspiciousSkippedExons =
-                NovelSpliceJunctionSelector.selectSkippedExons(isofox.novelSpliceJunctions(), linx.allFusions(), knownFusionCache);
+                NovelSpliceJunctionSelector.selectSkippedExons(isofox.novelSpliceJunctions(), linx.allSomaticFusions(), knownFusionCache);
         LOGGER.info(" Found {} suspicious skipped exons in RNA", suspiciousSkippedExons.size());
 
         List<NovelSpliceJunction> suspiciousNovelExonsIntrons =

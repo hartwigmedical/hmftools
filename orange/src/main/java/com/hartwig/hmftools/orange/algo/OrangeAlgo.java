@@ -171,9 +171,9 @@ public class OrangeAlgo {
                     purple.reportableSomaticVariants(),
                     purple.reportableGermlineVariants(),
                     purple.reportableSomaticGainsLosses(),
-                    linx.reportableFusions(),
-                    linx.homozygousDisruptions(),
-                    linx.reportableBreakends());
+                    linx.reportableSomaticFusions(),
+                    linx.somaticHomozygousDisruptions(),
+                    linx.reportableSomaticBreakends());
             LOGGER.info("Identified {} of {} driver genes to be wild-type", wildTypeGenes.size(), driverGenes.size());
         } else {
             LOGGER.info("Wild-type calling skipped due to insufficient tumor sample quality");
@@ -370,11 +370,11 @@ public class OrangeAlgo {
 
         LinxData linx = LinxDataLoader.load(config.tumorSampleId(), config.linxSomaticDataDirectory(), linxGermlineDataDirectory);
 
-        LOGGER.info(" Loaded {} structural variants", linx.allStructuralVariants().size());
-        LOGGER.info(" Loaded {} structural drivers", linx.drivers().size());
-        LOGGER.info(" Loaded {} fusions (of which {} are reportable)", linx.allFusions().size(), linx.reportableFusions().size());
-        LOGGER.info(" Loaded {} breakends (of which {} are reportable)", linx.allBreakends().size(), linx.reportableBreakends().size());
-        LOGGER.info(" Loaded {} reportable homozygous disruptions", linx.homozygousDisruptions().size());
+        LOGGER.info(" Loaded {} structural variants", linx.allSomaticStructuralVariants().size());
+        LOGGER.info(" Loaded {} structural drivers", linx.somaticDrivers().size());
+        LOGGER.info(" Loaded {} fusions (of which {} are reportable)", linx.allSomaticFusions().size(), linx.reportableSomaticFusions().size());
+        LOGGER.info(" Loaded {} breakends (of which {} are reportable)", linx.allSomaticBreakends().size(), linx.reportableSomaticBreakends().size());
+        LOGGER.info(" Loaded {} reportable homozygous disruptions", linx.somaticHomozygousDisruptions().size());
 
         if (linxGermlineDataDirectory != null) {
             LOGGER.info("Loading LINX germline data from {}", linxGermlineDataDirectory);

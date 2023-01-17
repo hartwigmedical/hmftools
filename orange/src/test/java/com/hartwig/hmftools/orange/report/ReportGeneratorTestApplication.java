@@ -100,6 +100,7 @@ public class ReportGeneratorTestApplication {
 
     @NotNull
     private static OrangeReport removeUnreported(@NotNull OrangeReport report) {
+        // TODO Deal with germline structural variants and germline breakends.
         ImmutableOrangeReport.Builder builder = ImmutableOrangeReport.builder()
                 .from(report)
                 .purple(ImmutablePurpleInterpretedData.builder()
@@ -119,12 +120,12 @@ public class ReportGeneratorTestApplication {
                         .build())
                 .linx(ImmutableLinxInterpretedData.builder()
                         .from(report.linx())
-                        .allStructuralVariants(retainReportableStructuralVariants(report.linx().allStructuralVariants(),
-                                report.linx().reportableBreakends()))
-                        .allFusions(report.linx().reportableFusions())
-                        .additionalSuspectFusions(Lists.newArrayList())
-                        .allBreakends(report.linx().reportableBreakends())
-                        .additionalSuspectBreakends(Lists.newArrayList())
+                        .allSomaticStructuralVariants(retainReportableStructuralVariants(report.linx().allSomaticStructuralVariants(),
+                                report.linx().reportableSomaticBreakends()))
+                        .allSomaticFusions(report.linx().reportableSomaticFusions())
+                        .additionalSuspectSomaticFusions(Lists.newArrayList())
+                        .allSomaticBreakends(report.linx().reportableSomaticBreakends())
+                        .additionalSuspectSomaticBreakends(Lists.newArrayList())
                         .allGermlineDisruptions(report.linx().reportableGermlineDisruptions())
                         .build());
 

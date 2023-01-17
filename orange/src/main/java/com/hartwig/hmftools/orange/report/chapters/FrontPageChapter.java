@@ -241,28 +241,28 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String disruptionDriverString() {
-        if (report.linx().homozygousDisruptions().isEmpty()) {
+        if (report.linx().somaticHomozygousDisruptions().isEmpty()) {
             return NONE;
         }
 
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for (HomozygousDisruption disruption : report.linx().homozygousDisruptions()) {
+        for (HomozygousDisruption disruption : report.linx().somaticHomozygousDisruptions()) {
             genes.add(disruption.gene());
         }
-        return report.linx().homozygousDisruptions().size() + " (" + concat(genes) + ")";
+        return report.linx().somaticHomozygousDisruptions().size() + " (" + concat(genes) + ")";
     }
 
     @NotNull
     private String fusionDriverString() {
-        if (report.linx().reportableFusions().isEmpty()) {
+        if (report.linx().reportableSomaticFusions().isEmpty()) {
             return NONE;
         }
 
         Set<String> fusions = Sets.newTreeSet(Comparator.naturalOrder());
-        for (LinxFusion fusion : report.linx().reportableFusions()) {
+        for (LinxFusion fusion : report.linx().reportableSomaticFusions()) {
             fusions.add(fusion.name());
         }
-        return report.linx().reportableFusions().size() + " (" + concat(fusions) + ")";
+        return report.linx().reportableSomaticFusions().size() + " (" + concat(fusions) + ")";
     }
 
     @NotNull
