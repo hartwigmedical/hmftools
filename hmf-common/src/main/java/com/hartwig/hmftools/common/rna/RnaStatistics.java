@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsInde
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getDoubleValue;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getIntValue;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getLongValue;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.getValue;
 
 import java.util.List;
 import java.util.Map;
@@ -99,12 +98,10 @@ public abstract class RnaStatistics
 
         final String[] values = lines.get(1).split(DELIMITER);
 
-        ImmutableRnaStatistics.Builder builder = ImmutableRnaStatistics.builder();
-
         long totalFragments = getLongValue(fieldsIndexMap, "TotalFragments", values);
         long duplicateFragments = getLongValue(fieldsIndexMap, "DuplicateFragments", values);
 
-        int splicedGeneCount = fieldsIndexMap.containsValue("SplicedGeneCount") ?
+        int splicedGeneCount = fieldsIndexMap.containsKey("SplicedGeneCount") ?
                 getIntValue(fieldsIndexMap, "SplicedGeneCount", values) : -1;
 
         String qcStatus;
