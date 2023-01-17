@@ -70,6 +70,7 @@ min_avg_base_qual | 22 | Min average base quality hard filter
 coverage_bed | NA      | Write file with counts of depth of each base of the supplied bed file
 validation_stringency | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT
 include_mt | NA      | By default the mitochondrial DNA is not read but will be if this config is included
+sync_fragments | False | Where R1 and R2 in a fragment overlap, count only a single consensus base and base qual for that fragment
 
 The cardinality of `reference` must match `reference_bam`.
 
@@ -339,7 +340,9 @@ If multiple tumors are supplied, the final set of candidates is the superset of 
 ## 3. Tumor Counts and Quality
 
 The aim of the stage it to collect evidence of each candidate variant's read context in the tumor. 
+
 SAGE examines every read with MAPQ >=1 overlapping the variant tallying matches of the read context. 
+
 A match can be:
   - `FULL` - Core and both flanks match read at same reference location.
   - `PARTIAL` - Core and at least one flank match read fully at same position. Remaining flank matches but is truncated.  An 'N' cigar (representating a splice junction gap in RNA) may overlap both the flank and part of the core as long as the remaining flank and core match precisely.  
@@ -348,6 +351,8 @@ A match can be:
   - `ALT` - variant matches but CORE does not
 
 Note that errors are tolerated in flanks so long as raw base qual at mismatch base < 20. The CORE must match precisely except for INS over 20 bases in length where 1 mismatch with raw base qual <20 is tolerated per 20 bases of insertion.
+
+Also note that, by default, Sage considers R1 and R2 of a paired end fragment independently if they overlap.   However, if -sync_fragments=true then a consensus of the overlap should be taken, and the 2 reads in the fragment converted into a single consensus read. For each base, if the R1 and R2 observations agree, set the consensus base qual to the high base qual from either read. If there is disagreement, the nucleotide with the highest base qual is chosen and the quality is set to the difference in base quals.   
 
 Failing any of the above matches, SAGE searches for matches that would occur if a repeat in the complete read context was extended or retracted.  Matches of this type we call 'jitter' and are tallied as `LENGTHENED` or `SHORTENED`. 
 
