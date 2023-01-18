@@ -83,6 +83,8 @@ Each collapsed sequence is either marked as PASS or one or more of the following
 - **MATCHES_REF** - NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0.
 
 Note that sequences with "no anchor" may represent partial rearrangements.
+
+CIDER hard filters variants with filter='MATCHES_REF' or if filter contains both MIN_LENGTH and either NO_V_ANCHOR or NO_J_ANCHOR.
  
 The full set of fields output are:
 
