@@ -214,22 +214,22 @@ public interface OrangeConfig {
     @NotNull
     String lilacQcCsv();
 
-    @NotNull
+    @Nullable
     String annotatedVirusTsv();
 
-    @NotNull
+    @Nullable
     String chordPredictionTxt();
 
-    @NotNull
+    @Nullable
     String cuppaResultCsv();
 
-    @NotNull
+    @Nullable
     String cuppaSummaryPlot();
 
     @Nullable
     String cuppaFeaturePlot();
 
-    @NotNull
+    @Nullable
     String cuppaChartPlot();
 
     @Nullable
@@ -300,12 +300,12 @@ public interface OrangeConfig {
                 .linxPlotDirectory(Config.nonOptionalValue(cmd, LINX_PLOT_DIRECTORY))
                 .lilacResultCsv(Config.nonOptionalFile(cmd, LILAC_RESULT_CSV))
                 .lilacQcCsv(Config.nonOptionalFile(cmd, LILAC_QC_CSV))
-                .annotatedVirusTsv(Config.nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
-                .chordPredictionTxt(Config.nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
-                .cuppaResultCsv(Config.nonOptionalFile(cmd, CUPPA_RESULT_CSV))
-                .cuppaSummaryPlot(Config.nonOptionalFile(cmd, CUPPA_SUMMARY_PLOT))
+                .annotatedVirusTsv(Config.optionalFile(cmd, ANNOTATED_VIRUS_TSV))
+                .chordPredictionTxt(Config.optionalFile(cmd, CHORD_PREDICTION_TXT))
+                .cuppaResultCsv(Config.optionalFile(cmd, CUPPA_RESULT_CSV))
+                .cuppaSummaryPlot(Config.optionalFile(cmd, CUPPA_SUMMARY_PLOT))
                 .cuppaFeaturePlot(Config.optionalFile(cmd, CUPPA_FEATURE_PLOT))
-                .cuppaChartPlot(Config.nonOptionalFile(cmd, CUPPA_CHART_PLOT))
+                .cuppaChartPlot(Config.optionalFile(cmd, CUPPA_CHART_PLOT))
                 .peachGenotypeTsv(Config.optionalFile(cmd, PEACH_GENOTYPE_TSV))
                 .sigsAllocationTsv(Config.optionalFile(cmd, SIGS_ALLOCATION_TSV))
                 .convertGermlineToSomatic(convertGermlineToSomatic)

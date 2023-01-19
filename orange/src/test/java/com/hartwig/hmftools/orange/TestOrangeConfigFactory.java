@@ -57,7 +57,7 @@ public final class TestOrangeConfigFactory {
     }
 
     @NotNull
-    public static OrangeConfig createDNAConfigTumorOnly() {
+    public static OrangeConfig createPanelConfig() {
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(TUMOR_SAMPLE_ID)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
@@ -80,11 +80,6 @@ public final class TestOrangeConfigFactory {
                 .linxPlotDirectory(LINX_PLOT_DIRECTORY)
                 .lilacResultCsv(LILAC_RESULT_CSV)
                 .lilacQcCsv(LILAC_QC_CSV)
-                .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
-                .chordPredictionTxt(CHORD_PREDICTION_TXT)
-                .cuppaResultCsv(CUPPA_RESULT_CSV)
-                .cuppaSummaryPlot(CUPPA_SUMMARY_PLOT)
-                .cuppaChartPlot(CUPPA_CHART_PLOT)
                 .sigsAllocationTsv(SIGS_ALLOCATION_TSV)
                 .convertGermlineToSomatic(false)
                 .limitJsonOutput(false)
@@ -92,9 +87,21 @@ public final class TestOrangeConfigFactory {
     }
 
     @NotNull
-    public static OrangeConfig createDNAConfigTumorNormal() {
+    public static OrangeConfig createWGSConfigTumorOnly() {
         return ImmutableOrangeConfig.builder()
-                .from(createDNAConfigTumorOnly())
+                .from(createPanelConfig())
+                .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
+                .chordPredictionTxt(CHORD_PREDICTION_TXT)
+                .cuppaResultCsv(CUPPA_RESULT_CSV)
+                .cuppaSummaryPlot(CUPPA_SUMMARY_PLOT)
+                .cuppaChartPlot(CUPPA_CHART_PLOT)
+                .build();
+    }
+
+    @NotNull
+    public static OrangeConfig createWGSConfigTumorNormal() {
+        return ImmutableOrangeConfig.builder()
+                .from(createWGSConfigTumorOnly())
                 .referenceSampleId(REFERENCE_SAMPLE_ID)
                 .rnaConfig(null)
                 .refSampleWGSMetricsFile(REF_SAMPLE_WGS_METRICS_FILE)
@@ -107,10 +114,10 @@ public final class TestOrangeConfigFactory {
     }
 
     @NotNull
-    public static OrangeConfig createDNARNAConfig() {
+    public static OrangeConfig createWGTSConfigTumorNormal() {
         // We use tumor_sample as rnaSampleId since we have no real ISOFOX test data for our test_run
         return ImmutableOrangeConfig.builder()
-                .from(createDNAConfigTumorNormal())
+                .from(createWGSConfigTumorNormal())
                 .rnaConfig(ImmutableOrangeRNAConfig.builder()
                         .rnaSampleId("tumor_sample")
                         .isofoxGeneDistributionCsv(ISOFOX_GENE_DISTRIBUTION_CSV)

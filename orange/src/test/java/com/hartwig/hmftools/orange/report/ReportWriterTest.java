@@ -8,28 +8,24 @@ import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ReportWriterTest {
 
     @Test
-    public void canGenerateTestReportForTumorNormalFromTestResources() throws IOException {
-        OrangeConfig config = TestOrangeConfigFactory.createDNAConfigTumorNormal();
-        OrangeReport report = OrangeAlgo.fromConfig(config).run(config);
-
-        ReportWriter writer = ReportWriterFactory.createInMemoryWriter();
-
-        writer.write(report);
+    public void canGenerateTestReportForPanelFromTestResources() throws IOException {
+        run(TestOrangeConfigFactory.createPanelConfig());
     }
 
     @Test
-    public void canGenerateTestReportForTumorOnlyFromTestResources() throws IOException {
-        OrangeConfig config = TestOrangeConfigFactory.createDNAConfigTumorOnly();
-        OrangeReport report = OrangeAlgo.fromConfig(config).run(config);
+    public void canGenerateTestReportForWGSTumorOnlyFromTestResources() throws IOException {
+        run(TestOrangeConfigFactory.createWGSConfigTumorOnly());
+    }
 
-        ReportWriter writer = ReportWriterFactory.createInMemoryWriter();
-
-        writer.write(report);
+    @Test
+    public void canGenerateTestReportForWGSTumorNormalFromTestResources() throws IOException {
+        run(TestOrangeConfigFactory.createWGSConfigTumorNormal());
     }
 
     @Test
@@ -44,6 +40,14 @@ public class ReportWriterTest {
     @Test
     public void canGenerateTestReportFromProperTestData() throws IOException {
         OrangeReport report = TestOrangeReportFactory.createProperTestReport();
+
+        ReportWriter writer = ReportWriterFactory.createInMemoryWriter();
+
+        writer.write(report);
+    }
+
+    private static void run(@NotNull OrangeConfig config) throws IOException {
+        OrangeReport report = OrangeAlgo.fromConfig(config).run(config);
 
         ReportWriter writer = ReportWriterFactory.createInMemoryWriter();
 

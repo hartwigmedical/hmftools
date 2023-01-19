@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
@@ -162,18 +163,22 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addViralPresence(@NotNull Document document) {
-        String titleDrivers = "Driver viruses (" + report.virusInterpreter().reportableViruses().size() + ")";
-        document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), report.virusInterpreter().reportableViruses()));
+        VirusInterpreterData virusInterpreter = report.virusInterpreter();
 
-        List<AnnotatedVirus> unreported = Lists.newArrayList();
-        for (AnnotatedVirus virus : report.virusInterpreter().allViruses()) {
-            if (!virus.reported()) {
-                unreported.add(virus);
+        if (virusInterpreter != null) {
+            String titleDrivers = "Driver viruses (" + virusInterpreter.reportableViruses().size() + ")";
+            document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), virusInterpreter.reportableViruses()));
+
+            List<AnnotatedVirus> unreported = Lists.newArrayList();
+            for (AnnotatedVirus virus : virusInterpreter.allViruses()) {
+                if (!virus.reported()) {
+                    unreported.add(virus);
+                }
             }
-        }
 
-        String titleNonDrivers = "Other viral presence (" + unreported.size() + ")";
-        document.add(ViralPresenceTable.build(titleNonDrivers, contentWidth(), unreported));
+            String titleNonDrivers = "Other viral presence (" + unreported.size() + ")";
+            document.add(ViralPresenceTable.build(titleNonDrivers, contentWidth(), unreported));
+        }
     }
 
     private void addHomozygousDisruptions(@NotNull Document document) {

@@ -58,5 +58,10 @@ public class LossOfHeterozygositySelectorTest {
                 MicrosatelliteStatus.MSS,
                 ChordStatus.HR_PROFICIENT);
         assertEquals(0, none.size());
+
+        List<GeneCopyNumber> nullable = LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(allGeneCopyNumbers,
+                MicrosatelliteStatus.MSS,
+                null);
+        assertEquals(0, nullable.size());
     }
 }

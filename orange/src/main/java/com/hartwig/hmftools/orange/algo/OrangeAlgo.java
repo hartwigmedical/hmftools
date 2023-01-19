@@ -416,24 +416,42 @@ public class OrangeAlgo {
         return LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
     }
 
-    @NotNull
+    @Nullable
     private static VirusInterpreterData loadVirusInterpreterData(@NotNull OrangeConfig config) throws IOException {
-        return VirusInterpreterDataLoader.load(config.annotatedVirusTsv());
+        String annotatedVirusTsv = config.annotatedVirusTsv();
+        if (annotatedVirusTsv == null) {
+            LOGGER.debug("Skipping loading of annotated  viruses as no input has been provided");
+            return null;
+        }
+
+        return VirusInterpreterDataLoader.load(annotatedVirusTsv);
     }
 
-    @NotNull
+    @Nullable
     private static ChordData loadChordAnalysis(@NotNull OrangeConfig config) throws IOException {
-        LOGGER.info("Loading CHORD data from {}", new File(config.chordPredictionTxt()).getParent());
-        ChordData chordData = ChordDataFile.read(config.chordPredictionTxt());
+        String chordPredictionTxt = config.chordPredictionTxt();
+        if (chordPredictionTxt == null) {
+            LOGGER.debug("Skipping CHORD loading as no input has been provided");
+            return null;
+        }
+
+        LOGGER.info("Loading CHORD data from {}", new File(chordPredictionTxt).getParent());
+        ChordData chordData = ChordDataFile.read(chordPredictionTxt);
         LOGGER.info(" HR Status: {} with type '{}'", chordData.hrStatus().display(), chordData.hrdType());
         return chordData;
     }
 
-    @NotNull
+    @Nullable
     private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException {
-        LOGGER.info("Loading CUPPA from {}", new File(config.cuppaResultCsv()).getParent());
-        List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
-        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
+        String cuppaResultTsv = config.cuppaResultCsv();
+        if (cuppaResultTsv == null) {
+            LOGGER.debug("Skipping CUPPA loading as no input has been provided");
+            return null;
+        }
+
+        LOGGER.info("Loading CUPPA from {}", new File(cuppaResultTsv).getParent());
+        List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(cuppaResultTsv);
+        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), cuppaResultTsv);
 
         CuppaData cuppaData = CuppaDataFactory.create(cuppaEntries);
         CuppaPrediction best = cuppaData.predictions().get(0);
@@ -533,14 +551,21 @@ public class OrangeAlgo {
             purpleKataegisPlot = plotManager.processPlotFile(purpleKataegisPlot);
         }
 
-        String cuppaSummaryPlot = plotManager.processPlotFile(config.cuppaSummaryPlot());
+        String cuppaSummaryPlot = null;
+        if (config.cuppaSummaryPlot() != null) {
+            cuppaSummaryPlot = plotManager.processPlotFile(config.cuppaSummaryPlot());
+        }
 
         String cuppaFeaturePlot = null;
         if (config.cuppaFeaturePlot() != null && new File(config.cuppaFeaturePlot()).exists()) {
             cuppaFeaturePlot = plotManager.processPlotFile(config.cuppaFeaturePlot());
         }
 
-        String cuppaChartPlot = plotManager.processPlotFile(config.cuppaChartPlot());
+
+        String cuppaChartPlot = null;
+        if (config.cuppaChartPlot() != null) {
+            cuppaChartPlot = plotManager.processPlotFile(config.cuppaChartPlot());
+        }
 
         return ImmutableOrangePlots.builder()
                 .sageReferenceBQRPlot(sageReferenceBQRPlot)

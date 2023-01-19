@@ -67,13 +67,13 @@ public abstract class OrangeReport {
     @NotNull
     public abstract LilacSummaryData lilac();
 
-    @NotNull
+    @Nullable
     public abstract VirusInterpreterData virusInterpreter();
 
-    @NotNull
+    @Nullable
     public abstract ChordData chord();
 
-    @NotNull
+    @Nullable
     public abstract CuppaData cuppa();
 
     @Nullable

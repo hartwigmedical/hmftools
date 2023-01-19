@@ -32,10 +32,14 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GermlineFindingsChapter implements ReportChapter {
+
+    private static final Logger LOGGER = LogManager.getLogger(GermlineFindingsChapter.class);
 
     private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#.0'%'");
 
@@ -63,7 +67,9 @@ public class GermlineFindingsChapter implements ReportChapter {
         document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
 
         if (report.refSample() != null) {
-            // TODO Show tables as NA rather than not show them in case germline data is missing while ref sample is present
+            if (hasAnyMissingGermlineData()) {
+                LOGGER.warn("Some germline data is missing even though a ref sample has been provided!");
+            }
             addGermlineVariants(document);
             addGermlineDeletions(document);
             addGermlineDisruptions(document);
@@ -73,6 +79,12 @@ public class GermlineFindingsChapter implements ReportChapter {
         } else {
             document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(ReportResources.tableContentStyle()));
         }
+    }
+
+    private boolean hasAnyMissingGermlineData() {
+        return report.purple().reportableGermlineVariants() == null || report.purple().germlineDrivers() == null
+                || report.purple().additionalSuspectGermlineVariants() == null || report.linx().reportableGermlineDisruptions() == null
+                || report.purple().reportableGermlineDeletions() == null || report.germlineMVLHPerGene() == null;
     }
 
     private void addGermlineVariants(@NotNull Document document) {

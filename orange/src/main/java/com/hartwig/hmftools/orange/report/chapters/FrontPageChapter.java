@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaData;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
@@ -43,6 +44,7 @@ import com.itextpdf.layout.property.UnitValue;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class FrontPageChapter implements ReportChapter {
 
@@ -93,7 +95,11 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private static String cuppaCancerType(@NotNull CuppaData cuppa) {
+    private static String cuppaCancerType(@Nullable CuppaData cuppa) {
+        if (cuppa == null) {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         CuppaPrediction best = CuppaInterpretation.best(cuppa);
         return best.cancerType() + " (" + PERCENTAGE.format(best.likelihood() * 100) + ")";
     }
@@ -152,11 +158,11 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(Cells.createKey("Number of SVs:"));
         summary.addCell(Cells.createValue(svTmbString()));
         summary.addCell(Cells.createKey("Max complex cluster size:"));
-        summary.addCell(Cells.createValue(Integer.toString(report.cuppa().maxComplexSize())));
+        summary.addCell(Cells.createValue(maxComplexSizeString()));
         summary.addCell(Cells.createKey("Telomeric SGLs:"));
-        summary.addCell(Cells.createValue(Integer.toString(report.cuppa().telomericSGLs())));
+        summary.addCell(Cells.createValue(telomericSGLString()));
         summary.addCell(Cells.createKey("Number of LINE insertions:"));
-        summary.addCell(Cells.createValue(Integer.toString(report.cuppa().LINECount())));
+        summary.addCell(Cells.createValue(lineCountString()));
 
         Image circosImage = Images.build(plotPathResolver.resolve(report.plots().purpleFinalCircosPlot()));
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -267,12 +273,17 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String virusString() {
-        if (report.virusInterpreter().reportableViruses().isEmpty()) {
+        VirusInterpreterData virusInterpreter = report.virusInterpreter();
+        if (virusInterpreter == null) {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        if (virusInterpreter.reportableViruses().isEmpty()) {
             return NONE;
         }
 
         Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
-        for (AnnotatedVirus virus : report.virusInterpreter().reportableViruses()) {
+        for (AnnotatedVirus virus : virusInterpreter.reportableViruses()) {
             if (virus.interpretation() != null) {
                 viruses.add(virus.interpretation());
             } else {
@@ -280,7 +291,7 @@ public class FrontPageChapter implements ReportChapter {
             }
         }
 
-        return report.virusInterpreter().reportableViruses().size() + " (" + concat(viruses) + ")";
+        return virusInterpreter.reportableViruses().size() + " (" + concat(viruses) + ")";
     }
 
     @NotNull
@@ -299,6 +310,10 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String hrDeficiencyString() {
         ChordData chord = report.chord();
+        if (chord == null) {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         if (chord.hrStatus() == ChordStatus.CANNOT_BE_DETERMINED) {
             return ChordStatus.CANNOT_BE_DETERMINED.display();
         }
@@ -352,6 +367,24 @@ public class FrontPageChapter implements ReportChapter {
         }
 
         return svTmb + addon;
+    }
+
+    @NotNull
+    private String maxComplexSizeString() {
+        CuppaData cuppa = report.cuppa();
+        return cuppa != null ? Integer.toString(cuppa.maxComplexSize()) : ReportResources.NOT_AVAILABLE;
+    }
+
+    @NotNull
+    private String telomericSGLString() {
+        CuppaData cuppa = report.cuppa();
+        return cuppa != null ? Integer.toString(cuppa.telomericSGLs()) : ReportResources.NOT_AVAILABLE;
+    }
+
+    @NotNull
+    private String lineCountString() {
+        CuppaData cuppa = report.cuppa();
+        return cuppa != null ? Integer.toString(cuppa.LINECount()) : ReportResources.NOT_AVAILABLE;
     }
 
     @NotNull
