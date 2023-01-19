@@ -540,6 +540,8 @@ public class OrangeAlgo {
             cuppaFeaturePlot = plotManager.processPlotFile(config.cuppaFeaturePlot());
         }
 
+        String cuppaChartPlot = plotManager.processPlotFile(config.cuppaChartPlot());
+
         return ImmutableOrangePlots.builder()
                 .sageReferenceBQRPlot(sageReferenceBQRPlot)
                 .sageTumorBQRPlot(sageTumorBQRPlot)
@@ -553,6 +555,7 @@ public class OrangeAlgo {
                 .linxDriverPlots(linxDriverPlots)
                 .cuppaSummaryPlot(cuppaSummaryPlot)
                 .cuppaFeaturePlot(cuppaFeaturePlot)
+                .cuppaChartPlot(cuppaChartPlot)
                 .build();
     }
 

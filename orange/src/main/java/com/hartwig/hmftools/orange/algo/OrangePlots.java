@@ -45,4 +45,7 @@ public abstract class OrangePlots {
 
     @Nullable
     public abstract String cuppaFeaturePlot();
+
+    @NotNull
+    public abstract String cuppaChartPlot();
 }
