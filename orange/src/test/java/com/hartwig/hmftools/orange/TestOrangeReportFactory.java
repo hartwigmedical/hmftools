@@ -118,8 +118,6 @@ public final class TestOrangeReportFactory {
                 .purpleCopyNumberPlot(DUMMY_IMAGE)
                 .purpleVariantCopyNumberPlot(DUMMY_IMAGE)
                 .purplePurityRangePlot(DUMMY_IMAGE)
-                .cuppaSummaryPlot(DUMMY_IMAGE)
-                .cuppaChartPlot(DUMMY_IMAGE)
                 .build();
     }
 
