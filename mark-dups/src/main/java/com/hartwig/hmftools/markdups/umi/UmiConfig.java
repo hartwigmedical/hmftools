@@ -14,8 +14,8 @@ public class UmiConfig
     private static final String UMI_ENABLED = "umi_enabled";
     private static final String UMI_FORM_CONSENSUS = "umi_consensus";
 
-    private static final char READ_ID_DELIM = ':';
-    private static final String READ_ID_DELIM_STR = String.valueOf(READ_ID_DELIM);
+    public static final char READ_ID_DELIM = ':';
+    public static final String READ_ID_DELIM_STR = String.valueOf(READ_ID_DELIM);
 
     public UmiConfig(boolean enabled, boolean createConsensusRead)
     {
