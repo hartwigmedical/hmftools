@@ -40,9 +40,12 @@ public abstract class OrangePlots {
     @NotNull
     public abstract List<String> linxDriverPlots();
 
-    @NotNull
+    @Nullable
     public abstract String cuppaSummaryPlot();
 
     @Nullable
     public abstract String cuppaFeaturePlot();
+
+    @Nullable
+    public abstract String cuppaChartPlot();
 }

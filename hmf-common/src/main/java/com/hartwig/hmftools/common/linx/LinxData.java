@@ -11,25 +11,31 @@ import org.jetbrains.annotations.Nullable;
 public interface LinxData
 {
     @NotNull
-    List<LinxSvAnnotation> allStructuralVariants();
+    List<LinxSvAnnotation> allSomaticStructuralVariants();
 
     @NotNull
-    List<LinxDriver> drivers();
+    List<LinxDriver> somaticDrivers();
 
     @NotNull
-    List<LinxFusion> allFusions();
+    List<LinxFusion> allSomaticFusions();
 
     @NotNull
-    List<LinxFusion> reportableFusions();
+    List<LinxFusion> reportableSomaticFusions();
 
     @NotNull
-    List<LinxBreakend> allBreakends();
+    List<LinxBreakend> allSomaticBreakends();
 
     @NotNull
-    List<LinxBreakend> reportableBreakends();
+    List<LinxBreakend> reportableSomaticBreakends();
 
     @NotNull
-    List<HomozygousDisruption> homozygousDisruptions();
+    List<HomozygousDisruption> somaticHomozygousDisruptions();
+
+    @Nullable
+    List<LinxSvAnnotation>  allGermlineStructuralVariants();
+
+    @Nullable
+    List<LinxBreakend> allGermlineBreakends();
 
     @Nullable
     List<LinxGermlineSv> allGermlineDisruptions();

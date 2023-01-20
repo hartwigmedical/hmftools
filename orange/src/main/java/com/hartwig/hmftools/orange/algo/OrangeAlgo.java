@@ -171,9 +171,9 @@ public class OrangeAlgo {
                     purple.reportableSomaticVariants(),
                     purple.reportableGermlineVariants(),
                     purple.reportableSomaticGainsLosses(),
-                    linx.reportableFusions(),
-                    linx.homozygousDisruptions(),
-                    linx.reportableBreakends());
+                    linx.reportableSomaticFusions(),
+                    linx.somaticHomozygousDisruptions(),
+                    linx.reportableSomaticBreakends());
             LOGGER.info("Identified {} of {} driver genes to be wild-type", wildTypeGenes.size(), driverGenes.size());
         } else {
             LOGGER.info("Wild-type calling skipped due to insufficient tumor sample quality");
@@ -370,11 +370,11 @@ public class OrangeAlgo {
 
         LinxData linx = LinxDataLoader.load(config.tumorSampleId(), config.linxSomaticDataDirectory(), linxGermlineDataDirectory);
 
-        LOGGER.info(" Loaded {} structural variants", linx.allStructuralVariants().size());
-        LOGGER.info(" Loaded {} structural drivers", linx.drivers().size());
-        LOGGER.info(" Loaded {} fusions (of which {} are reportable)", linx.allFusions().size(), linx.reportableFusions().size());
-        LOGGER.info(" Loaded {} breakends (of which {} are reportable)", linx.allBreakends().size(), linx.reportableBreakends().size());
-        LOGGER.info(" Loaded {} reportable homozygous disruptions", linx.homozygousDisruptions().size());
+        LOGGER.info(" Loaded {} structural variants", linx.allSomaticStructuralVariants().size());
+        LOGGER.info(" Loaded {} structural drivers", linx.somaticDrivers().size());
+        LOGGER.info(" Loaded {} fusions (of which {} are reportable)", linx.allSomaticFusions().size(), linx.reportableSomaticFusions().size());
+        LOGGER.info(" Loaded {} breakends (of which {} are reportable)", linx.allSomaticBreakends().size(), linx.reportableSomaticBreakends().size());
+        LOGGER.info(" Loaded {} reportable homozygous disruptions", linx.somaticHomozygousDisruptions().size());
 
         if (linxGermlineDataDirectory != null) {
             LOGGER.info("Loading LINX germline data from {}", linxGermlineDataDirectory);
@@ -416,24 +416,42 @@ public class OrangeAlgo {
         return LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
     }
 
-    @NotNull
+    @Nullable
     private static VirusInterpreterData loadVirusInterpreterData(@NotNull OrangeConfig config) throws IOException {
-        return VirusInterpreterDataLoader.load(config.annotatedVirusTsv());
+        String annotatedVirusTsv = config.annotatedVirusTsv();
+        if (annotatedVirusTsv == null) {
+            LOGGER.debug("Skipping loading of annotated  viruses as no input has been provided");
+            return null;
+        }
+
+        return VirusInterpreterDataLoader.load(annotatedVirusTsv);
     }
 
-    @NotNull
+    @Nullable
     private static ChordData loadChordAnalysis(@NotNull OrangeConfig config) throws IOException {
-        LOGGER.info("Loading CHORD data from {}", new File(config.chordPredictionTxt()).getParent());
-        ChordData chordData = ChordDataFile.read(config.chordPredictionTxt());
+        String chordPredictionTxt = config.chordPredictionTxt();
+        if (chordPredictionTxt == null) {
+            LOGGER.debug("Skipping CHORD loading as no input has been provided");
+            return null;
+        }
+
+        LOGGER.info("Loading CHORD data from {}", new File(chordPredictionTxt).getParent());
+        ChordData chordData = ChordDataFile.read(chordPredictionTxt);
         LOGGER.info(" HR Status: {} with type '{}'", chordData.hrStatus().display(), chordData.hrdType());
         return chordData;
     }
 
-    @NotNull
+    @Nullable
     private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException {
-        LOGGER.info("Loading CUPPA from {}", new File(config.cuppaResultCsv()).getParent());
-        List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
-        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
+        String cuppaResultTsv = config.cuppaResultCsv();
+        if (cuppaResultTsv == null) {
+            LOGGER.debug("Skipping CUPPA loading as no input has been provided");
+            return null;
+        }
+
+        LOGGER.info("Loading CUPPA from {}", new File(cuppaResultTsv).getParent());
+        List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(cuppaResultTsv);
+        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), cuppaResultTsv);
 
         CuppaData cuppaData = CuppaDataFactory.create(cuppaEntries);
         CuppaPrediction best = cuppaData.predictions().get(0);
@@ -533,11 +551,20 @@ public class OrangeAlgo {
             purpleKataegisPlot = plotManager.processPlotFile(purpleKataegisPlot);
         }
 
-        String cuppaSummaryPlot = plotManager.processPlotFile(config.cuppaSummaryPlot());
+        String cuppaSummaryPlot = null;
+        if (config.cuppaSummaryPlot() != null) {
+            cuppaSummaryPlot = plotManager.processPlotFile(config.cuppaSummaryPlot());
+        }
 
         String cuppaFeaturePlot = null;
         if (config.cuppaFeaturePlot() != null && new File(config.cuppaFeaturePlot()).exists()) {
             cuppaFeaturePlot = plotManager.processPlotFile(config.cuppaFeaturePlot());
+        }
+
+
+        String cuppaChartPlot = null;
+        if (config.cuppaChartPlot() != null) {
+            cuppaChartPlot = plotManager.processPlotFile(config.cuppaChartPlot());
         }
 
         return ImmutableOrangePlots.builder()
@@ -553,6 +580,7 @@ public class OrangeAlgo {
                 .linxDriverPlots(linxDriverPlots)
                 .cuppaSummaryPlot(cuppaSummaryPlot)
                 .cuppaFeaturePlot(cuppaFeaturePlot)
+                .cuppaChartPlot(cuppaChartPlot)
                 .build();
     }
 

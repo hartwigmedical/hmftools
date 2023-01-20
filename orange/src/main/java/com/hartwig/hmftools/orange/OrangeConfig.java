@@ -68,6 +68,7 @@ public interface OrangeConfig {
     String CUPPA_RESULT_CSV = "cuppa_result_csv";
     String CUPPA_SUMMARY_PLOT = "cuppa_summary_plot";
     String CUPPA_FEATURE_PLOT = "cuppa_feature_plot";
+    String CUPPA_CHART_PLOT = "cuppa_chart_plot";
     String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
     String SIGS_ALLOCATION_TSV = "sigs_allocation_tsv";
 
@@ -113,7 +114,8 @@ public interface OrangeConfig {
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
         options.addOption(CUPPA_RESULT_CSV, true, "Path towards the Cuppa result CSV.");
         options.addOption(CUPPA_SUMMARY_PLOT, true, "Path towards the Cuppa report summary plot PNG.");
-        options.addOption(CUPPA_FEATURE_PLOT, true, "Path towards the Cuppa report feature plot PNG.");
+        options.addOption(CUPPA_FEATURE_PLOT, true, "Path towards the Cuppa report feature plot PNG, if present.");
+        options.addOption(CUPPA_CHART_PLOT, true, "Path towards the Cuppa chart plot PNG.");
         options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
         options.addOption(SIGS_ALLOCATION_TSV, true, "Path towards the signatures allocation TSV.");
 
@@ -212,20 +214,23 @@ public interface OrangeConfig {
     @NotNull
     String lilacQcCsv();
 
-    @NotNull
+    @Nullable
     String annotatedVirusTsv();
 
-    @NotNull
+    @Nullable
     String chordPredictionTxt();
 
-    @NotNull
+    @Nullable
     String cuppaResultCsv();
 
-    @NotNull
+    @Nullable
     String cuppaSummaryPlot();
 
     @Nullable
     String cuppaFeaturePlot();
+
+    @Nullable
+    String cuppaChartPlot();
 
     @Nullable
     String peachGenotypeTsv();
@@ -295,11 +300,12 @@ public interface OrangeConfig {
                 .linxPlotDirectory(Config.nonOptionalValue(cmd, LINX_PLOT_DIRECTORY))
                 .lilacResultCsv(Config.nonOptionalFile(cmd, LILAC_RESULT_CSV))
                 .lilacQcCsv(Config.nonOptionalFile(cmd, LILAC_QC_CSV))
-                .annotatedVirusTsv(Config.nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
-                .chordPredictionTxt(Config.nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
-                .cuppaResultCsv(Config.nonOptionalFile(cmd, CUPPA_RESULT_CSV))
-                .cuppaSummaryPlot(Config.nonOptionalFile(cmd, CUPPA_SUMMARY_PLOT))
-                .cuppaFeaturePlot(Config.optionalValue(cmd, CUPPA_FEATURE_PLOT))
+                .annotatedVirusTsv(Config.optionalFile(cmd, ANNOTATED_VIRUS_TSV))
+                .chordPredictionTxt(Config.optionalFile(cmd, CHORD_PREDICTION_TXT))
+                .cuppaResultCsv(Config.optionalFile(cmd, CUPPA_RESULT_CSV))
+                .cuppaSummaryPlot(Config.optionalFile(cmd, CUPPA_SUMMARY_PLOT))
+                .cuppaFeaturePlot(Config.optionalFile(cmd, CUPPA_FEATURE_PLOT))
+                .cuppaChartPlot(Config.optionalFile(cmd, CUPPA_CHART_PLOT))
                 .peachGenotypeTsv(Config.optionalFile(cmd, PEACH_GENOTYPE_TSV))
                 .sigsAllocationTsv(Config.optionalFile(cmd, SIGS_ALLOCATION_TSV))
                 .convertGermlineToSomatic(convertGermlineToSomatic)

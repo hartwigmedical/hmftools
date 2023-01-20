@@ -83,6 +83,8 @@ Each collapsed sequence is either marked as PASS or one or more of the following
 - **MATCHES_REF** - NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0.
 
 Note that sequences with "no anchor" may represent partial rearrangements.
+
+CIDER hard filters variants with filter='MATCHES_REF' or if filter contains both MIN_LENGTH and either NO_V_ANCHOR or NO_J_ANCHOR.
  
 The full set of fields output are:
 
@@ -171,6 +173,7 @@ $ perl $BLAST_INSTALL/bin/update_blastdb.pl --passive --decompress human_genome
 - **Error tolerance in collapsing** - We collapse sequences with up to 1 high quality sequencing difference across the anchors + CDR3 sequence. We still see a small number of artefacts from very highly supported sequences which could be cleaned up further. 
 - **Extension of incomplete TCR** - For TCR regions it may be possible to predict a full CDR3 sequence from the germline using a parital frgament.  For IG this is likely dangerous due to hypermutation 
 - **Multiple CDR3s in consensus sequence** - A single consensus sequence may have 2 anchor locations that lead to plausible high scoring CDR3 sequences. Currently we choose the highest scoring, but both could be functional.
+- **Longer CDR3 sequences artefacts with indels sometimes reported where indel sequencing errors occur in anchor** - we observe this when we have >>100 reads support for a CDR3 sequence, we sometimes get a handful of reads with a longer CDR3 sequence containing the main sequence, but cannot find the anchror due to indel in the base sequence.
 
 ### Other:
 - Support AIRR format output.

@@ -28,22 +28,27 @@ public class LinxInterpreter {
 
     @NotNull
     public LinxInterpretedData interpret(@NotNull LinxData linx) {
-        List<LinxFusion> additionalSuspectFusions = DNAFusionSelector.selectInterestingUnreportedFusions(linx.allFusions(), driverGenes);
-        LOGGER.info(" Found an additional {} suspect fusions that are potentially interesting", additionalSuspectFusions.size());
+        List<LinxFusion> additionalSuspectSomaticFusions =
+                DNAFusionSelector.selectInterestingUnreportedFusions(linx.allSomaticFusions(), driverGenes);
+        LOGGER.info(" Found an additional {} suspect fusions that are potentially interesting", additionalSuspectSomaticFusions.size());
 
-        List<LinxBreakend> additionalSuspectBreakends =
-                BreakendSelector.selectInterestingUnreportedBreakends(linx.allBreakends(), linx.reportableFusions(), knownFusionCache);
-        LOGGER.info(" Found an additional {} suspect breakends that are potentially interesting", additionalSuspectBreakends.size());
+        List<LinxBreakend> additionalSuspectSomaticBreakends =
+                BreakendSelector.selectInterestingUnreportedBreakends(linx.allSomaticBreakends(),
+                        linx.reportableSomaticFusions(),
+                        knownFusionCache);
+        LOGGER.info(" Found an additional {} suspect breakends that are potentially interesting", additionalSuspectSomaticBreakends.size());
 
         return ImmutableLinxInterpretedData.builder()
-                .allStructuralVariants(linx.allStructuralVariants())
-                .allFusions(linx.allFusions())
-                .reportableFusions(linx.reportableFusions())
-                .additionalSuspectFusions(additionalSuspectFusions)
-                .allBreakends(linx.allBreakends())
-                .reportableBreakends(linx.reportableBreakends())
-                .additionalSuspectBreakends(additionalSuspectBreakends)
-                .homozygousDisruptions(linx.homozygousDisruptions())
+                .allSomaticStructuralVariants(linx.allSomaticStructuralVariants())
+                .allSomaticFusions(linx.allSomaticFusions())
+                .reportableSomaticFusions(linx.reportableSomaticFusions())
+                .additionalSuspectSomaticFusions(additionalSuspectSomaticFusions)
+                .allSomaticBreakends(linx.allSomaticBreakends())
+                .reportableSomaticBreakends(linx.reportableSomaticBreakends())
+                .additionalSuspectSomaticBreakends(additionalSuspectSomaticBreakends)
+                .somaticHomozygousDisruptions(linx.somaticHomozygousDisruptions())
+                .allGermlineStructuralVariants(linx.allGermlineStructuralVariants())
+                .allGermlineBreakends(linx.allGermlineBreakends())
                 .allGermlineDisruptions(linx.allGermlineDisruptions())
                 .reportableGermlineDisruptions(linx.reportableGermlineDisruptions())
                 .build();

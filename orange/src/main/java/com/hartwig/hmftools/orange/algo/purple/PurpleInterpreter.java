@@ -27,6 +27,7 @@ import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class PurpleInterpreter {
 
@@ -36,11 +37,11 @@ public class PurpleInterpreter {
     private final PaveAlgo paveAlgo;
     @NotNull
     private final List<DriverGene> driverGenes;
-    @NotNull
+    @Nullable
     private final ChordData chord;
 
     public PurpleInterpreter(@NotNull final PaveAlgo paveAlgo, @NotNull final List<DriverGene> driverGenes,
-            @NotNull final ChordData chord) {
+            @Nullable final ChordData chord) {
         this.paveAlgo = paveAlgo;
         this.driverGenes = driverGenes;
         this.chord = chord;
@@ -88,7 +89,7 @@ public class PurpleInterpreter {
         List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH =
                 LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(purple.allSomaticGeneCopyNumbers(),
                         purple.purityContext().microsatelliteStatus(),
-                        chord.hrStatus());
+                        chord != null ? chord.hrStatus() : null);
         LOGGER.info(" Found an additional {} suspect gene copy numbers with LOH", suspectGeneCopyNumbersWithLOH.size());
 
         return ImmutablePurpleInterpretedData.builder()

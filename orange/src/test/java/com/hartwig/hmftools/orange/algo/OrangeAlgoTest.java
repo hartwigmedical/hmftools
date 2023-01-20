@@ -14,24 +14,32 @@ import org.junit.Test;
 public class OrangeAlgoTest {
 
     @Test
-    public void canRunReportFromTestDirDNATumorOnly() throws IOException {
-        OrangeConfig config = TestOrangeConfigFactory.createDNAConfigTumorOnly();
+    public void canRunReportFromTestDirPanel() throws IOException {
+        OrangeConfig config = TestOrangeConfigFactory.createPanelConfig();
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
 
         assertNotNull(algo.run(config));
     }
 
     @Test
-    public void canRunReportFromTestDirDNA() throws IOException {
-        OrangeConfig config = TestOrangeConfigFactory.createDNAConfigTumorNormal();
+    public void canRunReportFromTestDirWGSTumorOnly() throws IOException {
+        OrangeConfig config = TestOrangeConfigFactory.createWGSConfigTumorOnly();
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
 
         assertNotNull(algo.run(config));
     }
 
     @Test
-    public void canRunReportFromTestDirDNARNA() throws IOException {
-        OrangeConfig config = TestOrangeConfigFactory.createDNARNAConfig();
+    public void canRunReportFromTestDirWGSTumorNormal() throws IOException {
+        OrangeConfig config = TestOrangeConfigFactory.createWGSConfigTumorNormal();
+        OrangeAlgo algo = OrangeAlgo.fromConfig(config);
+
+        assertNotNull(algo.run(config));
+    }
+
+    @Test
+    public void canRunReportFromTestDirWGTSTumorNormal() throws IOException {
+        OrangeConfig config = TestOrangeConfigFactory.createWGTSConfigTumorNormal();
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
 
         assertNotNull(algo.run(config));
@@ -40,7 +48,7 @@ public class OrangeAlgoTest {
     @Test
     public void canCreateReportWithoutTumorDoids() throws IOException {
         OrangeConfig config = ImmutableOrangeConfig.builder()
-                .from(TestOrangeConfigFactory.createDNAConfigTumorNormal())
+                .from(TestOrangeConfigFactory.createWGSConfigTumorNormal())
                 .primaryTumorDoids(Sets.newHashSet())
                 .build();
 

@@ -118,7 +118,6 @@ public final class TestOrangeReportFactory {
                 .purpleCopyNumberPlot(DUMMY_IMAGE)
                 .purpleVariantCopyNumberPlot(DUMMY_IMAGE)
                 .purplePurityRangePlot(DUMMY_IMAGE)
-                .cuppaSummaryPlot(DUMMY_IMAGE)
                 .build();
     }
 
@@ -163,14 +162,16 @@ public final class TestOrangeReportFactory {
         LinxFusion fusion = LinxTestFactory.createMinimalTestFusion();
         return ImmutableLinxInterpretedData.builder()
                 .from(TestLinxInterpretationFactory.createMinimalTestLinxData())
-                .addReportableFusions(fusion)
-                .addReportableFusions(fusion)
-                .addReportableFusions(fusion)
-                .addReportableFusions(fusion)
-                .addReportableFusions(fusion)
-                .addReportableFusions(fusion)
-                .addReportableFusions(fusion)
-                .addReportableFusions(fusion)
+                .addReportableSomaticFusions(fusion)
+                .addReportableSomaticFusions(fusion)
+                .addReportableSomaticFusions(fusion)
+                .addReportableSomaticFusions(fusion)
+                .addReportableSomaticFusions(fusion)
+                .addReportableSomaticFusions(fusion)
+                .addReportableSomaticFusions(fusion)
+                .addReportableSomaticFusions(fusion)
+                .allGermlineStructuralVariants(Lists.newArrayList())
+                .allGermlineBreakends(Lists.newArrayList())
                 .allGermlineDisruptions(Lists.newArrayList())
                 .reportableGermlineDisruptions(Lists.newArrayList())
                 .build();

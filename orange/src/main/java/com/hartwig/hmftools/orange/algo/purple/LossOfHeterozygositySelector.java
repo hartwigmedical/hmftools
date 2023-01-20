@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class LossOfHeterozygositySelector {
 
@@ -35,7 +36,7 @@ final class LossOfHeterozygositySelector {
 
     @NotNull
     public static List<GeneCopyNumber> selectHRDOrMSIGenesWithLOH(@NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers,
-            @NotNull MicrosatelliteStatus microsatelliteStatus, @NotNull ChordStatus chordStatus) {
+            @NotNull MicrosatelliteStatus microsatelliteStatus, @Nullable ChordStatus chordStatus) {
         List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH = Lists.newArrayList();
         for (GeneCopyNumber geneCopyNumber : allSomaticGeneCopyNumbers) {
             if (hasLOH(geneCopyNumber)) {
