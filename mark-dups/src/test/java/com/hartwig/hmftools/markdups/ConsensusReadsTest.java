@@ -4,6 +4,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.markdups.TestUtils.DEFAULT_QUAL;
+import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
 
 import static org.junit.Assert.assertEquals;
@@ -61,7 +63,66 @@ public class ConsensusReadsTest
 
         ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
         assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+        assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
+        assertEquals("10M", readInfo.ConsensusRead.getCigarString());
+        assertEquals(posStart, readInfo.ConsensusRead.getAlignmentStart());
 
+        // mismatch at some of the bases and so determined by qual
+        reads.clear();
+
+        SAMRecord read1 = createSamRecord(nextReadId(), posStart, consensusBases, "10M", false);
+        setBaseQualities(read1, DEFAULT_QUAL - 1);
+        reads.add(read1);
+
+        String bases2 = "AATAATAATA";
+        SAMRecord read2 = createSamRecord(nextReadId(), posStart + 2, bases2, "2S8M", false);
+        reads.add(read2);
+
+        String bases3 = "AATAAGAAAA";
+        SAMRecord read3 = createSamRecord(nextReadId(), posStart + 4, bases3, "4S6M", false);
+        setBaseQualities(read3, DEFAULT_QUAL - 1);
+        reads.add(read3);
+
+        // 3rd base is 'T' due to max qual of 2nd and 3rd reads
+        // 6th base is 'T' due to max qual of 2nd read
+        // 9th base is 'A' due to max qual of 1st and 3rd reads
+
+        readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+        assertEquals(posStart, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals("10M", readInfo.ConsensusRead.getCigarString());
+
+        assertEquals("AATAATAAAA", readInfo.ConsensusRead.getReadString());
+        assertEquals(19, readInfo.ConsensusRead.getBaseQualities()[2]);
+        assertEquals(0, readInfo.ConsensusRead.getBaseQualities()[5]);
+        assertEquals(18, readInfo.ConsensusRead.getBaseQualities()[8]);
+
+        // test preference for reference base when quals are qual
+        reads.clear();
+        posStart = 16;
+        read1 = createSamRecord(nextReadId(), posStart, REF_BASES_A, "10M", false);
+        reads.add(read1);
+
+        read2 = createSamRecord(nextReadId(), posStart, REF_BASES_C, "10M", false);
+        reads.add(read2);
+
+        readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals("AAAAACCCCC", readInfo.ConsensusRead.getReadString());
+
+        // soft-clips at both ends
+        reads.clear();
+        posStart = 11;
+        read1 = createSamRecord(nextReadId(), posStart + 3, REF_BASES_A, "3S6M1S", false);
+        reads.add(read1);
+
+        read2 = createSamRecord(nextReadId(), posStart + 2, REF_BASES_A, "2S5M3S", false);
+        reads.add(read2);
+
+        readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+
+        assertEquals(posStart + 2, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals("2S7M1S", readInfo.ConsensusRead.getCigarString());
+        assertEquals(REF_BASES_A, readInfo.ConsensusRead.getReadString());
     }
 
     private static SAMRecord createSamRecord(

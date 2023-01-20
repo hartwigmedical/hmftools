@@ -9,6 +9,9 @@ import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
 
 import java.util.List;
 
+import org.apache.commons.compress.utils.Lists;
+
+import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
@@ -29,7 +32,7 @@ public class ConsensusState
     {
         Bases = null;
         BaseQualities = null;
-        CigarElements = null;
+        CigarElements = Lists.newArrayList();
 
         MinUnclippedPosStart = 0;
         MaxUnclippedPosEnd = 0;
@@ -79,6 +82,9 @@ public class ConsensusState
         record.setReadBases(Bases);
         record.setBaseQualities(BaseQualities);
         record.setReferenceName(initialRead.getReferenceName());
+
+        record.setAlignmentStart(MinAlignedPosStart);
+        record.setCigar(new Cigar(CigarElements));
 
         if(initialRead.getMateReferenceIndex() >= 0)
         {

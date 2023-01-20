@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups.umi;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
@@ -9,12 +10,15 @@ import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.UNSET;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.SOFT_CLIP;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class ConsensusReads
@@ -135,6 +139,19 @@ public class ConsensusReads
             }
         }
 
+        // build CIGAR from matched and any soft-clipped elements
+        int leftSoftClipBases = consensusState.MinAlignedPosStart - consensusState.MinUnclippedPosStart;
+        int rightSoftClipBases = consensusState.MaxUnclippedPosEnd - consensusState.MaxAlignedPosEnd;
+        int alignedBases = consensusState.MaxAlignedPosEnd - consensusState.MinAlignedPosStart + 1;
+
+        if(leftSoftClipBases > 0)
+            consensusState.CigarElements.add(new CigarElement(leftSoftClipBases, CigarOperator.S));
+
+        consensusState.CigarElements.add(new CigarElement(alignedBases, CigarOperator.M));
+
+        if(rightSoftClipBases > 0)
+            consensusState.CigarElements.add(new CigarElement(rightSoftClipBases, CigarOperator.S));
+
         consensusState.setOutcome(ALIGNMENT_ONLY);
     }
 
@@ -143,6 +160,7 @@ public class ConsensusReads
     {
         List<Byte> distinctBases = Lists.newArrayListWithCapacity(4);
         List<Integer> qualTotals = Lists.newArrayListWithCapacity(4);
+        List<Integer> maxQuals = Lists.newArrayListWithCapacity(4);
 
         for(int i = 0; i < locationBases.length; ++i)
         {
@@ -154,6 +172,7 @@ public class ConsensusReads
                 {
                     int qualTotal = qualTotals.get(j) + locationQuals[i];
                     qualTotals.set(j, qualTotal);
+                    maxQuals.set(j, max(maxQuals.get(j), locationQuals[i]));
                     found = true;
                     break;
                 }
@@ -163,21 +182,24 @@ public class ConsensusReads
             {
                 distinctBases.add(locationBases[i]);
                 qualTotals.add((int)locationQuals[i]);
+                maxQuals.add((int)locationQuals[i]);
             }
         }
 
         byte maxBase = distinctBases.get(0);
         boolean maxIsRef = false;
-        int maxQual = qualTotals.get(0);
+        int maxQual = maxQuals.get(0);
+        int maxQualTotal = qualTotals.get(0);
 
         for(int i = 1; i < distinctBases.size(); ++i)
         {
-            if(qualTotals.get(i) > maxQual)
+            if(qualTotals.get(i) > maxQualTotal)
             {
-                maxQual = qualTotals.get(i);
+                maxQualTotal = qualTotals.get(i);
+                maxQual = maxQuals.get(i);
                 maxBase = distinctBases.get(i);
             }
-            else if(qualTotals.get(i) >= maxQual && !maxIsRef)
+            else if(qualTotals.get(i) >= maxQualTotal && !maxIsRef)
             {
                 String refBase = mRefGenome.getBaseString(chromosome, position, position);
 
@@ -187,14 +209,24 @@ public class ConsensusReads
                 }
                 else if(distinctBases.get(i) == refBase.getBytes()[0])
                 {
-                    maxQual = qualTotals.get(i);
+                    maxQualTotal = qualTotals.get(i);
+                    maxQual = maxQuals.get(i);
                     maxBase = distinctBases.get(i);
                     maxIsRef = true;
                 }
             }
         }
 
-        return new byte[] { maxBase, (byte)maxQual };
-    }
+        int differingQual = 0;
 
+        for(int i = 0; i < distinctBases.size(); ++i)
+        {
+            if(distinctBases.get(i) != maxBase)
+                differingQual += qualTotals.get(i);
+        }
+
+        double calcQual = (double)maxQual * max(0.0, maxQualTotal - differingQual) / maxQualTotal;
+
+        return new byte[] { maxBase, (byte)round(calcQual) };
+    }
 }
