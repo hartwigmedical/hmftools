@@ -17,6 +17,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class ConsensusState
 {
+    public final boolean IsForward;
     public byte[] Bases;
     public byte[] BaseQualities;
     public List<CigarElement> CigarElements;
@@ -28,8 +29,9 @@ public class ConsensusState
 
     private ConsensusOutcome mOutcome;
 
-    public ConsensusState()
+    public ConsensusState(final boolean isForward)
     {
+        IsForward = isForward;
         Bases = null;
         BaseQualities = null;
         CigarElements = Lists.newArrayList();
