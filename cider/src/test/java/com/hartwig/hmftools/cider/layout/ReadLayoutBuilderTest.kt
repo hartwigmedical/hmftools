@@ -10,7 +10,6 @@ class ReadLayoutBuilderTest
     companion object
     {
         const val MIN_BASE_QUALITY = 30.toByte()
-        const val MIN_OVERLAP_BASES = 3
     }
 
     @Test
@@ -131,18 +130,18 @@ class ReadLayoutBuilderTest
         var baseQual = "FFFFFF" // F is 37, : is 25
 
         // we are aligned at the A
-        var readData = TestUtils.createRead("read1", seq, baseQual, 1)
+        var readData = TestUtils.createLayoutRead("read1", seq, baseQual, 1)
         layout.addRead(readData, MIN_BASE_QUALITY)
 
         // another sequence which does not include A, A is actually 2 positions before the start of sequence
         // the GTG part matches
         seq = "GTGCC"
         baseQual = "FFFFF"
-        readData = TestUtils.createRead("read2", seq, baseQual, -2)
+        readData = TestUtils.createLayoutRead("read2", seq, baseQual, -2)
         assertTrue(ReadLayoutBuilder.layoutMatch(layout, readData, MIN_BASE_QUALITY, 3))
 
         // if I move the aligned position it will not match
-        val mismatchRead = TestUtils.createRead("read2", seq, baseQual, -1)
+        val mismatchRead = TestUtils.createLayoutRead("read2", seq, baseQual, -1)
         assertFalse(ReadLayoutBuilder.layoutMatch(layout, mismatchRead, MIN_BASE_QUALITY, 3))
 
         // try add to layout
@@ -160,7 +159,7 @@ class ReadLayoutBuilderTest
         var baseQual = "FFFFFF" // F is 37, : is 25
 
         // we are aligned at 2 bases before the start of layout
-        val read1 = TestUtils.createRead("read1", seq, baseQual, -2)
+        val read1 = TestUtils.createLayoutRead("read1", seq, baseQual, -2)
         layout.addRead(read1, MIN_BASE_QUALITY)
 
         assertEquals(seq, layout.consensusSequence())
@@ -169,14 +168,14 @@ class ReadLayoutBuilderTest
         // we can still align reads normally
         seq = "TCAGGTGA"
         baseQual = "FFFFFFFF"
-        val read2 = TestUtils.createRead("read2", seq, baseQual, -1)
+        val read2 = TestUtils.createLayoutRead("read2", seq, baseQual, -1)
         assertTrue(ReadLayoutBuilder.layoutMatch(layout, read2, MIN_BASE_QUALITY, 6))
         assertFalse(ReadLayoutBuilder.layoutMatch(layout, read2, MIN_BASE_QUALITY, 7))
 
         // we can also align reads that do not have negative aligned position
         seq = "ATTCAGGTG"
         baseQual = "FFFFFFFFF"
-        val read3 = TestUtils.createRead("read3", seq, baseQual, 1)
+        val read3 = TestUtils.createLayoutRead("read3", seq, baseQual, 1)
         assertTrue(ReadLayoutBuilder.layoutMatch(layout, read3, MIN_BASE_QUALITY, 6))
 
         // try adding those to layout

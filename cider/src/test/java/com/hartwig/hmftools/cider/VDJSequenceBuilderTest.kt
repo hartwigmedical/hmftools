@@ -1,43 +1,8 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.cider.TestUtils.createVDJ
-import com.hartwig.hmftools.cider.layout.ReadLayout
-import com.hartwig.hmftools.cider.layout.ReadLayoutBuilderTest
-import com.hartwig.hmftools.cider.layout.TestLayoutRead
-import htsjdk.samtools.SAMUtils
-import org.apache.logging.log4j.Level
 import org.eclipse.collections.api.factory.Lists
 import org.junit.Before
-import java.util.IdentityHashMap
 import kotlin.test.*
-
-// create a mock layout adaptor that just return anchor range that we give it
-class MockVJReadLayoutAdaptor : IVJReadLayoutAdaptor()
-{
-    val anchorRangeMap = IdentityHashMap<ReadLayout, IntRange>()
-
-    /*
-    override fun toReadCandidate(read: TestLayoutRead) : VJReadCandidate
-    {
-        // return VJReadCandidate(SAMRecord(null), )
-    }
-     */
-
-    override fun getAnchorMatchMethod(layout: ReadLayout): VJReadCandidate.MatchMethod
-    {
-        return VJReadCandidate.MatchMethod.ALIGN
-    }
-
-    override fun getTemplateAnchorSequence(layout: ReadLayout) : String
-    {
-        return "TGACCC"
-    }
-
-    override fun getExtrapolatedAnchorRange(vj: VJ, layout: ReadLayout) : IntRange
-    {
-        return anchorRangeMap[layout]!!
-    }
-}
 
 class VDJSequenceBuilderTest
 {
