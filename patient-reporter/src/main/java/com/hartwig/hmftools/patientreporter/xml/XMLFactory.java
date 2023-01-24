@@ -15,14 +15,18 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.xml.ImmutableKeyXML;
 import com.hartwig.hmftools.common.xml.KeyXML;
+import com.hartwig.hmftools.patientreporter.PanelReporterApplication;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.data.*;
 
 import org.apache.commons.compress.utils.Lists;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class XMLFactory {
+    private static final Logger LOGGER = LogManager.getLogger(XMLFactory.class);
 
     private XMLFactory() {
     }
@@ -72,12 +76,12 @@ public class XMLFactory {
         mapXml.put("itemWgsTumorPurity",
                 ImmutableKeyXML.builder()
                         .keyPath("WgsTumorPurity")
-                        .valuePath(Map.of("value", DataUtil.formatPercentage(report.genomicAnalysis().impliedPurity())))
+                        .valuePath(Map.of("value", DataUtil.formatPercentageRound(report.genomicAnalysis().impliedPurity())))
                         .build());
         mapXml.put("itemWgsGemTuPloid",
                 ImmutableKeyXML.builder()
                         .keyPath("WgsGemTuPloid")
-                        .valuePath(Map.of("value", String.valueOf(report.genomicAnalysis().averageTumorPloidy())))
+                        .valuePath(Map.of("value", GeneUtil.copyNumberToString(report.genomicAnalysis().averageTumorPloidy(), hasReliablePurity)))
                         .build());
 
         String cupAnalyse = null;
@@ -143,7 +147,7 @@ public class XMLFactory {
                 ImmutableKeyXML.builder()
                         .keyPath("importwgs.wgsms.line[1]horesco")
                         .valuePath(Map.of("value",
-                                report.genomicAnalysis().hrdStatus().display().equals(ChordStatus.CANNOT_BE_DETERMINED.toString()) ? "N/A" : Double.toString(report.genomicAnalysis().hrdValue())))
+                                report.genomicAnalysis().hrdStatus() == ChordStatus.CANNOT_BE_DETERMINED ? "N/A" : Double.toString(report.genomicAnalysis().hrdValue())))
                         .build());
         mapXml.put("importwgs.wgsms.line[1]horestu",
                 ImmutableKeyXML.builder()
