@@ -49,6 +49,7 @@ public class LinxInterpreter {
                 .somaticHomozygousDisruptions(linx.somaticHomozygousDisruptions())
                 .allGermlineStructuralVariants(linx.allGermlineStructuralVariants())
                 .allGermlineBreakends(linx.allGermlineBreakends())
+                .reportableGermlineBreakends(linx.reportableGermlineBreakends())
                 .allGermlineDisruptions(linx.allGermlineDisruptions())
                 .reportableGermlineDisruptions(linx.reportableGermlineDisruptions())
                 .build();

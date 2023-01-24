@@ -47,6 +47,9 @@ public abstract class LinxInterpretedData {
     public abstract List<LinxBreakend> allGermlineBreakends();
 
     @Nullable
+    public abstract List<LinxBreakend> reportableGermlineBreakends();
+
+    @Nullable
     public abstract List<LinxGermlineSv> allGermlineDisruptions();
 
     @Nullable

@@ -10,17 +10,20 @@ import java.util.StringJoiner;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
-import com.hartwig.hmftools.common.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
+import com.hartwig.hmftools.orange.report.datamodel.BreakendEntryFactory;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
+import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineDeletionTable;
-import com.hartwig.hmftools.orange.report.tables.GermlineDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
 import com.hartwig.hmftools.orange.report.tables.PharmacogeneticsTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -65,7 +68,7 @@ public class GermlineFindingsChapter implements ReportChapter {
         if (report.refSample() != null) {
             addGermlineVariants(document);
             addGermlineDeletions(document);
-            addGermlineDisruptions(document);
+            addGermlineBreakends(document);
             addMVLHAnalysis(document);
             addGermlineCNAberrations(document);
             addPharmacogenetics(document);
@@ -101,11 +104,16 @@ public class GermlineFindingsChapter implements ReportChapter {
         }
     }
 
-    private void addGermlineDisruptions(@NotNull Document document) {
-        List<LinxGermlineSv> reportableGermlineDisruptions = report.linx().reportableGermlineDisruptions();
-        if (reportableGermlineDisruptions != null) {
-            String title = "Potentially pathogenic germline disruptions (" + reportableGermlineDisruptions.size() + ")";
-            document.add(GermlineDisruptionTable.build(title, contentWidth(), reportableGermlineDisruptions));
+    private void addGermlineBreakends(@NotNull Document document) {
+        List<LinxSvAnnotation> allGermlineStructuralVariants = report.linx().allGermlineStructuralVariants();
+        List<LinxBreakend> reportableGermlineBreakends = report.linx().reportableGermlineBreakends();
+
+        if (allGermlineStructuralVariants != null && reportableGermlineBreakends != null) {
+            List<BreakendEntry> reportableBreakends =
+                    BreakendEntryFactory.create(reportableGermlineBreakends, allGermlineStructuralVariants);
+
+            String title = "Potentially pathogenic germline disruptions (" + reportableBreakends.size() + ")";
+            document.add(BreakendTable.build(title, contentWidth(), reportableBreakends));
         }
     }
 

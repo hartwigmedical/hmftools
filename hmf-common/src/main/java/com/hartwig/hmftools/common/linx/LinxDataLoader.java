@@ -60,8 +60,10 @@ public final class LinxDataLoader {
         }
 
         List<LinxBreakend> allGermlineBreakends = null;
+        List<LinxBreakend> reportableGermlineBreakends = null;
         if (germlineBreakendTsv != null) {
             allGermlineBreakends = LinxBreakend.read(germlineBreakendTsv);
+            reportableGermlineBreakends = selectReportableBreakends(allGermlineBreakends);
         }
 
         List<LinxGermlineSv> allGermlineDisruptions = null;
@@ -81,6 +83,7 @@ public final class LinxDataLoader {
                 .somaticHomozygousDisruptions(somaticHomozygousDisruptions)
                 .allGermlineStructuralVariants(allGermlineStructuralVariants)
                 .allGermlineBreakends(allGermlineBreakends)
+                .reportableGermlineBreakends(reportableGermlineBreakends)
                 .allGermlineDisruptions(allGermlineDisruptions)
                 .reportableGermlineDisruptions(reportableGermlineDisruptions)
                 .build();
