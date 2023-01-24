@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.xml;
 
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -17,6 +18,7 @@ import com.hartwig.hmftools.common.xml.ImmutableKeyXML;
 import com.hartwig.hmftools.common.xml.KeyXML;
 import com.hartwig.hmftools.patientreporter.PanelReporterApplication;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.data.*;
 
 import org.apache.commons.compress.utils.Lists;
@@ -27,6 +29,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class XMLFactory {
     private static final Logger LOGGER = LogManager.getLogger(XMLFactory.class);
+    private static final DecimalFormat DOUBLE_DECIMAL_FORMAT = ReportResources.decimalFormat("#.##");
+    private static final DecimalFormat NO_DECIMAL_FORMAT = ReportResources.decimalFormat("#");
+    private static final DecimalFormat SINGLE_DECIMAL_FORMAT = ReportResources.decimalFormat("#.#");
+
 
     private XMLFactory() {
     }
@@ -121,7 +127,8 @@ public class XMLFactory {
         mapXml.put("importwgs.wgsms.line[1]msscore",
                 ImmutableKeyXML.builder()
                         .keyPath("importwgs.wgsms.line[1]msscore")
-                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().microsatelliteIndelsPerMb())))
+                        .valuePath(Map.of("value", hasReliablePurity ? report.genomicAnalysis().microsatelliteStatus().display() + " "
+                                + DOUBLE_DECIMAL_FORMAT.format(report.genomicAnalysis().microsatelliteIndelsPerMb()) : DataUtil.NA_STRING))
                         .build());
         mapXml.put("importwgs.wgsms.line[1]msstatus",
                 ImmutableKeyXML.builder()
@@ -131,7 +138,7 @@ public class XMLFactory {
         mapXml.put("importwgs.wgsms.line[1]tumuload",
                 ImmutableKeyXML.builder()
                         .keyPath("importwgs.wgsms.line[1]tumuload")
-                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().tumorMutationalLoad())))
+                        .valuePath(Map.of("value", hasReliablePurity ? report.genomicAnalysis().tumorMutationalLoadStatus().display() + " " + NO_DECIMAL_FORMAT.format(report.genomicAnalysis().tumorMutationalLoad()) : DataUtil.NA_STRING))
                         .build());
         mapXml.put("importwgs.wgsms.line[1]tumulosta",
                 ImmutableKeyXML.builder()
@@ -141,13 +148,13 @@ public class XMLFactory {
         mapXml.put("importwgs.wgsms.line[1]tutmb",
                 ImmutableKeyXML.builder()
                         .keyPath("importwgs.wgsms.line[1]tutmb")
-                        .valuePath(Map.of("value", Double.toString(report.genomicAnalysis().tumorMutationalBurden())))
+                        .valuePath(Map.of("value", hasReliablePurity ? SINGLE_DECIMAL_FORMAT.format(report.genomicAnalysis().tumorMutationalBurden()) : DataUtil.NA_STRING))
                         .build());
         mapXml.put("importwgs.wgsms.line[1]horesco",
                 ImmutableKeyXML.builder()
                         .keyPath("importwgs.wgsms.line[1]horesco")
                         .valuePath(Map.of("value",
-                                report.genomicAnalysis().hrdStatus() == ChordStatus.CANNOT_BE_DETERMINED ? "N/A" : Double.toString(report.genomicAnalysis().hrdValue())))
+                                report.genomicAnalysis().hrdStatus() == ChordStatus.CANNOT_BE_DETERMINED ? "N/A" : DOUBLE_DECIMAL_FORMAT.format(report.genomicAnalysis().hrdValue())))
                         .build());
         mapXml.put("importwgs.wgsms.line[1]horestu",
                 ImmutableKeyXML.builder()
