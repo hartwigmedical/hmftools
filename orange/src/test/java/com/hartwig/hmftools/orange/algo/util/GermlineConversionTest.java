@@ -67,6 +67,12 @@ public class GermlineConversionTest {
     }
 
     @Test
+    public void canConvertMinimalPurpleData() {
+        PurpleInterpretedData minimal = TestOrangeReportFactory.createMinimalTestReport().purple();
+        assertNotNull(GermlineConversion.convertPurpleGermline(true, minimal));
+    }
+
+    @Test
     public void canConvertPurple() {
         PurpleVariant somaticVariant = TestPurpleVariantFactory.builder().build();
         PurpleVariant reportableSomaticVariant = TestPurpleVariantFactory.builder().build();

@@ -256,12 +256,12 @@ public interface OrangeConfig {
 
         boolean convertGermlineToSomatic = cmd.hasOption(CONVERT_GERMLINE_TO_SOMATIC);
         if (convertGermlineToSomatic) {
-            LOGGER.info("Germline events will be converted to somatic events");
+            LOGGER.info("Germline conversion to somatic has been enabled.");
         }
 
         String refSampleId = Config.optionalValue(cmd, REFERENCE_SAMPLE_ID);
         if (refSampleId != null) {
-            LOGGER.debug("Ref sample configured as {}", refSampleId);
+            LOGGER.debug("Ref sample has been configured as {}.", refSampleId);
         }
 
         LocalDate experimentDate;

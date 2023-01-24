@@ -88,7 +88,7 @@ public final class GermlineConversion {
     @NotNull
     @VisibleForTesting
     static List<DriverCatalog> mergeGermlineDriversIntoSomatic(@NotNull List<DriverCatalog> somaticDrivers,
-            @NotNull List<DriverCatalog> germlineDrivers) {
+            @Nullable List<DriverCatalog> germlineDrivers) {
         List<DriverCatalog> merged = Lists.newArrayList();
         for (DriverCatalog somaticDriver : somaticDrivers) {
             DriverCatalog matchingGermlineDriver = findMatchingGermlineDriver(somaticDriver, germlineDrivers);
@@ -100,10 +100,12 @@ public final class GermlineConversion {
         }
 
         // TODO convert germline disruptions and germline deletions once their underlying data is converted.
-        for (DriverCatalog germlineDriver : germlineDrivers) {
-            if (germlineDriver.driver() == DriverType.GERMLINE_MUTATION
-                    && findMatchingSomaticDriver(germlineDriver, somaticDrivers) == null) {
-                merged.add(convertToSomaticDriver(germlineDriver));
+        if (germlineDrivers != null) {
+            for (DriverCatalog germlineDriver : germlineDrivers) {
+                if (germlineDriver.driver() == DriverType.GERMLINE_MUTATION
+                        && findMatchingSomaticDriver(germlineDriver, somaticDrivers) == null) {
+                    merged.add(convertToSomaticDriver(germlineDriver));
+                }
             }
         }
 
@@ -128,7 +130,11 @@ public final class GermlineConversion {
 
     @Nullable
     private static DriverCatalog findMatchingGermlineDriver(@NotNull DriverCatalog somaticDriver,
-            @NotNull List<DriverCatalog> germlineDrivers) {
+            @Nullable List<DriverCatalog> germlineDrivers) {
+        if (germlineDrivers == null) {
+            return null;
+        }
+
         return find(germlineDrivers, DriverType.GERMLINE_MUTATION, somaticDriver.gene(), somaticDriver.transcript());
     }
 
@@ -165,10 +171,12 @@ public final class GermlineConversion {
 
     @NotNull
     private static List<PurpleVariant> mergeGermlineVariantsIntoSomatic(@NotNull List<PurpleVariant> somaticVariants,
-            @NotNull List<PurpleVariant> germlineVariants) {
+            @Nullable List<PurpleVariant> germlineVariants) {
         List<PurpleVariant> merged = Lists.newArrayList();
         merged.addAll(somaticVariants);
-        merged.addAll(germlineVariants);
+        if (germlineVariants != null) {
+            merged.addAll(germlineVariants);
+        }
         return merged;
     }
 
