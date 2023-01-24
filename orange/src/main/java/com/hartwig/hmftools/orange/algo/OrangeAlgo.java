@@ -476,9 +476,14 @@ public class OrangeAlgo {
         return peachGenotypes;
     }
 
-    @NotNull
+    @Nullable
     private static List<SignatureAllocation> loadSigAllocations(@NotNull OrangeConfig config) throws IOException {
         String sigsAllocationTsv = config.sigsAllocationTsv();
+
+        if (sigsAllocationTsv == null) {
+            LOGGER.info("Skipping signature loading since no sigs allocation tsv has been provided");
+            return null;
+        }
 
         LOGGER.info("Loading Sigs from {}", new File(sigsAllocationTsv).getParent());
         List<SignatureAllocation> sigsAllocations = SignatureAllocationFile.read(sigsAllocationTsv);

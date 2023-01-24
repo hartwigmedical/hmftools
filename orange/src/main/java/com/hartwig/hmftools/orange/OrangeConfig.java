@@ -235,7 +235,7 @@ public interface OrangeConfig {
     @Nullable
     String peachGenotypeTsv();
 
-    @NotNull
+    @Nullable
     String sigsAllocationTsv();
 
     boolean convertGermlineToSomatic();

@@ -213,7 +213,7 @@ investigate potential causes for QC failure.
     - Removed warning in case a variant potentially falls in the splice region of 2 neighbouring exons
     - Extended linx datamodel with germline structural variants and breakends, rename all previous fields to include "somatic"
     - Added `-cuppa_chart_plot` parameter to hold the output of cuppa-chart
-    - Cuppa, VirusInterpreter and Chord are made optional to support pipeline running in panel-mode
+    - Cuppa, VirusInterpreter, Sigs and Chord are made optional to support pipeline running in panel-mode
 - [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.2)
     - (COSMIC) signatures are added to the somatic findings (new parameter: `-sigs_allocation_tsv`)
     - Unreported germline variants are no longer converted to somatic variants in case "germline to somatic conversion" is enabled.

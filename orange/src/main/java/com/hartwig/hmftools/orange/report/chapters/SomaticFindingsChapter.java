@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
@@ -206,8 +207,12 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addSignatureAllocations(@NotNull Document document) {
-        String title = "Signature allocations (" + report.sigAllocations().size() + ")";
-        document.add(SignatureAllocationTable.build(title, contentWidth(), report.sigAllocations()));
+        List<SignatureAllocation> sigAllocations = report.sigAllocations();
+
+        if (sigAllocations != null) {
+            String title = "Signature allocations (" + sigAllocations.size() + ")";
+            document.add(SignatureAllocationTable.build(title, contentWidth(), sigAllocations));
+        }
     }
 
     private void addStructuralDriverPlots(@NotNull Document document) {
