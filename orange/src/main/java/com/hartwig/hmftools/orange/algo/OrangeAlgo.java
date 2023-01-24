@@ -357,7 +357,7 @@ public class OrangeAlgo {
                     purple.allGermlineDeletions().size(),
                     purple.reportableGermlineDeletions().size());
         } else {
-            LOGGER.debug(" Skipped loading germline variants since no reference sample configured");
+            LOGGER.debug(" Skipped loading germline variants and deletions since no reference sample configured");
         }
 
         return purple;

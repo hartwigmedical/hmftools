@@ -29,13 +29,11 @@ public final class GermlineDeletionTable {
 
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 1, 1, 1 },
-                new Cell[] { Cells.createHeader("Chr"), Cells.createHeader("Region"), Cells.createHeader("Gene"),
-                        Cells.createHeader("Germline status"), Cells.createHeader("Tumor status"), Cells.createHeader("Germline CN"),
-                        Cells.createHeader("Tumor CN") });
+                new Cell[] { Cells.createHeader("Location"), Cells.createHeader("Gene"), Cells.createHeader("Germline status"),
+                        Cells.createHeader("Tumor status"), Cells.createHeader("Germline CN"), Cells.createHeader("Tumor CN") });
 
         for (GermlineDeletion deletion : sort(deletions)) {
-            table.addCell(Cells.createContent(deletion.Chromosome));
-            table.addCell(Cells.createContent(deletion.ChromosomeBand));
+            table.addCell(Cells.createContent(deletion.Chromosome + deletion.ChromosomeBand));
             table.addCell(Cells.createContent(deletion.GeneName));
             table.addCell(Cells.createContent(deletion.NormalStatus.toString()));
             table.addCell(Cells.createContent(deletion.TumorStatus.toString()));
