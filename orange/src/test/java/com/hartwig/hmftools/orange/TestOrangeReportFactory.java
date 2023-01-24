@@ -87,7 +87,7 @@ public final class TestOrangeReportFactory {
     @NotNull
     public static OrangeReport createProperTestReport() {
         return builder().addConfiguredPrimaryTumor(DoidTestFactory.createDoidNode("1", "cancer type"))
-                .platinumVersion("v5.30")
+                .platinumVersion("v5.31")
                 .refSample(createMinimalOrangeSample())
                 .germlineMVLHPerGene(createTestGermlineMVLHPerGene())
                 .purple(createTestPurpleData())
