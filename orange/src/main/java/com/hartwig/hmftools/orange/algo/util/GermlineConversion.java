@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
+import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
@@ -18,6 +19,7 @@ import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurityPloidyFit;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurityPloidyFit;
+import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 
@@ -46,21 +48,18 @@ public final class GermlineConversion {
     @NotNull
     @VisibleForTesting
     static PurpleInterpretedData convertPurpleGermline(boolean containsTumorCells, @NotNull PurpleInterpretedData purple) {
-        // TODO Convert germline deletions into somatic deletions.
-
-        // TODO Consider merging additional suspect variants as well but in practice suspect germline variants are only relevant for peach
-        // and cause confusing when merged into somatic.
-
         // In case tumor contains no tumor cells, we remove all germline events.
         List<DriverCatalog> mergedDrivers;
-        List<PurpleVariant> mergedSomaticVariants;
+        List<PurpleVariant> additionalSomaticVariants;
+        List<PurpleGainLoss> additionalSomaticGainsLosses;
         if (containsTumorCells) {
             mergedDrivers = mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers());
-            mergedSomaticVariants =
-                    mergeGermlineVariantsIntoSomatic(purple.reportableSomaticVariants(), purple.reportableGermlineVariants());
+            additionalSomaticVariants = toSomaticVariants(purple.reportableGermlineVariants());
+            additionalSomaticGainsLosses = toSomaticGainLosses(purple.reportableGermlineDeletions());
         } else {
             mergedDrivers = purple.somaticDrivers();
-            mergedSomaticVariants = purple.reportableSomaticVariants();
+            additionalSomaticVariants = Lists.newArrayList();
+            additionalSomaticGainsLosses = Lists.newArrayList();
         }
 
         return ImmutablePurpleInterpretedData.builder()
@@ -68,10 +67,13 @@ public final class GermlineConversion {
                 .fit(removeGermlineAberrations(purple.fit()))
                 .somaticDrivers(mergedDrivers)
                 .germlineDrivers(null)
-                .reportableSomaticVariants(mergedSomaticVariants)
+                .addAllAllSomaticVariants(additionalSomaticVariants)
+                .addAllReportableSomaticVariants(additionalSomaticVariants)
                 .allGermlineVariants(null)
                 .reportableGermlineVariants(null)
                 .additionalSuspectGermlineVariants(null)
+                .addAllAllSomaticGainsLosses(additionalSomaticGainsLosses)
+                .addAllReportableSomaticGainsLosses(additionalSomaticGainsLosses)
                 .allGermlineDeletions(null)
                 .reportableGermlineDeletions(null)
                 .build();
@@ -93,7 +95,7 @@ public final class GermlineConversion {
         for (DriverCatalog somaticDriver : somaticDrivers) {
             DriverCatalog matchingGermlineDriver = findMatchingGermlineDriver(somaticDriver, germlineDrivers);
             if (somaticDriver.driver() == DriverType.MUTATION && matchingGermlineDriver != null) {
-                merged.add(mergeSomaticMutationWithGermline(somaticDriver, matchingGermlineDriver));
+                merged.add(mergeSomaticMutationDriverWithGermline(somaticDriver, matchingGermlineDriver));
             } else {
                 merged.add(somaticDriver);
             }
@@ -113,7 +115,24 @@ public final class GermlineConversion {
     }
 
     @NotNull
-    private static DriverCatalog mergeSomaticMutationWithGermline(@NotNull DriverCatalog somaticDriver,
+    private static List<PurpleVariant> toSomaticVariants(@Nullable List<PurpleVariant> reportableGermlineVariants) {
+        return reportableGermlineVariants != null ? reportableGermlineVariants : Lists.newArrayList();
+    }
+
+    @NotNull
+    private static List<PurpleGainLoss> toSomaticGainLosses(@Nullable List<GermlineDeletion> reportableGermlineDeletions) {
+        if (reportableGermlineDeletions == null) {
+            return Lists.newArrayList();
+        }
+        List<PurpleGainLoss> gainsLosses = Lists.newArrayList();
+        for (GermlineDeletion deletion : reportableGermlineDeletions) {
+            // TODO convert;
+        }
+        return gainsLosses;
+    }
+
+    @NotNull
+    private static DriverCatalog mergeSomaticMutationDriverWithGermline(@NotNull DriverCatalog somaticDriver,
             @NotNull DriverCatalog germlineDriver) {
         return ImmutableDriverCatalog.builder()
                 .from(somaticDriver)
@@ -167,17 +186,6 @@ public final class GermlineConversion {
                 .driver(DriverType.MUTATION)
                 .likelihoodMethod(LikelihoodMethod.HOTSPOT)
                 .build();
-    }
-
-    @NotNull
-    private static List<PurpleVariant> mergeGermlineVariantsIntoSomatic(@NotNull List<PurpleVariant> somaticVariants,
-            @Nullable List<PurpleVariant> germlineVariants) {
-        List<PurpleVariant> merged = Lists.newArrayList();
-        merged.addAll(somaticVariants);
-        if (germlineVariants != null) {
-            merged.addAll(germlineVariants);
-        }
-        return merged;
     }
 
     @NotNull
