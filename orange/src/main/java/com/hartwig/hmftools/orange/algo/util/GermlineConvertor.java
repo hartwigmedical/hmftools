@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -28,26 +29,31 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class GermlineConversion {
+public class GermlineConvertor {
 
-    private static final Logger LOGGER = LogManager.getLogger(GermlineConversion.class);
+    private static final Logger LOGGER = LogManager.getLogger(GermlineConvertor.class);
 
-    private GermlineConversion() {
+    @NotNull
+    private final EnsemblDataCache ensemblDataCache;
+
+    public GermlineConvertor(@NotNull final EnsemblDataCache ensemblDataCache) {
+        this.ensemblDataCache = ensemblDataCache;
     }
 
     @NotNull
-    public static OrangeReport convertGermlineToSomatic(@NotNull OrangeReport report) {
+    public OrangeReport convertGermlineToSomatic(@NotNull OrangeReport report) {
         return ImmutableOrangeReport.builder()
                 .from(report)
                 .germlineMVLHPerGene(null)
-                .purple(convertPurpleGermline(report.purple().fit().containsTumorCells(), report.purple()))
+                .purple(convertPurpleGermline(report.purple().fit().containsTumorCells(), report.purple(), report.linx()))
                 .linx(convertLinxGermline(report.linx()))
                 .build();
     }
 
     @NotNull
     @VisibleForTesting
-    static PurpleInterpretedData convertPurpleGermline(boolean containsTumorCells, @NotNull PurpleInterpretedData purple) {
+    static PurpleInterpretedData convertPurpleGermline(boolean containsTumorCells, @NotNull PurpleInterpretedData purple,
+            @NotNull LinxInterpretedData linx) {
         // In case tumor contains no tumor cells, we remove all germline events.
         List<DriverCatalog> mergedDrivers;
         List<PurpleVariant> additionalSomaticVariants;

@@ -59,7 +59,7 @@ import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
-import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
+import com.hartwig.hmftools.orange.algo.util.GermlineConvertor;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeGene;
@@ -207,7 +207,7 @@ public class OrangeAlgo {
         }
 
         if (config.convertGermlineToSomatic()) {
-            report = GermlineConversion.convertGermlineToSomatic(report);
+            report = new GermlineConvertor(ensemblDataCache).convertGermlineToSomatic(report);
         }
 
         return report;
