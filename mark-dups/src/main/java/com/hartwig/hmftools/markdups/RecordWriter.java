@@ -42,10 +42,7 @@ public class RecordWriter
     private final MarkDupsConfig mConfig;
 
     private final BamWriter mBamWriter;
-    private final BamWriter mCandidateBamWriter;
-    private final BamWriter mSupplementaryBamWriter;
     private final BufferedWriter mReadWriter;
-    private final BufferedWriter mResolvedReadWriter;
 
     private boolean mCacheReads;
     private final Set<SAMRecord> mReadsWritten; // debug only
@@ -95,19 +92,6 @@ public class RecordWriter
         else
         {
             mBamWriter = new BamWriter(null);
-        }
-
-        if(mConfig.UseInterimFiles)
-        {
-            mCandidateBamWriter = new BamWriter(formBamFilename("candidate"));
-            mSupplementaryBamWriter = new BamWriter(formBamFilename("supplementary"));
-            mResolvedReadWriter = initialiseResolvedReadWriter();
-        }
-        else
-        {
-            mCandidateBamWriter = null;
-            mSupplementaryBamWriter = null;
-            mResolvedReadWriter = null;
         }
 
         mReadWriter = initialiseReadWriter();
@@ -272,77 +256,6 @@ public class RecordWriter
         {
             MD_LOGGER.error(" failed to write read data: {}", e.toString());
         }
-    }
-
-    // interim files & caching routines, not in use
-    public synchronized void writeCachedFragment(final Fragment fragment) { doWriteCachedFragment(fragment); }
-
-    private void doWriteCachedFragment(final Fragment fragment)
-    {
-        if(!mConfig.UseInterimFiles)
-            return;
-
-        if(fragment.status() == SUPPLEMENTARY)
-        {
-            fragment.reads().forEach(x -> mSupplementaryBamWriter.writeRecord(x));
-        }
-        else
-        {
-            fragment.reads().forEach(x -> mCandidateBamWriter.writeRecord(x));
-        }
-    }
-
-    private BufferedWriter initialiseResolvedReadWriter()
-    {
-        try
-        {
-            String filename = mConfig.formFilename("resolved_fragments");
-            BufferedWriter writer = createBufferedWriter(filename, false);
-
-            writer.write("ReadId,Status,RemotePartition");
-            writer.newLine();
-
-            return writer;
-        }
-        catch(IOException e)
-        {
-            MD_LOGGER.error(" failed to create resolved fragments writer: {}", e.toString());
-        }
-
-        return null;
-    }
-
-    public void writeResolvedReadData(final String readId, final FragmentStatus status, final String chrPartition)
-    {
-        if(mResolvedReadWriter == null)
-            return;
-
-        try
-        {
-            mResolvedReadWriter.write(format("%s,%s,%s", readId, status, chrPartition));
-            mResolvedReadWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            MD_LOGGER.error(" failed to write resolved fragment: {}", e.toString());
-        }
-    }
-
-    public void closeInterimFiles()
-    {
-        if(mCandidateBamWriter != null)
-        {
-            MD_LOGGER.info("{} candidate reads written", mCandidateBamWriter.writeCount());
-            mCandidateBamWriter.close();
-        }
-
-        if(mSupplementaryBamWriter != null)
-        {
-            MD_LOGGER.info("{} supplementary reads written", mSupplementaryBamWriter.writeCount());
-            mSupplementaryBamWriter.close();
-        }
-
-        closeBufferedWriter(mResolvedReadWriter);
     }
 
     public void close()

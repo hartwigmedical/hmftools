@@ -82,13 +82,6 @@ public class MarkDuplicates
             recordWriter.writeFragments(fragments);
         }
 
-        if(mConfig.UseInterimFiles)
-        {
-            recordWriter.closeInterimFiles();
-
-            // routine for handling these..
-        }
-
         recordWriter.close();
 
         MD_LOGGER.debug("all chromosome tasks complete");
