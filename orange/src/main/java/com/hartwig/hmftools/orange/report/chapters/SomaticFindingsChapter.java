@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
@@ -19,10 +20,10 @@ import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.DNAFusionTable;
-import com.hartwig.hmftools.orange.report.tables.GeneCopyNumberTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.LossOfHeterozygosityTable;
 import com.hartwig.hmftools.orange.report.tables.SignatureAllocationTable;
+import com.hartwig.hmftools.orange.report.tables.SomaticGainLossTable;
 import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -106,25 +107,25 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     private void addSomaticAmpDels(@NotNull Document document) {
         String titleDrivers = "Driver amps/dels (" + report.purple().reportableSomaticGainsLosses().size() + ")";
-        document.add(GeneCopyNumberTable.build(titleDrivers,
+        document.add(SomaticGainLossTable.build(titleDrivers,
                 contentWidth(),
                 report.purple().reportableSomaticGainsLosses(),
                 report.isofox()));
 
         String titleNearDriverGains =
                 "Potentially interesting near-driver amps (" + report.purple().nearReportableSomaticGains().size() + ")";
-        document.add(GeneCopyNumberTable.build(titleNearDriverGains,
+        document.add(SomaticGainLossTable.build(titleNearDriverGains,
                 contentWidth(),
                 report.purple().nearReportableSomaticGains(),
                 report.isofox()));
 
         List<PurpleGainLoss> suspectGains = selectGains(report.purple().additionalSuspectSomaticGainsLosses());
         String titleSuspectGains = "Other regions with amps (" + suspectGains.size() + ")";
-        document.add(GeneCopyNumberTable.build(titleSuspectGains, contentWidth(), max10(suspectGains), report.isofox()));
+        document.add(SomaticGainLossTable.build(titleSuspectGains, contentWidth(), max10(suspectGains), report.isofox()));
 
         List<PurpleGainLoss> suspectLosses = selectLosses(report.purple().additionalSuspectSomaticGainsLosses());
         String titleSuspectLosses = "Regions with deletions in genes in other autosomal regions (" + suspectLosses.size() + ")";
-        document.add(GeneCopyNumberTable.build(titleSuspectLosses, contentWidth(), max10(suspectLosses), report.isofox()));
+        document.add(SomaticGainLossTable.build(titleSuspectLosses, contentWidth(), max10(suspectLosses), report.isofox()));
     }
 
     @NotNull
@@ -206,8 +207,12 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addSignatureAllocations(@NotNull Document document) {
-        String title = "Signature allocations (" + report.sigAllocations().size() + ")";
-        document.add(SignatureAllocationTable.build(title, contentWidth(), report.sigAllocations()));
+        List<SignatureAllocation> sigAllocations = report.sigAllocations();
+
+        if (sigAllocations != null) {
+            String title = "Signature allocations (" + sigAllocations.size() + ")";
+            document.add(SignatureAllocationTable.build(title, contentWidth(), sigAllocations));
+        }
     }
 
     private void addStructuralDriverPlots(@NotNull Document document) {

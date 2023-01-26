@@ -59,7 +59,7 @@ import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
-import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
+import com.hartwig.hmftools.orange.algo.util.GermlineConvertor;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeGene;
@@ -207,7 +207,7 @@ public class OrangeAlgo {
         }
 
         if (config.convertGermlineToSomatic()) {
-            report = GermlineConversion.convertGermlineToSomatic(report);
+            report = new GermlineConvertor(ensemblDataCache).convertGermlineToSomatic(report);
         }
 
         return report;
@@ -357,7 +357,7 @@ public class OrangeAlgo {
                     purple.allGermlineDeletions().size(),
                     purple.reportableGermlineDeletions().size());
         } else {
-            LOGGER.debug(" Skipped loading germline variants since no reference sample configured");
+            LOGGER.debug(" Skipped loading germline variants and deletions since no reference sample configured");
         }
 
         return purple;
@@ -476,9 +476,14 @@ public class OrangeAlgo {
         return peachGenotypes;
     }
 
-    @NotNull
+    @Nullable
     private static List<SignatureAllocation> loadSigAllocations(@NotNull OrangeConfig config) throws IOException {
         String sigsAllocationTsv = config.sigsAllocationTsv();
+
+        if (sigsAllocationTsv == null) {
+            LOGGER.info("Skipping signature loading since no sigs allocation tsv has been provided");
+            return null;
+        }
 
         LOGGER.info("Loading Sigs from {}", new File(sigsAllocationTsv).getParent());
         List<SignatureAllocation> sigsAllocations = SignatureAllocationFile.read(sigsAllocationTsv);

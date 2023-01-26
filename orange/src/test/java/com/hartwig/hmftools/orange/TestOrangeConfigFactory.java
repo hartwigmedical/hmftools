@@ -80,7 +80,6 @@ public final class TestOrangeConfigFactory {
                 .linxPlotDirectory(LINX_PLOT_DIRECTORY)
                 .lilacResultCsv(LILAC_RESULT_CSV)
                 .lilacQcCsv(LILAC_QC_CSV)
-                .sigsAllocationTsv(SIGS_ALLOCATION_TSV)
                 .convertGermlineToSomatic(false)
                 .limitJsonOutput(false)
                 .build();
@@ -95,6 +94,7 @@ public final class TestOrangeConfigFactory {
                 .cuppaResultCsv(CUPPA_RESULT_CSV)
                 .cuppaSummaryPlot(CUPPA_SUMMARY_PLOT)
                 .cuppaChartPlot(CUPPA_CHART_PLOT)
+                .sigsAllocationTsv(SIGS_ALLOCATION_TSV)
                 .build();
     }
 

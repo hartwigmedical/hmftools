@@ -23,8 +23,8 @@ data class VdjAnnotation(val vdj: VDJSequence,
                          val jPrimerMatchCount: Int)
 
 // helper object to annotate the VDJ sequences that we found
-class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
-                   private val blosumSearcher: AnchorBlosumSearcher)
+class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
+                   private val blosumSearcher: IAnchorBlosumSearcher)
 {
     fun sortAndAnnotateVdjs(vdjSequences: List<VDJSequence>, primerMatches: List<VdjPrimerMatch>) : List<VdjAnnotation>
     {
@@ -132,7 +132,16 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
         return anchorBlosumMatch
     }
 
-    // for now we want to just log where the mappings are
+    // TODO: probably simpler to just directly count the number of split reads instead of
+    // trying to see if any split location straddle a boundary
+    //
+    // =====V anchor========----------------------------------=====J anchor========
+    // |---------------------------------|        |-------------------------------|
+    //        V anchor + 30 bases                      30 bases + J anchor
+    // We want to count reads that has an aligned block that span the region V anchor + 30 bases after
+    // or J anchor + 30 bases before
+    //
+    // This would tell us if there is an rearrangement that occurred.
     fun countNonSplitReads(vdj: VDJSequence, vj: VJ) : Int
     {
         val alignedPos = vdj.layout.alignedPosition - vdj.layoutSliceStart
@@ -143,14 +152,32 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
         if (vj == VJ.J && vdj.jAnchor == null)
             return 0
 
-        val boundaryPos: Int = if (vj == VJ.V)
+        // we want to work out if any read block spans the boundary region
+        // which is the boundary +- 30 bases
+        var boundaryRegionStart: Int
+        var boundaryRegionEnd: Int
+
+        if (vj == VJ.V)
         {
-            vdj.vAnchorBoundary!!
+            boundaryRegionStart = vdj.vAnchorBoundary!!
+            boundaryRegionEnd = vdj.vAnchorBoundary!!
         }
         else
         {
-            vdj.jAnchorBoundary!!
+            boundaryRegionStart = vdj.jAnchorBoundary!!
+            boundaryRegionEnd = vdj.jAnchorBoundary!!
         }
+
+        boundaryRegionStart -= CiderConstants.MIN_NON_SPLIT_READ_STRADDLE_LENGTH
+        boundaryRegionEnd += CiderConstants.MIN_NON_SPLIT_READ_STRADDLE_LENGTH
+
+        // if the VDJ sequence only get a partial anchor sequence, any align block that span the whole way is counted
+        // as non split read
+        // i.e. if the V anchor has only 10 bases, then any align block that spans that 10 bases + 30 bases after V boundary
+        // is counted as non split read
+        boundaryRegionStart = Math.max(boundaryRegionStart, 0)
+        boundaryRegionEnd = Math.min(boundaryRegionEnd, vdj.length)
+
         var nonSplitReadCount = 0
 
         for (read in vdj.layout.reads)
@@ -165,7 +192,10 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
             //                                        |  <-- aligned position
             //                  |------------|           <-- this is the value we want
             val readPosWithinVdj = alignedPos - read.alignedPosition
-            val readSliceAnchorBoundary = boundaryPos - readPosWithinVdj
+
+            // we are trying to find if there is an aligned block that span the following region
+            val readSliceBoundaryRegionStart = boundaryRegionStart - readPosWithinVdj
+            val readSliceBoundaryRegionEnd = boundaryRegionEnd - readPosWithinVdj
 
             // work out where in the VDJ sequence is this read mapped
             if (!samRecord.readUnmappedFlag)
@@ -180,16 +210,17 @@ class VdjAnnotator(private val adaptor: VJReadLayoutBuilder,
                     require(alignRangeInReadSlice.left < alignRangeInReadSlice.right)
 
                     // to count as a non split read, it needs to be away from the boundary
-                    if (readSliceAnchorBoundary >= alignRangeInReadSlice.left + CiderConstants.MIN_NON_SPLIT_READ_STRADDLE_LENGTH &&
-                        readSliceAnchorBoundary <= alignRangeInReadSlice.right - CiderConstants.MIN_NON_SPLIT_READ_STRADDLE_LENGTH
+                    if (readSliceBoundaryRegionStart >= alignRangeInReadSlice.left &&
+                        readSliceBoundaryRegionEnd <= alignRangeInReadSlice.right
                     )
                     {
                         ++nonSplitReadCount
 
-                        // this read straddles a v anchor boundary
-                        sLogger.trace("read({}) cigar({}) revcomp({}), straddles {} boundary, align offset({}:{}), boundary offset({})",
+                        // this read straddles an anchor boundary
+                        sLogger.trace("read({}) cigar({}) revcomp({}), straddles {} boundary, align offset({}:{}), boundary region({}:{})",
                             samRecord, samRecord.cigarString, layoutReadSlice.reverseComplement, vj,
-                            alignRangeInReadSlice.left, alignRangeInReadSlice.right, readSliceAnchorBoundary)
+                            alignRangeInReadSlice.left, alignRangeInReadSlice.right,
+                            readSliceBoundaryRegionStart, readSliceBoundaryRegionEnd)
                     }
                 }
             }

@@ -79,7 +79,7 @@ public abstract class OrangeReport {
     @Nullable
     public abstract List<PeachGenotype> peach();
 
-    @NotNull
+    @Nullable
     public abstract List<SignatureAllocation> sigAllocations();
 
     @NotNull

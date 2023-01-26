@@ -17,7 +17,9 @@ import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
+import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurityPloidyFit;
 import com.hartwig.hmftools.orange.algo.purple.PurityPloidyFit;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
@@ -29,7 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class GermlineConversionTest {
+public class GermlineConvertorTest {
 
     private static final double EPSILON = 1.0E-10;
 
@@ -51,7 +53,8 @@ public class GermlineConversionTest {
                         .build())
                 .build();
 
-        OrangeReport converted = GermlineConversion.convertGermlineToSomatic(report);
+        GermlineConvertor convertor = new GermlineConvertor(TestEnsemblDataCacheFactory.createDummyCache());
+        OrangeReport converted = convertor.convertGermlineToSomatic(report);
 
         assertNull(converted.germlineMVLHPerGene());
 
@@ -64,6 +67,13 @@ public class GermlineConversionTest {
 
         assertNull(converted.linx().allGermlineDisruptions());
         assertNull(converted.linx().reportableGermlineDisruptions());
+    }
+
+    @Test
+    public void canConvertMinimalPurpleData() {
+        OrangeReport minimal = TestOrangeReportFactory.createMinimalTestReport();
+
+        assertNotNull(GermlineConvertor.convertPurpleGermline(true, minimal.purple(), minimal.linx()));
     }
 
     @Test
@@ -91,7 +101,9 @@ public class GermlineConversionTest {
                 .addAdditionalSuspectGermlineVariants(suspectGermlineVariant)
                 .build();
 
-        PurpleInterpretedData converted = GermlineConversion.convertPurpleGermline(true, purple);
+        LinxInterpretedData minimalLinx = TestLinxInterpretationFactory.createMinimalTestLinxData();
+
+        PurpleInterpretedData converted = GermlineConvertor.convertPurpleGermline(true, purple, minimalLinx);
 
         assertTrue(converted.fit().qc().germlineAberrations().isEmpty());
 
@@ -104,7 +116,7 @@ public class GermlineConversionTest {
         assertNotNull(findByDriverType(converted.somaticDrivers(), DriverType.AMP));
         assertNotNull(findByDriverType(converted.somaticDrivers(), DriverType.MUTATION));
 
-        assertEquals(1, converted.allSomaticVariants().size());
+        assertEquals(2, converted.allSomaticVariants().size());
         assertTrue(converted.allSomaticVariants().contains(somaticVariant));
 
         assertEquals(2, converted.reportableSomaticVariants().size());
@@ -114,7 +126,7 @@ public class GermlineConversionTest {
         assertEquals(1, converted.additionalSuspectSomaticVariants().size());
         assertTrue(converted.additionalSuspectSomaticVariants().contains(suspectSomaticVariant));
 
-        PurpleInterpretedData unreliableConverted = GermlineConversion.convertPurpleGermline(false, purple);
+        PurpleInterpretedData unreliableConverted = GermlineConvertor.convertPurpleGermline(false, purple, minimalLinx);
         assertEquals(1, unreliableConverted.somaticDrivers().size());
         assertNotNull(findByDriverType(unreliableConverted.somaticDrivers(), DriverType.AMP));
 
@@ -178,7 +190,7 @@ public class GermlineConversionTest {
         DriverCatalog germlineDriver2 =
                 DriverCatalogTestFactory.builder().driver(DriverType.GERMLINE_MUTATION).gene("gene 2").transcript("transcript 1").build();
 
-        List<DriverCatalog> merged = GermlineConversion.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver1, somaticDriver2),
+        List<DriverCatalog> merged = GermlineConvertor.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver1, somaticDriver2),
                 Lists.newArrayList(germlineDriver1, germlineDriver2));
 
         assertEquals(3, merged.size());

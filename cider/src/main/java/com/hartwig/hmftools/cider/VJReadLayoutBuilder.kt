@@ -11,7 +11,10 @@ import kotlin.collections.ArrayList
 // create an interface to make it easier to test
 abstract class IVJReadLayoutAdaptor
 {
-    //fun toReadCandidate(read: ReadLayout.Read) : VJReadCandidate
+    abstract fun toReadCandidate(read: ReadLayout.Read) : VJReadCandidate
+
+    abstract fun toLayoutReadSlice(read: ReadLayout.Read) : ReadSlice
+
     abstract fun getAnchorMatchMethod(layout: ReadLayout) : VJReadCandidate.MatchMethod
     abstract fun getTemplateAnchorSequence(layout: ReadLayout) : String
 
@@ -98,12 +101,12 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         return VjLayoutRead(slice, readCandidate, alignedPosition)
     }
 
-    fun toReadCandidate(read: ReadLayout.Read) : VJReadCandidate
+    override fun toReadCandidate(read: ReadLayout.Read) : VJReadCandidate
     {
         return (read as VjLayoutRead).readCandidate
     }
 
-    fun toLayoutReadSlice(read: ReadLayout.Read) : ReadSlice
+    override fun toLayoutReadSlice(read: ReadLayout.Read) : ReadSlice
     {
         return (read as VjLayoutRead).layoutReadSlice
     }
