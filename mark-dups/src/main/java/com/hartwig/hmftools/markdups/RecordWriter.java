@@ -3,6 +3,7 @@ package com.hartwig.hmftools.markdups;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.SUPPLEMENTARY;
@@ -22,10 +23,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
+import com.hartwig.hmftools.markdups.umi.UmiGroup;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
@@ -44,6 +47,7 @@ public class RecordWriter
     private final BufferedWriter mReadWriter;
     private final BufferedWriter mResolvedReadWriter;
 
+    private boolean mCacheReads;
     private final Set<SAMRecord> mReadsWritten; // debug only
 
     private class BamWriter
@@ -80,6 +84,7 @@ public class RecordWriter
     public RecordWriter(final MarkDupsConfig config)
     {
         mConfig = config;
+        mCacheReads = config.runReadChecks();
 
         if(mConfig.WriteBam)
         {
@@ -135,6 +140,27 @@ public class RecordWriter
     public synchronized void writeFragments(final List<Fragment> fragments) { fragments.forEach(x -> doWriteFragment(x)); }
     public synchronized void writeFragment(final Fragment fragment) { doWriteFragment(fragment); }
 
+    public synchronized void writeUmiReads(final UmiGroup umiGroup, final List<SAMRecord> completeReads)
+    {
+        for(SAMRecord read : completeReads)
+        {
+            if(read.hasAttribute(UMI_CONSENSUS_ATTRIBUTE))
+            {
+                mBamWriter.writeRecord(read);
+
+                if(mCacheReads)
+                        mReadsWritten.add(read);
+
+                continue;
+            }
+
+            Fragment fragment = new Fragment(read);
+            fragment.setUmiId(umiGroup.umiId());
+            fragment.setStatus(DUPLICATE);
+            doWriteFragment(fragment);
+        }
+    }
+
     private void doWriteFragment(final Fragment fragment)
     {
         if(fragment.readsWritten())
@@ -147,26 +173,9 @@ public class RecordWriter
         fragment.reads().forEach(x -> writeRead(x, fragment));
     }
 
-    public synchronized void writeCachedFragment(final Fragment fragment) { doWriteCachedFragment(fragment); }
-
-    private void doWriteCachedFragment(final Fragment fragment)
-    {
-        if(!mConfig.UseInterimFiles)
-            return;
-
-        if(fragment.status() == SUPPLEMENTARY)
-        {
-            fragment.reads().forEach(x -> mSupplementaryBamWriter.writeRecord(x));
-        }
-        else
-        {
-            fragment.reads().forEach(x -> mCandidateBamWriter.writeRecord(x));
-        }
-    }
-
     private void writeRead(final SAMRecord read, final Fragment fragment)
     {
-        if(mConfig.runReadChecks())
+        if(mCacheReads)
         {
             if(mReadsWritten.contains(read))
             {
@@ -265,6 +274,24 @@ public class RecordWriter
         }
     }
 
+    // interim files & caching routines, not in use
+    public synchronized void writeCachedFragment(final Fragment fragment) { doWriteCachedFragment(fragment); }
+
+    private void doWriteCachedFragment(final Fragment fragment)
+    {
+        if(!mConfig.UseInterimFiles)
+            return;
+
+        if(fragment.status() == SUPPLEMENTARY)
+        {
+            fragment.reads().forEach(x -> mSupplementaryBamWriter.writeRecord(x));
+        }
+        else
+        {
+            fragment.reads().forEach(x -> mCandidateBamWriter.writeRecord(x));
+        }
+    }
+
     private BufferedWriter initialiseResolvedReadWriter()
     {
         try
@@ -327,4 +354,7 @@ public class RecordWriter
     }
 
     public Set<SAMRecord> readsWritten() { return mReadsWritten; }
+
+    @VisibleForTesting
+    public void setCacheReads() { mCacheReads = true;}
 }

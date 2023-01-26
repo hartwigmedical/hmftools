@@ -82,7 +82,6 @@ public class Fragment
     public int initialPosition() { return mCoordinates.InitialPosition; }
 
     public void intialiseCoordinates(boolean useMateCigar) { mCoordinates = getFragmentCoordinates(mReads, useMateCigar); }
-    public void intialiseCoordinates() { intialiseCoordinates(true); }
 
     public double averageBaseQual() { return mAverageBaseQual; }
     public void setAverageBaseQual(double qual) { mAverageBaseQual = qual; }

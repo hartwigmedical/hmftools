@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.markdups.umi;
 
 import static java.lang.Math.max;
-import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroups.calcBaseQualAverage;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_FAIL;
-import static com.hartwig.hmftools.markdups.umi.ConsensusState.formReadId;
+import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -15,6 +16,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
+import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -71,10 +73,59 @@ public class ConsensusReads
             buildCigar(consensusState);
         }
 
-        SAMRecord consensusRead = consensusState.createConsensusRead(reads.get(0), groupIdentifier);
+        SAMRecord consensusRead = createConsensusRead(consensusState, reads, groupIdentifier);
 
         return new ConsensusReadInfo(consensusRead, consensusState.outcome());
     }
+
+    protected static String formReadId(final String templateReadId, final String groupIdentifier)
+    {
+        int lastDelim = templateReadId.lastIndexOf(READ_ID_DELIM);
+        return lastDelim > 0 ? templateReadId.substring(0, lastDelim) + READ_ID_DELIM + "CNS_" + groupIdentifier
+                : templateReadId + READ_ID_DELIM + "CNS_" + groupIdentifier;
+    }
+
+    public static SAMRecord createConsensusRead(final ConsensusState state, final List<SAMRecord> reads, final String groupIdentifier)
+    {
+        SAMRecord initialRead = reads.get(0);
+        SAMRecord record = new SAMRecord(initialRead.getHeader());
+
+        record.setReadName(formReadId(initialRead.getReadName(), groupIdentifier));
+        record.setReadBases(state.Bases);
+        record.setBaseQualities(state.BaseQualities);
+        record.setReferenceName(initialRead.getReferenceName());
+
+        record.setAlignmentStart(state.MinAlignedPosStart);
+        record.setCigar(new Cigar(state.CigarElements));
+
+        if(initialRead.getMateReferenceIndex() >= 0)
+        {
+            record.setMateReferenceName(initialRead.getMateReferenceName());
+            record.setMateAlignmentStart(initialRead.getMateAlignmentStart());
+            record.setMateReferenceIndex(initialRead.getMateReferenceIndex());
+            record.setReadPairedFlag(true);
+            record.setProperPairFlag(true);
+        }
+        else
+        {
+            record.setReadPairedFlag(false);
+            record.setProperPairFlag(false);
+        }
+
+        record.setFlags(initialRead.getFlags());
+        record.setDuplicateReadFlag(false); // being the new primary
+        record.setAttribute(UMI_CONSENSUS_ATTRIBUTE, reads.size());
+
+        if(initialRead.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
+        {
+            record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, initialRead.getAttribute(SUPPLEMENTARY_ATTRIBUTE));
+        }
+
+        record.setInferredInsertSize(initialRead.getInferredInsertSize());
+
+        return record;
+    }
+
 
     public SAMRecord copyPrimaryRead(final List<SAMRecord> reads, final String groupIdentifier)
     {
@@ -109,6 +160,8 @@ public class ConsensusReads
         record.setDuplicateReadFlag(false);
 
         primaryRead.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
+        record.setAttribute(UMI_CONSENSUS_ATTRIBUTE, reads.size());
+
         record.setInferredInsertSize(primaryRead.getInferredInsertSize());
 
         return record;

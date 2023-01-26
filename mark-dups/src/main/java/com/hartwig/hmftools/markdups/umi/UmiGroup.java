@@ -4,11 +4,12 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.common.Constants.MAX_UMI_BASE_DIFF;
-import static com.hartwig.hmftools.markdups.umi.ConsensusState.formReadId;
+import static com.hartwig.hmftools.markdups.umi.ConsensusReads.formReadId;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -77,8 +78,6 @@ public class UmiGroup
         }
 
         mConsensusReadId = formReadId(mFragments.get(0).id(), mUmiId);
-
-        mFragments.clear();
     }
 
     public void clearFragments() { mFragments.clear(); }
@@ -128,7 +127,8 @@ public class UmiGroup
             if(readGroup == null || readGroup.size() < mFragmentCount)
                 continue;
 
-            reads.addAll(readGroup);
+            if(mFragments.isEmpty()) // to avoid writing cached fragment reads twice
+                reads.addAll(readGroup);
 
             ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(readGroup, mUmiId);
             reads.add(consensusReadInfo.ConsensusRead);
@@ -137,11 +137,17 @@ public class UmiGroup
             mReadGroupComplete[i] = true;
         }
 
+        if(!mFragments.isEmpty())
+            mFragments.clear();
+
         return reads;
     }
 
     public List<String> getReadIds()
     {
+        if(!mFragments.isEmpty())
+            return mFragments.stream().map(x -> x.id()).collect(Collectors.toList());
+
         for(List<SAMRecord> readGroup : mReadGroups)
         {
             if(readGroup.size() == mFragmentCount)
@@ -178,7 +184,7 @@ public class UmiGroup
         if(mFragmentCount == 0)
             return format("id(%s) fragments(%d)", mUmiId, mFragments.size());
 
-        StringBuilder sb = new StringBuilder();
+        StringJoiner sj = new StringJoiner(", ");
         for(ReadLegType legType : ReadLegType.values())
         {
             List<SAMRecord> readGroup = mReadGroups[legType.ordinal()];
@@ -186,10 +192,10 @@ public class UmiGroup
             if(readGroup == null)
                 continue;
 
-            sb.append(format("%s=%d", legType, readGroup.size() == 0 ? mFragmentCount : readGroup.size()));
+            sj.add(format("%s=%d", legType, mReadGroupComplete[legType.ordinal()] ? mFragmentCount : readGroup.size()));
         }
 
-        return format("id(%s) fragments(%d) state: %s", mUmiId, mFragments.size(), sb);
+        return format("id(%s) fragments(%d) readCounts(%s)", mUmiId, mFragmentCount, sj);
     }
 
     public static List<UmiGroup> buildUmiGroups(final List<Fragment> fragments, final UmiConfig config)

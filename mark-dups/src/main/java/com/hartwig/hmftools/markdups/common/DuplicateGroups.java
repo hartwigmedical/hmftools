@@ -30,20 +30,15 @@ public class DuplicateGroups
     //private static final int HIGH_DEPTH_THRESHOLD = 10000;
     private final UmiConfig mUmiConfig;
     private final Statistics mStats;
-    private final ConsensusReads mConsensusReads;
 
-    public DuplicateGroups(final UmiConfig umiConfig, final RefGenomeInterface refGenome)
+    public DuplicateGroups(final UmiConfig umiConfig)
     {
         mUmiConfig = umiConfig;
-        mConsensusReads = new ConsensusReads(umiConfig, refGenome);
         mStats = new Statistics();
     }
 
     public Statistics statistics() { return mStats; }
     public UmiConfig umiConfig() { return mUmiConfig; }
-
-    @Deprecated
-    public ConsensusReads consensusReads() { return mConsensusReads; }
 
     public static void findDuplicateFragments(
             final List<Fragment> fragments, final List<Fragment> resolvedFragments,

@@ -21,7 +21,7 @@ import org.junit.Test;
 
 public class UmiGroupsTest
 {
-    private static final String FIXED_READ_ID = "123:ABC:1:4455:";
+    public static final String FIXED_READ_ID = "123:ABC:1:4455:";
 
     private static final UmiConfig UMI_CONFIG = new UmiConfig(true);
 

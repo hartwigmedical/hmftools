@@ -207,7 +207,7 @@ public class MarkDupsConfig
         return options;
     }
 
-    public MarkDupsConfig(int partitionSize, int bufferSize, final RefGenomeInterface refGenome)
+    public MarkDupsConfig(int partitionSize, int bufferSize, final RefGenomeInterface refGenome, boolean umiEnabled)
     {
         mIsValid = true;
         SampleId = "";
@@ -220,7 +220,7 @@ public class MarkDupsConfig
 
         PartitionSize = partitionSize;
         BufferSize = bufferSize;
-        UMIs = new UmiConfig(false);
+        UMIs = new UmiConfig(umiEnabled);
         NoMateCigar = false;
 
         SpecificChromosomes = Lists.newArrayList();

@@ -26,12 +26,13 @@ public final class TestUtils
     public static final String TEST_READ_BASES = MockRefGenome.generateRandomBases(100);
     public static final String TEST_READ_ID = "READ_01";
     public static final String TEST_READ_CIGAR = "100M";
+    public static final String TEST_READ_ID_PREFIX = "123:ABC:1:4455:";
 
     public static final int DEFAULT_QUAL = 37;
 
     public static MarkDupsConfig createTestConfig()
     {
-        return new MarkDupsConfig(DEFAULT_PARTITION_SIZE, DEFAULT_POS_BUFFER_SIZE, new MockRefGenome());
+        return new MarkDupsConfig(DEFAULT_PARTITION_SIZE, DEFAULT_POS_BUFFER_SIZE, new MockRefGenome(), false);
     }
 
     public static SAMSequenceDictionary SAM_DICTIONARY_V37;

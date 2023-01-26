@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.UNSET;
 import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
 
@@ -74,51 +75,5 @@ public class ConsensusState
             MinAlignedPosStart = min(readStart, MinAlignedPosStart);
             MaxAlignedPosEnd = max(readEnd, MaxAlignedPosEnd);
         }
-    }
-
-    public SAMRecord createConsensusRead(final SAMRecord initialRead, final String groupIdentifier)
-    {
-        SAMRecord record = new SAMRecord(initialRead.getHeader());
-
-        record.setReadName(formReadId(initialRead.getReadName(), groupIdentifier));
-        record.setReadBases(Bases);
-        record.setBaseQualities(BaseQualities);
-        record.setReferenceName(initialRead.getReferenceName());
-
-        record.setAlignmentStart(MinAlignedPosStart);
-        record.setCigar(new Cigar(CigarElements));
-
-        if(initialRead.getMateReferenceIndex() >= 0)
-        {
-            record.setMateReferenceName(initialRead.getMateReferenceName());
-            record.setMateAlignmentStart(initialRead.getMateAlignmentStart());
-            record.setMateReferenceIndex(initialRead.getMateReferenceIndex());
-            record.setReadPairedFlag(true);
-            record.setProperPairFlag(true);
-        }
-        else
-        {
-            record.setReadPairedFlag(false);
-            record.setProperPairFlag(false);
-        }
-
-        record.setFlags(initialRead.getFlags());
-        record.setDuplicateReadFlag(false); // being the new primary
-
-        if(initialRead.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
-        {
-            record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, initialRead.getAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        }
-
-        record.setInferredInsertSize(initialRead.getInferredInsertSize());
-
-        return record;
-    }
-
-    protected static String formReadId(final String templateReadId, final String groupIdentifier)
-    {
-        int lastDelim = templateReadId.lastIndexOf(READ_ID_DELIM);
-        return lastDelim > 0 ? templateReadId.substring(0, lastDelim) + READ_ID_DELIM + "CNS_" + groupIdentifier
-                : templateReadId + READ_ID_DELIM + "CNS_" + groupIdentifier;
     }
 }

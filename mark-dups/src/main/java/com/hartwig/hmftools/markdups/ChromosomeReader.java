@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -30,6 +31,7 @@ import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.PartitionResults;
 import com.hartwig.hmftools.markdups.common.Statistics;
 import com.hartwig.hmftools.markdups.umi.ConsensusReadInfo;
+import com.hartwig.hmftools.markdups.umi.ConsensusReads;
 import com.hartwig.hmftools.markdups.umi.UmiGroup;
 
 import htsjdk.samtools.SAMRecord;
@@ -47,6 +49,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private final RecordWriter mRecordWriter;
     private final ReadPositionsCache mReadPositions;
     private final DuplicateGroups mDuplicateGroups;
+    private final ConsensusReads mConsensusReads;
 
     private BaseRegion mCurrentPartition;
     private String mCurrentStrPartition;
@@ -77,7 +80,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mBamSlicer.setKeepUnmapped();
 
         mReadPositions = new ReadPositionsCache(region.Chromosome, config.BufferSize, !config.NoMateCigar, this);
-        mDuplicateGroups = new DuplicateGroups(config.UMIs, config.RefGenome);
+        mDuplicateGroups = new DuplicateGroups(config.UMIs);
+        mConsensusReads = new ConsensusReads(config.UMIs, config.RefGenome);
 
         if(!mConfig.SpecificRegions.isEmpty())
         {
@@ -314,10 +318,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private void processUmiGroup(final UmiGroup umiGroup)
     {
         // form consensus reads for any complete read leg groups and write reads
-
-        List<SAMRecord> completeReads = umiGroup.popCompletedReads(mDuplicateGroups.consensusReads());
-
-        // mRecordWriter.writeUmiReads();
+        List<SAMRecord> completeReads = umiGroup.popCompletedReads(mConsensusReads);
+        mRecordWriter.writeUmiReads(umiGroup, completeReads);
     }
 
     public void accept(final List<Fragment> positionFragments)
@@ -342,8 +344,6 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         if(mConfig.UMIs.Enabled)
         {
             umiGroups = mDuplicateGroups.processDuplicateUmiGroups(duplicateGroups);
-
-            umiGroups.forEach(x -> processUmiGroup(x));
         }
         else
         {
@@ -375,6 +375,9 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
                     mRegion.Chromosome, position, posFragmentCount, format("%.1fs", timeTakenSec));
         }
 
+        if(umiGroups != null)
+            umiGroups.forEach(x -> processUmiGroup(x));
+
         if(!resolvedFragments.isEmpty())
         {
             mRecordWriter.writeFragments(resolvedFragments);
@@ -390,4 +393,13 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         else
             mPerfCounter.start();
     }
+
+    @VisibleForTesting
+    public void processRead(final SAMRecord read) { processSamRecord(read); }
+
+    @VisibleForTesting
+    public void flushReadPositions() { mReadPositions.evictAll(); }
+
+    @VisibleForTesting
+    public void onChromosomeComplete() { onPartitionComplete(false); }
 }

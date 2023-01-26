@@ -51,7 +51,7 @@ public class PartitionDataTest
     @Test
     public void testBasicFragments()
     {
-        PartitionData partitionData = new PartitionData(LOCAL_PARTITION_STR, mConfig.UMIs, mConfig.RefGenome);
+        PartitionData partitionData = new PartitionData(LOCAL_PARTITION_STR, mConfig.UMIs);
 
         List<Fragment> testFragments = createBasicFragments();
 
@@ -171,7 +171,7 @@ public class PartitionDataTest
     @Test
     public void testCandidateFragments()
     {
-        PartitionData partitionData = new PartitionData(LOCAL_PARTITION_STR, mConfig.UMIs, mConfig.RefGenome);
+        PartitionData partitionData = new PartitionData(LOCAL_PARTITION_STR, mConfig.UMIs);
 
         // test 1: 2 candidate fragments both waiting on their mates
         List<Fragment> testFragments = createCandidateFragments();
