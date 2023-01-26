@@ -3,16 +3,16 @@ package com.hartwig.hmftools.markdups.umi;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.markdups.common.DuplicateGroups.calcBaseQualAverage;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_FAIL;
-import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MISMATCH;
+import static com.hartwig.hmftools.markdups.umi.ConsensusState.formReadId;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import htsjdk.samtools.CigarElement;
@@ -58,7 +58,10 @@ public class ConsensusReads
             mIndelConsensusReads.buildIndelComponents(reads,  consensusState);
 
             if(consensusState.outcome() == INDEL_FAIL)
-                return new ConsensusReadInfo(null, consensusState.outcome());
+            {
+                SAMRecord consensusRead = copyPrimaryRead(reads, groupIdentifier);
+                return new ConsensusReadInfo(consensusRead, consensusState.outcome());
+            }
         }
         else
         {
@@ -73,6 +76,43 @@ public class ConsensusReads
         return new ConsensusReadInfo(consensusRead, consensusState.outcome());
     }
 
+    public SAMRecord copyPrimaryRead(final List<SAMRecord> reads, final String groupIdentifier)
+    {
+        SAMRecord primaryRead = null;
+
+        double maxBaseQual = 0;
+
+        for(SAMRecord read : reads)
+        {
+            double avgBaseQual = calcBaseQualAverage(read);
+
+            if(avgBaseQual > maxBaseQual)
+            {
+                maxBaseQual = avgBaseQual;
+                primaryRead = read;
+            }
+        }
+
+        SAMRecord record = new SAMRecord(primaryRead.getHeader());
+
+        record.setReadName(formReadId(primaryRead.getReadName(), groupIdentifier));
+        record.setReadBases(primaryRead.getReadBases());
+        record.setBaseQualities(primaryRead.getBaseQualities());
+        record.setReferenceName(primaryRead.getReferenceName());
+
+        record.setAlignmentStart(primaryRead.getAlignmentStart());
+        record.setCigar(primaryRead.getCigar());
+        record.setMateReferenceName(primaryRead.getMateReferenceName());
+        record.setMateAlignmentStart(primaryRead.getMateAlignmentStart());
+        record.setMateReferenceIndex(primaryRead.getMateReferenceIndex());
+        record.setFlags(primaryRead.getFlags());
+        record.setDuplicateReadFlag(false);
+
+        primaryRead.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
+        record.setInferredInsertSize(primaryRead.getInferredInsertSize());
+
+        return record;
+    }
 
     private static void buildCigar(final ConsensusState consensusState)
     {

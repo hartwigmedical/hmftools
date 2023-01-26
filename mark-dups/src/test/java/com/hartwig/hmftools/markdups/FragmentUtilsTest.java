@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.markdups;
 
-import static com.hartwig.hmftools.markdups.common.DuplicateGroupUtils.calcBaseQualAverage;
-import static com.hartwig.hmftools.markdups.common.DuplicateGroupUtils.findPrimaryFragment;
+import static com.hartwig.hmftools.markdups.common.DuplicateGroups.calcBaseQualAverage;
+import static com.hartwig.hmftools.markdups.common.DuplicateGroups.findPrimaryFragment;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.NO_COORDS;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.markdups.TestUtils.DEFAULT_QUAL;

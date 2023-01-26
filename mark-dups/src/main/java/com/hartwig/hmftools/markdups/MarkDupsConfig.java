@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
@@ -12,6 +13,8 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
+import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_PARTITION_SIZE;
+import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -20,6 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.common.FilterReadsType;
@@ -31,12 +35,15 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 public class MarkDupsConfig
 {
     public final String SampleId;
     public final String BamFile;
     public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
+    public final RefGenomeInterface RefGenome;
 
     public final int PartitionSize;
     public final int BufferSize;
@@ -80,15 +87,13 @@ public class MarkDupsConfig
     private static final String USE_INTERIM_FILES = "use_interim_files";
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
 
-    private static final int DEFAULT_PARTITION_SIZE = 1000000;
-    private static final int DEFAULT_POS_BUFFER_SIZE = 1000;
-
     public MarkDupsConfig(final CommandLine cmd)
     {
         mIsValid = true;
         SampleId = cmd.getOptionValue(SAMPLE);
         BamFile = cmd.getOptionValue(BAM_FILE);
         RefGenomeFile = cmd.getOptionValue(REF_GENOME);
+        RefGenome = loadRefGenome(RefGenomeFile);
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
@@ -202,12 +207,7 @@ public class MarkDupsConfig
         return options;
     }
 
-    public MarkDupsConfig()
-    {
-        this(DEFAULT_PARTITION_SIZE, DEFAULT_POS_BUFFER_SIZE);
-    }
-
-    public MarkDupsConfig(int partitionSize, int bufferSize)
+    public MarkDupsConfig(int partitionSize, int bufferSize, final RefGenomeInterface refGenome)
     {
         mIsValid = true;
         SampleId = "";
@@ -216,10 +216,11 @@ public class MarkDupsConfig
         OutputDir = null;
         OutputId = "";
         RefGenVersion = V37;
+        RefGenome = refGenome;
 
         PartitionSize = partitionSize;
         BufferSize = bufferSize;
-        UMIs = new UmiConfig(false, false);
+        UMIs = new UmiConfig(false);
         NoMateCigar = false;
 
         SpecificChromosomes = Lists.newArrayList();

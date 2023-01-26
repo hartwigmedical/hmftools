@@ -115,7 +115,7 @@ public class ConsensusState
         return record;
     }
 
-    private static String formReadId(final String templateReadId, final String groupIdentifier)
+    protected static String formReadId(final String templateReadId, final String groupIdentifier)
     {
         int lastDelim = templateReadId.lastIndexOf(READ_ID_DELIM);
         return lastDelim > 0 ? templateReadId.substring(0, lastDelim) + READ_ID_DELIM + "CNS_" + groupIdentifier

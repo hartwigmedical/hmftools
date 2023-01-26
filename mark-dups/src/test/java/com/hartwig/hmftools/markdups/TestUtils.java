@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_PARTITION_SIZE;
+import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 
 import java.util.List;
 
@@ -26,6 +28,11 @@ public final class TestUtils
     public static final String TEST_READ_CIGAR = "100M";
 
     public static final int DEFAULT_QUAL = 37;
+
+    public static MarkDupsConfig createTestConfig()
+    {
+        return new MarkDupsConfig(DEFAULT_PARTITION_SIZE, DEFAULT_POS_BUFFER_SIZE, new MockRefGenome());
+    }
 
     public static SAMSequenceDictionary SAM_DICTIONARY_V37;
 

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.markdups;
 
-import static com.hartwig.hmftools.markdups.common.DuplicateGroupUtils.findDuplicateFragments;
+import static com.hartwig.hmftools.markdups.common.DuplicateGroups.findDuplicateFragments;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;

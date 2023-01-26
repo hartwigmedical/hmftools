@@ -44,7 +44,7 @@ public class ConsensusReadsTest
 
     public ConsensusReadsTest()
     {
-        mConfig = new UmiConfig(true, true);
+        mConfig = new UmiConfig(true);
         mRefGenome = new MockRefGenome();
         mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES);
         mConsensusReads = new ConsensusReads(mConfig, mRefGenome);

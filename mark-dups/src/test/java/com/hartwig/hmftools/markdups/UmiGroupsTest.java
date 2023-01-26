@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.markdups;
 
 import static com.hartwig.hmftools.markdups.TestUtils.createFragment;
-import static com.hartwig.hmftools.markdups.common.DuplicateGroupUtils.buildUmiGroups;
 import static com.hartwig.hmftools.markdups.umi.UmiConfig.extractUmiIdFromReadId;
+import static com.hartwig.hmftools.markdups.umi.UmiGroup.buildUmiGroups;
 import static com.hartwig.hmftools.markdups.umi.UmiGroup.exceedsUmiIdDiff;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 
@@ -23,7 +23,7 @@ public class UmiGroupsTest
 {
     private static final String FIXED_READ_ID = "123:ABC:1:4455:";
 
-    private static final UmiConfig UMI_CONFIG = new UmiConfig(true, false);
+    private static final UmiConfig UMI_CONFIG = new UmiConfig(true);
 
     @Test
     public void testUmiUtils()
@@ -64,13 +64,13 @@ public class UmiGroupsTest
         List<UmiGroup> groups = buildUmiGroups(fragments, UMI_CONFIG);
         assertEquals(2, groups.size());
 
-        UmiGroup group = groups.stream().filter(x -> x.Fragments.contains(frag1)).findFirst().orElse(null);
-        assertTrue(group.Fragments.contains(frag2));
-        assertTrue(group.Fragments.contains(frag3));
-        assertTrue(group.Fragments.contains(frag5));
+        UmiGroup group = groups.stream().filter(x -> x.fragments().contains(frag1)).findFirst().orElse(null);
+        assertTrue(group.fragments().contains(frag2));
+        assertTrue(group.fragments().contains(frag3));
+        assertTrue(group.fragments().contains(frag5));
 
-        group = groups.stream().filter(x -> x.Fragments.contains(frag4)).findFirst().orElse(null);
-        assertTrue(group.Fragments.contains(frag6));
+        group = groups.stream().filter(x -> x.fragments().contains(frag4)).findFirst().orElse(null);
+        assertTrue(group.fragments().contains(frag6));
 
         // check that larger groups aren't merged
 
@@ -94,14 +94,14 @@ public class UmiGroupsTest
         assertEquals(2, groups.size());
         assertEquals(fragments.size(), groups.stream().mapToInt(x -> x.fragmentCount()).sum());
 
-        group = groups.stream().filter(x -> x.Fragments.contains(frag11)).findFirst().orElse(null);
+        group = groups.stream().filter(x -> x.fragments().contains(frag11)).findFirst().orElse(null);
         assertEquals(18, group.fragmentCount());
-        assertTrue(group.Fragments.contains(frag12));
-        assertTrue(group.Fragments.contains(frag13));
-        assertTrue(group.Fragments.contains(frag14));
-        assertTrue(group.Fragments.contains(frag16));
+        assertTrue(group.fragments().contains(frag12));
+        assertTrue(group.fragments().contains(frag13));
+        assertTrue(group.fragments().contains(frag14));
+        assertTrue(group.fragments().contains(frag16));
 
-        group = groups.stream().filter(x -> x.Fragments.contains(frag15)).findFirst().orElse(null);
+        group = groups.stream().filter(x -> x.fragments().contains(frag15)).findFirst().orElse(null);
         assertEquals(5, group.fragmentCount());
     }
 

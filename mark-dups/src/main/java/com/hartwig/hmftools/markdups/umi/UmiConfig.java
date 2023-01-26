@@ -6,29 +6,25 @@ import org.apache.commons.cli.Options;
 public class UmiConfig
 {
     public final boolean Enabled;
-    public final boolean CreateConsensusRead;
 
     private int mUmiLength; // set and accessed in a thread-safe way
 
     // config options
     private static final String UMI_ENABLED = "umi_enabled";
-    private static final String UMI_FORM_CONSENSUS = "umi_consensus";
 
     public static final char READ_ID_DELIM = ':';
     public static final String READ_ID_DELIM_STR = String.valueOf(READ_ID_DELIM);
 
-    public UmiConfig(boolean enabled, boolean createConsensusRead)
+    public UmiConfig(boolean enabled)
     {
         Enabled = enabled;
-        CreateConsensusRead = createConsensusRead;
         mUmiLength = 0;
     }
 
     public static UmiConfig from(final CommandLine cmd)
     {
         return new UmiConfig(
-                cmd.hasOption(UMI_ENABLED),
-                cmd.hasOption(UMI_FORM_CONSENSUS));
+                cmd.hasOption(UMI_ENABLED));
     }
 
     public String extractUmiId(final String readId)
@@ -61,6 +57,5 @@ public class UmiConfig
     public static void addCommandLineOptions(final Options options)
     {
         options.addOption(UMI_ENABLED, false, "Use UMIs for duplicates");
-        options.addOption(UMI_FORM_CONSENSUS, false, "Form consensus reads from UMI duplicates");
     }
 }
