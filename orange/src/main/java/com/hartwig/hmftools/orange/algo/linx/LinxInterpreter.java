@@ -2,6 +2,8 @@ package com.hartwig.hmftools.orange.algo.linx;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
@@ -11,6 +13,7 @@ import com.hartwig.hmftools.common.linx.LinxFusion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class LinxInterpreter {
 
@@ -49,7 +52,24 @@ public class LinxInterpreter {
                 .somaticHomozygousDisruptions(linx.somaticHomozygousDisruptions())
                 .allGermlineStructuralVariants(linx.allGermlineStructuralVariants())
                 .allGermlineBreakends(linx.allGermlineBreakends())
-                .reportableGermlineBreakends(linx.reportableGermlineBreakends())
+                .reportableGermlineBreakends(filterForPresenceInTumor(linx.reportableGermlineBreakends()))
                 .build();
+    }
+
+    @Nullable
+    @VisibleForTesting
+    static List<LinxBreakend> filterForPresenceInTumor(@Nullable List<LinxBreakend> breakends) {
+        if (breakends == null) {
+            return null;
+        }
+
+        List<LinxBreakend> filtered = Lists.newArrayList();
+        for (LinxBreakend breakend : breakends) {
+            if (breakend.junctionCopyNumber() > 0.1) {
+                filtered.add(breakend);
+            }
+        }
+
+        return filtered;
     }
 }
