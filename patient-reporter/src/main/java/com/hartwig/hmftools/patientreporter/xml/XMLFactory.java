@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.xml.ImmutableKeyXML;
 import com.hartwig.hmftools.common.xml.KeyXML;
+import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.data.*;
@@ -86,9 +87,9 @@ public class XMLFactory {
                 .build());
 
         String disclaimer = Strings.EMPTY;
-        disclaimer += report.genomicAnalysis().hasReliablePurity() ? Strings.EMPTY : "Due to the lower tumor purity potential "
+        disclaimer += report.qsFormNumber().equals(QsFormNumber.FOR_209.display()) ? "Due to the lower tumor purity potential "
                 + "(subclonal) DNA aberrations might not have been detected using this test. This result should therefore be "
-                + "considered with caution.";
+                + "considered with caution." : Strings.EMPTY;
         disclaimer += !report.specialRemark().isEmpty() ? report.specialRemark() : Strings.EMPTY;
         xml.add(ImmutableKeyXML.builder().keyPath("WgsDisclaimerTonen").valuePath(Map.of("value", disclaimer)).build());
 
