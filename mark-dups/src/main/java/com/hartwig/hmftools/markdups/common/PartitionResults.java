@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.markdups.common;
 
+import static java.lang.String.format;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -36,12 +38,14 @@ public class PartitionResults
 
     public List<UmiGroup> umiGroups() { return mUmiGroups; }
 
-    public void addUmiGroups(final List<UmiGroup> umiGroups)
+    public void addUmiGroup(final UmiGroup umiGroup)
     {
         if(mUmiGroups == null)
-            mUmiGroups = Lists.newArrayList(umiGroups);
+            mUmiGroups = Lists.newArrayList(umiGroup);
         else
-            mUmiGroups.addAll(umiGroups);
+            mUmiGroups.add(umiGroup);
     }
+
+    public String toString() { return format("resolved(%d) umiGroups(%d)", mResolvedFragments.size(), mUmiGroups.size()); }
 
 }

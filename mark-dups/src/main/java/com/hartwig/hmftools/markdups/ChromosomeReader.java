@@ -401,5 +401,11 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     public void flushReadPositions() { mReadPositions.evictAll(); }
 
     @VisibleForTesting
+    public void flushPendingIncompletes() { processPendingIncompletes(); }
+
+    @VisibleForTesting
     public void onChromosomeComplete() { onPartitionComplete(false); }
+
+    @VisibleForTesting
+    public PartitionDataStore partitionDataStore() { return mPartitionDataStore; }
 }

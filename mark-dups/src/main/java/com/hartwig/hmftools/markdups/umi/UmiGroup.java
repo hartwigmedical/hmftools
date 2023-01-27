@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_
 import static com.hartwig.hmftools.markdups.common.Constants.MAX_UMI_BASE_DIFF;
 import static com.hartwig.hmftools.markdups.umi.ConsensusReads.formReadId;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -111,6 +112,11 @@ public class UmiGroup
         }
 
         return true;
+    }
+
+    public boolean hasCompleteReadGroup()
+    {
+        return Arrays.stream(mReadGroups).anyMatch(x -> x != null && !x.isEmpty() && x.size() == mFragmentCount);
     }
 
     public List<SAMRecord> popCompletedReads(final ConsensusReads consensusReads)

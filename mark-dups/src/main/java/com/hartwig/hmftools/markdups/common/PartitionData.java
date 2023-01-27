@@ -240,10 +240,6 @@ public class PartitionData
 
             PartitionResults partitionResults = new PartitionResults();
 
-            // TODO: mustn't add twice - easier to not add here at all?
-            // if(fragment.status().isResolved())
-            //    partitionResults.addResolvedFragment(fragment);
-
             processUpdatedGroups(partitionResults);
             return partitionResults;
         }
@@ -288,20 +284,6 @@ public class PartitionData
         if(existingFragment != null)
         {
             fragment.reads().forEach(x -> existingFragment.addRead(x));
-
-            /*
-            if(checkUmiGroups())
-            {
-                UmiGroup umiGroup = mUmiGroups.get(fragment.id());
-
-                if(umiGroup != null)
-                {
-                    fragment.reads().forEach(x -> umiGroup.addRead(x));
-                    mUpdatedUmiGroups.add(umiGroup);
-                    return true;
-                }
-            }
-            */
 
             if(existingFragment.status() == CANDIDATE && existingFragment.primaryReadsPresent())
             {
@@ -407,9 +389,16 @@ public class PartitionData
 
         mUpdatedCandidateDuplicates.clear();
 
-        partitionResults.addUmiGroups(mUpdatedUmiGroups.stream().collect(Collectors.toList()));
+        // only add UMI groups if they have complete sets of reads
 
-        mUpdatedUmiGroups.forEach(x -> checkRemoveUmiGroup(x));
+        for(UmiGroup umiGroup : mUpdatedUmiGroups)
+        {
+            if(umiGroup.hasCompleteReadGroup())
+            {
+                partitionResults.addUmiGroup(umiGroup);
+                checkRemoveUmiGroup(umiGroup);
+            }
+        }
 
         mUpdatedUmiGroups.clear();
     }
@@ -496,6 +485,12 @@ public class PartitionData
 
     @VisibleForTesting
     public Map<String,CandidateDuplicates> candidateDuplicatesMap() { return mCandidateDuplicatesMap; }
+
+    @VisibleForTesting
+    public Map<String,ResolvedFragmentState> resolvedFragmentStateMap() { return mFragmentStatus; }
+
+    @VisibleForTesting
+    public Map<String,UmiGroup> umiGroupMap() { return mUmiGroups; }
 
     @VisibleForTesting
     public void processPrimaryFragments(final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList)
