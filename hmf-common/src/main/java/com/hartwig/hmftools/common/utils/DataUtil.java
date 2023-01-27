@@ -13,6 +13,7 @@ public final class DataUtil {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
     private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");
+    private static final DecimalFormat PERCENTAGE_FORMAT_WITHOUT_PERCENT = new DecimalFormat("#");
     private static final DecimalFormat PERCENTAGE_FORMAT_WITH_DIGIT =
             new DecimalFormat("#.#'%'", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     public static final String NONE_STRING = "NONE";
@@ -29,6 +30,11 @@ public final class DataUtil {
     @NotNull
     public static String formatPercentageRound(double percentage) {
         return PERCENTAGE_FORMAT.format(percentage * 100);
+    }
+
+    @NotNull
+    public static String formatPercentageRoundWithoutPercent(double percentage) {
+        return PERCENTAGE_FORMAT_WITHOUT_PERCENT.format(percentage * 100);
     }
 
     @NotNull

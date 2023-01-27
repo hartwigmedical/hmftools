@@ -64,7 +64,7 @@ public class XMLFactory {
         xml.add(ImmutableKeyXML.builder().keyPath("WgsPlatform").valuePath(Map.of("value", "Illumina NovaSeq")).build());
         xml.add(ImmutableKeyXML.builder()
                 .keyPath("WgsTumorPurity")
-                .valuePath(Map.of("value", DataUtil.formatPercentageRound(report.genomicAnalysis().impliedPurity())))
+                .valuePath(Map.of("value", DataUtil.formatPercentageRoundWithoutPercent(report.genomicAnalysis().impliedPurity())))
                 .build());
         xml.add(ImmutableKeyXML.builder()
                 .keyPath("WgsGemTuPloid")
