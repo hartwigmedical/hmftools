@@ -17,6 +17,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class ConsensusState
 {
+    public final boolean IsForward;
     public byte[] Bases;
     public byte[] BaseQualities;
     public List<CigarElement> CigarElements;
@@ -28,8 +29,9 @@ public class ConsensusState
 
     private ConsensusOutcome mOutcome;
 
-    public ConsensusState()
+    public ConsensusState(final boolean isForward)
     {
+        IsForward = isForward;
         Bases = null;
         BaseQualities = null;
         CigarElements = Lists.newArrayList();
@@ -113,7 +115,7 @@ public class ConsensusState
         return record;
     }
 
-    private static String formReadId(final String templateReadId, final String groupIdentifier)
+    protected static String formReadId(final String templateReadId, final String groupIdentifier)
     {
         int lastDelim = templateReadId.lastIndexOf(READ_ID_DELIM);
         return lastDelim > 0 ? templateReadId.substring(0, lastDelim) + READ_ID_DELIM + "CNS_" + groupIdentifier

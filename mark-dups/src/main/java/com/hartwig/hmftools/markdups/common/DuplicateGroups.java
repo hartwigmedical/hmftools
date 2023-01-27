@@ -8,23 +8,42 @@ import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.calcFragmentStatus;
-import static com.hartwig.hmftools.markdups.umi.UmiGroup.exceedsUmiIdDiff;
+import static com.hartwig.hmftools.markdups.umi.UmiGroup.buildUmiGroups;
 
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.markdups.umi.ConsensusReadInfo;
+import com.hartwig.hmftools.markdups.umi.ConsensusReads;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
 import com.hartwig.hmftools.markdups.umi.UmiGroup;
 
 import htsjdk.samtools.SAMRecord;
 
-public class DuplicateGroupUtils
+public class DuplicateGroups
 {
-    private static final int HIGH_DEPTH_THRESHOLD = 10000;
+    //private static final int HIGH_DEPTH_THRESHOLD = 10000;
+    private final UmiConfig mUmiConfig;
+    private final Statistics mStats;
+    private final ConsensusReads mConsensusReads;
+
+    public DuplicateGroups(final UmiConfig umiConfig, final RefGenomeInterface refGenome)
+    {
+        mUmiConfig = umiConfig;
+        mConsensusReads = new ConsensusReads(umiConfig, refGenome);
+        mStats = new Statistics();
+    }
+
+    public Statistics statistics() { return mStats; }
+    public UmiConfig umiConfig() { return mUmiConfig; }
+
+    @Deprecated
+    public ConsensusReads consensusReads() { return mConsensusReads; }
 
     public static void findDuplicateFragments(
             final List<Fragment> fragments, final List<Fragment> resolvedFragments,
@@ -158,9 +177,6 @@ public class DuplicateGroupUtils
                     possibleDuplicates.remove(fragment1);
                 }
 
-                int dupCount = duplicateFragments.size();
-                duplicateFragments.forEach(x -> x.setDuplicateCount(dupCount));
-
                 resolvedFragments.addAll(duplicateFragments);
                 fragments.remove(i);
 
@@ -236,48 +252,49 @@ public class DuplicateGroupUtils
         return abs(abs(first.reads().get(0).getInferredInsertSize()) - abs(second.reads().get(0).getInferredInsertSize())) <= 10;
     }
 
-    public static void processDuplicateGroups(
-            final List<List<Fragment>> duplicateGroups, final UmiConfig umiConfig, final Statistics stats)
+    public List<UmiGroup> processDuplicateUmiGroups(final List<List<Fragment>> duplicateGroups)
+    {
+        if(duplicateGroups == null)
+            return Collections.EMPTY_LIST;
+
+        List<UmiGroup> allUmiGroups = Lists.newArrayList();
+
+        for(List<Fragment> fragments : duplicateGroups)
+        {
+            ++mStats.DuplicateGroups;
+
+            List<UmiGroup> umiGroups = buildUmiGroups(fragments, mUmiConfig);
+
+            for(UmiGroup umiGroup : umiGroups)
+            {
+                umiGroup.categoriseReads();
+
+                allUmiGroups.add(umiGroup);
+
+                ++mStats.UmiGroups;
+                mStats.addDuplicateGroup(umiGroup.fragmentCount());
+            }
+        }
+
+        return allUmiGroups;
+    }
+
+    public void processDuplicateGroups(final List<List<Fragment>> duplicateGroups)
     {
         if(duplicateGroups == null)
             return;
 
-        if(umiConfig.Enabled)
+        for(List<Fragment> fragments : duplicateGroups)
         {
-            for(List<Fragment> fragments : duplicateGroups)
-            {
-                ++stats.DuplicateGroups;
+            setPrimaryRead(fragments);
 
-                List<UmiGroup> umiGroups = buildUmiGroups(fragments, umiConfig);
-
-                for(UmiGroup umiGroup : umiGroups)
-                {
-                    umiGroup.Fragments.forEach(x -> x.setUmiId(umiGroup.UmiId));
-
-                    setDuplicateGroupProperties(umiGroup.Fragments);
-
-                    ++stats.UmiGroups;
-                    stats.addDuplicateGroup(umiGroup.Fragments);
-                }
-            }
-        }
-        else
-        {
-            for(List<Fragment> fragments : duplicateGroups)
-            {
-                setDuplicateGroupProperties(fragments);
-
-                ++stats.DuplicateGroups;
-                stats.addDuplicateGroup(fragments);
-            }
+            ++mStats.DuplicateGroups;
+            mStats.addDuplicateGroup(fragments.size());
         }
     }
 
-    private static void setDuplicateGroupProperties(final List<Fragment> duplicateFragments)
+    private static void setPrimaryRead(final List<Fragment> duplicateFragments)
     {
-        int dupCount = duplicateFragments.size();
-        duplicateFragments.forEach(x -> x.setDuplicateCount(dupCount));
-
         Fragment primary = findPrimaryFragment(duplicateFragments, false);
         primary.setStatus(PRIMARY);
     }
@@ -337,85 +354,18 @@ public class DuplicateGroupUtils
         return readBaseCount > 0 ? readBaseQualTotal / (double)readBaseCount : 0;
     }
 
-    public static List<UmiGroup> buildUmiGroups(final List<Fragment> fragments, final UmiConfig config)
+    public static double calcBaseQualAverage(final SAMRecord read)
     {
-        Map<String,UmiGroup> groups = Maps.newHashMap();
+        int readBaseCount = 0;
+        int readBaseQualTotal = 0;
 
-        for(Fragment fragment : fragments)
+        for(int i = 0; i < read.getBaseQualities().length; ++i)
         {
-            String umiId = config.extractUmiId(fragment.id());
-
-            UmiGroup group = groups.get(umiId);
-
-            if(group == null)
-            {
-                groups.put(umiId, new UmiGroup(umiId, fragment));
-            }
-            else
-            {
-                group.Fragments.add(fragment);
-            }
+            ++readBaseCount;
+            readBaseQualTotal += read.getBaseQualities()[i];
         }
 
-        List<UmiGroup> orderedGroups = groups.values().stream().sorted(new SizeComparator()).collect(Collectors.toList());
-        List<UmiGroup> finalGroups = Lists.newArrayList();
-
-        int i = 0;
-        while(i < orderedGroups.size() - 1)
-        {
-            UmiGroup first = orderedGroups.get(i);
-
-            List<UmiGroup> cluster = Lists.newArrayList(first);
-
-            int j = i + 1;
-            while(j < orderedGroups.size())
-            {
-                UmiGroup second = orderedGroups.get(j);
-
-                boolean merged = false;
-
-                for(UmiGroup existing : cluster)
-                {
-                    if(existing.fragmentCount() >= second.fragmentCount() && !exceedsUmiIdDiff(existing.UmiId, second.UmiId))
-                    {
-                        merged = true;
-                        break;
-                    }
-                }
-
-                if(!merged)
-                {
-                    ++j;
-                }
-                else
-                {
-                    orderedGroups.remove(j);
-                    cluster.add(second);
-
-                    // restart the search since a newly added group may be close enough to a skipped one
-                    j = i + 1;
-                }
-            }
-
-            for(j = 1; j < cluster.size(); ++j)
-            {
-                first.Fragments.addAll(cluster.get(j).Fragments);
-            }
-
-            finalGroups.add(first);
-            ++i;
-        }
-
-        return orderedGroups;
+        return readBaseCount > 0 ? readBaseQualTotal / (double)readBaseCount : 0;
     }
-
-    private static class SizeComparator implements Comparator<UmiGroup>
-    {
-        public int compare(final UmiGroup first, final UmiGroup second)
-        {
-            return first.Fragments.size() < second.Fragments.size() ? 1 : -1;
-        }
-    }
-
 
 }

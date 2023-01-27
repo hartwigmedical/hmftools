@@ -1,20 +1,18 @@
 package com.hartwig.hmftools.markdups.umi;
 
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.Math.round;
-import static java.lang.String.format;
 
+import static com.hartwig.hmftools.markdups.common.DuplicateGroups.calcBaseQualAverage;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
-import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.UNSET;
+import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_FAIL;
+import static com.hartwig.hmftools.markdups.umi.ConsensusState.formReadId;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.SOFT_CLIP;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import htsjdk.samtools.CigarElement;
@@ -23,13 +21,13 @@ import htsjdk.samtools.SAMRecord;
 
 public class ConsensusReads
 {
-    private final UmiConfig mConfig;
-    private final RefGenomeInterface mRefGenome;
+    private final BaseBuilder mBaseBuilder;
+    private final IndelConsensusReads mIndelConsensusReads;
 
     public ConsensusReads(final UmiConfig config, final RefGenomeInterface refGenome)
     {
-        mConfig = config;
-        mRefGenome = refGenome;
+        mBaseBuilder = new BaseBuilder(config, refGenome);
+        mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
     }
 
     public ConsensusReadInfo createConsensusRead(final List<SAMRecord> reads, final String groupIdentifier)
@@ -42,7 +40,7 @@ public class ConsensusReads
         boolean hasIndels = false;
 
         // work out the outermost boundaries - soft-clipped and aligned - from amongst all reads
-        ConsensusState consensusState = new ConsensusState();
+        ConsensusState consensusState = new ConsensusState(isForward);
 
         for(SAMRecord read : reads)
         {
@@ -57,12 +55,20 @@ public class ConsensusReads
 
         if(hasIndels)
         {
+            mIndelConsensusReads.buildIndelComponents(reads,  consensusState);
 
+            if(consensusState.outcome() == INDEL_FAIL)
+            {
+                SAMRecord consensusRead = copyPrimaryRead(reads, groupIdentifier);
+                return new ConsensusReadInfo(consensusRead, consensusState.outcome());
+            }
         }
         else
         {
-            buildReadComponents(reads, isForward, consensusState);
+            mBaseBuilder.buildReadBases(reads, consensusState);
+            consensusState.setOutcome(ALIGNMENT_ONLY);
 
+            buildCigar(consensusState);
         }
 
         SAMRecord consensusRead = consensusState.createConsensusRead(reads.get(0), groupIdentifier);
@@ -70,75 +76,46 @@ public class ConsensusReads
         return new ConsensusReadInfo(consensusRead, consensusState.outcome());
     }
 
-    private void buildReadComponents(final List<SAMRecord> reads, boolean isForward, final ConsensusState consensusState)
+    public SAMRecord copyPrimaryRead(final List<SAMRecord> reads, final String groupIdentifier)
     {
-        int baseLength = consensusState.Bases.length;
+        SAMRecord primaryRead = null;
 
-        int readCount = reads.size();
+        double maxBaseQual = 0;
 
-        int[] readOffsets = new int[readCount];
-
-        for(int i = 0; i < readCount; ++i)
+        for(SAMRecord read : reads)
         {
-            readOffsets[i] = reads.get(i).getReadBases().length - baseLength;
-        }
+            double avgBaseQual = calcBaseQualAverage(read);
 
-        byte[] locationBases = new byte[readCount];
-        byte[] locationQuals = new byte[readCount];
-
-        for(int baseIndex = 0; baseIndex < baseLength; ++baseIndex)
-        {
-            // check bases at this index
-            // work on the premise that most bases will agree
-            boolean hasMismatch = false;
-            int maxQual = 0;
-
-            for(int i = 0; i < readCount; ++i)
+            if(avgBaseQual > maxBaseQual)
             {
-                // on reverse strand, say base length = 10 (so 0-9 for longest read), if a read has length 8 then it will
-                SAMRecord read = reads.get(i);
-
-                locationBases[i] = 0;
-
-                int readIndex;
-                if(isForward)
-                {
-                    readIndex = baseIndex;
-
-                    if(readOffsets[i] != 0 && baseIndex >= read.getReadBases().length)
-                        continue;
-                }
-                else
-                {
-                    readIndex = baseIndex + readOffsets[i];
-
-                    if(readIndex < 0)
-                        continue;
-                }
-
-                locationBases[i] = reads.get(i).getReadBases()[readIndex];
-                locationQuals[i] = reads.get(i).getBaseQualities()[readIndex];
-                hasMismatch |= (i > 0 && locationBases[i] != locationBases[0]);
-                maxQual = max(locationQuals[i], maxQual);
-            }
-
-            if(!hasMismatch)
-            {
-                consensusState.Bases[baseIndex] = locationBases[0];
-                consensusState.BaseQualities[baseIndex] = (byte)maxQual;
-            }
-            else
-            {
-                int basePosition = consensusState.MinUnclippedPosStart + baseIndex;
-
-                byte[] consensusBaseAndQual = determineBaseAndQual(
-                        locationBases, locationQuals, reads.get(0).getContig(), basePosition);
-
-                consensusState.Bases[baseIndex] = consensusBaseAndQual[0];
-                consensusState.BaseQualities[baseIndex] = consensusBaseAndQual[1];
+                maxBaseQual = avgBaseQual;
+                primaryRead = read;
             }
         }
 
+        SAMRecord record = new SAMRecord(primaryRead.getHeader());
+
+        record.setReadName(formReadId(primaryRead.getReadName(), groupIdentifier));
+        record.setReadBases(primaryRead.getReadBases());
+        record.setBaseQualities(primaryRead.getBaseQualities());
+        record.setReferenceName(primaryRead.getReferenceName());
+
+        record.setAlignmentStart(primaryRead.getAlignmentStart());
+        record.setCigar(primaryRead.getCigar());
+        record.setMateReferenceName(primaryRead.getMateReferenceName());
+        record.setMateAlignmentStart(primaryRead.getMateAlignmentStart());
+        record.setMateReferenceIndex(primaryRead.getMateReferenceIndex());
+        record.setFlags(primaryRead.getFlags());
+        record.setDuplicateReadFlag(false);
+
+        primaryRead.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
+        record.setInferredInsertSize(primaryRead.getInferredInsertSize());
+
+        return record;
+    }
+
+    private static void buildCigar(final ConsensusState consensusState)
+    {
         // build CIGAR from matched and any soft-clipped elements
         int leftSoftClipBases = consensusState.MinAlignedPosStart - consensusState.MinUnclippedPosStart;
         int rightSoftClipBases = consensusState.MaxUnclippedPosEnd - consensusState.MaxAlignedPosEnd;
@@ -151,82 +128,6 @@ public class ConsensusReads
 
         if(rightSoftClipBases > 0)
             consensusState.CigarElements.add(new CigarElement(rightSoftClipBases, CigarOperator.S));
-
-        consensusState.setOutcome(ALIGNMENT_ONLY);
     }
 
-    public byte[] determineBaseAndQual(
-            final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
-    {
-        List<Byte> distinctBases = Lists.newArrayListWithCapacity(4);
-        List<Integer> qualTotals = Lists.newArrayListWithCapacity(4);
-        List<Integer> maxQuals = Lists.newArrayListWithCapacity(4);
-
-        for(int i = 0; i < locationBases.length; ++i)
-        {
-            boolean found = false;
-
-            for(int j = 0; j < distinctBases.size(); ++j)
-            {
-                if(distinctBases.get(j) == locationBases[i])
-                {
-                    int qualTotal = qualTotals.get(j) + locationQuals[i];
-                    qualTotals.set(j, qualTotal);
-                    maxQuals.set(j, max(maxQuals.get(j), locationQuals[i]));
-                    found = true;
-                    break;
-                }
-            }
-
-            if(!found)
-            {
-                distinctBases.add(locationBases[i]);
-                qualTotals.add((int)locationQuals[i]);
-                maxQuals.add((int)locationQuals[i]);
-            }
-        }
-
-        byte maxBase = distinctBases.get(0);
-        boolean maxIsRef = false;
-        int maxQual = maxQuals.get(0);
-        int maxQualTotal = qualTotals.get(0);
-
-        for(int i = 1; i < distinctBases.size(); ++i)
-        {
-            if(qualTotals.get(i) > maxQualTotal)
-            {
-                maxQualTotal = qualTotals.get(i);
-                maxQual = maxQuals.get(i);
-                maxBase = distinctBases.get(i);
-            }
-            else if(qualTotals.get(i) >= maxQualTotal && !maxIsRef)
-            {
-                String refBase = mRefGenome.getBaseString(chromosome, position, position);
-
-                if(maxBase == refBase.getBytes()[0])
-                {
-                    maxIsRef = true;
-                }
-                else if(distinctBases.get(i) == refBase.getBytes()[0])
-                {
-                    maxQualTotal = qualTotals.get(i);
-                    maxQual = maxQuals.get(i);
-                    maxBase = distinctBases.get(i);
-                    maxIsRef = true;
-                }
-            }
-        }
-
-        int differingQual = 0;
-
-        for(int i = 0; i < distinctBases.size(); ++i)
-        {
-            if(distinctBases.get(i) != maxBase)
-                differingQual += qualTotals.get(i);
-        }
-
-        double calcQual = (double)maxQual * max(0.0, maxQualTotal - differingQual) / maxQualTotal;
-
-        return new byte[] { maxBase, (byte)round(calcQual) };
-    }
 }

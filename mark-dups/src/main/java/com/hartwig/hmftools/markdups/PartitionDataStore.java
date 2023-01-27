@@ -26,7 +26,7 @@ public class PartitionDataStore
 
         if(partitionCache == null)
         {
-            partitionCache = new PartitionData(chrPartition, mConfig.UMIs);
+            partitionCache = new PartitionData(chrPartition, mConfig.UMIs, mConfig.RefGenome);
             mPartitionDataMap.put(chrPartition, partitionCache);
         }
 

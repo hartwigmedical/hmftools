@@ -79,10 +79,12 @@ public class Statistics
     {
     }
 
-    public void addDuplicateGroup(final List<Fragment> fragments)
+    public void addDuplicateGroup(final List<Fragment> fragments) { addDuplicateGroup(fragments.size());}
+
+    public void addDuplicateGroup(final int fragmentCount)
     {
-        addFrequency(fragments.size());
-        DuplicateReads += fragments.size() - 1; // excluding the primary fragment
+        addFrequency(fragmentCount);
+        DuplicateReads += fragmentCount - 1; // excluding the primary fragment
     }
 
     public void logStats()

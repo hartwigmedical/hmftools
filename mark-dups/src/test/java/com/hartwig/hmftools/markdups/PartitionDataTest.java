@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.markdups;
 
+import static com.hartwig.hmftools.markdups.TestUtils.createTestConfig;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
@@ -29,6 +30,7 @@ import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.markdups.common.CandidateDuplicates;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.PartitionData;
+import com.hartwig.hmftools.markdups.common.PartitionResults;
 import com.hartwig.hmftools.markdups.common.ResolvedFragmentState;
 
 import org.junit.Test;
@@ -37,21 +39,19 @@ public class PartitionDataTest
 {
     private final ReadIdGenerator mReadIdGen;
     private final MarkDupsConfig mConfig;
-    private final RecordWriter mWriter;
 
     private static final String LOCAL_PARTITION_STR = "1_0";
 
     public PartitionDataTest()
     {
         mReadIdGen = new ReadIdGenerator();
-        mConfig = new MarkDupsConfig();
-        mWriter = new RecordWriter(mConfig);
+        mConfig = createTestConfig();
     }
 
     @Test
     public void testBasicFragments()
     {
-        PartitionData partitionData = new PartitionData(LOCAL_PARTITION_STR, mConfig.UMIs);
+        PartitionData partitionData = new PartitionData(LOCAL_PARTITION_STR, mConfig.UMIs, mConfig.RefGenome);
 
         List<Fragment> testFragments = createBasicFragments();
 
@@ -73,7 +73,7 @@ public class PartitionDataTest
         assertEquals(1, resolvedState.ExpectedSupplementaries);
         assertEquals(0, resolvedState.ProcessedSupplementaries);
 
-        resolvedFragments = partitionData.processIncompleteFragment(mateRead);
+        resolvedFragments = processIncompleteFragment(partitionData, mateRead);
         assertNull(resolvedFragments);
         assertEquals(NONE, mateRead.status());
 
@@ -83,7 +83,7 @@ public class PartitionDataTest
         assertEquals(1, resolvedState.ExpectedSupplementaries);
         assertEquals(0, resolvedState.ProcessedSupplementaries);
 
-        resolvedFragments = partitionData.processIncompleteFragment(supp);
+        resolvedFragments = processIncompleteFragment(partitionData, supp);
         assertNull(resolvedFragments);
         assertEquals(NONE, supp.status());
 
@@ -98,7 +98,7 @@ public class PartitionDataTest
         mateRead = testFragments.get(1);
         supp = testFragments.get(2);
 
-        resolvedFragments = partitionData.processIncompleteFragment(mateRead);
+        resolvedFragments = processIncompleteFragment(partitionData, mateRead);
         assertNull(resolvedFragments);
         assertEquals(UNSET, mateRead.status());
         assertTrue(partitionData.incompleteFragmentMap().containsValue(mateRead));
@@ -116,7 +116,7 @@ public class PartitionDataTest
         assertEquals(1, resolvedState.ExpectedSupplementaries);
         assertEquals(0, resolvedState.ProcessedSupplementaries);
 
-        resolvedFragments = partitionData.processIncompleteFragment(supp);
+        resolvedFragments = processIncompleteFragment(partitionData, supp);
         assertNull(resolvedFragments);
         assertEquals(NONE, supp.status());
 
@@ -129,12 +129,12 @@ public class PartitionDataTest
         mateRead = testFragments.get(1);
         supp = testFragments.get(2);
 
-        resolvedFragments = partitionData.processIncompleteFragment(supp);
+        resolvedFragments = processIncompleteFragment(partitionData, supp);
         assertNull(resolvedFragments);
         assertEquals(SUPPLEMENTARY, supp.status());
         assertTrue(partitionData.incompleteFragmentMap().containsValue(supp));
 
-        resolvedFragments = partitionData.processIncompleteFragment(mateRead);
+        resolvedFragments = processIncompleteFragment(partitionData, mateRead);
         assertNull(resolvedFragments);
         assertEquals(UNSET, mateRead.status());
         assertEquals(2, supp.readCount());
@@ -171,7 +171,7 @@ public class PartitionDataTest
     @Test
     public void testCandidateFragments()
     {
-        PartitionData partitionData = new PartitionData(LOCAL_PARTITION_STR, mConfig.UMIs);
+        PartitionData partitionData = new PartitionData(LOCAL_PARTITION_STR, mConfig.UMIs, mConfig.RefGenome);
 
         // test 1: 2 candidate fragments both waiting on their mates
         List<Fragment> testFragments = createCandidateFragments();
@@ -192,12 +192,12 @@ public class PartitionDataTest
         assertTrue(partitionData.incompleteFragmentMap().containsValue(read2));
 
         // now send through the mate reads in turn
-        resolvedFragments = partitionData.processIncompleteFragment(mateRead1);
+        resolvedFragments = processIncompleteFragment(partitionData, mateRead1);
         assertTrue(resolvedFragments == null || resolvedFragments.isEmpty());
         assertEquals(2, read1.readCount());
         assertTrue(partitionData.incompleteFragmentMap().containsValue(read1));
 
-        resolvedFragments = partitionData.processIncompleteFragment(mateRead2);
+        resolvedFragments = processIncompleteFragment(partitionData, mateRead2);
         assertNotNull(resolvedFragments);
         assertEquals(2, resolvedFragments.size());
         assertEquals(2, read1.readCount());
@@ -217,7 +217,7 @@ public class PartitionDataTest
         assertFalse(partitionData.fragmentStatusMap().containsKey(read2.id()));
 
         // finally process the supplementary for the first fragment
-        resolvedFragments = partitionData.processIncompleteFragment(supp1);
+        resolvedFragments = processIncompleteFragment(partitionData, supp1);
         assertTrue(resolvedFragments == null || resolvedFragments.isEmpty());
         assertEquals(PRIMARY, supp1.status());
         assertFalse(partitionData.fragmentStatusMap().containsKey(read1.id()));
@@ -250,5 +250,10 @@ public class PartitionDataTest
         return Lists.newArrayList(read1, mateRead1, supp1, read2, mateRead2);
     }
 
+    private List<Fragment> processIncompleteFragment(final PartitionData partitionData, final Fragment fragment)
+    {
+        PartitionResults partitionResults = partitionData.processIncompleteFragment(fragment);
+        return partitionResults != null ? partitionResults.resolvedFragments() : null;
+    }
 
 }

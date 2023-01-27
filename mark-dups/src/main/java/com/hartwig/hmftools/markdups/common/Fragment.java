@@ -28,7 +28,6 @@ public class Fragment
 
     // duplicate read info
     private double mAverageBaseQual;
-    private int mDuplicateCount;
     private String mCandidateDupKey;
     private String mUmiId;
 
@@ -64,7 +63,6 @@ public class Fragment
         mCoordinates = NO_COORDS; // unset for non primary reads
 
         mAverageBaseQual = 0;
-        mDuplicateCount = 0;
         mReadsWritten = false;
         mCandidateDupKey = null;
         mUmiId = null;
@@ -88,9 +86,6 @@ public class Fragment
 
     public double averageBaseQual() { return mAverageBaseQual; }
     public void setAverageBaseQual(double qual) { mAverageBaseQual = qual; }
-
-    public int duplicateCount() { return mDuplicateCount; }
-    public void setDuplicateCount(int count) { mDuplicateCount = count; }
 
     public String candidateDupKey() { return mCandidateDupKey; }
     public void setCandidateDupKey(final String key) { mCandidateDupKey = key; }

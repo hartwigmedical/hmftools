@@ -5,12 +5,14 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
+import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.SUPPLEMENTARY;
 import static com.hartwig.hmftools.markdups.common.ResolvedFragmentState.fragmentState;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -18,7 +20,10 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
+import com.hartwig.hmftools.markdups.umi.UmiGroup;
 
 public class PartitionData
 {
@@ -27,45 +32,54 @@ public class PartitionData
     // fragment status from resolved fragments, keyed by readId
     private final Map<String,ResolvedFragmentState> mFragmentStatus;
 
+    private final Map<String,UmiGroup> mUmiGroups;
+
     // supplmentary and candidate duplicate reads, keyed by readId
-    private final Map<String, Fragment> mIncompleteFragments;
+    private final Map<String,Fragment> mIncompleteFragments;
 
     // positions with candidate duplicate fragments, keyed by a unique position-based key for the group
     private final Map<String,CandidateDuplicates> mCandidateDuplicatesMap;
 
-    private final UmiConfig mUmiConfig;
-
-    private final Statistics mStats;
+    private final DuplicateGroups mDuplicateGroups;
 
     // any update to the maps is done under a lock
     private Lock mLock;
     private long mLastCacheCount;
 
+    private Set<UmiGroup> mUpdatedUmiGroups;
+    private Set<CandidateDuplicates> mUpdatedCandidateDuplicates;
+
     private static final int LOG_CACHE_COUNT = 1000;
 
-    public PartitionData(final String chrPartition, final UmiConfig umiConfig)
+    public PartitionData(final String chrPartition, final UmiConfig umiConfig, final RefGenomeInterface refGenome)
     {
         mChrPartition = chrPartition;
         mFragmentStatus = Maps.newHashMap();
         mIncompleteFragments = Maps.newHashMap();
         mCandidateDuplicatesMap = Maps.newHashMap();
-        mUmiConfig = umiConfig;
-        mStats = new Statistics();
+        mUmiGroups = Maps.newHashMap();
+        mDuplicateGroups = new DuplicateGroups(umiConfig, refGenome);
+        mUpdatedUmiGroups = Sets.newHashSet();
+        mUpdatedCandidateDuplicates = Sets.newHashSet();
+
         mLock = new ReentrantLock();
     }
 
-    public Statistics statistics() { return mStats; }
+    public Statistics statistics() { return mDuplicateGroups.statistics(); }
 
-    public void processPrimaryFragments(final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList)
+    public void processPrimaryFragments(
+            final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList, final List<UmiGroup> umiGroups)
     {
         // gather any cached mate reads, attempt to resolve any candidate duplicates and feed back the resultant set of resolved fragments
         try
         {
             mLock.lock();
 
-            for(Fragment fragment : resolvedFragments)
+            resolvedFragments.forEach(x -> processResolvedFragment(x));
+
+            if(umiGroups != null)
             {
-                processResolvedFragment(fragment);
+                umiGroups.forEach(x -> processUmiGroup(x));
             }
 
             for(CandidateDuplicates candidateDuplicates : candidateDuplicatesList)
@@ -81,6 +95,40 @@ public class PartitionData
         {
             checkCachedCounts();
             mLock.unlock();
+        }
+    }
+
+    private void processUmiGroup(final UmiGroup umiGroup)
+    {
+        if(umiGroup.allReadsReceived())
+            return;
+
+        boolean addedRead = false;
+
+        for(Fragment fragment : umiGroup.fragments())
+        {
+            Fragment existingFragment = mIncompleteFragments.get(fragment.id());
+
+            if(existingFragment != null)
+            {
+                // existingFragment.setStatus(fragment.status());
+                existingFragment.reads().forEach(x -> fragment.addRead(x));
+
+                existingFragment.reads().forEach(x -> umiGroup.addRead(x));
+
+                mIncompleteFragments.remove(fragment.id());
+
+                addedRead = true;
+            }
+        }
+
+        if(addedRead && umiGroup.allReadsReceived())
+            return;
+
+        // store the UMI group to pick up mates and supplementaries when they arrive
+        for(Fragment fragment : umiGroup.fragments())
+        {
+            mUmiGroups.put(fragment.id(), umiGroup);
         }
     }
 
@@ -111,101 +159,6 @@ public class PartitionData
         }
 
         mFragmentStatus.put(fragment.id(), resolvedState);
-    }
-
-    public List<Fragment> processIncompleteFragments(final List<Fragment> fragments)
-    {
-        try
-        {
-            mLock.lock();
-
-            List<Fragment> resolvedFragments = null;
-
-            for(Fragment fragment : fragments)
-            {
-                List<Fragment> completeFragments = handleIncompleteFragment(fragment);
-
-                if(fragment.status().isResolved() || completeFragments != null)
-                {
-                    if(resolvedFragments == null)
-                        resolvedFragments = Lists.newArrayList();
-
-                    if(fragment.status().isResolved())
-                        resolvedFragments.add(fragment);
-
-                    if(completeFragments != null)
-                        resolvedFragments.addAll(completeFragments);
-                }
-            }
-
-            return resolvedFragments;
-        }
-        finally
-        {
-            mLock.unlock();
-        }
-    }
-
-    public List<Fragment> processIncompleteFragment(final Fragment fragment)
-    {
-        try
-        {
-            mLock.lock();
-            return handleIncompleteFragment(fragment);
-        }
-        finally
-        {
-            mLock.unlock();
-        }
-    }
-
-    private List<Fragment> handleIncompleteFragment(final Fragment fragment)
-    {
-        // a supplementary or higher mate read - returns any resolved fragments resulting from add this new read
-
-        // first look for a resolved status
-        ResolvedFragmentState resolvedState = mFragmentStatus.get(fragment.id());
-
-        if(resolvedState != null)
-        {
-            fragment.setStatus(resolvedState.Status);
-
-            // update the resolved state
-            resolvedState.update(fragment.reads());
-
-            if(resolvedState.allReceived())
-                mFragmentStatus.remove(fragment.id());
-
-            return null;
-        }
-
-        // next check for a candidate duplicate fragment to add this to
-        Fragment existingFragment = mIncompleteFragments.get(fragment.id());
-
-        if(existingFragment != null)
-        {
-            fragment.reads().forEach(x -> existingFragment.addRead(x));
-
-            if(existingFragment.status() == CANDIDATE && existingFragment.primaryReadsPresent())
-            {
-                // check if the set of candidates is now complete and ready for classification
-                CandidateDuplicates candidateDuplicates = mCandidateDuplicatesMap.get(existingFragment.candidateDupKey());
-
-                if(candidateDuplicates != null)
-                {
-                    checkResolveCandidateDuplicates(candidateDuplicates);
-
-                    if(candidateDuplicates.finalised())
-                        return candidateDuplicates.fragments();
-                }
-            }
-
-            return null;
-        }
-
-        // store the new fragment
-        mIncompleteFragments.put(fragment.id(), fragment);
-        return null;
     }
 
     private void processCandidateDuplicates(final CandidateDuplicates candidateDuplicates)
@@ -246,6 +199,141 @@ public class PartitionData
         }
     }
 
+    public PartitionResults processIncompleteFragments(final List<Fragment> fragments)
+    {
+        try
+        {
+            mLock.lock();
+
+            PartitionResults partitionResults = new PartitionResults();
+
+            for(Fragment fragment : fragments)
+            {
+                handleIncompleteFragment(fragment);
+
+                if(fragment.status().isResolved())
+                    partitionResults.addResolvedFragment(fragment);
+            }
+
+            processUpdatedGroups(partitionResults);
+
+            return partitionResults;
+        }
+        finally
+        {
+            mLock.unlock();
+        }
+    }
+
+    public PartitionResults processIncompleteFragment(final Fragment fragment)
+    {
+        try
+        {
+            mLock.lock();
+            boolean matched = handleIncompleteFragment(fragment);
+
+            if(!matched)
+                return null;
+
+            // only create results if the fragment is part of a group
+            if(fragment.status() == NONE)
+                return null;
+
+            PartitionResults partitionResults = new PartitionResults();
+
+            // TODO: mustn't add twice - easier to not add here at all?
+            // if(fragment.status().isResolved())
+            //    partitionResults.addResolvedFragment(fragment);
+
+            processUpdatedGroups(partitionResults);
+            return partitionResults;
+        }
+        finally
+        {
+            mLock.unlock();
+        }
+    }
+
+    private boolean handleIncompleteFragment(final Fragment fragment)
+    {
+        // a supplementary or higher mate read - returns any resolved fragments resulting from add this new read
+
+        // first look for a resolved status
+        ResolvedFragmentState resolvedState = mFragmentStatus.get(fragment.id());
+
+        if(resolvedState != null)
+        {
+            fragment.setStatus(resolvedState.Status);
+
+            // update the resolved state
+            resolvedState.update(fragment.reads());
+
+            if(resolvedState.allReceived())
+                mFragmentStatus.remove(fragment.id());
+
+            return true;
+        }
+
+        // next check for a UMI group or candidate duplicate group to add this to
+        Fragment existingFragment = mIncompleteFragments.get(fragment.id());
+
+        if(existingFragment != null)
+        {
+            fragment.reads().forEach(x -> existingFragment.addRead(x));
+
+            if(checkUmiGroups())
+            {
+                UmiGroup umiGroup = mUmiGroups.get(fragment.id());
+
+                if(umiGroup != null)
+                {
+                    fragment.reads().forEach(x -> umiGroup.addRead(x));
+                    mUpdatedUmiGroups.add(umiGroup);
+                    return true;
+                }
+            }
+
+            if(existingFragment.status() == CANDIDATE && existingFragment.primaryReadsPresent())
+            {
+                // check if the set of candidates is now complete and ready for classification
+                CandidateDuplicates candidateDuplicates = mCandidateDuplicatesMap.get(existingFragment.candidateDupKey());
+
+                if(candidateDuplicates != null)
+                {
+                    mUpdatedCandidateDuplicates.add(candidateDuplicates);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // store the new fragment
+        mIncompleteFragments.put(fragment.id(), fragment);
+        return false;
+    }
+
+    private void storeUmiGroup(final UmiGroup umiGroup)
+    {
+        if(umiGroup.allReadsReceived())
+            return;
+
+        for(Fragment fragment : umiGroup.fragments())
+        {
+            mUmiGroups.put(fragment.id(), umiGroup);
+        }
+    }
+
+    private void checkRemoveUmiGroup(final UmiGroup umiGroup)
+    {
+        if(!umiGroup.allReadsReceived())
+            return;
+
+        // remove by each read ID
+        List<String> groupReadIds = umiGroup.getReadIds();
+        groupReadIds.forEach(x -> mUmiGroups.remove(x));
+    }
+
     private void checkResolveCandidateDuplicates(final CandidateDuplicates candidateDuplicates)
     {
         if(!candidateDuplicates.allFragmentsReady())
@@ -253,28 +341,70 @@ public class PartitionData
 
         List<List<Fragment>> duplicateGroups = candidateDuplicates.finaliseFragmentStatus();
 
-        DuplicateGroupUtils.processDuplicateGroups(duplicateGroups, mUmiConfig, mStats);
+        if(checkUmiGroups())
+        {
+            List<UmiGroup> umiGroups = mDuplicateGroups.processDuplicateUmiGroups(duplicateGroups);
+
+            for(UmiGroup umiGroup : umiGroups)
+            {
+                mUpdatedUmiGroups.add(umiGroup);
+
+                // store only if incomplete
+                storeUmiGroup(umiGroup);
+            }
+        }
+        else
+        {
+            mDuplicateGroups.processDuplicateGroups(duplicateGroups);
+        }
 
         for(Fragment fragment : candidateDuplicates.fragments())
         {
             mIncompleteFragments.remove(fragment.id());
 
             // store this new resolved state if more reads are expected for the fragment
-            if(!fragment.allReadsPresent())
+            if(fragment.allReadsPresent())
+                continue;
+
+            if(fragment.umiId() != null) // cached with the UMI group
+                continue;
+
+            ResolvedFragmentState resolvedState = fragmentState(fragment);
+
+            if(!resolvedState.isValid())
             {
-                ResolvedFragmentState resolvedState = fragmentState(fragment);
-
-                if(!resolvedState.isValid())
-                {
-                    MD_LOGGER.error("fragment({}) invalid state({})", fragment, resolvedState);
-                }
-
-                mFragmentStatus.put(fragment.id(), resolvedState);
+                MD_LOGGER.error("fragment({}) invalid state({})", fragment, resolvedState);
             }
+
+            mFragmentStatus.put(fragment.id(), resolvedState);
         }
 
         mCandidateDuplicatesMap.remove(candidateDuplicates.key());
     }
+
+    private void processUpdatedGroups(final PartitionResults partitionResults)
+    {
+        if(mUpdatedUmiGroups.isEmpty() && mUpdatedCandidateDuplicates.isEmpty())
+            return;
+
+        for(CandidateDuplicates candidateDuplicates : mUpdatedCandidateDuplicates)
+        {
+            checkResolveCandidateDuplicates(candidateDuplicates);
+
+            if(candidateDuplicates.finalised())
+                partitionResults.addResolvedFragments(candidateDuplicates.fragments());
+        }
+
+        mUpdatedCandidateDuplicates.clear();
+
+        partitionResults.addUmiGroups(mUpdatedUmiGroups.stream().collect(Collectors.toList()));
+
+        mUpdatedUmiGroups.forEach(x -> checkRemoveUmiGroup(x));
+
+        mUpdatedUmiGroups.clear();
+    }
+
+    private boolean checkUmiGroups() { return mDuplicateGroups.umiConfig().Enabled; }
 
     public List<Fragment> extractRemainingFragments()
     {
@@ -312,9 +442,9 @@ public class PartitionData
         long resolvedNoSupp = mFragmentStatus.values().stream().filter(x -> x.MateReceived).count();
         long resolvedNoMate = mFragmentStatus.values().stream().filter(x -> x.ProcessedSupplementaries < x.ExpectedSupplementaries).count();
 
-        return format("incomplete(%d supp=%d) candidateGroups(%d max=%d) resolved(%d supp=%d mate=%d)",
+        return format("incomplete(%d supp=%d) candidateGroups(%d max=%d) resolved(%d supp=%d mate=%d) umiGroupReads(%d)",
                 mIncompleteFragments.size(), incompleteSupp, mCandidateDuplicatesMap.size(), maxCandidateGroup,
-                mFragmentStatus.size(), resolvedNoSupp, resolvedNoMate);
+                mFragmentStatus.size(), resolvedNoSupp, resolvedNoMate, mUmiGroups.size());
     }
 
     public void logCacheCounts()
@@ -340,6 +470,7 @@ public class PartitionData
             mFragmentStatus.clear();
             mIncompleteFragments.clear();
             mCandidateDuplicatesMap.clear();
+            mUmiGroups.clear();
         }
         finally
         {
@@ -355,4 +486,10 @@ public class PartitionData
 
     @VisibleForTesting
     public Map<String,CandidateDuplicates> candidateDuplicatesMap() { return mCandidateDuplicatesMap; }
+
+    @VisibleForTesting
+    public void processPrimaryFragments(final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList)
+    {
+        processPrimaryFragments(resolvedFragments, candidateDuplicatesList, Collections.EMPTY_LIST);
+    }
 }

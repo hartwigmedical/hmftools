@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.markdups;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.markdups.TestUtils.createTestConfig;
 
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -17,7 +18,7 @@ public class MarkDuplicatesTest
     public MarkDuplicatesTest()
     {
         mReadIdGen = new ReadIdGenerator();
-        mConfig = new MarkDupsConfig();
+        mConfig = createTestConfig();
         mWriter = new RecordWriter(mConfig);
         mPartitionDataStore = new PartitionDataStore(mConfig);
 
