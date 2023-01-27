@@ -172,8 +172,7 @@ public final class TestOrangeReportFactory {
                 .addReportableSomaticFusions(fusion)
                 .allGermlineStructuralVariants(Lists.newArrayList())
                 .allGermlineBreakends(Lists.newArrayList())
-                .allGermlineDisruptions(Lists.newArrayList())
-                .reportableGermlineDisruptions(Lists.newArrayList())
+                .reportableGermlineBreakends(Lists.newArrayList())
                 .build();
     }
 

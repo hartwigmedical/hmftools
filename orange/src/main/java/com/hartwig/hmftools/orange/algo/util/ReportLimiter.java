@@ -84,8 +84,7 @@ public final class ReportLimiter {
                 .somaticHomozygousDisruptions(max1(linx.somaticHomozygousDisruptions()))
                 .allGermlineStructuralVariants(max1(linx.allGermlineStructuralVariants()))
                 .allGermlineBreakends(max1(linx.allGermlineBreakends()))
-                .allGermlineDisruptions(max1(linx.allGermlineDisruptions()))
-                .reportableGermlineDisruptions(max1(linx.reportableGermlineDisruptions()))
+                .reportableGermlineBreakends(max1(linx.reportableGermlineBreakends()))
                 .build();
     }
 
