@@ -217,7 +217,8 @@ public final class GermlineConversion {
     }
 
     @NotNull
-    private static LinxInterpretedData convertLinxGermline(boolean containsTumorCells, @NotNull LinxInterpretedData linx) {
+    @VisibleForTesting
+    static LinxInterpretedData convertLinxGermline(boolean containsTumorCells, @NotNull LinxInterpretedData linx) {
         List<LinxSvAnnotation> additionalStructuralVariants = Lists.newArrayList();
         List<LinxBreakend> additionalReportableBreakends = Lists.newArrayList();
 
@@ -288,7 +289,8 @@ public final class GermlineConversion {
         return svIdMapping;
     }
 
-    private static int findMaxSvId(@NotNull List<LinxSvAnnotation> structuralVariants) {
+    @VisibleForTesting
+    static int findMaxSvId(@NotNull List<LinxSvAnnotation> structuralVariants) {
         int maxSvId = 0;
         for (LinxSvAnnotation structuralVariant : structuralVariants) {
             maxSvId = Math.max(maxSvId, structuralVariant.svId());
@@ -310,7 +312,8 @@ public final class GermlineConversion {
         return clusterIdMapping;
     }
 
-    private static int findMaxClusterId(@NotNull List<LinxSvAnnotation> structuralVariants) {
+    @VisibleForTesting
+    static int findMaxClusterId(@NotNull List<LinxSvAnnotation> structuralVariants) {
         int maxClusterId = 0;
         for (LinxSvAnnotation structuralVariant : structuralVariants) {
             maxClusterId = Math.max(maxClusterId, structuralVariant.clusterId());
@@ -332,7 +335,8 @@ public final class GermlineConversion {
         return breakendIdMapping;
     }
 
-    private static int findMaxBreakendId(@NotNull List<LinxBreakend> breakends) {
+    @VisibleForTesting
+    static int findMaxBreakendId(@NotNull List<LinxBreakend> breakends) {
         int maxId = 0;
         for (LinxBreakend breakend : breakends) {
             maxId = Math.max(maxId, breakend.id());
