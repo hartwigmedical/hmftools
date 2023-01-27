@@ -67,6 +67,12 @@ public abstract class PurpleInterpretedData {
     public abstract List<PurpleGainLoss> additionalSuspectSomaticGainsLosses();
 
     @Nullable
+    public abstract List<PurpleGainLoss> reportableGermlineGainsLosses();
+
+    @Nullable
+    public abstract List<PurpleGainLoss> allGermlineGainsLosses();
+
+    @Nullable
     public abstract List<GermlineDeletion> allGermlineDeletions();
 
     @Nullable

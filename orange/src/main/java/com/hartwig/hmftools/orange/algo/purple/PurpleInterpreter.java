@@ -20,9 +20,9 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,28 +34,29 @@ public class PurpleInterpreter {
     private static final Logger LOGGER = LogManager.getLogger(PurpleInterpreter.class);
 
     @NotNull
-    private final PaveAlgo paveAlgo;
+    private final PurpleVariantFactory purpleVariantFactory;
+    @NotNull
+    private final GermlineGainLossFactory germlineGainLossFactory;
     @NotNull
     private final List<DriverGene> driverGenes;
     @Nullable
     private final ChordData chord;
 
-    public PurpleInterpreter(@NotNull final PaveAlgo paveAlgo, @NotNull final List<DriverGene> driverGenes,
+    public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
+            @NotNull final GermlineGainLossFactory germlineGainLossFactory, @NotNull final List<DriverGene> driverGenes,
             @Nullable final ChordData chord) {
-        this.paveAlgo = paveAlgo;
+        this.purpleVariantFactory = purpleVariantFactory;
+        this.germlineGainLossFactory = germlineGainLossFactory;
         this.driverGenes = driverGenes;
         this.chord = chord;
     }
 
     @NotNull
     public PurpleInterpretedData interpret(@NotNull PurpleData purple) {
-        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(paveAlgo);
         List<PurpleVariant> allSomaticVariants = purpleVariantFactory.create(purple.allSomaticVariants());
         List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.create(purple.reportableSomaticVariants());
         List<PurpleVariant> additionalSuspectSomaticVariants =
-                SomaticVariantSelector.selectInterestingUnreportedVariants(allSomaticVariants,
-                        reportableSomaticVariants,
-                        driverGenes);
+                SomaticVariantSelector.selectInterestingUnreportedVariants(allSomaticVariants, reportableSomaticVariants, driverGenes);
         LOGGER.info(" Found an additional {} somatic variants that are potentially interesting", additionalSuspectSomaticVariants.size());
 
         List<PurpleVariant> allGermlineVariants = purpleVariantFactory.create(purple.allGermlineVariants());
@@ -92,6 +93,17 @@ public class PurpleInterpreter {
                         chord != null ? chord.hrStatus() : null);
         LOGGER.info(" Found an additional {} suspect gene copy numbers with LOH", suspectGeneCopyNumbersWithLOH.size());
 
+        List<PurpleGainLoss> allGermlineGainsLosses = null;
+        List<PurpleGainLoss> reportableGermlineGainsLosses = null;
+        List<GermlineDeletion> allGermlineDeletions = purple.allGermlineDeletions();
+
+        if (allGermlineDeletions != null) {
+            Map<PurpleGainLoss, GermlineDeletion> deletionMap =
+                    germlineGainLossFactory.mapDeletions(allGermlineDeletions, purple.allSomaticGeneCopyNumbers());
+            allGermlineGainsLosses = Lists.newArrayList(deletionMap.keySet());
+            reportableGermlineGainsLosses = selectReportable(deletionMap);
+        }
+
         return ImmutablePurpleInterpretedData.builder()
                 .fit(createFit(purple))
                 .characteristics(createCharacteristics(purple))
@@ -110,9 +122,22 @@ public class PurpleInterpreter {
                 .reportableSomaticGainsLosses(reportableSomaticGainsLosses)
                 .nearReportableSomaticGains(nearReportableSomaticGains)
                 .additionalSuspectSomaticGainsLosses(additionalSuspectSomaticGainsLosses)
-                .allGermlineDeletions(purple.allGermlineDeletions())
-                .reportableGermlineDeletions(purple.reportableGermlineDeletions())
+                .allGermlineGainsLosses(allGermlineGainsLosses)
+                .reportableGermlineGainsLosses(reportableGermlineGainsLosses)
                 .build();
+    }
+
+    @NotNull
+    private static List<PurpleGainLoss> selectReportable(@NotNull Map<PurpleGainLoss, GermlineDeletion> deletionMap) {
+        List<PurpleGainLoss> reportable = Lists.newArrayList();
+        for (Map.Entry<PurpleGainLoss, GermlineDeletion> entry : deletionMap.entrySet()) {
+            PurpleGainLoss gainLoss = entry.getKey();
+            GermlineDeletion deletion = entry.getValue();
+            if (deletion.Reported) {
+                reportable.add(gainLoss);
+            }
+        }
+        return reportable;
     }
 
     @NotNull

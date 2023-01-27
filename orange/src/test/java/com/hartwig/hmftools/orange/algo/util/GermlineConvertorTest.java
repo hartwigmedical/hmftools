@@ -17,9 +17,7 @@ import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
-import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurityPloidyFit;
 import com.hartwig.hmftools.orange.algo.purple.PurityPloidyFit;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
@@ -44,8 +42,8 @@ public class GermlineConvertorTest {
                         .allGermlineVariants(Lists.newArrayList())
                         .reportableGermlineVariants(Lists.newArrayList())
                         .additionalSuspectGermlineVariants(Lists.newArrayList())
-                        .allGermlineDeletions(Lists.newArrayList())
-                        .reportableGermlineDeletions(Lists.newArrayList())
+                        .allGermlineGainsLosses(Lists.newArrayList())
+                        .reportableGermlineGainsLosses(Lists.newArrayList())
                         .build())
                 .linx(TestLinxInterpretationFactory.builder()
                         .allGermlineDisruptions(Lists.newArrayList())
@@ -53,8 +51,7 @@ public class GermlineConvertorTest {
                         .build())
                 .build();
 
-        GermlineConvertor convertor = new GermlineConvertor(TestEnsemblDataCacheFactory.createDummyCache());
-        OrangeReport converted = convertor.convertGermlineToSomatic(report);
+        OrangeReport converted = GermlineConvertor.convertGermlineToSomatic(report);
 
         assertNull(converted.germlineMVLHPerGene());
 
@@ -62,8 +59,8 @@ public class GermlineConvertorTest {
         assertNull(converted.purple().allGermlineVariants());
         assertNull(converted.purple().reportableGermlineVariants());
         assertNull(converted.purple().additionalSuspectGermlineVariants());
-        assertNull(converted.purple().allGermlineDeletions());
-        assertNull(converted.purple().reportableGermlineDeletions());
+        assertNull(converted.purple().allGermlineGainsLosses());
+        assertNull(converted.purple().reportableGermlineGainsLosses());
 
         assertNull(converted.linx().allGermlineDisruptions());
         assertNull(converted.linx().reportableGermlineDisruptions());
@@ -73,7 +70,7 @@ public class GermlineConvertorTest {
     public void canConvertMinimalPurpleData() {
         OrangeReport minimal = TestOrangeReportFactory.createMinimalTestReport();
 
-        assertNotNull(GermlineConvertor.convertPurpleGermline(true, minimal.purple(), minimal.linx()));
+        assertNotNull(GermlineConvertor.convertPurpleGermline(true, minimal.purple()));
     }
 
     @Test
@@ -101,9 +98,7 @@ public class GermlineConvertorTest {
                 .addAdditionalSuspectGermlineVariants(suspectGermlineVariant)
                 .build();
 
-        LinxInterpretedData minimalLinx = TestLinxInterpretationFactory.createMinimalTestLinxData();
-
-        PurpleInterpretedData converted = GermlineConvertor.convertPurpleGermline(true, purple, minimalLinx);
+        PurpleInterpretedData converted = GermlineConvertor.convertPurpleGermline(true, purple);
 
         assertTrue(converted.fit().qc().germlineAberrations().isEmpty());
 
@@ -126,7 +121,7 @@ public class GermlineConvertorTest {
         assertEquals(1, converted.additionalSuspectSomaticVariants().size());
         assertTrue(converted.additionalSuspectSomaticVariants().contains(suspectSomaticVariant));
 
-        PurpleInterpretedData unreliableConverted = GermlineConvertor.convertPurpleGermline(false, purple, minimalLinx);
+        PurpleInterpretedData unreliableConverted = GermlineConvertor.convertPurpleGermline(false, purple);
         assertEquals(1, unreliableConverted.somaticDrivers().size());
         assertNotNull(findByDriverType(unreliableConverted.somaticDrivers(), DriverType.AMP));
 

@@ -18,15 +18,15 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class SomaticGainLossTable {
+public final class GainLossTable {
 
-    private SomaticGainLossTable() {
+    private GainLossTable() {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<PurpleGainLoss> gainLosses,
+    public static Table build(@NotNull String title, float width, @NotNull List<PurpleGainLoss> gainsLosses,
             @Nullable IsofoxInterpretedData isofox) {
-        if (gainLosses.isEmpty()) {
+        if (gainsLosses.isEmpty()) {
             return Tables.createEmpty(title, width);
         }
 
@@ -36,7 +36,7 @@ public final class SomaticGainLossTable {
                         Cells.createHeader("Type"), Cells.createHeader("CN"), Cells.createHeader("TPM"), Cells.createHeader("Perc (Type)"),
                         Cells.createHeader("FC (Type)"), Cells.createHeader("Perc (DB)"), Cells.createHeader("FC (DB)") });
 
-        for (PurpleGainLoss gainLoss : sort(gainLosses)) {
+        for (PurpleGainLoss gainLoss : sort(gainsLosses)) {
             table.addCell(Cells.createContent(gainLoss.chromosome()));
             table.addCell(Cells.createContent(gainLoss.chromosomeBand()));
             table.addCell(Cells.createContent(displayGene(gainLoss)));

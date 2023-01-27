@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.algo.purple;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
@@ -20,7 +21,9 @@ public class PurpleInterpreterTest {
 
     @NotNull
     private static PurpleInterpreter createTestInterpreter() {
-        PaveAlgo paveAlgo = new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache());
-        return new PurpleInterpreter(paveAlgo, Lists.newArrayList(), null);
+        EnsemblDataCache ensemblDataCache = TestEnsemblDataCacheFactory.createDummyCache();
+        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
+        GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
+        return new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, Lists.newArrayList(), null);
     }
 }

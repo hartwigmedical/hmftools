@@ -9,8 +9,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
@@ -29,31 +27,26 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class GermlineConvertor {
+public final class GermlineConvertor {
 
     private static final Logger LOGGER = LogManager.getLogger(GermlineConvertor.class);
 
-    @NotNull
-    private final EnsemblDataCache ensemblDataCache;
-
-    public GermlineConvertor(@NotNull final EnsemblDataCache ensemblDataCache) {
-        this.ensemblDataCache = ensemblDataCache;
+    private GermlineConvertor() {
     }
 
     @NotNull
-    public OrangeReport convertGermlineToSomatic(@NotNull OrangeReport report) {
+    public static OrangeReport convertGermlineToSomatic(@NotNull OrangeReport report) {
         return ImmutableOrangeReport.builder()
                 .from(report)
                 .germlineMVLHPerGene(null)
-                .purple(convertPurpleGermline(report.purple().fit().containsTumorCells(), report.purple(), report.linx()))
+                .purple(convertPurpleGermline(report.purple().fit().containsTumorCells(), report.purple()))
                 .linx(convertLinxGermline(report.linx()))
                 .build();
     }
 
     @NotNull
     @VisibleForTesting
-    static PurpleInterpretedData convertPurpleGermline(boolean containsTumorCells, @NotNull PurpleInterpretedData purple,
-            @NotNull LinxInterpretedData linx) {
+    static PurpleInterpretedData convertPurpleGermline(boolean containsTumorCells, @NotNull PurpleInterpretedData purple) {
         // In case tumor contains no tumor cells, we remove all germline events.
         List<DriverCatalog> mergedDrivers;
         List<PurpleVariant> additionalSomaticVariants;
@@ -61,7 +54,7 @@ public class GermlineConvertor {
         if (containsTumorCells) {
             mergedDrivers = mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers());
             additionalSomaticVariants = toSomaticVariants(purple.reportableGermlineVariants());
-            additionalSomaticGainsLosses = toSomaticGainLosses(purple.reportableGermlineDeletions());
+            additionalSomaticGainsLosses = toSomaticGainLosses(purple.reportableGermlineGainsLosses());
         } else {
             mergedDrivers = purple.somaticDrivers();
             additionalSomaticVariants = Lists.newArrayList();
@@ -80,8 +73,8 @@ public class GermlineConvertor {
                 .additionalSuspectGermlineVariants(null)
                 .addAllAllSomaticGainsLosses(additionalSomaticGainsLosses)
                 .addAllReportableSomaticGainsLosses(additionalSomaticGainsLosses)
-                .allGermlineDeletions(null)
-                .reportableGermlineDeletions(null)
+                .allGermlineGainsLosses(null)
+                .reportableGermlineGainsLosses(null)
                 .build();
     }
 
@@ -126,15 +119,8 @@ public class GermlineConvertor {
     }
 
     @NotNull
-    private static List<PurpleGainLoss> toSomaticGainLosses(@Nullable List<GermlineDeletion> reportableGermlineDeletions) {
-        if (reportableGermlineDeletions == null) {
-            return Lists.newArrayList();
-        }
-        List<PurpleGainLoss> gainsLosses = Lists.newArrayList();
-        for (GermlineDeletion deletion : reportableGermlineDeletions) {
-            // TODO convert;
-        }
-        return gainsLosses;
+    private static List<PurpleGainLoss> toSomaticGainLosses(@Nullable List<PurpleGainLoss> reportableGermlineGainsLosses) {
+        return reportableGermlineGainsLosses != null ? reportableGermlineGainsLosses : Lists.newArrayList();
     }
 
     @NotNull

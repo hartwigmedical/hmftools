@@ -57,8 +57,10 @@ import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
+import com.hartwig.hmftools.orange.algo.purple.GermlineGainLossFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
+import com.hartwig.hmftools.orange.algo.purple.PurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.util.GermlineConvertor;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
@@ -162,7 +164,10 @@ public class OrangeAlgo {
         LinxInterpretedData linx = linxInterpreter.interpret(loadLinxData(config));
 
         ChordData chord = loadChordAnalysis(config);
-        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(new PaveAlgo(ensemblDataCache), driverGenes, chord);
+
+        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
+        GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
+        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, driverGenes, chord);
         PurpleInterpretedData purple = purpleInterpreter.interpret(loadPurpleData(config));
 
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
@@ -207,7 +212,7 @@ public class OrangeAlgo {
         }
 
         if (config.convertGermlineToSomatic()) {
-            report = new GermlineConvertor(ensemblDataCache).convertGermlineToSomatic(report);
+            report = GermlineConvertor.convertGermlineToSomatic(report);
         }
 
         return report;
@@ -372,8 +377,12 @@ public class OrangeAlgo {
 
         LOGGER.info(" Loaded {} structural variants", linx.allSomaticStructuralVariants().size());
         LOGGER.info(" Loaded {} structural drivers", linx.somaticDrivers().size());
-        LOGGER.info(" Loaded {} fusions (of which {} are reportable)", linx.allSomaticFusions().size(), linx.reportableSomaticFusions().size());
-        LOGGER.info(" Loaded {} breakends (of which {} are reportable)", linx.allSomaticBreakends().size(), linx.reportableSomaticBreakends().size());
+        LOGGER.info(" Loaded {} fusions (of which {} are reportable)",
+                linx.allSomaticFusions().size(),
+                linx.reportableSomaticFusions().size());
+        LOGGER.info(" Loaded {} breakends (of which {} are reportable)",
+                linx.allSomaticBreakends().size(),
+                linx.reportableSomaticBreakends().size());
         LOGGER.info(" Loaded {} reportable homozygous disruptions", linx.somaticHomozygousDisruptions().size());
 
         if (linxGermlineDataDirectory != null) {
@@ -565,7 +574,6 @@ public class OrangeAlgo {
         if (config.cuppaFeaturePlot() != null && new File(config.cuppaFeaturePlot()).exists()) {
             cuppaFeaturePlot = plotManager.processPlotFile(config.cuppaFeaturePlot());
         }
-
 
         String cuppaChartPlot = null;
         if (config.cuppaChartPlot() != null) {
