@@ -77,8 +77,8 @@ public class XMLFactory {
         } else if (report.molecularTissueOriginReporting().interpretLikelihood() == null) {
             cupAnalyse = report.molecularTissueOriginReporting().interpretCancerType();
         } else {
-            cupAnalyse = report.molecularTissueOriginReporting().interpretCancerType() + " (" + report.molecularTissueOriginReporting()
-                    .interpretLikelihood() + ")";
+            String cuppaLikelihood = DataUtil.formatPercentageDigit(report.molecularTissueOriginReporting().interpretLikelihood());
+            cupAnalyse = report.molecularTissueOriginReporting().interpretCancerType() + " " + cuppaLikelihood;
         }
         xml.add(ImmutableKeyXML.builder()
                 .keyPath("WgsCupAnalyse")
