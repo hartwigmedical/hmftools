@@ -187,7 +187,6 @@ public class ClusterClassification
         }
         else
         {
-            // to be reworked once new inferred changes are complete
             if (cluster.getSvCount() == 2 && cluster.isConsistent() && cluster.getSglBreakendCount() == 2)
             {
                 final SvVarData sgl1 = cluster.getSV(0);
