@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
@@ -221,6 +222,7 @@ public final class GermlineConversion {
     static LinxInterpretedData convertLinxGermline(boolean containsTumorCells, @NotNull LinxInterpretedData linx) {
         List<LinxSvAnnotation> additionalStructuralVariants = Lists.newArrayList();
         List<LinxBreakend> additionalReportableBreakends = Lists.newArrayList();
+        List<HomozygousDisruption> additionalHomozygousDisruptions = Lists.newArrayList();
 
         if (containsTumorCells) {
             Map<Integer, Integer> svIdMapping = buildSvIdMapping(linx.allSomaticStructuralVariants(), linx.allGermlineStructuralVariants());
@@ -230,6 +232,7 @@ public final class GermlineConversion {
 
             additionalStructuralVariants = toSomaticStructuralVariants(linx.allGermlineStructuralVariants(), svIdMapping, clusterIdMapping);
             additionalReportableBreakends = toSomaticBreakends(linx.reportableGermlineBreakends(), breakendIdMapping, svIdMapping);
+            additionalHomozygousDisruptions = toSomaticHomozygousDisruptions(linx.germlineHomozygousDisruptions());
         }
 
         return ImmutableLinxInterpretedData.builder()
@@ -237,9 +240,11 @@ public final class GermlineConversion {
                 .addAllAllSomaticStructuralVariants(additionalStructuralVariants)
                 .addAllAllSomaticBreakends(additionalReportableBreakends)
                 .addAllReportableSomaticBreakends(additionalReportableBreakends)
+                .addAllSomaticHomozygousDisruptions(additionalHomozygousDisruptions)
                 .allGermlineStructuralVariants(null)
                 .allGermlineBreakends(null)
                 .reportableGermlineBreakends(null)
+                .germlineHomozygousDisruptions(null)
                 .build();
     }
 
@@ -342,5 +347,11 @@ public final class GermlineConversion {
             maxId = Math.max(maxId, breakend.id());
         }
         return maxId;
+    }
+
+    @NotNull
+    private static List<HomozygousDisruption> toSomaticHomozygousDisruptions(
+            @Nullable List<HomozygousDisruption> germlineHomozygousDisruptions) {
+        return germlineHomozygousDisruptions != null ? germlineHomozygousDisruptions : Lists.newArrayList();
     }
 }

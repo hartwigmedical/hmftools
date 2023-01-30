@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogTestFactory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
@@ -55,6 +56,7 @@ public class GermlineConversionTest {
                         .allGermlineStructuralVariants(Lists.newArrayList())
                         .allGermlineBreakends(Lists.newArrayList())
                         .reportableGermlineBreakends(Lists.newArrayList())
+                        .germlineHomozygousDisruptions(Lists.newArrayList())
                         .build())
                 .build();
 
@@ -72,6 +74,7 @@ public class GermlineConversionTest {
         assertNull(converted.linx().allGermlineStructuralVariants());
         assertNull(converted.linx().allGermlineBreakends());
         assertNull(converted.linx().reportableGermlineBreakends());
+        assertNull(converted.linx().germlineHomozygousDisruptions());
     }
 
     @Test
@@ -297,6 +300,8 @@ public class GermlineConversionTest {
         LinxBreakend germlineBreakend = LinxTestFactory.breakendBuilder().id(8).svId(1).build();
         LinxBreakend reportableGermlineBreakend = LinxTestFactory.breakendBuilder().id(9).svId(2).build();
 
+        HomozygousDisruption germlineHomozygousDisruption = LinxTestFactory.homozygousDisruptionBuilder().build();
+
         LinxInterpretedData linx = TestLinxInterpretationFactory.builder()
                 .addAllSomaticStructuralVariants(somaticStructuralVariant1, somaticStructuralVariant2)
                 .addAllSomaticBreakends(somaticBreakend, reportableSomaticBreakend)
@@ -304,6 +309,7 @@ public class GermlineConversionTest {
                 .addAllGermlineStructuralVariants(germlineStructuralVariant1, germlineStructuralVariant2)
                 .addAllGermlineBreakends(germlineBreakend, reportableGermlineBreakend)
                 .addReportableGermlineBreakends(reportableGermlineBreakend)
+                .addGermlineHomozygousDisruptions(germlineHomozygousDisruption)
                 .build();
 
         LinxInterpretedData converted = GermlineConversion.convertLinxGermline(true, linx);
@@ -316,5 +322,8 @@ public class GermlineConversionTest {
 
         assertEquals(2, converted.reportableSomaticBreakends().size());
         assertEquals(11, GermlineConversion.findMaxBreakendId(converted.reportableSomaticBreakends()));
+
+        assertEquals(1, converted.somaticHomozygousDisruptions().size());
+        assertTrue(converted.somaticHomozygousDisruptions().contains(germlineHomozygousDisruption));
     }
 }
