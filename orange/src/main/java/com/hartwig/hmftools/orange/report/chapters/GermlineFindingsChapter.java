@@ -10,6 +10,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
@@ -25,6 +26,7 @@ import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.GainLossTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
+import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.PharmacogeneticsTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -68,6 +70,7 @@ public class GermlineFindingsChapter implements ReportChapter {
         if (report.refSample() != null) {
             addGermlineVariants(document);
             addGermlineDeletions(document);
+            addGermlineHomozygousDisruptions(document);
             addGermlineBreakends(document);
             addMVLHAnalysis(document);
             addGermlineCNAberrations(document);
@@ -101,6 +104,14 @@ public class GermlineFindingsChapter implements ReportChapter {
         if (reportableGermlineGainsLosses != null) {
             String title = "Potentially pathogenic germline deletions (" + reportableGermlineGainsLosses.size() + ")";
             document.add(GainLossTable.build(title, contentWidth(), reportableGermlineGainsLosses, report.isofox()));
+        }
+    }
+
+    private void addGermlineHomozygousDisruptions(@NotNull Document document) {
+        List<HomozygousDisruption> germlineHomozygousDisruptions = report.linx().germlineHomozygousDisruptions();
+        if (germlineHomozygousDisruptions != null) {
+            String title = "Potentially pathogenic germline homozygous disruptions (" + germlineHomozygousDisruptions.size() + ")";
+            document.add(HomozygousDisruptionTable.build(title, contentWidth(), germlineHomozygousDisruptions));
         }
     }
 

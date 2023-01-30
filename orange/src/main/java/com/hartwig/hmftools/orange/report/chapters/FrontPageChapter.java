@@ -132,13 +132,17 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(Cells.createKey("Ploidy:"));
         summary.addCell(Cells.createValue(ploidyString()));
         summary.addCell(Cells.createKey("Somatic variant drivers:"));
-        summary.addCell(Cells.createValue(somaticDriverString()));
+        summary.addCell(Cells.createValue(somaticVariantDriverString()));
         summary.addCell(Cells.createKey("Germline variant drivers:"));
-        summary.addCell(Cells.createValue(germlineDriverString()));
+        summary.addCell(Cells.createValue(germlineVariantDriverString()));
         summary.addCell(Cells.createKey("Somatic copy number drivers:"));
-        summary.addCell(Cells.createValue(copyNumberDriverString()));
-        summary.addCell(Cells.createKey("Disruption drivers:"));
-        summary.addCell(Cells.createValue(disruptionDriverString()));
+        summary.addCell(Cells.createValue(somaticCopyNumberDriverString()));
+        summary.addCell(Cells.createKey("Germline copy number drivers:"));
+        summary.addCell(Cells.createValue(germlineCopyNumberDriverString()));
+        summary.addCell(Cells.createKey("Somatic disruption drivers:"));
+        summary.addCell(Cells.createValue(somaticDisruptionDriverString()));
+        summary.addCell(Cells.createKey("Germline disruption drivers:"));
+        summary.addCell(Cells.createValue(germlineDisruptionDriverString()));
         summary.addCell(Cells.createKey("Fusion drivers:"));
         summary.addCell(Cells.createValue(fusionDriverString()));
         summary.addCell(Cells.createKey("Viral presence:"));
@@ -199,12 +203,12 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String somaticDriverString() {
+    private String somaticVariantDriverString() {
         return variantDriverString(report.purple().reportableSomaticVariants(), report.purple().somaticDrivers());
     }
 
     @NotNull
-    private String germlineDriverString() {
+    private String germlineVariantDriverString() {
         List<PurpleVariant> reportableGermlineVariants = report.purple().reportableGermlineVariants();
         List<DriverCatalog> germlineDrivers = report.purple().germlineDrivers();
         if (reportableGermlineVariants != null && germlineDrivers != null) {
@@ -232,30 +236,57 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String copyNumberDriverString() {
-        // TODO Add germline deletions
-        if (report.purple().reportableSomaticGainsLosses().isEmpty()) {
-            return NONE;
-        }
-
-        Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for (PurpleGainLoss gainLoss : report.purple().reportableSomaticGainsLosses()) {
-            genes.add(gainLoss.gene());
-        }
-        return report.purple().reportableSomaticGainsLosses().size() + " (" + concat(genes) + ")";
+    private String somaticCopyNumberDriverString() {
+        return copyNumberDriverString(report.purple().reportableSomaticGainsLosses());
     }
 
     @NotNull
-    private String disruptionDriverString() {
-        if (report.linx().somaticHomozygousDisruptions().isEmpty()) {
+    private String germlineCopyNumberDriverString() {
+        List<PurpleGainLoss> germlineGainsLosses = report.purple().reportableGermlineGainsLosses();
+        if (germlineGainsLosses == null) {
+            return ReportResources.NOT_AVAILABLE;
+        }
+        return copyNumberDriverString(germlineGainsLosses);
+    }
+
+    @NotNull
+    private static String copyNumberDriverString(@NotNull List<PurpleGainLoss> gainsLosses) {
+        if (gainsLosses.isEmpty()) {
             return NONE;
         }
 
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for (HomozygousDisruption disruption : report.linx().somaticHomozygousDisruptions()) {
-            genes.add(disruption.gene());
+        for (PurpleGainLoss gainLoss : gainsLosses) {
+            genes.add(gainLoss.gene());
         }
-        return report.linx().somaticHomozygousDisruptions().size() + " (" + concat(genes) + ")";
+        return gainsLosses.size() + " (" + concat(genes) + ")";
+    }
+
+    @NotNull
+    private String somaticDisruptionDriverString() {
+        return disruptionDriverString(report.linx().somaticHomozygousDisruptions());
+    }
+
+    @NotNull
+    private String germlineDisruptionDriverString() {
+        List<HomozygousDisruption> germlineHomozygousDisruptions = report.linx().germlineHomozygousDisruptions();
+        if (germlineHomozygousDisruptions == null) {
+            return ReportResources.NOT_AVAILABLE;
+        }
+        return disruptionDriverString(germlineHomozygousDisruptions);
+    }
+
+    @NotNull
+    private static String disruptionDriverString(@NotNull List<HomozygousDisruption> homozygousDisruptions) {
+        if (homozygousDisruptions.isEmpty()) {
+            return NONE;
+        }
+
+        Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
+        for (HomozygousDisruption homozygousDisruption : homozygousDisruptions) {
+            genes.add(homozygousDisruption.gene());
+        }
+        return homozygousDisruptions.size() + " (" + concat(genes) + ")";
     }
 
     @NotNull
