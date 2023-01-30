@@ -35,6 +35,7 @@ public class LinxInterpreter {
 
     @NotNull
     public LinxInterpretedData interpret(@NotNull LinxData linx) {
+        LOGGER.info("Analysing linx data");
         List<LinxFusion> additionalSuspectSomaticFusions =
                 DNAFusionSelector.selectInterestingUnreportedFusions(linx.allSomaticFusions(), driverGenes);
         LOGGER.info(" Found an additional {} suspect fusions that are potentially interesting", additionalSuspectSomaticFusions.size());

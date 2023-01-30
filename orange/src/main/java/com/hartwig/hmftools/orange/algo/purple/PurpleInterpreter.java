@@ -67,6 +67,7 @@ public class PurpleInterpreter {
 
     @NotNull
     public PurpleInterpretedData interpret(@NotNull PurpleData purple) {
+        LOGGER.info("Analysing purple data");
         List<PurpleVariant> allSomaticVariants = purpleVariantFactory.create(purple.allSomaticVariants());
         List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.create(purple.reportableSomaticVariants());
         List<PurpleVariant> additionalSuspectSomaticVariants =
