@@ -12,7 +12,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
-import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
@@ -23,7 +22,6 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainLossFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -256,13 +254,7 @@ public class WildTypeAlgoTest {
 
     @NotNull
     private static HomozygousDisruption createHomDisruption(@NotNull String gene) {
-        return ImmutableHomozygousDisruption.builder()
-                .chromosome(Strings.EMPTY)
-                .chromosomeBand(Strings.EMPTY)
-                .gene(gene)
-                .transcript("123")
-                .isCanonical(true)
-                .build();
+        return LinxTestFactory.homozygousDisruptionBuilder().gene(gene).build();
     }
 
     @NotNull

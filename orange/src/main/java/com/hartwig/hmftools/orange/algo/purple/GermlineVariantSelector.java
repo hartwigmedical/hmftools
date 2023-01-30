@@ -24,7 +24,7 @@ final class GermlineVariantSelector {
                 boolean isHotspot = variant.hotspot() == Hotspot.HOTSPOT;
 
                 // TODO: Add pathogenic variants that were not reported
-                // TODO: Add variants with conflicting evidence
+                // TODO: Add variants with conflicting evidence in ClinVar
                 if (isHotspot) {
                     filtered.add(variant);
                 }

@@ -152,8 +152,8 @@ public final class TestOrangeReportFactory {
                 .allGermlineVariants(Lists.newArrayList())
                 .reportableGermlineVariants(Lists.newArrayList())
                 .additionalSuspectGermlineVariants(Lists.newArrayList())
-                .allGermlineDeletions(Lists.newArrayList())
-                .reportableGermlineDeletions(Lists.newArrayList())
+                .allGermlineGainsLosses(Lists.newArrayList())
+                .reportableGermlineGainsLosses(Lists.newArrayList())
                 .build();
     }
 
@@ -172,8 +172,7 @@ public final class TestOrangeReportFactory {
                 .addReportableSomaticFusions(fusion)
                 .allGermlineStructuralVariants(Lists.newArrayList())
                 .allGermlineBreakends(Lists.newArrayList())
-                .allGermlineDisruptions(Lists.newArrayList())
-                .reportableGermlineDisruptions(Lists.newArrayList())
+                .reportableGermlineBreakends(Lists.newArrayList())
                 .build();
     }
 

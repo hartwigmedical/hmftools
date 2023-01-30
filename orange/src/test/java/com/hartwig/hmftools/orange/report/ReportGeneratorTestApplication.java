@@ -32,6 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ReportGeneratorTestApplication {
 
@@ -100,7 +101,6 @@ public class ReportGeneratorTestApplication {
 
     @NotNull
     private static OrangeReport removeUnreported(@NotNull OrangeReport report) {
-        // TODO Deal with germline structural variants and germline breakends.
         ImmutableOrangeReport.Builder builder = ImmutableOrangeReport.builder()
                 .from(report)
                 .purple(ImmutablePurpleInterpretedData.builder()
@@ -116,7 +116,7 @@ public class ReportGeneratorTestApplication {
                         .allSomaticGainsLosses(report.purple().reportableSomaticGainsLosses())
                         .nearReportableSomaticGains(Lists.newArrayList())
                         .additionalSuspectSomaticGainsLosses(Lists.newArrayList())
-                        .allGermlineDeletions(report.purple().reportableGermlineDeletions())
+                        .allGermlineGainsLosses(report.purple().reportableGermlineGainsLosses())
                         .build())
                 .linx(ImmutableLinxInterpretedData.builder()
                         .from(report.linx())
@@ -126,7 +126,9 @@ public class ReportGeneratorTestApplication {
                         .additionalSuspectSomaticFusions(Lists.newArrayList())
                         .allSomaticBreakends(report.linx().reportableSomaticBreakends())
                         .additionalSuspectSomaticBreakends(Lists.newArrayList())
-                        .allGermlineDisruptions(report.linx().reportableGermlineDisruptions())
+                        .allGermlineStructuralVariants(retainReportableStructuralVariants(report.linx().allSomaticStructuralVariants(),
+                                report.linx().reportableSomaticBreakends()))
+                        .allGermlineBreakends(report.linx().reportableGermlineBreakends())
                         .build());
 
         if (report.isofox() != null) {
@@ -161,9 +163,13 @@ public class ReportGeneratorTestApplication {
         return reportable;
     }
 
-    @NotNull
-    private static List<LinxSvAnnotation> retainReportableStructuralVariants(@NotNull List<LinxSvAnnotation> structuralVariants,
-            @NotNull List<LinxBreakend> reportableBreakends) {
+    @Nullable
+    private static List<LinxSvAnnotation> retainReportableStructuralVariants(@Nullable List<LinxSvAnnotation> structuralVariants,
+            @Nullable List<LinxBreakend> reportableBreakends) {
+        if (structuralVariants == null || reportableBreakends == null) {
+            return null;
+        }
+
         List<LinxSvAnnotation> reportable = Lists.newArrayList();
         for (LinxSvAnnotation structuralVariant : structuralVariants) {
             if (isReportableSv(structuralVariant, reportableBreakends)) {

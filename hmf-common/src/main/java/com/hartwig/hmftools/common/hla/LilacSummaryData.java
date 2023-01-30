@@ -44,10 +44,10 @@ public abstract class LilacSummaryData
 
         LilacQcData qcData = LilacQcData.read(lilacQcCsv);
 
-        LOGGER.info("Read QC status '{}' from {}", qcData.status(), lilacQcCsv);
+        LOGGER.info(" Read QC status '{}' from {}", qcData.status(), lilacQcCsv);
 
         List<LilacAllele> alleles = LilacAllele.read(lilacResultCsv);
-        LOGGER.info("Read {} LILAC alleles from {}", alleles.size(), lilacResultCsv);
+        LOGGER.info(" Read {} LILAC alleles from {}", alleles.size(), lilacResultCsv);
 
         return ImmutableLilacSummaryData.builder()
                 .qc(qcData.status())

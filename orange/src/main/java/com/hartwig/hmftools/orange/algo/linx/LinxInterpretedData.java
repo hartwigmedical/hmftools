@@ -5,7 +5,6 @@ import java.util.List;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 
 import org.immutables.value.Value;
@@ -50,8 +49,6 @@ public abstract class LinxInterpretedData {
     public abstract List<LinxBreakend> reportableGermlineBreakends();
 
     @Nullable
-    public abstract List<LinxGermlineSv> allGermlineDisruptions();
+    public abstract List<HomozygousDisruption> germlineHomozygousDisruptions();
 
-    @Nullable
-    public abstract List<LinxGermlineSv> reportableGermlineDisruptions();
 }

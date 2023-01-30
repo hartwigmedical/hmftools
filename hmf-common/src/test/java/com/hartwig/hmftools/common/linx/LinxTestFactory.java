@@ -104,4 +104,15 @@ public final class LinxTestFactory {
                 .exonDown(0)
                 .junctionCopyNumber(0D);
     }
+
+    @NotNull
+    public static ImmutableHomozygousDisruption.Builder homozygousDisruptionBuilder()
+    {
+        return ImmutableHomozygousDisruption.builder()
+                .chromosome(Strings.EMPTY)
+                .chromosomeBand(Strings.EMPTY)
+                .gene(Strings.EMPTY)
+                .transcript(Strings.EMPTY)
+                .isCanonical(false);
+    }
 }
