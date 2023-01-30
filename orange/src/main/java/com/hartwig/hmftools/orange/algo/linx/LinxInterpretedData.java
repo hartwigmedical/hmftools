@@ -48,4 +48,7 @@ public abstract class LinxInterpretedData {
     @Nullable
     public abstract List<LinxBreakend> reportableGermlineBreakends();
 
+    @Nullable
+    public abstract List<HomozygousDisruption> germlineHomozygousDisruptions();
+
 }
