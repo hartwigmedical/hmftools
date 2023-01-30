@@ -38,13 +38,15 @@ public class LinxInterpreter {
         LOGGER.info("Analysing linx data");
         List<LinxFusion> additionalSuspectSomaticFusions =
                 DNAFusionSelector.selectInterestingUnreportedFusions(linx.allSomaticFusions(), driverGenes);
-        LOGGER.info(" Found an additional {} suspect fusions that are potentially interesting", additionalSuspectSomaticFusions.size());
+        LOGGER.info(" Found an additional {} suspect somatic fusions that are potentially interesting",
+                additionalSuspectSomaticFusions.size());
 
         List<LinxBreakend> additionalSuspectSomaticBreakends =
                 BreakendSelector.selectInterestingUnreportedBreakends(linx.allSomaticBreakends(),
                         linx.reportableSomaticFusions(),
                         knownFusionCache);
-        LOGGER.info(" Found an additional {} suspect breakends that are potentially interesting", additionalSuspectSomaticBreakends.size());
+        LOGGER.info(" Found an additional {} suspect somatic breakends that are potentially interesting",
+                additionalSuspectSomaticBreakends.size());
 
         List<LinxBreakend> reportableGermlineBreakends = filterForPresenceInTumor(linx.reportableGermlineBreakends());
         if (reportableGermlineBreakends != null) {
