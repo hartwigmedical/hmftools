@@ -4,15 +4,19 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroups.calcBaseQualAverage;
+import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_FAIL;
+import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MISMATCH;
 import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
@@ -40,15 +44,19 @@ public class ConsensusReads
         boolean isForward = !reads.get(0).getReadNegativeStrandFlag();
         int maxBaseLength = 0;
         boolean hasIndels = false;
+        boolean unmapped = false;
 
         // work out the outermost boundaries - soft-clipped and aligned - from amongst all reads
-        ConsensusState consensusState = new ConsensusState(isForward);
+        ConsensusState consensusState = new ConsensusState(isForward, reads.get(0).getContig());
 
         for(SAMRecord read : reads)
         {
             maxBaseLength = max(maxBaseLength, read.getReadBases().length);
 
-            hasIndels |= read.getCigar().getCigarElements().stream().anyMatch(x -> x.getOperator() == I || x.getOperator() == D);
+            if(!read.getReadUnmappedFlag())
+                hasIndels |= read.getCigar().getCigarElements().stream().anyMatch(x -> x.getOperator() == I || x.getOperator() == D);
+            else
+                unmapped = true;
 
             consensusState.setBoundaries(read);
         }
@@ -59,9 +67,17 @@ public class ConsensusReads
         {
             mIndelConsensusReads.buildIndelComponents(reads,  consensusState);
 
-            if(consensusState.outcome() == INDEL_FAIL)
+            if(consensusState.outcome() == INDEL_FAIL || consensusState.outcome() == INDEL_MISMATCH)
             {
                 SAMRecord consensusRead = copyPrimaryRead(reads, groupIdentifier);
+
+                /*
+                StringJoiner sj = new StringJoiner(", ");
+                reads.forEach(x -> sj.add(x.getCigarString()));
+                MD_LOGGER.debug("consensus indel mismatch: reads({}) cigars({}) details({})",
+                        reads.size(), sj.toString(), readToString(consensusRead));
+                */
+
                 return new ConsensusReadInfo(consensusRead, consensusState.outcome());
             }
         }
@@ -70,7 +86,8 @@ public class ConsensusReads
             mBaseBuilder.buildReadBases(reads, consensusState);
             consensusState.setOutcome(ALIGNMENT_ONLY);
 
-            buildCigar(consensusState);
+            if(!unmapped)
+                buildCigar(consensusState);
         }
 
         SAMRecord consensusRead = createConsensusRead(consensusState, reads, groupIdentifier);
@@ -96,7 +113,11 @@ public class ConsensusReads
         record.setReferenceName(initialRead.getReferenceName());
 
         record.setAlignmentStart(state.MinAlignedPosStart);
-        record.setCigar(new Cigar(state.CigarElements));
+
+        if(!initialRead.getReadUnmappedFlag())
+            record.setCigar(new Cigar(state.CigarElements));
+        else
+            record.setCigar(initialRead.getCigar());
 
         if(initialRead.getMateReferenceIndex() >= 0)
         {

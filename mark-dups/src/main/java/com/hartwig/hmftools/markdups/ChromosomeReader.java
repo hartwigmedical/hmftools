@@ -30,7 +30,6 @@ import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.PartitionResults;
 import com.hartwig.hmftools.markdups.common.Statistics;
-import com.hartwig.hmftools.markdups.umi.ConsensusReadInfo;
 import com.hartwig.hmftools.markdups.umi.ConsensusReads;
 import com.hartwig.hmftools.markdups.umi.UmiGroup;
 
@@ -102,7 +101,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         mPartitionRecordCount = 0;
 
-        mStats = new Statistics();
+        mStats = mDuplicateGroups.statistics();
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
         mReadsProcessed = Sets.newHashSet();
@@ -250,8 +249,6 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     {
         if(basePartition.equals(mCurrentStrPartition))
         {
-            // String callerInfo = format("%s_incomplete_%d", mCurrentStrPartition, abs(fragment.initialPosition()));
-
             PartitionResults partitionResults = mCurrentPartitionData.processIncompleteFragment(fragment);
 
             if(partitionResults == null)

@@ -310,10 +310,7 @@ public class PartitionData
         if(umiGroup.allReadsReceived())
             return;
 
-        for(Fragment fragment : umiGroup.fragments())
-        {
-            mUmiGroups.put(fragment.id(), umiGroup);
-        }
+        umiGroup.fragments().forEach(x -> mUmiGroups.put(x.id(), umiGroup));
     }
 
     private void checkRemoveUmiGroup(final UmiGroup umiGroup)
@@ -323,6 +320,13 @@ public class PartitionData
 
         // remove by each read ID
         List<String> groupReadIds = umiGroup.getReadIds();
+
+        if(groupReadIds == null)
+        {
+            MD_LOGGER.error("umiGroup({}) has no read IDs: {}", umiGroup.umiId(), umiGroup.toString());
+            return;
+        }
+
         groupReadIds.forEach(x -> mUmiGroups.remove(x));
     }
 

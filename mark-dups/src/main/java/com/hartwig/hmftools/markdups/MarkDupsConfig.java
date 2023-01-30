@@ -81,11 +81,12 @@ public class MarkDupsConfig
     private static final String WRITE_BAM = "write_bam";
 
     private static final String LOG_READ_IDS = "log_read_ids";
-    private static final String ITEM_DELIM = ";";
     private static final String PERF_DEBUG = "perf_debug";
     private static final String RUN_CHECKS = "run_checks";
     private static final String USE_INTERIM_FILES = "use_interim_files";
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
+
+    private static final String ITEM_DELIM = ";";
 
     public MarkDupsConfig(final CommandLine cmd)
     {

@@ -46,6 +46,7 @@ public class RecordWriter
 
     private boolean mCacheReads;
     private final Set<SAMRecord> mReadsWritten; // debug only
+    private int mNonConsensusReads;
 
     private class BamWriter
     {
@@ -82,6 +83,7 @@ public class RecordWriter
     {
         mConfig = config;
         mCacheReads = config.runReadChecks();
+        mNonConsensusReads = 0;
 
         if(mConfig.WriteBam)
         {
@@ -119,7 +121,7 @@ public class RecordWriter
         return filename;
     }
 
-    public int recordWriteCount() { return mBamWriter.writeCount(); }
+    public int recordWriteCount() { return mNonConsensusReads; } // mBamWriter.writeCount()
 
     public synchronized void writeFragments(final List<Fragment> fragments) { fragments.forEach(x -> doWriteFragment(x)); }
     public synchronized void writeFragment(final Fragment fragment) { doWriteFragment(fragment); }
@@ -133,7 +135,7 @@ public class RecordWriter
                 mBamWriter.writeRecord(read);
 
                 if(mCacheReads)
-                        mReadsWritten.add(read);
+                    mReadsWritten.add(read);
 
                 continue;
             }
@@ -170,6 +172,8 @@ public class RecordWriter
                 mReadsWritten.add(read);
             }
         }
+
+        ++mNonConsensusReads;
 
         writeReadData(read, fragment);
 

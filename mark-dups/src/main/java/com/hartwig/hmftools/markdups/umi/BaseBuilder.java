@@ -25,7 +25,7 @@ public class BaseBuilder
 
     public UmiConfig config() { return mConfig; }
 
-    private static final byte NO_BASE = 0;
+    public static final byte NO_BASE = 0;
 
     public void buildReadBases(final List<SAMRecord> reads, final ConsensusState consensusState)
     {
@@ -111,7 +111,7 @@ public class BaseBuilder
         }
     }
 
-    private byte[] determineBaseAndQual(
+    public byte[] determineBaseAndQual(
             final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
     {
         List<Byte> distinctBases = Lists.newArrayListWithCapacity(4);
@@ -155,7 +155,7 @@ public class BaseBuilder
                 maxQual = maxQuals.get(i);
                 maxBase = distinctBases.get(i);
             }
-            else if(qualTotals.get(i) >= maxQualTotal && !maxIsRef)
+            else if(chromosome != null && qualTotals.get(i) >= maxQualTotal && !maxIsRef) // chromosome will be null for unmapped reads
             {
                 String refBase = mRefGenome.getBaseString(chromosome, position, position);
 

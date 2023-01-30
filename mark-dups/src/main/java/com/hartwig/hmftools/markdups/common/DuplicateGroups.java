@@ -23,6 +23,8 @@ import com.hartwig.hmftools.markdups.umi.ConsensusReads;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
 import com.hartwig.hmftools.markdups.umi.UmiGroup;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.SAMRecord;
 
 public class DuplicateGroups
@@ -262,6 +264,15 @@ public class DuplicateGroups
 
             for(UmiGroup umiGroup : umiGroups)
             {
+                if(umiGroup.fragmentCount() == 1)
+                {
+                    // drop any single fragments
+                    Fragment fragment = umiGroup.fragments().get(0);
+                    fragment.setStatus(NONE);
+                    fragment.setUmiId(null);
+                    continue;
+                }
+
                 umiGroup.categoriseReads();
 
                 allUmiGroups.add(umiGroup);

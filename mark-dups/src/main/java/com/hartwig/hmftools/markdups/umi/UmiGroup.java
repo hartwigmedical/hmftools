@@ -24,7 +24,6 @@ public class UmiGroup
     private final String mUmiId;
     private final List<Fragment> mFragments;
     private int mFragmentCount;
-    private String mConsensusReadId;
 
     private final List<SAMRecord>[] mReadGroups;
     private final boolean[] mReadGroupComplete;
@@ -36,13 +35,11 @@ public class UmiGroup
         mReadGroups = new List[ReadLegType.values().length];
         mReadGroupComplete = new boolean[ReadLegType.values().length];
         mFragmentCount = 0;
-        mConsensusReadId = "";
     }
 
     public List<Fragment> fragments() { return mFragments; }
-    public int fragmentCount() { return mFragments.size(); }
+    public int fragmentCount() { return mFragmentCount > 0 ? mFragmentCount : mFragments.size(); }
 
-    public String consensusReadId() { return mConsensusReadId; }
     public String umiId() { return mUmiId; }
 
     public void categoriseReads()
@@ -77,11 +74,7 @@ public class UmiGroup
             fragment.setUmiId(mUmiId);
             fragment.reads().forEach(x -> addRead(x));
         }
-
-        mConsensusReadId = formReadId(mFragments.get(0).id(), mUmiId);
     }
-
-    public void clearFragments() { mFragments.clear(); }
 
     public void addRead(final SAMRecord read)
     {
@@ -156,7 +149,7 @@ public class UmiGroup
 
         for(List<SAMRecord> readGroup : mReadGroups)
         {
-            if(readGroup.size() == mFragmentCount)
+            if(readGroup != null && readGroup.size() == mFragmentCount)
             {
                 return readGroup.stream().map(x -> x.getReadName()).collect(Collectors.toList());
             }

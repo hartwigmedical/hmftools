@@ -1,18 +1,15 @@
 package com.hartwig.hmftools.markdups.umi;
 
 import static java.lang.Math.max;
-import static java.lang.String.format;
 
-import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
+import static com.hartwig.hmftools.markdups.umi.BaseBuilder.NO_BASE;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MATCH;
 
-import static htsjdk.samtools.CigarOperator.D;
-import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
-import static htsjdk.samtools.CigarOperator.N;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
@@ -32,166 +29,245 @@ public class IndelConsensusReads
 
     public void buildIndelComponents(final List<SAMRecord> reads, final ConsensusState consensusState)
     {
-        List<ReadCigarData> readCigars = Lists.newArrayListWithExpectedSize(reads.size());
-
-        for(SAMRecord read : reads)
-        {
-            int readIndex = 0;
-            int position = read.getAlignmentStart();
-
-            List<CigarElementData> elementData = Lists.newArrayList();
-            int cigarElementsCount = read.getCigar().getCigarElements().size();
-
-            for(int i = 0; i < cigarElementsCount; ++i)
-            {
-                CigarElement element = read.getCigar().getCigarElements().get(i);
-
-                if(element.getOperator() == S && i == 0)
-                {
-                    CigarElement nextElement = read.getCigar().getCigarElements().get(i + 1);
-                    int unclippedPos = position - element.getLength();
-                    int combinedLength = element.getLength() + nextElement.getLength();
-                    elementData.add(new CigarElementData(readIndex, unclippedPos, M, combinedLength));
-                    readIndex += combinedLength;
-                    ++i;
-                    continue;
-                }
-                else if(element.getOperator() == M && i == cigarElementsCount - 2)
-                {
-                    CigarElement nextElement = read.getCigar().getCigarElements().get(i + 1);
-                    int combinedLength = element.getLength() + nextElement.getLength();
-                    elementData.add(new CigarElementData(readIndex, position, M, combinedLength));
-                    break;
-                }
-
-                elementData.add(new CigarElementData(readIndex, position, element.getOperator(), element.getLength()));
-
-                if(element.getOperator() == D || element.getOperator() == N)
-                {
-                    position += element.getLength();
-                }
-                else if(element.getOperator() == M)
-                {
-                    readIndex += element.getLength();
-                    position += element.getLength();
-                }
-                else if(element.getOperator() == I)
-                {
-                    readIndex += element.getLength() + 1;
-                    position += 1;
-                }
-            }
-
-            ReadCigarData readCigarData = new ReadCigarData(elementData);
-            readCigars.add(readCigarData);
-        }
-
-        // check for an exact match on elements
-        ReadCigarData first = readCigars.get(0);
-        boolean hasMismatch = false;
-
-        for(int i = 1; i < readCigars.size(); ++i)
-        {
-            ReadCigarData next = readCigars.get(i);
-
-            if(next.Elements.size() != first.Elements.size())
-            {
-                hasMismatch = true;
-                break;
-            }
-
-            for(int j = 1; j < first.Elements.size(); ++j) // ignore first M
-            {
-                if(first.Elements.get(j).Operator != next.Elements.get(j).Operator)
-                {
-                    hasMismatch = true;
-                    break;
-                }
-
-                if(first.Elements.get(j).PosStart != next.Elements.get(j).PosStart)
-                {
-                    hasMismatch = true;
-                    break;
-                }
-            }
-
-            if(hasMismatch)
-                break;
-        }
-
-        if(!hasMismatch)
+        if(haveConsistentCigars(reads))
         {
             mBaseBuilder.buildReadBases(reads, consensusState);
             consensusState.setOutcome(INDEL_MATCH);
             buildIndelCigar(consensusState,reads.get(0));
+            return;
         }
 
-        /*
-        // check for differences and incompatibilities
-        int firstElementCount = readCigars.get(0).size();
+        List<ReadParseState> readStates = reads.stream().map(x -> new ReadParseState(x, consensusState.IsForward)).collect(Collectors.toList());
+
+        int readCount = reads.size();
+        byte[] locationBases = new byte[readCount];
+        byte[] locationQuals = new byte[readCount];
+
+        int baseIndex = consensusState.IsForward ? 0 : consensusState.baseLength() - 1;
+        CigarOperator currentOperator = M;
+        int currentCigarLength = 0;
+
+        int exhaustedCount = 0;
+        ElementTypeCount selectedElement = null;
+
+        while(exhaustedCount < readCount)
+        {
+            // work out current element type
+            if(selectedElement == null)
+                selectedElement = findNextElement(readStates);
+
+            // simplest scenario is where all reads agree about this next element
+            if(selectedElement.Count == readCount)
+            {
+                addMatchingElement(consensusState, readStates, selectedElement, baseIndex);
+
+                for(ReadParseState read : readStates)
+                {
+                    if(read.exhausted())
+                        ++exhaustedCount;
+                }
+
+                selectedElement = null;
+
+                if(consensusState.IsForward)
+                    baseIndex += selectedElement.Length;
+                else
+                    baseIndex -= selectedElement.Length;
+
+                continue;
+            }
+
+            //
+
+
+            for(ReadParseState read : readStates)
+            {
+
+            }
+
+
+
+
+        }
+
+    }
+
+    private void addMatchingElement(
+            final ConsensusState consensusState, final List<ReadParseState> readStates, final ElementTypeCount selectedElement, int baseIndex)
+    {
+        int readCount = readStates.size();
+        byte[] locationBases = new byte[readCount];
+        byte[] locationQuals = new byte[readCount];
+
+        consensusState.addCigarElement(selectedElement.Length, selectedElement.Operator);
+
+        for(int i = 0; i < selectedElement.Length; ++i)
+        {
+            boolean hasMismatch = false;
+            int maxQual = 0;
+
+            locationBases[0] = readStates.get(0).currentBase();
+            locationQuals[0] = readStates.get(0).currentBaseQual();
+            byte firstBase = locationBases[0];
+
+            for(int r = 1; r < readCount; ++r)
+            {
+                // on reverse strand, say base length = 10 (so 0-9 for longest read), if a read has length 8 then it will
+                ReadParseState read = readStates.get(r);
+
+                locationBases[r] = read.currentBase();
+                locationQuals[r] = read.currentBaseQual();
+
+                hasMismatch |= locationBases[r] != firstBase;
+
+                maxQual = max(locationQuals[r], maxQual);
+            }
+
+            if(!hasMismatch)
+            {
+                consensusState.Bases[baseIndex] = firstBase;
+                consensusState.BaseQualities[baseIndex] = (byte) maxQual;
+            }
+            else
+            {
+                int basePosition = consensusState.MinUnclippedPosStart + baseIndex;
+
+                byte[] consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
+                        locationBases, locationQuals, consensusState.Chromosome, basePosition);
+
+                consensusState.Bases[baseIndex] = consensusBaseAndQual[0];
+                consensusState.BaseQualities[baseIndex] = consensusBaseAndQual[1];
+            }
+
+        }
+    }
+
+    public static boolean haveConsistentCigars(final List<SAMRecord> reads)
+    {
+        boolean[] hasSoftClip = new boolean[reads.size()];
 
         for(int i = 0; i < reads.size(); ++i)
         {
-            if(readCigars.get(i).size() != firstElementCount)
-            {
-                consensusState.setOutcome(INDEL_MISMATCH);
-                return;
-            }
+            SAMRecord read = reads.get(i);
+
+            if(read.getCigar().isLeftClipped())
+                hasSoftClip[i] = true;
         }
 
-        List<CigarElementData> firstElementData = readCigars.get(0);
+        SAMRecord firstRead = reads.get(0);
+        int firstElementCount = firstRead.getCigar().getCigarElements().size();
 
-        for(int i = 0; i < firstElementData.size(); ++i)
+        for(int c = 0; c < firstElementCount; ++c)
         {
-            CigarElementData firstElement = firstElementData.get(i);
+            CigarElement firstElement = firstRead.getCigar().getCigarElements().get(c);
 
-            for(int j = 1; j < reads.size(); ++j)
+            if(firstElement.getOperator() == S && c == 0)
+                continue;
+
+            boolean checkLength = firstElement.getOperator() != M || (c > 1 && c < firstElementCount - 2);
+            boolean isLastSoftClip = firstElement.getOperator() == S && (c == firstElementCount - 1);
+
+            for(int i = 1; i < reads.size(); ++i)
             {
-                CigarElementData otherElement = readCigars.get(j).get(i);
+                SAMRecord read = reads.get(i);
+                int cigarIndex = c;
 
-                if(otherElement.Operator != firstElement.Operator)
+                if(!hasSoftClip[0] && hasSoftClip[i])
+                    ++cigarIndex;
+                else if(hasSoftClip[0] && !hasSoftClip[i])
+                    --cigarIndex;
+
+                if(isLastSoftClip && cigarIndex >= read.getCigar().getCigarElements().size() - 1)
+                    continue;
+
+                if(!isLastSoftClip && cigarIndex >= read.getCigar().getCigarElements().size())
+                    return false;
+
+                CigarElement readElement = read.getCigar().getCigarElements().get(cigarIndex);
+
+                if(isLastSoftClip)
                 {
-                    consensusState.setOutcome(INDEL_MISMATCH);
-                    return;
+                    if(readElement.getOperator() != M && readElement.getOperator() != S)
+                        return false;
+
+                    if(cigarIndex < read.getCigar().getCigarElements().size() - 2) // must last or second last
+                        return false;
+                }
+                else
+                {
+                    if(readElement.getOperator() != firstElement.getOperator())
+                        return false;
+
+                    if(checkLength && readElement.getLength() != firstElement.getLength())
+                        return false;
                 }
             }
         }
-        */
 
-        // List<CigarElementData> consensusCigarElements = Lists.newArrayListWithExpectedSize(reads.size());
-
-
+        return true;
     }
 
-    private class ReadCigarData
+    private ElementTypeCount findNextElement(final List<ReadParseState> readStates)
     {
-        public boolean Compatible;
+        List<ElementTypeCount> counts = Lists.newArrayList();
 
-        public final List<CigarElementData> Elements;
-
-        public ReadCigarData(final List<CigarElementData> elements)
+        for(ReadParseState read : readStates)
         {
-            Elements = elements;
-            Compatible = true;
+            int index = 0;
+            while(index < counts.size())
+            {
+                ElementTypeCount elementCount = counts.get(index);
+
+                if(elementCount.Operator == read.currentElementType() && elementCount.Length == read.currentElementLength())
+                {
+                    ++elementCount.Count;
+                    break;
+                }
+
+                ++index;
+            }
+
+            if(index >= counts.size())
+            {
+                counts.add(new ElementTypeCount(read.currentElementType(), read.currentElementLength()));
+            }
         }
+
+        ElementTypeCount maxElement = null;
+
+        for(ElementTypeCount elementCount : counts)
+        {
+            if(maxElement == null)
+            {
+                if(elementCount.Count > maxElement.Count)
+                {
+                    maxElement = elementCount;
+                }
+                else if(elementCount.Count == maxElement.Count
+                && cigarOperatorRank(elementCount.Operator) < cigarOperatorRank(maxElement.Operator))
+                {
+                    maxElement = elementCount;
+                }
+            }
+        }
+
+        return maxElement;
     }
 
-    private class CigarElementData
+    private static int cigarOperatorRank(final CigarOperator operator) { return operator.ordinal(); }
+
+    private class ElementTypeCount
     {
-        public final int ReadIndexStart;
-        public final int PosStart;
         public final CigarOperator Operator;
         public final int Length;
+        public int Count;
 
-        public CigarElementData(final int readIndexStart, final int posStart, final CigarOperator operator, final int length)
+        public ElementTypeCount(final CigarOperator operator, final int length)
         {
-            ReadIndexStart = readIndexStart;
-            PosStart = posStart;
             Operator = operator;
             Length = length;
+            Count = 0;
         }
-
-        public String toString() { return format("i(%d) pos(%d) e(%d%s)", ReadIndexStart, PosStart, Length, Operator); }
     }
 
     public void buildIndelCigar(final ConsensusState consensusState, final SAMRecord initialRead)
@@ -233,90 +309,4 @@ public class IndelConsensusReads
         if(rightSoftClipBases > 0)
             consensusState.CigarElements.add(new CigarElement(rightSoftClipBases, S));
     }
-
-    private static final byte INVALID_BASE = -1;
-
-    private class ReadState
-    {
-        public final SAMRecord Read;
-
-        private int mReadIndex;
-        private int mCigarIndex;
-        private int mCigarElementIndex;
-        private int mCigarElementLength;
-        private boolean mExhausted;
-
-        public ReadState(final SAMRecord read)
-        {
-            Read = read;
-
-            if(!read.getReadNegativeStrandFlag())
-            {
-                mReadIndex = 0;
-                mCigarIndex = 0;
-            }
-            else
-            {
-                mReadIndex = read.getReadBases().length - 1;
-                mCigarIndex = read.getCigar().getCigarElements().size() - 1;
-            }
-
-            mCigarElementLength = read.getCigar().getCigarElement(mCigarIndex).getLength();
-            mCigarElementIndex = 0;
-            mExhausted = false;
-        }
-
-        public boolean exhausted() { return mExhausted; }
-
-        public void moveNext(boolean isForward)
-        {
-            if(mExhausted)
-                return;
-
-            if(isForward)
-            {
-                ++mReadIndex;
-
-                if(mReadIndex >= Read.getReadBases().length)
-                {
-                    mExhausted = true;
-                    return;
-                }
-            }
-            else
-            {
-                --mReadIndex;
-
-                if(mReadIndex < 0)
-                {
-                    mExhausted = true;
-                    return;
-                }
-            }
-
-            ++mCigarElementIndex;
-
-            if(mCigarElementIndex >= mCigarElementLength)
-            {
-                if(isForward)
-                    ++mCigarIndex;
-                else
-                    --mCigarIndex;
-
-                mCigarElementLength = Read.getCigar().getCigarElement(mCigarIndex).getLength();
-                mCigarElementIndex = 0;
-            }
-        }
-
-        public byte currentBase() { return mExhausted ? INVALID_BASE : Read.getReadBases()[mReadIndex]; }
-        public byte currentBaseQual() { return mExhausted ? INVALID_BASE : Read.getBaseQualities()[mReadIndex]; }
-        public CigarOperator currentCigarType() { return Read.getCigar().getCigarElement(mCigarIndex).getOperator(); }
-
-        public String toString()
-        {
-            return format("index(%d) cigar(%d element=%d/%d) %s",
-                    mReadIndex, mCigarIndex, mCigarElementIndex, mCigarElementLength, mExhausted ? "exhausted" : "active");
-        }
-    }
-
 }
