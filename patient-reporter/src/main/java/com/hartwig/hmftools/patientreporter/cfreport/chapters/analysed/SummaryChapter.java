@@ -228,7 +228,7 @@ public class SummaryChapter implements ReportChapter {
 
         Style dataStyle = hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
-        String mutationalLoadString = hasReliablePurity ? analysis().tumorMutationalLoadStatus().display() + " ( "
+        String mutationalLoadString = hasReliablePurity ? analysis().tumorMutationalLoadStatus().display() + " ("
                 + SINGLE_DECIMAL_FORMAT.format(analysis().tumorMutationalLoad()) + ")" : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Tumor mutational load").addStyle(ReportResources.bodyTextStyle())));
@@ -245,7 +245,7 @@ public class SummaryChapter implements ReportChapter {
 
         if (hasReliablePurity && (ChordStatus.HR_DEFICIENT == analysis().hrdStatus()
                 || ChordStatus.HR_PROFICIENT == analysis().hrdStatus())) {
-            hrdString = analysis().hrdStatus().display() + " ( " + DOUBLE_DECIMAL_FORMAT.format(analysis().hrdValue()) + ")";
+            hrdString = analysis().hrdStatus().display() + " (" + DOUBLE_DECIMAL_FORMAT.format(analysis().hrdValue()) + ")";
             hrdStyle = ReportResources.dataHighlightStyle();
         } else {
             hrdString = DataUtil.NA_STRING;
