@@ -101,7 +101,6 @@ public class ReportGeneratorTestApplication {
 
     @NotNull
     private static OrangeReport removeUnreported(@NotNull OrangeReport report) {
-        // TODO Deal with germline structural variants and germline breakends.
         ImmutableOrangeReport.Builder builder = ImmutableOrangeReport.builder()
                 .from(report)
                 .purple(ImmutablePurpleInterpretedData.builder()
