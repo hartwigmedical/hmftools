@@ -123,7 +123,7 @@ public class GermlineFindingsChapter implements ReportChapter {
             List<BreakendEntry> reportableBreakends =
                     BreakendEntryFactory.create(reportableGermlineBreakends, allGermlineStructuralVariants);
 
-            String title = "Potentially pathogenic germline disruptions (" + reportableBreakends.size() + ")";
+            String title = "Potentially pathogenic germline gene disruptions (" + reportableBreakends.size() + ")";
             document.add(BreakendTable.build(title, contentWidth(), reportableBreakends));
         }
     }
