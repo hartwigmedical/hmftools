@@ -1548,7 +1548,7 @@ public final class ExampleAnalysisTestFactory {
                         createHlaReporting().hlaAllele(ImmutableHlaAllele.builder().gene("HLA-B").germlineAllele("B*08:01").build())
                                 .germlineCopies(1.0)
                                 .tumorCopies(1.83)
-                                .somaticMutations("0 mutations")
+                                .somaticMutations("None")
                                 .interpretation("Yes")
                                 .build()));
         alleles.put("HLA-C",
