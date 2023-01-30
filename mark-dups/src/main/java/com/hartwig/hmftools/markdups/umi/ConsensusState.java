@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.UNSET;
 import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.compress.utils.Lists;
@@ -58,6 +59,18 @@ public class ConsensusState
         BaseQualities = new byte[baseLength];
     }
 
+    void expandBaseLength(int baseLength)
+    {
+        if(Bases == null)
+        {
+            setBaseLength(baseLength);
+            return;
+        }
+
+        Bases = Arrays.copyOf(Bases, Bases.length + baseLength);
+        BaseQualities = Arrays.copyOf(BaseQualities, BaseQualities.length + baseLength);
+    }
+
     void setBoundaries(final SAMRecord read)
     {
         int readStart = read.getAlignmentStart();
@@ -83,9 +96,22 @@ public class ConsensusState
 
     public void addCigarElement(int length, final CigarOperator operator)
     {
+        // combine with existing if a match on type
         if(IsForward)
-            CigarElements.add(new CigarElement(length, operator));
+        {
+            int lastIndex = CigarElements.size() - 1;
+            if(lastIndex >= 0 && CigarElements.get(lastIndex).getOperator() == operator)
+                CigarElements.set(lastIndex, new CigarElement(CigarElements.get(lastIndex).getLength() + length, operator));
+            else
+                CigarElements.add(new CigarElement(length, operator));
+        }
         else
-            CigarElements.add(0, new CigarElement(length, operator));
+        {
+            int firstIndex = !CigarElements.isEmpty() ? 0 : -1;
+            if(firstIndex >= 0 && CigarElements.get(firstIndex).getOperator() == operator)
+                CigarElements.set(firstIndex, new CigarElement(CigarElements.get(firstIndex).getLength() + length, operator));
+            else
+                CigarElements.add(0, new CigarElement(length, operator));
+        }
     }
 }

@@ -51,46 +51,46 @@ public class BaseBuilder
             int maxQual = 0;
             byte firstBase = NO_BASE;
 
-            for(int i = 0; i < readCount; ++i)
+            for(int r = 0; r < readCount; ++r)
             {
                 // on reverse strand, say base length = 10 (so 0-9 for longest read), if a read has length 8 then it will
-                SAMRecord read = reads.get(i);
+                SAMRecord read = reads.get(r);
 
-                locationBases[i] = 0;
+                locationBases[r] = 0;
 
                 int readIndex;
                 if(consensusState.IsForward)
                 {
                     readIndex = baseIndex;
 
-                    if(readOffsets[i] != 0 && baseIndex >= read.getReadBases().length)
+                    if(readOffsets[r] != 0 && baseIndex >= read.getReadBases().length)
                     {
-                        locationBases[i] = NO_BASE;
-                        locationQuals[i] = NO_BASE;
+                        locationBases[r] = NO_BASE;
+                        locationQuals[r] = NO_BASE;
                         continue;
                     }
                 }
                 else
                 {
-                    readIndex = baseIndex + readOffsets[i];
+                    readIndex = baseIndex + readOffsets[r];
 
                     if(readIndex < 0)
                     {
-                        locationBases[i] = NO_BASE;
-                        locationQuals[i] = NO_BASE;
+                        locationBases[r] = NO_BASE;
+                        locationQuals[r] = NO_BASE;
                         continue;
                     }
                 }
 
-                locationBases[i] = reads.get(i).getReadBases()[readIndex];
-                locationQuals[i] = reads.get(i).getBaseQualities()[readIndex];
+                locationBases[r] = reads.get(r).getReadBases()[readIndex];
+                locationQuals[r] = reads.get(r).getBaseQualities()[readIndex];
 
                 if(firstBase == NO_BASE)
-                    firstBase = locationBases[i];
+                    firstBase = locationBases[r];
                 else
-                    hasMismatch |= locationBases[i] != firstBase;
+                    hasMismatch |= locationBases[r] != firstBase;
 
-                maxQual = max(locationQuals[i], maxQual);
+                maxQual = max(locationQuals[r], maxQual);
             }
 
             if(!hasMismatch)
@@ -120,6 +120,9 @@ public class BaseBuilder
 
         for(int i = 0; i < locationBases.length; ++i)
         {
+            if(locationBases[i] == NO_BASE)
+                continue;
+
             boolean found = false;
 
             for(int j = 0; j < distinctBases.size(); ++j)

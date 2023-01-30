@@ -1,14 +1,21 @@
 package com.hartwig.hmftools.markdups.umi;
 
 import static java.lang.Math.max;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.markdups.umi.BaseBuilder.NO_BASE;
+import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MATCH;
+import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MISMATCH;
 
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.N;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -31,6 +38,9 @@ public class IndelConsensusReads
     {
         if(haveConsistentCigars(reads))
         {
+            int baseLength = reads.get(0).getReadBases().length;
+            consensusState.setBaseLength(baseLength);
+
             mBaseBuilder.buildReadBases(reads, consensusState);
             consensusState.setOutcome(INDEL_MATCH);
             buildIndelCigar(consensusState,reads.get(0));
@@ -40,87 +50,162 @@ public class IndelConsensusReads
         List<ReadParseState> readStates = reads.stream().map(x -> new ReadParseState(x, consensusState.IsForward)).collect(Collectors.toList());
 
         int readCount = reads.size();
-        byte[] locationBases = new byte[readCount];
-        byte[] locationQuals = new byte[readCount];
 
         int baseIndex = consensusState.IsForward ? 0 : consensusState.baseLength() - 1;
-        CigarOperator currentOperator = M;
-        int currentCigarLength = 0;
 
         int exhaustedCount = 0;
-        ElementTypeCount selectedElement = null;
 
         while(exhaustedCount < readCount)
         {
             // work out current element type
-            if(selectedElement == null)
-                selectedElement = findNextElement(readStates);
+            ElementTypeCount selectedElement = findNextElement(readStates);
+
+            if(!deleteOrSplit(selectedElement.Operator))
+                consensusState.expandBaseLength(selectedElement.Length);
 
             // simplest scenario is where all reads agree about this next element
-            if(selectedElement.Count == readCount)
+            addElementBases(consensusState, readStates, selectedElement, baseIndex);
+
+            if(consensusState.outcome() == INDEL_FAIL)
+                return;
+
+            for(ReadParseState read : readStates)
             {
-                addMatchingElement(consensusState, readStates, selectedElement, baseIndex);
+                if(read.exhausted())
+                    ++exhaustedCount;
+            }
 
-                for(ReadParseState read : readStates)
-                {
-                    if(read.exhausted())
-                        ++exhaustedCount;
-                }
-
-                selectedElement = null;
-
+            if(!deleteOrSplit(selectedElement.Operator))
+            {
                 if(consensusState.IsForward)
                     baseIndex += selectedElement.Length;
                 else
                     baseIndex -= selectedElement.Length;
-
-                continue;
             }
-
-            //
-
-
-            for(ReadParseState read : readStates)
-            {
-
-            }
-
-
-
-
         }
 
+        consensusState.setOutcome(INDEL_MISMATCH);
     }
 
-    private void addMatchingElement(
+    private void addElementBases(
             final ConsensusState consensusState, final List<ReadParseState> readStates, final ElementTypeCount selectedElement, int baseIndex)
     {
         int readCount = readStates.size();
-        byte[] locationBases = new byte[readCount];
-        byte[] locationQuals = new byte[readCount];
 
         consensusState.addCigarElement(selectedElement.Length, selectedElement.Operator);
+
+        if(deleteOrSplit(selectedElement.Operator))
+        {
+            // move past the delete element and any differing aligned bases
+            for(int r = 0; r < readCount; ++r)
+            {
+                ReadParseState read = readStates.get(r);
+
+                if(read.exhausted())
+                    continue;
+
+                for(int i = 0; i < selectedElement.Length; ++i)
+                {
+                    if(deleteOrSplit(read.elementType()) || read.elementType() == M)
+                    {
+                        read.moveNext();
+                    }
+                    else
+                    {
+                        consensusState.setOutcome(INDEL_FAIL);
+                        return;
+                    }
+                }
+            }
+
+            return;
+        }
+
+        byte[] locationBases = new byte[readCount];
+        byte[] locationQuals = new byte[readCount];
 
         for(int i = 0; i < selectedElement.Length; ++i)
         {
             boolean hasMismatch = false;
             int maxQual = 0;
+            byte firstBase = NO_BASE;
 
-            locationBases[0] = readStates.get(0).currentBase();
-            locationQuals[0] = readStates.get(0).currentBaseQual();
-            byte firstBase = locationBases[0];
-
-            for(int r = 1; r < readCount; ++r)
+            for(int r = 0; r < readCount; ++r)
             {
-                // on reverse strand, say base length = 10 (so 0-9 for longest read), if a read has length 8 then it will
+                locationBases[r] = NO_BASE;
+            }
+
+            for(int r = 0; r < readCount; ++r)
+            {
                 ReadParseState read = readStates.get(r);
 
-                locationBases[r] = read.currentBase();
-                locationQuals[r] = read.currentBaseQual();
+                if(read.exhausted())
+                    continue;
 
-                hasMismatch |= locationBases[r] != firstBase;
+                // check for element type differences:
 
-                maxQual = max(locationQuals[r], maxQual);
+                // first skip past any insert if the selected element is aligned
+                if(i >= 1 && selectedElement.Operator == M && read.elementType() == I)
+                {
+                    read.skipInsert();
+                }
+
+                boolean useBase = true;
+                boolean moveNext = true;
+
+                if(operatorsDiffer(read.elementType(), selectedElement.Operator))
+                {
+                    // when aligned (M) is selected:
+                    // - insert - skip past the insert's bases after the first one
+                    // - delete - move along in step but cannot use base
+
+                    // when insert (I) is selected:
+                    // - aligned - pause the caret after the first base
+                    // - delete - invalid difference, set consensus invalid
+
+                    if(selectedElement.Operator == M)
+                    {
+                        if(deleteOrSplit(read.elementType()))
+                        {
+                            useBase = false;
+                        }
+                        else if(read.elementType() == I)
+                        {
+                            // handled above, implies a bug or consecutive insert
+                            consensusState.setOutcome(INDEL_FAIL);
+                            return;
+                        }
+                    }
+                    else if(selectedElement.Operator == I)
+                    {
+                        if(read.elementType() == M)
+                        {
+                            moveNext = false;
+
+                        }
+                        else if(deleteOrSplit(read.elementType()))
+                        {
+                            consensusState.setOutcome(INDEL_FAIL);
+                            return;
+                        }
+                    }
+                }
+
+                if(useBase)
+                {
+                    locationBases[r] = read.currentBase();
+                    locationQuals[r] = read.currentBaseQual();
+
+                    if(firstBase == NO_BASE)
+                        firstBase = locationBases[r];
+                    else
+                        hasMismatch |= locationBases[r] != firstBase;
+
+                    maxQual = max(locationQuals[r], maxQual);
+                }
+
+                if(moveNext)
+                    read.moveNext();
             }
 
             if(!hasMismatch)
@@ -139,7 +224,29 @@ public class IndelConsensusReads
                 consensusState.BaseQualities[baseIndex] = consensusBaseAndQual[1];
             }
 
+            ++baseIndex;
         }
+    }
+
+    private static boolean operatorsDiffer(final CigarOperator first, final CigarOperator second)
+    {
+        if(first == second)
+            return false;
+
+        if(alignedOrSoftClip(first) && alignedOrSoftClip(second))
+            return false;
+
+        return true;
+    }
+
+    private static boolean deleteOrSplit(final CigarOperator operator)
+    {
+        return operator == D || operator == N;
+    }
+
+    private static boolean alignedOrSoftClip(final CigarOperator operator)
+    {
+        return operator == M || operator == S;
     }
 
     public static boolean haveConsistentCigars(final List<SAMRecord> reads)
@@ -187,7 +294,7 @@ public class IndelConsensusReads
 
                 if(isLastSoftClip)
                 {
-                    if(readElement.getOperator() != M && readElement.getOperator() != S)
+                    if(!alignedOrSoftClip(readElement.getOperator()))
                         return false;
 
                     if(cigarIndex < read.getCigar().getCigarElements().size() - 2) // must last or second last
@@ -199,6 +306,15 @@ public class IndelConsensusReads
                         return false;
 
                     if(checkLength && readElement.getLength() != firstElement.getLength())
+                        return false;
+                }
+
+                // check for additional elements
+                if(c == firstElementCount - 1 && cigarIndex < read.getCigar().getCigarElements().size() - 1)
+                {
+                    CigarElement nextReadElement = read.getCigar().getCigarElements().get(cigarIndex);
+
+                    if(nextReadElement.getOperator() != S)
                         return false;
                 }
             }
@@ -213,12 +329,13 @@ public class IndelConsensusReads
 
         for(ReadParseState read : readStates)
         {
+            int elementLength = read.remainingElementLength();
             int index = 0;
             while(index < counts.size())
             {
                 ElementTypeCount elementCount = counts.get(index);
 
-                if(elementCount.Operator == read.currentElementType() && elementCount.Length == read.currentElementLength())
+                if(elementCount.Operator == read.elementType() && elementCount.Length == elementLength)
                 {
                     ++elementCount.Count;
                     break;
@@ -229,7 +346,7 @@ public class IndelConsensusReads
 
             if(index >= counts.size())
             {
-                counts.add(new ElementTypeCount(read.currentElementType(), read.currentElementLength()));
+                counts.add(new ElementTypeCount(read.elementType(), elementLength));
             }
         }
 
@@ -237,9 +354,14 @@ public class IndelConsensusReads
 
         for(ElementTypeCount elementCount : counts)
         {
-            if(maxElement == null)
+            if(maxElement != null)
             {
-                if(elementCount.Count > maxElement.Count)
+                if(elementCount.Operator == M && maxElement.Operator == S)
+                {
+                    // favour alignments over soft-clips
+                    maxElement = elementCount;
+                }
+                else if(elementCount.Count > maxElement.Count)
                 {
                     maxElement = elementCount;
                 }
@@ -248,6 +370,10 @@ public class IndelConsensusReads
                 {
                     maxElement = elementCount;
                 }
+            }
+            else
+            {
+                maxElement = elementCount;
             }
         }
 
@@ -266,8 +392,10 @@ public class IndelConsensusReads
         {
             Operator = operator;
             Length = length;
-            Count = 0;
+            Count = 1;
         }
+
+        public String toString() { return format("%d%s = %d", Length, Operator, Count); }
     }
 
     public void buildIndelCigar(final ConsensusState consensusState, final SAMRecord initialRead)

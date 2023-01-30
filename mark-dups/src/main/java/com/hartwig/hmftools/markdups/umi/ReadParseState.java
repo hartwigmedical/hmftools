@@ -4,8 +4,10 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.markdups.umi.BaseBuilder.NO_BASE;
 
+import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.N;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -16,21 +18,20 @@ public class ReadParseState
 
     private boolean mIsForward;
     private int mReadIndex;
-    private int mCigarIndex;
-    private int mCigarElementIndex;
+    private int mCigarIndex; // index of the current element amongst the CIGAR
+    private int mElementIndex; // index within the current CIGAR element
     private int mElementLength;
     private CigarOperator mElementType;
 
     private boolean mExhausted;
-    private boolean mUseCurrentBase;
-    private int mSkipCount;
+    private boolean mElementChanged; // on the last move
 
     public ReadParseState(final SAMRecord read, boolean isForward)
     {
         Read = read;
         mIsForward = isForward;
 
-        if(!read.getReadNegativeStrandFlag())
+        if(mIsForward)
         {
             mReadIndex = 0;
             mCigarIndex = 0;
@@ -43,85 +44,61 @@ public class ReadParseState
 
         mElementLength = read.getCigar().getCigarElement(mCigarIndex).getLength();
         mElementType = read.getCigar().getCigarElement(mCigarIndex).getOperator();
-        mCigarElementIndex = 0;
+        mElementIndex = 0;
         mExhausted = false;
-        mSkipCount = 0;
-        mUseCurrentBase = true;
+        mElementChanged = false;
     }
 
-    public byte currentBase()
-    {
-        return mExhausted ? NO_BASE : Read.getReadBases()[mReadIndex];
-    }
+    public byte currentBase() { return mExhausted ? NO_BASE : Read.getReadBases()[mReadIndex]; }
+    public byte currentBaseQual() { return mExhausted ? NO_BASE : Read.getBaseQualities()[mReadIndex]; }
 
-    public byte currentBaseQual()
-    {
-        return mExhausted ? NO_BASE : Read.getBaseQualities()[mReadIndex];
-    }
+    public CigarOperator elementType() { return mElementType; }
+    public int elementLength() { return mElementLength; }
+    public int elementIndex() { return mElementIndex; }
 
-    public CigarOperator currentElementType()
-    {
-        return mElementType;
-    }
-
-    public int currentElementLength()
-    {
-        return mElementLength;
-    }
-
-    public boolean useCurrentBase()
-    {
-        return mUseCurrentBase;
-    }
-
-    public boolean exhausted()
-    {
-        return mExhausted;
-    }
+    public boolean exhausted() { return mExhausted; }
+    public int remainingElementLength() { return mElementLength - mElementIndex; }
+    public boolean elementChanged() { return mElementChanged; }
 
     public void moveNext()
     {
         if(mExhausted)
-        {
             return;
-        }
 
-        if(mIsForward)
+        ++mElementIndex;
+
+        if(mElementIndex >= mElementLength)
         {
-            ++mReadIndex;
+            mElementChanged = true;
 
-            if(mReadIndex >= Read.getReadBases().length)
-            {
-                mExhausted = true;
-                return;
-            }
-        }
-        else
-        {
-            --mReadIndex;
-
-            if(mReadIndex < 0)
-            {
-                mExhausted = true;
-                return;
-            }
-        }
-
-        ++mCigarElementIndex;
-
-        if(mCigarElementIndex >= mElementLength)
-        {
             if(mIsForward)
-            {
                 ++mCigarIndex;
-            }
             else
-            {
                 --mCigarIndex;
+
+            if(mCigarIndex < 0 || mCigarIndex >= Read.getCigar().getCigarElements().size())
+            {
+                mExhausted = true;
+                return;
             }
 
             mElementLength = Read.getCigar().getCigarElement(mCigarIndex).getLength();
-            mCigarElementIndex = 0;
+            mElementType = Read.getCigar().getCigarElement(mCigarIndex).getOperator();
+            mElementIndex = 0;
+        }
+        else
+        {
+            mElementChanged = false;
+        }
+
+        boolean moveReadIndex = (mElementType != D && mElementType != N);
+
+        if(moveReadIndex)
+        {
+            if(mIsForward)
+                ++mReadIndex;
+            else
+                --mReadIndex;
         }
     }
 
@@ -133,23 +110,9 @@ public class ReadParseState
         }
     }
 
-    public void skipPosition()
-    {
-        if(mElementType == M)
-        {
-
-        }
-
-    }
-
-    public void pause(int skipCount)
-    {
-        mSkipCount = skipCount;
-    }
-
     public String toString()
     {
         return format("index(%d) cigar(%d: %s element=%d/%d) %s",
-                mReadIndex, mCigarIndex, mElementType, mCigarElementIndex, mElementLength, mExhausted ? "exhausted" : "active");
+                mReadIndex, mCigarIndex, mElementType, mElementIndex, mElementLength, mExhausted ? "exhausted" : "active");
     }
 }

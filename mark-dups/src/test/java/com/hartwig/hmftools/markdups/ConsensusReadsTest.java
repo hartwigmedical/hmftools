@@ -5,14 +5,23 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.markdups.TestUtils.DEFAULT_QUAL;
+import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
+import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_A;
+import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_C;
+import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_G;
+import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_T;
 import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MATCH;
-import static com.hartwig.hmftools.markdups.umi.IndelConsensusReads.haveConsistentCigars;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 
@@ -21,6 +30,7 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.markdups.umi.ConsensusReadInfo;
 import com.hartwig.hmftools.markdups.umi.ConsensusReads;
+import com.hartwig.hmftools.markdups.umi.ReadParseState;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
 
 import org.junit.Test;
@@ -34,16 +44,7 @@ public class ConsensusReadsTest
     private final ConsensusReads mConsensusReads;
     private final ReadIdGenerator mReadIdGen;
 
-    private final String REF_BASES_A = "AAAAAAAAAA";
-    private final String REF_BASES_C = "CCCCCCCCCC";
-    private final String REF_BASES_G = "GGGGGGGGGG";
-    private final String REF_BASES_T = "TTTTTTTTTT";
-    private final String REF_BASES_RANDOM = generateRandomBases(10);
-
-    private final String REF_BASES = "X" + REF_BASES_RANDOM + REF_BASES_A + REF_BASES_C + REF_BASES_G + REF_BASES_T
-            + REF_BASES_A + REF_BASES_C + REF_BASES_G + REF_BASES_T + REF_BASES_RANDOM;
-
-    private final String UMI_ID_1 = "TAGTAG";
+    public static final String UMI_ID_1 = "TAGTAG";
 
     public ConsensusReadsTest()
     {
@@ -160,47 +161,9 @@ public class ConsensusReadsTest
     }
 
     @Test
-    public void testIndelCompatibility()
-    {
-        int posStart = 13;
-
-        String consensusBases = REF_BASES_A.substring(0, 5) + "C" + REF_BASES_A.substring(5, 10);
-        String firstCigar = "2S3M1I3M2S";
-        SAMRecord read1 = createSamRecord(nextReadId(), posStart, consensusBases, firstCigar, false);
-
-        SAMRecord read2 = createSamRecord(nextReadId(), posStart, consensusBases, firstCigar, false);
-        assertTrue(haveConsistentCigars(Lists.newArrayList(read1, read2)));
-
-        // differing soft-clipping
-        read2 = createSamRecord(nextReadId(), posStart, consensusBases, "3S3M1I3M3S", false);
-        assertTrue(haveConsistentCigars(Lists.newArrayList(read1, read2)));
-
-        // differing initial and end alignment
-        read2 = createSamRecord(nextReadId(), posStart, consensusBases, "10M1I5M", false);
-        assertTrue(haveConsistentCigars(Lists.newArrayList(read1, read2)));
-
-        // differing initial and end alignment and soft-clipping
-        read2 = createSamRecord(nextReadId(), posStart, consensusBases, "3S4M1I4M3S", false);
-        assertTrue(haveConsistentCigars(Lists.newArrayList(read1, read2)));
-
-        // now test differences
-
-        // different indel length
-        read2 = createSamRecord(nextReadId(), posStart, consensusBases, "2S3M2I3M2S", false);
-        assertFalse(haveConsistentCigars(Lists.newArrayList(read1, read2)));
-
-        firstCigar = "5M2D5M1I5M";
-        read1 = createSamRecord(nextReadId(), posStart, consensusBases, firstCigar, false);
-        read2 = createSamRecord(nextReadId(), posStart, consensusBases, firstCigar, false);
-        assertTrue(haveConsistentCigars(Lists.newArrayList(read1, read2)));
-
-        read2 = createSamRecord(nextReadId(), posStart, consensusBases, "5M2D4M1I5M", false);
-        assertFalse(haveConsistentCigars(Lists.newArrayList(read1, read2)));
-    }
-
-    @Test
     public void testMatchingIndelReads()
     {
+        // indels with no CIGAR differences use the standard consensus routines
         final List<SAMRecord> reads = Lists.newArrayList();
 
         int posStart = 13;
@@ -223,6 +186,109 @@ public class ConsensusReadsTest
         assertEquals(posStart, readInfo.ConsensusRead.getAlignmentStart());
     }
 
+    @Test
+    public void testReadParseState()
+    {
+        String bases = "AGGCGGA";
+        String indelCigar = "1S2M1I2M1S";
+
+        SAMRecord read1 = createSamRecord(nextReadId(), 100, bases, indelCigar, false);
+
+        ReadParseState readState = new ReadParseState(read1, true);
+        assertEquals((byte)'A', readState.currentBase());
+        assertEquals(DEFAULT_QUAL, readState.currentBaseQual());
+        assertEquals(S, readState.elementType());
+        assertEquals(1, readState.elementLength());
+
+        readState.moveNext();
+        assertEquals((byte)'G', readState.currentBase());
+        assertEquals(M, readState.elementType());
+        assertEquals(2, readState.elementLength());
+
+        readState.moveNext();
+        readState.moveNext();
+        assertEquals((byte)'C', readState.currentBase());
+        assertEquals(I, readState.elementType());
+        assertEquals(1, readState.elementLength());
+
+        readState.moveNext();
+        readState.moveNext();
+        assertFalse(readState.exhausted());
+        assertEquals((byte)'G', readState.currentBase());
+        assertEquals(M, readState.elementType());
+
+        readState.moveNext();
+        assertFalse(readState.exhausted());
+        assertEquals((byte)'A', readState.currentBase());
+        assertEquals(S, readState.elementType());
+
+        readState.moveNext();
+        assertTrue(readState.exhausted());
+
+        // and in reverse
+        readState = new ReadParseState(read1, false);
+        assertEquals((byte)'A', readState.currentBase());
+        assertEquals(DEFAULT_QUAL, readState.currentBaseQual());
+        assertEquals(S, readState.elementType());
+        assertEquals(1, readState.elementLength());
+
+        readState.moveNext();
+        readState.moveNext();
+        readState.moveNext();
+
+        assertEquals((byte)'C', readState.currentBase());
+        assertEquals(I, readState.elementType());
+        assertEquals(1, readState.elementLength());
+
+        readState.moveNext();
+        readState.moveNext();
+        readState.moveNext();
+        assertFalse(readState.exhausted());
+        assertEquals((byte)'A', readState.currentBase());
+        assertEquals(S, readState.elementType());
+
+        readState.moveNext();
+        assertTrue(readState.exhausted());
+
+        // with a delete
+        bases = "ACGT";
+        indelCigar = "2M3D2M";
+
+        read1 = createSamRecord(nextReadId(), 100, bases, indelCigar, false);
+
+        readState = new ReadParseState(read1, true);
+
+        assertEquals((byte)'A', readState.currentBase());
+        assertEquals(M, readState.elementType());
+
+        readState.moveNext();
+        assertEquals((byte)'C', readState.currentBase());
+        assertEquals(M, readState.elementType());
+
+        readState.moveNext();
+        assertEquals((byte)'C', readState.currentBase());
+        assertEquals(D, readState.elementType());
+
+        readState.moveNext();
+        assertEquals((byte)'C', readState.currentBase());
+        assertEquals(D, readState.elementType());
+
+        readState.moveNext();
+        assertEquals((byte)'C', readState.currentBase());
+        assertEquals(D, readState.elementType());
+
+        readState.moveNext();
+        assertEquals((byte)'G', readState.currentBase());
+        assertEquals(M, readState.elementType());
+
+        readState.moveNext();
+        assertEquals((byte)'T', readState.currentBase());
+        assertEquals(M, readState.elementType());
+
+        readState.moveNext();
+        assertTrue(readState.exhausted());
+    }
+
     private static SAMRecord createSamRecord(
             final String readId, int readStart, final String readBases, final String cigar, boolean isReversed)
     {
@@ -230,11 +296,11 @@ public class ConsensusReadsTest
                 readId, CHR_1, readStart, readBases, cigar, CHR_1, 5000, isReversed, false, null);
     }
 
-    private String nextReadId() { return nextReadId(UMI_ID_1); }
+    private String nextReadId() { return nextUmiReadId(UMI_ID_1, mReadIdGen); }
 
-    private String nextReadId(final String umiId)
+    public static String nextUmiReadId(final String umiId, final ReadIdGenerator readIdGen)
     {
-        String readId = mReadIdGen.nextId();
+        String readId = readIdGen.nextId();
         return format("ABCD:%s:%s", readId, umiId);
     }
 }

@@ -16,7 +16,6 @@ import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 
 import java.util.List;
-import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
@@ -61,13 +60,11 @@ public class ConsensusReads
             consensusState.setBoundaries(read);
         }
 
-        consensusState.setBaseLength(maxBaseLength);
-
         if(hasIndels)
         {
             mIndelConsensusReads.buildIndelComponents(reads,  consensusState);
 
-            if(consensusState.outcome() == INDEL_FAIL || consensusState.outcome() == INDEL_MISMATCH)
+            if(consensusState.outcome() == INDEL_FAIL)
             {
                 SAMRecord consensusRead = copyPrimaryRead(reads, groupIdentifier);
 
@@ -83,6 +80,7 @@ public class ConsensusReads
         }
         else
         {
+            consensusState.setBaseLength(maxBaseLength);
             mBaseBuilder.buildReadBases(reads, consensusState);
             consensusState.setOutcome(ALIGNMENT_ONLY);
 
