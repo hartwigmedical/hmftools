@@ -167,7 +167,7 @@ public class OrangeAlgo {
 
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
-        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, driverGenes, chord);
+        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, driverGenes, linx, chord);
         PurpleInterpretedData purple = purpleInterpreter.interpret(loadPurpleData(config));
 
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();

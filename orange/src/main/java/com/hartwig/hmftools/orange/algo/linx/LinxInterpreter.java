@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
@@ -103,7 +100,7 @@ public class LinxInterpreter {
         }
 
         List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
-        for (Pair<LinxBreakend, LinxBreakend> breakendPair : createBreakendPairsPerSvId(breakends)) {
+        for (Pair<LinxBreakend, LinxBreakend> breakendPair : BreakendUtil.createPairsPerSvId(breakends)) {
             LinxBreakend first = breakendPair.getLeft();
             LinxBreakend second = breakendPair.getRight();
 
@@ -125,29 +122,5 @@ public class LinxInterpreter {
             }
         }
         return homozygousDisruptions;
-    }
-
-    @NotNull
-    private static Collection<Pair<LinxBreakend, LinxBreakend>> createBreakendPairsPerSvId(@NotNull List<LinxBreakend> breakends) {
-        Map<Integer, Pair<LinxBreakend, LinxBreakend>> mapPerSvId = Maps.newHashMap();
-        for (LinxBreakend breakend : breakends) {
-            if (!mapPerSvId.containsKey(breakend.svId())) {
-                LinxBreakend paired = findPaired(breakends, breakend);
-                if (paired != null) {
-                    mapPerSvId.put(breakend.svId(), Pair.of(breakend, paired));
-                }
-            }
-        }
-        return mapPerSvId.values();
-    }
-
-    @Nullable
-    private static LinxBreakend findPaired(@NotNull List<LinxBreakend> breakends, @NotNull LinxBreakend breakendToFindPairFor) {
-        for (LinxBreakend breakend : breakends) {
-            if (breakend != breakendToFindPairFor && breakend.svId() == breakendToFindPairFor.svId()) {
-                return breakend;
-            }
-        }
-        return null;
     }
 }

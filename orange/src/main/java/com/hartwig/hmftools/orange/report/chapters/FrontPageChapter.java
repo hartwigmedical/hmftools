@@ -135,7 +135,7 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(Cells.createValue(somaticDriverString()));
         summary.addCell(Cells.createKey("Germline variant drivers:"));
         summary.addCell(Cells.createValue(germlineDriverString()));
-        summary.addCell(Cells.createKey("Copy number drivers:"));
+        summary.addCell(Cells.createKey("Somatic copy number drivers:"));
         summary.addCell(Cells.createValue(copyNumberDriverString()));
         summary.addCell(Cells.createKey("Disruption drivers:"));
         summary.addCell(Cells.createValue(disruptionDriverString()));

@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
+import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
@@ -59,9 +60,15 @@ public class PurpleInterpreterTest {
         return createInterpreter(TestEnsemblDataCacheFactory.loadTestCache());
     }
 
+    @NotNull
     private static PurpleInterpreter createInterpreter(@NotNull EnsemblDataCache ensemblDataCache) {
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
-        return new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, Lists.newArrayList(), null);
+
+        return new PurpleInterpreter(purpleVariantFactory,
+                germlineGainLossFactory,
+                Lists.newArrayList(),
+                TestLinxInterpretationFactory.createMinimalTestLinxData(),
+                null);
     }
 }
