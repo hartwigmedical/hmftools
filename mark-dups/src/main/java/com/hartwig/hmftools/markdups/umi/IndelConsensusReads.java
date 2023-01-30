@@ -3,6 +3,7 @@ package com.hartwig.hmftools.markdups.umi;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.umi.BaseBuilder.NO_BASE;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MATCH;
@@ -51,7 +52,7 @@ public class IndelConsensusReads
 
         int readCount = reads.size();
 
-        int baseIndex = consensusState.IsForward ? 0 : consensusState.baseLength() - 1;
+        int baseIndex = 0;
 
         int exhaustedCount = 0;
 
@@ -61,7 +62,12 @@ public class IndelConsensusReads
             ElementTypeCount selectedElement = findNextElement(readStates);
 
             if(!deleteOrSplit(selectedElement.Operator))
+            {
                 consensusState.expandBaseLength(selectedElement.Length);
+
+                if(!consensusState.IsForward)
+                    baseIndex = selectedElement.Length - 1;
+            }
 
             // simplest scenario is where all reads agree about this next element
             addElementBases(consensusState, readStates, selectedElement, baseIndex);
@@ -79,8 +85,6 @@ public class IndelConsensusReads
             {
                 if(consensusState.IsForward)
                     baseIndex += selectedElement.Length;
-                else
-                    baseIndex -= selectedElement.Length;
             }
         }
 
@@ -106,14 +110,12 @@ public class IndelConsensusReads
 
                 for(int i = 0; i < selectedElement.Length; ++i)
                 {
-                    if(deleteOrSplit(read.elementType()) || read.elementType() == M)
+                    if(read.elementType() == I)
+                        read.skipInsert();
+
+                    if(deleteOrSplit(read.elementType()) || alignedOrSoftClip(read.elementType()))
                     {
                         read.moveNext();
-                    }
-                    else
-                    {
-                        consensusState.setOutcome(INDEL_FAIL);
-                        return;
                     }
                 }
             }
@@ -145,10 +147,8 @@ public class IndelConsensusReads
                 // check for element type differences:
 
                 // first skip past any insert if the selected element is aligned
-                if(i >= 1 && selectedElement.Operator == M && read.elementType() == I)
-                {
+                if(selectedElement.Operator == M && read.elementType() == I)
                     read.skipInsert();
-                }
 
                 boolean useBase = true;
                 boolean moveNext = true;
@@ -172,21 +172,17 @@ public class IndelConsensusReads
                         else if(read.elementType() == I)
                         {
                             // handled above, implies a bug or consecutive insert
+                            logMismatchFail(consensusState, r, read, selectedElement);
                             consensusState.setOutcome(INDEL_FAIL);
                             return;
                         }
                     }
                     else if(selectedElement.Operator == I)
                     {
-                        if(read.elementType() == M)
+                        if(read.elementType() == M || deleteOrSplit(read.elementType()))
                         {
                             moveNext = false;
-
-                        }
-                        else if(deleteOrSplit(read.elementType()))
-                        {
-                            consensusState.setOutcome(INDEL_FAIL);
-                            return;
+                            useBase = false;
                         }
                     }
                 }
@@ -224,8 +220,19 @@ public class IndelConsensusReads
                 consensusState.BaseQualities[baseIndex] = consensusBaseAndQual[1];
             }
 
-            ++baseIndex;
+            if(consensusState.IsForward)
+                ++baseIndex;
+            else
+                --baseIndex;
         }
+    }
+
+    private void logMismatchFail(
+            final ConsensusState consensusState, int readIndex, final ReadParseState read, final ElementTypeCount selectedElement)
+    {
+        MD_LOGGER.debug("indel mismatch fail: consensus({}:{}-{}) read({}: {}) state({}) select({})",
+                consensusState.Chromosome, consensusState.MinAlignedPosStart, consensusState.MaxAlignedPosEnd,
+                readIndex, read.Read.getReadName(), read.toString(), selectedElement);
     }
 
     private static boolean operatorsDiffer(final CigarOperator first, final CigarOperator second)
@@ -395,7 +402,7 @@ public class IndelConsensusReads
             Count = 1;
         }
 
-        public String toString() { return format("%d%s = %d", Length, Operator, Count); }
+        public String toString() { return format("%d%s=%d", Length, Operator, Count); }
     }
 
     public void buildIndelCigar(final ConsensusState consensusState, final SAMRecord initialRead)

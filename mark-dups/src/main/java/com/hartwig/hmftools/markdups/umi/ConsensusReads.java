@@ -16,6 +16,7 @@ import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
@@ -68,12 +69,10 @@ public class ConsensusReads
             {
                 SAMRecord consensusRead = copyPrimaryRead(reads, groupIdentifier);
 
-                /*
                 StringJoiner sj = new StringJoiner(", ");
                 reads.forEach(x -> sj.add(x.getCigarString()));
                 MD_LOGGER.debug("consensus indel mismatch: reads({}) cigars({}) details({})",
                         reads.size(), sj.toString(), readToString(consensusRead));
-                */
 
                 return new ConsensusReadInfo(consensusRead, consensusState.outcome());
             }

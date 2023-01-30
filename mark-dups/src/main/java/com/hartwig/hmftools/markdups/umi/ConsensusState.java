@@ -67,8 +67,25 @@ public class ConsensusState
             return;
         }
 
-        Bases = Arrays.copyOf(Bases, Bases.length + baseLength);
-        BaseQualities = Arrays.copyOf(BaseQualities, BaseQualities.length + baseLength);
+        if(IsForward)
+        {
+            Bases = Arrays.copyOf(Bases, Bases.length + baseLength);
+            BaseQualities = Arrays.copyOf(BaseQualities, BaseQualities.length + baseLength);
+        }
+        else
+        {
+            byte[] bases = new byte[Bases.length + baseLength];
+            byte[] baseQuals = new byte[Bases.length + baseLength];
+
+            for(int i = 0; i < Bases.length; ++i)
+            {
+                bases[i + baseLength] = Bases[i];
+                baseQuals[i + baseLength] = BaseQualities[i];
+            }
+
+            Bases = bases;
+            BaseQualities = baseQuals;
+        }
     }
 
     void setBoundaries(final SAMRecord read)

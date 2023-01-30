@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.markdups.ConsensusReadsTest.UMI_ID_1;
 import static com.hartwig.hmftools.markdups.ConsensusReadsTest.nextUmiReadId;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_A;
+import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MISMATCH;
 import static com.hartwig.hmftools.markdups.umi.IndelConsensusReads.haveConsistentCigars;
@@ -88,61 +89,102 @@ public class IndelConsensusReadsTest
     @Test
     public void testInsertMismatches()
     {
-        final List<SAMRecord> reads = Lists.newArrayList();
-
         // first 2 reads without an insert vs 1 with one ignored
-        SAMRecord read1 = createSamRecord(nextReadId(), 13, REF_BASES_A.substring(0, 10), "2S8M", false);
-        reads.add(read1);
+        boolean readsReversed = false;
+        SAMRecord read1 = createSamRecord(nextReadId(), 13, REF_BASES_A.substring(0, 10), "2S8M", readsReversed);
 
         // matching but without the soft-clip
-        SAMRecord read2 = createSamRecord(nextReadId(), 11, REF_BASES_A.substring(0, 10), "7M3S", false);
-        reads.add(read2);
+        SAMRecord read2 = createSamRecord(nextReadId(), 11, REF_BASES_A.substring(0, 10), "7M3S", readsReversed);
 
         String indelBases = REF_BASES_A.substring(0, 5) + "C" + REF_BASES_A.substring(5, 10);
-        SAMRecord read3 = createSamRecord(nextReadId(), 12, indelBases, "1S4M1I4M1S", false);
-        reads.add(read3);
+        SAMRecord read3 = createSamRecord(nextReadId(), 12, indelBases, "1S4M1I4M1S", readsReversed);
+
+        indelBases = REF_BASES_A.substring(0, 3) + "GG" + REF_BASES_A.substring(3, 10);
+        SAMRecord read4 = createSamRecord(nextReadId(), 11, indelBases, "3M2I7M", readsReversed);
+
+        indelBases = REF_BASES_A.substring(0, 4) + "TTT" + REF_BASES_A.substring(4, 7) + "TTTT" + REF_BASES_A.substring(7, 10);
+        SAMRecord read5 = createSamRecord(nextReadId(), 12, indelBases, "1S3M3I3M4I2M1S", readsReversed);
 
         String consensusBases = REF_BASES_A.substring(0, 10);
 
-        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(Lists.newArrayList(read1, read2, read3, read4, read5), UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
         assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
         assertEquals("10M", readInfo.ConsensusRead.getCigarString());
         assertEquals(11, readInfo.ConsensusRead.getAlignmentStart());
+
+        // now with 2 inserts in the consensus
+        consensusBases = REF_BASES_A.substring(0, 3) + "TT" + REF_BASES_A.substring(3, 6) + "GGG" + REF_BASES_A.substring(6, 10);
+        String consensusCigar = "1S2M2I3M3I3M1S";
+        readsReversed = true;
+        read1 = createSamRecord(nextReadId(), 12, consensusBases, consensusCigar, readsReversed);
+
+        // matching but without the soft-clip
+        read2 = createSamRecord(nextReadId(), 12, consensusBases, consensusCigar, readsReversed);
+
+        read3 = createSamRecord(nextReadId(), 12, REF_BASES_A.substring(0, 10), "2S6M2S", readsReversed);
+
+        // has the same indels but shorter
+        indelBases = REF_BASES_A.substring(0, 3) + "TTT" + REF_BASES_A.substring(3, 6) + "GG" + REF_BASES_A.substring(6, 10);
+        read4 = createSamRecord(nextReadId(), 12, indelBases, "1S2M3I3M2I3M1S", readsReversed);
+
+        readInfo = mConsensusReads.createConsensusRead(Lists.newArrayList(read1, read2, read3, read4), UMI_ID_1);
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
+        assertEquals(consensusCigar, readInfo.ConsensusRead.getCigarString());
+        assertEquals(12, readInfo.ConsensusRead.getAlignmentStart());
     }
 
     @Test
     public void testDeleteMismatches()
     {
-        final List<SAMRecord> reads = Lists.newArrayList();
-
         // first 2 reads without a delete vs 1 with one ignored
         SAMRecord read1 = createSamRecord(nextReadId(), 13, REF_BASES_A.substring(0, 10), "2S8M", false);
-        reads.add(read1);
 
         // matching but without the soft-clip
         SAMRecord read2 = createSamRecord(nextReadId(), 11, REF_BASES_A.substring(0, 10), "7M3S", false);
-        reads.add(read2);
 
         String indelBases = REF_BASES_A.substring(0, 5) + REF_BASES_A.substring(6, 10);
         SAMRecord read3 = createSamRecord(nextReadId(), 12, indelBases, "1S4M1D3M1S", false);
-        reads.add(read3);
 
         indelBases = REF_BASES_A.substring(0, 3) + REF_BASES_A.substring(7, 10);
         SAMRecord read4 = createSamRecord(nextReadId(), 11, indelBases, "3M4D3M", false);
-        reads.add(read4);
 
         indelBases = REF_BASES_A.substring(0, 3) + REF_BASES_A.substring(4, 6) + REF_BASES_A.substring(7, 10);
         SAMRecord read5 = createSamRecord(nextReadId(), 11, indelBases, "3M1D2M1D3M", false);
-        reads.add(read5);
 
         String consensusBases = REF_BASES_A.substring(0, 10);
 
-        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(Lists.newArrayList(read1, read2, read3, read4, read5), UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
         assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
         assertEquals("10M", readInfo.ConsensusRead.getCigarString());
         assertEquals(11, readInfo.ConsensusRead.getAlignmentStart());
+
+        // now test a delete in the consensus read
+        String consensusCigar = "4M3D3M";
+        String delBases = REF_BASES_A.substring(0, 4) + REF_BASES_A.substring(7, 10);
+        read1 = createSamRecord(nextReadId(), 11, delBases, consensusCigar, false);
+        setBaseQualities(read1, 11);
+
+        // matching but without the soft-clip
+        read2 = createSamRecord(nextReadId(), 11, delBases, consensusCigar, false);
+        setBaseQualities(read2, 11);
+
+        indelBases = REF_BASES_A.substring(0, 7) + "CCC"; // no delete and differing aligned bases after the delete
+        read3 = createSamRecord(nextReadId(), 11, indelBases, "10M", false);
+        setBaseQualities(read3, 35);
+
+        consensusBases = REF_BASES_A.substring(0, 4) + "CCC";
+
+        readInfo = mConsensusReads.createConsensusRead(Lists.newArrayList(read1, read2, read3), UMI_ID_1);
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
+        assertEquals(consensusCigar, readInfo.ConsensusRead.getCigarString());
+        int calcBaseQual = 13;
+        assertEquals(calcBaseQual, readInfo.ConsensusRead.getBaseQualities()[4]);
+        assertEquals(calcBaseQual, readInfo.ConsensusRead.getBaseQualities()[5]);
+        assertEquals(calcBaseQual, readInfo.ConsensusRead.getBaseQualities()[6]);
     }
 
     private String nextReadId() { return nextUmiReadId(UMI_ID_1, mReadIdGen); }
