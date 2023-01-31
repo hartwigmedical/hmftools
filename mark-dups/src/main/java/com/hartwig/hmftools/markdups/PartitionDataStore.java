@@ -27,6 +27,10 @@ public class PartitionDataStore
         if(partitionCache == null)
         {
             partitionCache = new PartitionData(chrPartition, mConfig.UMIs);
+
+            if(mConfig.PerfDebug && mConfig.Threads > 1)
+                partitionCache.togglePerfChecks();
+
             mPartitionDataMap.put(chrPartition, partitionCache);
         }
 

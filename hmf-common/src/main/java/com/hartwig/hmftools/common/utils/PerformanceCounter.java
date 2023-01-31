@@ -34,7 +34,7 @@ public class PerformanceCounter
     private double mLastTime;
     private String mCurrentIntervalName;
 
-    private static final double NANOS_IN_SECOND = 1000000000;
+    public static final double NANOS_IN_SECOND = 1000000000;
 
     public PerformanceCounter(final String name)
     {
@@ -117,7 +117,7 @@ public class PerformanceCounter
 
     public void stop()
     {
-        if (!mIsRunning)
+        if(!mIsRunning)
             return;
 
         mIsRunning = false;

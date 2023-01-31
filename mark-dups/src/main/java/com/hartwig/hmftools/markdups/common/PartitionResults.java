@@ -51,6 +51,12 @@ public class PartitionResults
             mUmiGroups.add(umiGroup);
     }
 
-    public String toString() { return format("resolved(%d) umiGroups(%d)", mResolvedFragments.size(), mUmiGroups.size()); }
+    public String toString()
+    {
+        return format("fragStatus(%s) resolved(%d) umiGroups(%d)",
+                mFragmentStatus != null ? mFragmentStatus : "unset",
+                mResolvedFragments != null ? mResolvedFragments.size() : "unset",
+                mUmiGroups != null ? mUmiGroups.size() : "unset");
+    }
 
 }

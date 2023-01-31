@@ -3,6 +3,7 @@ package com.hartwig.hmftools.markdups.common;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_SECOND;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
@@ -46,6 +47,8 @@ public class PartitionData
     // any update to the maps is done under a lock
     private Lock mLock;
     private long mLastCacheCount;
+    private long mLockAcquireTime;
+    private boolean mPerfChecks;
 
     private Set<UmiGroup> mUpdatedUmiGroups;
     private Set<CandidateDuplicates> mUpdatedCandidateDuplicates;
@@ -64,9 +67,15 @@ public class PartitionData
         mUpdatedCandidateDuplicates = Sets.newHashSet();
 
         mLock = new ReentrantLock();
+        mLockAcquireTime = 0;
+        mPerfChecks = false;
     }
 
+    public String partitionStr() { return mChrPartition; }
     public Statistics statistics() { return mDuplicateGroups.statistics(); }
+
+    public void togglePerfChecks() { mPerfChecks = true; }
+    public double totalLockTime() { return mLockAcquireTime / NANOS_IN_SECOND; }
 
     public void processPrimaryFragments(
             final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList, final List<UmiGroup> umiGroups)
@@ -74,7 +83,7 @@ public class PartitionData
         // gather any cached mate reads, attempt to resolve any candidate duplicates and feed back the resultant set of resolved fragments
         try
         {
-            mLock.lock();
+            acquireLock();
 
             resolvedFragments.forEach(x -> processResolvedFragment(x));
 
@@ -205,7 +214,7 @@ public class PartitionData
     {
         try
         {
-            mLock.lock();
+            acquireLock();
 
             PartitionResults partitionResults = new PartitionResults();
 
@@ -235,7 +244,7 @@ public class PartitionData
     {
         try
         {
-            mLock.lock();
+            acquireLock();
             ReadMatch readMatch = handleIncompleteFragment(read);
 
             if(!readMatch.Matched)
@@ -460,7 +469,7 @@ public class PartitionData
     {
         try
         {
-            mLock.lock();
+            acquireLock();
 
             MD_LOGGER.debug("partition({}) log state: {}", mChrPartition, cacheCountsStr());
         }
@@ -474,7 +483,7 @@ public class PartitionData
     {
         try
         {
-            mLock.lock();
+            acquireLock();
 
             mFragmentStatus.clear();
             mIncompleteFragments.clear();
@@ -485,6 +494,19 @@ public class PartitionData
         {
             mLock.unlock();
         }
+    }
+
+    private void acquireLock()
+    {
+        if(mPerfChecks)
+        {
+            mLock.lock();
+            return;
+        }
+
+        long startTime = System.nanoTime();
+        mLock.lock();
+        mLockAcquireTime += System.nanoTime() - startTime;
     }
 
     @VisibleForTesting

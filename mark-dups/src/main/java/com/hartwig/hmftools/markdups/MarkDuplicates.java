@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -106,9 +107,29 @@ public class MarkDuplicates
         }
 
         if(mConfig.PerfDebug)
+        {
             combinedPerfCounter.logIntervalStats(10);
+
+            List<Double> partitionLockTimes = Lists.newArrayList();
+            partitionDataStore.partitions().forEach(x -> partitionLockTimes.add(x.totalLockTime()));
+            Collections.sort(partitionLockTimes, Collections.reverseOrder());
+            double nthTime = partitionLockTimes.size() >= 5 ? partitionLockTimes.get(4) : partitionLockTimes.get(partitionLockTimes.size() - 1);
+
+            for(PartitionData partitionData : partitionDataStore.partitions())
+            {
+                double lockTime = partitionData.totalLockTime();
+
+                if(lockTime >= nthTime)
+                {
+                    MD_LOGGER.debug("partition({}) total lock-acquisition time({})",
+                            partitionData.partitionStr(), format("%.3f", lockTime));
+                }
+            }
+        }
         else
+        {
             combinedPerfCounter.logStats();
+        }
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         double timeTakeMins = timeTakenMs / 60000.0;
