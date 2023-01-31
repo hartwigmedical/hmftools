@@ -101,7 +101,8 @@ public class PartitionDataTest
         resolvedFragments = processIncompleteFragment(partitionData, mateRead);
         assertNull(resolvedFragments);
         assertEquals(UNSET, mateRead.status());
-        assertTrue(partitionData.incompleteFragmentMap().containsValue(mateRead));
+        Fragment mateFragment = partitionData.incompleteFragmentMap().get(mateRead.id());
+        assertTrue(mateFragment != null && mateFragment.reads().contains(mateRead.reads().get(0)));
 
         resolvedFragments = Lists.newArrayList(read);
         partitionData.processPrimaryFragments(resolvedFragments, Collections.EMPTY_LIST);
@@ -132,19 +133,22 @@ public class PartitionDataTest
         resolvedFragments = processIncompleteFragment(partitionData, supp);
         assertNull(resolvedFragments);
         assertEquals(SUPPLEMENTARY, supp.status());
-        assertTrue(partitionData.incompleteFragmentMap().containsValue(supp));
+        Fragment suppFragment = partitionData.incompleteFragmentMap().get(supp.id());
+        assertTrue(suppFragment != null && suppFragment.reads().contains(supp.reads().get(0)));
+        // assertTrue(partitionData.incompleteFragmentMap().containsValue(supp));
 
         resolvedFragments = processIncompleteFragment(partitionData, mateRead);
         assertNull(resolvedFragments);
         assertEquals(UNSET, mateRead.status());
-        assertEquals(2, supp.readCount());
+        assertEquals(2, suppFragment.readCount());
         assertFalse(partitionData.incompleteFragmentMap().containsValue(mateRead));
 
         resolvedFragments = Lists.newArrayList(read);
         partitionData.processPrimaryFragments(resolvedFragments, Collections.EMPTY_LIST);
         assertEquals(1, resolvedFragments.size());
         assertEquals(3, read.readCount());
-        assertFalse(partitionData.incompleteFragmentMap().containsValue(supp));
+        assertFalse(partitionData.incompleteFragmentMap().containsKey(suppFragment.id()));
+        // assertFalse(partitionData.incompleteFragmentMap().containsValue(supp));
 
         assertFalse(partitionData.fragmentStatusMap().containsKey(read.id()));
     }
@@ -252,8 +256,15 @@ public class PartitionDataTest
 
     private List<Fragment> processIncompleteFragment(final PartitionData partitionData, final Fragment fragment)
     {
-        PartitionResults partitionResults = partitionData.processIncompleteFragment(fragment);
-        return partitionResults != null ? partitionResults.resolvedFragments() : null;
+        PartitionResults partitionResults = partitionData.processIncompleteFragment(fragment.reads().get(0));
+
+        if(partitionResults == null)
+            return null;
+
+        if(partitionResults.fragmentStatus() != null)
+            fragment.setStatus(partitionResults.fragmentStatus());
+
+        return partitionResults.resolvedFragments();
     }
 
 }

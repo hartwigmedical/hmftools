@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.SUPPLEMENTARY;
+import static com.hartwig.hmftools.markdups.common.ReadMatch.NO_READ_MATCH;
 import static com.hartwig.hmftools.markdups.common.ResolvedFragmentState.fragmentState;
 
 import java.util.Collections;
@@ -22,6 +23,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
 import com.hartwig.hmftools.markdups.umi.UmiGroup;
+
+import htsjdk.samtools.SAMRecord;
 
 public class PartitionData
 {
@@ -198,7 +201,7 @@ public class PartitionData
         }
     }
 
-    public PartitionResults processIncompleteFragments(final List<Fragment> fragments)
+    public PartitionResults processIncompleteFragments(final List<SAMRecord> reads)
     {
         try
         {
@@ -206,12 +209,16 @@ public class PartitionData
 
             PartitionResults partitionResults = new PartitionResults();
 
-            for(Fragment fragment : fragments)
+            for(SAMRecord read : reads)
             {
-                handleIncompleteFragment(fragment);
+                ReadMatch readMatch = handleIncompleteFragment(read);
 
-                if(fragment.status().isResolved())
+                if(readMatch.Status != null && readMatch.Status.isResolved())
+                {
+                    Fragment fragment = new Fragment(read);
+                    fragment.setStatus(readMatch.Status);
                     partitionResults.addResolvedFragment(fragment);
+                }
             }
 
             processUpdatedGroups(partitionResults);
@@ -224,23 +231,25 @@ public class PartitionData
         }
     }
 
-    public PartitionResults processIncompleteFragment(final Fragment fragment)
+    public PartitionResults processIncompleteFragment(final SAMRecord read)
     {
         try
         {
             mLock.lock();
-            boolean matched = handleIncompleteFragment(fragment);
+            ReadMatch readMatch = handleIncompleteFragment(read);
 
-            if(!matched)
+            if(!readMatch.Matched)
                 return null;
 
             // only create results if the fragment is part of a group
-            if(fragment.status() == NONE)
-                return null;
-
             PartitionResults partitionResults = new PartitionResults();
 
-            processUpdatedGroups(partitionResults);
+            if(readMatch.Status != null)
+                partitionResults.setFragmentStatus(readMatch.Status);
+
+            if(readMatch.Status == null || readMatch.Status != NONE)
+                processUpdatedGroups(partitionResults);
+
             return partitionResults;
         }
         finally
@@ -249,41 +258,38 @@ public class PartitionData
         }
     }
 
-    private boolean handleIncompleteFragment(final Fragment fragment)
+    private ReadMatch handleIncompleteFragment(final SAMRecord read)
     {
         // a supplementary or higher mate read - returns any resolved fragments resulting from add this new read
 
         // first look for a resolved status
-        ResolvedFragmentState resolvedState = mFragmentStatus.get(fragment.id());
+        ResolvedFragmentState resolvedState = mFragmentStatus.get(read.getReadName());
 
         if(resolvedState != null)
         {
-            fragment.setStatus(resolvedState.Status);
-
-            // update the resolved state
-            resolvedState.update(fragment.reads());
+            resolvedState.update(read);
 
             if(resolvedState.allReceived())
-                mFragmentStatus.remove(fragment.id());
+                mFragmentStatus.remove(read.getReadName());
 
-            return true;
+            return new ReadMatch(true, resolvedState.Status);
         }
 
-        UmiGroup umiGroup = mUmiGroups.get(fragment.id());
+        UmiGroup umiGroup = mUmiGroups.get(read.getReadName());
 
         if(umiGroup != null)
         {
-            fragment.reads().forEach(x -> umiGroup.addRead(x));
+            umiGroup.addRead(read);
             mUpdatedUmiGroups.add(umiGroup);
-            return true;
+            return new ReadMatch(true, null);
         }
 
         // next check for a UMI group or candidate duplicate group to add this to
-        Fragment existingFragment = mIncompleteFragments.get(fragment.id());
+        Fragment existingFragment = mIncompleteFragments.get(read.getReadName());
 
         if(existingFragment != null)
         {
-            fragment.reads().forEach(x -> existingFragment.addRead(x));
+            existingFragment.addRead(read);
 
             if(existingFragment.status() == CANDIDATE && existingFragment.primaryReadsPresent())
             {
@@ -293,16 +299,16 @@ public class PartitionData
                 if(candidateDuplicates != null)
                 {
                     mUpdatedCandidateDuplicates.add(candidateDuplicates);
-                    return true;
+                    return new ReadMatch(true, null);
                 }
             }
 
-            return false;
+            return NO_READ_MATCH;
         }
 
         // store the new fragment
-        mIncompleteFragments.put(fragment.id(), fragment);
-        return false;
+        mIncompleteFragments.put(read.getReadName(), new Fragment(read));
+        return NO_READ_MATCH;
     }
 
     private void storeUmiGroup(final UmiGroup umiGroup)

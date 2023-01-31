@@ -30,6 +30,8 @@ import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
 import com.hartwig.hmftools.markdups.umi.UmiGroup;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
@@ -124,7 +126,13 @@ public class RecordWriter
     public int recordWriteCount() { return mNonConsensusReads; } // mBamWriter.writeCount()
 
     public synchronized void writeFragments(final List<Fragment> fragments) { fragments.forEach(x -> doWriteFragment(x)); }
+
     public synchronized void writeFragment(final Fragment fragment) { doWriteFragment(fragment); }
+
+    public synchronized void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus)
+    {
+        writeRead(read, fragmentStatus, null);
+    }
 
     public synchronized void writeUmiReads(final UmiGroup umiGroup, final List<SAMRecord> completeReads)
     {
@@ -156,10 +164,10 @@ public class RecordWriter
         }
 
         fragment.setReadWritten();
-        fragment.reads().forEach(x -> writeRead(x, fragment));
+        fragment.reads().forEach(x -> writeRead(x, fragment.status(), fragment));
     }
 
-    private void writeRead(final SAMRecord read, final Fragment fragment)
+    private void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus, @Nullable final Fragment fragment)
     {
         if(mCacheReads)
         {
@@ -175,9 +183,9 @@ public class RecordWriter
 
         ++mNonConsensusReads;
 
-        writeReadData(read, fragment);
+        writeReadData(read, fragmentStatus, fragment);
 
-        read.setDuplicateReadFlag(fragment.status() == DUPLICATE); // overwrite any existing status
+        read.setDuplicateReadFlag(fragmentStatus == DUPLICATE); // overwrite any existing status
 
         mBamWriter.writeRecord(read);
     }
@@ -212,21 +220,21 @@ public class RecordWriter
         return null;
     }
 
-    private void writeReadData(final SAMRecord read, final Fragment fragment)
+    private void writeReadData(final SAMRecord read, final FragmentStatus fragmentStatus, @Nullable final Fragment fragment)
     {
         if(mReadWriter == null)
             return;
 
         if(mConfig.LogReadType == DUPLICATES)
         {
-            if(!read.getDuplicateReadFlag() && !fragment.status().isDuplicate())
+            if(!read.getDuplicateReadFlag() && !fragmentStatus.isDuplicate())
                 return;
         }
         else if(mConfig.LogReadType == MISMATCHES)
         {
-            if(fragment.status() != UNSET)
+            if(fragmentStatus != UNSET)
             {
-                if(read.getDuplicateReadFlag() == (fragment.status() == DUPLICATE))
+                if(read.getDuplicateReadFlag() == (fragmentStatus == DUPLICATE))
                     return;
             }
         }
@@ -240,15 +248,17 @@ public class RecordWriter
 
             mReadWriter.write(format(",%d,%s,%d,%s,%s,%s,%s",
                     abs(read.getInferredInsertSize()), read.getMateReferenceName(), read.getMateAlignmentStart(),
-                    read.getDuplicateReadFlag(), fragment.status(), read.hasAttribute(MATE_CIGAR_ATTRIBUTE), fragment.coordinates().Key));
+                    read.getDuplicateReadFlag(), fragmentStatus, read.hasAttribute(MATE_CIGAR_ATTRIBUTE),
+                    fragment != null ? fragment.coordinates().Key : ""));
 
             if(mConfig.UMIs.Enabled)
             {
-                mReadWriter.write(format(",%s", fragment.umiId() != null ? fragment.umiId() : ""));
+                mReadWriter.write(format(",%s", fragment != null && fragment.umiId() != null ? fragment.umiId() : ""));
             }
 
             mReadWriter.write(format(",%.2f,%d,%s,%d",
-                    fragment.averageBaseQual(), read.getMappingQuality(), suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
+                    fragment != null ? fragment.averageBaseQual() : 0, read.getMappingQuality(),
+                    suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
 
             mReadWriter.write(format(",%s,%s,%s,%s,%s,%s",
                     read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), read.getReadUnmappedFlag(),

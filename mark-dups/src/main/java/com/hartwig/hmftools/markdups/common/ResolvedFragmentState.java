@@ -56,22 +56,19 @@ public class ResolvedFragmentState
                 fragment.status(), expectedSuppCount, processedSuppCount, nonSuppCount > 1 || fragment.unpaired());
     }
 
-    public void update(final List<SAMRecord> reads)
+    public void update(final SAMRecord read)
     {
-        for(SAMRecord read : reads)
+        if(read.getSupplementaryAlignmentFlag())
         {
-            if(read.getSupplementaryAlignmentFlag())
-            {
-                ++ProcessedSupplementaries;
-            }
-            else
-            {
-                MateReceived = true;
+            ++ProcessedSupplementaries;
+        }
+        else
+        {
+            MateReceived = true;
 
-                if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
-                {
-                    ++ExpectedSupplementaries;
-                }
+            if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
+            {
+                ++ExpectedSupplementaries;
             }
         }
     }

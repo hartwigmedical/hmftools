@@ -11,12 +11,17 @@ public class PartitionResults
 {
     private List<Fragment> mResolvedFragments;
     private List<UmiGroup> mUmiGroups;
+    private FragmentStatus mFragmentStatus; // set for a single non-primary fragment
 
     public PartitionResults()
     {
         mResolvedFragments = null;
         mUmiGroups = null;
+        mFragmentStatus = null;
     }
+
+    public FragmentStatus fragmentStatus() { return mFragmentStatus; }
+    public void setFragmentStatus(final FragmentStatus status) { mFragmentStatus = status; }
 
     public List<Fragment> resolvedFragments() { return mResolvedFragments; }
 

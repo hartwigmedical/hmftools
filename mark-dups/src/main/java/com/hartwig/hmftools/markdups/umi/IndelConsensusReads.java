@@ -156,12 +156,11 @@ public class IndelConsensusReads
                 if(operatorsDiffer(read.elementType(), selectedElement.Operator))
                 {
                     // when aligned (M) is selected:
-                    // - insert - skip past the insert's bases after the first one
+                    // - insert - skip past the insert's bases
                     // - delete - move along in step but cannot use base
 
                     // when insert (I) is selected:
-                    // - aligned - pause the caret after the first base
-                    // - delete - invalid difference, set consensus invalid
+                    // - aligned or delete - pause the index and don't use the base
 
                     if(selectedElement.Operator == M)
                     {

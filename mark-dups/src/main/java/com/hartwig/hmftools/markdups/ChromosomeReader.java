@@ -27,6 +27,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.common.CandidateDuplicates;
 import com.hartwig.hmftools.markdups.common.DuplicateGroups;
 import com.hartwig.hmftools.markdups.common.Fragment;
+import com.hartwig.hmftools.markdups.common.FragmentStatus;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.PartitionResults;
 import com.hartwig.hmftools.markdups.common.Statistics;
@@ -54,7 +55,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private String mCurrentStrPartition;
     private PartitionData mCurrentPartitionData;
 
-    private final Map<String,List<Fragment>> mPendingIncompleteReads;
+    private final Map<String,List<SAMRecord>> mPendingIncompleteReads;
 
     private final boolean mLogReadIds;
     private int mPartitionRecordCount;
@@ -225,16 +226,15 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
                 ++mStats.Incomplete;
 
                 String basePartition = Fragment.getBasePartition(read, mConfig.PartitionSize);
-                Fragment fragment = new Fragment(read);
 
                 if(basePartition == null)
                 {
                     // mate or supp is on a non-human chromsome, meaning it won't be retrieved - so write this immediately
-                    mRecordWriter.writeFragment(fragment);
+                    mRecordWriter.writeRead(read, FragmentStatus.UNSET);
                     return;
                 }
 
-                processIncompleteRead(fragment, basePartition);
+                processIncompleteRead(read, basePartition);
             }
         }
         catch(Exception e)
@@ -245,24 +245,26 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         }
     }
 
-    private void processIncompleteRead(final Fragment fragment, final String basePartition)
+    private void processIncompleteRead(final SAMRecord read, final String basePartition)
     {
         if(basePartition.equals(mCurrentStrPartition))
         {
-            PartitionResults partitionResults = mCurrentPartitionData.processIncompleteFragment(fragment);
+            PartitionResults partitionResults = mCurrentPartitionData.processIncompleteFragment(read);
 
-            if(partitionResults == null)
+            if(partitionResults != null)
             {
-                if(fragment.status().isResolved())
-                    mRecordWriter.writeFragment(fragment);
-            }
-            else
-            {
-                if(partitionResults.umiGroups() != null)
-                    partitionResults.umiGroups().forEach(x -> processUmiGroup(x));
+                if(partitionResults.umiGroups() != null || partitionResults.umiGroups() != null)
+                {
+                    if(partitionResults.umiGroups() != null)
+                        partitionResults.umiGroups().forEach(x -> processUmiGroup(x));
 
-                if(partitionResults.resolvedFragments() != null)
-                    mRecordWriter.writeFragments(partitionResults.resolvedFragments());
+                    if(partitionResults.resolvedFragments() != null)
+                        mRecordWriter.writeFragments(partitionResults.resolvedFragments());
+                }
+                else if(partitionResults.fragmentStatus() != null && partitionResults.fragmentStatus().isResolved())
+                {
+                    mRecordWriter.writeRead(read, partitionResults.fragmentStatus());
+                }
             }
         }
         else
@@ -270,7 +272,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
             ++mStats.InterPartition;
 
             // cache this read and send through as groups when the partition is complete
-            List<Fragment> pendingFragments = mPendingIncompleteReads.get(basePartition);
+            List<SAMRecord> pendingFragments = mPendingIncompleteReads.get(basePartition);
 
             if(pendingFragments == null)
             {
@@ -278,7 +280,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
                 mPendingIncompleteReads.put(basePartition, pendingFragments);
             }
 
-            pendingFragments.add(fragment);
+            pendingFragments.add(read);
         }
     }
 
@@ -293,14 +295,14 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
                     mRegion.Chromosome, mCurrentPartition, mPendingIncompleteReads.values().stream().mapToInt(x -> x.size()).sum());
         }
 
-        for(Map.Entry<String,List<Fragment>> entry : mPendingIncompleteReads.entrySet())
+        for(Map.Entry<String,List<SAMRecord>> entry : mPendingIncompleteReads.entrySet())
         {
             String basePartition = entry.getKey();
-            List<Fragment> fragments = entry.getValue();
+            List<SAMRecord> reads = entry.getValue();
 
             PartitionData partitionData = mPartitionDataStore.getOrCreatePartitionData(basePartition);
 
-            PartitionResults partitionResults = partitionData.processIncompleteFragments(fragments);
+            PartitionResults partitionResults = partitionData.processIncompleteFragments(reads);
 
             if(partitionResults.umiGroups() != null)
                 partitionResults.umiGroups().forEach(x -> processUmiGroup(x));
