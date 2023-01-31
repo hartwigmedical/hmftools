@@ -86,7 +86,8 @@ public class XMLFactory {
                 .valuePath(cupAnalyse == null ? null : Map.of("value", cupAnalyse))
                 .build());
 
-        String disclaimer = Strings.EMPTY;
+        String disclaimer = "Further interpretation of these results within the patient’s clinical context is " +
+                "required by a clinician with support of a molecular tumor board.";
         disclaimer += report.qsFormNumber().equals(QsFormNumber.FOR_209.display()) ? "Due to the lower tumor purity potential "
                 + "(subclonal) DNA aberrations might not have been detected using this test. This result should therefore be "
                 + "considered with caution." : Strings.EMPTY;
