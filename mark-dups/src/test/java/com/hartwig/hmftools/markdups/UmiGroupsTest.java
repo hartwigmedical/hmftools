@@ -13,6 +13,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
 import com.hartwig.hmftools.markdups.umi.UmiGroup;
@@ -103,6 +104,27 @@ public class UmiGroupsTest
 
         group = groups.stream().filter(x -> x.fragments().contains(frag15)).findFirst().orElse(null);
         assertEquals(5, group.fragmentCount());
+    }
+
+    @Test
+    public void testDefinedUmis()
+    {
+        UmiConfig umiConfig = new UmiConfig(true);
+        String definedUmi1 = "AAAGGG";
+        String definedUmi2 = "TTTAAA";
+        String definedUmi3 = "CCCAAA";
+        umiConfig.addDefinedUmis(Sets.newHashSet(definedUmi1, definedUmi2, definedUmi3));
+
+        Fragment frag1 = createFragment(FIXED_READ_ID + definedUmi1, CHR_1, 100);
+        Fragment frag2 = createFragment(FIXED_READ_ID + "AAAGGC", CHR_1, 100);
+        Fragment frag3 = createFragment(FIXED_READ_ID + definedUmi1, CHR_1, 100);
+        Fragment frag4 = createFragment(FIXED_READ_ID + definedUmi2, CHR_1, 100);
+        Fragment frag5 = createFragment(FIXED_READ_ID + "TTTAAC", CHR_1, 100);
+        Fragment frag6 = createFragment(FIXED_READ_ID + definedUmi3, CHR_1, 100);
+
+        List<Fragment> fragments = Lists.newArrayList(frag1, frag2, frag3, frag4, frag5, frag6);
+        List<UmiGroup> groups = buildUmiGroups(fragments, umiConfig);
+        assertEquals(3, groups.size());
     }
 
     /*

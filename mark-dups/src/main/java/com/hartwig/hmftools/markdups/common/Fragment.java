@@ -29,7 +29,7 @@ public class Fragment
     // duplicate read info
     private double mAverageBaseQual;
     private String mCandidateDupKey;
-    private String mUmiId;
+    private String mUmi;
 
     public Fragment(final SAMRecord read)
     {
@@ -65,7 +65,7 @@ public class Fragment
         mAverageBaseQual = 0;
         mReadsWritten = false;
         mCandidateDupKey = null;
-        mUmiId = null;
+        mUmi = null;
     }
 
     public final String id() { return mReads.get(0).getReadName(); }
@@ -89,8 +89,8 @@ public class Fragment
     public String candidateDupKey() { return mCandidateDupKey; }
     public void setCandidateDupKey(final String key) { mCandidateDupKey = key; }
 
-    public String umiId() { return mUmiId; }
-    public void setUmiId(final String umiId) { mUmiId = umiId; }
+    public String umi() { return mUmi; }
+    public void setUmi(final String umi) { mUmi = umi; }
 
     public boolean readsWritten() { return mReadsWritten; }
     public void setReadWritten() { mReadsWritten = true; }

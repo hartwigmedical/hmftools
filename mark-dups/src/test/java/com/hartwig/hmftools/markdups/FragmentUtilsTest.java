@@ -60,6 +60,7 @@ public class FragmentUtilsTest
                 false, false, null);
 
         read.setReadUnmappedFlag(true);
+        read.setInferredInsertSize(100);
 
         Fragment fragment = new Fragment(read);
 
@@ -69,10 +70,11 @@ public class FragmentUtilsTest
                 false, false, null);
 
         mateRead.setMateUnmappedFlag(true);
+        mateRead.setInferredInsertSize(-100);
 
         fragment.addRead(mateRead);
 
-        assertEquals("1_100", fragment.coordinates().Key);
+        assertEquals("1_100_100", fragment.coordinates().Key);
         assertFalse(fragment.coordinates().Incomplete);
     }
 
@@ -137,9 +139,10 @@ public class FragmentUtilsTest
         // unmapped mate
         read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "100M", "", 0,
                 false, false, null);
+        read.setInferredInsertSize(400);
 
         fragmentCoords = getFragmentCoordinates(read);
-        assertEquals("1_100", fragmentCoords.Key);
+        assertEquals("1_100_400", fragmentCoords.Key);
         assertEquals(100, fragmentCoords.InitialPosition);
 
         // missing mate CIGAR attribute

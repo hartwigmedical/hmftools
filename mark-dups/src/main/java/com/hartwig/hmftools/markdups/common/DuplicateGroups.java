@@ -17,13 +17,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.markdups.umi.ConsensusReadInfo;
-import com.hartwig.hmftools.markdups.umi.ConsensusReads;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
 import com.hartwig.hmftools.markdups.umi.UmiGroup;
-
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -269,7 +264,7 @@ public class DuplicateGroups
                     // drop any single fragments
                     Fragment fragment = umiGroup.fragments().get(0);
                     fragment.setStatus(NONE);
-                    fragment.setUmiId(null);
+                    fragment.setUmi(null);
                     continue;
                 }
 

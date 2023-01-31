@@ -1,5 +1,17 @@
 package com.hartwig.hmftools.markdups.umi;
 
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.umi.UmiGroup.exceedsUmiIdDiff;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.beust.jcommander.internal.Sets;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
@@ -9,8 +21,11 @@ public class UmiConfig
 
     private int mUmiLength; // set and accessed in a thread-safe way
 
+    private final Set<String> mDefinedUmis;
+
     // config options
     private static final String UMI_ENABLED = "umi_enabled";
+    private static final String UMI_DEFINED_IDS = "umi_defined_ids";
 
     public static final char READ_ID_DELIM = ':';
     public static final String READ_ID_DELIM_STR = String.valueOf(READ_ID_DELIM);
@@ -19,18 +34,53 @@ public class UmiConfig
     {
         Enabled = enabled;
         mUmiLength = 0;
+        mDefinedUmis = Sets.newHashSet();
     }
+
+    public boolean hasDefinedUmis() { return !mDefinedUmis.isEmpty(); }
+    public void addDefinedUmis(final Set<String> umis) { mDefinedUmis.addAll(umis); }
 
     public static UmiConfig from(final CommandLine cmd)
     {
-        return new UmiConfig(
-                cmd.hasOption(UMI_ENABLED));
+        UmiConfig umiConfig = new UmiConfig(cmd.hasOption(UMI_ENABLED));
+
+        String definedUmiIdsFilename = cmd.getOptionValue(UMI_DEFINED_IDS);
+
+        if(definedUmiIdsFilename != null)
+        {
+            try
+            {
+                List<String> umis = Files.readAllLines(Paths.get(definedUmiIdsFilename));
+                MD_LOGGER.info("loaded {} defined UMI IDs from {}", umis.size(), definedUmiIdsFilename);
+                umiConfig.addDefinedUmis(umis.stream().collect(Collectors.toSet()));
+            }
+            catch(IOException e)
+            {
+                MD_LOGGER.error("failed to load defined UMI IDs: {}", e.toString());
+            }
+        }
+
+        return umiConfig;
     }
 
     public String extractUmiId(final String readId)
     {
         int umiLength = checkAndGetUmiLength(readId);
         return extractUmiId(readId, umiLength);
+    }
+
+    public String matchDefinedUmiId(final String umiId)
+    {
+        if(mDefinedUmis.contains(umiId))
+            return umiId;
+
+        for(String definedId : mDefinedUmis)
+        {
+            if(!exceedsUmiIdDiff(umiId, definedId))
+                return definedId;
+        }
+
+        return null;
     }
 
     private synchronized int checkAndGetUmiLength(final String readId)
@@ -57,5 +107,6 @@ public class UmiConfig
     public static void addCommandLineOptions(final Options options)
     {
         options.addOption(UMI_ENABLED, false, "Use UMIs for duplicates");
+        options.addOption(UMI_DEFINED_IDS, true, "Optional set of defined UMI IDs in file");
     }
 }

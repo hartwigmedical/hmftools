@@ -98,6 +98,11 @@ public class FragmentClassificationTest
 
         assertEquals(DUPLICATE, calcFragmentStatus(frag1, frag2));
 
+        frag2.reads().get(0).setInferredInsertSize(100);
+        initialiseFragmentCoordinates(frag2);
+
+        assertEquals(NONE, calcFragmentStatus(frag1, frag2));
+
         // mates present and matching
         frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1000,
                 false, false, null);

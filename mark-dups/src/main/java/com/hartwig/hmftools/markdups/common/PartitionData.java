@@ -329,7 +329,7 @@ public class PartitionData
 
         if(groupReadIds == null)
         {
-            MD_LOGGER.error("umiGroup({}) has no read IDs: {}", umiGroup.umiId(), umiGroup.toString());
+            MD_LOGGER.error("umiGroup({}) has no read IDs: {}", umiGroup.umi(), umiGroup.toString());
             return;
         }
 
@@ -368,7 +368,7 @@ public class PartitionData
             if(fragment.allReadsPresent())
                 continue;
 
-            if(fragment.umiId() != null) // cached with the UMI group
+            if(fragment.umi() != null) // cached with the UMI group
                 continue;
 
             ResolvedFragmentState resolvedState = fragmentState(fragment);

@@ -6,7 +6,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
-import static com.hartwig.hmftools.markdups.common.FragmentStatus.SUPPLEMENTARY;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 import static com.hartwig.hmftools.markdups.ReadOutput.DUPLICATES;
@@ -149,7 +148,7 @@ public class RecordWriter
             }
 
             Fragment fragment = new Fragment(read);
-            fragment.setUmiId(umiGroup.umiId());
+            fragment.setUmi(umiGroup.umi());
             fragment.setStatus(DUPLICATE);
             doWriteFragment(fragment);
         }
@@ -204,7 +203,7 @@ public class RecordWriter
             writer.write(",InsertSize,MateChr,MatePosStart,Duplicate,CalcDuplicate,MateCigar,Coords");
 
             if(mConfig.UMIs.Enabled)
-                writer.write(",UmiId");
+                writer.write(",Umi");
 
             writer.write(",AvgBaseQual,MapQual,SuppData,Flags,FirstInPair,ReadReversed,Unmapped,MateUnmapped,Supplementary,Secondary");
 
@@ -253,7 +252,7 @@ public class RecordWriter
 
             if(mConfig.UMIs.Enabled)
             {
-                mReadWriter.write(format(",%s", fragment != null && fragment.umiId() != null ? fragment.umiId() : ""));
+                mReadWriter.write(format(",%s", fragment != null && fragment.umi() != null ? fragment.umi() : ""));
             }
 
             mReadWriter.write(format(",%.2f,%d,%s,%d",

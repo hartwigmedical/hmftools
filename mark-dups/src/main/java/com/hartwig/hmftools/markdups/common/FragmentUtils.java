@@ -77,7 +77,11 @@ public class FragmentUtils
         String readCoordStr = formCoordinate(firstRead.getReferenceName(), readCoordinate, readForwardStrand);
 
         if(!firstRead.getReadPairedFlag() || firstRead.getReadUnmappedFlag() || firstRead.getMateUnmappedFlag())
-            return new FragmentCoordinates(readCoordStr, readStrandPosition);
+        {
+            // include the fragment length
+            return new FragmentCoordinates(format("%s_%d", readCoordStr, abs(firstRead.getInferredInsertSize())), readStrandPosition);
+        }
+
 
         if(mateRead == null)
         {

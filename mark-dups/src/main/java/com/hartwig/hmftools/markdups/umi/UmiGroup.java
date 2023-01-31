@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.common.Constants.MAX_UMI_BASE_DIFF;
-import static com.hartwig.hmftools.markdups.umi.ConsensusReads.formReadId;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -21,7 +20,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class UmiGroup
 {
-    private final String mUmiId;
+    private final String mUmi;
     private final List<Fragment> mFragments;
     private int mFragmentCount;
 
@@ -30,7 +29,7 @@ public class UmiGroup
 
     public UmiGroup(final String umiId, final Fragment fragment)
     {
-        mUmiId = umiId;
+        mUmi = umiId;
         mFragments = Lists.newArrayList(fragment);
         mReadGroups = new List[ReadLegType.values().length];
         mReadGroupComplete = new boolean[ReadLegType.values().length];
@@ -40,7 +39,7 @@ public class UmiGroup
     public List<Fragment> fragments() { return mFragments; }
     public int fragmentCount() { return mFragmentCount > 0 ? mFragmentCount : mFragments.size(); }
 
-    public String umiId() { return mUmiId; }
+    public String umi() { return mUmi; }
 
     public void categoriseReads()
     {
@@ -71,7 +70,7 @@ public class UmiGroup
 
         for(Fragment fragment : mFragments)
         {
-            fragment.setUmiId(mUmiId);
+            fragment.setUmi(mUmi);
             fragment.reads().forEach(x -> addRead(x));
         }
     }
@@ -129,7 +128,7 @@ public class UmiGroup
             if(mFragments.isEmpty()) // to avoid writing cached fragment reads twice
                 reads.addAll(readGroup);
 
-            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(readGroup, mUmiId);
+            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(readGroup, mUmi);
             reads.add(consensusReadInfo.ConsensusRead);
 
             readGroup.clear();
@@ -181,7 +180,7 @@ public class UmiGroup
     public String toString()
     {
         if(mFragmentCount == 0)
-            return format("id(%s) fragments(%d)", mUmiId, mFragments.size());
+            return format("id(%s) fragments(%d)", mUmi, mFragments.size());
 
         StringJoiner sj = new StringJoiner(", ");
         for(ReadLegType legType : ReadLegType.values())
@@ -194,16 +193,32 @@ public class UmiGroup
             sj.add(format("%s=%d", legType, mReadGroupComplete[legType.ordinal()] ? mFragmentCount : readGroup.size()));
         }
 
-        return format("id(%s) fragments(%d) readCounts(%s)", mUmiId, mFragmentCount, sj);
+        return format("id(%s) fragments(%d) readCounts(%s)", mUmi, mFragmentCount, sj);
     }
 
     public static List<UmiGroup> buildUmiGroups(final List<Fragment> fragments, final UmiConfig config)
     {
         Map<String,UmiGroup> groups = Maps.newHashMap();
+        boolean checkDefinedUmis = config.hasDefinedUmis();
+        boolean useDefinedUmis = checkDefinedUmis;
 
         for(Fragment fragment : fragments)
         {
             String umiId = config.extractUmiId(fragment.id());
+
+            if(checkDefinedUmis)
+            {
+                String definedUmiId = config.matchDefinedUmiId(umiId);
+                if(definedUmiId == null)
+                {
+                    useDefinedUmis = false;
+                    checkDefinedUmis = false;
+                }
+                else
+                {
+                    umiId = definedUmiId;
+                }
+            }
 
             UmiGroup group = groups.get(umiId);
 
@@ -213,8 +228,13 @@ public class UmiGroup
             }
             else
             {
-                group.mFragments.add(fragment);
+                group.fragments().add(fragment);
             }
+        }
+
+        if(useDefinedUmis)
+        {
+            return groups.values().stream().collect(Collectors.toList());
         }
 
         List<UmiGroup> orderedGroups = groups.values().stream().sorted(new SizeComparator()).collect(Collectors.toList());
@@ -236,7 +256,7 @@ public class UmiGroup
 
                 for(UmiGroup existing : cluster)
                 {
-                    if(existing.fragmentCount() >= second.fragmentCount() && !exceedsUmiIdDiff(existing.mUmiId, second.mUmiId))
+                    if(existing.fragmentCount() >= second.fragmentCount() && !exceedsUmiIdDiff(existing.mUmi, second.mUmi))
                     {
                         merged = true;
                         break;
@@ -259,7 +279,7 @@ public class UmiGroup
 
             for(j = 1; j < cluster.size(); ++j)
             {
-                first.mFragments.addAll(cluster.get(j).mFragments);
+                first.fragments().addAll(cluster.get(j).fragments());
             }
 
             finalGroups.add(first);
