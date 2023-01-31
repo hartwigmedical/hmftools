@@ -329,7 +329,7 @@ public class PartitionData
 
         if(groupReadIds == null)
         {
-            MD_LOGGER.error("umiGroup({}) has no read IDs: {}", umiGroup.umi(), umiGroup.toString());
+            MD_LOGGER.error("umiGroup({}) has no read IDs: {}", umiGroup.id(), umiGroup.toString());
             return;
         }
 

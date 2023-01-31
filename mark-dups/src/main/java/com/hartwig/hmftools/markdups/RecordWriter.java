@@ -3,6 +3,7 @@ package com.hartwig.hmftools.markdups;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
@@ -147,10 +148,19 @@ public class RecordWriter
                 continue;
             }
 
-            Fragment fragment = new Fragment(read);
-            fragment.setUmi(umiGroup.umi());
-            fragment.setStatus(DUPLICATE);
-            doWriteFragment(fragment);
+            read.setAttribute(UMI_ATTRIBUTE, umiGroup.id());
+
+            if(mReadWriter == null)
+            {
+                writeRead(read, DUPLICATE, null);
+            }
+            else
+            {
+                Fragment fragment = new Fragment(read);
+                fragment.setUmi(umiGroup.id());
+                fragment.setStatus(DUPLICATE);
+                doWriteFragment(fragment);
+            }
         }
     }
 

@@ -30,6 +30,7 @@ public class ConsensusState
     public int MaxUnclippedPosEnd;
     public int MinAlignedPosStart;
     public int MaxAlignedPosEnd;
+    public int MapQuality;
 
     private ConsensusOutcome mOutcome;
 
@@ -45,13 +46,13 @@ public class ConsensusState
         MaxUnclippedPosEnd = 0;
         MinAlignedPosStart = 0;
         MaxAlignedPosEnd = 0;
+        MapQuality = 0;
 
         mOutcome = UNSET;
     }
 
     public ConsensusOutcome outcome() { return mOutcome; }
     public void setOutcome(final ConsensusOutcome outcome) { mOutcome = outcome; }
-    public int baseLength() { return Bases.length; }
 
     void setBaseLength(int baseLength)
     {

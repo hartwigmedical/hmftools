@@ -411,9 +411,18 @@ public class IndelConsensusReads
         int rightSoftClipBases = consensusState.MaxUnclippedPosEnd - consensusState.MaxAlignedPosEnd;
 
         final Cigar refCigar = initialRead.getCigar();
+        int cigarCount = refCigar.getCigarElements().size();
 
         CigarElement firstAlignment = null;
         CigarElement lastAlignment = null;
+
+        boolean hasFirstAlignment = refCigar.getCigarElements().get(0).getOperator() == M
+                || (refCigar.getCigarElements().get(0).getOperator() == S && refCigar.getCigarElements().get(1).getOperator() == M);
+
+        boolean hasLastAlignment = refCigar.getCigarElements().get(cigarCount - 1).getOperator() == M
+                || (refCigar.getCigarElements().get(cigarCount - 1).getOperator() == S && refCigar.getCigarElements().get(cigarCount - 2).getOperator() == M);
+
+        // indel CIGARs can occasionally begin with an 'I', so cannot assume
 
         for(int i = 0; i < refCigar.getCigarElements().size(); ++i)
         {
@@ -421,26 +430,34 @@ public class IndelConsensusReads
 
             if(element.getOperator() == S)
                 continue;
-            else if(firstAlignment == null && element.getOperator() == M)
+            else if(hasFirstAlignment && firstAlignment == null && element.getOperator() == M)
                 firstAlignment = element;
-            else if(i >= refCigar.getCigarElements().size() - 2 && element.getOperator() == M)
+            else if(hasLastAlignment && i >= cigarCount - 2 && element.getOperator() == M)
                 lastAlignment = element;
             else
                 consensusState.CigarElements.add(element);
         }
 
         // lengthen the outer alignments as required
-        int firstAlignmentLength = firstAlignment.getLength() + max(initialRead.getAlignmentStart() - consensusState.MinAlignedPosStart, 0);
-        int lastAlignmentLength = lastAlignment.getLength() + max(consensusState.MaxAlignedPosEnd - initialRead.getAlignmentEnd(), 0);
+        if(firstAlignment != null)
+        {
+            int firstAlignmentLength =
+                    firstAlignment.getLength() + max(initialRead.getAlignmentStart() - consensusState.MinAlignedPosStart, 0);
 
-        consensusState.CigarElements.add(0, new CigarElement(firstAlignmentLength, M));
+            consensusState.CigarElements.add(0, new CigarElement(firstAlignmentLength, M));
 
-        if(leftSoftClipBases > 0)
-            consensusState.CigarElements.add(0, new CigarElement(leftSoftClipBases, S));
+            if(leftSoftClipBases > 0)
+                consensusState.CigarElements.add(0, new CigarElement(leftSoftClipBases, S));
+        }
 
-        consensusState.CigarElements.add(new CigarElement(lastAlignmentLength, M));
+        if(lastAlignment != null)
+        {
+            int lastAlignmentLength = lastAlignment.getLength() + max(consensusState.MaxAlignedPosEnd - initialRead.getAlignmentEnd(), 0);
 
-        if(rightSoftClipBases > 0)
-            consensusState.CigarElements.add(new CigarElement(rightSoftClipBases, S));
+            consensusState.CigarElements.add(new CigarElement(lastAlignmentLength, M));
+
+            if(rightSoftClipBases > 0)
+                consensusState.CigarElements.add(new CigarElement(rightSoftClipBases, S));
+        }
     }
 }

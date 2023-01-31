@@ -59,6 +59,7 @@ public class ConsensusReads
                 unmapped = true;
 
             consensusState.setBoundaries(read);
+            consensusState.MapQuality = max(consensusState.MapQuality, read.getMappingQuality());
         }
 
         if(hasIndels)
@@ -107,6 +108,7 @@ public class ConsensusReads
         record.setReadName(formReadId(initialRead.getReadName(), groupIdentifier));
         record.setReadBases(state.Bases);
         record.setBaseQualities(state.BaseQualities);
+        record.setMappingQuality(state.MapQuality);
         record.setReferenceName(initialRead.getReferenceName());
 
         record.setAlignmentStart(state.MinAlignedPosStart);
@@ -168,6 +170,7 @@ public class ConsensusReads
         record.setReadBases(primaryRead.getReadBases());
         record.setBaseQualities(primaryRead.getBaseQualities());
         record.setReferenceName(primaryRead.getReferenceName());
+        record.setMappingQuality(primaryRead.getMappingQuality());
 
         record.setAlignmentStart(primaryRead.getAlignmentStart());
         record.setCigar(primaryRead.getCigar());
