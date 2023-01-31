@@ -113,27 +113,31 @@ class Gene:
 def get_ensembl(ensembl_gene_data, only_vdj):
     ensembl_df = pd.read_csv(ensembl_gene_data)
 
+    kde_kint = []
+
     # manually add in the KDE section
     # v37: IGKKDE	01	2	89131735	89132285    -
     # v38: IGKKDE	01	chr2	88832222	88832772	-
-    ensembl_df = ensembl_df.append(
+    kde_kint.append(
         {'GeneId': None, 'GeneName': 'KDE', "Chromosome": "2", "Strand": -1, "GeneStart": 89131735,
-         "GeneEnd": 89132285}, ignore_index=True)
+         "GeneEnd": 89132285})
 
-    ensembl_df = ensembl_df.append(
+    kde_kint.append(
         {'GeneId': None, 'GeneName': 'KDE', "Chromosome": "2", "Strand": -1, "GeneStart": 88832222,
-         "GeneEnd": 88832772}, ignore_index=True)
+         "GeneEnd": 88832772})
 
     # KINT, obtained by BLAT of CACCGCGCTCTTGGGGCAGCCGCCTTGCCGCTAGTGGCCGTGGCCACCCTGTGTCTGCCCGATT
     # v37
-    ensembl_df = ensembl_df.append(
+    kde_kint.append(
         {'GeneId': None, 'GeneName': 'KINT', "Chromosome": "2", "Strand": -1, "GeneStart": 89159145,
-         "GeneEnd": 89159209}, ignore_index=True)
+         "GeneEnd": 89159209})
 
     # v38
-    ensembl_df = ensembl_df.append(
+    kde_kint.append(
         {'GeneId': None, 'GeneName': 'KINT', "Chromosome": "2", "Strand": -1, "GeneStart": 88859633,
-         "GeneEnd": 88859697}, ignore_index=True)
+         "GeneEnd": 88859697})
+
+    ensembl_df = pd.concat([ensembl_df, pd.DataFrame(kde_kint)], ignore_index=True)
 
     genes = []
     for idx, row in ensembl_df.iterrows():
@@ -225,6 +229,7 @@ def process_blastn_result(blastn_csv, gene_finder):
 
     df["gene"] = gene_col.apply(lambda x: x.gene_name if x else None)
     df["gene_type"] = gene_col.apply(lambda x: x.vdj_type if x else None)
+    df["gene_chr"] = gene_col.apply(lambda x: x.chromosome if x else None)
     df["gene_start"] = gene_col.apply(lambda x: x.gene_start if x else None)
     df["gene_end"] = gene_col.apply(lambda x: x.gene_end if x else None)
 
@@ -235,7 +240,7 @@ def process_blastn_result(blastn_csv, gene_finder):
     del df
 
     def get_gene_type_df(df, gene_type):
-        seq_with_gene_type = df[df["gene_type"] == gene_type].groupby("qseqid")[["gene", "pident", "qstart", "qend"]].first()
+        seq_with_gene_type = df[df["gene_type"] == gene_type].groupby("qseqid")[["gene", "pident", "qstart", "qend", "gene_chr"]].first()
         # rename columns
         seq_with_gene_type.rename(columns={ "gene": gene_type.lower() + "Gene",
                                             "pident": gene_type.lower() + "PIdent",
@@ -248,7 +253,24 @@ def process_blastn_result(blastn_csv, gene_finder):
     seq_with_d = get_gene_type_df(filtered_df, "D")
     seq_with_j = get_gene_type_df(filtered_df, "J")
 
-    # merge together
+    if not seq_with_d.empty:
+        # since D gene is very short it can sometimes match with
+        # the wrong gene. We make sure they are in the same chromosome
+        vdj_chr = None
+        if not seq_with_v.empty:
+            vdj_chr = seq_with_v["gene_chr"][0]
+        elif not seq_with_j.empty:
+            vdj_chr = seq_with_j["gene_chr"][0]
+
+        if vdj_chr is not None and vdj_chr != seq_with_d["gene_chr"][0]:
+            # clear the D gene if chromosome does not match
+            seq_with_d = seq_with_d.head(0)
+
+    # drop the gene_chr columns
+    for df in [seq_with_v, seq_with_d, seq_with_j]:
+        df.drop(columns="gene_chr", inplace=True)
+
+    # merge the V, D and J genes together
     seq_gene_df = seq_with_v.merge(seq_with_d, how="outer", on="qseqid").merge(seq_with_j, how="outer", on="qseqid")
 
     # fine genes that matches ref
@@ -286,16 +308,32 @@ def process_blastn_result(blastn_csv, gene_finder):
     return seq_gene_df
 
 def write_fasta(vdj_df, fasta_filename, filter_cdr3):
+
+    # to allow sequences to match properly, we need to add 50 flanking bases to the VDJ sequences
+    # we add those as columns
+    def blastn_query_range(row):
+        if "DUPLICATE" not in row['filter'] and "MATCHES_REF" not in row['filter']:
+            full_seq = row["fullSeq"]
+            vdj_seq = row["vdjSeq"]
+            i = full_seq.index(vdj_seq)
+            return [max(i - FLANKING_BASES, 0), min(i + len(vdj_seq) + FLANKING_BASES, len(full_seq))]
+        return [-1, -1]
+
+    # get the query sequence range
+    vdj_df[["blastnQueryStart", "blastnQueryEnd"]] = vdj_df.apply(blastn_query_range, axis=1, result_type="expand")
+
     if filter_cdr3:
         vdj_df = vdj_df[vdj_df["cdr3AA"] == filter_cdr3]
+
     with open(fasta_filename, "w") as f:
         for idx, row in vdj_df.iterrows():
-            if "DUPLICATE" not in row['filter'] and "MATCHES_REF" not in row['filter']:
-                full_seq = row["fullSeq"]
-                vdj_seq = row["vdjSeq"]
-                i = full_seq.index(vdj_seq)
-                query_seq = full_seq[max(i - FLANKING_BASES, 0): min(i + len(vdj_seq) + FLANKING_BASES, len(full_seq))]
-                f.write(f">{row['cdr3AA']}\n")
+            if  row['blastnQueryStart'] != -1 and row['blastnQueryEnd'] != -1:
+                # start = row['blastnQueryStart']
+                # end = row['blastnQueryEnd']
+                # logger.info(f"start: {start}, end: {end}")
+                query_seq = row["fullSeq"][row['blastnQueryStart']: row['blastnQueryEnd']]
+                # use the index as the key in the fasta so we can identify it later
+                f.write(f">{idx}\n")
                 f.write(f"{query_seq}\n")
                 #logger.debug(f"i: {i}, vdj_seq: {vdj_seq}, query_seq: {query_seq}, full_seq: {full_seq}")
 
@@ -338,8 +376,16 @@ def main():
         os.unlink(blastn_csv)
 
     # now merge the results back into the vdj_df
-    vdj_df = vdj_df.merge(seq_gene_df, how="left", left_on="cdr3AA", right_on="qseqid").drop("qseqid", axis=1)
+    vdj_df = vdj_df.merge(seq_gene_df, how="left", left_index=True, right_on="qseqid").drop("qseqid", axis=1)
     vdj_df["blastnStatus"] = vdj_df["blastnStatus"].fillna("SKIPPED_BLASTN")
+
+    # fix the V D J aligned positions to be in terms of the full seq
+    for s in ['v', 'd', 'j']:
+        vdj_df[f"{s}AlignStart"] = vdj_df[f"{s}AlignStart"] + vdj_df["blastnQueryStart"]
+        vdj_df[f"{s}AlignEnd"] = vdj_df[f"{s}AlignEnd"] + vdj_df["blastnQueryEnd"]
+
+    vdj_df.drop(columns=["blastnQueryStart", "blastnQueryEnd"], inplace=True)
+
     vdj_df.to_csv(args.out_tsv, sep="\t", float_format='%.10g', index=False)
 
     elapsed_sec = time.time() - start

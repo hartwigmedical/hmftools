@@ -179,6 +179,10 @@ $ perl $BLAST_INSTALL/bin/update_blastdb.pl --passive --decompress human_genome
 - Support AIRR format output.
 
 # Version History and Download Links
+- [0.6](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.6)
+  - Fix issue where some sequences that matches reference genome are not marked as MATCHES_REF.
+  - Fix bug in the cider_blastn.py script, do not allow D segment to match with genes not within the same chromosome as V or J.
+  - Fix the vAlignStart / vAlignEnd / dAlignStart / dAlignEnd / jAlignStart / jAlignEnd columns.
 - [0.5](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.5)
   - By default do not report VDJ sequences that match reference genome. 
   - Add command line argument `report_match_ref_seq`.
