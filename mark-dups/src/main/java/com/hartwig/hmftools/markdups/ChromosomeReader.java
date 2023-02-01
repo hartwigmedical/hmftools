@@ -355,7 +355,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
             if(timeTakenSec >= 1.0)
             {
-                MD_LOGGER.debug("position({}:{}) fragments({}) resolved({}) candidates({}) time({})",
+                MD_LOGGER.debug("position({}:{}) fragments({}) resolved({}) candidates({}) processing time({})",
                         mRegion.Chromosome, position, posFragmentCount, resolvedFragments.size(),
                         candidateDuplicatesList.stream().mapToInt(x -> x.fragmentCount()).sum(),
                         format("%.1fs", timeTakenSec));

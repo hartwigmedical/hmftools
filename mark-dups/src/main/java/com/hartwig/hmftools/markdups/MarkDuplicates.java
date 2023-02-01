@@ -119,7 +119,7 @@ public class MarkDuplicates
             {
                 double lockTime = partitionData.totalLockTime();
 
-                if(lockTime >= nthTime)
+                if(lockTime > 0 && lockTime >= nthTime)
                 {
                     MD_LOGGER.debug("partition({}) total lock-acquisition time({})",
                             partitionData.partitionStr(), format("%.3f", lockTime));

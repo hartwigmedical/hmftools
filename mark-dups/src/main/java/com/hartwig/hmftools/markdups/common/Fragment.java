@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.markdups.common;
 
+import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.NO_COORDS;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.SUPPLEMENTARY;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.UNSET;
@@ -19,6 +20,7 @@ public class Fragment
 {
     private FragmentStatus mStatus;
     private final boolean mUnpaired;
+    private final boolean mHasLocalMate;
     private boolean mAllReadsPresent;
     private boolean mAllPrimaryReadsPresent;
     private final List<SAMRecord> mReads; // consider making an array of 4 (or less for BNDs)
@@ -46,11 +48,16 @@ public class Fragment
             {
                 mAllPrimaryReadsPresent = true;
                 mAllReadsPresent = !read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE);
+                mHasLocalMate = false;
             }
             else
             {
                 mAllPrimaryReadsPresent = false;
                 mAllReadsPresent = false;
+
+                mHasLocalMate = read.getMateUnmappedFlag()
+                        && read.getMateReferenceName().equals(read.getReferenceName())
+                        && read.getMateAlignmentStart() - read.getAlignmentStart() < DEFAULT_POS_BUFFER_SIZE;
             }
         }
         else
@@ -58,6 +65,7 @@ public class Fragment
             mStatus = SUPPLEMENTARY;
             mAllPrimaryReadsPresent = false;
             mAllReadsPresent = false;
+            mHasLocalMate = false;
         }
 
         mCoordinates = NO_COORDS; // unset for non primary reads
@@ -77,6 +85,7 @@ public class Fragment
     public boolean unpaired() { return mUnpaired; }
     public boolean allReadsPresent() { return mAllReadsPresent; }
     public boolean primaryReadsPresent() { return mAllPrimaryReadsPresent; }
+    public boolean hasLocalMate() { return mHasLocalMate; }
 
     public FragmentCoordinates coordinates() { return mCoordinates; }
     public int initialPosition() { return mCoordinates.InitialPosition; }

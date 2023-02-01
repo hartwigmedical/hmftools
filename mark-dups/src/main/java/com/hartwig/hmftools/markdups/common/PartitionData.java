@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.SUPPLEMENTARY;
+import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 import static com.hartwig.hmftools.markdups.common.ReadMatch.NO_READ_MATCH;
 import static com.hartwig.hmftools.markdups.common.ResolvedFragmentState.fragmentState;
 
@@ -53,7 +54,7 @@ public class PartitionData
     private Set<UmiGroup> mUpdatedUmiGroups;
     private Set<CandidateDuplicates> mUpdatedCandidateDuplicates;
 
-    private static final int LOG_CACHE_COUNT = 1000;
+    private static final int LOG_CACHE_COUNT = 10000;
 
     public PartitionData(final String chrPartition, final UmiConfig umiConfig)
     {
@@ -426,13 +427,52 @@ public class PartitionData
 
     public List<Fragment> extractRemainingFragments()
     {
-        if(mIncompleteFragments.isEmpty())
-            return Collections.EMPTY_LIST;
+        List<Fragment> remainingFragments = mIncompleteFragments.values().stream().collect(Collectors.toList());
+
+        if(remainingFragments.isEmpty() && mUmiGroups.isEmpty() && mFragmentStatus.isEmpty())
+            return remainingFragments;
 
         // not under lock since called only when all partitions are complete
         MD_LOGGER.debug("partition({}) final state: {}", mChrPartition, cacheCountsStr());
 
-        List<Fragment> remainingFragments = mIncompleteFragments.values().stream().collect(Collectors.toList());
+        if(MD_LOGGER.isDebugEnabled())
+        {
+            // log some remaining cached fragments to help with debug
+            int logCount = 0;
+            int maxLog = 3;
+            for(Map.Entry<String,ResolvedFragmentState> entry : mFragmentStatus.entrySet())
+            {
+                MD_LOGGER.debug("cached resolved status: {} : {}", entry.getKey(), entry.getValue());
+
+                ++logCount;
+
+                if(logCount >= maxLog)
+                    break;
+            }
+
+            logCount = 0;
+            for(Fragment fragment : remainingFragments)
+            {
+                SAMRecord read = fragment.reads().get(0);
+                MD_LOGGER.debug("cached incomplete read: {} status({})", readToString(read), fragment.status());
+
+                ++logCount;
+
+                if(logCount >= maxLog)
+                    break;
+            }
+
+            logCount = 0;
+            for(UmiGroup umiGroup : mUmiGroups.values())
+            {
+                MD_LOGGER.debug("cached umi group: {}", umiGroup.toString());
+
+                ++logCount;
+
+                if(logCount >= maxLog)
+                    break;
+            }
+        }
 
         mFragmentStatus.clear();
         mIncompleteFragments.clear();
@@ -498,7 +538,7 @@ public class PartitionData
 
     private void acquireLock()
     {
-        if(mPerfChecks)
+        if(!mPerfChecks)
         {
             mLock.lock();
             return;

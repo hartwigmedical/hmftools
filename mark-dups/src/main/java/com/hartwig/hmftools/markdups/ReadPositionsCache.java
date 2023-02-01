@@ -35,6 +35,10 @@ public class ReadPositionsCache
     private int mLastFragmentLogCount;
     private int mLastLogReadCount;
 
+    private long mFragmemtCacheCount;
+    private long mFragmemtUnmatchedCount;
+    private long mFragmemtNoCacheCount;
+
     private class FragmentGroup
     {
         // fragments with a matching start position
@@ -61,6 +65,9 @@ public class ReadPositionsCache
 
         mLastFragmentLogCount = 0;
         mLastLogReadCount = 0;
+        mFragmemtCacheCount = 0;
+        mFragmemtUnmatchedCount = 0;
+        mFragmemtNoCacheCount = 0;
     }
 
     public boolean processRead(final SAMRecord read)
@@ -111,7 +118,16 @@ public class ReadPositionsCache
                 checkFlush(fragmentPosition);
         }
 
-        mFragments.put(read.getReadName(), fragment);
+        // only store the read if its mate is local and expected to be added
+        if(fragment.hasLocalMate())
+        {
+            mFragments.put(read.getReadName(), fragment);
+            ++mFragmemtCacheCount;
+        }
+        else
+        {
+            ++mFragmemtNoCacheCount;
+        }
 
         if(fragmentPosition > 0)
         {
@@ -173,25 +189,10 @@ public class ReadPositionsCache
 
         int distanceFromMinPosition = position - mMinPosition;
 
-        int flushCount = 0;
         if(distanceFromMinPosition < mCapacity)
-        {
             return;
 
-            /*
-            if(mFragments.size() < 100000)
-                return;
-
-            // attempt to reduce the cache prior to it being full
-            flushCount = 100;
-            MD_LOGGER.debug("read cache: chr({} minPos={}) fragments({}) partial flush",
-                    mChromosome, mMinPosition, mFragments.size());
-            */
-        }
-        else
-        {
-            flushCount = position - mMinPosition - mCapacity + 1;
-        }
+        int flushCount = position - mMinPosition - mCapacity + 1;
 
         int flushedElements = 0;
 
@@ -205,7 +206,7 @@ public class ReadPositionsCache
             {
                 ++flushedElements;
 
-                element.Fragments.forEach(x -> mFragments.remove(x.id())); // need remove frags first since the processing can remove elements
+                removeMappedFragments(element.Fragments); // need remove frags first since the processing can remove elements
 
                 mReadGroupHandler.accept(element.Fragments);
 
@@ -235,7 +236,7 @@ public class ReadPositionsCache
             {
                 flushedPositions.add(entry.getKey());
 
-                entry.getValue().Fragments.forEach(x -> mFragments.remove(x.id()));
+                removeMappedFragments(entry.getValue().Fragments);
                 mReadGroupHandler.accept(entry.getValue().Fragments);
             }
         }
@@ -245,8 +246,31 @@ public class ReadPositionsCache
         checkFragmentLog();
     }
 
+    private void removeMappedFragments(final List<Fragment> fragments)
+    {
+        for(Fragment fragment : fragments)
+        {
+            if(fragment.hasLocalMate())
+            {
+                if(fragment.readCount() == 1)
+                    ++mFragmemtUnmatchedCount;
+
+                mFragments.remove(fragment.id());
+            }
+        }
+
+        // fragments.stream().filter(x -> x.hasLocalMate()).forEach(x -> mFragments.remove(x.id()));
+    }
+
     public void evictAll()
     {
+        if(mFragmemtNoCacheCount > LOG_FRAG_COUNT || mFragmemtCacheCount > LOG_FRAG_COUNT)
+        {
+            MD_LOGGER.debug("read cache eviction: chr({}:{}) fragments(forward={} reverse={}) cache(none={} cache={} unmatched={})",
+                    mChromosome, mMinPosition, mFragments.size(), mReversePositions.size(),
+                    mFragmemtNoCacheCount, mFragmemtCacheCount, mFragmemtUnmatchedCount);
+        }
+
         for(int i = 0; i < mCapacity; i++)
         {
             FragmentGroup element = mForwardPositions[i];
@@ -265,6 +289,9 @@ public class ReadPositionsCache
         mFragments.clear();
         mLastLogReadCount = 0;
         mLastFragmentLogCount = 0;
+        mFragmemtCacheCount = 0;
+        mFragmemtUnmatchedCount = 0;
+        mFragmemtNoCacheCount = 0;
     }
 
     private void resetMinPosition(int position)
