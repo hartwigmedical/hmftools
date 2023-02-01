@@ -179,6 +179,11 @@ public class UmiGroup
         }
     }
 
+    public int cachedReadCount()
+    {
+        return Arrays.stream(mReadGroups).filter(x -> x != null).mapToInt(x -> x.size()).sum();
+    }
+
     public String toString()
     {
         if(mFragmentCount == 0)

@@ -500,9 +500,18 @@ public class PartitionData
         long resolvedNoSupp = mFragmentStatus.values().stream().filter(x -> x.MateReceived).count();
         long resolvedNoMate = mFragmentStatus.values().stream().filter(x -> x.ProcessedSupplementaries < x.ExpectedSupplementaries).count();
 
-        return format("incomplete(%d supp=%d) candidateGroups(%d max=%d) resolved(%d supp=%d mate=%d) umiGroupReads(%d)",
-                mIncompleteFragments.size(), incompleteSupp, mCandidateDuplicatesMap.size(), maxCandidateGroup,
-                mFragmentStatus.size(), resolvedNoSupp, resolvedNoMate, mUmiGroups.size());
+        long umiReads = 0;
+        Set<UmiGroup> uniqueGroups = Sets.newHashSet();
+
+        if(mPerfChecks)
+        {
+            mUmiGroups.values().forEach(x -> uniqueGroups.add(x));
+            umiReads = uniqueGroups.stream().mapToInt(x -> x.cachedReadCount()).sum();
+        }
+
+        return format("incomplete(%d supp=%d) resolved(%d supp=%d mate=%d) umi(groups=%d frags=%s reads=%d) candidateGroups(%d max=%d)",
+                mIncompleteFragments.size(), incompleteSupp, mFragmentStatus.size(), resolvedNoSupp, resolvedNoMate,
+                uniqueGroups.size(), mUmiGroups.size(), umiReads, mCandidateDuplicatesMap.size(), maxCandidateGroup);
     }
 
     public void logCacheCounts()

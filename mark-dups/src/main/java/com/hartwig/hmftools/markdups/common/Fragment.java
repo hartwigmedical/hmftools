@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.markdups.common;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.NO_COORDS;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.SUPPLEMENTARY;
@@ -55,9 +57,9 @@ public class Fragment
                 mAllPrimaryReadsPresent = false;
                 mAllReadsPresent = false;
 
-                mHasLocalMate = read.getMateUnmappedFlag()
+                mHasLocalMate = !read.getMateUnmappedFlag()
                         && read.getMateReferenceName().equals(read.getReferenceName())
-                        && read.getMateAlignmentStart() - read.getAlignmentStart() < DEFAULT_POS_BUFFER_SIZE;
+                        && abs(read.getMateAlignmentStart() - read.getAlignmentStart()) < DEFAULT_POS_BUFFER_SIZE;
             }
         }
         else
@@ -201,6 +203,5 @@ public class Fragment
         return String.format("id(%s) reads(%d) status(%s) coords(%s) present(%s)", //  mate(%s:%d)
                 id(), mReads.size(), mStatus, mCoordinates.Key,
                 mAllReadsPresent ? "all" : (mAllPrimaryReadsPresent ? "primary" : "incomplete"));
-        // mReads.get(0).getMateReferenceName(), mReads.get(0).getMateAlignmentStart()
     }
 }
