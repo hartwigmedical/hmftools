@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups.umi;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarBaseLength;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
@@ -10,6 +11,7 @@ import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MISMATCH;
+import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.SUPPLEMENTARY;
 import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -19,6 +21,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.samtools.CigarUtils;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -39,7 +42,10 @@ public class ConsensusReads
     public ConsensusReadInfo createConsensusRead(final List<SAMRecord> reads, final String groupIdentifier)
     {
         if(reads.size() <= 1)
-            return null;
+        {
+            SAMRecord consensusRead = copyPrimaryRead(reads, groupIdentifier);
+            return new ConsensusReadInfo(consensusRead, SUPPLEMENTARY);
+        }
 
         boolean isForward = !reads.get(0).getReadNegativeStrandFlag();
         int maxBaseLength = 0;
@@ -90,7 +96,29 @@ public class ConsensusReads
 
         SAMRecord consensusRead = createConsensusRead(consensusState, reads, groupIdentifier);
 
+        if(mBaseBuilder.config().Debug)
+            consensusRead.setMappingQuality(0);
+
+        // sanity check the read
+        if(!isValidConsensusRead(consensusRead))
+        {
+            MD_LOGGER.error("invalid consensus read: umi({}) read: {}", groupIdentifier, readToString(consensusRead));
+        }
+
         return new ConsensusReadInfo(consensusRead, consensusState.outcome());
+    }
+
+    private boolean isValidConsensusRead(final SAMRecord consensusRead)
+    {
+        int baseLength = consensusRead.getReadBases().length;
+
+        if(consensusRead.getBaseQualities().length != baseLength)
+            return false;
+
+        if(cigarBaseLength(consensusRead.getCigar()) != baseLength)
+            return false;
+
+        return true;
     }
 
     protected static String formReadId(final String templateReadId, final String groupIdentifier)

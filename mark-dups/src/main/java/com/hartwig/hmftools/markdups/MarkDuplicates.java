@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.markdups;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
@@ -77,9 +78,11 @@ public class MarkDuplicates
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
 
+        int maxLogFragments = (mConfig.RunChecks || mConfig.PerfDebug) ? 100 : 0;
         for(PartitionData partitionData : partitionDataStore.partitions())
         {
-            List<Fragment> fragments = partitionData.extractRemainingFragments();
+            List<Fragment> fragments = partitionData.extractRemainingFragments(maxLogFragments > 0);
+            maxLogFragments = max(0, maxLogFragments - fragments.size());
             recordWriter.writeFragments(fragments);
         }
 

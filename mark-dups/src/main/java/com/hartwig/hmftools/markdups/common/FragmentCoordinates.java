@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.markdups.common;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 public class FragmentCoordinates
@@ -10,10 +11,7 @@ public class FragmentCoordinates
 
     public static final FragmentCoordinates NO_COORDS = new FragmentCoordinates("", 0, true);
 
-    public FragmentCoordinates(final String key, final int initialPosition)
-    {
-        this(key, initialPosition, false);
-    }
+    public FragmentCoordinates(final String key, final int initialPosition) { this(key, initialPosition, false); }
 
     public FragmentCoordinates(final String key, final int initialPosition, boolean incomplete)
     {
@@ -30,5 +28,15 @@ public class FragmentCoordinates
     public static String formCoordinate(final String chromosome, final int position, final boolean isForward)
     {
         return isForward ? format("%s_%d", chromosome, position) : format("%s_%d_R", chromosome, position);
+    }
+
+    public static String formKey(final String firstCoord, final String secondCoord, final boolean firstForward)
+    {
+        return firstForward ? format("%s_%s", firstCoord, secondCoord) : format("%s_%s_N", firstCoord, secondCoord);
+    }
+
+    public static String formKey(final String readCoord, final int insertSize)
+    {
+        return format("%s_%d", readCoord, abs(insertSize));
     }
 }

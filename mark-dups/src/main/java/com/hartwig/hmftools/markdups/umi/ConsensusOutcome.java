@@ -6,7 +6,8 @@ public enum ConsensusOutcome
     ALIGNMENT_ONLY,
     INDEL_MATCH,
     INDEL_MISMATCH,
-    INDEL_FAIL;
+    INDEL_FAIL,
+    SUPPLEMENTARY;
 
     public boolean valid() { return this != INDEL_FAIL; }
 }

@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.common.Constants.MAX_UMI_BASE_DIFF;
+import static com.hartwig.hmftools.markdups.common.FragmentUtils.getUnclippedPosition;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -130,7 +131,16 @@ public class UmiGroup
             if(mFragments.isEmpty()) // to avoid writing cached fragment reads twice
                 reads.addAll(readGroup);
 
-            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(readGroup, mId);
+            ConsensusReadInfo consensusReadInfo;
+            if(i == ReadLegType.PRIMARY_SUPPLEMENTARY.ordinal() || i == ReadLegType.MATE_SUPPLEMENTARY.ordinal())
+            {
+                consensusReadInfo = consensusReads.createConsensusRead(findConsistentSupplementaries(readGroup), mId);
+            }
+            else
+            {
+                consensusReadInfo = consensusReads.createConsensusRead(readGroup, mId);
+            }
+
             reads.add(consensusReadInfo.ConsensusRead);
 
             readGroup.clear();
@@ -141,6 +151,34 @@ public class UmiGroup
             mFragments.clear();
 
         return reads;
+    }
+
+    private List<SAMRecord> findConsistentSupplementaries(final List<SAMRecord> readGroup)
+    {
+        Map<Integer,Integer> posCounts = Maps.newHashMap();
+        for(SAMRecord read : readGroup)
+        {
+            int unclippedPos = getUnclippedPosition(read);
+            Integer count = posCounts.get(unclippedPos);
+            posCounts.put(unclippedPos, count != null ? count + 1 : 1);
+        }
+
+        if(posCounts.size() == 1)
+            return readGroup;
+
+        int maxPos = 0;
+        int maxCount = 0;
+        for(Map.Entry<Integer,Integer> entry : posCounts.entrySet())
+        {
+            if(entry.getValue() > maxCount)
+            {
+                maxPos = entry.getKey();
+                maxCount = entry.getValue();
+            }
+        }
+
+        int finalMaxPos = maxPos;
+        return readGroup.stream().filter(x -> getUnclippedPosition(x) == finalMaxPos).collect(Collectors.toList());
     }
 
     public List<String> getReadIds()
@@ -263,7 +301,7 @@ public class UmiGroup
 
                 for(UmiGroup existing : cluster)
                 {
-                    if(existing.fragmentCount() >= second.fragmentCount() && !exceedsUmiIdDiff(existing.mId, second.mId))
+                    if(existing.fragmentCount() >= second.fragmentCount() && !exceedsUmiIdDiff(existing.id(), second.id()))
                     {
                         merged = true;
                         break;

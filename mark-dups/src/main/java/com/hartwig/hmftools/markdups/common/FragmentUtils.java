@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.formCoordinate;
+import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.formKey;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
@@ -79,9 +80,8 @@ public class FragmentUtils
         if(!firstRead.getReadPairedFlag() || firstRead.getReadUnmappedFlag() || firstRead.getMateUnmappedFlag())
         {
             // include the fragment length
-            return new FragmentCoordinates(format("%s_%d", readCoordStr, abs(firstRead.getInferredInsertSize())), readStrandPosition);
+            return new FragmentCoordinates(formKey(readCoordStr, firstRead.getInferredInsertSize()), readStrandPosition);
         }
-
 
         if(mateRead == null)
         {
@@ -90,6 +90,8 @@ public class FragmentUtils
         }
 
         boolean mateForwardStrand = !firstRead.getMateNegativeStrandFlag();
+        boolean firstReadForward = firstRead.getFirstOfPairFlag() ? readForwardStrand : mateForwardStrand;
+
         int mateCoordinate;
 
         if(mateRead != null)
@@ -118,8 +120,8 @@ public class FragmentUtils
         }
 
         return readLowerPos ?
-                new FragmentCoordinates(readCoordStr + "_" + mateCoordStr, readStrandPosition)
-                : new FragmentCoordinates(mateCoordStr + "_" + readCoordStr, mateStrandPosition);
+                new FragmentCoordinates(formKey(readCoordStr, mateCoordStr, firstReadForward), readStrandPosition)
+                : new FragmentCoordinates(formKey(mateCoordStr, readCoordStr, firstReadForward), mateStrandPosition);
     }
 
     public static FragmentStatus calcFragmentStatus(final Fragment first, final Fragment second)

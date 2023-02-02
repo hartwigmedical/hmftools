@@ -18,6 +18,7 @@ import org.apache.commons.cli.Options;
 public class UmiConfig
 {
     public final boolean Enabled;
+    public final boolean Debug;
 
     private int mUmiLength; // set and accessed in a thread-safe way
 
@@ -26,13 +27,17 @@ public class UmiConfig
     // config options
     private static final String UMI_ENABLED = "umi_enabled";
     private static final String UMI_DEFINED_IDS = "umi_defined_ids";
+    private static final String UMI_DEBUG = "umi_debug";
 
     public static final char READ_ID_DELIM = ':';
     public static final String READ_ID_DELIM_STR = String.valueOf(READ_ID_DELIM);
 
-    public UmiConfig(boolean enabled)
+    public UmiConfig(boolean enabled) { this(enabled, false); }
+
+    public UmiConfig(boolean enabled, boolean debug)
     {
         Enabled = enabled;
+        Debug = debug;
         mUmiLength = 0;
         mDefinedUmis = Sets.newHashSet();
     }
@@ -42,7 +47,7 @@ public class UmiConfig
 
     public static UmiConfig from(final CommandLine cmd)
     {
-        UmiConfig umiConfig = new UmiConfig(cmd.hasOption(UMI_ENABLED));
+        UmiConfig umiConfig = new UmiConfig(cmd.hasOption(UMI_ENABLED), cmd.hasOption(UMI_DEBUG));
 
         String definedUmiIdsFilename = cmd.getOptionValue(UMI_DEFINED_IDS);
 
@@ -107,6 +112,7 @@ public class UmiConfig
     public static void addCommandLineOptions(final Options options)
     {
         options.addOption(UMI_ENABLED, false, "Use UMIs for duplicates");
+        options.addOption(UMI_DEBUG, false, "Debug options for UMIs");
         options.addOption(UMI_DEFINED_IDS, true, "Optional set of defined UMI IDs in file");
     }
 }

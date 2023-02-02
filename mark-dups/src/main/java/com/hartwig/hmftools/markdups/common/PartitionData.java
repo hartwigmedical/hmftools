@@ -425,7 +425,7 @@ public class PartitionData
 
     private boolean umiEnabled() { return mDuplicateGroups.umiConfig().Enabled; }
 
-    public List<Fragment> extractRemainingFragments()
+    public List<Fragment> extractRemainingFragments(boolean logCachedReads)
     {
         List<Fragment> remainingFragments = mIncompleteFragments.values().stream().collect(Collectors.toList());
 
@@ -435,7 +435,7 @@ public class PartitionData
         // not under lock since called only when all partitions are complete
         MD_LOGGER.debug("partition({}) final state: {}", mChrPartition, cacheCountsStr());
 
-        if(MD_LOGGER.isDebugEnabled())
+        if(logCachedReads && MD_LOGGER.isDebugEnabled())
         {
             // log some remaining cached fragments to help with debug
             int logCount = 0;
@@ -477,6 +477,7 @@ public class PartitionData
         mFragmentStatus.clear();
         mIncompleteFragments.clear();
         mCandidateDuplicatesMap.clear();
+        mUmiGroups.clear();
 
         return remainingFragments;
     }

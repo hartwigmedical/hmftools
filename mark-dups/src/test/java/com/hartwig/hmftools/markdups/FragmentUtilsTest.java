@@ -126,14 +126,16 @@ public class FragmentUtilsTest
         assertEquals("1_200_2_100", fragmentCoords.Key);
         assertEquals(200, fragmentCoords.InitialPosition);
 
-        // mate in earlier position
+        // mate in earlier position, and fragment reversed
         read = createSamRecord(TEST_READ_ID, CHR_1, 200, TEST_READ_BASES, "100M", CHR_1, 100,
                 false, false, null);
         read.setMateNegativeStrandFlag(true);
+        read.setSecondOfPairFlag(true);
+        read.setFirstOfPairFlag(false);
         read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
 
         fragmentCoords = getFragmentCoordinates(read);
-        assertEquals("1_199_R_1_200", fragmentCoords.Key);
+        assertEquals("1_199_R_1_200_N", fragmentCoords.Key);
         assertEquals(-199, fragmentCoords.InitialPosition);
 
         // unmapped mate
@@ -144,6 +146,15 @@ public class FragmentUtilsTest
         fragmentCoords = getFragmentCoordinates(read);
         assertEquals("1_100_400", fragmentCoords.Key);
         assertEquals(100, fragmentCoords.InitialPosition);
+
+        // fragment reversed
+        read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "100M", "", 0,
+                true, false, null);
+        read.setInferredInsertSize(400);
+
+        fragmentCoords = getFragmentCoordinates(read);
+        assertEquals("1_199_R_400", fragmentCoords.Key);
+        assertEquals(-199, fragmentCoords.InitialPosition);
 
         // missing mate CIGAR attribute
         read = createSamRecord(TEST_READ_ID, CHR_1, 200, TEST_READ_BASES, "100M", CHR_1, 100,

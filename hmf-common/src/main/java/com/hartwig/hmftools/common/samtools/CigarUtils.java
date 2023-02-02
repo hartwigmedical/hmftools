@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.samtools;
 
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.N;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,6 +36,11 @@ public final class CigarUtils
         }
 
         return cigar;
+    }
+
+    public static int cigarBaseLength(final Cigar cigar)
+    {
+        return cigar.getCigarElements().stream().filter(x -> x.getOperator() != N && x.getOperator() != D).mapToInt(x -> x.getLength()).sum();
     }
 
     public static int calcCigarLength(final String cigarStr)
