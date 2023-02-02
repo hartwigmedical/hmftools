@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
+import static com.hartwig.hmftools.isofox.common.FragmentType.FORWARD_STRAND;
+import static com.hartwig.hmftools.isofox.common.FragmentType.REVERSE_STRAND;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
@@ -33,6 +35,10 @@ public class SummaryStats
 
         double enrichedGenePercent = totalFragments > 0 ? enrichedGeneFragCount / totalFragmentsDenom : 0;
 
+        long fowardFrags = fragmentTypeCounts.typeCount(FORWARD_STRAND);
+        double totalStrandFrags = fowardFrags + fragmentTypeCounts.typeCount(REVERSE_STRAND);
+        double forwardStrandPerc = totalStrandFrags > 0 ? fowardFrags / totalStrandFrags : 0;
+
         final List<Double> fragLengths = FragmentSizeCalcs.calcPercentileData(fragmentLengths, Lists.newArrayList(0.05, 0.5, 0.95));
 
         String qcStatus = RnaStatistics.calcQcStatus(totalFragments, duplicateFragments, spliceGeneCount);
@@ -52,6 +58,7 @@ public class SummaryStats
                 .fragmentLength95thPercent(!fragLengths.isEmpty() ? fragLengths.get(2) : 0)
                 .enrichedGenePercent(enrichedGenePercent)
                 .medianGCRatio(medianGCRatio)
+                .forwardStrandPercent(forwardStrandPerc)
                 .build();
     }
 

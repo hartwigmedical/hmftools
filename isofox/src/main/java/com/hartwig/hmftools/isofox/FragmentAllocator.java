@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
@@ -17,6 +18,8 @@ import static com.hartwig.hmftools.isofox.common.FragmentMatchType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
+import static com.hartwig.hmftools.isofox.common.FragmentType.FORWARD_STRAND;
+import static com.hartwig.hmftools.isofox.common.FragmentType.REVERSE_STRAND;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
@@ -569,14 +572,23 @@ public class FragmentAllocator
 
             // now set counts for each valid transcript
             boolean isUniqueTrans = validTranscripts.size() == 1;
+            Boolean supportedGeneIsForward = null;
 
             FragmentMatchType comboTransMatchType = FragmentMatchType.SHORT;
 
-            for (int transId : validTranscripts)
+            for(int transId : validTranscripts)
             {
                 int regionCount = (int)validRegions.stream().filter(x -> x.hasTransId(transId)).count();
 
                 FragmentMatchType transMatchType;
+
+                if(supportedGeneIsForward == null)
+                {
+                    supportedGeneIsForward = findGeneStrand(read1, validTranscripts);
+
+                    if(supportedGeneIsForward == null)
+                        supportedGeneIsForward = findGeneStrand(read2, validTranscripts);
+                }
 
                 if(read1.getTranscriptClassification(transId) == SPLICE_JUNCTION || read2.getTranscriptClassification(transId) == SPLICE_JUNCTION)
                 {
@@ -636,6 +648,21 @@ public class FragmentAllocator
             }
 
             mExpressionReadTracker.processUnsplicedGenes(comboTransMatchType, overlapGenes, validTranscripts, commonMappings, minMapQuality);
+
+            if(!read1.isSecondaryAlignment() && !read2.isSecondaryAlignment() && supportedGeneIsForward != null)
+            {
+                // track fragment strandedness
+                boolean firstIsForward = read1.isFirstOfPair() ? !read1.isReadReversed() : !read2.isReadReversed();
+                boolean secondIsForward = !read1.isFirstOfPair() ? !read1.isReadReversed() : !read2.isReadReversed();
+
+                if(firstIsForward != secondIsForward)
+                {
+                    if(firstIsForward == supportedGeneIsForward)
+                        mCurrentGenes.addCount(FORWARD_STRAND, 1);
+                    else
+                        mCurrentGenes.addCount(REVERSE_STRAND, 1);
+                }
+            }
         }
 
         if(!read1.isSecondaryAlignment() && !read2.isSecondaryAlignment())
@@ -651,6 +678,27 @@ public class FragmentAllocator
                 writeReadData(mReadDataWriter, geneReadData, 1, read2, read1, fragmentType, validTranscripts.size());
             }
         }
+    }
+
+    private Boolean findGeneStrand(final ReadRecord read, final List<Integer> transcripts)
+    {
+        for(int transId : transcripts)
+        {
+            for(RegionReadData regionReadData : read.getMappedRegions().keySet())
+            {
+                TransExonRef transExonRef = regionReadData.getTransExonRefs().stream().filter(x -> x.TransId == transId).findFirst().orElse(null);
+                if(transExonRef != null)
+                {
+                    GeneReadData geneData = mCurrentGenes.genes().stream()
+                            .filter(x -> x.GeneData.GeneId.equals(transExonRef.GeneId)).findFirst().orElse(null);
+
+                    if(geneData != null)
+                        return geneData.GeneData.Strand == POS_ORIENT;
+                }
+            }
+        }
+
+        return null;
     }
 
     private int calcFragmentLength(int transId, final ReadRecord read1, final ReadRecord read2)

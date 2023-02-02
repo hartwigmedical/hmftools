@@ -224,13 +224,13 @@ public final class LinxGermlineSv
         final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
         lines.remove(0);
 
-        List<LinxGermlineSv> deletions = Lists.newArrayList();
+        List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
 
         for(final String line : lines)
         {
             String[] values = line.split(DELIMITER, -1);
 
-            deletions.add(new LinxGermlineSv(
+            germlineSVs.add(new LinxGermlineSv(
                     values[fieldsIndexMap.get("chromosomeStart")],
                     values[fieldsIndexMap.get("chromosomeEnd")],
                     getIntValue(fieldsIndexMap, "positionStart", values),
@@ -269,6 +269,6 @@ public final class LinxGermlineSv
                     Boolean.parseBoolean(values[fieldsIndexMap.get("reported")])));
         }
 
-        return deletions;
+        return germlineSVs;
     }
 }

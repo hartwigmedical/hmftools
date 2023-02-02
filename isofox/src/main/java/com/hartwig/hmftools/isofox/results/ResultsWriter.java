@@ -12,7 +12,9 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.UNMAPPED_READS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
+import static com.hartwig.hmftools.isofox.common.FragmentType.FORWARD_STRAND;
 import static com.hartwig.hmftools.isofox.common.FragmentType.LOW_MAP_QUAL;
+import static com.hartwig.hmftools.isofox.common.FragmentType.REVERSE_STRAND;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
@@ -235,6 +237,7 @@ public class ResultsWriter
             mGeneCollectionWriter = createBufferedWriter(outputFileName, false);
             mGeneCollectionWriter.write("GeneSetId,GeneCount,Chromosome,RangeStart,RangeEnd");
             mGeneCollectionWriter.write(",TotalFragments,Duplicates,SupportingTrans,Unspliced,AltSJ,Chimeric,LowMapQual");
+            mGeneCollectionWriter.write(",ForwardStrand,ReverseStrand");
             mGeneCollectionWriter.write(",Genes");
             mGeneCollectionWriter.newLine();
         }
@@ -257,10 +260,11 @@ public class ResultsWriter
 
             final FragmentTypeCounts fragmentCounts = geneCollection.fragmentTypeCounts();
 
-            mGeneCollectionWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
+            mGeneCollectionWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d",
                     fragmentCounts.typeCount(TOTAL), fragmentCounts.typeCount(DUPLICATE), fragmentCounts.typeCount(TRANS_SUPPORTING),
                     fragmentCounts.typeCount(UNSPLICED), fragmentCounts.typeCount(ALT),
-                    fragmentCounts.typeCount(CHIMERIC), fragmentCounts.typeCount(LOW_MAP_QUAL)));
+                    fragmentCounts.typeCount(CHIMERIC), fragmentCounts.typeCount(LOW_MAP_QUAL),
+                    fragmentCounts.typeCount(FORWARD_STRAND), fragmentCounts.typeCount(REVERSE_STRAND)));
 
             mGeneCollectionWriter.write(String.format(",%s", geneCollection.geneNames(geneCollection.genes().size())));
 

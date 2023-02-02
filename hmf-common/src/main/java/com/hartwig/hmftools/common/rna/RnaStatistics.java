@@ -39,6 +39,8 @@ public abstract class RnaStatistics
     // Median GC (excluding 7 highly expressed genes)
     public abstract double medianGCRatio();
 
+    public abstract double forwardStrandPercent();
+
     public abstract String qcStatus();
 
     private static final int LOW_COVERAGE_THRESHOLD = 2500000;
@@ -68,6 +70,7 @@ public abstract class RnaStatistics
                 .add("FragLength95th")
                 .add("EnrichedGenePercent")
                 .add("MedianGCRatio")
+                .add("ForwardStrandPercent")
                 .toString();
     }
 
@@ -89,6 +92,7 @@ public abstract class RnaStatistics
                 .add(String.format("%.0f", fragmentLength95thPercent()))
                 .add(String.format("%.3f", enrichedGenePercent()))
                 .add(String.format("%.3f", medianGCRatio()))
+                .add(String.format("%.3f", forwardStrandPercent()))
                 .toString();
     }
 
@@ -130,6 +134,7 @@ public abstract class RnaStatistics
                 .fragmentLength95thPercent(getDoubleValue(fieldsIndexMap, "FragLength95th", values))
                 .enrichedGenePercent(getDoubleValue(fieldsIndexMap, "EnrichedGenePercent", values))
                 .medianGCRatio(getDoubleValue(fieldsIndexMap, "MedianGCRatio", values))
+                .forwardStrandPercent(getDoubleValue(fieldsIndexMap, "ForwardStrandPercent", values))
                 .build();
     }
 
