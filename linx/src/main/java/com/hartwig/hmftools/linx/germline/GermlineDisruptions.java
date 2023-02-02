@@ -492,7 +492,7 @@ public class GermlineDisruptions
                     var.chromosome(true), var.chromosome(false),
                     var.position(true), var.position(false),
                     var.orientation(true), var.orientation(false),
-                    var.type(), allFilters.toString(), svData.event(), svData.qualityScore(),
+                    var.type(), filters.toString(), svData.event(), svData.qualityScore(),
                     svData.startHomologySequence(), svData.endHomologySequence(),
                     svData.junctionCopyNumber(), svData.adjustedStartAF(), svData.adjustedEndAF(),
                     svData.adjustedStartCopyNumber(), svData.adjustedEndCopyNumber(),
