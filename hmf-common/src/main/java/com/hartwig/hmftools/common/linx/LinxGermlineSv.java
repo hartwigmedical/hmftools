@@ -18,6 +18,8 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 public final class LinxGermlineSv
 {
+    public final int SvId;
+    public final String VcfId;
     public final String ChromosomeStart;
     public final String ChromosomeEnd;
     public final int PositionStart;
@@ -57,8 +59,8 @@ public final class LinxGermlineSv
     public final boolean Reported;
 
     public LinxGermlineSv(
-            final String chromosomeStart, final String chromosomeEnd, final int positionStart, final int positionEnd,
-            final byte orientStart, final byte orientEnd, final StructuralVariantType type,
+            final int svId, final String vcfId, final String chromosomeStart, final String chromosomeEnd,
+            final int positionStart, final int positionEnd, final byte orientStart, final byte orientEnd, final StructuralVariantType type,
             final String filter, final String eventId, final double qualScore,
             final String homologyStart, final String homologyEnd, final double junctionCopyNumber,
             final double adjustedAFStart, final double adjustedAFEnd, final double adjustedCopyNumberStart, final double adjustedCopyNumberEnd,
@@ -69,6 +71,8 @@ public final class LinxGermlineSv
             final String geneName, final int clusterId, final int clusterCount, final String resolvedType,
             final String linkedByStart, final String linkedByEnd, final int cohortFrequency, final boolean reported)
     {
+        SvId = svId;
+        VcfId = vcfId;
         ChromosomeStart = chromosomeStart;
         ChromosomeEnd = chromosomeEnd;
         PositionStart = positionStart;
@@ -136,6 +140,8 @@ public final class LinxGermlineSv
     private static String header()
     {
         return new StringJoiner(DELIMITER, "", "")
+                .add("svId")
+                .add("vcfId")
                 .add("chromosomeStart")
                 .add("chromosomeEnd")
                 .add("positionStart")
@@ -176,46 +182,48 @@ public final class LinxGermlineSv
                 .toString();
     }
 
-    private static String toString(final LinxGermlineSv disruption)
+    private static String toString(final LinxGermlineSv germlineSv)
     {
         return new StringJoiner(DELIMITER)
-                .add(disruption.ChromosomeStart)
-                .add(disruption.ChromosomeEnd)
-                .add(String.valueOf(disruption.PositionStart))
-                .add(String.valueOf(disruption.PositionEnd))
-                .add(String.valueOf(disruption.OrientStart))
-                .add(String.valueOf(disruption.OrientEnd))
-                .add(String.valueOf(disruption.Type))
-                .add(disruption.Filter)
-                .add(disruption.EventId)
-                .add(String.valueOf(disruption.QualScore))
-                .add(disruption.HomologyStart)
-                .add(disruption.HomologyEnd)
-                .add(String.valueOf(disruption.JunctionCopyNumber))
-                .add(String.valueOf(disruption.AdjustedAFStart))
-                .add(String.valueOf(disruption.AdjustedAFEnd))
-                .add(String.valueOf(disruption.AdjustedCopyNumberStart))
-                .add(String.valueOf(disruption.AdjustedCopyNumberEnd))
-                .add(String.valueOf(disruption.AdjustedCopyNumberChangeStart))
-                .add(String.valueOf(disruption.AdjustedCopyNumberChangeEnd))
-                .add(String.valueOf(disruption.GermlineFragments))
-                .add(String.valueOf(disruption.GermlineReferenceFragmentsStart))
-                .add(String.valueOf(disruption.GermlineReferenceFragmentsEnd))
-                .add(String.valueOf(disruption.TumorFragments))
-                .add(String.valueOf(disruption.TumorReferenceFragmentsStart))
-                .add(String.valueOf(disruption.TumorReferenceFragmentsEnd))
-                .add(disruption.InsertSequence)
-                .add(disruption.InsertSequenceAlignments)
-                .add(disruption.InsertSequenceRepeatClass)
-                .add(disruption.InsertSequenceRepeatType)
-                .add(disruption.GeneName)
-                .add(String.valueOf(disruption.ClusterId))
-                .add(String.valueOf(disruption.ClusterCount))
-                .add(disruption.ResolvedType)
-                .add(disruption.LinkedByStart)
-                .add(disruption.LinkedByEnd)
-                .add(String.valueOf(disruption.CohortFrequency))
-                .add(String.valueOf(disruption.Reported))
+                .add(String.valueOf(germlineSv.SvId))
+                .add(germlineSv.VcfId)
+                .add(germlineSv.ChromosomeStart)
+                .add(germlineSv.ChromosomeEnd)
+                .add(String.valueOf(germlineSv.PositionStart))
+                .add(String.valueOf(germlineSv.PositionEnd))
+                .add(String.valueOf(germlineSv.OrientStart))
+                .add(String.valueOf(germlineSv.OrientEnd))
+                .add(String.valueOf(germlineSv.Type))
+                .add(germlineSv.Filter)
+                .add(germlineSv.EventId)
+                .add(String.valueOf(germlineSv.QualScore))
+                .add(germlineSv.HomologyStart)
+                .add(germlineSv.HomologyEnd)
+                .add(String.valueOf(germlineSv.JunctionCopyNumber))
+                .add(String.valueOf(germlineSv.AdjustedAFStart))
+                .add(String.valueOf(germlineSv.AdjustedAFEnd))
+                .add(String.valueOf(germlineSv.AdjustedCopyNumberStart))
+                .add(String.valueOf(germlineSv.AdjustedCopyNumberEnd))
+                .add(String.valueOf(germlineSv.AdjustedCopyNumberChangeStart))
+                .add(String.valueOf(germlineSv.AdjustedCopyNumberChangeEnd))
+                .add(String.valueOf(germlineSv.GermlineFragments))
+                .add(String.valueOf(germlineSv.GermlineReferenceFragmentsStart))
+                .add(String.valueOf(germlineSv.GermlineReferenceFragmentsEnd))
+                .add(String.valueOf(germlineSv.TumorFragments))
+                .add(String.valueOf(germlineSv.TumorReferenceFragmentsStart))
+                .add(String.valueOf(germlineSv.TumorReferenceFragmentsEnd))
+                .add(germlineSv.InsertSequence)
+                .add(germlineSv.InsertSequenceAlignments)
+                .add(germlineSv.InsertSequenceRepeatClass)
+                .add(germlineSv.InsertSequenceRepeatType)
+                .add(germlineSv.GeneName)
+                .add(String.valueOf(germlineSv.ClusterId))
+                .add(String.valueOf(germlineSv.ClusterCount))
+                .add(germlineSv.ResolvedType)
+                .add(germlineSv.LinkedByStart)
+                .add(germlineSv.LinkedByEnd)
+                .add(String.valueOf(germlineSv.CohortFrequency))
+                .add(String.valueOf(germlineSv.Reported))
                 .toString();
     }
 
@@ -231,6 +239,8 @@ public final class LinxGermlineSv
             String[] values = line.split(DELIMITER, -1);
 
             germlineSVs.add(new LinxGermlineSv(
+                    getIntValue(fieldsIndexMap, "svId", values),
+                    getValue(fieldsIndexMap, "vcfId", "", values),
                     values[fieldsIndexMap.get("chromosomeStart")],
                     values[fieldsIndexMap.get("chromosomeEnd")],
                     getIntValue(fieldsIndexMap, "positionStart", values),

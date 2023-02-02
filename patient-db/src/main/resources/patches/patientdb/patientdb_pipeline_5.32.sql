@@ -28,6 +28,8 @@ CREATE TABLE driverGenePanel
 
 ALTER TABLE structuralVariantGermline
     DROP COLUMN gene,
+    ADD COLUMN svId INT NOT NULL after sampleId,
+    ADD COLUMN vcfId varchar(50) NOT NULL after svId,
     ADD COLUMN homologySequenceStart varchar(255) not null after qualScore,
     ADD COLUMN homologySequenceEnd varchar(255) after startHomologySequence,
     ADD COLUMN junctionCopyNumber DOUBLE PRECISION after endHomologySequence,
