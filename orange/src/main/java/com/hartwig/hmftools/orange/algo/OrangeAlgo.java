@@ -187,6 +187,7 @@ public class OrangeAlgo {
         OrangeReport report = ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
                 .experimentDate(config.experimentDate())
+                .experimentType(config.experimentType())
                 .configuredPrimaryTumor(configuredPrimaryTumor)
                 .refGenomeVersion(config.refGenomeVersion())
                 .platinumVersion(platinumVersion)

@@ -35,6 +35,9 @@ public abstract class OrangeReport {
     public abstract LocalDate experimentDate();
 
     @NotNull
+    public abstract ExperimentType experimentType();
+
+    @NotNull
     public abstract Set<DoidNode> configuredPrimaryTumor();
 
     @NotNull
