@@ -183,7 +183,7 @@ public class NeoSampleTask implements Callable
 
                 for (VariantContext variant : reader.iterator())
                 {
-                    if (filter.test(variant))
+                    if(filter.test(variant))
                     {
                         final SomaticVariant somaticVariant = variantFactory.createVariant(mSampleData.Id, variant).orElse(null);
 
@@ -235,7 +235,7 @@ public class NeoSampleTask implements Callable
 
             String line = fileReader.readLine();
 
-            if (line == null)
+            if(line == null)
             {
                 NE_LOGGER.error("empty Linx neo-epitope file({})", filename);
                 return fusions;
@@ -243,7 +243,7 @@ public class NeoSampleTask implements Callable
 
             int neCount = 0;
 
-            while ((line = fileReader.readLine()) != null)
+            while((line = fileReader.readLine()) != null)
             {
                 final String[] items = line.split(DELIMITER, -1);
 

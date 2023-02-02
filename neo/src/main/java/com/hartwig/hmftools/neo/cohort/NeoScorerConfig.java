@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
@@ -35,6 +36,8 @@ public class NeoScorerConfig
     public final double SimilarityThreshold;
     public final int Threads;
 
+    public static final String SAMPLE = "sample";
+    public static final String SAMPLE_DATA_DIR = "sample_data_dir";
     public static final String NEO_DATA_DIR = "neo_data_dir";
     public static final String LILAC_DATA_DIR = "lilac_data_dir";
     public static final String PREDICTION_DATA_DIR = "mcf_prediction_dir";
@@ -48,18 +51,32 @@ public class NeoScorerConfig
 
     public NeoScorerConfig(final CommandLine cmd)
     {
-        SampleIds = loadSampleIdsFile(cmd);
+        if(cmd.hasOption(SAMPLE))
+            SampleIds = Lists.newArrayList(cmd.getOptionValue(SAMPLE));
+        else
+            SampleIds = loadSampleIdsFile(cmd);
 
-        NeoDataDir = cmd.getOptionValue(NEO_DATA_DIR);
-        LilacDataDir = cmd.getOptionValue(LILAC_DATA_DIR);
-        IsofoxDataDir = cmd.getOptionValue(ISF_DATA_DIR);
+        if(cmd.hasOption(SAMPLE_DATA_DIR))
+        {
+            String sampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
+            NeoDataDir = sampleDataDir;
+            LilacDataDir = sampleDataDir;
+            IsofoxDataDir = sampleDataDir;
+            OutputDir = sampleDataDir;
+        }
+        else
+        {
+            NeoDataDir = cmd.getOptionValue(NEO_DATA_DIR);
+            LilacDataDir = cmd.getOptionValue(LILAC_DATA_DIR);
+            IsofoxDataDir = cmd.getOptionValue(ISF_DATA_DIR);
+            OutputDir = parseOutputDir(cmd);
+        }
 
         SampleTranscriptExpressionFile = cmd.getOptionValue(SAMPLE_TRANS_EXP_FILE);
 
         LikelihoodThreshold = Double.parseDouble(cmd.getOptionValue(LIKELIHOOD_THRESHOLD, "0.02"));
         SimilarityThreshold = Double.parseDouble(cmd.getOptionValue(SIMILARITY_THRESHOLD, "10"));
 
-        OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
         Threads = parseThreads(cmd);
 
@@ -74,15 +91,27 @@ public class NeoScorerConfig
 
     public String formFilename(final String fileId)
     {
-        if(OutputId == null || OutputId.isEmpty())
-            return String.format("%sneo_cohort_%s.csv", OutputDir, fileId);
+        String filename = OutputDir;
+
+        if(SampleIds.size() == 1)
+            filename += SampleIds.get(0) + ".neo";
         else
-            return String.format("%sneo_cohort_%s_%s.csv", OutputDir, OutputId, fileId);
+            filename += "neo_cohort";
+
+        if(OutputId != null && !OutputId.isEmpty())
+            filename += "." + OutputId;
+
+        filename += "." + fileId;
+        filename += ".csv";
+
+        return filename;
     }
 
     public static void addCmdLineArgs(Options options)
     {
         addSampleIdFile(options);
+        options.addOption(SAMPLE, true, "Sample ID for single sample");
+        options.addOption(SAMPLE_DATA_DIR, true, "Directory for sample files");
         options.addOption(NEO_DATA_DIR, true, "Directory for sample neo-epitope files");
         options.addOption(PREDICTION_DATA_DIR, true, "Directory for sample prediction result files");
         options.addOption(LILAC_DATA_DIR, true, "Directory for Lilac coverage files");
