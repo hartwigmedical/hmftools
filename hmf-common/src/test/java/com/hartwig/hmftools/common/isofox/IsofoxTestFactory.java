@@ -37,7 +37,8 @@ public final class IsofoxTestFactory {
                 .fragmentLength50thPercent(0D)
                 .fragmentLength95thPercent(0D)
                 .enrichedGenePercent(0D)
-                .medianGCRatio(0D);
+                .medianGCRatio(0D)
+                .forwardStrandPercent(0D);
     }
 
     @NotNull
