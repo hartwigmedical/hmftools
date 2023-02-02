@@ -324,13 +324,12 @@ public class GermlineDeletions
 
             if(positionsOverlap(geneData.GeneStart, geneData.GeneEnd, regionLowerPos, regionHighPos))
             {
+                overlappingGenes.add(geneData);
+
                 DriverGene driverGene = mDriverGenes.stream().filter(y -> y.gene().equals(geneData.GeneName)).findFirst().orElse(null);
 
                 if(driverGene != null)
-                {
                     driverGenes.add(driverGene);
-                    overlappingGenes.add(geneData);
-                }
             }
         }
 
@@ -411,7 +410,7 @@ public class GermlineDeletions
             GeneData geneData = overlappingGenes.stream().filter(x -> x.GeneId.equals(transData.GeneId)).findFirst().orElse(null);
             DriverGene driverGene = driverGenes.stream().filter(x -> x.gene().equals(geneData.GeneName)).findFirst().orElse(null);
 
-            boolean reported = filters.isEmpty() && driverGene.reportGermlineDisruption();
+            boolean reported = filters.isEmpty() && driverGene != null && driverGene.reportGermlineDisruption();
 
             if(!reported)
                 continue;
