@@ -61,7 +61,7 @@ public class DriverGenePanelDAO {
                     driverGene.reportGermlineVariant().toString(),
                     driverGene.reportGermlineHotspot().toString(),
                     driverGene.likelihoodType().toString(),
-                    driverGene.reportGermlineDisruption(),
+                    driverGene.reportGermlineDisruption().toString(),
                     DatabaseUtil.checkStringLength(altTrans.toString(), DRIVERGENEPANEL.ADDITIONALREPORTEDTRANSCRIPTS),
                     driverGene.reportPGX());
         }

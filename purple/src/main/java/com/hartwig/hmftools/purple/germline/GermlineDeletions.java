@@ -3,6 +3,10 @@ package com.hartwig.hmftools.purple.germline;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.drivercatalog.AmplificationDrivers.MAX_COPY_NUMBER_DEL;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.ANY;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.NONE;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.VARIANT_NOT_LOST;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.WILDTYPE_LOST;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
@@ -309,6 +313,9 @@ public class GermlineDeletions
         int regionLowerPos = adjustPosStart - GERMLINE_DEL_GENE_BUFFER;
         int regionHighPos = adjustPosEnd + GERMLINE_DEL_GENE_BUFFER;
 
+        double tumorCopyNumber = region.refNormalisedCopyNumber();
+        GermlineStatus tumorStatus = tumorCopyNumber < 0.5 ? HOM_DELETION : HET_DELETION;
+
         // find overlapping driver genes
         List<GeneData> overlappingGenes = Lists.newArrayList();
         List<DriverGene> driverGenes = Lists.newArrayList();
@@ -329,11 +336,17 @@ public class GermlineDeletions
                 DriverGene driverGene = mDriverGenes.stream().filter(y -> y.gene().equals(geneData.GeneName)).findFirst().orElse(null);
 
                 if(driverGene != null)
-                    driverGenes.add(driverGene);
+                {
+                    // check requirements on the germline disruption field
+                    if(driverGene.reportGermlineDisruption() == ANY || driverGene.reportGermlineDisruption() == VARIANT_NOT_LOST)
+                        driverGenes.add(driverGene);
+                    else if(driverGene.reportGermlineDisruption() == WILDTYPE_LOST && tumorStatus == HOM_DELETION)
+                        driverGenes.add(driverGene);
+                }
             }
         }
 
-        if(overlappingGenes.isEmpty() && driverGenes.isEmpty())
+        if(overlappingGenes.isEmpty())
             return;
 
         int cohortFrequency = mCohortFrequency.getRegionFrequency(
@@ -378,8 +391,6 @@ public class GermlineDeletions
             return;
 
         double germlineCopyNumber = region.observedNormalRatio() * 2;
-        double tumorCopyNumber = region.refNormalisedCopyNumber();
-        GermlineStatus tumorStatus = tumorCopyNumber < 0.5 ? HOM_DELETION : HET_DELETION;
 
         String filter;
 
@@ -394,7 +405,8 @@ public class GermlineDeletions
             filter = sj.toString();
         }
 
-        boolean anyReported = filters.isEmpty() && driverGenes.stream().anyMatch(x -> x.reportGermlineDisruption());
+        // WILDTYPE_LOST - requires an LOH for the deletion to be reportable
+        boolean anyReported = filters.isEmpty() && !driverGenes.isEmpty();
 
         for(GeneData geneData : deletedGenes)
         {
@@ -410,7 +422,7 @@ public class GermlineDeletions
             GeneData geneData = overlappingGenes.stream().filter(x -> x.GeneId.equals(transData.GeneId)).findFirst().orElse(null);
             DriverGene driverGene = driverGenes.stream().filter(x -> x.gene().equals(geneData.GeneName)).findFirst().orElse(null);
 
-            boolean reported = filters.isEmpty() && driverGene != null && driverGene.reportGermlineDisruption();
+            boolean reported = filters.isEmpty() && driverGene != null;
 
             if(!reported)
                 continue;

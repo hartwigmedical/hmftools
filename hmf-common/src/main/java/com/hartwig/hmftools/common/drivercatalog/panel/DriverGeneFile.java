@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.ANY;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.NONE;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -72,6 +74,16 @@ public final class DriverGeneFile
                     .filter(x -> !x.isEmpty())
                     .collect(Collectors.toList());
 
+            String reportGermlineDisruptionStr = values[germlineDisruptionIndex];
+            DriverGeneGermlineReporting reportGermlineDisruption;
+
+            if(reportGermlineDisruptionStr.toLowerCase().equals(Boolean.TRUE.toString()))
+                reportGermlineDisruption = ANY;
+            else if(reportGermlineDisruptionStr.toLowerCase().equals(Boolean.FALSE.toString()))
+                reportGermlineDisruption = NONE;
+            else
+                reportGermlineDisruption = DriverGeneGermlineReporting.valueOf(reportGermlineDisruptionStr);
+
             builder.gene(values[geneIndex])
                     .reportMissenseAndInframe(Boolean.parseBoolean(values[missenseIndex]))
                     .reportNonsenseAndFrameshift(Boolean.parseBoolean(values[nonsenseIndex]))
@@ -83,7 +95,7 @@ public final class DriverGeneFile
                     .likelihoodType(DriverCategory.valueOf(values[likelihoodTypeIndex]))
                     .reportGermlineVariant(DriverGeneGermlineReporting.valueOf(values[germlineVariantIndex].toUpperCase()))
                     .reportGermlineHotspot(DriverGeneGermlineReporting.valueOf(values[germlineHotspotIndex].toUpperCase()))
-                    .reportGermlineDisruption(Boolean.parseBoolean(values[germlineDisruptionIndex]))
+                    .reportGermlineDisruption(reportGermlineDisruption)
                     .additionalReportedTranscripts(otherReportableTrans)
                     .reportPGX(reportPGXIndex != null ? Boolean.parseBoolean(values[reportPGXIndex]) : false);
 

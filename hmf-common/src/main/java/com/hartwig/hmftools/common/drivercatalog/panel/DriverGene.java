@@ -38,7 +38,8 @@ public interface DriverGene extends Comparable<DriverGene>
     @NotNull
     DriverCategory likelihoodType();
 
-    boolean reportGermlineDisruption();
+    @NotNull
+    DriverGeneGermlineReporting reportGermlineDisruption();
 
     List<String> additionalReportedTranscripts();
 

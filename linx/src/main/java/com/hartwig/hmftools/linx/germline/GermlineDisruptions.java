@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_GERMLINE;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.NONE;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.DOWNSTREAM;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
@@ -90,7 +91,7 @@ public class GermlineDisruptions
                 .collect(Collectors.toList());
 
         mReportableGeneIds = config.DriverGenes.stream()
-                .filter(x -> x.reportGermlineDisruption())
+                .filter(x -> x.reportGermlineDisruption() != NONE)
                 .map(x -> geneTransCache.getGeneDataByName(x.gene()))
                 .filter(x -> x != null)
                 .map(x -> x.GeneId)

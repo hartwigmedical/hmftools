@@ -243,7 +243,7 @@ public class PurpleInterpreter {
                     .reportSomaticHotspot(false)
                     .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
                     .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
-                    .reportGermlineDisruption(false)
+                    .reportGermlineDisruption(DriverGeneGermlineReporting.NONE)
                     .likelihoodType(DriverCategory.ONCO)
                     .reportPGX(false)
                     .build());
