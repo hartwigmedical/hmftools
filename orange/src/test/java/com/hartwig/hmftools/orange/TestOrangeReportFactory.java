@@ -34,6 +34,7 @@ import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.orange.algo.ExperimentType;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangePlots;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeSample;
@@ -68,6 +69,7 @@ public final class TestOrangeReportFactory {
         return ImmutableOrangeReport.builder()
                 .sampleId(TEST_SAMPLE)
                 .experimentDate(LocalDate.of(2021, 11, 19))
+                .experimentType(ExperimentType.PANEL)
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .tumorSample(createMinimalOrangeSample())
                 .purple(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
@@ -86,7 +88,8 @@ public final class TestOrangeReportFactory {
 
     @NotNull
     public static OrangeReport createProperTestReport() {
-        return builder().addConfiguredPrimaryTumor(DoidTestFactory.createDoidNode("1", "cancer type"))
+        return builder().experimentType(ExperimentType.WGS)
+                .addConfiguredPrimaryTumor(DoidTestFactory.createDoidNode("1", "cancer type"))
                 .platinumVersion("v5.31")
                 .refSample(createMinimalOrangeSample())
                 .germlineMVLHPerGene(createTestGermlineMVLHPerGene())

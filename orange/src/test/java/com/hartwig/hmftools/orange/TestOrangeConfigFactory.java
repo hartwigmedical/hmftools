@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.orange.algo.ExperimentType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -62,6 +63,7 @@ public final class TestOrangeConfigFactory {
                 .tumorSampleId(TUMOR_SAMPLE_ID)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
                 .experimentDate(LocalDate.now())
+                .experimentType(ExperimentType.PANEL)
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)
@@ -89,6 +91,7 @@ public final class TestOrangeConfigFactory {
     public static OrangeConfig createWGSConfigTumorOnly() {
         return ImmutableOrangeConfig.builder()
                 .from(createPanelConfig())
+                .experimentType(ExperimentType.WGS)
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .cuppaResultCsv(CUPPA_RESULT_CSV)
