@@ -130,7 +130,10 @@ public class ClusteringPrep
             }
             else
             {
-                newType = sglSvData.startOrientation() == POS_ORIENT ? DEL : DUP;
+                if((sglSvData.startOrientation() == POS_ORIENT) == (sglSvData.startPosition() < infSvData.startPosition()))
+                    newType = DEL;
+                else
+                    newType = DUP;
             }
         }
         else
