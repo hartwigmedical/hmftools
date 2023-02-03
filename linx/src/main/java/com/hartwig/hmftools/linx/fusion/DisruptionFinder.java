@@ -305,9 +305,6 @@ public class DisruptionFinder implements CohortFileInterface
             // ignore if the other breakend may be in a different gene (eg making a fusion)
             if(!otherBreakendGenes.isEmpty())
             {
-                //if(otherBreakendGenes.stream().noneMatch(x -> genesList.stream().anyMatch(y -> y.geneName().equals(x.geneName()))))
-                //    continue;
-
                 if(otherBreakendGenes.stream().anyMatch(x -> genesList.stream().anyMatch(y -> !y.geneName().equals(x.geneName()))))
                     continue;
             }

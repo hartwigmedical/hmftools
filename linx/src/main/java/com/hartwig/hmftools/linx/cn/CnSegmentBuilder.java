@@ -89,7 +89,7 @@ public class CnSegmentBuilder
 
                 SvCNData cnData = null;
 
-                if (i == 0)
+                if(i == 0)
                 {
                     if(breakend.type() == DUP && breakendList.get(i + 1).getSV() == breakend.getSV())
                     {
@@ -149,7 +149,7 @@ public class CnSegmentBuilder
 
                 double actualBaf = calcActualBaf(currentCopyNumber);
 
-                if (i < breakendList.size() - 1)
+                if(i < breakendList.size() - 1)
                 {
                     final SvBreakend nextBreakend = breakendList.get(i + 1);
 
@@ -259,7 +259,7 @@ public class CnSegmentBuilder
         double assumedBaf = 0.5;
 
         int cnId = 0;
-        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        for(final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
             final String chromosome = entry.getKey();
             final List<SvBreakend> breakendList = entry.getValue();
@@ -276,11 +276,9 @@ public class CnSegmentBuilder
                 final SvVarData var = breakend.getSV();
                 double jcn = var.jcn();
 
-                double jcnChange = -jcn * breakend.orientation();
-
                 SvCNData cnData = null;
 
-                if (i == 0)
+                if(i == 0)
                 {
                     // add telomere segment at start, and centromere as soon as the breakend crosses the centromere
                     if(breakend.arm() == Q_ARM)
@@ -307,7 +305,7 @@ public class CnSegmentBuilder
                     }
                 }
 
-                if (i < breakendList.size() - 1)
+                if(i < breakendList.size() - 1)
                 {
                     final SvBreakend nextBreakend = breakendList.get(i + 1);
 
@@ -375,8 +373,17 @@ public class CnSegmentBuilder
 
                 cnDataPair[breakend.usesStart() ? SE_START : SE_END] = cnData;
 
-                // set copy number data back into the SV
-                breakend.getSV().setCopyNumberData(breakend.usesStart(), assumedCn, jcn);
+                // set copy number data back into the SV using Purple's estimation
+                if(breakend.usesStart())
+                {
+                    breakend.getSV().setCopyNumberData(
+                            breakend.usesStart(), svData.adjustedStartCopyNumber(), svData.adjustedStartCopyNumberChange());
+                }
+                else
+                {
+                    breakend.getSV().setCopyNumberData(
+                            breakend.usesStart(), svData.adjustedEndCopyNumber(), svData.adjustedEndCopyNumberChange());
+                }
             }
         }
     }

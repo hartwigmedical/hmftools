@@ -55,7 +55,7 @@ public final class SvFileLoader
             // generate a unique ID for each SV record
             int svId = 0;
 
-            for (EnrichedStructuralVariant var : enrichedVariants)
+            for(EnrichedStructuralVariant var : enrichedVariants)
             {
                 svDataList.add(convertSvData(var, svId++));
             }
@@ -80,7 +80,7 @@ public final class SvFileLoader
 
             int svId = 0;
 
-            for (StructuralVariant var : variants)
+            for(StructuralVariant var : variants)
             {
                 svDataList.add(convertGermlineSvData(var, svId++));
             }
@@ -101,7 +101,7 @@ public final class SvFileLoader
     {
         List<SvVarData> svDataItems = Lists.newArrayList();
 
-        for (final StructuralVariantData svRecord : svRecords)
+        for(final StructuralVariantData svRecord : svRecords)
         {
             final String filter = svRecord.filter();
 
