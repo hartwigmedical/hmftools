@@ -185,7 +185,7 @@ public class MarkDuplicates
     public static void main(@NotNull final String[] args)
     {
         final VersionInfo version = new VersionInfo("mark-dups.version");
-        MD_LOGGER.info("BamTools version: {}", version.version());
+        MD_LOGGER.info("MarkDups version: {}", version.version());
 
         final Options options = MarkDupsConfig.createCmdLineOptions();
 
