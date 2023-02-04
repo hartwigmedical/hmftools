@@ -17,8 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import javax.sound.midi.SysexMessage;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -500,7 +498,7 @@ public class SampleAnalyser implements Callable
         CnSegmentBuilder cnSegmentBuilder = new CnSegmentBuilder();
         cnSegmentBuilder.setAllelePloidies(1, 1);
 
-        cnSegmentBuilder.createIndependentCopyNumberData(mCnDataLoader, mAnalyser.getState().getChrBreakendMap());
+        cnSegmentBuilder.createGermlineCopyNumberData(mCnDataLoader, mAnalyser.getState().getChrBreakendMap());
 
         cnSegmentBuilder.setSamplePurity(mCnDataLoader, 1, 2, MALE);
 

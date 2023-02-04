@@ -44,7 +44,7 @@ public class LinxOutput
         {
             WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA) || defaultWrite;
             WriteSvData = cmd.hasOption(WRITE_SV_DATA) || defaultWrite;
-            WriteClusterHistory = cmd.hasOption(WRITE_CLUSTER_HISTORY) || defaultWrite;
+            WriteClusterHistory = cmd.hasOption(WRITE_CLUSTER_HISTORY);
             WriteSingleSVClusters = cmd.hasOption(WRITE_SINGLE_SV_CLUSTERS) || defaultWrite;
             WriteLinks = cmd.hasOption(WRITE_LINKS) || defaultWrite;
         }

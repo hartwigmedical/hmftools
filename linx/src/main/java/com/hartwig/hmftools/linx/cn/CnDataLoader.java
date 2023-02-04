@@ -162,7 +162,7 @@ public class CnDataLoader
 
         for (final StructuralVariantData svData : mSvDataList)
         {
-            if (svData.filter().equals(PON_FILTER_PON))
+            if(svData.filter().equals(PON_FILTER_PON))
                 continue;
 
             for(int be = SE_START; be <= SE_END; ++be)
@@ -188,7 +188,7 @@ public class CnDataLoader
                     if(svOrientation == 1)
                         --cnPosition;
 
-                    if (svPosition != cnPosition)
+                    if(svPosition != cnPosition)
                         continue;
 
                     if(!svData.type().toString().equals(cnData.SegStart))
@@ -307,7 +307,7 @@ public class CnDataLoader
                 boolean newChromosome = (index == 0);
                 boolean reset = newChromosome;
 
-                if (cnData.CopyNumber < TOTAL_CN_LOSS)
+                if(cnData.CopyNumber < TOTAL_CN_LOSS)
                 {
                     // record homozygous loss
                     final SvCNData nextCnData = index < cnDataList.size() - 1 ? cnDataList.get(index + 1) : null;
@@ -329,27 +329,27 @@ public class CnDataLoader
                         lohHomLossEvents.add(homLoss);
                 }
 
-                if (isLohSection || lohOnStartTelomere)
+                if(isLohSection || lohOnStartTelomere)
                 {
                     boolean lohRegained = (minCN >= MIN_LOH_CN);
 
                     // check that an SV with correct orientation exists here
-                    if (lohRegained && cnData.matchesSV(true) && findSvData(cnData, -1) == null)
+                    if(lohRegained && cnData.matchesSV(true) && findSvData(cnData, -1) == null)
                     {
                         lohRegained = false;
 
                         LNX_LOGGER.debug("skipping LOH end segment({}) with no SV match", cnData);
                     }
 
-                    if (lohRegained || reset)
+                    if(lohRegained || reset)
                     {
                         // check for a short isolated TI and if found continue with the LOH
-                        if (lohRegained && cnData.EndPos - cnData.StartPos <= SHORT_TI_LENGTH && index < cnDataList.size() - 1)
+                        if(lohRegained && cnData.EndPos - cnData.StartPos <= SHORT_TI_LENGTH && index < cnDataList.size() - 1)
                         {
                             final SvCNData nextData = cnDataList.get(index + 1);
                             double nextMinCN = nextData.minorAlleleJcn();
 
-                            if (nextData.EndPos - cnData.StartPos > REMOTE_SV_DISTANCE && nextMinCN < MIN_LOH_CN
+                            if(nextData.EndPos - cnData.StartPos > REMOTE_SV_DISTANCE && nextMinCN < MIN_LOH_CN
                             && lohStartCnData != null && cnData.StartPos - lohStartCnData.StartPos > REMOTE_SV_DISTANCE)
                             {
                                 LNX_LOGGER.trace("chr({}) skipping short isolated TI seg({}) length({})",
@@ -358,7 +358,7 @@ public class CnDataLoader
                             }
                         }
 
-                        if (lohOnStartTelomere || totalLoss)
+                        if(lohOnStartTelomere || totalLoss)
                         {
                             // LOH section invalidated
                             processLOHData(chromosome, lohStartCnData, cnData, lohSegments, false, lohHomLossEvents);
@@ -376,16 +376,16 @@ public class CnDataLoader
 
                         reset = true;
                     }
-                    else if (cnData.matchesSegment(TELOMERE, false))
+                    else if(cnData.matchesSegment(TELOMERE, false))
                     {
                         // rest of arm was lost so no linking SV for LOH section - but still record the event
                         processLOHData(chromosome, lohStartCnData, cnData, lohSegments, true, lohHomLossEvents);
                         reset = true;
                     }
-                    else if (cnData.CopyNumber < TOTAL_CN_LOSS)
+                    else if(cnData.CopyNumber < TOTAL_CN_LOSS)
                     {
                         // other chromatid loss has occurred - this will cancel a valid LOH due to uncertainty unless due to a simple SV
-                        if (cnData.matchesSegment(SegmentSupport.DEL, true) && cnData.matchesSegment(SegmentSupport.DEL, false)
+                        if(cnData.matchesSegment(SegmentSupport.DEL, true) && cnData.matchesSegment(SegmentSupport.DEL, false)
                                 && isSingleVariant(cnData))
                         {
                             LNX_LOGGER.trace("total CN loss matches single SV({} : {} -> {})", chromosome, cnData.StartPos, cnData.EndPos);
@@ -401,14 +401,14 @@ public class CnDataLoader
                         lohMinCN = min(lohMinCN, minCN);
                     }
                 }
-                else if (!reset)
+                else if(!reset)
                 {
                     boolean lohLost = minCN < MIN_LOH_CN;
 
                     // check that an SV with correct orientation exists here
                     StructuralVariantData svData = findSvData(cnData, 1);
 
-                    if (lohLost && cnData.matchesSV(true) && svData == null)
+                    if(lohLost && cnData.matchesSV(true) && svData == null)
                     {
                         lohLost = false;
                     }
@@ -417,7 +417,7 @@ public class CnDataLoader
                         lohLost = false;
                     }
 
-                    if (lohLost)
+                    if(lohLost)
                     {
                         // new LOH section identified
                         isLohSection = true;
@@ -426,7 +426,7 @@ public class CnDataLoader
                         lohMinCN = minCN;
                         priorCN = lastMinCN;
 
-                        if (lohOnStartTelomere)
+                        if(lohOnStartTelomere)
                         {
                             LNX_LOGGER.trace("chr({}) LOH at telomere", chromosome);
                         }
@@ -436,7 +436,7 @@ public class CnDataLoader
                                     chromosome, cnData.StartPos, cnData.CopyNumber, cnData.ActualBaf, lohMinCN, priorCN));
 
                             // check for segments ending on telomere
-                            if (cnData.matchesSegment(TELOMERE, false))
+                            if(cnData.matchesSegment(TELOMERE, false))
                             {
                                 processLOHData(chromosome, lohStartCnData, lohStartCnData, lohSegments, true, null);
                                 reset = true;
@@ -445,7 +445,7 @@ public class CnDataLoader
                     }
                 }
 
-                if (reset)
+                if(reset)
                 {
                     isLohSection = false;
                     lohOnStartTelomere = false;
@@ -454,7 +454,7 @@ public class CnDataLoader
                     totalLoss = false;
                     lohHomLossEvents.clear();
 
-                    if (newChromosome && (minCN < MIN_LOH_CN))
+                    if(newChromosome && (minCN < MIN_LOH_CN))
                     {
                         lohOnStartTelomere = true;
                         lohStartCnData = cnData;
@@ -471,7 +471,7 @@ public class CnDataLoader
 
     private StructuralVariantData findSvData(final SvCNData cnData, int requiredOrient)
     {
-        if (cnData.matchesSegment(UNKNOWN, true)
+        if(cnData.matchesSegment(UNKNOWN, true)
         || cnData.matchesSegment(TELOMERE, true)
         || cnData.matchesSegment(CENTROMERE, true))
         {
@@ -482,12 +482,12 @@ public class CnDataLoader
 
         final StructuralVariantData svData = cnData.getStructuralVariantData();
 
-        if (svData == null)
+        if(svData == null)
             return null;
 
-        if (cnData.svLinkOnStart() && svData.startOrientation() == requiredOrient && svData.startPosition() == svPosition)
+        if(cnData.svLinkOnStart() && svData.startOrientation() == requiredOrient && svData.startPosition() == svPosition)
             return svData;
-        else if (!cnData.svLinkOnStart() && svData.endOrientation() == requiredOrient && svData.endPosition() == svPosition)
+        else if(!cnData.svLinkOnStart() && svData.endOrientation() == requiredOrient && svData.endPosition() == svPosition)
             return svData;
         else
             return null;
@@ -519,7 +519,7 @@ public class CnDataLoader
         }
 
         // exclude an LOH if one boundary is a simple non-overlapping SV and the other is another variant
-        if (startData != null && endData != null && startSvData != null && endSvData != null && startSvData.id() != endSvData.id())
+        if(startData != null && endData != null && startSvData != null && endSvData != null && startSvData.id() != endSvData.id())
         {
             if(startData.matchesSegment(SegmentSupport.DEL, true) || startData.matchesSegment(SegmentSupport.DUP, true))
             {
@@ -552,9 +552,9 @@ public class CnDataLoader
 
         if(LNX_LOGGER.isDebugEnabled())
         {
-            if (startSvData != null && endSvData != null)
+            if(startSvData != null && endSvData != null)
             {
-                if (startSvData.id() == endSvData.id())
+                if(startSvData.id() == endSvData.id())
                 {
                     LNX_LOGGER.trace("segs start({}) and end({}) matches singleSV({} - {})",
                             startData, endData, startSvData.id(), startSvData.type());
@@ -567,13 +567,13 @@ public class CnDataLoader
             }
             else
             {
-                if (startSvData == null && startData.matchesSV(true))
+                if(startSvData == null && startData.matchesSV(true))
                 {
                     boolean incorrectOrientation = (startData.getStructuralVariantData() != null);
                     LNX_LOGGER.debug("LOH start seg({}) no SV match: orient({})", startData, incorrectOrientation ? "wrong" : "ok");
                 }
 
-                if (endSvData == null && endData.matchesSV(false))
+                if(endSvData == null && endData.matchesSV(false))
                 {
                     boolean incorrectOrientation = (endData.getStructuralVariantData() != null);
                     LNX_LOGGER.debug("LOH end segment({}) no SV match: orient({})", endData, incorrectOrientation ? "wrong" : "ok");
