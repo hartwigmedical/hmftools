@@ -4,7 +4,7 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.metrics.MetricsConfig.BT_LOGGER;
 
 import java.util.StringJoiner;
 
@@ -115,7 +115,7 @@ public class Metrics
 
         double stdDeviation = sqrt(varianceTotal / total);
 
-        BM_LOGGER.debug(format("mean(%.3f totalFrequency=%d total=%d) stdDeviation(%.3f variantTotal=%.3f)",
+        BT_LOGGER.debug(format("mean(%.3f totalFrequency=%d total=%d) stdDeviation(%.3f variantTotal=%.3f)",
                 mean, totalFrequency, total, stdDeviation, varianceTotal));
 
         mStatistics = new Statistics(mean, median, stdDeviation, 0);

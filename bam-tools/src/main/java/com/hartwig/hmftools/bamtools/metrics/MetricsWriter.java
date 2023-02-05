@@ -2,7 +2,7 @@ package com.hartwig.hmftools.bamtools.metrics;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.metrics.MetricsConfig.BT_LOGGER;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.DELIM;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.GENOME_TERRITORY_COLUMN;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.HET_SNP_Q_COLUMN;
@@ -21,12 +21,11 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.bamtools.BmConfig;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 
 public final class MetricsWriter
 {
-    public static void writeResults(final Metrics metrics, final BmConfig config)
+    public static void writeResults(final Metrics metrics, final MetricsConfig config)
     {
         if(config.WriteOldStyle)
         {
@@ -115,7 +114,7 @@ public final class MetricsWriter
         return tsvData.toString();
     }
 
-    private static void writeMetrics(final Metrics metrics, final BmConfig config)
+    private static void writeMetrics(final Metrics metrics, final MetricsConfig config)
     {
         try
         {
@@ -132,11 +131,11 @@ public final class MetricsWriter
         }
         catch(IOException e)
         {
-            BM_LOGGER.error("failed to write metrics file: {}", e.toString());
+            BT_LOGGER.error("failed to write metrics file: {}", e.toString());
         }
     }
 
-    private static void writeCoverageFrequency(final Metrics metrics, final BmConfig config)
+    private static void writeCoverageFrequency(final Metrics metrics, final MetricsConfig config)
     {
         try
         {
@@ -157,11 +156,11 @@ public final class MetricsWriter
         }
         catch(IOException e)
         {
-            BM_LOGGER.error("failed to write coverage frequency file: {}", e.toString());
+            BT_LOGGER.error("failed to write coverage frequency file: {}", e.toString());
         }
     }
 
-    private static void writeOldStyleFile(final Metrics metrics, final BmConfig config)
+    private static void writeOldStyleFile(final Metrics metrics, final MetricsConfig config)
     {
         try
         {
@@ -194,7 +193,7 @@ public final class MetricsWriter
         }
         catch(IOException e)
         {
-            BM_LOGGER.error("failed to write metrics file: {}", e.toString());
+            BT_LOGGER.error("failed to write metrics file: {}", e.toString());
         }
 
     }

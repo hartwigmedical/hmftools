@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools;
+package com.hartwig.hmftools.bamtools.metrics;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -13,9 +13,6 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.bamtools.metrics.CombinedStats;
-import com.hartwig.hmftools.bamtools.metrics.MetricsWriter;
-import com.hartwig.hmftools.bamtools.slice.SliceWriter;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -29,13 +26,13 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class BamToolsApplication
+public class BamMetricsApplication
 {
-    private final BmConfig mConfig;
+    private final MetricsConfig mConfig;
 
-    public BamToolsApplication(final CommandLine cmd)
+    public BamMetricsApplication(final CommandLine cmd)
     {
-        mConfig = new BmConfig(cmd);
+        mConfig = new MetricsConfig(cmd);
     }
 
     public void run()
@@ -43,7 +40,7 @@ public class BamToolsApplication
         if(!mConfig.isValid())
             System.exit(1);
 
-        BmConfig.BM_LOGGER.info("sample({}) starting bam metrics", mConfig.SampleId);
+        MetricsConfig.BT_LOGGER.info("sample({}) starting bam metrics", mConfig.SampleId);
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -59,7 +56,7 @@ public class BamToolsApplication
             allRegions.addAll(partitionChromosome(chromosomeStr));
         }
 
-        BmConfig.BM_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
+        MetricsConfig.BT_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
 
         Queue<PartitionTask> partitions = new ConcurrentLinkedQueue<>();
 
@@ -71,13 +68,11 @@ public class BamToolsApplication
 
         CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
 
-        SliceWriter sliceWriter = new SliceWriter(mConfig);
-
         List<Thread> workers = new ArrayList<>();
 
         for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
         {
-            workers.add(new PartitionThread(mConfig, partitions, combinedStats, sliceWriter));
+            workers.add(new PartitionThread(mConfig, partitions, combinedStats));
         }
 
         for(Thread worker : workers)
@@ -88,23 +83,18 @@ public class BamToolsApplication
             }
             catch(InterruptedException e)
             {
-                BmConfig.BM_LOGGER.error("task execution error: {}", e.toString());
+                MetricsConfig.BT_LOGGER.error("task execution error: {}", e.toString());
                 e.printStackTrace();
             }
         }
 
-        BmConfig.BM_LOGGER.info("all regions complete, totalReads({})", combinedStats.totalReads());
+        MetricsConfig.BT_LOGGER.info("all regions complete, totalReads({})", combinedStats.totalReads());
 
-        if(mConfig.runMetrics())
-        {
-            combinedStats.metrics().finalise(mConfig.ExcludeZeroCoverage);
-            MetricsWriter.writeResults(combinedStats.metrics(), mConfig);
-            BmConfig.BM_LOGGER.info("final stats: {}", combinedStats.metrics());
-        }
+        combinedStats.metrics().finalise(mConfig.ExcludeZeroCoverage);
+        MetricsWriter.writeResults(combinedStats.metrics(), mConfig);
+        MetricsConfig.BT_LOGGER.info("final stats: {}", combinedStats.metrics());
 
-        sliceWriter.close();
-
-        BmConfig.BM_LOGGER.info("all regions complete, totalReads({}) stats: {}", combinedStats.totalReads(), combinedStats.metrics());
+        MetricsConfig.BT_LOGGER.info("all regions complete, totalReads({}) stats: {}", combinedStats.totalReads(), combinedStats.metrics());
 
         if(mConfig.PerfDebug)
             combinedStats.perfCounter().logIntervalStats(10);
@@ -114,12 +104,12 @@ public class BamToolsApplication
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         double timeTakeMins = timeTakenMs / 60000.0;
 
-        BmConfig.BM_LOGGER.info("BamMetrics complete, mins({})", format("%.3f", timeTakeMins));
+        MetricsConfig.BT_LOGGER.info("BamMetrics complete, mins({})", format("%.3f", timeTakeMins));
     }
 
     private List<ChrBaseRegion> partitionChromosome(final String chromosome)
     {
-        if(!mConfig.runSlicing() && !mConfig.SpecificRegions.isEmpty())
+        if(!mConfig.SpecificRegions.isEmpty())
         {
             List<ChrBaseRegion> partitions = Lists.newArrayList();
 
@@ -159,9 +149,9 @@ public class BamToolsApplication
     public static void main(@NotNull final String[] args)
     {
         final VersionInfo version = new VersionInfo("bam-tools.version");
-        BmConfig.BM_LOGGER.info("BamTools version: {}", version.version());
+        MetricsConfig.BT_LOGGER.info("BamTools version: {}", version.version());
 
-        final Options options = BmConfig.createCmdLineOptions();
+        final Options options = MetricsConfig.createCmdLineOptions();
 
         try
         {
@@ -169,12 +159,12 @@ public class BamToolsApplication
 
             setLogLevel(cmd);
 
-            BamToolsApplication bamTools = new BamToolsApplication(cmd);
-            bamTools.run();
+            BamMetricsApplication bamMetrtics = new BamMetricsApplication(cmd);
+            bamMetrtics.run();
         }
         catch(ParseException e)
         {
-            BmConfig.BM_LOGGER.warn(e);
+            MetricsConfig.BT_LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("BamMetrics", options);
             System.exit(1);

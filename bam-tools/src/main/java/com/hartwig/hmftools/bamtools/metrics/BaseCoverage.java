@@ -7,21 +7,19 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import static htsjdk.samtools.CigarOperator.M;
 
-import com.hartwig.hmftools.bamtools.BmConfig;
-
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class BaseCoverage
 {
-    private final BmConfig mConfig;
+    private final MetricsConfig mConfig;
     private final int mRegionSize;
     private int mRegionStart;
 
     private final int[] mBaseDepth;
     private final long[] mFilterTypeCounts;
 
-    public BaseCoverage(final BmConfig config, int regionStart, int regionEnd)
+    public BaseCoverage(final MetricsConfig config, int regionStart, int regionEnd)
     {
         mConfig = config;
         mRegionSize = regionEnd - regionStart + 1;
