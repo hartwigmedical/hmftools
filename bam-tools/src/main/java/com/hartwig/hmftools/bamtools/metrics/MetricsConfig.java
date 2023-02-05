@@ -15,9 +15,11 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.CommonUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -153,5 +155,33 @@ public class MetricsConfig
         options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
 
         return options;
+    }
+
+    @VisibleForTesting
+    public MetricsConfig(int maxCoveage)
+    {
+        mIsValid = true;
+
+        SampleId = "SAMPLE_ID";
+        BamFile = null;
+        RefGenomeFile = null;
+        OutputDir = null;
+        OutputId = null;
+
+        RefGenVersion = V37;
+
+        PartitionSize = DEFAULT_CHR_PARTITION_SIZE;
+        MapQualityThreshold = DEFAULT_MAP_QUAL_THRESHOLD;
+        BaseQualityThreshold = DEFAULT_BASE_QUAL_THRESHOLD;
+        MaxCoverage = maxCoveage;
+        ExcludeZeroCoverage = false;
+        WriteOldStyle = false;
+
+        SpecificChromosomes = Collections.emptyList();
+        SpecificRegions = Collections.emptyList();
+        LogReadIds = Collections.emptyList();
+
+        Threads = 0;
+        PerfDebug = false;
     }
 }

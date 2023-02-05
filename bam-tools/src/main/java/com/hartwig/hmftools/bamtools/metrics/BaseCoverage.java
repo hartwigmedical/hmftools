@@ -7,6 +7,10 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import static htsjdk.samtools.CigarOperator.M;
 
+import java.util.List;
+
+import com.google.common.annotations.VisibleForTesting;
+
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
@@ -28,33 +32,34 @@ public class BaseCoverage
         mFilterTypeCounts = new long[FilterType.values().length];
     }
 
-    public void processRead(final SAMRecord record, final int[] mateBaseCoords)
+    public void processRead(final SAMRecord read, final List<int[]> mateBaseCoords)
     {
         // some filters exclude all matched bases
-        int alignedBases = record.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
+        int alignedBases = read.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
-        if(record.getMappingQuality() < mConfig.MapQualityThreshold)
+        if(read.getMappingQuality() < mConfig.MapQualityThreshold)
         {
             mFilterTypeCounts[FilterType.LOW_MAP_QUAL.ordinal()] += alignedBases;
             return;
         }
 
-        if(record.getDuplicateReadFlag())
+        if(read.getDuplicateReadFlag())
         {
             mFilterTypeCounts[FilterType.DUPLICATE.ordinal()] += alignedBases;
             return;
         }
 
-        if(mateUnmapped(record))
+        //if(mateUnmapped(read))
+        if(!read.getReadPairedFlag() || read.getMateUnmappedFlag())
         {
             mFilterTypeCounts[FilterType.MATE_UNMAPPED.ordinal()] += alignedBases;
             return;
         }
 
-        int position = record.getAlignmentStart();
+        int position = read.getAlignmentStart();
         int readIndex = 0;
 
-        for(CigarElement element : record.getCigar().getCigarElements())
+        for(CigarElement element : read.getCigar().getCigarElements())
         {
             switch(element.getOperator())
             {
@@ -74,7 +79,9 @@ public class BaseCoverage
 
                 case M:
                     processMatchedBases(
-                            record, position, readIndex, element.getLength(), mateBaseCoords);
+                            read, position, readIndex, element.getLength(), mateBaseCoords);
+                    position += element.getLength();
+                    readIndex += element.getLength();
                     break;
 
                 default:
@@ -84,7 +91,7 @@ public class BaseCoverage
     }
 
     private void processMatchedBases(
-            final SAMRecord record, int posStart, int readIndexStart, int matchLength, final int[] mateBaseCoords)
+            final SAMRecord read, int posStart, int readIndexStart, int matchLength, final List<int[]> mateBaseCoords)
     {
         for(int i = 0; i < matchLength; ++i)
         {
@@ -99,9 +106,9 @@ public class BaseCoverage
             int readIndex = readIndexStart + i;
             int baseIndex = position - mRegionStart;
 
-            boolean lowBaseQual = record.getBaseQualities()[readIndex] < mConfig.BaseQualityThreshold;
+            boolean lowBaseQual = read.getBaseQualities()[readIndex] < mConfig.BaseQualityThreshold;
 
-            boolean overlapped = mateBaseCoords != null && positionWithin(position, mateBaseCoords[SE_START], mateBaseCoords[SE_END]);
+            boolean overlapped = mateBaseCoords != null && mateBaseCoords.stream().anyMatch(x -> positionWithin(position, x[SE_START], x[SE_END]));
 
             boolean exceedsCoverage = mBaseDepth[baseIndex] >= mConfig.MaxCoverage;
 
@@ -156,4 +163,20 @@ public class BaseCoverage
 
         return metrics;
     }
+
+    public void clear()
+    {
+        for(int i = 0; i < mBaseDepth.length; ++i)
+        {
+            mBaseDepth[i] = 0;
+        }
+
+        for(int i = 0; i < mFilterTypeCounts.length; ++i)
+        {
+            mFilterTypeCounts[i] = 0;
+        }
+    }
+
+    @VisibleForTesting
+    public int[] baseDepth() { return mBaseDepth; }
 }

@@ -3,13 +3,10 @@ package com.hartwig.hmftools.markdups;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.markdups.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_A;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_C;
-import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_G;
-import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_T;
 import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MATCH;
@@ -28,6 +25,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.markdups.umi.ConsensusReadInfo;
 import com.hartwig.hmftools.markdups.umi.ConsensusReads;
 import com.hartwig.hmftools.markdups.umi.ReadParseState;
@@ -292,7 +290,7 @@ public class ConsensusReadsTest
     private static SAMRecord createSamRecord(
             final String readId, int readStart, final String readBases, final String cigar, boolean isReversed)
     {
-        return TestUtils.createSamRecord(
+        return SamRecordTestUtils.createSamRecord(
                 readId, CHR_1, readStart, readBases, cigar, CHR_1, 5000, isReversed, false, null);
     }
 

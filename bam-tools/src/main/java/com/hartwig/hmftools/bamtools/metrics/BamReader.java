@@ -2,14 +2,11 @@ package com.hartwig.hmftools.bamtools.metrics;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-
-import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bamtools.common.ReadGroup;
@@ -17,6 +14,7 @@ import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 
@@ -79,9 +77,9 @@ public class BamReader
         mCombinedStats.addStats(metrics, mTotalReads, mPerfCounter);
     }
 
-    private void processSamRecord(final SAMRecord record)
+    private void processSamRecord(final SAMRecord read)
     {
-        int readStart = record.getAlignmentStart();
+        int readStart = read.getAlignmentStart();
 
         if(!mRegion.containsPosition(readStart))
             return;
@@ -93,49 +91,56 @@ public class BamReader
 
         if(mFilterRegion != null)
         {
-            if(positionsOverlap(readStart, readStart + record.getReadBases().length, mFilterRegion.start(), mFilterRegion.end()))
+            if(positionsOverlap(readStart, readStart + read.getReadBases().length, mFilterRegion.start(), mFilterRegion.end()))
                 return;
         }
 
         if(mLogReadIds) // debugging only
         {
-            if(mConfig.LogReadIds.contains(record.getReadName()))
-                MetricsConfig.BT_LOGGER.debug("specific readId({}) unmapped({})", record.getReadName(), record.getReadUnmappedFlag());
+            if(mConfig.LogReadIds.contains(read.getReadName()))
+                MetricsConfig.BT_LOGGER.debug("specific readId({}) unmapped({})", read.getReadName(), read.getReadUnmappedFlag());
         }
 
         // cache if the mate read overlaps
-        ReadGroup readGroup = mReadGroupMap.get(record.getReadName());
+        ReadGroup readGroup = mReadGroupMap.get(read.getReadName());
 
         if(readGroup != null)
         {
-            readGroup.addRead(record);
+            readGroup.addRead(read);
+
+            if(readGroup.allReadsPresent())
+            {
+                processReadGroup(readGroup);
+                mReadGroupMap.remove(read.getReadName());
+            }
+
             return;
         }
 
-        if(mateReadOverlaps(record))
+        if(mateReadOverlaps(read))
         {
-            readGroup = new ReadGroup(record);
+            readGroup = new ReadGroup(read);
             mReadGroupMap.put(readGroup.id(), readGroup);
             return;
         }
 
         // process this non-overlapping read immediately without caching
-        mBaseCoverage.processRead(record, null);
+        mBaseCoverage.processRead(read, null);
     }
 
-    private boolean mateReadOverlaps(final SAMRecord record)
+    private boolean mateReadOverlaps(final SAMRecord read)
     {
-        if(mateUnmapped(record))
+        if(mateUnmapped(read))
             return false;
 
-        if(!record.getReferenceName().equals(record.getMateReferenceName()))
+        if(!read.getReferenceName().equals(read.getMateReferenceName()))
             return false;
 
-        int readLength = record.getReadBases().length;
-        int readStart = record.getAlignmentStart();
-        int readEnd = readStart + readLength - 1;
+        int readLength = read.getReadBases().length;
+        int readStart = read.getAlignmentStart();
+        int readEnd = read.getAlignmentEnd();
 
-        int mateStart = record.getMateAlignmentStart();
+        int mateStart = read.getMateAlignmentStart();
         int mateEnd = mateStart + readLength - 1;
 
         return positionsOverlap(readStart, readEnd, mateStart, mateEnd);
@@ -149,38 +154,92 @@ public class BamReader
             return;
         }
 
-        List<int[]> readAlignedBaseCoords = Lists.newArrayList();
+        // check for overlaps in the reads and if found, form a list of the aligned coordinates
+        boolean hasOverlaps = false;
+
+        for(int i = 0; i < readGroup.reads().size() - 1; ++i)
+        {
+            SAMRecord read1 = readGroup.reads().get(i);
+
+            for(int j = i + 1; j < readGroup.reads().size(); ++j)
+            {
+                SAMRecord read2 = readGroup.reads().get(j);
+
+                if(positionsOverlap(read1.getAlignmentStart(), read1.getAlignmentEnd(), read2.getAlignmentStart(), read2.getAlignmentEnd()))
+                {
+                    hasOverlaps = true;
+                    break;
+                }
+            }
+
+            if(hasOverlaps)
+                break;
+        }
+
+        if(!hasOverlaps)
+        {
+            readGroup.reads().forEach(x -> mBaseCoverage.processRead(x, null));
+            return;
+        }
+
+        List<int[]> combinedAlignedBaseCoords = Lists.newArrayList();
 
         for(int i = 0; i < readGroup.reads().size(); ++i)
         {
-            SAMRecord record = readGroup.reads().get(i);
-
-            int alignedBases = record.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
-            int[] alignedBaseCoords = new int[] { record.getAlignmentStart(), record.getAlignmentStart() + alignedBases - 1 };
+            SAMRecord read = readGroup.reads().get(i);
 
             if(i == 0)
             {
-                mBaseCoverage.processRead(record, null);
+                mBaseCoverage.processRead(read, null);
             }
             else
             {
-                // check for any overlap with a previous read
-                int[] overlappingBaseCoords = null;
-                for(int j = 0; j < i; ++j)
-                {
-                    final int[] readBaseCoords = readAlignedBaseCoords.get(j);
-
-                    if(positionsOverlap(alignedBaseCoords[SE_START], alignedBaseCoords[SE_END], readBaseCoords[SE_START], readBaseCoords[SE_END]))
-                    {
-                        overlappingBaseCoords = readBaseCoords;
-                        break;
-                    }
-                }
-
-                mBaseCoverage.processRead(record, overlappingBaseCoords);
+                mBaseCoverage.processRead(read, combinedAlignedBaseCoords);
             }
 
-            readAlignedBaseCoords.add(alignedBaseCoords);
+            if(i < readGroup.reads().size() - 1)
+                addAlignedCoords(read, combinedAlignedBaseCoords);
         }
     }
+
+    private static void addAlignedCoords(final SAMRecord read, final List<int[]> alignedBaseCoords)
+    {
+        int position = read.getAlignmentStart();
+
+        for(CigarElement element : read.getCigar().getCigarElements())
+        {
+            switch(element.getOperator())
+            {
+                case S:
+                case H:
+                case I:
+                    break;
+
+                case M:
+                    alignedBaseCoords.add(new int[] { position, position + element.getLength() - 1});
+                    position += element.getLength();
+                    break;
+
+                case D:
+                case N:
+                    position += element.getLength();
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
+
+    @VisibleForTesting
+    public void processRead(final SAMRecord read)
+    {
+        processSamRecord(read);
+    }
+
+    @VisibleForTesting
+    public BaseCoverage baseCoverage() { return mBaseCoverage; }
+
+    @VisibleForTesting
+    public Map<String,ReadGroup> readGroupMap() { return mReadGroupMap; }
 }

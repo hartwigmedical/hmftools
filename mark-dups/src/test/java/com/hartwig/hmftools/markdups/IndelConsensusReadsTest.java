@@ -19,6 +19,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.markdups.umi.ConsensusReadInfo;
 import com.hartwig.hmftools.markdups.umi.ConsensusReads;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
@@ -192,7 +193,7 @@ public class IndelConsensusReadsTest
     private static SAMRecord createSamRecord(
             final String readId, int readStart, final String readBases, final String cigar, boolean isReversed)
     {
-        return TestUtils.createSamRecord(
+        return SamRecordTestUtils.createSamRecord(
                 readId, CHR_1, readStart, readBases, cigar, CHR_1, 5000, isReversed, false, null);
     }
 

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.markdups;
 
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroups.calcBaseQualAverage;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroups.findPrimaryFragment;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.NO_COORDS;
@@ -9,7 +10,6 @@ import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.markdups.TestUtils.createFragment;
-import static com.hartwig.hmftools.markdups.TestUtils.createSamRecord;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.markdups.common.Fragment;

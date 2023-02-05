@@ -7,7 +7,6 @@ import java.nio.file.Paths;
 
 public final class CommonUtils
 {
-
     // config strings
     public static final String SAMPLE = "sample";
     public static final String BAM_FILE = "bam_file";
