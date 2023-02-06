@@ -6,10 +6,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
+import com.hartwig.hmftools.common.hla.HlaReporting;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.HLAAllele;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.itextpdf.kernel.pdf.action.PdfAction;
@@ -19,7 +22,6 @@ import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
-import com.itextpdf.layout.property.TextAlignment;
 import com.itextpdf.layout.property.UnitValue;
 
 import org.apache.logging.log4j.util.Strings;
@@ -43,13 +45,14 @@ public class QCFailPGXChapter implements ReportChapter {
     @Override
     @NotNull
     public String name() {
-        return "Pharmacogenetics";
+        return "Genotypes";
     }
 
     @Override
     public void render(@NotNull Document reportDocument) {
         reportDocument.add(createPharmacogeneticsGenotypesTable(failReport.pharmacogeneticsGenotypes(),
                 failReport.sampleReport().reportPharmogenetics()));
+        reportDocument.add(createHlaTable(failReport.hlaAllelesReportingData()));
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1 }));
         table.setWidth(contentWidth());
@@ -67,8 +70,59 @@ public class QCFailPGXChapter implements ReportChapter {
                                 + "observed variants, then 'Unresolved Haplotype' is called.",
                         "Wild type is assumed when no variants are observed." })));
         table.addCell(TableUtil.createLayoutCell());
+        table.addCell(TableUtil.createLayoutCell(1, 1).setHeight(30));
+
+        table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported HLA Alleles")));
+        table.addCell(TableUtil.createLayoutCell()
+                .add(createContentDiv(new String[] { "HLA Class I types (HLA-A, HLA-B and HLA-C) are "
+                        + "reported based on blood analysis\n" })
+
+                        .add(createContentDivWithLinkThree("The IMGT/HLA database ",
+                                "https://www.ebi.ac.uk/ipd/imgt/hla/",
+                                " is used as a "
+                                        + "reference set of Human MHC class I alleles. HLA typing is done to 4-digits, which means it uniquely "
+                                        + "identifies a specific protein, but ignores synonymous variants (6 digits) and intronic differences "
+                                        + "(8 digits).",
+                                "https://www.ebi.ac.uk/ipd/imgt/hla/"))));
         reportDocument.add(table);
 
+    }
+
+    @NotNull
+    private static Table createHlaTable(@NotNull HlaAllelesReportingData lilac) {
+
+        String title = "HLA Alleles";
+        Table table = TableUtil.createReportContentTable(new float[] { 10, 10, 10},
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Germline allele"),
+                        TableUtil.createHeaderCell("Germline copies")},
+                ReportResources.CONTENT_WIDTH_WIDE_SMALL);
+        if (!lilac.hlaQC().equals("PASS")) {
+            String noConsent = "The QC of the HLA types do not meet the QC cut-offs";
+            return TableUtil.createNoConsentReportTable(title,
+                    noConsent,
+                    TableUtil.TABLE_BOTTOM_MARGIN,
+                    ReportResources.CONTENT_WIDTH_WIDE_SMALL);
+        } else if (lilac.hlaAllelesReporting().isEmpty()) {
+            return TableUtil.createNoneReportTable(title, null, TableUtil.TABLE_BOTTOM_MARGIN, ReportResources.CONTENT_WIDTH_WIDE_SMALL);
+        } else {
+            Set<String> sortedAlleles = Sets.newTreeSet(lilac.hlaAllelesReporting().keySet().stream().collect(Collectors.toSet()));
+            for (String sortAllele : sortedAlleles) {
+                List<HlaReporting> allele = lilac.hlaAllelesReporting().get(sortAllele);
+                table.addCell(TableUtil.createContentCell(sortAllele));
+
+                Table tableGermlineAllele = new Table(new float[] { 1 });
+                Table tableGermlineCopies = new Table(new float[] { 1 });
+
+                for (HlaReporting hlaAlleleReporting : HLAAllele.sort(allele)) {
+                    tableGermlineAllele.addCell(TableUtil.createTransparentCell(hlaAlleleReporting.hlaAllele().germlineAllele()));
+                    tableGermlineCopies.addCell(TableUtil.createTransparentCell(String.valueOf(Math.round(hlaAlleleReporting.germlineCopies()))));
+                }
+
+                table.addCell(TableUtil.createContentCell(tableGermlineAllele));
+                table.addCell(TableUtil.createContentCell(tableGermlineCopies));
+            }
+        }
+        return TableUtil.createWrappingReportTable(title, null, table, TableUtil.TABLE_BOTTOM_MARGIN);
     }
 
     @NotNull

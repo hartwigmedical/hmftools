@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 
 import org.apache.logging.log4j.util.Strings;
@@ -70,6 +71,9 @@ public interface PatientReport {
 
     @NotNull
     Map<String, List<PeachGenotype>> pharmacogeneticsGenotypes();
+
+    @NotNull
+    HlaAllelesReportingData hlaAllelesReportingData();
 
     @NotNull
     String reportDate();

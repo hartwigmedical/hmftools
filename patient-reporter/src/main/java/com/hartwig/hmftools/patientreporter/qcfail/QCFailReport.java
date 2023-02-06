@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.patientreporter.PatientReport;
@@ -61,6 +62,10 @@ public abstract class QCFailReport implements PatientReport {
     @NotNull
     @Override
     public abstract Map<String, List<PeachGenotype>> pharmacogeneticsGenotypes();
+
+    @NotNull
+    @Override
+    public abstract HlaAllelesReportingData hlaAllelesReportingData();
 
     @NotNull
     @Override

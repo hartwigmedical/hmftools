@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
+import com.hartwig.hmftools.common.hla.*;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
@@ -528,6 +529,7 @@ public class CFReportWriterTest {
                 .logoCompanyPath(testReportData.logoCompanyPath())
                 .udiDi(UDI_DI)
                 .pharmacogeneticsGenotypes(createTestPharmacogeneticsGenotypes())
+                .hlaAllelesReportingData(createTestHlaData())
                 .purpleQC(Sets.newHashSet(purpleQCStatus))
                 .reportDate(DataUtil.formatDate(LocalDate.now()))
                 .isWGSreport(true)
@@ -538,6 +540,50 @@ public class CFReportWriterTest {
         CFReportWriter writer = testCFReportWriter();
         writer.writeQCFailReport(patientReport, filename);
         writer.writeJsonFailedFile(patientReport, REPORT_BASE_DIR);
+    }
+
+    @NotNull
+    private static ImmutableHlaReporting.Builder createHlaReporting() {
+        return ImmutableHlaReporting.builder()
+                .hlaAllele(ImmutableHlaAllele.builder().gene(Strings.EMPTY).germlineAllele(Strings.EMPTY).build())
+                .germlineCopies(0)
+                .tumorCopies(0)
+                .somaticMutations(Strings.EMPTY)
+                .interpretation(Strings.EMPTY);
+    }
+
+    @NotNull
+    private static HlaAllelesReportingData createTestHlaData() {
+        Map<String, List<HlaReporting>> alleles = Maps.newHashMap();
+
+        alleles.put("HLA-A",
+                Lists.newArrayList(createHlaReporting().hlaAllele(ImmutableHlaAllele.builder()
+                        .gene("HLA-A")
+                        .germlineAllele("A*01:01")
+                        .build()).germlineCopies(2.0).tumorCopies(3.83).somaticMutations("None").interpretation("Yes").build()));
+        alleles.put("HLA-B",
+                Lists.newArrayList(createHlaReporting().hlaAllele(ImmutableHlaAllele.builder()
+                                .gene("HLA-B")
+                                .germlineAllele("B*40:02")
+                                .build()).germlineCopies(1.0).tumorCopies(2.0).somaticMutations("None").interpretation("Yes").build(),
+                        createHlaReporting().hlaAllele(ImmutableHlaAllele.builder().gene("HLA-B").germlineAllele("B*08:01").build())
+                                .germlineCopies(1.0)
+                                .tumorCopies(1.83)
+                                .somaticMutations("None")
+                                .interpretation("Yes")
+                                .build()));
+        alleles.put("HLA-C",
+                Lists.newArrayList(createHlaReporting().hlaAllele(ImmutableHlaAllele.builder()
+                                .gene("HLA-C")
+                                .germlineAllele("C*07:01")
+                                .build()).germlineCopies(1.0).tumorCopies(1.83).somaticMutations("None").interpretation("yes").build(),
+                        createHlaReporting().hlaAllele(ImmutableHlaAllele.builder().gene("HLA-C").germlineAllele("C*03:04").build())
+                                .germlineCopies(1.0)
+                                .tumorCopies(2.0)
+                                .somaticMutations("None")
+                                .interpretation("Yes")
+                                .build()));
+        return ImmutableHlaAllelesReportingData.builder().hlaQC("PASS").hlaAllelesReporting(alleles).build();
     }
 
     @NotNull
