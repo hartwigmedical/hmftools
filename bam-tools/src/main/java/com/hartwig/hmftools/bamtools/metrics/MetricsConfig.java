@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -113,6 +114,16 @@ public class MetricsConfig
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
+
+        try
+        {
+            loadSpecificChromsomesOrRegions(cmd, SpecificChromosomes, SpecificRegions, BT_LOGGER);
+        }
+        catch(Exception e)
+        {
+            BT_LOGGER.error("failed to load specific regions: {}", e.toString());
+            System.exit(1);
+        }
 
         LogReadIds = cmd.hasOption(LOG_READ_IDS) ?
                 Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
