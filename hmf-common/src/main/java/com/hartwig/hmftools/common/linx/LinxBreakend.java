@@ -95,7 +95,7 @@ public abstract class LinxBreakend
         Integer codingTypeIndex = fieldsIndexMap.containsKey("codingType") ?
                 fieldsIndexMap.get("codingType") : fieldsIndexMap.get("codingContext");
 
-        for (String line : lines)
+        for(String line : lines)
         {
             String[] values = line.split(DELIMITER);
 

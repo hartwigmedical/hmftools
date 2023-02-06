@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.linx.visualiser.file.VisSvData.INFO_TYPE_NORM
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 
@@ -45,6 +46,7 @@ public class VisDataWriter
 
     private boolean mEnabled;
     private final String mOutputDir;
+    private final boolean mGermline; // currently incomplete and disabled
 
     private boolean mBatchOutput;
     private BufferedWriter mSvFileWriter;
@@ -61,9 +63,13 @@ public class VisDataWriter
     public static final String COHORT_VIS_PROTEIN_FILE = "LNX_VIS_PROTEIN_DOMAINS.tsv";
     public static final String COHORT_VIS_FUSIONS_FILE = "LNX_VIS_FUSIONS.tsv";
 
-    public VisDataWriter(final String outputDir, final EnsemblDataCache geneDataCache, boolean enabled, boolean isBatchOutput)
+    public static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
+
+    public VisDataWriter(
+            final String outputDir, final EnsemblDataCache geneDataCache, boolean enabled, boolean isBatchOutput, boolean isGermline)
     {
         mEnabled = enabled;
+        mGermline = isGermline;
         mOutputDir = outputDir;
         mBatchOutput = isBatchOutput;
 
@@ -179,7 +185,7 @@ public class VisDataWriter
             }
             else
             {
-                VisSvData.write(VisSvData.generateFilename(mOutputDir, sampleData.sampleId()), svDataList);
+                VisSvData.write(VisSvData.generateFilename(mOutputDir, sampleData.sampleId(), mGermline), svDataList);
             }
         }
         catch(IOException e)
@@ -315,7 +321,7 @@ public class VisDataWriter
             }
             else
             {
-                VisSegment.write(VisSegment.generateFilename(mOutputDir, sampleData.sampleId()), segments);
+                VisSegment.write(VisSegment.generateFilename(mOutputDir, sampleData.sampleId(), mGermline), segments);
             }
         }
         catch (final IOException e)
@@ -459,8 +465,8 @@ public class VisDataWriter
             }
             else
             {
-                VisGeneExon.write(VisGeneExon.generateFilename(mOutputDir, sampleData.sampleId()), geneExonList);
-                VisProteinDomain.write(VisProteinDomain.generateFilename(mOutputDir, sampleData.sampleId()), proteinList);
+                VisGeneExon.write(VisGeneExon.generateFilename(mOutputDir, sampleData.sampleId(), mGermline), geneExonList);
+                VisProteinDomain.write(VisProteinDomain.generateFilename(mOutputDir, sampleData.sampleId(), mGermline), proteinList);
             }
         }
         catch (final IOException e)
@@ -513,7 +519,7 @@ public class VisDataWriter
             }
             else
             {
-                VisCopyNumber.write(VisCopyNumber.generateFilename(mOutputDir, sampleData.sampleId()), cnDataList);
+                VisCopyNumber.write(VisCopyNumber.generateFilename(mOutputDir, sampleData.sampleId(), mGermline), cnDataList);
             }
         }
         catch(IOException e)
@@ -536,7 +542,7 @@ public class VisDataWriter
             }
             else
             {
-                VisFusion.write(VisFusion.generateFilename(mOutputDir, sampleData.sampleId()), sampleData.getFusions());
+                VisFusion.write(VisFusion.generateFilename(mOutputDir, sampleData.sampleId(), mGermline), sampleData.getFusions());
             }
         }
         catch(IOException e)

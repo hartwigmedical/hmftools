@@ -90,7 +90,7 @@ public class LinxConfig
     public static RefGenomeVersion REF_GENOME_VERSION = V37;
 
     private static final String INDEL_ANNOTATIONS = "indel_annotation";
-    private static final String GERMLINE = "germline";
+    public static final String GERMLINE = "germline";
 
     // reference files
     private static final String FRAGILE_SITE_FILE = "fragile_site_file";

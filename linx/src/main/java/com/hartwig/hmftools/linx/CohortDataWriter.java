@@ -73,7 +73,7 @@ public class CohortDataWriter
         mWriters = Maps.newHashMap();
 
         mVisWriter = new VisDataWriter(
-                config.OutputDataPath, geneDataCache, config.Output.WriteVisualisationData, config.hasMultipleSamples());
+                config.OutputDataPath, geneDataCache, config.Output.WriteVisualisationData, config.hasMultipleSamples(), config.IsGermline);
 
         mWriters.put(COHORT_WRITER_SV, createSvDataFile());
         mWriters.put(COHORT_WRITER_CLUSTER, createClusterFile());

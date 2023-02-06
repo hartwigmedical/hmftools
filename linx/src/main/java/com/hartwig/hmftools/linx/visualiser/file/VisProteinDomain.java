@@ -1,19 +1,19 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
-import static java.util.stream.Collectors.toList;
-
-import static com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber.DELIMITER;
+import static com.hartwig.hmftools.common.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.getIntValue;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.getValue;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-
-import org.jetbrains.annotations.NotNull;
 
 public class VisProteinDomain implements GenomeRegion
 {
@@ -63,26 +63,24 @@ public class VisProteinDomain implements GenomeRegion
     }
 
     private static final String FILE_EXTENSION = ".linx.vis_protein_domain.tsv";
+    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.vis_protein_domain.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
     {
-        return basePath + File.separator + sample + FILE_EXTENSION;
+        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
     }
 
-    @NotNull
     public static List<VisProteinDomain> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<VisProteinDomain> cnDataList) throws IOException
+    public static void write(final String filename, List<VisProteinDomain> cnDataList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(cnDataList));
     }
 
-    @NotNull
-    static List<String> toLines(@NotNull final List<VisProteinDomain> cnDataList)
+    private static List<String> toLines(final List<VisProteinDomain> cnDataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -90,13 +88,31 @@ public class VisProteinDomain implements GenomeRegion
         return lines;
     }
 
-    @NotNull
-    static List<VisProteinDomain> fromLines(@NotNull List<String> lines)
+    private static List<VisProteinDomain> fromLines(List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisProteinDomain::fromString).collect(toList());
+        String header = lines.get(0);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        lines.remove(0);
+
+        List<VisProteinDomain> data = Lists.newArrayList();
+
+        for(String line : lines)
+        {
+            String[] values = line.split(DELIMITER);
+
+            data.add(new VisProteinDomain(
+                    getValue(fieldsIndexMap, "SampleId", "", values),
+                    getIntValue(fieldsIndexMap, "ClusterId", 0, values),
+                    getValue(fieldsIndexMap, "Transcript", "", values),
+                    getValue(fieldsIndexMap, "Chromosome", "", values),
+                    getIntValue(fieldsIndexMap, "Start", 0, values),
+                    getIntValue(fieldsIndexMap, "End", 0, values),
+                    getValue(fieldsIndexMap, "Info", "", values)));
+        }
+
+        return data;
     }
 
-    @NotNull
     public static String header()
     {
         return new StringJoiner(DELIMITER)
@@ -121,21 +137,5 @@ public class VisProteinDomain implements GenomeRegion
                 .add(String.valueOf(proteinData.End))
                 .add(String.valueOf(proteinData.Info))
                 .toString();
-    }
-
-    private static VisProteinDomain fromString(final String line)
-    {
-        String[] values = line.split(DELIMITER);
-
-        int index = 0;
-
-        return new VisProteinDomain(
-                values[index++],
-                Integer.parseInt(values[index++]),
-                values[index++],
-                values[index++],
-                Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]),
-                values[index++]);
     }
 }

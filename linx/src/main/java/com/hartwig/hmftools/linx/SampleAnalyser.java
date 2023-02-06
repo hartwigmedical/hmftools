@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -434,29 +435,29 @@ public class SampleAnalyser implements Callable
     {
         try
         {
-            LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-            LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+            LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+            LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+            LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
 
             DriverCatalogFile.write(LinxDriver.generateCatalogFilename(
-                    mConfig.OutputDataPath, mCurrentSampleId, !mConfig.IsGermline), Lists.newArrayList());
+                    mConfig.OutputDataPath, mCurrentSampleId, !mConfig.IsGermline), Collections.EMPTY_LIST);
 
             if(mConfig.IsGermline)
             {
-                LinxGermlineSv.write(LinxGermlineSv.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                LinxGermlineSv.write(LinxGermlineSv.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Collections.EMPTY_LIST);
             }
             else
             {
-                LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Collections.EMPTY_LIST);
+                LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Collections.EMPTY_LIST);
 
-                VisSvData.write(VisSvData.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                VisCopyNumber.write(VisCopyNumber.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                VisGeneExon.write(VisGeneExon.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                VisSegment.write(VisSegment.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                VisFusion.write(VisFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                VisProteinDomain.write(VisProteinDomain.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                VisSvData.write(VisSvData.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisCopyNumber.write(VisCopyNumber.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisGeneExon.write(VisGeneExon.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisSegment.write(VisSegment.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisFusion.write(VisFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisProteinDomain.write(VisProteinDomain.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
             }
         }
         catch (IOException e)

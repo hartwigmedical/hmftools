@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS_DESC;
+import static com.hartwig.hmftools.linx.LinxConfig.GERMLINE;
 import static com.hartwig.hmftools.linx.visualiser.circos.Highlights.populateKnownSites;
 
 import java.io.File;
@@ -43,6 +44,7 @@ public class VisualiserConfig
     public final String Sample;
     public final String SampleDataDir;
     public final boolean UseCohortFiles;
+    public final boolean IsGermline;
 
     public final String OutputConfPath;
     public final String OutputPlotPath;
@@ -95,6 +97,7 @@ public class VisualiserConfig
         OutputConfPath = cmd.hasOption(DATA_OUT) ? cmd.getOptionValue(DATA_OUT) : SampleDataDir + "data/";
         CircosBin = parameter(cmd, CIRCOS, missingJoiner);
         UseCohortFiles = cmd.hasOption(LOAD_COHORT_FILES);
+        IsGermline = cmd.hasOption(GERMLINE);
 
         RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
         EnsemblDataDir = cmd.getOptionValue(ENSEMBL_DATA_DIR);
@@ -181,6 +184,7 @@ public class VisualiserConfig
         options.addOption(SAMPLE, true, "Sample name");
         options.addOption(VIS_FILE_DIRECTORY, true, "Path to all Linx vis files, used instead of specifying them individually");
         options.addOption(LOAD_COHORT_FILES, false, "Load Linx cohort rather than per-sample vis files");
+        options.addOption(GERMLINE, false, "Load Linx germline VIS files");
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
 
         options.addOption(PLOT_OUT, true, "Plot output directory, default is 'plot' in sample files directory");

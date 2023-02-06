@@ -51,24 +51,33 @@ public class SampleData
     public SampleData(final VisualiserConfig config) throws Exception
     {
         mConfig = config;
-        
+
+        boolean isGermline = config.IsGermline;
+
+        if(!isGermline
+        && !Files.exists(Paths.get(VisSvData.generateFilename(mConfig.SampleDataDir, mConfig.Sample, false)))
+        && Files.exists(Paths.get(VisSvData.generateFilename(mConfig.SampleDataDir, mConfig.Sample, true))))
+        {
+            isGermline = true;
+        }
+
         final String svDataFile = mConfig.UseCohortFiles ?
-                mConfig.SampleDataDir + COHORT_VIS_SVS_FILE : VisSvData.generateFilename(mConfig.SampleDataDir, mConfig.Sample);
+                mConfig.SampleDataDir + COHORT_VIS_SVS_FILE : VisSvData.generateFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
 
         final String linksFile = mConfig.UseCohortFiles ?
-                mConfig.SampleDataDir + COHORT_VIS_LINKS_FILE : VisSegment.generateFilename(mConfig.SampleDataDir, mConfig.Sample);
+                mConfig.SampleDataDir + COHORT_VIS_LINKS_FILE : VisSegment.generateFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
 
         final String cnaFile = mConfig.UseCohortFiles ?
-                mConfig.SampleDataDir + COHORT_VIS_COPY_NUMBER_FILE : VisCopyNumber.generateFilename(mConfig.SampleDataDir, mConfig.Sample);
+                mConfig.SampleDataDir + COHORT_VIS_COPY_NUMBER_FILE : VisCopyNumber.generateFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
 
         final String geneExonFile = mConfig.UseCohortFiles ?
-                mConfig.SampleDataDir + COHORT_VIS_GENE_EXONS_FILE : VisGeneExon.generateFilename(mConfig.SampleDataDir, mConfig.Sample);
+                mConfig.SampleDataDir + COHORT_VIS_GENE_EXONS_FILE : VisGeneExon.generateFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
 
         final String proteinFile = mConfig.UseCohortFiles ?
-                mConfig.SampleDataDir + COHORT_VIS_PROTEIN_FILE : VisProteinDomain.generateFilename(mConfig.SampleDataDir, mConfig.Sample);
+                mConfig.SampleDataDir + COHORT_VIS_PROTEIN_FILE : VisProteinDomain.generateFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
 
         final String fusionFile = mConfig.UseCohortFiles ?
-                mConfig.SampleDataDir + COHORT_VIS_FUSIONS_FILE : VisFusion.generateFilename(mConfig.SampleDataDir, mConfig.Sample);
+                mConfig.SampleDataDir + COHORT_VIS_FUSIONS_FILE : VisFusion.generateFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
 
         List<VisSvData> svData = VisSvData.read(svDataFile).stream().filter(x -> x.SampleId.equals(mConfig.Sample)).collect(toList());
 

@@ -29,6 +29,20 @@ public class FileReaderUtils
         return values[fieldsIndexMap.get(field)];
     }
 
+    public static boolean getBoolValue(final Map<String,Integer> fieldsIndexMap, final String field, final String[] values)
+    {
+        return getBoolValue(fieldsIndexMap, field, false, values);
+    }
+
+    public static boolean getBoolValue(
+            final Map<String,Integer> fieldsIndexMap, final String field, final boolean defaultValue, final String[] values)
+    {
+        if(!fieldsIndexMap.containsKey(field))
+            return defaultValue;
+
+        return Boolean.parseBoolean(values[fieldsIndexMap.get(field)]);
+    }
+
     public static int getIntValue(final Map<String,Integer> fieldsIndexMap, final String field, final String[] values)
     {
         return getIntValue(fieldsIndexMap, field, 0, values);
