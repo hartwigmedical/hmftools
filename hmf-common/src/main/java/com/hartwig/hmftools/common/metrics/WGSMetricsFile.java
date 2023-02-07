@@ -71,8 +71,8 @@ public final class WGSMetricsFile
         return ImmutableWGSMetrics.builder()
                 .meanCoverage(Double.parseDouble(values[fieldsIndexMap.get(MEAN_COVERAGE_COLUMN)]))
                 .sdCoverage(Double.parseDouble(values[fieldsIndexMap.get(SD_COVERAGE_COLUMN)]))
-                .medianCoverage(Integer.parseInt(values[fieldsIndexMap.get(MEDIAN_COVERAGE_COLUMN)]))
-                .madCoverage(Integer.parseInt(values[fieldsIndexMap.get(MAD_COVERAGE_COLUMN)]))
+                .medianCoverage((int)Double.parseDouble(values[fieldsIndexMap.get(MEDIAN_COVERAGE_COLUMN)]))
+                .madCoverage((int)Double.parseDouble(values[fieldsIndexMap.get(MAD_COVERAGE_COLUMN)]))
                 .pctExcAdapter(fieldsIndexMap.containsKey(PCT_EXC_ADAPTER_COLUMN) ?
                         Double.parseDouble(values[fieldsIndexMap.get(PCT_EXC_ADAPTER_COLUMN)]) : null)
                 .pctExcMapQ(Double.parseDouble(values[fieldsIndexMap.get(PCT_EXC_MAPQ_COLUMN)]))

@@ -84,8 +84,8 @@ public final class MetricsWriter
         tsvData.add(String.valueOf(genomeTerritory));
         tsvData.add(format("%.3f", statistics.Mean));
         tsvData.add(format("%.3f", statistics.StandardDeviation));
-        tsvData.add(format("%.3f", statistics.Median));
-        tsvData.add(format("%.3f", statistics.MedianAbsoluteDeviation));
+        tsvData.add(format("%.0f", statistics.Median));
+        tsvData.add(format("%.0f", statistics.MedianAbsoluteDeviation));
 
         tsvData.add(format("%.5f", 0.0));
 
