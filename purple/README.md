@@ -81,7 +81,7 @@ java -jar purple.jar \
    -output_dir /output/purple/ \
 ```
 
-We recommend using [GRIDSS](https://github.com/PapenfussLab/gridss) as the structural variant caller and using the following arguments into PURPLE:
+Purple requires a GRIDSS + Gripss VCF for structural variants, and Sage for somatic variants.
 
 ```
 java -jar purple.jar \
@@ -94,7 +94,7 @@ java -jar purple.jar \
    -ref_genome_version 37 \
    -ensembl_data_dir /path_to_ensembl_data_cache/ \
    -somatic_vcf /path/COLO829/COLO829.somatic.vcf.gz \
-   -somatic_sv_vcf /path/COLO829/COLO829.sv.high_confidence.vcf.gz \
+   -somatic_sv_vcf /path/COLO829/COLO829.sv.vcf.gz \
    -sv_recovery_vcf /path/COLO829/COLO829.sv.low_confidence.vcf.gz \
    -circos /path/circos-0.69-6/bin/circos \
    -output_dir /output/purple/ \

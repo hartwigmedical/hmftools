@@ -40,8 +40,8 @@ public class SampleDataFiles
         options.addOption(AMBER, true,
                 "Path to AMBER output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
 
-        options.addOption(STRUCTURAL_VARIANTS, true, "Optional location of somatic SV VCF for more accurate segmentation");
-        options.addOption(SOMATIC_SV_VCF, true, "Optional location of somatic SV VCF for more accurate segmentation");
+        options.addOption(STRUCTURAL_VARIANTS, true, "(Deprecated for 'somatic_sv_vcf', location of somatic SV VCF");
+        options.addOption(SOMATIC_SV_VCF, true, "Optional location of somatic SV VCF");
         options.addOption(GERMLINE_SV_VCF, true, "Optional location of germline SV VCF to annotate");
         options.addOption(SV_RECOVERY_VCF, true, "Optional location of failing structural variants that may be recovered");
         options.addOption(GERMLINE_VARIANTS, true, "Optional location of germline variants to enrich and process in driver catalog.");
