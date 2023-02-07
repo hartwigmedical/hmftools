@@ -87,7 +87,7 @@ def load_cobalt_ratio_df(sample_cfg, assume_diploid):
     return cobalt_ratio_df
 
 def chromosome_rank(chromosome):
-    if chromosome is str:
+    if isinstance(chromosome, str):
         chromosome = chromosome.replace('chr', '').upper()
     if chromosome == 'X':
         return 23
@@ -157,18 +157,15 @@ of bam files generated using the same target enrichment process.''',
 
     # remove all regions that are not in the exons. Maybe think about including more?
     cobalt_ratio_df = cobalt_ratio_df.loc[cobalt_ratio_df['target_region']].reset_index(drop=True)
-    cobalt_ratio_df
 
     # now want to normalise this by the median of GC ratios of the panel regions
     normalisation_df = cobalt_ratio_df[['sample_id', 'tumorGCRatio_panel']].groupby(['sample_id']).agg(['median'])
     normalisation_df.columns = normalisation_df.columns.to_flat_index()
     normalisation_df.columns = [ c[0] + '_' + c[1] for c in normalisation_df.columns]
-    normalisation_df
 
     # use this normalisation to calculate relative enrichment per region
     cobalt_ratio_df = pd.merge(cobalt_ratio_df, normalisation_df, how='left', on='sample_id')
     cobalt_ratio_df['relativeEnrichment'] = cobalt_ratio_df['tumorGCRatio_panel'] / cobalt_ratio_df['tumorGCRatio_wgs'] / cobalt_ratio_df['tumorGCRatio_panel_median']
-    cobalt_ratio_df
 
     print(f"calculating relative enrichment")
 
