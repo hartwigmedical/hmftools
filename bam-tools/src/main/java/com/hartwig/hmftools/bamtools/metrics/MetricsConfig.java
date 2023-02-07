@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.SAMPLE;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.addCommonCommandOptions;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.checkFileExists;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.loadSpecificRegionsConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
@@ -23,6 +28,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.CommonUtils;
+import com.hartwig.hmftools.common.genome.bed.BedFileReader;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
@@ -63,16 +69,12 @@ public class MetricsConfig
 
     public static final Logger BT_LOGGER = LogManager.getLogger(MetricsConfig.class);
 
-    // config strings
-    public static final String SAMPLE = "sample";
-    public static final String BAM_FILE = "bam_file";
-    public static final String PARTITION_SIZE = "partition_size";
-
     private static final String MAP_QUAL_THRESHOLD = "map_qual_threshold";
     private static final String BASE_QUAL_THRESHOLD = "base_qual_threshold";
     private static final String MAX_COVERAGE = "max_coverage";
     private static final String EXCLUDE_ZERO_COVERAGE = "exclude_zero_coverage";
     private static final String WRITE_OLD_STYLE = "write_old_style";
+    private static final String REGIONS_BED_FILE = "regions_bed_file";
 
     public static final String LOG_READ_IDS = "log_read_ids";
     public static final String PERF_DEBUG = "perf_debug";
@@ -115,15 +117,7 @@ public class MetricsConfig
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
 
-        try
-        {
-            loadSpecificChromsomesOrRegions(cmd, SpecificChromosomes, SpecificRegions, BT_LOGGER);
-        }
-        catch(Exception e)
-        {
-            BT_LOGGER.error("failed to load specific regions: {}", e.toString());
-            System.exit(1);
-        }
+        mIsValid &= loadSpecificRegionsConfig(cmd, SpecificChromosomes, SpecificRegions);
 
         LogReadIds = cmd.hasOption(LOG_READ_IDS) ?
                 Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
@@ -147,21 +141,15 @@ public class MetricsConfig
     public static Options createCmdLineOptions()
     {
         final Options options = new Options();
-        addOutputOptions(options);
-        addLoggingOptions(options);
 
-        options.addOption(SAMPLE, true, "Tumor sample ID");
-        options.addOption(BAM_FILE, true, "BAM file location");
-        addRefGenomeConfig(options);;
+        addCommonCommandOptions(options);
+
         options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_CHR_PARTITION_SIZE);
         options.addOption(MAP_QUAL_THRESHOLD, true, "Map quality threshold, default: " + DEFAULT_MAP_QUAL_THRESHOLD);
         options.addOption(BASE_QUAL_THRESHOLD, true, "Base quality threshold, default: " + DEFAULT_BASE_QUAL_THRESHOLD);
         options.addOption(MAX_COVERAGE, true, "Max coverage, default: " + DEFAULT_MAX_COVERAGE);
         options.addOption(EXCLUDE_ZERO_COVERAGE, false, "Exclude bases with zero coverage");
         options.addOption(WRITE_OLD_STYLE, false, "Write data in same format as Picard CollectWgsMetrics");
-        addThreadOptions(options);
-
-        addSpecificChromosomesRegionsConfig(options);
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
         options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
 

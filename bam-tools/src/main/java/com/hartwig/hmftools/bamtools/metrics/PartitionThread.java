@@ -50,7 +50,7 @@ public class PartitionThread extends Thread
 
                 if(logAndGc)
                 {
-                    MetricsConfig.BT_LOGGER.debug("processing partition({}), remaining({})", partition.TaskId, mPartitions.size());
+                    MetricsConfig.BT_LOGGER.info("processing partition({}), remaining({})", partition.TaskId, mPartitions.size());
                 }
 
                 slicer.run();
