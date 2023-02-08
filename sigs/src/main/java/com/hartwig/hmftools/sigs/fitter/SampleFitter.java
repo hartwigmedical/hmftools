@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.sigs.fitter;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.sigs.DataUtils.round;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_MISALLOCATED;
@@ -29,6 +32,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.sigs.ImmutableSignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
@@ -53,6 +57,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class SampleFitter
 {
+    private final RefGenomeVersion mRefGenomeVersion;
     private final String mSampleIdsConfig;
     private final List<String> mSampleIdList;
     private final String mSnvCountsFile;
@@ -99,6 +104,8 @@ public class SampleFitter
 
         mSampleCountsMatrix = null;
         mSignatures = null;
+
+        mRefGenomeVersion = RefGenomeVersion.from(cmd);
 
         mOutputDir = parseOutputDir(cmd);
         mOutputId = cmd.getOptionValue(OUTPUT_FILE_ID);
@@ -226,7 +233,7 @@ public class SampleFitter
         }
     }
 
-    private final double[] getSampleCounts(final String sampleId, int sampleIndex)
+    private double[] getSampleCounts(final String sampleId, int sampleIndex)
     {
         if(mSampleCountsMatrix != null)
             return mSampleCountsMatrix.getCol(sampleIndex);
@@ -243,8 +250,7 @@ public class SampleFitter
 
             if(mPositionBucketSize > 0)
             {
-                PositionFreqBuilder posFreqBuilder =
-                        new PositionFreqBuilder(mOutputDir, mOutputId, mPositionBucketSize);
+                PositionFreqBuilder posFreqBuilder = new PositionFreqBuilder(mRefGenomeVersion, mOutputDir, mOutputId, mPositionBucketSize);
 
                 final PositionFrequencies samplePosFrequencies = mSnvLoader.getPositionFrequencies().get(0);
                 posFreqBuilder.writeSampleCounts(sampleId, samplePosFrequencies.getChrPosBucketFrequencies(), mWritePosFreqCoords);
@@ -366,6 +372,7 @@ public class SampleFitter
         Options options = new Options();
         CommonUtils.addCmdLineArgs(options);
         addDatabaseCmdLineArgs(options);
+        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         options.addOption(POSITION_BUCKET_SIZE, true, "Position bucket size");
         options.addOption(MAX_SAMPLE_COUNT, true, "Max sample SNV count for position frequencies, default = 20K");
         options.addOption(UPLOAD_TO_DB, false, "Upload results to database if present");

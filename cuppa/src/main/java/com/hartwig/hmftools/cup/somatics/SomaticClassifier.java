@@ -184,7 +184,7 @@ public class SomaticClassifier implements CuppaClassifier
         int posFreqBucketSize = cmd != null && cmd.hasOption(SNV_POS_FREQ_POS_SIZE) ?
                 Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE)) : GEN_POS_BUCKET_SIZE;
 
-        mPosFrequencies = new PositionFrequencies(posFreqBucketSize, GEN_POS_MAX_SAMPLE_COUNT);
+        mPosFrequencies = new PositionFrequencies(mConfig.RefGenVersion, posFreqBucketSize, GEN_POS_MAX_SAMPLE_COUNT);
 
         if(cmd != null && cmd.hasOption(WRITE_GEN_POS_CSS) && !mRunPairwiseGenPos)
         {

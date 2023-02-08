@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.genome.refgenome;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -33,6 +34,11 @@ public enum RefGenomeVersion
         }
 
         throw new IllegalArgumentException("Cannot resolve ref genome version: " + version);
+    }
+
+    public static RefGenomeVersion from(final CommandLine cmd)
+    {
+        return RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(V37)));
     }
 
     RefGenomeVersion(@NotNull final String identifier, final boolean is37)

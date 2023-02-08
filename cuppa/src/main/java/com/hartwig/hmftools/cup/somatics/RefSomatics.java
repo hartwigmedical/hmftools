@@ -115,7 +115,7 @@ public class RefSomatics implements RefClassifier
 
         int posFreqBucketSize = Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE, String.valueOf(GEN_POS_BUCKET_SIZE)));
 
-        mPosFrequencies = new PositionFrequencies(posFreqBucketSize, GEN_POS_MAX_SAMPLE_COUNT);
+        mPosFrequencies = new PositionFrequencies(mConfig.RefGenVersion, posFreqBucketSize, GEN_POS_MAX_SAMPLE_COUNT);
     }
 
     public CategoryType categoryType() { return SNV; }

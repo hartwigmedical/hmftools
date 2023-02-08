@@ -2,11 +2,13 @@ package com.hartwig.hmftools.common.genome.refgenome;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,7 +60,6 @@ public class RefGenomeSource implements RefGenomeInterface
     {
         return mRefGenome.getSubsequenceAt(chromosome, posStart, posEnd).getBases();
     }
-
 
     public static RefGenomeSource loadRefGenome(final String filename)
     {

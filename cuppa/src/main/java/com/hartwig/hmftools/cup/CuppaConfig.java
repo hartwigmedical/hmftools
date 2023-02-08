@@ -2,6 +2,9 @@ package com.hartwig.hmftools.cup;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -50,6 +53,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.feature.FeatureClassifier;
 import com.hartwig.hmftools.cup.rna.AltSjClassifier;
@@ -66,6 +70,7 @@ import org.apache.logging.log4j.Logger;
 
 public class CuppaConfig
 {
+    public final RefGenomeVersion RefGenVersion;
     public final List<CategoryType> Categories;
 
     // reference data
@@ -194,6 +199,7 @@ public class CuppaConfig
 
         CUP_LOGGER.info("running classifiers: {}", Categories.isEmpty() ? ALL_CATEGORIES : Categories.toString());
 
+        RefGenVersion = RefGenomeVersion.from(cmd);
         RefDataDir = checkAddDirSeparator(cmd.getOptionValue(REF_DATA_DIR, ""));
 
         RefSampleDataFile = getRefDataFile(cmd, REF_SAMPLE_DATA_FILE, REF_FILE_SAMPLE_DATA);
@@ -444,6 +450,7 @@ public class CuppaConfig
         options.addOption(WRITE_CONDENSED, false, "Write sample results as single line");
 
         addDatabaseCmdLineArgs(options);
+        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         GeneExpressionClassifier.addCmdLineArgs(options);
         AltSjClassifier.addCmdLineArgs(options);
         SomaticClassifier.addCmdLineArgs(options);
@@ -457,6 +464,7 @@ public class CuppaConfig
 
     public CuppaConfig()
     {
+        RefGenVersion = V37;
         Categories = Lists.newArrayList();
         RefDataDir = "";
         RefSampleDataFile = "";

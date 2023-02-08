@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cup.ref;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.feature.RefFeatures;
 import com.hartwig.hmftools.cup.rna.RefGeneExpression;
@@ -32,6 +35,7 @@ import org.apache.commons.cli.Options;
 
 public class RefDataConfig
 {
+    public final RefGenomeVersion RefGenVersion;
     public final List<CategoryType> Categories;
 
     public final String OutputDir;
@@ -87,6 +91,7 @@ public class RefDataConfig
 
         CUP_LOGGER.info("build ref data for classifiers: {}", Categories.isEmpty() ? ALL_CATEGORIES : Categories.toString());
 
+        RefGenVersion = RefGenomeVersion.from(cmd);
         SampleDataFile = cmd.getOptionValue(REF_SAMPLE_DATA_FILE, "");
         CohortSampleTraitsFile = cmd.getOptionValue(REF_COHORT_SAMPLE_TRAITS_FILE, "");
         CohortSigContribsFile = cmd.getOptionValue(REF_COHORT_SIG_CONTRIBS_FILE, "");
@@ -152,6 +157,7 @@ public class RefDataConfig
         options.addOption(WRITE_COHORT_FILES, false, "Re-write ref data as cohort files");
 
         addDatabaseCmdLineArgs(options);
+        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
 
         addLoggingOptions(options);
         addOutputOptions(options);

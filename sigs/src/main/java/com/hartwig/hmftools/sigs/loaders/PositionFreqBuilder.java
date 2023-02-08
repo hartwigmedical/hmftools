@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.sigs.loaders;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getBucketIndex;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getChromosomeFromIndex;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getPositionFromIndex;
@@ -25,6 +28,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
@@ -40,6 +44,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class PositionFreqBuilder
 {
+    private final RefGenomeVersion mRefGenomeVersion;
+
     // position mapping
     private final Map<String,Integer> mChromosomeLengths;
     private final Map<String,Integer> mChromosomePosIndex;
@@ -76,14 +82,16 @@ public class PositionFreqBuilder
 
         mSampleList.addAll(ConfigUtils.loadSampleIdsFile(cmd.getOptionValue(SAMPLE_DATA_FILE)));
 
-        mChromosomeLengths = PositionFrequencies.buildStandardChromosomeLengths();
-        mPositionCacheSize = initialisePositionCache(mBucketSize, mChromosomeLengths, mChromosomePosIndex);
+        mRefGenomeVersion = RefGenomeVersion.from(cmd);
+        mChromosomeLengths = PositionFrequencies.buildStandardChromosomeLengths(mRefGenomeVersion);
+        mPositionCacheSize = initialisePositionCache(mRefGenomeVersion, mBucketSize, mChromosomeLengths, mChromosomePosIndex);
 
         SIG_LOGGER.info("position cache size({}) from position bucket position({})", mPositionCacheSize, mBucketSize);
     }
 
-    public PositionFreqBuilder(final String outputDir, final String outputId, int positionBucketSize)
+    public PositionFreqBuilder(final RefGenomeVersion refGenomeVersion, final String outputDir, final String outputId, int positionBucketSize)
     {
+        mRefGenomeVersion = refGenomeVersion;
         mChromosomePosIndex = Maps.newHashMap();
         mSamplePositionFrequencies = Maps.newHashMap();
 
@@ -93,8 +101,8 @@ public class PositionFreqBuilder
         mOutputDir = outputDir;
         mOutputFileId = outputId;
 
-        mChromosomeLengths = PositionFrequencies.buildStandardChromosomeLengths();
-        mPositionCacheSize = initialisePositionCache(mBucketSize, mChromosomeLengths, mChromosomePosIndex);
+        mChromosomeLengths = PositionFrequencies.buildStandardChromosomeLengths(refGenomeVersion);
+        mPositionCacheSize = initialisePositionCache(refGenomeVersion, mBucketSize, mChromosomeLengths, mChromosomePosIndex);
         SIG_LOGGER.info("position cache size({}) from position bucket position({})", mPositionCacheSize, mBucketSize);
 
         mSampleList = null;
@@ -111,6 +119,7 @@ public class PositionFreqBuilder
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(OUTPUT_FILE_ID, true, "Output file ID");
         options.addOption(LOG_DEBUG, false, "Log verbose");
+        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
     }
 
     public void run()
@@ -159,7 +168,7 @@ public class PositionFreqBuilder
         final List<String> sampleNames = Lists.newArrayList();
 
         final Map<String,Integer> newChrPosIndexMap = Maps.newHashMap();
-        int newPosCacheSize = initialisePositionCache(mNewBucketSize, mChromosomeLengths, newChrPosIndexMap);
+        int newPosCacheSize = initialisePositionCache(mRefGenomeVersion, mNewBucketSize, mChromosomeLengths, newChrPosIndexMap);
 
         final Matrix oldSampleCounts = loadMatrixDataFile(mSamplePosCountsFile, sampleNames, false);
         final double[][] oldCounts = oldSampleCounts.getData();

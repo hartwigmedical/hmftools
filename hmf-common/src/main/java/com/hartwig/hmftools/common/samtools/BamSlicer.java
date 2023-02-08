@@ -50,7 +50,7 @@ public class BamSlicer
 
     public void haltProcessing() { mConsumerHalt = true; }
 
-    public void slice(@NotNull final SamReader samReader, final List<ChrBaseRegion> regions, @NotNull final Consumer<SAMRecord> consumer)
+    public void slice(final SamReader samReader, final List<ChrBaseRegion> regions, final Consumer<SAMRecord> consumer)
     {
         mConsumerHalt = false;
 
@@ -73,12 +73,12 @@ public class BamSlicer
         }
     }
 
-    public List<SAMRecord> slice(@NotNull final SamReader samReader, final ChrBaseRegion region)
+    public List<SAMRecord> slice(final SamReader samReader, final ChrBaseRegion region)
     {
         return slice(samReader, createIntervals(Lists.newArrayList(region), samReader.getFileHeader()));
     }
 
-    public List<SAMRecord> slice(@NotNull final SamReader samReader, final GenomePosition variantRegion)
+    public List<SAMRecord> slice(final SamReader samReader, final GenomePosition variantRegion)
     {
         int position = variantRegion.position();
 
@@ -88,7 +88,7 @@ public class BamSlicer
         return slice(samReader, queryIntervals);
     }
 
-    public List<SAMRecord> slice(@NotNull final SamReader samReader, final QueryInterval[] queryIntervals)
+    public List<SAMRecord> slice(final SamReader samReader, final QueryInterval[] queryIntervals)
     {
         final List<SAMRecord> records = Lists.newArrayList();
 
