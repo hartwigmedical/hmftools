@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.cuppa.interpretation.MolecularTissueOriginReporting;
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
@@ -50,6 +51,10 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     @Override
     public abstract Map<String, List<PeachGenotype>> pharmacogeneticsGenotypes();
+
+    @NotNull
+    @Override
+    public abstract HlaAllelesReportingData hlaAllelesReportingData();
 
     @Override
     @NotNull

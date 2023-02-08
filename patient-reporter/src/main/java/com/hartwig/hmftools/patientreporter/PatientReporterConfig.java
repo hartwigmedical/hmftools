@@ -365,6 +365,8 @@ public interface PatientReporterConfig {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQcFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
             peachGenotypeTsv = nonOptionalFile(cmd, PEACH_GENOTYPE_TSV);
+            lilacResultCsv = nonOptionalFile(cmd, LILAC_RESULT_CSV);
+            lilacQcCsv = nonOptionalFile(cmd, LILAC_QC_CSV);
         } else if (!isQCFail) {
             if (requirePipelineVersion) {
                 pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);

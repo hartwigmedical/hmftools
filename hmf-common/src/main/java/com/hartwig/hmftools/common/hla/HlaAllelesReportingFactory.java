@@ -2,13 +2,12 @@ package com.hartwig.hmftools.common.hla;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.StringJoiner;
+import java.util.*;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.logging.log4j.LogManager;
@@ -39,7 +38,8 @@ public class HlaAllelesReportingFactory {
     }
 
     @NotNull
-    public static HlaAllelesReportingData convertToReportData(@NotNull LilacSummaryData lilacSummaryData, boolean hasRealiablePurity) {
+    public static HlaAllelesReportingData convertToReportData(@NotNull LilacSummaryData lilacSummaryData, boolean hasRealiablePurity,
+                                                              Set<PurpleQCStatus> purpleQCStatus ) {
         List<HlaReporting> lilacReportingList = Lists.newArrayList();
 
         Map<String, List<LilacAllele>> mapLilacReportingAlleles = generateLilacMap(lilacSummaryData);
@@ -61,16 +61,24 @@ public class HlaAllelesReportingFactory {
                 LOGGER.warn("To many hla alleles of allele '{}'", keyMap.getKey());
             }
 
-            lilacReportingList.add(ImmutableHlaReporting.builder()
-                    .hlaAllele(ImmutableHlaAllele.builder()
-                            .germlineAllele(keyMap.getValue().get(0).allele())
-                            .gene(extractHLAGene(keyMap.getValue().get(0)))
-                            .build())
-                    .germlineCopies(germlineCopies)
-                    .tumorCopies(tumorCopies)
-                    .somaticMutations(mutationString)
-                    .interpretation(HLApresenceInTumor(keyMap.getValue().get(0), mutationString, hasRealiablePurity))
-                    .build());
+            boolean contamination = purpleQCStatus.contains(PurpleQCStatus.FAIL_CONTAMINATION);
+            boolean failure = purpleQCStatus.contains(PurpleQCStatus.FAIL_NO_TUMOR);
+
+            String interpretation = HLApresenceInTumor(keyMap.getValue().get(0), mutationString, hasRealiablePurity);
+            String interpretInterpretation = hasRealiablePurity ? interpretation : "Unknown";
+
+            if (!contamination) {
+                lilacReportingList.add(ImmutableHlaReporting.builder()
+                        .hlaAllele(ImmutableHlaAllele.builder()
+                                .germlineAllele(keyMap.getValue().get(0).allele())
+                                .gene(extractHLAGene(keyMap.getValue().get(0)))
+                                .build())
+                        .germlineCopies(germlineCopies)
+                        .tumorCopies(hasRealiablePurity && !failure ? tumorCopies : Double.NaN)
+                        .somaticMutations(!failure ? mutationString : DataUtil.NA_STRING)
+                        .interpretation(!failure ? interpretInterpretation  : DataUtil.NA_STRING)
+                        .build());
+            }
         }
 
         Map<String, List<HlaReporting>> hlaAlleleMap = Maps.newHashMap();
@@ -129,7 +137,7 @@ public class HlaAllelesReportingFactory {
     }
 
     @NotNull
-    public static String HLApresenceInTumor(@NotNull LilacAllele allele, @NotNull String mutationString, boolean hasReliablePurity) {
+    public static String HLApresenceInTumor(@NotNull LilacAllele allele, @NotNull String mutationString, Boolean hasReliablePurity) {
         double tumorCopies = Double.parseDouble(SINGLE_DIGIT.format(allele.tumorCopyNumber()));
         boolean mutation = mutationString.contains("missense") || mutationString.contains("nonsense or frameshift")
                 || mutationString.contains("splice") || mutationString.contains("inframe indel");

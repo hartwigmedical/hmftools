@@ -411,13 +411,13 @@ public class SummaryChapter implements ReportChapter {
     private void renderHla(@NotNull Document report) {
         Div div = createSectionStartDiv(contentWidth());
         String title = "HLA Alleles";
-        if (!patientReport.genomicAnalysis().hlaAlleles().hlaQC().equals("PASS")) {
+        if (!patientReport.hlaAllelesReportingData().hlaQC().equals("PASS")) {
             String noConsent = "The QC of the HLA types do not meet the QC cut-offs";
             div.add(TableUtil.createNoConsentReportTable(title,
                     noConsent,
                     TableUtil.TABLE_BOTTOM_MARGIN_SUMMARY,
                     ReportResources.CONTENT_WIDTH_WIDE_SUMMARY));
-        } else if (patientReport.genomicAnalysis().hlaAlleles().hlaAllelesReporting().isEmpty()) {
+        } else if (patientReport.hlaAllelesReportingData().hlaAllelesReporting().isEmpty()) {
             div.add(TableUtil.createNoneReportTable(title,
                     null,
                     TableUtil.TABLE_BOTTOM_MARGIN_SUMMARY,
@@ -429,9 +429,9 @@ public class SummaryChapter implements ReportChapter {
                     ReportResources.CONTENT_WIDTH_WIDE_SUMMARY);
 
             Set<String> sortedAlleles =
-                    Sets.newTreeSet(patientReport.genomicAnalysis().hlaAlleles().hlaAllelesReporting().keySet().stream().collect(Collectors.toSet()));
+                    Sets.newTreeSet(patientReport.hlaAllelesReportingData().hlaAllelesReporting().keySet().stream().collect(Collectors.toSet()));
             for (String sortAllele : sortedAlleles) {
-                List<HlaReporting> allele = patientReport.genomicAnalysis().hlaAlleles().hlaAllelesReporting().get(sortAllele);
+                List<HlaReporting> allele = patientReport.hlaAllelesReportingData().hlaAllelesReporting().get(sortAllele);
 
                 Set<String> germlineAllele = Sets.newHashSet();
                 Set<String> interpretation = Sets.newHashSet();

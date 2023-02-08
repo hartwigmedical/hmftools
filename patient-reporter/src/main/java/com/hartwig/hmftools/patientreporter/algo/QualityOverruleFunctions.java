@@ -2,18 +2,10 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
-import com.hartwig.hmftools.common.hla.HlaReporting;
-import com.hartwig.hmftools.common.hla.ImmutableHlaAllelesReportingData;
-import com.hartwig.hmftools.common.hla.ImmutableHlaReporting;
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.loader.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -49,14 +41,11 @@ public final class QualityOverruleFunctions {
             newNotifyPerVariant.put(overruled.variant(), overruled.notifyVariant());
         }
 
-        HlaAllelesReportingData hlaAllelesReportingData = overuleHla(genomicAnalysis.hlaAlleles(), genomicAnalysis.hasReliablePurity());
-
         return ImmutableGenomicAnalysis.builder()
                 .from(genomicAnalysis)
                 .reportableVariants(overruledVariants)
                 .notifyGermlineStatusPerVariant(newNotifyPerVariant)
                 .cnPerChromosome(cnPerChromosomeDataSort)
-                .hlaAlleles(hlaAllelesReportingData)
                 .suspectGeneCopyNumbersHRDWithLOH(overruleSuspectedLOH(genomicAnalysis.suspectGeneCopyNumbersHRDWithLOH(),
                         genomicAnalysis.hasReliablePurity()))
                 .suspectGeneCopyNumbersMSIWithLOH(overruleSuspectedLOH(genomicAnalysis.suspectGeneCopyNumbersMSIWithLOH(),
@@ -90,32 +79,6 @@ public final class QualityOverruleFunctions {
                 return item1.chromosome().compareTo(item2.chromosome());
             }
         }).collect(Collectors.toList());
-    }
-
-    @NotNull
-    private static HlaAllelesReportingData overuleHla(@NotNull HlaAllelesReportingData hlaAllelesReportingData, boolean hasReliablePurity) {
-
-        Map<String, List<HlaReporting>> alleles = Maps.newHashMap();
-
-        Set<String> hlaAlleles =
-                Sets.newTreeSet(hlaAllelesReportingData.hlaAllelesReporting().keySet().stream().collect(Collectors.toSet()));
-        for (String allele : hlaAlleles) {
-            List<HlaReporting> hlaReportingList = hlaAllelesReportingData.hlaAllelesReporting().get(allele);
-            List<HlaReporting> hlaReportingListCurated = Lists.newArrayList();
-            for (HlaReporting hlaReporting : hlaReportingList) {
-                hlaReportingListCurated.add(ImmutableHlaReporting.builder()
-                        .from(hlaReporting)
-                        .germlineCopies(hasReliablePurity ? hlaReporting.germlineCopies() : Double.NaN)
-                        .tumorCopies(hasReliablePurity ? hlaReporting.tumorCopies() : Double.NaN)
-                        .interpretation(hasReliablePurity ? hlaReporting.interpretation() : "Unknown")
-                        .build());
-            }
-            alleles.put(allele, hlaReportingListCurated);
-        }
-        return ImmutableHlaAllelesReportingData.builder()
-                .from(hlaAllelesReportingData)
-                .hlaAllelesReporting(hlaAllelesReportingData.hlaQC().equals("PASS") ? alleles : Maps.newHashMap())
-                .build();
     }
 
     @NotNull

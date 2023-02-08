@@ -88,9 +88,6 @@ public abstract class GenomicAnalysis {
     public abstract List<AnnotatedVirus> reportableViruses();
 
     @NotNull
-    public abstract HlaAllelesReportingData hlaAlleles();
-
-    @NotNull
     public abstract List<LohGenesReporting> suspectGeneCopyNumbersHRDWithLOH();
 
     @NotNull

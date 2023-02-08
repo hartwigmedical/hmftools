@@ -12,9 +12,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
-import com.hartwig.hmftools.common.hla.HlaAllelesReportingFactory;
-import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.linx.GeneDisruption;
 import com.hartwig.hmftools.common.linx.GeneDisruptionFactory;
@@ -104,9 +101,6 @@ public class GenomicAnalyzer {
         Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant =
                 determineNotify(reportableVariants, germlineReportingModel, germlineReportingLevel);
 
-        LilacSummaryData lilacSummaryData = LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
-        HlaAllelesReportingData hlaReportingData = HlaAllelesReportingFactory.convertToReportData(lilacSummaryData, purpleData.hasReliablePurity());
-
         List<ProtectEvidence> reportableEvidenceItems = extractReportableEvidenceItems(config.protectEvidenceTsv());
         List<ProtectEvidence> nonTrialsOnLabel = ReportableEvidenceItemFactory.extractNonTrialsOnLabel(reportableEvidenceItems);
         List<ProtectEvidence> trialsOnLabel = ClinicalTrialFactory.extractOnLabelTrials(reportableEvidenceItems);
@@ -136,7 +130,6 @@ public class GenomicAnalyzer {
                 .geneDisruptions(reportableGeneDisruptions)
                 .homozygousDisruptions(linxData.homozygousDisruptions())
                 .reportableViruses(virusInterpreterData.reportableViruses())
-                .hlaAlleles(hlaReportingData)
                 .suspectGeneCopyNumbersHRDWithLOH(suspectGeneCopyNumbersHRDWithLOH)
                 .suspectGeneCopyNumbersMSIWithLOH(suspectGeneCopyNumbersMSIWithLOH)
                 .build();

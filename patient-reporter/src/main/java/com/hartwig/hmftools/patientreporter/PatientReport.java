@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public interface PatientReport {
 
@@ -72,7 +73,7 @@ public interface PatientReport {
     @NotNull
     Map<String, List<PeachGenotype>> pharmacogeneticsGenotypes();
 
-    @NotNull
+    @Nullable
     HlaAllelesReportingData hlaAllelesReportingData();
 
     @NotNull

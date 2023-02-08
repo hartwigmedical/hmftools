@@ -8,10 +8,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingFactory;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
@@ -23,7 +27,6 @@ import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.patientreporter.*;
 import com.hartwig.hmftools.patientreporter.pipeline.PipelineVersion;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -71,36 +74,43 @@ public class QCFailReporter {
 
         String wgsPurityString = null;
         Set<PurpleQCStatus> purpleQc = Sets.newHashSet();
+        boolean hasReliablePurity = false;
+        HlaAllelesReportingData hlaReportingData = null;
+        Map<String, List<PeachGenotype>> pharmacogeneticsMap = Maps.newHashMap();
+
         if (reason.isDeepWGSDataAvailable()) {
             String purplePurityTsv = config.purplePurityTsv();
             LOGGER.info("Loading PURPLE data from {}", new File(purplePurityTsv).getParent());
             PurityContext purityContext = PurityContextFile.readWithQC(config.purpleQcFile(), purplePurityTsv);
 
             String formattedPurity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
-            boolean hasReliablePurity = PurityContext.checkHasReliablePurity(purityContext);
+            hasReliablePurity = PurityContext.checkHasReliablePurity(purityContext);
 
             wgsPurityString = hasReliablePurity ? formattedPurity : Lims.PURITY_NOT_RELIABLE_STRING;
             purpleQc = purityContext.qc().status();
+
+            List<PeachGenotype> pharmacogeneticsGenotypesOverrule = Lists.newArrayList();
+            if (reason.isDeepWGSDataAvailable() && !purpleQc.contains(PurpleQCStatus.FAIL_CONTAMINATION)) {
+                List<PeachGenotype> pharmacogeneticsGenotypes = loadPeachData(config.peachGenotypeTsv());
+                pharmacogeneticsGenotypesOverrule = sampleReport.reportPharmogenetics() ? pharmacogeneticsGenotypes : Lists.newArrayList();
+            }
+
+
+            for (PeachGenotype pharmacogenetics : pharmacogeneticsGenotypesOverrule) {
+                if (pharmacogeneticsMap.containsKey(pharmacogenetics.gene())) {
+                    List<PeachGenotype> curent = pharmacogeneticsMap.get(pharmacogenetics.gene());
+                    curent.add(pharmacogenetics);
+                    pharmacogeneticsMap.put(pharmacogenetics.gene(), curent);
+                } else {
+                    pharmacogeneticsMap.put(pharmacogenetics.gene(), Lists.newArrayList(pharmacogenetics));
+                }
+            }
+
+            LilacSummaryData lilacSummaryData = LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
+            hlaReportingData = HlaAllelesReportingFactory.convertToReportData(lilacSummaryData, hasReliablePurity, purpleQc);
         }
 
         LOGGER.info("  QC status: {}", purpleQc.toString());
-
-        List<PeachGenotype> pharmacogeneticsGenotypesOverrule = Lists.newArrayList();
-        if (reason.isDeepWGSDataAvailable() && !purpleQc.contains(PurpleQCStatus.FAIL_CONTAMINATION)) {
-            List<PeachGenotype> pharmacogeneticsGenotypes = loadPeachData(config.peachGenotypeTsv());
-            pharmacogeneticsGenotypesOverrule = sampleReport.reportPharmogenetics() ? pharmacogeneticsGenotypes : Lists.newArrayList();
-        }
-
-        Map<String, List<PeachGenotype>> pharmacogeneticsMap = Maps.newHashMap();
-        for (PeachGenotype pharmacogenetics : pharmacogeneticsGenotypesOverrule) {
-            if (pharmacogeneticsMap.containsKey(pharmacogenetics.gene())) {
-                List<PeachGenotype> curent = pharmacogeneticsMap.get(pharmacogenetics.gene());
-                curent.add(pharmacogenetics);
-                pharmacogeneticsMap.put(pharmacogenetics.gene(), curent);
-            } else {
-                pharmacogeneticsMap.put(pharmacogenetics.gene(), com.google.common.collect.Lists.newArrayList(pharmacogenetics));
-            }
-        }
 
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
@@ -115,6 +125,7 @@ public class QCFailReporter {
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .udiDi(reportData.udiDi())
                 .pharmacogeneticsGenotypes(pharmacogeneticsMap)
+                .hlaAllelesReportingData(hlaReportingData)
                 .purpleQC(purpleQc)
                 .reportDate(reportDate)
                 .isWGSreport(true)

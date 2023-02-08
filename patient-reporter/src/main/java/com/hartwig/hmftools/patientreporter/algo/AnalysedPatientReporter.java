@@ -18,6 +18,9 @@ import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
 import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPredictionFactory;
 import com.hartwig.hmftools.common.cuppa.interpretation.MolecularTissueOriginReporting;
 import com.hartwig.hmftools.common.cuppa.interpretation.MolecularTissueOriginReportingFactory;
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingData;
+import com.hartwig.hmftools.common.hla.HlaAllelesReportingFactory;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
@@ -119,6 +122,9 @@ public class AnalysedPatientReporter {
             }
         }
 
+        LilacSummaryData lilacSummaryData = LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
+        HlaAllelesReportingData hlaReportingData = HlaAllelesReportingFactory.convertToReportData(lilacSummaryData, curateGeneName.hasReliablePurity(), curateGeneName.purpleQCStatus());
+
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(qcForm)
@@ -140,6 +146,7 @@ public class AnalysedPatientReporter {
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .udiDi(reportData.udiDi())
                 .pharmacogeneticsGenotypes(pharmacogeneticsGenotypesMap)
+                .hlaAllelesReportingData(hlaReportingData)
                 .reportDate(reportDate)
                 .isWGSreport(true)
                 .build();

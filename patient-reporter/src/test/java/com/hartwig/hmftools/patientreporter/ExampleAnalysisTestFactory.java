@@ -185,7 +185,6 @@ public final class ExampleAnalysisTestFactory {
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .reportableViruses(viruses)
-                .hlaAlleles(hlaData)
                 .suspectGeneCopyNumbersMSIWithLOH(MSILOHGenes())
                 .suspectGeneCopyNumbersHRDWithLOH(HRDLOHGenes())
                 .build();
@@ -215,6 +214,7 @@ public final class ExampleAnalysisTestFactory {
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .pipelineVersion(pipelineVersion)
                 .pharmacogeneticsGenotypes(pharmacogeneticsGenotypes)
+                .hlaAllelesReportingData(hlaData)
                 .reportDate(reportDate)
                 .isWGSreport(true)
                 .build();
