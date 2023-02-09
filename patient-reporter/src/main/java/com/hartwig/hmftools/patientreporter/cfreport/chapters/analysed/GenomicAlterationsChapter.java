@@ -494,7 +494,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 Set<String> sortedPharmacogenetics = Sets.newTreeSet(pharmacogeneticsMap.keySet().stream().collect(Collectors.toSet()));
                 for (String sortPharmacogenetics : sortedPharmacogenetics) {
                     List<PeachGenotype> pharmacogenticsGenotypeList = pharmacogeneticsMap.get(sortPharmacogenetics);
-                    contentTable.addCell(TableUtil.createContentCell(sortPharmacogenetics));
+                    contentTable.addCell(TableUtil.createContentCell(sortPharmacogenetics.equals("UGT1A1") ? sortPharmacogenetics + "#" : sortPharmacogenetics));
 
                     Table tableGenotype = new Table(new float[] { 1 });
                     Table tableFunction = new Table(new float[] { 1 });
@@ -515,6 +515,10 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     contentTable.addCell(TableUtil.createContentCell(tableLinkedDrugs));
                     contentTable.addCell(TableUtil.createContentCell(tableSource));
                 }
+                contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
+                        .add(new Paragraph("\n #Note that we do not separately call the *36 allele. Dutch clinical " +
+                                "guidelines consider the *36 allele to be clinically equivalent to the *1 allele.").addStyle(ReportResources.subTextStyle()
+                                .setTextAlignment(TextAlignment.CENTER))));
                 return TableUtil.createWrappingReportTable(title, null, contentTable, TableUtil.TABLE_BOTTOM_MARGIN);
             }
         } else {
