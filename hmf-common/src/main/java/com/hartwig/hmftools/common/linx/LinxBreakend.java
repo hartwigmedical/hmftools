@@ -80,6 +80,10 @@ public abstract class LinxBreakend
 
         List<LinxBreakend> breakends = Lists.newArrayList();
 
+        // backwards compatibility on old column name
+        Integer codingTypeIndex = fieldsIndexMap.containsKey("codingType") ?
+                fieldsIndexMap.get("codingType") : fieldsIndexMap.get("codingContext");
+
         for(int i = 0; i < lines.size(); ++i)
         {
             String[] values = lines.get(i).split(DELIMITER);
@@ -96,7 +100,7 @@ public abstract class LinxBreakend
                     .reportedDisruption(Boolean.parseBoolean(values[fieldsIndexMap.get("reportedDisruption")]))
                     .undisruptedCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("undisruptedCopyNumber")]))
                     .regionType(values[fieldsIndexMap.get("regionType")])
-                    .codingContext(values[fieldsIndexMap.get("codingContext")])
+                    .codingContext(values[codingTypeIndex])
                     .biotype(values[fieldsIndexMap.get("biotype")])
                     .exonicBasePhase(Integer.parseInt(values[fieldsIndexMap.get("exonicBasePhase")]))
                     .nextSpliceExonRank(Integer.parseInt(values[fieldsIndexMap.get("nextSpliceExonRank")]))
