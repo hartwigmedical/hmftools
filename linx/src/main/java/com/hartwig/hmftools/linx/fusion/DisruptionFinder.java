@@ -759,14 +759,13 @@ public class DisruptionFinder implements CohortFileInterface
 
                         SvBreakend breakend = var.getBreakend(be);
 
-                        LNX_LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted, cnLowside({})",
-                                var.id(), breakend, gene.geneName(), transcript.transName(),
-                                formatJcn(transcript.undisruptedCopyNumber()));
-
-                        transcript.setReportableDisruption(true);
-
                         if(!transcript.undisruptedCopyNumberSet())
                             transcript.setUndisruptedCopyNumber(getUndisruptedCopyNumber(breakend));
+
+                        LNX_LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted, cnLowside({})",
+                                var.id(), breakend, gene.geneName(), transcript.transName(), formatJcn(transcript.undisruptedCopyNumber()));
+
+                        transcript.setReportableDisruption(true);
 
                         SvDisruptionData disruptionData = new SvDisruptionData(
                                 var,  gene.isStart(), gene.GeneData, transcript.TransData,

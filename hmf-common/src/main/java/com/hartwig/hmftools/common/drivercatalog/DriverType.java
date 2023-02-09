@@ -13,7 +13,9 @@ public enum DriverType
     MUTATION,
     GERMLINE_MUTATION,
     GERMLINE_DELETION,
-    GERMLINE_DISRUPTION;
+    GERMLINE_DISRUPTION,
+    GERMLINE_HOM_DUP_DISRUPTION,
+    UNKNOWN;
 
     public static final EnumSet<DriverType> DRIVERS_PURPLE_GERMLINE = EnumSet.of(DriverType.GERMLINE_MUTATION, DriverType.GERMLINE_DELETION);
 
@@ -33,7 +35,14 @@ public enum DriverType
     public static DriverType checkConvertType(final String driverTypeStr)
     {
         // allow reading of old types for backwards compatibility
-        return DriverType.valueOf(driverTypeStr);
+        try
+        {
+            return DriverType.valueOf(driverTypeStr);
+        }
+        catch(IllegalArgumentException e)
+        {
+            return UNKNOWN;
+        }
     }
 
 }
