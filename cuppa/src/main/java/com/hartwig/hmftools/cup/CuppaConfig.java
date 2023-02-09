@@ -120,6 +120,7 @@ public class CuppaConfig
     public final boolean WriteSimilarities;
     public final boolean WriteDetailedScores;
     public final boolean WriteCondensed;
+    public final boolean CreatePdf;
 
     public final String OutputDir;
     public final String OutputFileId;
@@ -179,6 +180,7 @@ public class CuppaConfig
     public static final String WRITE_SIMS = "write_similarities";
     public static final String WRITE_DETAILED_SCORES = "write_detailed_scores";
     public static final String WRITE_CONDENSED = "write_condensed";
+    public static final String CREATE_PDF = "create_pdf";
 
     public static final Logger CUP_LOGGER = LogManager.getLogger(CuppaConfig.class);
 
@@ -296,6 +298,7 @@ public class CuppaConfig
         WriteSimilarities = cmd.hasOption(WRITE_SIMS);
         WriteCondensed = cmd.hasOption(WRITE_CONDENSED);
         WriteDetailedScores = cmd.hasOption(WRITE_DETAILED_SCORES);
+        CreatePdf = cmd.hasOption(CREATE_PDF);
     }
 
     private String getRefDataFile(final CommandLine cmd, final String configStr, final String defaultFilename)
@@ -448,6 +451,7 @@ public class CuppaConfig
         options.addOption(WRITE_SIMS, false, "Write top-20 CSS similarities to file");
         options.addOption(WRITE_DETAILED_SCORES, false, "Cohort-only - write detailed (non-classifier) data");
         options.addOption(WRITE_CONDENSED, false, "Write sample results as single line");
+        options.addOption(CREATE_PDF, false, "Call CUP Report ccript to generate PDF");
 
         addDatabaseCmdLineArgs(options);
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
@@ -506,6 +510,7 @@ public class CuppaConfig
         WriteSimilarities = false;
         WriteDetailedScores = false;
         WriteCondensed = false;
+        CreatePdf = false;
         OutputDir = "";
         OutputFileId = "";
         Threads = 0;
