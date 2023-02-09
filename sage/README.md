@@ -465,6 +465,7 @@ min_germline_depth_allosome|0|0|6 | 6 | Normal `RC_CNT[6]`
 max_germline_vaf<sup>3</sup>|10%|4%|4% | 4% | Normal`RC_CNT[0+1+2+3+4]` / `RC_CNT[6]`
 max_germline_rel_raw_base_qual|50%|4%|4% | 4% | Normal `RABQ[1]` / Tumor `RABQ[1]` 
 strandBias|0.0005 |0.0005|0.0005 |0.0005| SBLikelihood<sup>4</sup>
+minAvgBaseQual|0|22|22|22|ABQ
 
 1. These min_tumor_qual cutoffs should be set lower for lower depth samples.  For example for 30x tumor coverage, we recommend (Hotspot=40;Panel=60;HC=100;LC=150).   For targeted data with higher depth please see recommendations [here](https://github.com/hartwigmedical/hmftools/blob/master/README_TARGETED.md).
 
