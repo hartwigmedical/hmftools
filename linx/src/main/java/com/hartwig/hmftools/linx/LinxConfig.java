@@ -127,21 +127,21 @@ public class LinxConfig
             PurpleDataPath = SampleDataPath;
 
             OutputDataPath = isSingleSample() && !cmd.hasOption(OUTPUT_DIR) ? SampleDataPath : parseOutputDir(cmd);
-
-            if(svVcfFile.isEmpty() && mSampleIds.size() == 1)
-            {
-                svVcfFile = PurpleCommon.purpleSomaticSvFile(SampleDataPath, mSampleIds.get(0));
-            }
-            else
-            {
-                svVcfFile = SampleDataPath + "*" + PURPLE_SV_VCF_SUFFIX;
-            }
         }
         else
         {
             SampleDataPath = "";
             PurpleDataPath = cmd.getOptionValue(PURPLE_DATA_DIR, "");
             OutputDataPath = parseOutputDir(cmd);
+        }
+
+        if(svVcfFile.isEmpty() && mSampleIds.size() == 1)
+        {
+            svVcfFile = PurpleCommon.purpleSomaticSvFile(PurpleDataPath, mSampleIds.get(0));
+        }
+        else
+        {
+            svVcfFile = PurpleDataPath + "*" + PURPLE_SV_VCF_SUFFIX;
         }
 
         SvVcfFile = svVcfFile;
@@ -237,7 +237,7 @@ public class LinxConfig
 
     public boolean hasValidSampleDataSource(final CommandLine cmd)
     {
-        if(!cmd.hasOption(VCF_FILE) && !cmd.hasOption(SAMPLE_DATA_DIR))
+        if(!cmd.hasOption(VCF_FILE) && !cmd.hasOption(SAMPLE_DATA_DIR) && !cmd.hasOption(PURPLE_DATA_DIR))
         {
             LNX_LOGGER.error("missing SV VCF file or sample data directory");
             return false;
