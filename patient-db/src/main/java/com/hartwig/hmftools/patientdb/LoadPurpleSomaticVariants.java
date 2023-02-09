@@ -2,6 +2,9 @@ package com.hartwig.hmftools.patientdb;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
+import static com.hartwig.hmftools.patientdb.CommonUtils.SAMPLE;
+import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
@@ -12,7 +15,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
-import com.hartwig.hmftools.common.utils.FileReaderUtils;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.patientdb.dao.BufferedWriter;
@@ -22,8 +24,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.Record;
@@ -32,9 +32,6 @@ import org.jooq.Result;
 
 public class LoadPurpleSomaticVariants
 {
-    private static final Logger LOGGER = LogManager.getLogger(LoadPurpleSomaticVariants.class);
-
-    private static final String SAMPLE = "sample";
     private static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String REFERENCE = "reference";
     private static final String RNA = "rna";
@@ -54,6 +51,8 @@ public class LoadPurpleSomaticVariants
             {
                 Configurator.setRootLevel(Level.DEBUG);
             }
+
+            logVersion();
 
             String sampleId = cmd.getOptionValue(SAMPLE);
             List<String> sampleIds = cmd.hasOption(SAMPLE_ID_FILE) ? ConfigUtils.loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE)) : null;

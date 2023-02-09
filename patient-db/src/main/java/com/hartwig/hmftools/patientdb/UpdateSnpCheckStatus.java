@@ -33,7 +33,7 @@ public class UpdateSnpCheckStatus {
         String sample = cmd.getOptionValue(SAMPLE);
         String isPassString = cmd.getOptionValue(IS_PASS);
 
-        if (Utils.anyNull(sample, isPassString) || (!isPassString.equals(HAS_PASSED) && !isPassString.equals(HAS_FAILED))) {
+        if (CommonUtils.anyNull(sample, isPassString) || (!isPassString.equals(HAS_PASSED) && !isPassString.equals(HAS_FAILED))) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-DB - Update SnpCheck Status", options);
             System.exit(1);

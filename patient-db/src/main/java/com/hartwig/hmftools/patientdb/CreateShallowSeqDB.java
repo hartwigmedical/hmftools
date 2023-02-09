@@ -163,7 +163,7 @@ public class CreateShallowSeqDB {
     private static boolean checkInputs(@NotNull CommandLine cmd) {
         String runsDirectory = cmd.getOptionValue(RUNS_DIRECTORY);
 
-        boolean allParamsPresent = !Utils.anyNull(runsDirectory,
+        boolean allParamsPresent = !CommonUtils.anyNull(runsDirectory,
                 cmd.getOptionValue(SHALLOW_SEQ_TSV),
                 cmd.getOptionValue(PURPLE_PURITY_P4_TSV),
                 cmd.getOptionValue(PURPLE_PURITY_P5_TSV),

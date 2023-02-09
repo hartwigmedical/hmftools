@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
+import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
 import java.io.IOException;
@@ -14,14 +16,10 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadDriverGenePanel
 {
-
-    private static final Logger LOGGER = LogManager.getLogger(LoadDriverGenePanel.class);
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException
     {
@@ -30,6 +28,8 @@ public class LoadDriverGenePanel
         DatabaseAccess.addDatabaseCmdLineArgs(options);
         DriverGenePanelConfig.addGenePanelOption(true, options);
         CommandLine cmd = new DefaultParser().parse(options, args);
+
+        logVersion();
 
         List<DriverGene> driverGenes = DriverGenePanelConfig.driverGenes(cmd);
 

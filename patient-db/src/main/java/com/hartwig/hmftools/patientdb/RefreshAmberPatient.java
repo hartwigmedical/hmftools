@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
+import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -23,27 +25,32 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class RefreshAmberPatient {
-
-    private static final Logger LOGGER = LogManager.getLogger(RefreshAmberPatient.class);
-
-    public static void main(@NotNull String[] args) throws ParseException, SQLException {
+public class RefreshAmberPatient
+{
+    public static void main(@NotNull String[] args) throws ParseException, SQLException
+    {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
-        try (DatabaseAccess dbAccess = databaseAccess(cmd)) {
+        logVersion();
+
+        try(DatabaseAccess dbAccess = databaseAccess(cmd))
+        {
             LOGGER.info("Reading sample data");
             List<AmberPatient> previousPatients = dbAccess.readAmberPatients();
             List<AmberSample> allSamples = dbAccess.readAmberSamples();
             List<AmberMapping> allMappings = Lists.newArrayList();
 
-            for (int i = 0; i < allSamples.size(); i++) {
+            for(int i = 0; i < allSamples.size(); i++)
+            {
                 AmberSample victim = allSamples.get(i);
 
                 LOGGER.info("Processing " + (i + 1) + " of " + allSamples.size() + ": " + victim.sampleId());
-                for (int j = i + 1; j < allSamples.size(); j++) {
+                for(int j = i + 1; j < allSamples.size(); j++)
+                {
                     AmberMapping match = AmberMappingFactory.create(victim, allSamples.get(j));
-                    if (match.likelihood() > 0.8) {
+                    if(match.likelihood() > 0.8)
+                    {
                         allMappings.add(match);
                     }
                 }
@@ -65,7 +72,8 @@ public class RefreshAmberPatient {
     }
 
     @NotNull
-    private static Options createOptions() {
+    private static Options createOptions()
+    {
         Options options = new Options();
         addDatabaseCmdLineArgs(options);
         return options;

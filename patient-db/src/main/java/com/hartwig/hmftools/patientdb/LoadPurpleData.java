@@ -4,6 +4,9 @@ import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticVcfFi
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFile;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
+import static com.hartwig.hmftools.patientdb.CommonUtils.SAMPLE;
+import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -40,8 +43,6 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -51,9 +52,6 @@ import htsjdk.variant.vcf.VCFCodec;
 
 public class LoadPurpleData 
 {
-    private static final Logger LOGGER = LogManager.getLogger(LoadPurpleData.class);
-
-    private static final String SAMPLE = "sample";
     private static final String REFERENCE = "reference";
     private static final String RNA_SAMPLE = "rna";
 
@@ -70,6 +68,8 @@ public class LoadPurpleData
         {
             CommandLine cmd = new DefaultParser().parse(options, args);
             DatabaseAccess dbAccess = databaseAccess(cmd);
+
+            logVersion();
 
             String sampleId = cmd.getOptionValue(SAMPLE);
             String referenceId = cmd.getOptionValue(REFERENCE);

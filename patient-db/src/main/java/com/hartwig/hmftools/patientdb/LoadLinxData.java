@@ -2,7 +2,10 @@ package com.hartwig.hmftools.patientdb;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_GERMLINE;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
+import static com.hartwig.hmftools.patientdb.CommonUtils.SAMPLE;
 import static com.hartwig.hmftools.patientdb.LoadPurpleData.hasMissingFiles;
+import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
+import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -28,15 +31,10 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class LoadLinxData {
-
-    private static final Logger LOGGER = LogManager.getLogger(LoadLinxData.class);
-
-    private static final String SAMPLE = "sample";
+public class LoadLinxData
+{
     private static final String LINX_DIR = "linx_dir";
 
     private static final String SOMATIC_ONLY = "somatic_only";
@@ -47,6 +45,8 @@ public class LoadLinxData {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
         DatabaseAccess dbAccess = createDatabaseAccess(cmd);
+
+        logVersion();
 
         if(dbAccess == null)
         {
@@ -133,7 +133,7 @@ public class LoadLinxData {
         final String germlineBreakendFile = LinxBreakend.generateFilename(linxDir, sampleId, true);
         final String driverCatalogFile = LinxDriver.generateCatalogFilename(linxDir, sampleId, false);
 
-        List<String> requiredFiles = Lists.newArrayList(germlineSvFile, germlineBreakendFile, driverCatalogFile);
+        List<String> requiredFiles = Lists.newArrayList(germlineSvFile, driverCatalogFile); // required after v5.31
 
         if(requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x))))
         {
@@ -152,9 +152,12 @@ public class LoadLinxData {
         LOGGER.info("sample({}) loading {} germline SV records", sampleId, germlineSVs.size());
         dbAccess.writeGermlineSVs(sampleId, germlineSVs);
 
-        List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendFile);
-        LOGGER.info("sample({}) loading {} germline breakend records", sampleId, germlineBreakends.size());
-        dbAccess.writeGermlineBreakends(sampleId, germlineBreakends);
+        if(Files.exists(Paths.get(germlineBreakendFile)))
+        {
+            List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendFile);
+            LOGGER.info("sample({}) loading {} germline breakend records", sampleId, germlineBreakends.size());
+            dbAccess.writeGermlineBreakends(sampleId, germlineBreakends);
+        }
     }
 
     @NotNull

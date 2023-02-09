@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.patientdb.LoadPurpleData.hasMissingFiles;
+import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -50,8 +51,6 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.Record;
 import org.jooq.Record1;
@@ -69,8 +68,6 @@ public class FileDbLoadChecker
     private static final String SAMPLE = "sample";
     private static final String PURPLE_DIR = "purple_dir";
     private static final String LINX_DIR = "linx_dir";
-
-    private static final Logger LOGGER = LogManager.getLogger(LoadPurpleSomaticVariants.class);
 
     public FileDbLoadChecker(final CommandLine cmd) throws Exception
     {

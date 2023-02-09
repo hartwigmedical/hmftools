@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
+import static com.hartwig.hmftools.patientdb.CommonUtils.SAMPLE;
+import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -17,16 +20,10 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadMetricsData
 {
-    private static final Logger LOGGER = LogManager.getLogger(LoadMetricsData.class);
-
-    private static final String SAMPLE = "sample";
-
     private static final String REF_METRICS_FILE = "ref_metrics_file";
     private static final String TUMOR_METRICS_FILE = "tumor_metrics_file";
 
@@ -35,11 +32,13 @@ public class LoadMetricsData
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
+        logVersion();
+
         String sample = cmd.getOptionValue(SAMPLE);
         String refMetricsFile = cmd.getOptionValue(REF_METRICS_FILE);
         String tumorMetricsFile = cmd.getOptionValue(TUMOR_METRICS_FILE);
 
-        if (Utils.anyNull(sample, refMetricsFile, tumorMetricsFile))
+        if (CommonUtils.anyNull(sample, refMetricsFile, tumorMetricsFile))
         {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-DB - Load Metrics Data", options);

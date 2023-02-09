@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
+import static com.hartwig.hmftools.patientdb.CommonUtils.SAMPLE;
+import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -18,25 +21,24 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class LoadCuppa {
-
-    private static final Logger LOGGER = LogManager.getLogger(LoadCuppa.class);
-
-    private static final String SAMPLE = "sample";
+public class LoadCuppa
+{
     private static final String CUPPA_RESULTS_CSV = "cuppa_results_csv";
 
-    public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
+    public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException
+    {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
+
+        logVersion();
 
         String sample = cmd.getOptionValue(SAMPLE);
         String cuppaResultsCsv = cmd.getOptionValue(CUPPA_RESULTS_CSV);
 
-        if (Utils.anyNull(sample, cuppaResultsCsv)) {
+        if(CommonUtils.anyNull(sample, cuppaResultsCsv))
+        {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-DB - Load CUPPA Data", options);
             System.exit(1);
@@ -59,7 +61,8 @@ public class LoadCuppa {
     }
 
     @NotNull
-    private static Options createOptions() {
+    private static Options createOptions()
+    {
         Options options = new Options();
 
         options.addOption(SAMPLE, true, "Sample for which we are going to load the CUPPA results");

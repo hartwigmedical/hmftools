@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
+import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -19,14 +21,10 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadCanonicalTranscripts
 {
-    private static final Logger LOGGER = LogManager.getLogger(LoadCanonicalTranscripts.class);
-
     private static final String ENSEMBL_DATA_CACHE_ROOT_DIR = "ensembl_data_root_dir";
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException
@@ -34,6 +32,8 @@ public class LoadCanonicalTranscripts
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
         DatabaseAccess dbAccess = databaseAccess(cmd);
+
+        logVersion();
 
         final String ensemblRootDir = cmd.getOptionValue(ENSEMBL_DATA_CACHE_ROOT_DIR);
 

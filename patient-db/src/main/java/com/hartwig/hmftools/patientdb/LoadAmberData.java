@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
+import static com.hartwig.hmftools.patientdb.CommonUtils.SAMPLE;
+import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -31,21 +34,16 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.vcf.VCFFileReader;
 
 public class LoadAmberData
 {
-    private static final Logger LOGGER = LogManager.getLogger(LoadAmberData.class);
-
     private static final int DEFAULT_MIN_DEPTH = 10;
     private static final double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
     private static final double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
 
-    private static final String SAMPLE = "sample";
     private static final String AMBER_SNP_VCF = "amber_snp_vcf";
     private static final String SNPCHECK_VCF = "snpcheck_vcf";
 
@@ -53,6 +51,8 @@ public class LoadAmberData
     {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
+
+        logVersion();
 
         String tumorSample = cmd.getOptionValue(SAMPLE);
         String amberSnpPath = cmd.getOptionValue(AMBER_SNP_VCF);

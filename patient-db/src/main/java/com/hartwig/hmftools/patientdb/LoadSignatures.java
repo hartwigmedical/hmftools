@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
+import static com.hartwig.hmftools.patientdb.CommonUtils.SAMPLE;
+import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -14,15 +17,10 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadSignatures
 {
-    private static final Logger LOGGER = LogManager.getLogger(LoadSignatures.class);
-
-    private static final String SAMPLE = "sample";
     private static final String SAMPLE_DIR = "sample_dir";
 
     public static void main(@NotNull String[] args) throws ParseException
@@ -31,7 +29,9 @@ public class LoadSignatures
         CommandLine cmd = new DefaultParser().parse(options, args);
         DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
-        if (dbAccess == null) {
+        logVersion();
+
+        if(dbAccess == null) {
 
             LOGGER.error("Failed to create DB connection");
             System.exit(1);
