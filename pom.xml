@@ -63,7 +63,7 @@
         <cobalt.version>1.13</cobalt.version>
         <compar.version>1.1</compar.version>
         <ctdna.version>1.0</ctdna.version>
-        <cuppa.version>1.8</cuppa.version>
+        <cuppa.version>1.7.2</cuppa.version>
         <gene-utils.version>1.0</gene-utils.version>
         <gripss.version>2.3.3</gripss.version>
         <health-checker.version>3.3</health-checker.version>
@@ -78,7 +78,7 @@
         <patient-db.version>5.31.0</patient-db.version>
         <pave.version>1.4.1</pave.version>
         <purple.version>3.8</purple.version>
-        <sage.version>3.2.4</sage.version>
+        <sage.version>3.2.5</sage.version>
         <sigs.version>1.2</sigs.version>
         <sv-prep.version>1.1</sv-prep.version>
         <sv-tools.version>1.0</sv-tools.version>

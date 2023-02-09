@@ -63,6 +63,11 @@ public class PartitionThread extends Thread
                 MetricsConfig.BT_LOGGER.trace("all tasks complete");
                 break;
             }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                System.exit(1);
+            }
         }
 
         try

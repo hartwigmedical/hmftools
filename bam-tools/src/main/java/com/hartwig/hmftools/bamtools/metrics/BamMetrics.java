@@ -97,9 +97,10 @@ public class BamMetrics
         MetricsConfig.BT_LOGGER.info("all regions complete, totalReads({}) stats: {}", combinedStats.totalReads(), combinedStats.metrics());
 
         if(mConfig.PerfDebug)
+        {
             combinedStats.perfCounter().logIntervalStats(10);
-        else
             combinedStats.perfCounter().logStats();
+        }
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         double timeTakeMins = timeTakenMs / 60000.0;

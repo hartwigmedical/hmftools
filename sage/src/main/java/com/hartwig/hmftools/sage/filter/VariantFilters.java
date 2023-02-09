@@ -155,7 +155,7 @@ public class VariantFilters
             filters.add(SoftFilter.STRAND_BIAS.filterName());
         }
 
-        if(belowMinAverageBaseQuality(primaryTumor))
+        if(tier != VariantTier.HOTSPOT && belowMinAverageBaseQuality(primaryTumor))
         {
             filters.add(SoftFilter.MIN_AVG_BASE_QUALITY.filterName());
         }

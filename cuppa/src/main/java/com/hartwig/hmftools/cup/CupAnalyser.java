@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
@@ -160,6 +161,20 @@ public class CupAnalyser
         mResultsWriter.close();
 
         mClassifiers.forEach(x -> x.close());
+
+        if(mConfig.CreatePdf && mSampleDataCache.SpecificSample != null)
+        {
+            try
+            {
+                RExecutor.executeFromClasspath(
+                        "r/CupGenerateReport_pipeline.R", mSampleDataCache.SpecificSample.Id, mConfig.OutputDir);
+            }
+            catch(Exception e)
+            {
+                CUP_LOGGER.error("failed to generate PDF report with R script: {}", e.toString());
+                System.exit(1);
+            }
+        }
 
         CUP_LOGGER.info("CUP analysis complete");
     }
