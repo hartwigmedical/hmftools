@@ -29,6 +29,8 @@ public final class CommonUtils
     public static final String PARTITION_SIZE = "partition_size";
     public static final String REGIONS_BED_FILE = "regions_bed_file";
 
+    public static final String BAM_FILE_TYPE = "bam";
+
     public static void addCommonCommandOptions(final Options options)
     {
         addOutputOptions(options);
@@ -76,16 +78,30 @@ public final class CommonUtils
         return true;
     }
 
-    public static String formFilename(final String sampleId, final String outputDir, final String outputId, final String fileType)
+    public static String formFilename(
+            final String sampleId, final String bamFile, final String outputDir, final String outputId, final String fileType)
     {
-        String filename = outputDir + sampleId;
+        String filename;
 
-        filename += ".bam_" + fileType;
+        if(sampleId != null && !sampleId.isEmpty())
+        {
+            filename = outputDir + sampleId;
+        }
+        else
+        {
+            filename = bamFile.substring(0, bamFile.indexOf(".bam"));
+        }
+
+        if(!fileType.equals(BAM_FILE_TYPE))
+            filename += ".bam_" + fileType;
 
         if(outputId != null)
             filename += "." + outputId;
 
-        filename += ".csv";
+        if(fileType.equals(BAM_FILE_TYPE))
+            filename += ".bam";
+        else
+            filename += ".csv";
 
         return filename;
     }

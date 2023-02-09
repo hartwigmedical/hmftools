@@ -26,11 +26,11 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class BamMetricsApplication
+public class BamMetrics
 {
     private final MetricsConfig mConfig;
 
-    public BamMetricsApplication(final CommandLine cmd)
+    public BamMetrics(final CommandLine cmd)
     {
         mConfig = new MetricsConfig(cmd);
     }
@@ -159,7 +159,7 @@ public class BamMetricsApplication
 
             setLogLevel(cmd);
 
-            BamMetricsApplication bamMetrtics = new BamMetricsApplication(cmd);
+            BamMetrics bamMetrtics = new BamMetrics(cmd);
             bamMetrtics.run();
         }
         catch(ParseException e)

@@ -64,10 +64,10 @@ public class SliceConfig
         WriteReads = cmd.hasOption(WRITE_READS);
         WriteBam = cmd.hasOption(WRITE_BAM) || !WriteReads;
 
-        if(SampleId == null || BamFile == null || OutputDir == null || RefGenomeFile == null)
+        if(BamFile == null || OutputDir == null || RefGenomeFile == null)
         {
-            BT_LOGGER.error("missing config: sample({}) bam({}) refGenome({}) outputDir({})",
-                    SampleId != null, BamFile != null, RefGenomeFile != null, OutputDir != null);
+            BT_LOGGER.error("missing config: bam({}) refGenome({}) outputDir({})",
+                    BamFile != null, RefGenomeFile != null, OutputDir != null);
             mIsValid = false;
         }
 
@@ -103,7 +103,7 @@ public class SliceConfig
         return mIsValid;
     }
 
-    public String formFilename(final String fileType) { return CommonUtils.formFilename(SampleId, OutputDir, OutputId, fileType); }
+    public String formFilename(final String fileType) { return CommonUtils.formFilename(SampleId, BamFile, OutputDir, OutputId, fileType); }
 
 
     public static Options createCmdLineOptions()

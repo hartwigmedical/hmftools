@@ -8,17 +8,11 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.addCommonCommandO
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.checkFileExists;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.loadSpecificRegionsConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,7 +22,6 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.CommonUtils;
-import com.hartwig.hmftools.common.genome.bed.BedFileReader;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
@@ -74,7 +67,6 @@ public class MetricsConfig
     private static final String MAX_COVERAGE = "max_coverage";
     private static final String EXCLUDE_ZERO_COVERAGE = "exclude_zero_coverage";
     private static final String WRITE_OLD_STYLE = "write_old_style";
-    private static final String REGIONS_BED_FILE = "regions_bed_file";
 
     public static final String LOG_READ_IDS = "log_read_ids";
     public static final String PERF_DEBUG = "perf_debug";
@@ -95,10 +87,10 @@ public class MetricsConfig
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
-        if(SampleId == null || BamFile == null || OutputDir == null || RefGenomeFile == null)
+        if(BamFile == null || OutputDir == null || RefGenomeFile == null)
         {
-            BT_LOGGER.error("missing config: sample({}) bam({}) refGenome({}) outputDir({})",
-                    SampleId != null, BamFile != null, RefGenomeFile != null, OutputDir != null);
+            BT_LOGGER.error("missing config: bam({}) refGenome({}) outputDir({})",
+                    BamFile != null, RefGenomeFile != null, OutputDir != null);
             mIsValid = false;
         }
 
@@ -136,7 +128,10 @@ public class MetricsConfig
         return mIsValid;
     }
 
-    public String formFilename(final String fileType) { return CommonUtils.formFilename(SampleId, OutputDir, OutputId, fileType); }
+    public String formFilename(final String fileType)
+    {
+        return CommonUtils.formFilename(SampleId, BamFile, OutputDir, OutputId, fileType);
+    }
 
     public static Options createCmdLineOptions()
     {
@@ -164,10 +159,9 @@ public class MetricsConfig
         SampleId = "SAMPLE_ID";
         BamFile = null;
         RefGenomeFile = null;
+        RefGenVersion = V37;
         OutputDir = null;
         OutputId = null;
-
-        RefGenVersion = V37;
 
         PartitionSize = DEFAULT_CHR_PARTITION_SIZE;
         MapQualityThreshold = DEFAULT_MAP_QUAL_THRESHOLD;

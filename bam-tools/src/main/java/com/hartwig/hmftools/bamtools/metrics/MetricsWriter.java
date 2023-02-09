@@ -165,7 +165,18 @@ public final class MetricsWriter
         try
         {
             // write summary metrics
-            String filename = WGSMetricsFile.generateFilename(config.OutputDir, config.SampleId);
+            String filename;
+
+            if(config.SampleId != null && !config.SampleId.isEmpty())
+            {
+                filename = WGSMetricsFile.generateFilename(config.OutputDir, config.SampleId);
+            }
+            else
+            {
+                String filePrefix = config.BamFile.substring(0, config.BamFile.indexOf(".bam"));
+                filename = filePrefix + WGSMetricsFile.FILE_EXTENSION;
+            }
+
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("## METRICS CLASS");
