@@ -91,7 +91,6 @@ public class RefSampleTraits implements RefClassifier
         }
         else
         {
-            // -gender_rates "Breast;1;0.1"
             mGenderRates.put(CANCER_TYPE_BREAST, new double[] {1.0, BREAST_MALE_GENDER_RATE} );
             mGenderRates.put(CANCER_TYPE_BREAST_TRIPLE_NEGATIVE, new double[] {1.0, BREAST_MALE_GENDER_RATE} );
         }
