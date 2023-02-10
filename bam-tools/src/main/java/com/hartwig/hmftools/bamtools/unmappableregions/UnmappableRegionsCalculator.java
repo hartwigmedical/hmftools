@@ -9,27 +9,33 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+
 public class UnmappableRegionsCalculator
 {
     private final RefGenomeSource mRefGenomeSource;
+    private final IndexedFastaSequenceFile mIndexedFastaSequenceFile;
     private final String mOutputBedPath;
-    private int mChunkSize = 1000000;
+    private int mPartitionSize = DEFAULT_CHR_PARTITION_SIZE; // 1000000
 
-    // Constructors ================================
     public UnmappableRegionsCalculator(String refGenomeFastaPath, String outputBedPath) throws FileNotFoundException
     {
-        mRefGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(new File(refGenomeFastaPath)));
+        mIndexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(refGenomeFastaPath));
+        mRefGenomeSource = new RefGenomeSource(mIndexedFastaSequenceFile);
         mOutputBedPath = outputBedPath;
     }
 
-    // Setters ================================
-    public UnmappableRegionsCalculator setChunkSize(int chunkSize)
+    public UnmappableRegionsCalculator setPartitionSize(int partitionSize)
     {
-        mChunkSize = chunkSize;
+        mPartitionSize = partitionSize;
         return this;
     }
 
-    // Methods ================================
     public Integer[][] nucleotideStretchStartEndPositions(String nucleotideSequence, char targetNucleotide) throws Exception
     {
 //        String nucleotideSequence = mRefGenomeSource.getBaseString("21",1,10);
@@ -86,20 +92,20 @@ public class UnmappableRegionsCalculator
         return startEndPositions;
     }
 
-    public Integer[][] chromosomeChunksStartEndPositions(String chromosome, int chunkSize) throws Exception
+    public Integer[][] chromosomePartitionsStartEndPositions(String chromosome, int partitionSize) throws Exception
     {
-        if(chunkSize < 1)
-            throw new Exception("`chunkSize` must be >=1");
+        if(partitionSize < 1)
+            throw new Exception("`partitionSize` must be >=1");
 
         int chromosomeLength = mRefGenomeSource.getChromosomeLength(chromosome);
 
         ArrayList<Integer> startPositions = new ArrayList<>();
         ArrayList<Integer> endPositions = new ArrayList<>();
 
-        for(int i = 0; i < chromosomeLength; i += chunkSize)
+        for(int i = 0; i < chromosomeLength; i += partitionSize)
         {
             startPositions.add(i); // zero based positions
-            endPositions.add(i + chunkSize);
+            endPositions.add(i + partitionSize);
         }
 
         // Set last end position to be the chrom length
@@ -120,30 +126,30 @@ public class UnmappableRegionsCalculator
         return startEndPositions;
     }
 
-    public ArrayList<Integer[]> unmappablePositionsInChromosome(String chromosome, int chunkSize) throws Exception
+    public ArrayList<Integer[]> unmappablePositionsInChromosome(String chromosome, int partitionSize) throws Exception
     {
-        Integer[][] chunksStartEndPositions = chromosomeChunksStartEndPositions(chromosome, chunkSize);
+        Integer[][] partitionsStartEndPositions = chromosomePartitionsStartEndPositions(chromosome, partitionSize);
 
         ArrayList<Integer[]> unmappedStartEndPositions = new ArrayList<>();
 
-        for(int i = 0; i < chunksStartEndPositions.length; i++)
+        for(int i = 0; i < partitionsStartEndPositions.length; i++)
         {
-            Integer chunkStartPosition = chunksStartEndPositions[i][0];
-            Integer chunkEndPosition = chunksStartEndPositions[i][1];
+            Integer partitionStartPosition = partitionsStartEndPositions[i][0];
+            Integer partitionEndPosition = partitionsStartEndPositions[i][1];
 
-            String chunkDnaSequence = mRefGenomeSource.getBaseString(
+            String partitionDnaSequence = mRefGenomeSource.getBaseString(
                 chromosome,
-                chunkStartPosition + 1, // getBaseString() uses 1 based positions: start and end are inclusive
-                chunkEndPosition
+                partitionStartPosition + 1, // getBaseString() uses 1 based positions: start and end are inclusive
+                partitionEndPosition
             );
 
-            Integer[][] currentUnmappedPositions = nucleotideStretchStartEndPositions(chunkDnaSequence, 'N');
+            Integer[][] currentUnmappedPositions = nucleotideStretchStartEndPositions(partitionDnaSequence, 'N');
 
             for(Integer[] j : currentUnmappedPositions)
             {
-                // Convert chunk position to genome position
-                j[0] += chunkStartPosition;
-                j[1] += chunkStartPosition;
+                // Convert partition position to genome position
+                j[0] += partitionStartPosition;
+                j[1] += partitionStartPosition;
                 //System.out.println(Arrays.toString(j));
 
                 unmappedStartEndPositions.add(j);
@@ -232,9 +238,9 @@ public class UnmappableRegionsCalculator
         for(HumanChromosome humanChromosome : HumanChromosome.values())
         {
             String chromosome = humanChromosome.toString();
-            System.out.println("Calculating unmapped regions for chromosome: " + chromosome);
+            System.out.println("Calculating N-nucleotide regions for chromosome: " + chromosome);
 
-            ArrayList<Integer[]> unmappedStartEndPositions = unmappablePositionsInChromosome(chromosome, mChunkSize);
+            ArrayList<Integer[]> unmappedStartEndPositions = unmappablePositionsInChromosome(chromosome, mPartitionSize);
             ArrayList<Integer[]> unmappedStartEndPositionsFlattened = flattenStartEndPositions(unmappedStartEndPositions);
 
             for(Integer[] startEndPosition : unmappedStartEndPositionsFlattened)
@@ -249,16 +255,39 @@ public class UnmappableRegionsCalculator
     // Entry point ================================
     public static void main(String[] args) throws Exception
     {
-        String refGenomeFastaPath = "/home/lnguyen/Documents/BamMetricsTest/resources/HMFtools-Resources_ref_genome_37_Homo_sapiens.GRCh37.GATK.illumina.fasta";
-        String outputBedPath = "/home/lnguyen/Documents/BamMetricsTest/output/GRCh37_unmapped_regions.bed";
-        UnmappableRegionsCalculator unmappableRegionsCalculator = new UnmappableRegionsCalculator(refGenomeFastaPath, outputBedPath);
+        //
+        Options options = new Options();
+        options.addOption("r","refGenomeFastaPath", true, "Path to reference genome fasta file");
+        options.addOption("o","outputBedPath", true, "Path to output bed file");
+        options.addOption("p","partitionSize", true, "Size (in no. of bases) of the window used to scan the fasta file");
+
+        //
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd = parser.parse(options, args);
+
+        //
+        UnmappableRegionsCalculator unmappableRegionsCalculator = new UnmappableRegionsCalculator(
+            cmd.getOptionValue("refGenomeFastaPath"),
+            cmd.getOptionValue("outputBedPath")
+        );
+
+        if(cmd.hasOption("partitionSize"))
+            unmappableRegionsCalculator.setPartitionSize(Integer.parseInt(cmd.getOptionValue("partitionSize")));
+
+        //
+        unmappableRegionsCalculator.run();
+
+//        String refGenomeFastaPath = "/home/lnguyen/Documents/BamMetricsTest/resources/HMFtools-Resources_ref_genome_37_Homo_sapiens.GRCh37.GATK.illumina.fasta";
+//        String outputBedPath = "/home/lnguyen/Documents/BamMetricsTest/output/GRCh37_unmapped_regions.bed";
+//        UnmappableRegionsCalculator unmappableRegionsCalculator = new UnmappableRegionsCalculator(refGenomeFastaPath, outputBedPath);
+//        unmappableRegionsCalculator.run();
 
 //        unmappableRegionsCalculator.nucleotideStretchStartEndPositions("NNNAAANNNNNNTTT",'N',false);
-//        unmappableRegionsCalculator.chromosomeChunksStartEndPositions("21", 1000000, true);
+//        unmappableRegionsCalculator.chromosomePartitionsStartEndPositions("21", 1000000, true);
 
 //        ArrayList<Integer[]> startEndPositions = unmappableRegionsCalculator.unmappablePositionsInChromosome("21", 2000000);
 //        unmappableRegionsCalculator.flattenStartEndPositions(startEndPositions);
 
-        unmappableRegionsCalculator.run();
+//
     }
 }
