@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.linx.germline;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_GERMLINE;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE_DISRUPTION;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE_HOM_DUP_DISRUPTION;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.HOM_DUP_DISRUPTION;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.NONE;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.DOWNSTREAM;
@@ -22,7 +26,11 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findEndIndex;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findStartIndex;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF_PERC;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.annotators.PseudoGeneFinder.isPseudogeneDeletion;
+import static com.hartwig.hmftools.linx.drivers.DeletionDrivers.isHomozygousDupDisruption;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
@@ -391,6 +399,13 @@ public class GermlineDisruptions
             boolean anyReportable = false;
             Set<String> allFilters = Sets.newHashSet(svData.filter());
             String geneName = "";
+            DriverType driverType = GERMLINE_DISRUPTION; // default if meets the driver criteria
+
+            // check for a homozygous DUP
+            if(var.type() == DUP && isHomozygousDup(var, standardDisruptions))
+            {
+                driverType = GERMLINE_HOM_DUP_DISRUPTION;
+            }
 
             for(SvDisruptionData disruptionData : entry.getValue())
             {
@@ -464,7 +479,7 @@ public class GermlineDisruptions
                 if(reportable && drivers.stream().noneMatch(x -> x.gene().equals(gene.GeneName)))
                 {
                     drivers.add(ImmutableDriverCatalog.builder()
-                            .driver(DriverType.GERMLINE_DISRUPTION)
+                            .driver(driverType)
                             .category(TSG)
                             .gene(gene.GeneName)
                             .transcript(disruptionData.Transcript.TransName)
@@ -506,6 +521,23 @@ public class GermlineDisruptions
                     geneName, cluster.id(), cluster.getSvCount(), cluster.getResolvedType().toString(),
                     svData.startLinkedBy(), svData.endLinkedBy(), ponCount, anyReportable));
         }
+    }
+
+    private boolean isHomozygousDup(final SvVarData var, final List<SvDisruptionData> standardDisruptions)
+    {
+        if(var.type() != DUP)
+            return false;
+
+        SvDisruptionData startDisruptionData = standardDisruptions.stream()
+                .filter(x -> x.Var == var && x.IsStart == true).findFirst().orElse(null);
+
+        SvDisruptionData endDisruptionData = standardDisruptions.stream()
+                .filter(x -> x.Var == var && x.IsStart == true).findFirst().orElse(null);
+
+        if(startDisruptionData == null || endDisruptionData == null || startDisruptionData.Gene != endDisruptionData.Gene)
+            return false;
+
+        return isHomozygousDupDisruption(var.getBreakend(true), var.getBreakend(false), var.getSvData().junctionCopyNumber());
     }
 
     private boolean isReportable(final SvDisruptionData disruptionData)

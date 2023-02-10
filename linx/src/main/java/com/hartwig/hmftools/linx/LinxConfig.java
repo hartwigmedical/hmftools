@@ -135,13 +135,12 @@ public class LinxConfig
             OutputDataPath = parseOutputDir(cmd);
         }
 
-        if(svVcfFile.isEmpty() && mSampleIds.size() == 1)
+        if(svVcfFile.isEmpty())
         {
-            svVcfFile = PurpleCommon.purpleSomaticSvFile(PurpleDataPath, mSampleIds.get(0));
-        }
-        else
-        {
-            svVcfFile = PurpleDataPath + "*" + PURPLE_SV_VCF_SUFFIX;
+            if(mSampleIds.size() == 1)
+                svVcfFile = PurpleCommon.purpleSomaticSvFile(PurpleDataPath, mSampleIds.get(0));
+            else
+                svVcfFile = PurpleDataPath + "*" + PURPLE_SV_VCF_SUFFIX;
         }
 
         SvVcfFile = svVcfFile;
