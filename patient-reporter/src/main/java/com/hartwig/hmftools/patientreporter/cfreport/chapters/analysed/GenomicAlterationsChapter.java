@@ -394,7 +394,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         Table table = TableUtil.createReportContentTable(new float[] { 10, 10, 10, 10, 10, 10 },
                 new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Germline allele"),
                         TableUtil.createHeaderCell("Germline copies"), TableUtil.createHeaderCell("Tumor copies"),
-                        TableUtil.createHeaderCell("Number of somatic mutations*"),
+                        TableUtil.createHeaderCell("Number somatic mutations*"),
                         TableUtil.createHeaderCell("Interpretation: presence in tumor") },
                 ReportResources.CONTENT_WIDTH_WIDE);
         if (!lilac.hlaQC().equals("PASS")) {
