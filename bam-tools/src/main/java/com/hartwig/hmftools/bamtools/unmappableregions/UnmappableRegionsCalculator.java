@@ -2,12 +2,17 @@ package com.hartwig.hmftools.bamtools.unmappableregions;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
 
@@ -22,6 +27,7 @@ public class UnmappableRegionsCalculator
     private final IndexedFastaSequenceFile mIndexedFastaSequenceFile;
     private final String mOutputBedPath;
     private int mPartitionSize = DEFAULT_CHR_PARTITION_SIZE; // 1000000
+    private RefGenomeVersion mRefGenomeVersion = V37;
 
     public UnmappableRegionsCalculator(String refGenomeFastaPath, String outputBedPath) throws FileNotFoundException
     {
@@ -30,10 +36,14 @@ public class UnmappableRegionsCalculator
         mOutputBedPath = outputBedPath;
     }
 
-    public UnmappableRegionsCalculator setPartitionSize(int partitionSize)
+    public void setPartitionSize(int partitionSize)
     {
         mPartitionSize = partitionSize;
-        return this;
+    }
+
+    public void setRefGenomeVersion(RefGenomeVersion refGenomeVersion)
+    {
+        mRefGenomeVersion = refGenomeVersion;
     }
 
     public Integer[][] nucleotideStretchStartEndPositions(String nucleotideSequence, char targetNucleotide) throws Exception
@@ -237,7 +247,9 @@ public class UnmappableRegionsCalculator
 
         for(HumanChromosome humanChromosome : HumanChromosome.values())
         {
-            String chromosome = humanChromosome.toString();
+//            String chromosome = humanChromosome.toString();
+            String chromosome = mRefGenomeVersion.versionedChromosome(humanChromosome.toString());
+
             System.out.println("Calculating N-nucleotide regions for chromosome: " + chromosome);
 
             ArrayList<Integer[]> unmappedStartEndPositions = unmappablePositionsInChromosome(chromosome, mPartitionSize);
@@ -257,9 +269,10 @@ public class UnmappableRegionsCalculator
     {
         //
         Options options = new Options();
-        options.addOption("r","refGenomeFastaPath", true, "Path to reference genome fasta file");
+        options.addOption("i","refGenomeFastaPath", true, "Path to reference genome fasta file");
         options.addOption("o","outputBedPath", true, "Path to output bed file");
         options.addOption("p","partitionSize", true, "Size (in no. of bases) of the window used to scan the fasta file");
+        options.addOption("g","refGenomeVersion", true, "Version of the ref genome. Can be GRCh37, hg19, GRCh38, or hg38");
 
         //
         CommandLineParser parser = new DefaultParser();
@@ -273,6 +286,16 @@ public class UnmappableRegionsCalculator
 
         if(cmd.hasOption("partitionSize"))
             unmappableRegionsCalculator.setPartitionSize(Integer.parseInt(cmd.getOptionValue("partitionSize")));
+
+        if(cmd.hasOption("refGenomeVersion")){
+            String refGenomeVersion = cmd.getOptionValue("refGenomeVersion").toLowerCase();
+            if(refGenomeVersion.equals("grch37") || refGenomeVersion.equals("hg19"))
+                unmappableRegionsCalculator.setRefGenomeVersion(V37);
+            else if (refGenomeVersion.equals("grch38") || refGenomeVersion.equals("hg38"))
+                unmappableRegionsCalculator.setRefGenomeVersion(V38);
+            else
+                throw new Exception("`refGenomeVersion` must be GRCh37, hg19, GRCh38, or hg38");
+        }
 
         //
         unmappableRegionsCalculator.run();
