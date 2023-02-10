@@ -36,9 +36,11 @@ public enum RefGenomeVersion
         throw new IllegalArgumentException("Cannot resolve ref genome version: " + version);
     }
 
-    public static RefGenomeVersion from(final CommandLine cmd)
+    public static RefGenomeVersion from(final CommandLine cmd) { return from(cmd, V37); }
+
+    public static RefGenomeVersion from(final CommandLine cmd, final RefGenomeVersion defaultVersion)
     {
-        return RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(V37)));
+        return RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(defaultVersion)));
     }
 
     RefGenomeVersion(@NotNull final String identifier, final boolean is37)

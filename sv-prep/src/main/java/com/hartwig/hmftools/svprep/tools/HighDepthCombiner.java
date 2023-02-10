@@ -114,7 +114,7 @@ public class HighDepthCombiner
         mFinalRegions = Maps.newHashMap();
 
         mRefefenceBlacklist = new BlacklistLocations(cmd.getOptionValue(REF_BLACKLIST_FILE));
-        mRefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        mRefGenVersion = RefGenomeVersion.from(cmd);
 
         mKnownFusionCache = new KnownFusionCache();
         mKnownFusionCache.loadFromFile(cmd);

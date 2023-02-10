@@ -173,7 +173,7 @@ public class IsofoxConfig
         RefGenomeFile = refGenomeFilename != null ? new File(refGenomeFilename) : null;
         RefGenome = loadRefGenome(refGenomeFilename);
 
-        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        RefGenVersion = RefGenomeVersion.from(cmd);
 
         Filters = new GeneRegionFilters(RefGenVersion);
         Filters.loadConfig(cmd);

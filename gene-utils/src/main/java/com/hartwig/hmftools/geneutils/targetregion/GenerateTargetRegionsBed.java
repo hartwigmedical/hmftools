@@ -79,7 +79,7 @@ public class GenerateTargetRegionsBed
 
         mCombinedRegions = Maps.newHashMap();
 
-        mRefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V38.toString()));
+        mRefGenVersion = RefGenomeVersion.from(cmd);
         mEnsemblDataCache = new EnsemblDataCache(cmd, mRefGenVersion);
         mEnsemblDataCache.setRequiredData(true, false, false, false);
         mEnsemblDataCache.load(true);

@@ -105,7 +105,7 @@ public class MarkDupsConfig
             mIsValid = false;
         }
 
-        RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
+        RefGenVersion = RefGenomeVersion.from(cmd);
 
         MD_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         MD_LOGGER.info("output({})", OutputDir);

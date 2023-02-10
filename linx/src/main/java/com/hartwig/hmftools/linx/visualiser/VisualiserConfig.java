@@ -99,7 +99,7 @@ public class VisualiserConfig
         UseCohortFiles = cmd.hasOption(LOAD_COHORT_FILES);
         IsGermline = cmd.hasOption(GERMLINE);
 
-        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        RefGenVersion = RefGenomeVersion.from(cmd);
         EnsemblDataDir = cmd.getOptionValue(ENSEMBL_DATA_DIR);
 
         SpecificRegions = ChrBaseRegion.loadSpecificRegions(cmd);
@@ -132,7 +132,7 @@ public class VisualiserConfig
             throw new IOException("Unable to write to data directory " + OutputConfPath);
         }
 
-        RefGenomeVersion refGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        RefGenomeVersion refGenVersion = RefGenomeVersion.from(cmd);
         RefGenomeCoords = refGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
         Highlights.populateKnownSites(refGenVersion);
 

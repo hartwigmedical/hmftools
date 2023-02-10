@@ -63,7 +63,7 @@ public class GripssConfig
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
         VcfFile = cmd.getOptionValue(VCF_FILE, "");
-        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        RefGenVersion = RefGenomeVersion.from(cmd);
 
         RestrictedChromosomes = loadSpecificChromsomes(cmd);
     }

@@ -94,7 +94,7 @@ public class MetricsConfig
             mIsValid = false;
         }
 
-        RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
+        RefGenVersion = RefGenomeVersion.from(cmd);
 
         BT_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         BT_LOGGER.info("output({})", OutputDir);

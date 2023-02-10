@@ -98,7 +98,7 @@ public class PvConfig
         OutputDir = parseOutputDir(cmd);
         ReferenceVariantsFile = cmd.getOptionValue(REFERENCE_VARIANTS_FILE);
 
-        RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
+        RefGenVersion = RefGenomeVersion.from(cmd);
 
         PV_LOGGER.info("refGenome({}), purpleDir({}) linxDir({})", RefGenVersion, PurpleDir, LinxDir);
         PV_LOGGER.info("output({})", OutputDir);

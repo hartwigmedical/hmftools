@@ -85,7 +85,7 @@ public class EnsemblDAO
 
     public EnsemblDAO(final CommandLine cmd)
     {
-        mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(V37)));
+        mRefGenomeVersion = RefGenomeVersion.from(cmd);
         mGeneIdDataMap = Maps.newHashMap();
         mTranscriptIds = Sets.newHashSet();
 
