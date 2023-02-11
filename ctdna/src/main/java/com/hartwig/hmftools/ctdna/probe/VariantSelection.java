@@ -1,19 +1,19 @@
-package com.hartwig.hmftools.ctdna;
+package com.hartwig.hmftools.ctdna.probe;
 
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_CODING_MUTATION;
-import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_MUTATION;
-import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_SV;
-import static com.hartwig.hmftools.ctdna.CategoryType.REPORTABLE_MUTATION;
-import static com.hartwig.hmftools.ctdna.CategoryType.SUBCLONAL_MUTATION;
-import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
-import static com.hartwig.hmftools.ctdna.SelectionStatus.EXCEEDS_COUNT;
-import static com.hartwig.hmftools.ctdna.SelectionStatus.FILTERED;
-import static com.hartwig.hmftools.ctdna.SelectionStatus.GENE_LOCATIONS;
-import static com.hartwig.hmftools.ctdna.SelectionStatus.PROXIMATE;
-import static com.hartwig.hmftools.ctdna.SelectionStatus.SELECTED;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_CODING_MUTATION;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_MUTATION;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_SV;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.REPORTABLE_MUTATION;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.SUBCLONAL_MUTATION;
+import static com.hartwig.hmftools.ctdna.probe.SelectionStatus.EXCEEDS_COUNT;
+import static com.hartwig.hmftools.ctdna.probe.SelectionStatus.FILTERED;
+import static com.hartwig.hmftools.ctdna.probe.SelectionStatus.GENE_LOCATIONS;
+import static com.hartwig.hmftools.ctdna.probe.SelectionStatus.PROXIMATE;
+import static com.hartwig.hmftools.ctdna.probe.SelectionStatus.SELECTED;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -104,7 +104,7 @@ public final class VariantSelection
             sj.add(format("%s=%d", type, typeCounts[type.ordinal()]));
         }
 
-        PV_LOGGER.info("selected variant type counts: {}", sj.toString());
+        CT_LOGGER.info("selected variant type counts: {}", sj.toString());
 
         return selectedVariants;
     }

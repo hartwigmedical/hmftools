@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ctdna;
+package com.hartwig.hmftools.ctdna.probe;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -7,9 +7,9 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
-import static com.hartwig.hmftools.ctdna.PvConfig.createCmdLineOptions;
-import static com.hartwig.hmftools.ctdna.VariantUtils.calcGcPercent;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.ctdna.probe.PvConfig.createCmdLineOptions;
+import static com.hartwig.hmftools.ctdna.probe.VariantUtils.calcGcPercent;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -53,9 +53,9 @@ public class ProbeVariantSelection
             System.exit(1);
 
         if(mConfig.isMultiSample())
-            PV_LOGGER.info("running probe variant selection for {} samples", mConfig.SampleIds.size());
+            CT_LOGGER.info("running probe variant selection for {} samples", mConfig.SampleIds.size());
         else
-            PV_LOGGER.info("sample({}) running probe variant selection", mConfig.sample());
+            CT_LOGGER.info("sample({}) running probe variant selection", mConfig.sample());
 
         if(mConfig.ReferenceVariantsFile != null)
         {
@@ -100,7 +100,7 @@ public class ProbeVariantSelection
 
         closeBufferedWriter(mWriter);
 
-        PV_LOGGER.info("Probe variation selection complete");
+        CT_LOGGER.info("Probe variation selection complete");
     }
 
     private class SampleTask implements Callable
@@ -126,13 +126,13 @@ public class ProbeVariantSelection
                 processSample(sampleId);
                 if(i > 0 && (i % 10) == 0)
                 {
-                    PV_LOGGER.info("{}: processed {} samples", mTaskId, i);
+                    CT_LOGGER.info("{}: processed {} samples", mTaskId, i);
                 }
             }
 
             if(mConfig.Threads > 1)
             {
-                PV_LOGGER.info("{}: tasks complete for {} samples", mTaskId, mSampleIds.size());
+                CT_LOGGER.info("{}: tasks complete for {} samples", mTaskId, mSampleIds.size());
             }
 
             return (long)0;
@@ -157,8 +157,8 @@ public class ProbeVariantSelection
             }
             catch(Exception e)
             {
-                PV_LOGGER.error("sample data loading error: {}", e.toString());
-                PV_LOGGER.error("failed loading sample data, exiting");
+                CT_LOGGER.error("sample data loading error: {}", e.toString());
+                CT_LOGGER.error("failed loading sample data, exiting");
                 System.exit(1);
             }
         }
@@ -190,7 +190,7 @@ public class ProbeVariantSelection
         }
         catch(IOException e)
         {
-            PV_LOGGER.error(" failed to initialise output file: {}", e.toString());
+            CT_LOGGER.error(" failed to initialise output file: {}", e.toString());
             return null;
         }
     }
@@ -225,14 +225,14 @@ public class ProbeVariantSelection
         }
         catch(IOException e)
         {
-            PV_LOGGER.error(" failed to write variants: {}", e.toString());
+            CT_LOGGER.error(" failed to write variants: {}", e.toString());
         }
     }
 
     public static void main(@NotNull final String[] args)
     {
         final VersionInfo version = new VersionInfo("ctdna.version");
-        PV_LOGGER.info("ProbeVariantSelection version: {}", version.version());
+        CT_LOGGER.info("ProbeVariantSelection version: {}", version.version());
 
         final Options options = createCmdLineOptions();
 
@@ -247,7 +247,7 @@ public class ProbeVariantSelection
         }
         catch(ParseException e)
         {
-            PV_LOGGER.warn(e);
+            CT_LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("PrimerVariantSelection", options);
             System.exit(1);

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.bamtools.slice;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bamtools.metrics.MetricsConfig.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 
 import java.util.List;

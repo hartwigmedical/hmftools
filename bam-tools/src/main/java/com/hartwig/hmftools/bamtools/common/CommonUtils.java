@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.bamtools.common;
 
-import static com.hartwig.hmftools.bamtools.metrics.MetricsConfig.BT_LOGGER;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -12,11 +11,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+import com.hartwig.hmftools.bamtools.metrics.MetricsConfig;
 import com.hartwig.hmftools.common.genome.bed.BedFileReader;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class CommonUtils
 {
@@ -30,6 +32,8 @@ public final class CommonUtils
     public static final String REGIONS_BED_FILE = "regions_bed_file";
 
     public static final String BAM_FILE_TYPE = "bam";
+
+    public static final Logger BT_LOGGER = LogManager.getLogger(MetricsConfig.class);
 
     public static void addCommonCommandOptions(final Options options)
     {

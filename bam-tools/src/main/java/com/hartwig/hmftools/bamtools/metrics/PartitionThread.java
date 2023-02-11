@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 
 import htsjdk.samtools.SamReader;
@@ -50,7 +51,7 @@ public class PartitionThread extends Thread
 
                 if(logAndGc)
                 {
-                    MetricsConfig.BT_LOGGER.info("processing partition({}), remaining({})", partition.TaskId, mPartitions.size());
+                    BT_LOGGER.info("processing partition({}), remaining({})", partition.TaskId, mPartitions.size());
                 }
 
                 slicer.run();
@@ -60,7 +61,7 @@ public class PartitionThread extends Thread
             }
             catch(NoSuchElementException e)
             {
-                MetricsConfig.BT_LOGGER.trace("all tasks complete");
+                BT_LOGGER.trace("all tasks complete");
                 break;
             }
             catch(Exception e)
@@ -76,7 +77,7 @@ public class PartitionThread extends Thread
         }
         catch(IOException e)
         {
-            MetricsConfig.BT_LOGGER.error("failed to close bam file: {}", e.toString());
+            BT_LOGGER.error("failed to close bam file: {}", e.toString());
         }
     }
 }

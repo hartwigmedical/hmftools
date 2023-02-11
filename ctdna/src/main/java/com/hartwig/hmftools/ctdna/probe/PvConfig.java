@@ -1,8 +1,7 @@
-package com.hartwig.hmftools.ctdna;
+package com.hartwig.hmftools.ctdna.probe;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
@@ -11,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -21,8 +21,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class PvConfig
 {
@@ -46,8 +44,6 @@ public class PvConfig
 
     public final int Threads;
     public final String OutputDir;
-
-    public static final Logger PV_LOGGER = LogManager.getLogger(PvConfig.class);
 
     // config strings
     public static final String SAMPLE = "sample";
@@ -100,8 +96,8 @@ public class PvConfig
 
         RefGenVersion = RefGenomeVersion.from(cmd);
 
-        PV_LOGGER.info("refGenome({}), purpleDir({}) linxDir({})", RefGenVersion, PurpleDir, LinxDir);
-        PV_LOGGER.info("output({})", OutputDir);
+        CT_LOGGER.info("refGenome({}), purpleDir({}) linxDir({})", RefGenVersion, PurpleDir, LinxDir);
+        CT_LOGGER.info("output({})", OutputDir);
 
         ProbeCount = Integer.parseInt(cmd.getOptionValue(PROBE_COUNT, String.valueOf(DEFAULT_PROBE_COUNT)));
         ProbeLength = Integer.parseInt(cmd.getOptionValue(PROBE_LENGTH, String.valueOf(DEFAULT_PROBE_LENGTH)));
@@ -140,7 +136,7 @@ public class PvConfig
 
         if(SampleIds.isEmpty())
         {
-            PV_LOGGER.error("missing sampleId config");
+            CT_LOGGER.error("missing sampleId config");
             return false;
         }
 
@@ -153,7 +149,7 @@ public class PvConfig
         {
             if(required)
             {
-                PV_LOGGER.error("missing config: {}", config);
+                CT_LOGGER.error("missing config: {}", config);
                 return false;
             }
 
@@ -162,7 +158,7 @@ public class PvConfig
 
         if(!Files.exists(Paths.get(filePath)))
         {
-            PV_LOGGER.error("invalid {} path: {}", config, filePath);
+            CT_LOGGER.error("invalid {} path: {}", config, filePath);
             return false;
         }
 

@@ -1,15 +1,12 @@
-package com.hartwig.hmftools.ctdna;
+package com.hartwig.hmftools.ctdna.probe;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.ctdna.CategoryType.GERMLINE_MUTATION;
-import static com.hartwig.hmftools.ctdna.PointMutation.generateMutationSequence;
-import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
-import static com.hartwig.hmftools.ctdna.VariantSelection.addRegisteredLocation;
-import static com.hartwig.hmftools.ctdna.VariantSelection.isNearRegisteredLocation;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.GERMLINE_MUTATION;
+import static com.hartwig.hmftools.ctdna.probe.PointMutation.generateMutationSequence;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -99,7 +96,7 @@ public class GermlineMutation extends Variant
 
         germlineVariants.stream().filter(x -> x.reported()).forEach(x -> variants.add(new GermlineMutation(x)));
 
-        PV_LOGGER.debug("sample({}) loaded {} germline variants", sampleId, variants.size());
+        CT_LOGGER.debug("sample({}) loaded {} germline variants", sampleId, variants.size());
 
         return variants;
     }

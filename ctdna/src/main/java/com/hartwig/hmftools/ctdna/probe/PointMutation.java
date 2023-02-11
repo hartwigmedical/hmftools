@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ctdna;
+package com.hartwig.hmftools.ctdna.probe;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
@@ -7,25 +7,22 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.SUBCLONAL_LIKELIHOOD_FLAG;
-import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_CODING_MUTATION;
-import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_MUTATION;
-import static com.hartwig.hmftools.ctdna.CategoryType.REPORTABLE_MUTATION;
-import static com.hartwig.hmftools.ctdna.CategoryType.SUBCLONAL_MUTATION;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_MAPPABILITY_MIN;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_REPEAT_COUNT_MAX;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_SUBCLONAL_LIKELIHOOD_MIN;
-import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INDEL_LENGTH;
-import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INSERT_BASES;
-import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
-import static com.hartwig.hmftools.ctdna.VariantSelection.addRegisteredLocation;
-import static com.hartwig.hmftools.ctdna.VariantSelection.isNearRegisteredLocation;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_CODING_MUTATION;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_MUTATION;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.REPORTABLE_MUTATION;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.SUBCLONAL_MUTATION;
+import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
+import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
+import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_MAPPABILITY_MIN;
+import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_REPEAT_COUNT_MAX;
+import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_SUBCLONAL_LIKELIHOOD_MIN;
+import static com.hartwig.hmftools.ctdna.probe.PvConfig.MAX_INDEL_LENGTH;
+import static com.hartwig.hmftools.ctdna.probe.PvConfig.MAX_INSERT_BASES;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
@@ -34,7 +31,6 @@ import com.hartwig.hmftools.common.utils.Strings;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.CommonVcfTags;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -162,7 +158,7 @@ public class PointMutation extends Variant
 
         if(sequence.length() != config.ProbeLength)
         {
-            PV_LOGGER.error("variant({}:{} {}->{}) invalid sequenceLength({}): {}",
+            CT_LOGGER.error("variant({}:{} {}->{}) invalid sequenceLength({}): {}",
                     chromosome, position, ref, alt, sequence.length(), sequence);
         }
 
@@ -250,7 +246,7 @@ public class PointMutation extends Variant
             variants.add(new PointMutation(variantContext, sampleId));
         }
 
-        PV_LOGGER.info("loaded {} somatic variants from vcf({})", variants.size(), vcfFile);
+        CT_LOGGER.info("loaded {} somatic variants from vcf({})", variants.size(), vcfFile);
 
         return variants;
     }

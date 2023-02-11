@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 
@@ -60,7 +61,7 @@ public class BamReader
 
     public void run()
     {
-        MetricsConfig.BT_LOGGER.debug("processing region({})", mRegion);
+        BT_LOGGER.debug("processing region({})", mRegion);
 
         mPerfCounter.start(mConfig.PerfDebug ? mRegion.toString() : null);
         mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
@@ -98,7 +99,7 @@ public class BamReader
         if(mLogReadIds) // debugging only
         {
             if(mConfig.LogReadIds.contains(read.getReadName()))
-                MetricsConfig.BT_LOGGER.debug("specific readId({}) unmapped({})", read.getReadName(), read.getReadUnmappedFlag());
+                BT_LOGGER.debug("specific readId({}) unmapped({})", read.getReadName(), read.getReadUnmappedFlag());
         }
 
         // cache if the mate read overlaps

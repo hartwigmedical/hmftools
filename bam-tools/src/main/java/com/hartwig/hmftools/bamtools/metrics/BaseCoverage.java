@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -49,7 +48,6 @@ public class BaseCoverage
             return;
         }
 
-        //if(mateUnmapped(read))
         if(!read.getReadPairedFlag() || read.getMateUnmappedFlag())
         {
             mFilterTypeCounts[FilterType.MATE_UNMAPPED.ordinal()] += alignedBases;
