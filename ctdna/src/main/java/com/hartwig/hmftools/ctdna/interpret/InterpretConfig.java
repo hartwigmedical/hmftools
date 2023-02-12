@@ -38,7 +38,7 @@ public class InterpretConfig
         for(String vcf : vcfs)
         {
             vcf = vcf.trim();
-            
+
             if(vcfDir != null)
                 SomaticVcfs.add(vcfDir + vcf);
             else
