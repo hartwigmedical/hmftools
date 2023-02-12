@@ -6,8 +6,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -19,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.*;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.*;
 
 import org.apache.commons.cli.CommandLine;
@@ -279,12 +278,12 @@ public class UnmappableRegionsCalculator
 
         //
         addRefGenomeConfig(options); // -ref_genome, -ref_genome_version
-        addOutputOptions(options); // -output_dir, -output_id
+        addOutputDir(options); // -output_dir,
         options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_CHR_PARTITION_SIZE);
         CommandLine cmd = parser.parse(options, args);
 
         //
-        String outputBedPath = cmd.getOptionValue(OUTPUT_DIR) + cmd.getOptionValue(OUTPUT_ID) + ".bed";
+        String outputBedPath = cmd.getOptionValue(OUTPUT_DIR) + "genome_unmappable_regions." + cmd.getOptionValue(REF_GENOME_VERSION) + ".bed";
 
         UnmappableRegionsCalculator unmappableRegionsCalculator = new UnmappableRegionsCalculator(
             cmd.getOptionValue(REF_GENOME),
