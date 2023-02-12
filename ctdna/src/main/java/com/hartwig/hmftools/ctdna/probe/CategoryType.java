@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ctdna;
+package com.hartwig.hmftools.ctdna.probe;
 
 public enum CategoryType
 {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ctdna;
+package com.hartwig.hmftools.ctdna.probe;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -14,14 +14,14 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.ctdna.CategoryType.AMP_DEL;
-import static com.hartwig.hmftools.ctdna.CategoryType.FUSION;
-import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_SV;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
-import static com.hartwig.hmftools.ctdna.PvConfig.DEFAULT_SV_BREAKENDS_PER_GENE;
-import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INSERT_BASES;
-import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.AMP_DEL;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.FUSION;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_SV;
+import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
+import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
+import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_SV_BREAKENDS_PER_GENE;
+import static com.hartwig.hmftools.ctdna.probe.PvConfig.MAX_INSERT_BASES;
 
 import java.util.List;
 import java.util.Map;
@@ -205,8 +205,7 @@ public class StructuralVariant extends Variant
 
         if(sequence.length() != probeLength)
         {
-            PV_LOGGER.error("variant({}:{}) invalid sequenceLength({}): {}",
-                    chromosome, position, sequence.length(), sequence);
+            CT_LOGGER.error("variant({}:{}) invalid sequenceLength({}): {}", chromosome, position, sequence.length(), sequence);
         }
 
         return sequence;
@@ -275,7 +274,7 @@ public class StructuralVariant extends Variant
 
         if(sequence.length() != probeLength)
         {
-            PV_LOGGER.error("variant({}:{} - {}:{}) invalid sequenceLength({}): {}",
+            CT_LOGGER.error("variant({}:{} - {}:{}) invalid sequenceLength({}): {}",
                     chrStart, positionStart, chrEnd, positionEnd, sequence.length(), sequence);
         }
 
@@ -424,7 +423,7 @@ public class StructuralVariant extends Variant
 
             if(annotation == null)
             {
-                PV_LOGGER.error("sample({}) vcfId({}) Linx annotation not found", sampleId, variant.id());
+                CT_LOGGER.error("sample({}) vcfId({}) Linx annotation not found", sampleId, variant.id());
                 // return Lists.newArrayList();
                 continue;
             }
@@ -457,7 +456,7 @@ public class StructuralVariant extends Variant
             }
         }
 
-        PV_LOGGER.info("loaded {} structural variants from vcf({})", variants.size(), vcfFile);
+        CT_LOGGER.info("loaded {} structural variants from vcf({})", variants.size(), vcfFile);
 
         // find SVs related to DEL and AMP events
         for(LinxDriver driver : drivers)

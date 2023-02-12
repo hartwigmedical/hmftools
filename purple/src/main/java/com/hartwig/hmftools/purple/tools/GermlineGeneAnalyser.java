@@ -56,7 +56,7 @@ public class GermlineGeneAnalyser
 
     public GermlineGeneAnalyser(final CommandLine cmd)
     {
-        RefGenomeVersion refGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        RefGenomeVersion refGenVersion = RefGenomeVersion.from(cmd);
         mGeneDataCache = new EnsemblDataCache(cmd, refGenVersion);
 
         mGeneDataCache.setRequiredData(true, false, false, true);

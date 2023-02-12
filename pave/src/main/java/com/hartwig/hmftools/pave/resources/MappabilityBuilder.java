@@ -44,7 +44,7 @@ public class MappabilityBuilder
     {
         mOutputDir = parseOutputDir(cmd);
         mInputFile = cmd.getOptionValue(MAPPABILITY_BED);
-        mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        mRefGenomeVersion = RefGenomeVersion.from(cmd);
     }
 
     public void run()

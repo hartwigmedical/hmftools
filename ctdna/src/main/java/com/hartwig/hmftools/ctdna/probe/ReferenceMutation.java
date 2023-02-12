@@ -1,11 +1,10 @@
-package com.hartwig.hmftools.ctdna;
+package com.hartwig.hmftools.ctdna.probe;
 
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.ctdna.CategoryType.REFERENCE;
-import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
-import static com.hartwig.hmftools.ctdna.VariantSelection.addRegisteredLocation;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.REFERENCE;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -143,11 +142,11 @@ public class ReferenceMutation extends Variant
                         ""));
             }
 
-            PV_LOGGER.info("loaded {} reference variants from file({})", variants.size(), filename);
+            CT_LOGGER.info("loaded {} reference variants from file({})", variants.size(), filename);
         }
         catch(Exception e)
         {
-            PV_LOGGER.error("failed to load reference variants file({}): {}", filename, e.toString());
+            CT_LOGGER.error("failed to load reference variants file({}): {}", filename, e.toString());
             return null;
         }
 

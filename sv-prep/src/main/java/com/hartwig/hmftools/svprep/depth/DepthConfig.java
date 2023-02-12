@@ -55,7 +55,7 @@ public class DepthConfig
         BamFiles = Arrays.stream(cmd.getOptionValue(BAM_FILES).split(DELIM, -1)).collect(Collectors.toList());
 
         RefGenome = cmd.getOptionValue(REF_GENOME);
-        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));;
+        RefGenVersion = RefGenomeVersion.from(cmd);
         VafCap = Double.parseDouble(cmd.getOptionValue(VAF_CAP, String.valueOf(DEFAULT_VAF_CAP)));
         Threads = parseThreads(cmd);
 

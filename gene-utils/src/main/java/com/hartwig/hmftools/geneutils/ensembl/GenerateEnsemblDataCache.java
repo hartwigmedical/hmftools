@@ -43,7 +43,7 @@ public class GenerateEnsemblDataCache
     {
         String outputDir = parseOutputDir(cmd);
 
-        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(V37)));
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd);
 
         GU_LOGGER.info("writing Ensembl version({}) data files to {}", refGenomeVersion, outputDir);
 

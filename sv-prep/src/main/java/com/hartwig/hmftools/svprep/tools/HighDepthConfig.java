@@ -46,7 +46,7 @@ public class HighDepthConfig
         BamFile = cmd.getOptionValue(BAM_FILE);
         OutputFile = cmd.getOptionValue(OUTPUT_FILE);
         RefGenome = cmd.getOptionValue(REF_GENOME);
-        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        RefGenVersion = RefGenomeVersion.from(cmd);
         Threads = parseThreads(cmd);
         PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_CHR_PARTITION_SIZE)));
         HighDepthThreshold = Integer.parseInt(cmd.getOptionValue(HIGH_DEPTH_THRESHOLD, String.valueOf(DEFAULT_HIGH_DEPTH_THRESHOLD)));

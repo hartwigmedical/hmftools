@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.bamtools.slice;
 
-import static com.hartwig.hmftools.bamtools.metrics.MetricsConfig.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 
 import java.io.File;

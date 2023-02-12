@@ -1,44 +1,18 @@
-package com.hartwig.hmftools.ctdna;
+package com.hartwig.hmftools.ctdna.probe;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.ctdna.CategoryType.FUSION;
-import static com.hartwig.hmftools.ctdna.CategoryType.GERMLINE_SV;
-import static com.hartwig.hmftools.ctdna.CategoryType.OTHER_SV;
-import static com.hartwig.hmftools.ctdna.PvConfig.MAX_INSERT_BASES;
-import static com.hartwig.hmftools.ctdna.PvConfig.PV_LOGGER;
-import static com.hartwig.hmftools.ctdna.StructuralVariant.generateSvReferenceSequences;
-import static com.hartwig.hmftools.ctdna.StructuralVariant.generateSvSequence;
-import static com.hartwig.hmftools.ctdna.VariantSelection.addRegisteredLocation;
-import static com.hartwig.hmftools.ctdna.VariantSelection.isNearRegisteredLocation;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.GERMLINE_SV;
+import static com.hartwig.hmftools.ctdna.probe.StructuralVariant.generateSvReferenceSequences;
+import static com.hartwig.hmftools.ctdna.probe.StructuralVariant.generateSvSequence;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxCluster;
-import com.hartwig.hmftools.common.linx.LinxCommonTypes;
-import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
-import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
-import com.hartwig.hmftools.common.sv.StructuralVariantData;
-import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 
 public class GermlineSv extends Variant
 {
@@ -131,7 +105,7 @@ public class GermlineSv extends Variant
 
         germlineSvs.stream().filter(x -> x.Reported).forEach(x -> variants.add(new GermlineSv(x)));
 
-        PV_LOGGER.info("loaded {} germline SVs from vcf({})", variants.size(), filename);
+        CT_LOGGER.info("loaded {} germline SVs from vcf({})", variants.size(), filename);
 
         return variants;
     }

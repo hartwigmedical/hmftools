@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.ctdna.probe.StructuralVariant;
 
 import org.apache.commons.compress.utils.Lists;
 import org.junit.Test;

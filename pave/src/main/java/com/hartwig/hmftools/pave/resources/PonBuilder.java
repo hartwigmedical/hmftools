@@ -71,7 +71,7 @@ public class PonBuilder
         mQualCutoff = Integer.parseInt(cmd.getOptionValue(QUAL_CUTOFF));
         mMinSamples = Integer.parseInt(cmd.getOptionValue(MIN_SAMPLES));
 
-        mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
+        mRefGenomeVersion = RefGenomeVersion.from(cmd);
 
         mExistingPon = new PonAnnotation(cmd.getOptionValue(PON_FILE), true);
 

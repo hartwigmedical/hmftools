@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.ctdna;
+package com.hartwig.hmftools.ctdna.probe;
 
-import static com.hartwig.hmftools.ctdna.SelectionStatus.NOT_SET;
-import static com.hartwig.hmftools.ctdna.SelectionStatus.SELECTED;
+import static com.hartwig.hmftools.ctdna.probe.SelectionStatus.NOT_SET;
+import static com.hartwig.hmftools.ctdna.probe.SelectionStatus.SELECTED;
 
 import java.util.List;
 import java.util.Map;

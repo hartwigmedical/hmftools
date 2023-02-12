@@ -61,7 +61,7 @@ public class PaveConfig
         SampleId = cmd.getOptionValue(SAMPLE);
         VcfFile = cmd.getOptionValue(VCF_FILE);
 
-        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        RefGenVersion = RefGenomeVersion.from(cmd);
 
         OutputVcfFile = cmd.getOptionValue(OUTPUT_VCF_FILE);
 

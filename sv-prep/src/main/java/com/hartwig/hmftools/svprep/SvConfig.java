@@ -133,7 +133,7 @@ public class SvConfig
             mIsValid = false;
         }
 
-        RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
+        RefGenVersion = RefGenomeVersion.from(cmd);
 
         SV_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         SV_LOGGER.info("output({})", OutputDir);

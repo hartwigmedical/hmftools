@@ -121,7 +121,7 @@ public class ReferenceData
 
         RefGenome = refGenome;
 
-        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        RefGenVersion = RefGenomeVersion.from(cmd);
         PPL_LOGGER.info("using ref genome: {}", RefGenVersion);
 
         RefGeCoordinates = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;

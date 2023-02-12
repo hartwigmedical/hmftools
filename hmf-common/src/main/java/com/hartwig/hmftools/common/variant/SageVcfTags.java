@@ -30,6 +30,12 @@ public final class SageVcfTags
     public static final String REPEAT_SEQUENCE_FLAG = "REP_S";
     private static final String REPEAT_FLAG_DESCRIPTION = "Repeat sequence";
 
+    public static final String READ_CONTEXT_QUALITY = "RC_QUAL";
+    public static final String READ_CONTEXT_QUALITY_DESCRIPTION =
+            "Read context quality [Full, Partial, Core, Realigned, Alt, Reference, Total]";
+
+    public static final String LIST_SEPARATOR = ",";
+
     public static VCFHeader addMetaData(@NotNull final VCFHeader header)
     {
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));

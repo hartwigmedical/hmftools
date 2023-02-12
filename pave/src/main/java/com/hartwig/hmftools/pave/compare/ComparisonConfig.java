@@ -59,7 +59,7 @@ public class ComparisonConfig
     {
         SampleIds = loadSampleIdsFile(cmd);
 
-        RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
+        RefGenVersion = RefGenomeVersion.from(cmd);
 
         ReferenceVariantsFile = cmd.getOptionValue(REF_VARIANTS_FILE);
 

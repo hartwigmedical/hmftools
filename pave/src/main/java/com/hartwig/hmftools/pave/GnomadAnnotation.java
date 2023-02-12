@@ -57,7 +57,7 @@ public class GnomadAnnotation
 
         if(cmd != null)
         {
-            mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+            mRefGenomeVersion = RefGenomeVersion.from(cmd);
             mLoadChromosomeOnDemand = cmd.hasOption(GNOMAD_LOAD_CHR_ON_DEMAND);
 
             if(cmd.hasOption(GNOMAD_FREQUENCY_FILE))

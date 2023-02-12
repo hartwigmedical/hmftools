@@ -3,6 +3,7 @@ package com.hartwig.hmftools.bamtools.metrics;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
@@ -40,7 +41,7 @@ public class BamMetrics
         if(!mConfig.isValid())
             System.exit(1);
 
-        MetricsConfig.BT_LOGGER.info("sample({}) starting bam metrics", mConfig.SampleId);
+        BT_LOGGER.info("sample({}) starting bam metrics", mConfig.SampleId);
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -56,7 +57,7 @@ public class BamMetrics
             allRegions.addAll(partitionChromosome(chromosomeStr));
         }
 
-        MetricsConfig.BT_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
+        BT_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
 
         Queue<PartitionTask> partitions = new ConcurrentLinkedQueue<>();
 
@@ -83,18 +84,18 @@ public class BamMetrics
             }
             catch(InterruptedException e)
             {
-                MetricsConfig.BT_LOGGER.error("task execution error: {}", e.toString());
+                BT_LOGGER.error("task execution error: {}", e.toString());
                 e.printStackTrace();
             }
         }
 
-        MetricsConfig.BT_LOGGER.info("all regions complete, totalReads({})", combinedStats.totalReads());
+        BT_LOGGER.info("all regions complete, totalReads({})", combinedStats.totalReads());
 
         combinedStats.metrics().finalise(mConfig.ExcludeZeroCoverage);
         MetricsWriter.writeResults(combinedStats.metrics(), mConfig);
-        MetricsConfig.BT_LOGGER.info("final stats: {}", combinedStats.metrics());
+        BT_LOGGER.info("final stats: {}", combinedStats.metrics());
 
-        MetricsConfig.BT_LOGGER.info("all regions complete, totalReads({}) stats: {}", combinedStats.totalReads(), combinedStats.metrics());
+        BT_LOGGER.info("all regions complete, totalReads({}) stats: {}", combinedStats.totalReads(), combinedStats.metrics());
 
         if(mConfig.PerfDebug)
         {
@@ -105,7 +106,7 @@ public class BamMetrics
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         double timeTakeMins = timeTakenMs / 60000.0;
 
-        MetricsConfig.BT_LOGGER.info("BamMetrics complete, mins({})", format("%.3f", timeTakeMins));
+        BT_LOGGER.info("BamMetrics complete, mins({})", format("%.3f", timeTakeMins));
     }
 
     private List<ChrBaseRegion> partitionChromosome(final String chromosome)
@@ -150,7 +151,7 @@ public class BamMetrics
     public static void main(@NotNull final String[] args)
     {
         final VersionInfo version = new VersionInfo("bam-tools.version");
-        MetricsConfig.BT_LOGGER.info("BamTools version: {}", version.version());
+        BT_LOGGER.info("BamTools version: {}", version.version());
 
         final Options options = MetricsConfig.createCmdLineOptions();
 
@@ -165,7 +166,7 @@ public class BamMetrics
         }
         catch(ParseException e)
         {
-            MetricsConfig.BT_LOGGER.warn(e);
+            BT_LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("BamMetrics", options);
             System.exit(1);

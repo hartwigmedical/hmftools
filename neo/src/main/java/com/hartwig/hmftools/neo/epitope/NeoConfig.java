@@ -134,7 +134,7 @@ public class NeoConfig
 
         final String refGenomeFilename = cmd.getOptionValue(REF_GENOME);
         RefGenome = loadRefGenome(refGenomeFilename);
-        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(V37)));
+        RefGenVersion = RefGenomeVersion.from(cmd);
 
         SvFusionsDir = cmd.getOptionValue(SV_FUSION_DATA_DIR);
         SomaticVcf = cmd.getOptionValue(SOMATIC_VCF);
