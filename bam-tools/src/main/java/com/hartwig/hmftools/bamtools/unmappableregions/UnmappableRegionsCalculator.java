@@ -2,6 +2,10 @@ package com.hartwig.hmftools.bamtools.unmappableregions;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 
@@ -15,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.*;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -25,6 +30,7 @@ public class UnmappableRegionsCalculator
 {
     private final RefGenomeSource mRefGenomeSource;
     private final IndexedFastaSequenceFile mIndexedFastaSequenceFile;
+
     private final String mOutputBedPath;
     private int mPartitionSize = DEFAULT_CHR_PARTITION_SIZE; // 1000000
     private RefGenomeVersion mRefGenomeVersion = V37;
@@ -269,35 +275,25 @@ public class UnmappableRegionsCalculator
     {
         //
         Options options = new Options();
-        options.addOption("i","refGenomeFastaPath", true, "Path to reference genome fasta file");
-        options.addOption("o","outputBedPath", true, "Path to output bed file");
-        options.addOption("p","partitionSize", true, "Size (in no. of bases) of the window used to scan the fasta file");
-        options.addOption("g","refGenomeVersion", true, "Version of the ref genome. Can be GRCh37, hg19, GRCh38, or hg38");
+        CommandLineParser parser = new DefaultParser();
 
         //
-        CommandLineParser parser = new DefaultParser();
+        addRefGenomeConfig(options); // -ref_genome, -ref_genome_version
+        addOutputOptions(options); // -output_dir, -output_id
+        options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_CHR_PARTITION_SIZE);
         CommandLine cmd = parser.parse(options, args);
 
         //
+        String outputBedPath = cmd.getOptionValue(OUTPUT_DIR) + cmd.getOptionValue(OUTPUT_ID) + ".bed";
+
         UnmappableRegionsCalculator unmappableRegionsCalculator = new UnmappableRegionsCalculator(
-            cmd.getOptionValue("refGenomeFastaPath"),
-            cmd.getOptionValue("outputBedPath")
+            cmd.getOptionValue(REF_GENOME),
+            outputBedPath
         );
 
-        if(cmd.hasOption("partitionSize"))
-            unmappableRegionsCalculator.setPartitionSize(Integer.parseInt(cmd.getOptionValue("partitionSize")));
+        int partitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_CHR_PARTITION_SIZE)));
+        unmappableRegionsCalculator.setPartitionSize(partitionSize);
 
-        if(cmd.hasOption("refGenomeVersion")){
-            String refGenomeVersion = cmd.getOptionValue("refGenomeVersion").toLowerCase();
-            if(refGenomeVersion.equals("grch37") || refGenomeVersion.equals("hg19"))
-                unmappableRegionsCalculator.setRefGenomeVersion(V37);
-            else if (refGenomeVersion.equals("grch38") || refGenomeVersion.equals("hg38"))
-                unmappableRegionsCalculator.setRefGenomeVersion(V38);
-            else
-                throw new Exception("`refGenomeVersion` must be GRCh37, hg19, GRCh38, or hg38");
-        }
-
-        //
         unmappableRegionsCalculator.run();
 
 //        String refGenomeFastaPath = "/home/lnguyen/Documents/BamMetricsTest/resources/HMFtools-Resources_ref_genome_37_Homo_sapiens.GRCh37.GATK.illumina.fasta";
@@ -310,7 +306,5 @@ public class UnmappableRegionsCalculator
 
 //        ArrayList<Integer[]> startEndPositions = unmappableRegionsCalculator.unmappablePositionsInChromosome("21", 2000000);
 //        unmappableRegionsCalculator.flattenStartEndPositions(startEndPositions);
-
-//
     }
 }
