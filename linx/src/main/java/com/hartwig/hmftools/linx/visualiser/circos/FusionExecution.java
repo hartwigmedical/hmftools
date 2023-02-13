@@ -35,7 +35,7 @@ public class FusionExecution
         );
         if (result != 0)
         {
-            VIS_LOGGER.warn("Error adding fusion plots.");
+            VIS_LOGGER.warn("Error adding fusion plots");
         }
 
         return result;

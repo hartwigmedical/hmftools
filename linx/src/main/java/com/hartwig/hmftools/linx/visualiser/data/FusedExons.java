@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.linx.visualiser.data.VisExons.sortedUpstreamE
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -50,6 +51,8 @@ public class FusedExons
                 .geneEnd(convertedUpGeneRegion.end())
                 .transcript(fusion.TranscriptUp);
 
+        boolean hasUpExons = false;
+
         for(final VisGeneExon exon : upStreamExons)
         {
             final GenomeRegion convertedExon = convertRegion(fusion.StrandUp, upGeneRegion, exon);
@@ -63,6 +66,7 @@ public class FusedExons
                         .skipped(exon.ExonRank > fusion.FusedExonUp)
                         .build();
                 result.add(fusedExon);
+                hasUpExons = true;
             }
         }
 
@@ -82,6 +86,7 @@ public class FusedExons
                 .transcript(fusion.TranscriptDown);
 
         boolean intronicToExonicFusion = fusion.RegionTypeUp.equals("Intronic") && fusion.RegionTypeDown.equals("Exonic");
+        boolean hasDownExons = false;
 
         for(int i = 0; i < downStreamExons.size(); i++)
         {
@@ -97,8 +102,12 @@ public class FusedExons
                         .skipped(exon.ExonRank < fusion.FusedExonDown || (i == 0 && intronicToExonicFusion))
                         .build();
                 result.add(fusedExon);
+                hasDownExons = true;
             }
         }
+
+        if(!hasUpExons || !hasDownExons)
+            return Collections.emptyList();
 
         return result;
     }

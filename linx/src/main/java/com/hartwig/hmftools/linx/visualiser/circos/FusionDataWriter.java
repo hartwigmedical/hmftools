@@ -65,9 +65,7 @@ public class FusionDataWriter
         mProteinDomainColors = new ProteinDomainColors(mFinalProteinDomains);
     }
 
-    @NotNull
-    public Object write(final String sample, final String outputDir)
-            throws IOException
+    public Object write(final String sample, final String outputDir) throws IOException
     {
         String filePrefix = outputDir + File.separator + sample;
         FusedExons.write(filePrefix + FUSION_PLOT_TSV, mFinalExons);
@@ -75,9 +73,5 @@ public class FusionDataWriter
         return this;
     }
 
-    public List<FusedExon> finalExons()
-    {
-        return mFinalExons;
-    }
-
+    public List<FusedExon> finalExons() { return mFinalExons; }
 }
