@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
@@ -9,6 +10,7 @@ import static htsjdk.samtools.CigarOperator.M;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -18,17 +20,19 @@ public class BaseCoverage
     private final MetricsConfig mConfig;
     private final int mRegionSize;
     private int mRegionStart;
+    private final List<ChrBaseRegion> mUnmappableRegions;
 
     private final int[] mBaseDepth;
     private final long[] mFilterTypeCounts;
 
-    public BaseCoverage(final MetricsConfig config, int regionStart, int regionEnd)
+    public BaseCoverage(final MetricsConfig config, int regionStart, int regionEnd, final List<ChrBaseRegion> unmappableRegions)
     {
         mConfig = config;
         mRegionSize = regionEnd - regionStart + 1;
         mRegionStart = regionStart;
         mBaseDepth = new int[mRegionSize];
         mFilterTypeCounts = new long[FilterType.values().length];
+        mUnmappableRegions = unmappableRegions;
     }
 
     public void processRead(final SAMRecord read, final List<int[]> mateBaseCoords)
@@ -91,6 +95,9 @@ public class BaseCoverage
     private void processMatchedBases(
             final SAMRecord read, int posStart, int readIndexStart, int matchLength, final List<int[]> mateBaseCoords)
     {
+        boolean checkUnmappable = !mUnmappableRegions.isEmpty()
+                && mUnmappableRegions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), posStart, read.getAlignmentEnd()));
+
         for(int i = 0; i < matchLength; ++i)
         {
             int position = posStart + i;
@@ -100,6 +107,9 @@ public class BaseCoverage
 
             if(position >= mRegionStart + mRegionSize)
                 break;
+
+            if(checkUnmappable && mUnmappableRegions.stream().anyMatch(x -> x.containsPosition(position)))
+                continue;
 
             int readIndex = readIndexStart + i;
             int baseIndex = position - mRegionStart;
@@ -138,6 +148,14 @@ public class BaseCoverage
         for(int i = 0; i < mBaseDepth.length; ++i)
         {
             int coverage = mBaseDepth[i];
+
+            if(!mUnmappableRegions.isEmpty())
+            {
+                int position = mRegionStart + i;
+
+                if(mUnmappableRegions.stream().anyMatch(x -> x.containsPosition(position)))
+                    continue;
+            }
 
             if(coverage == 0)
             {

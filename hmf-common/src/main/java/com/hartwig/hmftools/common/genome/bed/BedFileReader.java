@@ -31,9 +31,14 @@ public final class BedFileReader
 
     public static List<ChrBaseRegion> loadBedFile(final String filename) throws Exception
     {
-        List<ChrBaseRegion> regions = Lists.newArrayList();
+        List<ChrBaseRegion> regions = loadBedFile(Files.readAllLines(Paths.get(filename)));
+        LOGGER.info("loaded {} regions from BED file {}", regions.size(), filename);
+        return regions;
+    }
 
-        List<String> lines = Files.readAllLines(Paths.get(filename));
+    public static List<ChrBaseRegion> loadBedFile(final List<String> lines) throws Exception
+    {
+        List<ChrBaseRegion> regions = Lists.newArrayList();
 
         for(String line : lines)
         {
@@ -53,7 +58,6 @@ public final class BedFileReader
             regions.add(new ChrBaseRegion(chromosome, posStart, posEnd));
         }
 
-        LOGGER.info("loaded {} regions from BED file {}", regions.size(), filename);
         return regions;
     }
 }

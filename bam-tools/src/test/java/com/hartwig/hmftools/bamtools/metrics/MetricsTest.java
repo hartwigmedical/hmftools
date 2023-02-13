@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
+
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
@@ -33,7 +35,7 @@ public class MetricsTest
     @Test
     public void testReadFilterTypes()
     {
-        BaseCoverage baseCoverage = new BaseCoverage(mConfig, 1, 200);
+        BaseCoverage baseCoverage = new BaseCoverage(mConfig, 1, 200, Collections.emptyList());
 
         // add 1 of each filter type:
 

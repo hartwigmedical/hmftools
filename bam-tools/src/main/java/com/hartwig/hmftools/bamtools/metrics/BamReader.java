@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -49,7 +50,9 @@ public class BamReader
 
         mReadGroupMap = Maps.newHashMap();
 
-        mBaseCoverage = new BaseCoverage(mConfig, mRegion.start(), mRegion.end());
+        List<ChrBaseRegion> unmappableRegions = mConfig.UnmappableRegions.stream().filter(x -> x.overlaps(region)).collect(Collectors.toList());
+
+        mBaseCoverage = new BaseCoverage(mConfig, mRegion.start(), mRegion.end(), unmappableRegions);
 
         mFilterRegion = null;
 

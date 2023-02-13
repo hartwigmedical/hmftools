@@ -4,6 +4,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
@@ -258,7 +259,8 @@ public class UnmappableRegionsCalculator
 //            String chromosome = humanChromosome.toString();
             String chromosome = mRefGenomeVersion.versionedChromosome(humanChromosome.toString());
 
-            System.out.println("Calculating N-nucleotide regions for chromosome: " + chromosome);
+            BT_LOGGER.info("Calculating N-nucleotide regions for chromosome: " + chromosome);
+            // System.out.println("Calculating N-nucleotide regions for chromosome: " + chromosome);
 
             ArrayList<Integer[]> unmappedStartEndPositions = unmappablePositionsInChromosome(chromosome, mPartitionSize);
             ArrayList<Integer[]> unmappedStartEndPositionsFlattened = flattenStartEndPositions(unmappedStartEndPositions);

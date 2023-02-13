@@ -52,7 +52,16 @@ public class SomaticVariants
                 if(variantContext.isFiltered())
                     continue;
 
-                processVariant(patientId, genotypeInfos, variantContext);
+                try
+                {
+                    processVariant(patientId, genotypeInfos, variantContext);
+                }
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                    CT_LOGGER.error("patient({}) error processing variant", patientId, e.toString());
+                    return;
+                }
                 ++variantCount;
 
                 if(variantCount > 0 && (variantCount % 100000) == 0)
@@ -78,6 +87,13 @@ public class SomaticVariants
         for(GenotypeInfo genotypeInfo : genotypeInfos)
         {
             Genotype genotype = variantContext.getGenotype(genotypeInfo.Index);
+
+            if(genotype == null || genotype.getExtendedAttributes().isEmpty())
+            {
+                CT_LOGGER.warn("patientId({}) genotypeInfo({}) missing for variant({}:{}:{}>{})",
+                        patientId, genotypeInfo, variant.chromosome(), variant.position(), variant.ref(), variant.alt());
+                continue;
+            }
 
             int alleleCount = genotype.getAD()[1];
             int depth = genotype.getDP();
