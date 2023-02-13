@@ -14,6 +14,9 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -22,6 +25,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.CommonUtils;
+import com.hartwig.hmftools.common.genome.bed.BedFileReader;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
@@ -40,6 +44,8 @@ public class MetricsConfig
     public final int MaxCoverage;
 
     public final int PartitionSize;
+
+    public final List<ChrBaseRegion> UnmappableRegions;
 
     // metrics capture config
     public final boolean ExcludeZeroCoverage;
@@ -102,6 +108,9 @@ public class MetricsConfig
         ExcludeZeroCoverage = cmd.hasOption(EXCLUDE_ZERO_COVERAGE);
         WriteOldStyle = cmd.hasOption(WRITE_OLD_STYLE);
 
+        UnmappableRegions = Lists.newArrayList();
+        loadUnmappableRegions();
+
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
 
@@ -122,6 +131,24 @@ public class MetricsConfig
 
         mIsValid = checkFileExists(BamFile) && checkFileExists(RefGenomeFile);
         return mIsValid;
+    }
+
+    private void loadUnmappableRegions()
+    {
+        String filename = RefGenVersion.is37() ? "/genome_unmappable_regions.37.bed" : "/genome_unmappable_regions.38.bed";
+
+        final InputStream inputStream = MetricsConfig.class.getResourceAsStream(filename);
+
+        try
+        {
+            UnmappableRegions.addAll(
+                    BedFileReader.loadBedFile(new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList())));
+        }
+        catch(Exception e)
+        {
+            BT_LOGGER.error("failed to load unmapped regions file({}): {}", filename, e.toString());
+            System.exit(1);
+        }
     }
 
     public String formFilename(final String fileType)
@@ -169,6 +196,7 @@ public class MetricsConfig
         SpecificChromosomes = Collections.emptyList();
         SpecificRegions = Collections.emptyList();
         LogReadIds = Collections.emptyList();
+        UnmappableRegions = Collections.emptyList();
 
         Threads = 0;
         PerfDebug = false;
