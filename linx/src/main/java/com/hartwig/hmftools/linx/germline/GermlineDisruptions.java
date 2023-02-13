@@ -529,10 +529,10 @@ public class GermlineDisruptions
             return false;
 
         SvDisruptionData startDisruptionData = standardDisruptions.stream()
-                .filter(x -> x.Var == var && x.IsStart == true).findFirst().orElse(null);
+                .filter(x -> x.Var == var && x.IsStart).findFirst().orElse(null);
 
         SvDisruptionData endDisruptionData = standardDisruptions.stream()
-                .filter(x -> x.Var == var && x.IsStart == true).findFirst().orElse(null);
+                .filter(x -> x.Var == var && !x.IsStart).findFirst().orElse(null);
 
         if(startDisruptionData == null || endDisruptionData == null || startDisruptionData.Gene != endDisruptionData.Gene)
             return false;
