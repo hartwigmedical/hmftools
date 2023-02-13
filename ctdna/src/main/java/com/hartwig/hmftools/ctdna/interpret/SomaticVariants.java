@@ -90,8 +90,8 @@ public class SomaticVariants
 
             if(genotype == null || genotype.getExtendedAttributes().isEmpty())
             {
-                CT_LOGGER.warn("patientId({}) genotypeInfo({}) missing for variant({}:{}:{}>{})",
-                        patientId, genotypeInfo, variant.chromosome(), variant.position(), variant.ref(), variant.alt());
+                //CT_LOGGER.warn("patientId({}) genotypeInfo({}) missing for variant({}:{}:{}>{})",
+                //        patientId, genotypeInfo, variant.chromosome(), variant.position(), variant.ref(), variant.alt());
                 continue;
             }
 

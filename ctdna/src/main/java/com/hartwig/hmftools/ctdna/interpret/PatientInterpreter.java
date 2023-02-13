@@ -4,8 +4,6 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 
-import java.io.IOException;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -13,17 +11,12 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
-
-public class SampleInterpreter
+public class PatientInterpreter
 {
     private final InterpretConfig mConfig;
     private final ResultsWriter mResultsWriter;
 
-    public SampleInterpreter(final CommandLine cmd)
+    public PatientInterpreter(final CommandLine cmd)
     {
         mConfig = new InterpretConfig(cmd);
 
@@ -60,8 +53,8 @@ public class SampleInterpreter
 
         setLogLevel(cmd);
 
-        SampleInterpreter sampleInterpreter = new SampleInterpreter(cmd);
-        sampleInterpreter.run();
+        PatientInterpreter patientInterpreter = new PatientInterpreter(cmd);
+        patientInterpreter.run();
 
         CT_LOGGER.info("Sample VCF analyser complete");
     }
