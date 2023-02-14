@@ -115,14 +115,5 @@ public class SomaticVariants
 
             mResultsWriter.writeSampleVariant(patientId, genotype.getSampleName(), variant, alleleCount, depth, qualPerAlleleCount);
         }
-
-        /*
-        AD
-        DP
-        QualPerAD =  (RC_QUAL_FULL+RC_QUAL_PARTIAL+RC_QUAL_CORE+RC_QUAL_REALIGN)/AD
-         */
-
-
     }
-
 }
