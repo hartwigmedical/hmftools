@@ -210,7 +210,9 @@ investigate potential causes for QC failure.
 ### Version History and Download Links
 
 - Upcoming
-    - Extended linx datamodel with germline structural variants and breakends, rename all previous fields to include "somatic"
+    - Full support for reporting germline structural variants
+      - This includes extended linx & purple datamodels with germline values
+      - All somatic fields now have explicit "somatic" in their property name. 
     - Added `-cuppa_chart_plot` parameter to hold the output of cuppa-chart
     - Cuppa, VirusInterpreter, Sigs and Chord are made optional to support pipeline running in panel-mode
     - Add `experimentType` to ORANGE output which is either `TARGETED` or `FULL_GENOME` based on purple's targeted property. 
