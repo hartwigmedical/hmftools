@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.purple.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
 import org.jetbrains.annotations.NotNull;
@@ -46,8 +47,10 @@ final class LossOfHeterozygositySelector {
             boolean isRelevantMSI = MSI_GENES.contains(geneCopyNumber.geneName()) && microsatelliteStatus == MicrosatelliteStatus.MSI;
 
             if (isRelevantHRD || isRelevantMSI) {
-                if (hasLOH(geneCopyNumber) || hasGermlineHetDeletion(geneCopyNumber, allGermlineDeletions)) {
+                if (hasLOH(geneCopyNumber)) {
                     suspectGeneCopyNumbersWithLOH.add(geneCopyNumber);
+                } else if (hasReportedGermlineHetDeletion(geneCopyNumber, allGermlineDeletions)) {
+                    suspectGeneCopyNumbersWithLOH.add(correctForGermlineImpact(geneCopyNumber));
                 }
             }
         }
@@ -58,7 +61,7 @@ final class LossOfHeterozygositySelector {
         return geneCopyNumber.minMinorAlleleCopyNumber() < 0.5 && geneCopyNumber.minCopyNumber() > 0.5;
     }
 
-    private static boolean hasGermlineHetDeletion(@NotNull GeneCopyNumber geneCopyNumber,
+    private static boolean hasReportedGermlineHetDeletion(@NotNull GeneCopyNumber geneCopyNumber,
             @Nullable List<GermlineDeletion> allGermlineDeletions) {
         if (allGermlineDeletions == null) {
             return false;
@@ -80,5 +83,14 @@ final class LossOfHeterozygositySelector {
             }
         }
         return null;
+    }
+
+    @NotNull
+    private static GeneCopyNumber correctForGermlineImpact(@NotNull GeneCopyNumber geneCopyNumber) {
+        return ImmutableGeneCopyNumber.builder()
+                .from(geneCopyNumber)
+                .minCopyNumber(geneCopyNumber.minCopyNumber() - geneCopyNumber.minMinorAlleleCopyNumber())
+                .minMinorAlleleCopyNumber(0D)
+                .build();
     }
 }

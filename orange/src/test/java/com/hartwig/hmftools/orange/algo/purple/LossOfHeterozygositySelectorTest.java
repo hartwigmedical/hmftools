@@ -19,6 +19,8 @@ import org.junit.Test;
 
 public class LossOfHeterozygositySelectorTest {
 
+    private static final double EPSILON = 1.0E-10;
+
     @Test
     public void canSelectGenesForLOH() {
         String hrdGene = LossOfHeterozygositySelector.HRD_GENES.iterator().next();
@@ -78,7 +80,12 @@ public class LossOfHeterozygositySelectorTest {
         GeneCopyNumber hrdGene = GeneCopyNumberTestFactory.builder().geneName(gene).minMinorAlleleCopyNumber(1D).minCopyNumber(2D).build();
 
         GermlineDeletion hetDeletion = GermlineDeletionTestFactory.create(gene, true, GermlineStatus.HET_DELETION);
-        assertEquals(1, runWithHRDOneGeneOneGermlineDeletion(hrdGene, hetDeletion).size());
+        List<GeneCopyNumber> lohList = runWithHRDOneGeneOneGermlineDeletion(hrdGene, hetDeletion);
+        assertEquals(1, lohList.size());
+
+        GeneCopyNumber loh = lohList.get(0);
+        assertEquals(0, loh.minMinorAlleleCopyNumber(), EPSILON);
+        assertEquals(1, loh.minCopyNumber(), EPSILON);
 
         GermlineDeletion homDeletion = GermlineDeletionTestFactory.create(gene, true, GermlineStatus.HOM_DELETION);
         assertTrue(runWithHRDOneGeneOneGermlineDeletion(hrdGene, homDeletion).isEmpty());
