@@ -279,6 +279,7 @@ public class GermlineReportedEnrichmentTest
                 .reportSomaticHotspot(false)
                 .reportSplice(false)
                 .reportGermlineDisruption(ANY)
+                .reportGermlineDeletion(ANY)
                 .reportPGX(false)
                 .build();
     }

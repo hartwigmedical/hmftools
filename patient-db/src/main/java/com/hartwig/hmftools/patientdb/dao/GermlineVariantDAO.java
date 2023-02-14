@@ -247,8 +247,7 @@ public class GermlineVariantDAO
                 STRUCTURALVARIANTGERMLINE.RESOLVEDTYPE,
                 STRUCTURALVARIANTGERMLINE.LINKEDBYSTART,
                 STRUCTURALVARIANTGERMLINE.LINKEDBYEND,
-                STRUCTURALVARIANTGERMLINE.COHORTFREQUENCY,
-                STRUCTURALVARIANTGERMLINE.REPORTED);
+                STRUCTURALVARIANTGERMLINE.COHORTFREQUENCY);
 
         for(LinxGermlineSv germlineSV : germlineSVs)
         {
@@ -299,8 +298,7 @@ public class GermlineVariantDAO
                 germlineSV.ResolvedType,
                 germlineSV.LinkedByStart,
                 germlineSV.LinkedByEnd,
-                germlineSV.CohortFrequency,
-                germlineSV.Reported);
+                germlineSV.CohortFrequency);
     }
 
     public void writeGermlineBreakends(final String sample, final List<LinxBreakend> germlineBreakends)

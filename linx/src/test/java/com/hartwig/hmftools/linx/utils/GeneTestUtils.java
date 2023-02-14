@@ -161,6 +161,7 @@ public class GeneTestUtils
                 .likelihoodType(TSG)
                 .reportPGX(false)
                 .reportGermlineDisruption(DriverGeneGermlineReporting.ANY)
+                .reportGermlineDeletion(DriverGeneGermlineReporting.ANY)
                 .build();
     }
 

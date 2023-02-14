@@ -20,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class LoadDriverGenePanel
 {
-
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException
     {
         Options options = new Options();
@@ -35,7 +34,7 @@ public class LoadDriverGenePanel
 
         LOGGER.info("Loading {} driver genes to database", driverGenes.size());
 
-        DatabaseAccess dbAccess = databaseAccess(cmd);
+        DatabaseAccess dbAccess = databaseAccess(cmd, true);
         dbAccess.writeGenePanel(driverGenes);
         LOGGER.info("Complete");
     }

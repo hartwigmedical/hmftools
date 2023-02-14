@@ -338,9 +338,9 @@ public class GermlineDeletions
                 if(driverGene != null)
                 {
                     // check requirements on the germline disruption field
-                    if(driverGene.reportGermlineDisruption() == ANY || driverGene.reportGermlineDisruption() == VARIANT_NOT_LOST)
+                    if(driverGene.reportGermlineDeletion() == ANY || driverGene.reportGermlineDeletion() == VARIANT_NOT_LOST)
                         driverGenes.add(driverGene);
-                    else if(driverGene.reportGermlineDisruption() == WILDTYPE_LOST && tumorStatus == HOM_DELETION)
+                    else if(driverGene.reportGermlineDeletion() == WILDTYPE_LOST && tumorStatus == HOM_DELETION)
                         driverGenes.add(driverGene);
                 }
             }

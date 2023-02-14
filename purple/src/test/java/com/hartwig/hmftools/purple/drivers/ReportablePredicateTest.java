@@ -92,6 +92,7 @@ public class ReportablePredicateTest
                 .reportSomaticHotspot(true)
                 .likelihoodType(ONCO)
                 .reportGermlineDisruption(DriverGeneGermlineReporting.NONE)
+                .reportGermlineDeletion(DriverGeneGermlineReporting.NONE)
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
                 .reportPGX(false)

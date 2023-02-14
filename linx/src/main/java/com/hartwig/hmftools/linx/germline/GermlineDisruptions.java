@@ -9,7 +9,9 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE_DISRUPTION;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE_HOM_DUP_DISRUPTION;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.HOM_DUP_DISRUPTION;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.ANY;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.NONE;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.VARIANT_NOT_LOST;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.DOWNSTREAM;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
@@ -50,6 +52,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -77,7 +80,7 @@ public class GermlineDisruptions
 {
     private final EnsemblDataCache mGeneTransCache;
     private final List<GeneData> mDriverGeneDataList;
-    private final List<String> mReportableGeneIds;
+    private final List<DriverGene> mDriverGenes;
     private final List<SvDisruptionData> mDisruptions;
 
     private final Set<SvVarData> mReportableSgls;
@@ -93,17 +96,19 @@ public class GermlineDisruptions
     {
         mGeneTransCache = geneTransCache;
 
-        mDriverGeneDataList = config.DriverGenes.stream()
-                .map(x -> geneTransCache.getGeneDataByName(x.gene()))
-                .filter(x -> x != null)
-                .collect(Collectors.toList());
+        mDriverGenes = Lists.newArrayList();
+        mDriverGeneDataList = Lists.newArrayList();
 
-        mReportableGeneIds = config.DriverGenes.stream()
-                .filter(x -> x.reportGermlineDisruption() != NONE)
-                .map(x -> geneTransCache.getGeneDataByName(x.gene()))
-                .filter(x -> x != null)
-                .map(x -> x.GeneId)
-                .collect(Collectors.toList());
+        for(DriverGene driverGene : config.DriverGenes)
+        {
+            if(driverGene.reportGermlineDisruption() != NONE)
+                mDriverGenes.add(driverGene);
+
+            GeneData geneData = geneTransCache.getGeneDataByName(driverGene.gene());
+
+            if(geneData != null)
+                mDriverGeneDataList.add(geneData);
+        }
 
         mDisruptions = Lists.newArrayList();
 
@@ -396,7 +401,6 @@ public class GermlineDisruptions
 
             int ponCount = getPonCount(var);
 
-            boolean anyReportable = false;
             Set<String> allFilters = Sets.newHashSet(svData.filter());
             String geneName = "";
             DriverType driverType = GERMLINE_DISRUPTION; // default if meets the driver criteria
@@ -412,8 +416,8 @@ public class GermlineDisruptions
                 final GeneData gene = disruptionData.Gene;
                 final TranscriptData transcript = disruptionData.Transcript;
 
-                boolean reportable = isReportable(disruptionData);
-                anyReportable |= reportable;
+                // DELs and DUPs which straddle driver genes are not reportable
+                boolean reportable = !mDisruptions.contains(disruptionData) && isReportable(disruptionData);
 
                 if(disruptionData.isPseudogeneDeletion())
                 {
@@ -438,7 +442,7 @@ public class GermlineDisruptions
                         .transcriptId(transcript.TransName)
                         .canonical(transcript.IsCanonical)
                         .biotype(transcript.BioType)
-                        .disruptive(true)
+                        .disruptive(false)
                         .reportedDisruption(reportable)
                         .undisruptedCopyNumber(disruptionData.UndisruptedCopyNumber)
                         .junctionCopyNumber(svData.junctionCopyNumber())
@@ -453,6 +457,7 @@ public class GermlineDisruptions
 
                     builder.regionType(breakendTransData.regionType())
                         .codingType(breakendTransData.codingType())
+                        .disruptive(breakendTransData.isDisruptive())
                         .exonicBasePhase(breakendTransData.Phase)
                         .nextSpliceExonRank(breakendTransData.nextSpliceExonRank())
                         .nextSpliceExonPhase(breakendTransData.Phase)
@@ -519,7 +524,7 @@ public class GermlineDisruptions
                     svData.startTumorVariantFragmentCount(), svData.startTumorReferenceFragmentCount(), svData.endTumorReferenceFragmentCount(),
                     svData.insertSequence(), svData.insertSequenceAlignments(), svData.insertSequenceRepeatClass(), svData.insertSequenceRepeatType(),
                     geneName, cluster.id(), cluster.getSvCount(), cluster.getResolvedType().toString(),
-                    svData.startLinkedBy(), svData.endLinkedBy(), ponCount, anyReportable));
+                    svData.startLinkedBy(), svData.endLinkedBy(), ponCount));
         }
     }
 
@@ -547,7 +552,12 @@ public class GermlineDisruptions
         if(!var.getSvData().filter().equals(PASS))
             return false;
 
-        if(!mReportableGeneIds.contains(disruptionData.Gene.GeneId))
+        DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
+
+        if(driverGene == null)
+            return false;
+
+        if(driverGene.reportGermlineDisruption() == VARIANT_NOT_LOST && var.getSvData().junctionCopyNumber() < 0.1)
             return false;
 
         final SvCluster cluster = var.getCluster();
