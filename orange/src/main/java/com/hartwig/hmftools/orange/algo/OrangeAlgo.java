@@ -167,8 +167,10 @@ public class OrangeAlgo {
 
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
-        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, driverGenes, linx, chord);
-        PurpleInterpretedData purple = purpleInterpreter.interpret(loadPurpleData(config));
+        PurpleInterpreter purpleInterpreter =
+                new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, driverGenes, linx, chord);
+        PurpleData purpleData = loadPurpleData(config);
+        PurpleInterpretedData purple = purpleInterpreter.interpret(purpleData);
 
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
         if (WildTypeAlgo.wildTypeCallingAllowed(purple.fit().qc().status())) {
@@ -187,7 +189,7 @@ public class OrangeAlgo {
         OrangeReport report = ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
                 .experimentDate(config.experimentDate())
-                .experimentType(config.experimentType())
+                .experimentType(purpleData.purityContext().targeted() ? ExperimentType.TARGETED : ExperimentType.FULL_GENOME)
                 .configuredPrimaryTumor(configuredPrimaryTumor)
                 .refGenomeVersion(config.refGenomeVersion())
                 .platinumVersion(platinumVersion)

@@ -69,7 +69,7 @@ public final class TestOrangeReportFactory {
         return ImmutableOrangeReport.builder()
                 .sampleId(TEST_SAMPLE)
                 .experimentDate(LocalDate.of(2021, 11, 19))
-                .experimentType(ExperimentType.PANEL)
+                .experimentType(ExperimentType.TARGETED)
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .tumorSample(createMinimalOrangeSample())
                 .purple(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
@@ -88,7 +88,7 @@ public final class TestOrangeReportFactory {
 
     @NotNull
     public static OrangeReport createProperTestReport() {
-        return builder().experimentType(ExperimentType.WGS)
+        return builder().experimentType(ExperimentType.FULL_GENOME)
                 .addConfiguredPrimaryTumor(DoidTestFactory.createDoidNode("1", "cancer type"))
                 .platinumVersion("v5.31")
                 .refSample(createMinimalOrangeSample())
