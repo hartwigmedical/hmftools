@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo.cohort;
+package com.hartwig.hmftools.neo.scorer;
 
 public enum OutputType
 {

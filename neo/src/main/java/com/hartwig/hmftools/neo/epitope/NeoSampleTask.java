@@ -19,26 +19,23 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStringToList;
 import static com.hartwig.hmftools.neo.NeoCommon.DOWNSTREAM_PRE_GENE_DISTANCE;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.epitope.NeoEpitopeAnnotator.initialiseNeoepitopeWriter;
-import static com.hartwig.hmftools.neo.epitope.NeoEpitopeAnnotator.initialisePeptideWriter;
-import static com.hartwig.hmftools.neo.epitope.NeoEpitopeAnnotator.writeNeoepitopes;
-import static com.hartwig.hmftools.neo.epitope.NeoEpitopeAnnotator.writePeptideHlaData;
+import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.initialiseNeoepitopeWriter;
+import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.initialisePeptideWriter;
+import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.writeNeoepitopes;
+import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.writePeptideHlaData;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

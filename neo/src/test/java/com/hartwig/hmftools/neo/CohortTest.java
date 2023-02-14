@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.neo;
 
-import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.EXPECTED_ALLELE_COUNT;
+import static com.hartwig.hmftools.neo.scorer.AlleleCoverage.EXPECTED_ALLELE_COUNT;
 
 import static junit.framework.TestCase.assertEquals;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.neo.cohort.PeptidePredictionData;
+import com.hartwig.hmftools.neo.scorer.PeptidePredictionData;
 
 import org.junit.Test;
 

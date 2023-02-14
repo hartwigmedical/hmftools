@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.neo.cohort;
+package com.hartwig.hmftools.neo.scorer;
 
 import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
-import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.EXPECTED_ALLELE_COUNT;
-import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.gene;
+import static com.hartwig.hmftools.neo.scorer.AlleleCoverage.EXPECTED_ALLELE_COUNT;
+import static com.hartwig.hmftools.neo.scorer.AlleleCoverage.gene;
 
 import java.util.List;
 
