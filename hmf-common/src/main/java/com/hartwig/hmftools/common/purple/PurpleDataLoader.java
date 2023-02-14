@@ -76,7 +76,7 @@ public final class PurpleDataLoader
             allGermlineVariants = new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample, germlineVariantVcf);
             reportableGermlineVariants = selectReportedVariants(allGermlineVariants);
 
-            allGermlineDeletions = GermlineDeletion.read(germlineDeletionTsv);
+            allGermlineDeletions = selectPassDeletions(GermlineDeletion.read(germlineDeletionTsv));
             reportableGermlineDeletions = selectReportedDeletions(allGermlineDeletions);
         }
 
@@ -107,6 +107,21 @@ public final class PurpleDataLoader
             }
         }
         return reported;
+    }
+
+    @NotNull
+    private static List<GermlineDeletion> selectPassDeletions(@NotNull List<GermlineDeletion> allGermlineDeletions)
+    {
+        List<GermlineDeletion> pass = Lists.newArrayList();
+        for(GermlineDeletion deletion : allGermlineDeletions)
+        {
+            if (deletion.Filter.equals("PASS"))
+            {
+                pass.add(deletion);
+            }
+        }
+
+        return pass;
     }
 
     @NotNull

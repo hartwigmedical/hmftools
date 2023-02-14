@@ -378,15 +378,15 @@ public class OrangeAlgo {
 
         LinxData linx = LinxDataLoader.load(config.tumorSampleId(), config.linxSomaticDataDirectory(), linxGermlineDataDirectory);
 
-        LOGGER.info(" Loaded {} structural variants", linx.allSomaticStructuralVariants().size());
-        LOGGER.info(" Loaded {} structural drivers", linx.somaticDrivers().size());
-        LOGGER.info(" Loaded {} fusions (of which {} are reportable)",
+        LOGGER.info(" Loaded {} somatic structural variants", linx.allSomaticStructuralVariants().size());
+        LOGGER.info(" Loaded {} somatic structural drivers", linx.somaticDrivers().size());
+        LOGGER.info(" Loaded {} somatic fusions (of which {} are reportable)",
                 linx.allSomaticFusions().size(),
                 linx.reportableSomaticFusions().size());
-        LOGGER.info(" Loaded {} breakends (of which {} are reportable)",
+        LOGGER.info(" Loaded {} somatic breakends (of which {} are reportable)",
                 linx.allSomaticBreakends().size(),
                 linx.reportableSomaticBreakends().size());
-        LOGGER.info(" Loaded {} reportable homozygous disruptions", linx.somaticHomozygousDisruptions().size());
+        LOGGER.info(" Loaded {} somatic reportable homozygous disruptions", linx.somaticHomozygousDisruptions().size());
 
         if (linxGermlineDataDirectory != null) {
             LOGGER.info("Loading LINX germline data from {}", linxGermlineDataDirectory);
