@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.fusionInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_FUSION;
@@ -21,8 +22,10 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -118,6 +121,10 @@ public class SvNeoEpitope extends NeoEpitope
                 Phases[FS_DOWN] = exon.PhaseEnd;
                 ExonRank[FS_DOWN] = exon.Rank + 1;
             }
+        }
+        else if(RegionType[FS_DOWN] == UPSTREAM)
+        {
+            setDownstreamPhaseFromUtr();
         }
     }
 
@@ -260,12 +267,50 @@ public class SvNeoEpitope extends NeoEpitope
         }
     }
 
+    private void setDownstreamPhaseFromUtr()
+    {
+        int breakpointPosition = position(FS_DOWN);
+        TranscriptData transData = TransData[FS_DOWN];
+
+        if(transData.posStrand())
+        {
+            for(ExonData exon : transData.exons())
+            {
+                if(exon.Rank == 1)
+                    continue;
+
+                if(exon.Start <= breakpointPosition)
+                    continue;
+
+                Phases[FS_DOWN] = exon.PhaseStart;
+                ExonRank[FS_DOWN] = exon.Rank;
+                break;
+            }
+        }
+        else
+        {
+            for(int i = transData.exons().size() - 1; i >= 0; --i)
+            {
+                ExonData exon = transData.exons().get(i);
+
+                if(exon.End >= breakpointPosition)
+                    continue;
+
+                Phases[FS_DOWN] = exon.PhaseEnd;
+                ExonRank[FS_DOWN] = exon.Rank;
+                break;
+            }
+
+        }
+    }
+
     public String toString()
     {
-        return String.format("fusion up(%s: %s:%d:%d) down(%s: %s:%d:%d)",
-                mSvFusion.GeneNames[FS_UP], mSvFusion.Chromosomes[FS_UP],
+        return String.format("fusion up(%s:%s %s:%d:%d) down(%s:%s %s:%d:%d) phased(%s) trans up(%s:%s) down(%s:%s)",
+                mSvFusion.GeneNames[FS_UP], TransData[FS_UP].TransName, mSvFusion.Chromosomes[FS_UP],
                 mSvFusion.Positions[FS_UP], mSvFusion.Orientations[FS_UP],
-                mSvFusion.GeneNames[FS_DOWN], mSvFusion.Chromosomes[FS_DOWN],
-                mSvFusion.Positions[FS_DOWN], mSvFusion.Orientations[FS_DOWN]);
+                mSvFusion.GeneNames[FS_DOWN], TransData[FS_DOWN].TransName, mSvFusion.Chromosomes[FS_DOWN],
+                mSvFusion.Positions[FS_DOWN], mSvFusion.Orientations[FS_DOWN], phaseMatched(),
+                CodingType[FS_UP], RegionType[FS_UP], CodingType[FS_DOWN], RegionType[FS_DOWN]);
     }
 }

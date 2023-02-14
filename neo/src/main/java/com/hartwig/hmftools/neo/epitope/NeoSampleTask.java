@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.generateFilename;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
@@ -33,9 +34,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -270,20 +273,30 @@ public class NeoSampleTask implements Callable
             // find all transcripts where the breakend is inside the coding region on the 5' gene
             final List<TranscriptData> upTransDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[FS_UP]);
             final List<TranscriptData> downTransDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[FS_DOWN]);
-            final String[] validTranscriptNames = fusion.Transcripts;
+
+            String[] upTransNames = fusion.Transcripts[FS_UP].split(ITEM_DELIM, -1);
+            String[] downTransNames = fusion.Transcripts[FS_DOWN].split(ITEM_DELIM, -1);
 
             boolean sameGene = fusion.GeneIds[FS_UP].equals(fusion.GeneIds[FS_DOWN]);
 
-            for(TranscriptData upTransData : upTransDataList)
+            for(String upTransName : upTransNames)
             {
-                if(!validTranscriptNames[FS_UP].contains(upTransData.TransName))
+                TranscriptData upTransData = upTransDataList.stream().filter(x -> x.TransName.equals(upTransName)).findFirst().orElse(null);
+
+                if(upTransData == null)
                     continue;
 
                 if(!positionWithin(fusion.Positions[FS_UP], upTransData.CodingStart, upTransData.CodingEnd))
                     continue;
 
-                for(TranscriptData downTransData : downTransDataList)
+                for(String downTransName : downTransNames)
                 {
+                    TranscriptData downTransData = downTransDataList.stream()
+                            .filter(x -> x.TransName.equals(downTransName)).findFirst().orElse(null);
+
+                    if(downTransData == null)
+                        continue;
+
                     // if the same gene then must be the same transcript
                     if(sameGene && upTransData.TransId != downTransData.TransId)
                         continue;
@@ -308,12 +321,7 @@ public class NeoSampleTask implements Callable
                     if(!positionWithin(fusion.Positions[FS_DOWN], transRangeStart, transRangeEnd))
                         continue;
 
-                    if(!validTranscriptNames[FS_DOWN].contains(downTransData.TransName))
-                        continue;
-
                     NeoEpitope neData = new SvNeoEpitope(fusion);
-                    neDataList.add(neData);
-
                     neData.setTranscriptData(upTransData, downTransData);
                     neDataList.add(neData);
                 }
@@ -411,13 +419,14 @@ public class NeoSampleTask implements Callable
                     int maxNmdCount = max(neData.NmdBasesMax, otherNeData.NmdBasesMax);
                     int minCodingBaseLen = min(neData.CodingBasesLengthMin, otherNeData.CodingBasesLengthMin);
                     int maxCodingBaseLen = max(neData.CodingBasesLengthMax, otherNeData.CodingBasesLengthMax);
+                    final String otherAminoAcidStr = otherNeData.aminoAcidString();
 
                     // remove exact matches or take the longer if one is a subset
-                    if(aminoAcidStr.contains(otherNeData.aminoAcidString()))
+                    if(aminoAcidStr.contains(otherAminoAcidStr))
                     {
                         neDataList.remove(j);
                     }
-                    else if(otherNeData.aminoAcidString().contains(aminoAcidStr))
+                    else if(otherAminoAcidStr.contains(aminoAcidStr))
                     {
                         neDataList.set(i, otherNeData);
                         neData = otherNeData;
