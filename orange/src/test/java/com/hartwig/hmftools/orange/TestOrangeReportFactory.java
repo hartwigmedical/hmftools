@@ -155,8 +155,8 @@ public final class TestOrangeReportFactory {
                 .allGermlineVariants(Lists.newArrayList())
                 .reportableGermlineVariants(Lists.newArrayList())
                 .additionalSuspectGermlineVariants(Lists.newArrayList())
-                .allGermlineGainsLosses(Lists.newArrayList())
-                .reportableGermlineGainsLosses(Lists.newArrayList())
+                .allGermlineFullLosses(Lists.newArrayList())
+                .reportableGermlineFullLosses(Lists.newArrayList())
                 .build();
     }
 

@@ -40,8 +40,8 @@ public class PurpleInterpreterTest {
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleInterpretedData interpreted = interpreter.interpret(purple);
 
-        assertEquals(2, interpreted.allGermlineGainsLosses().size());
-        assertEquals(1, interpreted.reportableGermlineGainsLosses().size());
+        assertEquals(2, interpreted.allGermlineFullLosses().size());
+        assertEquals(1, interpreted.reportableGermlineFullLosses().size());
     }
 
     @Test

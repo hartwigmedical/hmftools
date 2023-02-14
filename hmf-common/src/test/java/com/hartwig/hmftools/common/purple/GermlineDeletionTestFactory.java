@@ -9,12 +9,6 @@ public final class GermlineDeletionTestFactory {
     }
 
     @NotNull
-    public static GermlineDeletion create(@NotNull String geneName, boolean reported, @NotNull GermlineStatus tumorStatus, int regionStart,
-            int regionEnd) {
-        return create(geneName, reported, tumorStatus, 0D, regionStart, regionEnd);
-    }
-
-    @NotNull
     public static GermlineDeletion create(@NotNull String geneName, boolean reported, @NotNull GermlineStatus tumorStatus) {
         return create(geneName, reported, tumorStatus, 0D, 0, 0);
     }

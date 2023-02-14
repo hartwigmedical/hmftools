@@ -102,15 +102,16 @@ public class PurpleInterpreter {
         LOGGER.info(" Found an additional {} somatic gains/losses that are potentially interesting",
                 additionalSuspectSomaticGainsLosses.size());
 
+        List<GermlineDeletion> allGermlineDeletions = purple.allGermlineDeletions();
         List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH =
                 LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(purple.allSomaticGeneCopyNumbers(),
+                        allGermlineDeletions,
                         purple.purityContext().microsatelliteStatus(),
                         chord != null ? chord.hrStatus() : null);
         LOGGER.info(" Found an additional {} suspect gene copy numbers with LOH", suspectGeneCopyNumbersWithLOH.size());
 
-        List<PurpleGainLoss> allGermlineGainsLosses = null;
-        List<PurpleGainLoss> reportableGermlineGainsLosses = null;
-        List<GermlineDeletion> allGermlineDeletions = purple.allGermlineDeletions();
+        List<PurpleGainLoss> allGermlineFullLosses = null;
+        List<PurpleGainLoss> reportableGermlineFullLosses = null;
 
         if (allGermlineDeletions != null) {
             List<GermlineDeletion> impliedDeletions = implyDeletionsFromBreakends(allGermlineDeletions,
@@ -125,12 +126,12 @@ public class PurpleInterpreter {
             Map<PurpleGainLoss, GermlineDeletion> deletionMap =
                     germlineGainLossFactory.mapDeletions(mergedGermlineDeletions, purple.allSomaticGeneCopyNumbers());
 
-            allGermlineGainsLosses = Lists.newArrayList(deletionMap.keySet());
-            reportableGermlineGainsLosses = selectReportable(deletionMap);
+            allGermlineFullLosses = Lists.newArrayList(deletionMap.keySet());
+            reportableGermlineFullLosses = selectReportable(deletionMap);
 
             LOGGER.info(" Resolved {} germline losses of which {} are reportable",
-                    allGermlineGainsLosses.size(),
-                    reportableGermlineGainsLosses.size());
+                    allGermlineFullLosses.size(),
+                    reportableGermlineFullLosses.size());
         }
 
         return ImmutablePurpleInterpretedData.builder()
@@ -151,8 +152,9 @@ public class PurpleInterpreter {
                 .reportableSomaticGainsLosses(reportableSomaticGainsLosses)
                 .nearReportableSomaticGains(nearReportableSomaticGains)
                 .additionalSuspectSomaticGainsLosses(additionalSuspectSomaticGainsLosses)
-                .allGermlineGainsLosses(allGermlineGainsLosses)
-                .reportableGermlineGainsLosses(reportableGermlineGainsLosses)
+                .allGermlineDeletions(allGermlineDeletions)
+                .allGermlineFullLosses(allGermlineFullLosses)
+                .reportableGermlineFullLosses(reportableGermlineFullLosses)
                 .build();
     }
 

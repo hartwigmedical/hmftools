@@ -100,7 +100,7 @@ public class GermlineFindingsChapter implements ReportChapter {
     }
 
     private void addGermlineDeletions(@NotNull Document document) {
-        List<PurpleGainLoss> reportableGermlineGainsLosses = report.purple().reportableGermlineGainsLosses();
+        List<PurpleGainLoss> reportableGermlineGainsLosses = report.purple().reportableGermlineFullLosses();
         if (reportableGermlineGainsLosses != null) {
             String title = "Potentially pathogenic germline deletions (" + reportableGermlineGainsLosses.size() + ")";
             document.add(GainLossTable.build(title, contentWidth(), reportableGermlineGainsLosses, report.isofox()));

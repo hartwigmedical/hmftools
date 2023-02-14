@@ -49,8 +49,9 @@ public class GermlineConversionTest {
                         .allGermlineVariants(Lists.newArrayList())
                         .reportableGermlineVariants(Lists.newArrayList())
                         .additionalSuspectGermlineVariants(Lists.newArrayList())
-                        .allGermlineGainsLosses(Lists.newArrayList())
-                        .reportableGermlineGainsLosses(Lists.newArrayList())
+                        .allGermlineDeletions(Lists.newArrayList())
+                        .allGermlineFullLosses(Lists.newArrayList())
+                        .reportableGermlineFullLosses(Lists.newArrayList())
                         .build())
                 .linx(TestLinxInterpretationFactory.builder()
                         .allGermlineStructuralVariants(Lists.newArrayList())
@@ -68,8 +69,9 @@ public class GermlineConversionTest {
         assertNull(converted.purple().allGermlineVariants());
         assertNull(converted.purple().reportableGermlineVariants());
         assertNull(converted.purple().additionalSuspectGermlineVariants());
-        assertNull(converted.purple().allGermlineGainsLosses());
-        assertNull(converted.purple().reportableGermlineGainsLosses());
+        assertNull(converted.purple().allGermlineDeletions());
+        assertNull(converted.purple().allGermlineFullLosses());
+        assertNull(converted.purple().reportableGermlineFullLosses());
 
         assertNull(converted.linx().allGermlineStructuralVariants());
         assertNull(converted.linx().allGermlineBreakends());
@@ -95,8 +97,8 @@ public class GermlineConversionTest {
 
         PurpleGainLoss somaticGainLoss = TestPurpleGainLossFactory.builder().build();
         PurpleGainLoss reportableSomaticGainLoss = TestPurpleGainLossFactory.builder().build();
-        PurpleGainLoss germlineGainLoss = TestPurpleGainLossFactory.builder().build();
-        PurpleGainLoss reportableGermlineGainLoss = TestPurpleGainLossFactory.builder().build();
+        PurpleGainLoss germlineFullLoss = TestPurpleGainLossFactory.builder().build();
+        PurpleGainLoss reportableGermlineFullLoss = TestPurpleGainLossFactory.builder().build();
 
         DriverCatalog somaticDriver = DriverCatalogTestFactory.builder().driver(DriverType.AMP).build();
         DriverCatalog germlineMutationDriver = DriverCatalogTestFactory.builder().driver(DriverType.GERMLINE_MUTATION).build();
@@ -114,8 +116,8 @@ public class GermlineConversionTest {
                 .addAdditionalSuspectGermlineVariants(suspectGermlineVariant)
                 .addAllSomaticGainsLosses(somaticGainLoss, reportableSomaticGainLoss)
                 .addReportableSomaticGainsLosses(reportableSomaticGainLoss)
-                .addAllGermlineGainsLosses(germlineGainLoss, reportableGermlineGainLoss)
-                .addReportableGermlineGainsLosses(reportableGermlineGainLoss)
+                .addAllGermlineFullLosses(germlineFullLoss, reportableGermlineFullLoss)
+                .addReportableGermlineFullLosses(reportableGermlineFullLoss)
                 .build();
 
         PurpleInterpretedData converted = GermlineConversion.convertPurpleGermline(true, purple);
@@ -138,11 +140,11 @@ public class GermlineConversionTest {
         assertTrue(converted.additionalSuspectSomaticVariants().contains(suspectSomaticVariant));
 
         assertEquals(3, converted.allSomaticGainsLosses().size());
-        assertTrue(converted.allSomaticGainsLosses().contains(reportableGermlineGainLoss));
+        assertTrue(converted.allSomaticGainsLosses().contains(reportableGermlineFullLoss));
 
         assertEquals(2, converted.reportableSomaticGainsLosses().size());
         assertTrue(converted.reportableSomaticGainsLosses().contains(reportableSomaticGainLoss));
-        assertTrue(converted.reportableSomaticGainsLosses().contains(reportableGermlineGainLoss));
+        assertTrue(converted.reportableSomaticGainsLosses().contains(reportableGermlineFullLoss));
 
         PurpleInterpretedData unreliableConverted = GermlineConversion.convertPurpleGermline(false, purple);
         assertEquals(1, unreliableConverted.somaticDrivers().size());

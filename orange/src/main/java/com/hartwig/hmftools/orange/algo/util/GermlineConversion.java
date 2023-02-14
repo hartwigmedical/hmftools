@@ -62,7 +62,7 @@ public final class GermlineConversion {
         if (containsTumorCells) {
             mergedDrivers = mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers());
             additionalReportableVariants = toSomaticVariants(purple.reportableGermlineVariants());
-            additionalReportableGainsLosses = toSomaticGainsLosses(purple.reportableGermlineGainsLosses());
+            additionalReportableGainsLosses = toSomaticGainsLosses(purple.reportableGermlineFullLosses());
         } else {
             mergedDrivers = purple.somaticDrivers();
             additionalReportableVariants = Lists.newArrayList();
@@ -81,8 +81,9 @@ public final class GermlineConversion {
                 .additionalSuspectGermlineVariants(null)
                 .addAllAllSomaticGainsLosses(additionalReportableGainsLosses)
                 .addAllReportableSomaticGainsLosses(additionalReportableGainsLosses)
-                .allGermlineGainsLosses(null)
-                .reportableGermlineGainsLosses(null)
+                .allGermlineDeletions(null)
+                .allGermlineFullLosses(null)
+                .reportableGermlineFullLosses(null)
                 .build();
     }
 

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 
 import org.immutables.value.Value;
@@ -66,8 +67,11 @@ public abstract class PurpleInterpretedData {
     public abstract List<PurpleGainLoss> additionalSuspectSomaticGainsLosses();
 
     @Nullable
-    public abstract List<PurpleGainLoss> allGermlineGainsLosses();
+    public abstract List<GermlineDeletion> allGermlineDeletions();
 
     @Nullable
-    public abstract List<PurpleGainLoss> reportableGermlineGainsLosses();
+    public abstract List<PurpleGainLoss> allGermlineFullLosses();
+
+    @Nullable
+    public abstract List<PurpleGainLoss> reportableGermlineFullLosses();
 }
