@@ -123,6 +123,10 @@ public final class GermlineConversion {
                 if (germlineDriver.driver() == DriverType.GERMLINE_DISRUPTION) {
                     merged.add(convertToSomaticDisruptionDriver(germlineDriver));
                 }
+
+                if (germlineDriver.driver() == DriverType.GERMLINE_HOM_DUP_DISRUPTION) {
+                    merged.add(convertToSomaticHomozygousDisruptionDriver(germlineDriver));
+                }
             }
         }
 
@@ -213,6 +217,18 @@ public final class GermlineConversion {
                 .from(germlineDriver)
                 .driver(DriverType.DISRUPTION)
                 .driverLikelihood(0D)
+                .likelihoodMethod(LikelihoodMethod.DEL)
+                .build();
+    }
+
+    @NotNull
+    private static DriverCatalog convertToSomaticHomozygousDisruptionDriver(@NotNull DriverCatalog germlineDriver) {
+        assert germlineDriver.driver() == DriverType.GERMLINE_HOM_DUP_DISRUPTION;
+
+        return ImmutableDriverCatalog.builder()
+                .from(germlineDriver)
+                .driver(DriverType.HOM_DUP_DISRUPTION)
+                .driverLikelihood(1D)
                 .likelihoodMethod(LikelihoodMethod.DEL)
                 .build();
     }

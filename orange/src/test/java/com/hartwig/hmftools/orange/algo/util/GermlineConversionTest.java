@@ -260,10 +260,17 @@ public class GermlineConversionTest {
                 .driverLikelihood(1D)
                 .build();
 
-        List<DriverCatalog> merged = GermlineConversion.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver),
-                Lists.newArrayList(germlineDriver1, germlineDriver2, germlineDriver3, germlineDriver4));
+        DriverCatalog germlineDriver5 = DriverCatalogTestFactory.builder()
+                .gene("gene 5")
+                .transcript("transcript 5")
+                .driver(DriverType.GERMLINE_HOM_DUP_DISRUPTION)
+                .driverLikelihood(0D)
+                .build();
 
-        assertEquals(4, merged.size());
+        List<DriverCatalog> merged = GermlineConversion.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver),
+                Lists.newArrayList(germlineDriver1, germlineDriver2, germlineDriver3, germlineDriver4, germlineDriver5));
+
+        assertEquals(5, merged.size());
         assertTrue(mergedNoGermline.contains(somaticDriver));
 
         DriverCatalog germlineDeletionDriver = findByGeneTranscript(merged, germlineDriver2.gene(), germlineDriver2.transcript());
@@ -275,6 +282,10 @@ public class GermlineConversionTest {
         DriverCatalog germlineDisruptionDriver = findByGeneTranscript(merged, germlineDriver4.gene(), germlineDriver4.transcript());
         assertEquals(DriverType.DISRUPTION, germlineDisruptionDriver.driver());
         assertEquals(0D, germlineDisruptionDriver.driverLikelihood(), EPSILON);
+
+        DriverCatalog germlineHomDisruptionDriver = findByGeneTranscript(merged, germlineDriver5.gene(), germlineDriver5.transcript());
+        assertEquals(DriverType.HOM_DUP_DISRUPTION, germlineHomDisruptionDriver.driver());
+        assertEquals(1D, germlineHomDisruptionDriver.driverLikelihood(), EPSILON);
     }
 
     @Nullable
