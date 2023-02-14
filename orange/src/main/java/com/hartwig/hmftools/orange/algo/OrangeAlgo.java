@@ -373,9 +373,9 @@ public class OrangeAlgo {
 
     @NotNull
     private static LinxData loadLinxData(@NotNull OrangeConfig config) throws IOException {
-        String linxGermlineDataDirectory = config.linxGermlineDataDirectory();
         LOGGER.info("Loading LINX somatic data from {}", config.linxSomaticDataDirectory());
 
+        String linxGermlineDataDirectory = config.linxGermlineDataDirectory();
         LinxData linx = LinxDataLoader.load(config.tumorSampleId(), config.linxSomaticDataDirectory(), linxGermlineDataDirectory);
 
         LOGGER.info(" Loaded {} somatic structural variants", linx.allSomaticStructuralVariants().size());
@@ -390,9 +390,14 @@ public class OrangeAlgo {
 
         if (linxGermlineDataDirectory != null) {
             LOGGER.info("Loading LINX germline data from {}", linxGermlineDataDirectory);
+            LOGGER.info(" Loaded {} germline structural variants", linx.allGermlineStructuralVariants().size());
+            LOGGER.info(" Loaded {} germline breakends (of which {} are reportable)",
+                    linx.allGermlineBreakends().size(),
+                    linx.reportableGermlineBreakends().size());
             LOGGER.info(" Loaded {} germline disruptions (of which {} are reportable)",
                     linx.allGermlineDisruptions().size(),
                     linx.reportableGermlineDisruptions().size());
+            LOGGER.info(" Loaded {} germline reportable homozygous disruptions", linx.germlineHomozygousDisruptions().size());
         } else {
             LOGGER.info(" Skipped loading LINX germline data as no linx germline data directory has been provided");
         }

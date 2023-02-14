@@ -128,7 +128,7 @@ public class PurpleInterpreter {
             allGermlineGainsLosses = Lists.newArrayList(deletionMap.keySet());
             reportableGermlineGainsLosses = selectReportable(deletionMap);
 
-            LOGGER.info(" Resolved {}  germline losses of which {} are reportable",
+            LOGGER.info(" Resolved {} germline losses of which {} are reportable",
                     allGermlineGainsLosses.size(),
                     reportableGermlineGainsLosses.size());
         }
