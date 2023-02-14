@@ -173,7 +173,7 @@ public class OrangeAlgo {
         IsofoxData isofoxData = loadIsofoxData(config);
 
         ExperimentType experimentType = purpleData.purityContext().targeted() ? ExperimentType.TARGETED : ExperimentType.FULL_GENOME;
-        LOGGER.info("Determined experiment type as '{}'", experimentType);
+        LOGGER.info("Determined experiment type to be '{}'", experimentType);
 
         LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
         LinxInterpretedData linx = linxInterpreter.interpret(linxData);
@@ -338,7 +338,7 @@ public class OrangeAlgo {
             mvlhPerGene.put(gene, missedVariantLikelihood);
         }
 
-        LOGGER.info("Skipping MVLH data for {} genes", mvlhPerGene.keySet().size());
+        LOGGER.info("Loaded MVLH data for {} genes", mvlhPerGene.keySet().size());
         return mvlhPerGene;
     }
 
