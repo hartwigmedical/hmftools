@@ -242,7 +242,7 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String germlineCopyNumberDriverString() {
-        List<PurpleGainLoss> germlineGainsLosses = report.purple().reportableGermlineGainsLosses();
+        List<PurpleGainLoss> germlineGainsLosses = report.purple().reportableGermlineFullLosses();
         if (germlineGainsLosses == null) {
             return ReportResources.NOT_AVAILABLE;
         }

@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.bamtools.unmappableregions;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 
@@ -113,7 +115,9 @@ public class UnmappableRegionsCalculator
         if(partitionSize < 1)
             throw new Exception("`partitionSize` must be >=1");
 
-        int chromosomeLength = mRefGenomeSource.getChromosomeLength(chromosome);
+        RefGenomeCoordinates refGenomeCoords = mRefGenomeVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+        int chromosomeLength = refGenomeCoords.length(stripChrPrefix(chromosome));
+//        int chromosomeLength = mRefGenomeSource.getChromosomeLength(chromosome);
 
         ArrayList<Integer> startPositions = new ArrayList<>();
         ArrayList<Integer> endPositions = new ArrayList<>();
@@ -145,7 +149,6 @@ public class UnmappableRegionsCalculator
     public ArrayList<Integer[]> unmappablePositionsInChromosome(String chromosome, int partitionSize) throws Exception
     {
         Integer[][] partitionsStartEndPositions = chromosomePartitionsStartEndPositions(chromosome, partitionSize);
-
         ArrayList<Integer[]> unmappedStartEndPositions = new ArrayList<>();
 
         for(int i = 0; i < partitionsStartEndPositions.length; i++)

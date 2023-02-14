@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.purple;
 import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.immutables.value.Value;
@@ -35,6 +36,9 @@ public interface PurpleData
     List<SomaticVariant> reportableGermlineVariants();
 
     @NotNull
+    List<StructuralVariant> allSomaticStructuralVariants();
+
+    @NotNull
     List<PurpleCopyNumber> allSomaticCopyNumbers();
 
     @NotNull
@@ -45,4 +49,5 @@ public interface PurpleData
 
     @Nullable
     List<GermlineDeletion> reportableGermlineDeletions();
+
 }

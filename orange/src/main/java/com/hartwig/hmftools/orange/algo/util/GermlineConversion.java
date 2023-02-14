@@ -62,7 +62,7 @@ public final class GermlineConversion {
         if (containsTumorCells) {
             mergedDrivers = mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers());
             additionalReportableVariants = toSomaticVariants(purple.reportableGermlineVariants());
-            additionalReportableGainsLosses = toSomaticGainsLosses(purple.reportableGermlineGainsLosses());
+            additionalReportableGainsLosses = toSomaticGainsLosses(purple.reportableGermlineFullLosses());
         } else {
             mergedDrivers = purple.somaticDrivers();
             additionalReportableVariants = Lists.newArrayList();
@@ -81,8 +81,9 @@ public final class GermlineConversion {
                 .additionalSuspectGermlineVariants(null)
                 .addAllAllSomaticGainsLosses(additionalReportableGainsLosses)
                 .addAllReportableSomaticGainsLosses(additionalReportableGainsLosses)
-                .allGermlineGainsLosses(null)
-                .reportableGermlineGainsLosses(null)
+                .allGermlineDeletions(null)
+                .allGermlineFullLosses(null)
+                .reportableGermlineFullLosses(null)
                 .build();
     }
 
@@ -122,6 +123,10 @@ public final class GermlineConversion {
 
                 if (germlineDriver.driver() == DriverType.GERMLINE_DISRUPTION) {
                     merged.add(convertToSomaticDisruptionDriver(germlineDriver));
+                }
+
+                if (germlineDriver.driver() == DriverType.GERMLINE_HOM_DUP_DISRUPTION) {
+                    merged.add(convertToSomaticHomozygousDisruptionDriver(germlineDriver));
                 }
             }
         }
@@ -213,6 +218,18 @@ public final class GermlineConversion {
                 .from(germlineDriver)
                 .driver(DriverType.DISRUPTION)
                 .driverLikelihood(0D)
+                .likelihoodMethod(LikelihoodMethod.DEL)
+                .build();
+    }
+
+    @NotNull
+    private static DriverCatalog convertToSomaticHomozygousDisruptionDriver(@NotNull DriverCatalog germlineDriver) {
+        assert germlineDriver.driver() == DriverType.GERMLINE_HOM_DUP_DISRUPTION;
+
+        return ImmutableDriverCatalog.builder()
+                .from(germlineDriver)
+                .driver(DriverType.HOM_DUP_DISRUPTION)
+                .driverLikelihood(1D)
                 .likelihoodMethod(LikelihoodMethod.DEL)
                 .build();
     }

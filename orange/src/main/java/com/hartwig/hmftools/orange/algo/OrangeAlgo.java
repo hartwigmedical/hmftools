@@ -28,6 +28,7 @@ import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
+import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
@@ -160,15 +161,34 @@ public class OrangeAlgo {
         OrangeSample refSample = loadSampleData(config, false);
         OrangeSample tumorSample = loadSampleData(config, true);
 
-        LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
-        LinxInterpretedData linx = linxInterpreter.interpret(loadLinxData(config));
-
+        PurpleData purpleData = loadPurpleData(config);
+        LinxData linxData = loadLinxData(config);
+        Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config);
         ChordData chord = loadChordAnalysis(config);
+        LilacSummaryData lilac = loadLilacData(config);
+        VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
+        CuppaData cuppa = loadCuppaData(config);
+        List<PeachGenotype> peach = loadPeachData(config);
+        List<SignatureAllocation> sigAllocations = loadSigAllocations(config);
+        IsofoxData isofoxData = loadIsofoxData(config);
+
+        ExperimentType experimentType = purpleData.purityContext().targeted() ? ExperimentType.TARGETED : ExperimentType.FULL_GENOME;
+        LOGGER.info("Determined experiment type to be '{}'", experimentType);
+
+        LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
+        LinxInterpretedData linx = linxInterpreter.interpret(linxData);
 
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
-        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, driverGenes, linx, chord);
-        PurpleInterpretedData purple = purpleInterpreter.interpret(loadPurpleData(config));
+        PurpleInterpreter purpleInterpreter =
+                new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, driverGenes, linx, chord);
+        PurpleInterpretedData purple = purpleInterpreter.interpret(purpleData);
+
+        IsofoxInterpretedData isofox = null;
+        if (isofoxData != null) {
+            IsofoxInterpreter isofoxInterpreter = new IsofoxInterpreter(driverGenes, knownFusionCache, linx);
+            isofox = isofoxInterpreter.interpret(isofoxData);
+        }
 
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
         if (WildTypeAlgo.wildTypeCallingAllowed(purple.fit().qc().status())) {
@@ -187,23 +207,23 @@ public class OrangeAlgo {
         OrangeReport report = ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
                 .experimentDate(config.experimentDate())
-                .experimentType(config.experimentType())
+                .experimentType(experimentType)
                 .configuredPrimaryTumor(configuredPrimaryTumor)
                 .refGenomeVersion(config.refGenomeVersion())
                 .platinumVersion(platinumVersion)
                 .refSample(refSample)
                 .tumorSample(tumorSample)
-                .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
+                .germlineMVLHPerGene(mvlhPerGene)
                 .purple(purple)
                 .linx(linx)
                 .wildTypeGenes(wildTypeGenes)
-                .isofox(loadIsofoxData(config, linx))
-                .lilac(loadLilacData(config))
-                .virusInterpreter(loadVirusInterpreterData(config))
+                .isofox(isofox)
+                .lilac(lilac)
+                .virusInterpreter(virusInterpreter)
                 .chord(chord)
-                .cuppa(loadCuppaData(config))
-                .peach(loadPeachData(config))
-                .sigAllocations(loadSigAllocations(config))
+                .cuppa(cuppa)
+                .peach(peach)
+                .sigAllocations(sigAllocations)
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();
@@ -317,6 +337,8 @@ public class OrangeAlgo {
             double missedVariantLikelihood = Double.parseDouble(mvlhString) / 100D;
             mvlhPerGene.put(gene, missedVariantLikelihood);
         }
+
+        LOGGER.info("Loaded MVLH data for {} genes", mvlhPerGene.keySet().size());
         return mvlhPerGene;
     }
 
@@ -351,7 +373,9 @@ public class OrangeAlgo {
         LOGGER.info(" Loaded {} somatic variants (of which {} are reportable)",
                 purple.allSomaticVariants().size(),
                 purple.reportableSomaticVariants().size());
-        LOGGER.info(" Loaded {} gene copy numbers entries", purple.allSomaticGeneCopyNumbers().size());
+        LOGGER.info(" Loaded {} somatic copy numbers entries", purple.allSomaticCopyNumbers().size());
+        LOGGER.info(" Loaded {} somatic gene copy numbers entries", purple.allSomaticGeneCopyNumbers().size());
+        LOGGER.info(" Loaded {} somatic structural variants", purple.allSomaticStructuralVariants().size());
 
         if (referenceSample != null) {
             LOGGER.info(" Loaded {} germline driver catalog entries", purple.germlineDrivers().size());
@@ -371,26 +395,31 @@ public class OrangeAlgo {
 
     @NotNull
     private static LinxData loadLinxData(@NotNull OrangeConfig config) throws IOException {
-        String linxGermlineDataDirectory = config.linxGermlineDataDirectory();
         LOGGER.info("Loading LINX somatic data from {}", config.linxSomaticDataDirectory());
 
+        String linxGermlineDataDirectory = config.linxGermlineDataDirectory();
         LinxData linx = LinxDataLoader.load(config.tumorSampleId(), config.linxSomaticDataDirectory(), linxGermlineDataDirectory);
 
-        LOGGER.info(" Loaded {} structural variants", linx.allSomaticStructuralVariants().size());
-        LOGGER.info(" Loaded {} structural drivers", linx.somaticDrivers().size());
-        LOGGER.info(" Loaded {} fusions (of which {} are reportable)",
+        LOGGER.info(" Loaded {} somatic structural variants", linx.allSomaticStructuralVariants().size());
+        LOGGER.info(" Loaded {} somatic structural drivers", linx.somaticDrivers().size());
+        LOGGER.info(" Loaded {} somatic fusions (of which {} are reportable)",
                 linx.allSomaticFusions().size(),
                 linx.reportableSomaticFusions().size());
-        LOGGER.info(" Loaded {} breakends (of which {} are reportable)",
+        LOGGER.info(" Loaded {} somatic breakends (of which {} are reportable)",
                 linx.allSomaticBreakends().size(),
                 linx.reportableSomaticBreakends().size());
-        LOGGER.info(" Loaded {} reportable homozygous disruptions", linx.somaticHomozygousDisruptions().size());
+        LOGGER.info(" Loaded {} somatic reportable homozygous disruptions", linx.somaticHomozygousDisruptions().size());
 
         if (linxGermlineDataDirectory != null) {
             LOGGER.info("Loading LINX germline data from {}", linxGermlineDataDirectory);
+            LOGGER.info(" Loaded {} germline structural variants", linx.allGermlineStructuralVariants().size());
+            LOGGER.info(" Loaded {} germline breakends (of which {} are reportable)",
+                    linx.allGermlineBreakends().size(),
+                    linx.reportableGermlineBreakends().size());
             LOGGER.info(" Loaded {} germline disruptions (of which {} are reportable)",
                     linx.allGermlineDisruptions().size(),
                     linx.reportableGermlineDisruptions().size());
+            LOGGER.info(" Loaded {} germline reportable homozygous disruptions", linx.germlineHomozygousDisruptions().size());
         } else {
             LOGGER.info(" Skipped loading LINX germline data as no linx germline data directory has been provided");
         }
@@ -399,7 +428,7 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private IsofoxInterpretedData loadIsofoxData(@NotNull OrangeConfig config, @NotNull LinxInterpretedData linx) throws IOException {
+    private IsofoxData loadIsofoxData(@NotNull OrangeConfig config) throws IOException {
         OrangeRNAConfig rna = config.rnaConfig();
         if (rna == null) {
             LOGGER.info("Skipping ISOFOX data loading as RNA is not configured");
@@ -412,13 +441,13 @@ public class OrangeAlgo {
             return null;
         }
 
-        return IsofoxInterpreter.interpret(IsofoxDataLoader.load(isofoxCancerType,
+        return IsofoxDataLoader.load(isofoxCancerType,
                 rna.isofoxGeneDistributionCsv(),
                 rna.isofoxAltSjCohortCsv(),
                 rna.isofoxSummaryCsv(),
                 rna.isofoxGeneDataCsv(),
                 rna.isofoxFusionCsv(),
-                rna.isofoxAltSpliceJunctionCsv()), linx, driverGenes, knownFusionCache);
+                rna.isofoxAltSpliceJunctionCsv());
     }
 
     @NotNull

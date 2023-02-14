@@ -8,24 +8,33 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class LinxDataLoader {
-    private LinxDataLoader() {
+
+    private LinxDataLoader()
+    {
     }
 
     @NotNull
     public static LinxData load(final String tumorSample, final String linxSomaticDir, @Nullable String linxGermlineDir)
-            throws IOException {
+            throws IOException
+    {
         final String somaticSvAnnotationFile = LinxSvAnnotation.generateFilename(linxSomaticDir, tumorSample, false);
         final String somaticBreakendFile = LinxBreakend.generateFilename(linxSomaticDir, tumorSample);
         final String somaticFusionFile = LinxFusion.generateFilename(linxSomaticDir, tumorSample);
         final String somaticDriversFile = LinxDriver.generateFilename(linxSomaticDir, tumorSample);
         final String somaticDriverCatalogFile = LinxDriver.generateCatalogFilename(linxSomaticDir, tumorSample, true);
 
-        final String germlineSvAnnotationFile =
-                linxGermlineDir != null ? LinxSvAnnotation.generateFilename(linxGermlineDir, tumorSample, true) : null;
-        final String germlineBreakendFile =
-                linxGermlineDir != null ? LinxBreakend.generateFilename(linxGermlineDir, tumorSample, true) : null;
-        final String germlineDisruptionFile =
-                linxGermlineDir != null ? LinxGermlineSv.generateFilename(linxGermlineDir, tumorSample) : null;
+        String germlineSvAnnotationFile = null;
+        String germlineBreakendFile = null;
+        String germlineDisruptionFile = null;
+        String germlineDriverCatalogFile = null;
+
+        if (linxGermlineDir != null)
+        {
+            germlineSvAnnotationFile = LinxSvAnnotation.generateFilename(linxGermlineDir, tumorSample, true);
+            germlineBreakendFile = LinxBreakend.generateFilename(linxGermlineDir, tumorSample, true);
+            germlineDisruptionFile = LinxGermlineSv.generateFilename(linxGermlineDir, tumorSample);
+            germlineDriverCatalogFile = LinxDriver.generateCatalogFilename(linxGermlineDir, tumorSample, false);
+        }
 
         return load(somaticSvAnnotationFile,
                 somaticFusionFile,
@@ -34,14 +43,16 @@ public final class LinxDataLoader {
                 somaticDriversFile,
                 germlineSvAnnotationFile,
                 germlineBreakendFile,
-                germlineDisruptionFile);
+                germlineDisruptionFile,
+                germlineDriverCatalogFile);
     }
 
     @NotNull
     private static LinxData load(@NotNull String somaticStructuralVariantTsv, @NotNull String somaticFusionTsv, @NotNull String somaticBreakendTsv,
             @NotNull String somaticDriverCatalogTsv, @NotNull String somaticDriverTsv, @Nullable String germlineStructuralVariantTsv,
-            @Nullable String germlineBreakendTsv, @Nullable String germlineDisruptionTsv)
-            throws IOException {
+            @Nullable String germlineBreakendTsv, @Nullable String germlineDisruptionTsv, @Nullable String germlineDriverCatalogTsv)
+            throws IOException
+    {
         List<LinxSvAnnotation> allSomaticStructuralVariants = LinxSvAnnotation.read(somaticStructuralVariantTsv);
         List<LinxDriver> allSomaticDrivers = LinxDriver.read(somaticDriverTsv);
 
@@ -52,25 +63,34 @@ public final class LinxDataLoader {
         List<LinxBreakend> reportableSomaticBreakends = selectReportableBreakends(allSomaticBreakends);
 
         List<HomozygousDisruption> somaticHomozygousDisruptions =
-                HomozygousDisruptionFactory.extractFromLinxDriverCatalogTsv(somaticDriverCatalogTsv);
+                HomozygousDisruptionFactory.extractSomaticFromLinxDriverCatalogTsv(somaticDriverCatalogTsv);
 
         List<LinxSvAnnotation> allGermlineStructuralVariants = null;
-        if (germlineStructuralVariantTsv != null) {
+        if (germlineStructuralVariantTsv != null)
+        {
             allGermlineStructuralVariants = LinxSvAnnotation.read(germlineStructuralVariantTsv);
         }
 
         List<LinxBreakend> allGermlineBreakends = null;
         List<LinxBreakend> reportableGermlineBreakends = null;
-        if (germlineBreakendTsv != null) {
+        if (germlineBreakendTsv != null)
+        {
             allGermlineBreakends = LinxBreakend.read(germlineBreakendTsv);
             reportableGermlineBreakends = selectReportableBreakends(allGermlineBreakends);
         }
 
         List<LinxGermlineSv> allGermlineDisruptions = null;
         List<LinxGermlineSv> reportableGermlineDisruptions = null;
-        if (germlineDisruptionTsv != null) {
+        if (germlineDisruptionTsv != null)
+        {
             allGermlineDisruptions = LinxGermlineSv.read(germlineDisruptionTsv);
             reportableGermlineDisruptions = selectReportableGermlineSvs(allGermlineDisruptions, reportableGermlineBreakends);
+        }
+
+        List<HomozygousDisruption> germlineHomozygousDisruptions = null;
+        if (germlineDriverCatalogTsv != null)
+        {
+            germlineHomozygousDisruptions = HomozygousDisruptionFactory.extractGermlineFromLinxDriverCatalogTsv(germlineDriverCatalogTsv);
         }
 
         return ImmutableLinxData.builder()
@@ -86,14 +106,18 @@ public final class LinxDataLoader {
                 .reportableGermlineBreakends(reportableGermlineBreakends)
                 .allGermlineDisruptions(allGermlineDisruptions)
                 .reportableGermlineDisruptions(reportableGermlineDisruptions)
+                .germlineHomozygousDisruptions(germlineHomozygousDisruptions)
                 .build();
     }
 
     @NotNull
-    private static List<LinxFusion> selectReportableFusions(@NotNull List<LinxFusion> fusions) {
+    private static List<LinxFusion> selectReportableFusions(@NotNull List<LinxFusion> fusions)
+    {
         List<LinxFusion> reportableFusions = Lists.newArrayList();
-        for (LinxFusion fusion : fusions) {
-            if (fusion.reported()) {
+        for (LinxFusion fusion : fusions)
+        {
+            if (fusion.reported())
+            {
                 reportableFusions.add(fusion);
             }
         }
@@ -101,10 +125,13 @@ public final class LinxDataLoader {
     }
 
     @NotNull
-    private static List<LinxBreakend> selectReportableBreakends(@NotNull List<LinxBreakend> breakends) {
+    private static List<LinxBreakend> selectReportableBreakends(@NotNull List<LinxBreakend> breakends)
+    {
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
-        for (LinxBreakend breakend : breakends) {
-            if (breakend.reportedDisruption()) {
+        for (LinxBreakend breakend : breakends)
+        {
+            if (breakend.reportedDisruption())
+            {
                 reportableBreakends.add(breakend);
             }
         }

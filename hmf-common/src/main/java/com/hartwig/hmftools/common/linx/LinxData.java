@@ -45,4 +45,7 @@ public interface LinxData
 
     @Nullable
     List<LinxGermlineSv> reportableGermlineDisruptions();
+
+    @Nullable
+    List<HomozygousDisruption> germlineHomozygousDisruptions();
 }

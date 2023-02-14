@@ -7,15 +7,21 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class IsofoxInterpreterTest {
 
     @Test
     public void canInterpretMinimalIsofoxData() {
-        assertNotNull(IsofoxInterpreter.interpret(IsofoxTestFactory.createMinimalIsofoxTestData(),
-                TestLinxInterpretationFactory.createMinimalTestLinxData(),
-                Lists.newArrayList(),
-                new KnownFusionCache()));
+        IsofoxInterpreter interpreter = createTestInterpreter();
+        assertNotNull(interpreter.interpret(IsofoxTestFactory.createMinimalIsofoxTestData()));
+    }
+
+    @NotNull
+    private static IsofoxInterpreter createTestInterpreter() {
+        return new IsofoxInterpreter(Lists.newArrayList(),
+                new KnownFusionCache(),
+                TestLinxInterpretationFactory.createMinimalTestLinxData());
     }
 }

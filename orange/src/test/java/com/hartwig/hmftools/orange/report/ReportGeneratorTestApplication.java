@@ -116,7 +116,7 @@ public class ReportGeneratorTestApplication {
                         .allSomaticGainsLosses(report.purple().reportableSomaticGainsLosses())
                         .nearReportableSomaticGains(Lists.newArrayList())
                         .additionalSuspectSomaticGainsLosses(Lists.newArrayList())
-                        .allGermlineGainsLosses(report.purple().reportableGermlineGainsLosses())
+                        .allGermlineFullLosses(report.purple().reportableGermlineFullLosses())
                         .build())
                 .linx(ImmutableLinxInterpretedData.builder()
                         .from(report.linx())

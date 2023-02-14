@@ -9,7 +9,6 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.orange.algo.ExperimentType;
 import com.hartwig.hmftools.orange.util.Config;
 
 import org.apache.commons.cli.CommandLine;
@@ -37,7 +36,6 @@ public interface OrangeConfig {
     String REFERENCE_SAMPLE_ID = "reference_sample_id";
     String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
     String EXPERIMENT_DATE = "experiment_date";
-    String EXPERIMENT_TYPE = "experiment_type";
     String REF_GENOME_VERSION = "ref_genome_version";
     String OUTPUT_DIRECTORY = "output_dir";
 
@@ -87,7 +85,6 @@ public interface OrangeConfig {
         options.addOption(REFERENCE_SAMPLE_ID, true, "(Optional) The reference sample of the tumor sample for which ORANGE will run.");
         options.addOption(PRIMARY_TUMOR_DOIDS, true, "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
         options.addOption(EXPERIMENT_DATE, true, "Optional, if provided represents the experiment date in YYMMDD format.");
-        options.addOption(EXPERIMENT_TYPE, true, "Either 'PANEL' or 'WGS', depending on the type of experiment performed.");
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version used in analysis (37 or 38)");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the ORANGE output data will be written to.");
 
@@ -147,9 +144,6 @@ public interface OrangeConfig {
 
     @NotNull
     LocalDate experimentDate();
-
-    @NotNull
-    ExperimentType experimentType();
 
     @NotNull
     RefGenomeVersion refGenomeVersion();
@@ -283,7 +277,6 @@ public interface OrangeConfig {
                 .rnaConfig(OrangeRNAConfig.createConfig(cmd))
                 .primaryTumorDoids(toStringSet(Config.nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .experimentDate(experimentDate)
-                .experimentType(ExperimentType.valueOf(Config.nonOptionalValue(cmd, EXPERIMENT_TYPE)))
                 .refGenomeVersion(RefGenomeVersion.from(Config.nonOptionalValue(cmd, REF_GENOME_VERSION)))
                 .outputDir(Config.outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(Config.nonOptionalFile(cmd, DOID_JSON))
@@ -319,17 +312,6 @@ public interface OrangeConfig {
                 .limitJsonOutput(limitJsonOutput)
                 .build();
 
-        if (config.experimentType() == ExperimentType.WGS) {
-            if (anyNull(config.annotatedVirusTsv(),
-                    config.chordPredictionTxt(),
-                    config.cuppaResultCsv(),
-                    config.cuppaSummaryPlot(),
-                    config.cuppaChartPlot(),
-                    config.sigsAllocationTsv())) {
-                LOGGER.warn("Some inputs are missing to ORANGE which are expected in WGS mode!");
-            }
-        }
-
         return config;
     }
 
@@ -351,14 +333,5 @@ public interface OrangeConfig {
             LOGGER.warn("Could not parse configured experiment date '{}'. Expected format is '{}'", experimentDateString, format);
         }
         return experimentDate;
-    }
-
-    private static boolean anyNull(@NotNull Object... arguments) {
-        for (Object object : arguments) {
-            if (object == null) {
-                return true;
-            }
-        }
-        return false;
     }
 }

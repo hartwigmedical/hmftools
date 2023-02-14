@@ -34,7 +34,7 @@ public class GermlineGainLossFactory {
             if (germlineDeletion.TumorStatus == GermlineStatus.HOM_DELETION) {
                 PurpleGainLoss gainLoss = toGainLoss(germlineDeletion, allSomaticGeneCopyNumbers);
                 if (deletionMap.containsKey(gainLoss)) {
-                    LOGGER.warn("Gain loss created that already exists, from {}", germlineDeletion);
+                    LOGGER.warn("Gain loss created that already exists, from germline deletion on gene {}", germlineDeletion.GeneName);
                 } else {
                     deletionMap.put(gainLoss, germlineDeletion);
                 }

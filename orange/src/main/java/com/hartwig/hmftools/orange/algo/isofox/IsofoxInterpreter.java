@@ -14,16 +14,26 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class IsofoxInterpreter {
+public class IsofoxInterpreter {
 
     private static final Logger LOGGER = LogManager.getLogger(IsofoxInterpreter.class);
 
-    private IsofoxInterpreter() {
+    @NotNull
+    private final List<DriverGene> driverGenes;
+    @NotNull
+    private final KnownFusionCache knownFusionCache;
+    @NotNull
+    private final LinxInterpretedData linx;
+
+    public IsofoxInterpreter(@NotNull final List<DriverGene> driverGenes, @NotNull final KnownFusionCache knownFusionCache,
+            @NotNull final LinxInterpretedData linx) {
+        this.driverGenes = driverGenes;
+        this.knownFusionCache = knownFusionCache;
+        this.linx = linx;
     }
 
     @NotNull
-    public static IsofoxInterpretedData interpret(@NotNull IsofoxData isofox, @NotNull LinxInterpretedData linx,
-            @NotNull List<DriverGene> driverGenes, @NotNull KnownFusionCache knownFusionCache) {
+    public IsofoxInterpretedData interpret(@NotNull IsofoxData isofox) {
         List<GeneExpression> highExpressionGenes = ExpressionSelector.selectHighExpressionGenes(isofox.geneExpressions(), driverGenes);
         LOGGER.info(" Found {} genes with high expression", highExpressionGenes.size());
 

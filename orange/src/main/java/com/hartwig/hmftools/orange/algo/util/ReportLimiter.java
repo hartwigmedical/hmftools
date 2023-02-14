@@ -65,8 +65,9 @@ public final class ReportLimiter {
                 .reportableSomaticGainsLosses(max1(purple.reportableSomaticGainsLosses()))
                 .nearReportableSomaticGains(max1(purple.nearReportableSomaticGains()))
                 .additionalSuspectSomaticGainsLosses(max1(purple.additionalSuspectSomaticGainsLosses()))
-                .allGermlineGainsLosses(max1(purple.allGermlineGainsLosses()))
-                .reportableGermlineGainsLosses(max1(purple.reportableGermlineGainsLosses()))
+                .allGermlineDeletions(max1(purple.allGermlineDeletions()))
+                .allGermlineFullLosses(max1(purple.allGermlineFullLosses()))
+                .reportableGermlineFullLosses(max1(purple.reportableGermlineFullLosses()))
                 .build();
     }
 
