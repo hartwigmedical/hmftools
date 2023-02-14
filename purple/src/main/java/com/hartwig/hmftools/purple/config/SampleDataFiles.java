@@ -71,7 +71,7 @@ public class SampleDataFiles
         else
             SomaticSvVcfFile = getFilename(cmd, SOMATIC_SV_VCF, SampleDataDir, sampleId, ".gripss.filtered.somatic.vcf.gz");
 
-        GermlineSvVcfFile = getFilename(cmd, GERMLINE_SV_VCF, SampleDataDir, referenceId, ".gripss.filtered.germline.vcf.gz");
+        GermlineSvVcfFile = getFilename(cmd, GERMLINE_SV_VCF, SampleDataDir, sampleId, ".gripss.filtered.germline.vcf.gz");
 
         RecoveredSvVcfFile = getFilename(cmd, SV_RECOVERY_VCF, SampleDataDir, sampleId, ".gripss.somatic.vcf.gz");
         SomaticVcfFile = getFilename(cmd, SOMATIC_VARIANTS, SampleDataDir, sampleId, ".sage.somatic.filtered.pave.vcf.gz");

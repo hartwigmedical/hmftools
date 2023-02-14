@@ -56,7 +56,6 @@ public final class LinxGermlineSv
     public final String LinkedByStart;
     public final String LinkedByEnd;
     public final int CohortFrequency;
-    public final boolean Reported;
 
     public LinxGermlineSv(
             final int svId, final String vcfId, final String chromosomeStart, final String chromosomeEnd,
@@ -69,7 +68,7 @@ public final class LinxGermlineSv
             final int tumorFragments, final int tumorReferenceFragmentsStart, final int tumorReferenceFragmentsEnd,
             final String insSeq, final String insSeqAlignments, final String insSeqRepeatClass, final String insSeqRepeatType,
             final String geneName, final int clusterId, final int clusterCount, final String resolvedType,
-            final String linkedByStart, final String linkedByEnd, final int cohortFrequency, final boolean reported)
+            final String linkedByStart, final String linkedByEnd, final int cohortFrequency)
     {
         SvId = svId;
         VcfId = vcfId;
@@ -109,7 +108,6 @@ public final class LinxGermlineSv
         LinkedByStart = linkedByStart;
         LinkedByEnd = linkedByEnd;
         CohortFrequency = cohortFrequency;
-        Reported = reported;
     }
 
     private static final String EXTENSION = ".linx.germline.disruption.tsv";
@@ -178,7 +176,6 @@ public final class LinxGermlineSv
                 .add("linkedByStart")
                 .add("linkedByEnd")
                 .add("cohortFrequency")
-                .add("reported")
                 .toString();
     }
 
@@ -223,7 +220,6 @@ public final class LinxGermlineSv
                 .add(germlineSv.LinkedByStart)
                 .add(germlineSv.LinkedByEnd)
                 .add(String.valueOf(germlineSv.CohortFrequency))
-                .add(String.valueOf(germlineSv.Reported))
                 .toString();
     }
 
@@ -275,8 +271,7 @@ public final class LinxGermlineSv
                     values[fieldsIndexMap.get("resolvedType")],
                     values[fieldsIndexMap.get("linkedByStart")],
                     values[fieldsIndexMap.get("linkedByEnd")],
-                    getIntValue(fieldsIndexMap, "cohortFrequency", values),
-                    Boolean.parseBoolean(values[fieldsIndexMap.get("reported")])));
+                    getIntValue(fieldsIndexMap, "cohortFrequency", values)));
         }
 
         return germlineSVs;

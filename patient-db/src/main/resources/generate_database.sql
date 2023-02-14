@@ -457,6 +457,7 @@ CREATE TABLE driverGenePanel
     reportGermlineHotspot varchar(50) NOT NULL,
     likelihoodType varchar(255) NOT NULL,
     reportGermlineDisruption varchar(50) NOT NULL,
+    reportGermlineDeletion varchar(50) NOT NULL,
     additionalReportedTranscripts varchar(255) NOT NULL,
     reportPGX BOOLEAN NOT NULL,
     PRIMARY KEY (gene)
@@ -1054,7 +1055,6 @@ CREATE TABLE structuralVariantGermline
     linkedByStart varchar(1024),
     linkedByEnd varchar(1024),
     cohortFrequency int not null,
-    reported BOOLEAN NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

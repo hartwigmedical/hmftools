@@ -61,6 +61,9 @@ public final class DriverGeneFile
         int germlineVariantIndex = fieldsIndexMap.get("reportGermlineVariant");
         int germlineHotspotIndex = fieldsIndexMap.get("reportGermlineHotspot");
         int germlineDisruptionIndex = fieldsIndexMap.get("reportGermlineDisruption");
+
+        Integer germlineDeletionIndex = fieldsIndexMap.get("reportGermlineDeletion");
+
         int altTransIndex = fieldsIndexMap.get("additionalReportedTranscripts");
         Integer reportPGXIndex = fieldsIndexMap.get("reportPGX");
 
@@ -74,6 +77,7 @@ public final class DriverGeneFile
                     .filter(x -> !x.isEmpty())
                     .collect(Collectors.toList());
 
+            // backwards compatibility prior to pipeline v5.32
             String reportGermlineDisruptionStr = values[germlineDisruptionIndex];
             DriverGeneGermlineReporting reportGermlineDisruption;
 
@@ -83,6 +87,9 @@ public final class DriverGeneFile
                 reportGermlineDisruption = NONE;
             else
                 reportGermlineDisruption = DriverGeneGermlineReporting.valueOf(reportGermlineDisruptionStr);
+
+            DriverGeneGermlineReporting reportGermlineDeletion = germlineDeletionIndex != null ?
+                    DriverGeneGermlineReporting.valueOf(values[germlineDeletionIndex]) : reportGermlineDisruption;
 
             builder.gene(values[geneIndex])
                     .reportMissenseAndInframe(Boolean.parseBoolean(values[missenseIndex]))
@@ -96,6 +103,7 @@ public final class DriverGeneFile
                     .reportGermlineVariant(DriverGeneGermlineReporting.valueOf(values[germlineVariantIndex].toUpperCase()))
                     .reportGermlineHotspot(DriverGeneGermlineReporting.valueOf(values[germlineHotspotIndex].toUpperCase()))
                     .reportGermlineDisruption(reportGermlineDisruption)
+                    .reportGermlineDeletion(reportGermlineDeletion)
                     .additionalReportedTranscripts(otherReportableTrans)
                     .reportPGX(reportPGXIndex != null ? Boolean.parseBoolean(values[reportPGXIndex]) : false);
 

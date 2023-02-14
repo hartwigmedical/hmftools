@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo.cohort;
+package com.hartwig.hmftools.neo.scorer;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;

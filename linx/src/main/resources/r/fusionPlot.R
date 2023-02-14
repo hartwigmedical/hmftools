@@ -41,7 +41,7 @@ plot_fusion <- function(fusedExons, fusedProteinDomains) {
     mutate(start = ifelse(rank == 1, start, geneStart)) %>%
     summarise(start = max(start, geneStart), end = max(geneEnd)) %>%
     mutate(label = paste0(gene, " - ",transcript))
-  
+
   fadedAlpha = 0.4
   fadedArea = fusedExons %>% 
     filter(skipped == "false") %>% 

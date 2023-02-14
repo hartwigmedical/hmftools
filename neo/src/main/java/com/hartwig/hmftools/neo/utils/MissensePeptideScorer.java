@@ -44,7 +44,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
-import com.hartwig.hmftools.neo.cohort.NeoScorer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

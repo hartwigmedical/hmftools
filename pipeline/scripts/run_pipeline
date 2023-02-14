@@ -296,19 +296,20 @@ else
 fi
 
 ${scripts_dir}/run_gripss_somatic ${gripss_jar} \
-  ${tumor_id}  ${reference_id} \
+  ${tumor_id} ${reference_id} \
   ${gripss_somatic_dir} ${gridss_vcf} \
   ${run_mode} ${ref_genome_version} ${ref_genome} \
   ${sv_hotspot_file} ${sv_pon_file} ${sgl_pon_file} ${repeat_mask_file} ${target_regions_definition} \
 
 
+gripss_germline_dir=${sample_dir}/gripss_germline
+
 if [ "${reference_id}" != "none" ]; then
 
   # Gripss germline
-  gripss_germline_dir=${sample_dir}/gripss_germline
 
   ${scripts_dir}/run_gripss_germline ${gripss_jar} \
-    ${reference_id} \
+    ${tumor_id} ${reference_id} \
     ${gripss_germline_dir} ${gridss_vcf} \
     ${ref_genome_version} ${ref_genome} \
     ${sv_hotspot_file} ${sv_pon_file} ${sgl_pon_file}
@@ -318,12 +319,15 @@ fi
 # Purple
 purple_dir=${sample_dir}/purple
 
-sv_vcf=${gripss_somatic_dir}/${tumor_id}.gripss.filtered.somatic.vcf.gz
+somatic_sv_vcf=${gripss_somatic_dir}/${tumor_id}.gripss.filtered.somatic.vcf.gz
 sv_unfiltered_vcf=${gripss_somatic_dir}/${tumor_id}.gripss.somatic.vcf.gz
+germline_sv_vcf=${gripss_germline_dir}/${tumor_id}.gripss.filtered.germline.vcf.gz
 
 ${scripts_dir}/run_purple ${purple_jar} \
   ${tumor_id} ${reference_id} \
-  ${sv_vcf} ${sv_unfiltered_vcf} ${pave_vcf} ${pave_germline_vcf} ${amber_dir} ${cobalt_dir} ${purple_dir} \
+  ${pave_vcf} ${somatic_sv_vcf} ${sv_unfiltered_vcf} \
+  ${pave_germline_vcf} ${germline_sv_vcf} \
+  ${amber_dir} ${cobalt_dir} ${purple_dir} \
   ${run_mode} ${ref_genome_version} ${ref_genome} \
   ${gc_profile} ${sage_somatic_hotspots} ${sage_germline_hotspots} \
   ${driver_gene_panel} ${ensembl_dir} ${germline_del_freq_file} \
@@ -338,11 +342,11 @@ else
   linx_somatic_dir=${sample_dir}/linx
 fi
 
-sv_vcf=${purple_dir}/${tumor_id}.purple.sv.vcf.gz
+purple_somatic_sv_vcf=${purple_dir}/${tumor_id}.purple.sv.vcf.gz
 
 ${scripts_dir}/run_linx_somatic ${linx_jar} \
   ${tumor_id} \
-  ${sv_vcf} ${purple_dir} ${linx_somatic_dir} \
+  ${purple_somatic_sv_vcf} ${purple_dir} ${linx_somatic_dir} \
   ${ref_genome_version} ${fragile_site_file} \
   ${line_element_file} ${ensembl_dir} ${driver_gene_panel} ${known_fusion_file} \
   ${circos} \
@@ -353,11 +357,11 @@ if [ "${reference_id}" != "none" ]; then
   # Linx germline
   linx_germline_dir=${sample_dir}/linx_germline
 
-  sv_germline_vcf=${gripss_germline_dir}/${reference_id}.gripss.filtered.germline.vcf.gz
+  purple_germline_sv_vcf=${purple_dir}/${tumor_id}.purple.sv.germline.vcf.gz
 
   ${scripts_dir}/run_linx_germline ${linx_jar} \
     ${tumor_id} \
-    ${sv_germline_vcf} ${linx_germline_dir} \
+    ${purple_germline_sv_vcf} ${linx_germline_dir} \
     ${ref_genome_version} ${line_element_file} ${ensembl_dir} ${driver_gene_panel}
 fi
 

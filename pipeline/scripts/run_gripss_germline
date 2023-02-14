@@ -1,6 +1,7 @@
 #!/bin/bash
 
 gripss_jar=$1 && shift
+tumor_id=$1 && shift
 reference_id=$1 && shift
 output_dir=$1 && shift
 gridss_vcf=$1 && shift
@@ -26,10 +27,8 @@ if [[ ! -f "${gridss_vcf}" ]]; then
   exit
 fi
 
-echo "Running Gripss germline for ${tumor_id}, output dir ${output_dir}"
-
-java -jar ${gripss_jar} \
-  -sample ${reference_id} \
+args="-sample ${reference_id} \
+  -reference ${tumor_id} \
   -germline \
   -ref_genome ${ref_genome} \
   -ref_genome_version ${ref_genome_version} \
@@ -38,4 +37,9 @@ java -jar ${gripss_jar} \
   -pon_sgl_file ${pon_sgl_file} \
   -vcf ${gridss_vcf} \
   -output_dir ${output_dir} \
-  -output_id germline \
+  -output_id germline"
+  
+
+echo "Running Gripss germline with args: ${args}"
+
+java -jar ${gripss_jar} ${args}

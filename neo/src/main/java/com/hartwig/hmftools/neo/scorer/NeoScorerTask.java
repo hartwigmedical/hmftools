@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo.cohort;
+package com.hartwig.hmftools.neo.scorer;
 
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.AA_SELENOCYSTEINE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
@@ -8,9 +8,9 @@ import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
-import static com.hartwig.hmftools.neo.cohort.DataLoader.loadAlleleCoverage;
-import static com.hartwig.hmftools.neo.cohort.DataLoader.loadNeoEpitopes;
-import static com.hartwig.hmftools.neo.cohort.DataLoader.loadRnaNeoData;
+import static com.hartwig.hmftools.neo.scorer.DataLoader.loadAlleleCoverage;
+import static com.hartwig.hmftools.neo.scorer.DataLoader.loadNeoEpitopes;
+import static com.hartwig.hmftools.neo.scorer.DataLoader.loadRnaNeoData;
 
 import java.util.List;
 import java.util.Map;

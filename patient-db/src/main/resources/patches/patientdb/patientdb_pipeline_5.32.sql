@@ -19,6 +19,7 @@ CREATE TABLE driverGenePanel
     reportGermlineHotspot varchar(50) NOT NULL,
     likelihoodType varchar(255) NOT NULL,
     reportGermlineDisruption varchar(50) NOT NULL,
+    reportGermlineDeletion varchar(50) NOT NULL,
     additionalReportedTranscripts varchar(255) NOT NULL,
     reportPGX BOOLEAN NOT NULL,
     PRIMARY KEY (gene)
@@ -38,7 +39,8 @@ ALTER TABLE structuralVariantGermline
     ADD COLUMN adjustedCopyNumberStart DOUBLE PRECISION after adjustedAFEnd,
     ADD COLUMN adjustedCopyNumberEnd DOUBLE PRECISION after adjustedCopyNumberStart,
     ADD COLUMN adjustedCopyNumberChangeStart DOUBLE PRECISION after adjustedCopyNumberEnd,
-    ADD COLUMN adjustedCopyNumberChangeEnd DOUBLE PRECISION after adjustedCopyNumberChangeStart;
+    ADD COLUMN adjustedCopyNumberChangeEnd DOUBLE PRECISION after adjustedCopyNumberChangeStart,
+    DROP COLUMN reported;
 
 # Germline Breakends
 

@@ -337,10 +337,10 @@ public class GermlineDeletions
 
                 if(driverGene != null)
                 {
-                    // check requirements on the germline disruption field
-                    if(driverGene.reportGermlineDisruption() == ANY || driverGene.reportGermlineDisruption() == VARIANT_NOT_LOST)
+                    // check requirements on the germline disruption field: WILDTYPE_LOST - requires an LOH for the deletion to be reportable
+                    if(driverGene.reportGermlineDeletion() == ANY || driverGene.reportGermlineDeletion() == VARIANT_NOT_LOST)
                         driverGenes.add(driverGene);
-                    else if(driverGene.reportGermlineDisruption() == WILDTYPE_LOST && tumorStatus == HOM_DELETION)
+                    else if(driverGene.reportGermlineDeletion() == WILDTYPE_LOST && tumorStatus == HOM_DELETION)
                         driverGenes.add(driverGene);
                 }
             }
@@ -405,16 +405,15 @@ public class GermlineDeletions
             filter = sj.toString();
         }
 
-        // WILDTYPE_LOST - requires an LOH for the deletion to be reportable
-        boolean anyReported = filters.isEmpty() && !driverGenes.isEmpty();
-
         for(GeneData geneData : deletedGenes)
         {
+            boolean reportedGene = filters.isEmpty() && driverGenes.stream().anyMatch(x -> x.gene().equals(geneData.GeneName));
+
             mDeletions.add(new GermlineDeletion(
                     geneData.GeneName, region.chromosome(), geneData.KaryotypeBand, adjustPosStart, adjustPosEnd,
                     region.depthWindowCount(), exonRankMin, exonRankMax,
                     GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorStatus, germlineCopyNumber, tumorCopyNumber,
-                    filter, cohortFrequency, anyReported));
+                    filter, cohortFrequency, reportedGene));
         }
 
         for(TranscriptData transData : transcripts)

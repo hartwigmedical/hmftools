@@ -1,9 +1,8 @@
-package com.hartwig.hmftools.neo.cohort;
+package com.hartwig.hmftools.neo.scorer;
 
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCOPE_TRANS;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.cohort.NeoScorerConfig.SAMPLE_TRANS_EXP_FILE;
 
 import java.util.List;
 import java.util.concurrent.Callable;

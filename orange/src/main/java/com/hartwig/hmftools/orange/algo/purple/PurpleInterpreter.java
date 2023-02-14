@@ -246,6 +246,7 @@ public class PurpleInterpreter {
                     .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
                     .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                     .reportGermlineDisruption(DriverGeneGermlineReporting.NONE)
+                    .reportGermlineDeletion(DriverGeneGermlineReporting.NONE)
                     .likelihoodType(DriverCategory.ONCO)
                     .reportPGX(false)
                     .build());

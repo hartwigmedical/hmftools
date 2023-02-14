@@ -84,7 +84,7 @@ public final class LinxDataLoader {
         if (germlineDisruptionTsv != null)
         {
             allGermlineDisruptions = LinxGermlineSv.read(germlineDisruptionTsv);
-            reportableGermlineDisruptions = selectReportableGermlineSvs(allGermlineDisruptions);
+            reportableGermlineDisruptions = selectReportableGermlineSvs(allGermlineDisruptions, reportableGermlineBreakends);
         }
 
         List<HomozygousDisruption> germlineHomozygousDisruptions = null;
@@ -139,15 +139,17 @@ public final class LinxDataLoader {
     }
 
     @NotNull
-    private static List<LinxGermlineSv> selectReportableGermlineSvs(@NotNull List<LinxGermlineSv> germlineSvs)
-    {
+    private static List<LinxGermlineSv> selectReportableGermlineSvs(
+            @NotNull List<LinxGermlineSv> germlineSvs, @NotNull List<LinxBreakend> reportableGermlineBreakends) {
         List<LinxGermlineSv> reportableGermlineSvs = Lists.newArrayList();
-        for (LinxGermlineSv germlineSv : germlineSvs)
-        {
-            if (germlineSv.Reported)
-            {
+
+        if(reportableGermlineBreakends == null)
+            return reportableGermlineSvs;
+
+        for (LinxGermlineSv germlineSv : germlineSvs) {
+
+            if(reportableGermlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId))
                 reportableGermlineSvs.add(germlineSv);
-            }
         }
         return reportableGermlineSvs;
     }

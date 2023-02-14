@@ -330,9 +330,9 @@ public class SvVisualiser implements AutoCloseable
         }
     }
 
-    private void submitFrame(int frame, boolean fusion, double labelSize, String sample, final CircosConfigWriter confWrite)
+    private void submitFrame(int frame, boolean hasFusion, double labelSize, String sample, final CircosConfigWriter confWrite)
     {
-        boolean plotFusion = !mConfig.Debug && fusion;
+        boolean plotFusion = hasFusion && !mConfig.Debug;
         boolean plotChromosome = !mConfig.Debug;
 
         mCallableConfigs.add(() -> confWrite.writeConfig(frame));

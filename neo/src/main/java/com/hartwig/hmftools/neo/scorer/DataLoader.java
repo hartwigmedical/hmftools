@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.neo.cohort;
+package com.hartwig.hmftools.neo.scorer;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.extractTranscriptNames;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
-import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.EXPECTED_ALLELE_COUNT;
+import static com.hartwig.hmftools.neo.scorer.AlleleCoverage.EXPECTED_ALLELE_COUNT;
 
 import java.io.File;
 import java.io.IOException;
