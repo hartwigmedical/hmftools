@@ -7,15 +7,21 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
+
 public final class PurpleDataLoader
 {
-    private PurpleDataLoader() {}
+    private PurpleDataLoader()
+    {
+    }
 
     @NotNull
     public static PurpleData load(final String tumorSample, @Nullable final String referenceSample, @Nullable final String rnaSample,
@@ -27,12 +33,24 @@ public final class PurpleDataLoader
         String somaticVariantVcf = resolveVcfPath(PurpleCommon.purpleSomaticVcfFile(purpleDir, tumorSample));
         String germlineDriverCatalogTsv = DriverCatalogFile.generateGermlineFilename(purpleDir, tumorSample);
         String germlineVariantVcf = resolveVcfPath(PurpleCommon.purpleGermlineVcfFile(purpleDir, tumorSample));
-        String geneCopyNumberTsv = GeneCopyNumberFile.generateFilenameForReading(purpleDir, tumorSample);
+        String somaticStructuralVariantVcf = resolveVcfPath(PurpleCommon.purpleSomaticSvFile(purpleDir, tumorSample));
         String copyNumberTsv = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, tumorSample);
+        String geneCopyNumberTsv = GeneCopyNumberFile.generateFilenameForReading(purpleDir, tumorSample);
         String germlineDeletionTsv = GermlineDeletion.generateFilename(purpleDir, tumorSample);
 
-        return load(tumorSample, referenceSample, rnaSample, qcFile, purityTsv, somaticDriverCatalogTsv, somaticVariantVcf,
-                germlineDriverCatalogTsv, germlineVariantVcf, geneCopyNumberTsv, copyNumberTsv, germlineDeletionTsv);
+        return load(tumorSample,
+                referenceSample,
+                rnaSample,
+                qcFile,
+                purityTsv,
+                somaticDriverCatalogTsv,
+                somaticVariantVcf,
+                germlineDriverCatalogTsv,
+                germlineVariantVcf,
+                somaticStructuralVariantVcf,
+                copyNumberTsv,
+                geneCopyNumberTsv,
+                germlineDeletionTsv);
     }
 
     private static String resolveVcfPath(final String vcfPath)
@@ -51,8 +69,8 @@ public final class PurpleDataLoader
     @NotNull
     private static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @Nullable String rnaSample,
             @NotNull String qcFile, @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
-            @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @NotNull String geneCopyNumberTsv,
-            @NotNull String copyNumberTsv, @NotNull String germlineDeletionTsv) throws IOException
+            @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @NotNull String structuralVariantVcf,
+            @NotNull String copyNumberTsv, @NotNull String geneCopyNumberTsv, @NotNull String germlineDeletionTsv) throws IOException
     {
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
 
@@ -62,6 +80,9 @@ public final class PurpleDataLoader
                 SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVariantVcf);
         List<SomaticVariant> reportableSomaticVariants = selectReportedVariants(allSomaticVariants);
 
+        List<StructuralVariant> allSomaticStructuralVariants =
+                StructuralVariantFileLoader.fromFile(structuralVariantVcf, new PassingVariantFilter());
+
         List<GeneCopyNumber> allSomaticGeneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberTsv);
 
         List<DriverCatalog> germlineDrivers = null;
@@ -69,7 +90,7 @@ public final class PurpleDataLoader
         List<SomaticVariant> reportableGermlineVariants = null;
         List<GermlineDeletion> allGermlineDeletions = null;
         List<GermlineDeletion> reportableGermlineDeletions = null;
-        if(referenceSample != null)
+        if (referenceSample != null)
         {
             germlineDrivers = DriverCatalogFile.read(germlineDriverCatalogTsv);
 
@@ -88,6 +109,7 @@ public final class PurpleDataLoader
                 .reportableSomaticVariants(reportableSomaticVariants)
                 .allGermlineVariants(allGermlineVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
+                .allSomaticStructuralVariants(allSomaticStructuralVariants)
                 .allSomaticCopyNumbers(PurpleCopyNumberFile.read(copyNumberTsv))
                 .allSomaticGeneCopyNumbers(allSomaticGeneCopyNumbers)
                 .allGermlineDeletions(allGermlineDeletions)
@@ -99,9 +121,9 @@ public final class PurpleDataLoader
     private static List<SomaticVariant> selectReportedVariants(@NotNull List<SomaticVariant> allVariants)
     {
         List<SomaticVariant> reported = Lists.newArrayList();
-        for(SomaticVariant variant : allVariants)
+        for (SomaticVariant variant : allVariants)
         {
-            if(variant.reported())
+            if (variant.reported())
             {
                 reported.add(variant);
             }
@@ -113,7 +135,7 @@ public final class PurpleDataLoader
     private static List<GermlineDeletion> selectPassDeletions(@NotNull List<GermlineDeletion> allGermlineDeletions)
     {
         List<GermlineDeletion> pass = Lists.newArrayList();
-        for(GermlineDeletion deletion : allGermlineDeletions)
+        for (GermlineDeletion deletion : allGermlineDeletions)
         {
             if (deletion.Filter.equals("PASS"))
             {
@@ -128,9 +150,9 @@ public final class PurpleDataLoader
     private static List<GermlineDeletion> selectReportedDeletions(@NotNull List<GermlineDeletion> allGermlineDeletions)
     {
         List<GermlineDeletion> reported = Lists.newArrayList();
-        for(GermlineDeletion deletion : allGermlineDeletions)
+        for (GermlineDeletion deletion : allGermlineDeletions)
         {
-            if(deletion.Reported)
+            if (deletion.Reported)
             {
                 reported.add(deletion);
             }
