@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ctdna.interpret;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 
 import java.io.IOException;
@@ -84,6 +85,8 @@ public class SomaticVariants
     {
         VariantContextDecorator variant = new VariantContextDecorator(variantContext);
 
+        double subclonalLikelihood = variantContext.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0);
+
         for(GenotypeInfo genotypeInfo : genotypeInfos)
         {
             Genotype genotype = variantContext.getGenotype(genotypeInfo.Index);
@@ -113,7 +116,8 @@ public class SomaticVariants
                 qualPerAlleleCount = qualTotal / (double) alleleCount;
             }
 
-            mResultsWriter.writeSampleVariant(patientId, genotype.getSampleName(), variant, alleleCount, depth, qualPerAlleleCount);
+            mResultsWriter.writeSampleVariant(
+                    patientId, genotype.getSampleName(), variant, subclonalLikelihood, alleleCount, depth, qualPerAlleleCount);
         }
     }
 }

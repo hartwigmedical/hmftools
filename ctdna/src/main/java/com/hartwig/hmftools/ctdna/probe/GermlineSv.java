@@ -9,9 +9,11 @@ import static com.hartwig.hmftools.ctdna.probe.StructuralVariant.generateSvRefer
 import static com.hartwig.hmftools.ctdna.probe.StructuralVariant.generateSvSequence;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 
 public class GermlineSv extends Variant
@@ -100,12 +102,20 @@ public class GermlineSv extends Variant
 
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
         String linxDir = PvConfig.getSampleFilePath(sampleId, config.LinxDir);
-        String filename = LinxGermlineSv.generateFilename(linxDir, sampleId);
-        final List<LinxGermlineSv> germlineSvs = LinxGermlineSv.read(filename);
 
-        germlineSvs.stream().filter(x -> x.Reported).forEach(x -> variants.add(new GermlineSv(x)));
+        String germlineSvFile = LinxGermlineSv.generateFilename(linxDir, sampleId);
+        String germlineBreakendsFile = LinxBreakend.generateFilename(linxDir, sampleId, true);
+        List<LinxGermlineSv> germlineSvs = LinxGermlineSv.read(germlineSvFile);
+        List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendsFile).stream()
+                .filter(x -> x.reportedDisruption()).collect(Collectors.toList());
 
-        CT_LOGGER.info("loaded {} germline SVs from vcf({})", variants.size(), filename);
+        for(LinxGermlineSv germlineSv : germlineSvs)
+        {
+            if(germlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId))
+                variants.add(new GermlineSv(germlineSv));
+        }
+
+        CT_LOGGER.info("loaded {} germline SVs from vcf({})", variants.size(), germlineSvFile);
 
         return variants;
     }

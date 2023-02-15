@@ -33,7 +33,7 @@ public class ResultsWriter
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("PatientId,SampleId,Chromosome,Position,Ref,Alt,Tier,Type,RepeatCount,Mappability,AD,DP,QualPerAD");
+            writer.write("PatientId,SampleId,Chromosome,Position,Ref,Alt,Tier,Type,RepeatCount,Mappability,SubclonalPerc,AD,DP,QualPerAD");
             writer.newLine();
 
             return writer;
@@ -47,15 +47,15 @@ public class ResultsWriter
 
     public synchronized void writeSampleVariant(
             final String patientId, final String sampleId, final VariantContextDecorator variant,
-            int alleleCount, int depth, double qualPerAlleleCount)
+            double subclonalLikelihood, int alleleCount, int depth, double qualPerAlleleCount)
     {
         try
         {
             mVariantWriter.write(String.format("%s,%s,%s,%d,%s,%s",
                     patientId, sampleId, variant.chromosome(), variant.position(), variant.ref(), variant.alt()));
 
-            mVariantWriter.write(String.format(",%s,%s,%d,%.3f",
-                    variant.tier(), variant.type(), variant.repeatCount(), variant.mappability()));
+            mVariantWriter.write(String.format(",%s,%s,%d,%.3f,%.3f",
+                    variant.tier(), variant.type(), variant.repeatCount(), variant.mappability(), subclonalLikelihood));
 
             mVariantWriter.write(String.format(",%d,%d,%.1f", alleleCount, depth, qualPerAlleleCount));
 
