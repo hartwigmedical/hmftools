@@ -1,17 +1,22 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.pow;
+import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 
+import java.util.List;
 import java.util.StringJoiner;
+
+import com.google.common.collect.Lists;
 
 public class Metrics
 {
     public final long[] FilterTypeCounts;
-    public final int[] CoverageFrequency;
+    public final long[] CoverageFrequency;
 
     private long mCoverageBases; // bases with any level of coverage
 
@@ -21,7 +26,7 @@ public class Metrics
     public Metrics(int maxCoverage)
     {
         FilterTypeCounts = new long[FilterType.values().length];
-        CoverageFrequency = new int[maxCoverage + 1];
+        CoverageFrequency = new long[maxCoverage + 1];
         mCoverageBases = 0;
         mTotalBases = -1;
         mStatistics = null;
@@ -30,6 +35,7 @@ public class Metrics
     public void addCoverageBases(long bases) { mCoverageBases += bases; }
     public long coverageBases() { return mCoverageBases; }
     public long zeroCoverageBases() { return CoverageFrequency[0]; }
+    public long genomeTerritory() { return zeroCoverageBases() + coverageBases(); }
 
     public Statistics statistics() { return mStatistics; }
 
@@ -51,10 +57,13 @@ public class Metrics
         return FilterTypeCounts[type.ordinal()] / (double) mTotalBases;
     }
 
-    public double calcCoverageFrequency(int coverageLevel)
+    public double calcCoverageFrequency(int coverageLevel, double genomeTerritory)
     {
+        if(genomeTerritory <= 0)
+            return 0;
+
         // calculates the percentage of bases with this coverage level or higher, exclude the bases with zero coverage
-        long totalCoverage = FilterTypeCounts[FilterType.UNFILTERED.ordinal()];
+        // long totalCoverage = FilterTypeCounts[FilterType.UNFILTERED.ordinal()];
 
         long frequencyTotal = 0;
 
@@ -63,10 +72,10 @@ public class Metrics
             if(i < coverageLevel)
                 continue;
 
-            frequencyTotal += (long)CoverageFrequency[i] * i;
+            frequencyTotal += CoverageFrequency[i] * i;
         }
 
-        return frequencyTotal / (double)totalCoverage;
+        return frequencyTotal / genomeTerritory;
     }
 
     private void calcStatistics(boolean excludeZeroCoverge)
@@ -82,7 +91,7 @@ public class Metrics
                 continue;
 
             total += CoverageFrequency[i];
-            totalFrequency += (long)CoverageFrequency[i] * i;
+            totalFrequency += CoverageFrequency[i] * i;
         }
 
         if(total == 0)
@@ -115,10 +124,66 @@ public class Metrics
 
         double stdDeviation = sqrt(varianceTotal / total);
 
-        BT_LOGGER.debug(format("mean(%.3f totalFrequency=%d total=%d) stdDeviation(%.3f variantTotal=%.3f)",
-                mean, totalFrequency, total, stdDeviation, varianceTotal));
+        // calculate median difference from median
+        List<DiffFrequency> diffFrequencies = Lists.newArrayList();
+        for(int i = 0; i < CoverageFrequency.length; ++i)
+        {
+            int coverageDiff = (int)round(abs(i - median));
+            addMedianDiffFrequency(diffFrequencies, coverageDiff, CoverageFrequency[i]);
+        }
 
-        mStatistics = new Statistics(mean, median, stdDeviation, 0);
+        cumulativeTotal = 0;
+        int mad = 0;
+        for(DiffFrequency diffFrequency : diffFrequencies)
+        {
+            if(cumulativeTotal + diffFrequency.Frequency >= medianTotal)
+            {
+                mad = diffFrequency.Diff;
+                break;
+            }
+            else
+            {
+                cumulativeTotal += diffFrequency.Frequency;
+            }
+        }
+
+        BT_LOGGER.debug(format("mean(%.3f) median(%.1f) mad(%d) totalFrequency=%d total=%d) stdDeviation(%.3f variantTotal=%.3f)",
+                mean, median, mad, totalFrequency, total, stdDeviation, varianceTotal));
+
+        mStatistics = new Statistics(mean, median, mad, stdDeviation);
+    }
+
+    private class DiffFrequency
+    {
+        public final int Diff;
+        public long Frequency;
+
+        public DiffFrequency(int diff, long frequency)
+        {
+            Diff = diff;
+            Frequency = frequency;
+        }
+    }
+
+    private void addMedianDiffFrequency(final List<DiffFrequency> diffFrequencies, int diff, long frequency)
+    {
+        int index = 0;
+        while(index < diffFrequencies.size())
+        {
+            if(diffFrequencies.get(index).Diff == diff)
+            {
+                diffFrequencies.get(index).Frequency += frequency;
+                return;
+            }
+            else if(diffFrequencies.get(index).Diff > diff)
+            {
+                break;
+            }
+
+            ++index;
+        }
+
+        diffFrequencies.add(index, new DiffFrequency(diff, frequency));
     }
 
     private void calcTotalFiltered()

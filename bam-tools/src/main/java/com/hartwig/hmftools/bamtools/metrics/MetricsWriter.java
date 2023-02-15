@@ -67,9 +67,6 @@ public final class MetricsWriter
             header.add(format("PCT_%dX", coverage));
         }
 
-        header.add(HET_SNP_SENSITIVITY_COLUMN);
-        header.add(HET_SNP_Q_COLUMN);
-
         return header.toString();
     }
 
@@ -79,13 +76,13 @@ public final class MetricsWriter
 
         final Statistics statistics = metrics.statistics();
 
-        long genomeTerritory = metrics.zeroCoverageBases() + metrics.coverageBases();
+        long genomeTerritory = metrics.genomeTerritory();
 
         tsvData.add(String.valueOf(genomeTerritory));
         tsvData.add(format("%.3f", statistics.Mean));
         tsvData.add(format("%.3f", statistics.StandardDeviation));
         tsvData.add(format("%.0f", statistics.Median));
-        tsvData.add(format("%.0f", statistics.MedianAbsoluteDeviation));
+        tsvData.add(format("%d", statistics.MedianAbsoluteDeviation));
 
         tsvData.add(format("%.5f", 0.0));
 
@@ -104,12 +101,10 @@ public final class MetricsWriter
 
         for(Integer coverage : COVERAGE_LEVELS)
         {
-            tsvData.add(format("%.5f", metrics.calcCoverageFrequency(coverage)));
+            tsvData.add(format("%.5f", metrics.calcCoverageFrequency(coverage, genomeTerritory)));
         }
 
         // HET SNP values are uncalculated
-        tsvData.add("0");
-        tsvData.add("0");
 
         return tsvData.toString();
     }

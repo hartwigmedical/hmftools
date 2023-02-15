@@ -85,9 +85,6 @@ public class BamReader
     {
         int readStart = read.getAlignmentStart();
 
-        if(!mRegion.containsPosition(readStart))
-            return;
-
         ++mTotalReads;
 
         if(mTotalReads > 0 && (mTotalReads % 1_000_000) == 0)
