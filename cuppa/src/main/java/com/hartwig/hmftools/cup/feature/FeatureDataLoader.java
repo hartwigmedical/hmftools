@@ -340,7 +340,7 @@ public class FeatureDataLoader
         return gene.equals(INDEL_ALB) || gene.equals(INDEL_SFTPB) || gene.equals(INDEL_SLC34A2);
     }
 
-    private static boolean isKnownIndel(final String gene, final int repeatCount, final VariantType variantType)
+    public static boolean isKnownIndel(final String gene, final int repeatCount, final VariantType variantType)
     {
         return isKnownIndelGene(gene) && variantType == INDEL && repeatCount <= INDEL_MAX_REPEAT_COUNT;
     }
