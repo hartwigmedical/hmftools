@@ -146,6 +146,13 @@ public class UnmappableRegionsCalculator
         return startEndPositions;
     }
 
+    public ArrayList<Integer[]> unmappablePositionsInChromosome(HumanChromosome humanChromosome, int partitionSize) throws Exception
+    {
+        String chromosome = mRefGenomeVersion.versionedChromosome(humanChromosome.toString());
+        ArrayList<Integer[]> output = unmappablePositionsInChromosome(chromosome, partitionSize);
+        return output;
+    }
+
     public ArrayList<Integer[]> unmappablePositionsInChromosome(String chromosome, int partitionSize) throws Exception
     {
         Integer[][] partitionsStartEndPositions = chromosomePartitionsStartEndPositions(chromosome, partitionSize);
@@ -260,9 +267,8 @@ public class UnmappableRegionsCalculator
             String chromosome = mRefGenomeVersion.versionedChromosome(humanChromosome.toString());
 
             BT_LOGGER.info("Calculating N-nucleotide regions for chromosome: " + chromosome);
-            // System.out.println("Calculating N-nucleotide regions for chromosome: " + chromosome);
 
-            ArrayList<Integer[]> unmappedStartEndPositions = unmappablePositionsInChromosome(chromosome, mPartitionSize);
+            ArrayList<Integer[]> unmappedStartEndPositions = unmappablePositionsInChromosome(humanChromosome, mPartitionSize);
             ArrayList<Integer[]> unmappedStartEndPositionsFlattened = flattenStartEndPositions(unmappedStartEndPositions);
 
             for(Integer[] startEndPosition : unmappedStartEndPositionsFlattened)
@@ -277,17 +283,17 @@ public class UnmappableRegionsCalculator
     // Entry point ================================
     public static void main(String[] args) throws Exception
     {
-        //
+        // Initialize options
         Options options = new Options();
         CommandLineParser parser = new DefaultParser();
 
-        //
+        // Add options
         addRefGenomeConfig(options); // -ref_genome, -ref_genome_version
         addOutputDir(options); // -output_dir,
         options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_CHR_PARTITION_SIZE);
         CommandLine cmd = parser.parse(options, args);
 
-        //
+        // Apply commandline arguments
         String outputBedPath = cmd.getOptionValue(OUTPUT_DIR) + "genome_unmappable_regions." + cmd.getOptionValue(REF_GENOME_VERSION) + ".bed";
 
         UnmappableRegionsCalculator unmappableRegionsCalculator = new UnmappableRegionsCalculator(
@@ -295,20 +301,14 @@ public class UnmappableRegionsCalculator
             outputBedPath
         );
 
+        unmappableRegionsCalculator.setRefGenomeVersion(
+            RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION))
+        );
+
         int partitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_CHR_PARTITION_SIZE)));
         unmappableRegionsCalculator.setPartitionSize(partitionSize);
 
+        //
         unmappableRegionsCalculator.run();
-
-//        String refGenomeFastaPath = "/home/lnguyen/Documents/BamMetricsTest/resources/HMFtools-Resources_ref_genome_37_Homo_sapiens.GRCh37.GATK.illumina.fasta";
-//        String outputBedPath = "/home/lnguyen/Documents/BamMetricsTest/output/GRCh37_unmapped_regions.bed";
-//        UnmappableRegionsCalculator unmappableRegionsCalculator = new UnmappableRegionsCalculator(refGenomeFastaPath, outputBedPath);
-//        unmappableRegionsCalculator.run();
-
-//        unmappableRegionsCalculator.nucleotideStretchStartEndPositions("NNNAAANNNNNNTTT",'N',false);
-//        unmappableRegionsCalculator.chromosomePartitionsStartEndPositions("21", 1000000, true);
-
-//        ArrayList<Integer[]> startEndPositions = unmappableRegionsCalculator.unmappablePositionsInChromosome("21", 2000000);
-//        unmappableRegionsCalculator.flattenStartEndPositions(startEndPositions);
     }
 }
