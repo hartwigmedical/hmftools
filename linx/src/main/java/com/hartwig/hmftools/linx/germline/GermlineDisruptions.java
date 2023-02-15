@@ -429,7 +429,7 @@ public class GermlineDisruptions
                 boolean isUpstream = (var.orientation(disruptionData.IsStart) == POS_ORIENT) == (gene.forwardStrand());
 
                 ImmutableLinxBreakend.Builder builder = ImmutableLinxBreakend.builder()
-                        .id(breakendId)
+                        .id(breakendId++)
                         .svId(var.id())
                         .isStart(disruptionData.IsStart)
                         .type(var.type())
