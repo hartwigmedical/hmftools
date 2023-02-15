@@ -186,7 +186,7 @@ public final class MetricsWriter
             writer.write("## HISTOGRAM");
             writer.newLine();
 
-            writer.write("coverage" + DELIM + "quality_coverage_count");
+            writer.write("coverage" + DELIM + "high_quality_coverage_count");
             writer.newLine();
 
             for(int i = 0; i < metrics.CoverageFrequency.length; ++i)

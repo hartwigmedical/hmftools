@@ -63,7 +63,6 @@ public class Metrics
             return 0;
 
         // calculates the percentage of bases with this coverage level or higher, exclude the bases with zero coverage
-        // long totalCoverage = FilterTypeCounts[FilterType.UNFILTERED.ordinal()];
 
         long frequencyTotal = 0;
 
@@ -72,7 +71,7 @@ public class Metrics
             if(i < coverageLevel)
                 continue;
 
-            frequencyTotal += CoverageFrequency[i] * i;
+            frequencyTotal += CoverageFrequency[i];
         }
 
         return frequencyTotal / genomeTerritory;

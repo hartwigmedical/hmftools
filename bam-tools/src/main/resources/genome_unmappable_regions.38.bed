@@ -1,4 +1,4 @@
-chrom	start	end
+Chromosome	Start	End
 chr1	0	10000
 chr1	207666	257666
 chr1	297968	347968
