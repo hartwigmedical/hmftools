@@ -126,8 +126,8 @@ public class ReportGeneratorTestApplication {
                         .additionalSuspectSomaticFusions(Lists.newArrayList())
                         .allSomaticBreakends(report.linx().reportableSomaticBreakends())
                         .additionalSuspectSomaticBreakends(Lists.newArrayList())
-                        .allGermlineStructuralVariants(retainReportableStructuralVariants(report.linx().allSomaticStructuralVariants(),
-                                report.linx().reportableSomaticBreakends()))
+                        .allGermlineStructuralVariants(retainReportableStructuralVariants(report.linx().allGermlineStructuralVariants(),
+                                report.linx().reportableGermlineBreakends()))
                         .allGermlineBreakends(report.linx().reportableGermlineBreakends())
                         .build());
 
