@@ -209,7 +209,7 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 
-- Upcoming
+- [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.3)
     - Full support for reporting germline structural variants
       - This includes extended linx & purple datamodels with various germline findings
       - All somatic fields now have explicit "somatic" in their property name. 
