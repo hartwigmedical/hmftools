@@ -9,6 +9,11 @@ public final class GermlineDeletionTestFactory {
     }
 
     @NotNull
+    public static GermlineDeletion create(@NotNull String geneName) {
+        return create(geneName, false, GermlineStatus.HET_DELETION, 0D, 0, 0);
+    }
+
+    @NotNull
     public static GermlineDeletion create(@NotNull String geneName, boolean reported, @NotNull GermlineStatus tumorStatus) {
         return create(geneName, reported, tumorStatus, 0D, 0, 0);
     }

@@ -34,6 +34,7 @@ public final class PurpleDataLoader
         String germlineDriverCatalogTsv = DriverCatalogFile.generateGermlineFilename(purpleDir, tumorSample);
         String germlineVariantVcf = resolveVcfPath(PurpleCommon.purpleGermlineVcfFile(purpleDir, tumorSample));
         String somaticStructuralVariantVcf = resolveVcfPath(PurpleCommon.purpleSomaticSvFile(purpleDir, tumorSample));
+        String germlineStructuralVariantVcf = resolveVcfPath(PurpleCommon.purpleGermlineSvFile(purpleDir, tumorSample));
         String copyNumberTsv = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, tumorSample);
         String geneCopyNumberTsv = GeneCopyNumberFile.generateFilenameForReading(purpleDir, tumorSample);
         String germlineDeletionTsv = GermlineDeletion.generateFilename(purpleDir, tumorSample);
@@ -48,6 +49,7 @@ public final class PurpleDataLoader
                 germlineDriverCatalogTsv,
                 germlineVariantVcf,
                 somaticStructuralVariantVcf,
+                germlineStructuralVariantVcf,
                 copyNumberTsv,
                 geneCopyNumberTsv,
                 germlineDeletionTsv);
@@ -69,8 +71,9 @@ public final class PurpleDataLoader
     @NotNull
     private static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @Nullable String rnaSample,
             @NotNull String qcFile, @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
-            @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @NotNull String structuralVariantVcf,
-            @NotNull String copyNumberTsv, @NotNull String geneCopyNumberTsv, @NotNull String germlineDeletionTsv) throws IOException
+            @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @NotNull String somaticStructuralVariantVcf,
+            @NotNull String germlineStructuralVariantVcf, @NotNull String copyNumberTsv, @NotNull String geneCopyNumberTsv,
+            @NotNull String germlineDeletionTsv) throws IOException
     {
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
 
@@ -81,11 +84,12 @@ public final class PurpleDataLoader
         List<SomaticVariant> reportableSomaticVariants = selectReportedVariants(allSomaticVariants);
 
         List<StructuralVariant> allSomaticStructuralVariants =
-                StructuralVariantFileLoader.fromFile(structuralVariantVcf, new PassingVariantFilter());
+                StructuralVariantFileLoader.fromFile(somaticStructuralVariantVcf, new PassingVariantFilter());
 
         List<GeneCopyNumber> allSomaticGeneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberTsv);
 
         List<DriverCatalog> germlineDrivers = null;
+        List<StructuralVariant> allGermlineStructuralVariants = null;
         List<SomaticVariant> allGermlineVariants = null;
         List<SomaticVariant> reportableGermlineVariants = null;
         List<GermlineDeletion> allGermlineDeletions = null;
@@ -93,6 +97,7 @@ public final class PurpleDataLoader
         if (referenceSample != null)
         {
             germlineDrivers = DriverCatalogFile.read(germlineDriverCatalogTsv);
+            allGermlineStructuralVariants = StructuralVariantFileLoader.fromFile(germlineStructuralVariantVcf, new PassingVariantFilter());
 
             allGermlineVariants = new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample, germlineVariantVcf);
             reportableGermlineVariants = selectReportedVariants(allGermlineVariants);
@@ -110,6 +115,7 @@ public final class PurpleDataLoader
                 .allGermlineVariants(allGermlineVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
                 .allSomaticStructuralVariants(allSomaticStructuralVariants)
+                .allGermlineStructuralVariants(allGermlineStructuralVariants)
                 .allSomaticCopyNumbers(PurpleCopyNumberFile.read(copyNumberTsv))
                 .allSomaticGeneCopyNumbers(allSomaticGeneCopyNumbers)
                 .allGermlineDeletions(allGermlineDeletions)

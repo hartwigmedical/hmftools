@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.drivercatalog.AmplificationDrivers;
@@ -27,6 +28,7 @@ import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.orange.algo.linx.BreakendUtil;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
@@ -116,6 +118,7 @@ public class PurpleInterpreter {
         if (allGermlineDeletions != null) {
             List<GermlineDeletion> impliedDeletions = implyDeletionsFromBreakends(allGermlineDeletions,
                     linx.reportableGermlineBreakends(),
+                    purple.allGermlineStructuralVariants(),
                     linx.allGermlineStructuralVariants());
             LOGGER.info(" Implied {} additional reportable germline deletions from breakends", impliedDeletions.size());
 
@@ -159,9 +162,11 @@ public class PurpleInterpreter {
     }
 
     @NotNull
-    private static List<GermlineDeletion> implyDeletionsFromBreakends(@NotNull List<GermlineDeletion> allGermlineDeletions,
-            @Nullable List<LinxBreakend> reportableGermlineBreakends, @Nullable List<LinxSvAnnotation> allGermlineStructuralVariants) {
-        if (reportableGermlineBreakends == null || allGermlineStructuralVariants == null) {
+    @VisibleForTesting
+    static List<GermlineDeletion> implyDeletionsFromBreakends(@NotNull List<GermlineDeletion> allGermlineDeletions,
+            @Nullable List<LinxBreakend> reportableGermlineBreakends, @NotNull List<StructuralVariant> allPurpleGermlineSvs,
+            @Nullable List<LinxSvAnnotation> allLinxGermlineSvAnnotations) {
+        if (reportableGermlineBreakends == null || allLinxGermlineSvAnnotations == null) {
             LOGGER.warn("Linx germline data is missing while purple germline data is present!");
             return Lists.newArrayList();
         }
@@ -177,12 +182,16 @@ public class PurpleInterpreter {
             boolean sameTranscript = first.transcriptId().equals(second.transcriptId());
             boolean noWildTypeRemaining = first.undisruptedCopyNumber() < 0.5 && second.undisruptedCopyNumber() < 0.5;
 
-            LinxSvAnnotation sv = findBySvId(allGermlineStructuralVariants, first.svId());
-            // TODO Evaluate that SV is shorter than MAX_LENGTH_FOR_IMPLIED_DELS
+            StructuralVariant sv = findBySvId(allPurpleGermlineSvs, allLinxGermlineSvAnnotations, first.svId());
             boolean meetsMaxLength = false;
+            if (sv != null) {
+                meetsMaxLength = Math.abs(sv.start().position() - sv.end().position()) <= MAX_LENGTH_FOR_IMPLIED_DELS;
+            }
 
-            // TODO Check if there is a delete already on the positions implied by the DEL sv.
-            if (bothReported && bothDel && sameGene && sameTranscript && noWildTypeRemaining && meetsMaxLength) {
+            boolean hasNoExistingGermlineDel = !hasGermlineDeletionInGene(allGermlineDeletions, first.gene());
+
+            if (bothReported && bothDel && sameGene && sameTranscript && noWildTypeRemaining && meetsMaxLength
+                    && hasNoExistingGermlineDel) {
                 impliedDeletions.add(new GermlineDeletion(first.gene(),
                         first.chromosome(),
                         first.chrBand(),
@@ -205,15 +214,38 @@ public class PurpleInterpreter {
     }
 
     @Nullable
-    private static LinxSvAnnotation findBySvId(@NotNull List<LinxSvAnnotation> allGermlineStructuralVariants, int svIdToFind) {
-        for (LinxSvAnnotation structuralVariant : allGermlineStructuralVariants) {
-            if (structuralVariant.svId() == svIdToFind) {
-                return structuralVariant;
+    private static StructuralVariant findBySvId(@NotNull List<StructuralVariant> allPurpleSvs,
+            @NotNull List<LinxSvAnnotation> allLinxSvAnnotations, int svIdToFind) {
+        LinxSvAnnotation match = null;
+        int index = 0;
+        while (match == null && index < allLinxSvAnnotations.size()) {
+            LinxSvAnnotation svAnnotation = allLinxSvAnnotations.get(index);
+            if (svAnnotation.svId() == svIdToFind) {
+                match = svAnnotation;
+            }
+            index++;
+        }
+
+        if (match != null) {
+            for (StructuralVariant structuralVariant : allPurpleSvs) {
+                if (structuralVariant.id().equals(match.vcfId())) {
+                    return structuralVariant;
+                }
             }
         }
 
         LOGGER.warn("Could not find germline structural variant with svId: {}", svIdToFind);
         return null;
+    }
+
+    private static boolean hasGermlineDeletionInGene(@NotNull List<GermlineDeletion> germlineDeletions, @NotNull String geneToFind) {
+        for (GermlineDeletion deletion : germlineDeletions) {
+            if (deletion.GeneName.equals(geneToFind)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @NotNull

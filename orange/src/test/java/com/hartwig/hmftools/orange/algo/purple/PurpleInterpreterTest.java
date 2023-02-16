@@ -3,8 +3,13 @@ package com.hartwig.hmftools.orange.algo.purple;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
@@ -12,10 +17,15 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
+import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantImpl;
+import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -24,7 +34,13 @@ public class PurpleInterpreterTest {
     private static final String TEST_GENE = "gene";
 
     @Test
-    public void canCreateGermlineGainsLosses() {
+    public void canInterpretMinimalPurpleData() {
+        PurpleInterpreter interpreter = createTestInterpreter();
+        assertNotNull(interpreter.interpret(PurpleTestFactory.createMinimalTestPurpleData()));
+    }
+
+    @Test
+    public void canCreateGermlineFullLosses() {
         // Gene is needed to be able to match with ensembl test data
         GermlineDeletion hetReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1);
         GermlineDeletion homReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 2);
@@ -33,6 +49,7 @@ public class PurpleInterpreterTest {
         PurpleData purple = ImmutablePurpleData.builder()
                 .from(PurpleTestFactory.createMinimalTestPurpleData())
                 .addAllSomaticGeneCopyNumbers(GeneCopyNumberTestFactory.builder().chromosome("1").geneName(TEST_GENE).build())
+                .allGermlineStructuralVariants(Lists.newArrayList())
                 .addAllGermlineDeletions(hetReported, homReported, homUnreported)
                 .addReportableGermlineDeletions(hetReported, homReported)
                 .build();
@@ -40,14 +57,58 @@ public class PurpleInterpreterTest {
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleInterpretedData interpreted = interpreter.interpret(purple);
 
+        assertEquals(3, interpreted.allGermlineDeletions().size());
         assertEquals(2, interpreted.allGermlineFullLosses().size());
         assertEquals(1, interpreted.reportableGermlineFullLosses().size());
     }
 
     @Test
-    public void canInterpretMinimalPurpleData() {
-        PurpleInterpreter interpreter = createTestInterpreter();
-        assertNotNull(interpreter.interpret(PurpleTestFactory.createMinimalTestPurpleData()));
+    public void canImplyDeletionsFromBreakends() {
+        LinxBreakend left = LinxTestFactory.breakendBuilder()
+                .reportedDisruption(true)
+                .gene(TEST_GENE)
+                .transcriptId("trans 1")
+                .svId(1)
+                .type(StructuralVariantType.DEL)
+                .undisruptedCopyNumber(0.3)
+                .build();
+        LinxBreakend right = LinxTestFactory.breakendBuilder()
+                .reportedDisruption(true)
+                .gene(TEST_GENE)
+                .transcriptId("trans 1")
+                .svId(1)
+                .type(StructuralVariantType.DEL)
+                .undisruptedCopyNumber(0.4)
+                .build();
+
+        StructuralVariant shortSv = create("vcf id 1", 10, 20);
+        LinxSvAnnotation svAnnotation = LinxTestFactory.svAnnotationBuilder().svId(1).vcfId(shortSv.id()).build();
+
+        List<GermlineDeletion> impliedMatch = PurpleInterpreter.implyDeletionsFromBreakends(Lists.newArrayList(),
+                Lists.newArrayList(left, right),
+                Lists.newArrayList(shortSv),
+                Lists.newArrayList(svAnnotation));
+
+        assertEquals(1, impliedMatch.size());
+        GermlineDeletion deletion = impliedMatch.get(0);
+        assertEquals(TEST_GENE, deletion.GeneName);
+        assertEquals(GermlineStatus.HOM_DELETION, deletion.TumorStatus);
+
+        GermlineDeletion existingDeletion = GermlineDeletionTestFactory.create(TEST_GENE);
+        List<GermlineDeletion> impliedExisting = PurpleInterpreter.implyDeletionsFromBreakends(Lists.newArrayList(existingDeletion),
+                Lists.newArrayList(left, right),
+                Lists.newArrayList(shortSv),
+                Lists.newArrayList(svAnnotation));
+
+        assertEquals(0, impliedExisting.size());
+
+        StructuralVariant longSv = create("vcf id 1", 10, 200000);
+        List<GermlineDeletion> impliedTooLong = PurpleInterpreter.implyDeletionsFromBreakends(Lists.newArrayList(existingDeletion),
+                Lists.newArrayList(left, right),
+                Lists.newArrayList(longSv),
+                Lists.newArrayList(svAnnotation));
+
+        assertEquals(0, impliedTooLong.size());
     }
 
     @NotNull
@@ -70,5 +131,31 @@ public class PurpleInterpreterTest {
                 Lists.newArrayList(),
                 TestLinxInterpretationFactory.createMinimalTestLinxData(),
                 null);
+    }
+
+    @NotNull
+    private static StructuralVariant create(@NotNull String vcfId, int start, int end) {
+        return ImmutableStructuralVariantImpl.builder()
+                .id(vcfId)
+                .start(ImmutableStructuralVariantLegImpl.builder()
+                        .orientation((byte) 0)
+                        .homology(Strings.EMPTY)
+                        .anchoringSupportDistance(0)
+                        .chromosome(Strings.EMPTY)
+                        .position(start)
+                        .build())
+                .end(ImmutableStructuralVariantLegImpl.builder()
+                        .orientation((byte) 0)
+                        .homology(Strings.EMPTY)
+                        .anchoringSupportDistance(0)
+                        .chromosome(Strings.EMPTY)
+                        .position(end)
+                        .build())
+                .insertSequence(Strings.EMPTY)
+                .type(StructuralVariantType.DEL)
+                .qualityScore(0D)
+                .recovered(false)
+                .hotspot(false)
+                .build();
     }
 }
