@@ -40,40 +40,46 @@ ORANGE requires the output of various Hartwig algorithms, along with some resour
 known fusions and ensembl data cache). The resource files required to run ORANGE can be
 found [here](https://resources.hartwigmedicalfoundation.nl) for either 37 or 38 reference genome version.
 
-### Base (tumor-only) mode
+### Base (panel) DNA mode
 
 ```
 java -jar orange.jar \
-   -tumor_sample_id tumor_sample
-   -primary_tumor_doids doid1;doid2 \
-   -ref_genome_version 37 \
-   -output_dir /path/to/where/to/write/output \
-   -doid_json /path/to/input_doid_tree.json \
-   -cohort_mapping_tsv /path/to/input_cohort_mapping.tsv \
-   -cohort_percentiles_tsv /path/to/input_cohort_percentiles.tsv \
-   -driver_gene_panel_tsv /path/to/driver_gene_panel.tsv \
-   -known_fusion_file /path/to/known_fusion_file.tsv \
-   -ensembl_data_directory /path/to/ensembl_data_directory \
-   -tumor_sample_wgs_metrics_file /path/to/tumor_sample_wgs_metrics \
-   -tumor_sample_flagstat_file /path/to/tumor_sample_flagstats \
-   -sage_somatic_tumor_sample_bqr_plot /path/to/sage_tumor_sample_bqr_plot \
-   -purple_data_directory /path/to/purple_data \
-   -purple_plot_directory /path/to/purple_plots \
-   -linx_somatic_data_directory /path/to/linx_somatic_data \
-   -linx_plot_directory /path/to/linx_plots \
-   -lilac_result_csv /path/to/lilac_results.csv \
-   -lilac_qc_csv /path/to/lilac_qc.csv \
-   -annotated_virus_tsv /path/to/annotated_virus.tsv \
-   -chord_prediction_txt /path/to/chord_prediction.txt \
-   -cuppa_result_csv /path/to/cuppa_results.tsv \
-   -cuppa_summary_plot /path/to/cuppa_summary_plot \
-   -sigs_allocation_tsv /path/to/sigs.allocation.tsv 
+    -tumor_sample_id tumor_sample \
+    -primary_tumor_doids doid1;doid2 \
+    -ref_genome_version 37 \
+    -output_dir /path/to/where/to/write/output \
+    -doid_json /path/to/input_doid_tree.json \
+    -cohort_mapping_tsv /path/to/input_cohort_mapping.tsv \
+    -cohort_percentiles_tsv /path/to/input_cohort_percentiles.tsv \
+    -driver_gene_panel_tsv /path/to/driver_gene_panel.tsv \
+    -known_fusion_file /path/to/known_fusion_file.tsv \
+    -ensembl_data_directory /path/to/ensembl_data_directory \
+    -tumor_sample_wgs_metrics_file /path/to/tumor_sample_wgs_metrics \
+    -tumor_sample_flagstat_file /path/to/tumor_sample_flagstats \
+    -sage_somatic_tumor_sample_bqr_plot /path/to/sage_tumor_sample_bqr_plot \
+    -purple_data_directory /path/to/purple_data \
+    -purple_plot_directory /path/to/purple_plots \
+    -linx_somatic_data_directory /path/to/linx_somatic_data \
+    -linx_plot_directory /path/to/linx_plots \
+    -lilac_result_csv /path/to/lilac_results.csv \
+    -lilac_qc_csv /path/to/lilac_qc.csv"
 ```
 
 Note that `primary_tumor_doids` can be left blank (""). This parameter is used to look up cancer-type-specific percentiles for various
 tumor characteristics. If primary tumor doids are not provided, percentiles are calculated against the full HMF database only.
 
-### Additional parameters when running tumor-reference mode
+### Additional parameters when full genome tumor DNA data is available
+
+```
+   -annotated_virus_tsv /path/to/annotated_virus.tsv \
+   -chord_prediction_txt /path/to/chord_prediction.txt \
+   -cuppa_result_csv /path/to/cuppa_results.tsv \
+   -cuppa_summary_plot /path/to/cuppa_summary_plot \
+   -cuppa_chart_plot /path/to/cuppa_chart_plot \
+   -sigs_allocation_tsv /path/to/sigs.allocation.tsv 
+```
+
+### Additional parameters when full genome germline DNA data is available
 
 ```
     -reference_sample_id reference_sample \
@@ -85,7 +91,7 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
     -peach_genotype_tsv /path/to/peach_genotypes.tsv 
 ```
 
-### Additional parameters when RNA data is available
+### Additional parameters when full genome RNA data is available
 
 ```
     -rna_sample_id rna_sample \
@@ -156,7 +162,8 @@ In addition to all germline SNV/Indel tumor drivers determined by [PURPLE](../pu
     1. Any hotspots that are not configured to be reported.
     2. Any hotspots that are filtered based on quality.
 - Potentially pathogenic germline deletions
-- Potentially pathogenic germline disruptions
+- Potentially pathogenic germline homozygous disruptions
+- Potentially pathogenic germline gene disruptions
 - Missed variant likelihood (MVLH) per gene, presenting the likelihood of missing a pathogenic variant in case there would have been one
   present.
 - (Large-scale) germline CN aberrations.
