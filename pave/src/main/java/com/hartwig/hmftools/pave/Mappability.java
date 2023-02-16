@@ -82,7 +82,7 @@ public class Mappability
 
             if(entry.Region.containsPosition(variant.Position))
             {
-                variant.context().getCommonInfo().putAttribute(MAPPABILITY, entry.Mappability);
+                setMappability(variant, entry.Mappability);
                 mCurrentIndex = i;
                 return true;
             }
@@ -91,12 +91,20 @@ public class Mappability
             if(variant.Position < entry.Region.start() && i > 0)
             {
                 MapEntry prevEntry = mEntries.get(i - 1);
-                variant.context().getCommonInfo().putAttribute(MAPPABILITY, prevEntry.Mappability);
+                setMappability(variant, prevEntry.Mappability);
                 return true;
             }
         }
 
         return false;
+    }
+
+    private void setMappability(final VariantData variant, double mappability)
+    {
+        if(!variant.context().getCommonInfo().hasAttribute(MAPPABILITY))
+        {
+            variant.context().getCommonInfo().putAttribute(MAPPABILITY, mappability);
+        }
     }
 
     public static void addHeader(final VCFHeader header)

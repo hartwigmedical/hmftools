@@ -207,6 +207,7 @@ public class PaveApplication
         {
             PV_LOGGER.error("error processing var({})", variant);
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
