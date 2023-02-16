@@ -40,7 +40,7 @@ ORANGE requires the output of various Hartwig algorithms, along with some resour
 known fusions and ensembl data cache). The resource files required to run ORANGE can be
 found [here](https://resources.hartwigmedicalfoundation.nl) for either 37 or 38 reference genome version.
 
-### Base (panel) DNA mode
+### Base (panel / targeted) tumor DNA mode
 
 ```
 java -jar orange.jar \
