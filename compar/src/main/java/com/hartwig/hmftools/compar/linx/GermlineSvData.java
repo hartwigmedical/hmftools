@@ -41,13 +41,19 @@ public class GermlineSvData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(String.format("%s", SvData.Reported));
+        // TODO (Charles): Fix
+        //values.add(String.format("%s", SvData.Reported));
         values.add(String.format("%d", SvData.GermlineFragments));
         return values;
     }
 
     @Override
-    public boolean reportable() { return SvData.Reported; }
+    public boolean reportable()
+    {
+        // TODO (Charles): Fix
+        // return SvData.Reported
+        return false;
+    }
 
     @Override
     public boolean matches(final ComparableItem other)
