@@ -18,12 +18,14 @@ import com.hartwig.hmftools.compar.Mismatch;
 public class GermlineSvData implements ComparableItem
 {
     public final LinxGermlineSv SvData;
+    private final boolean mIsReported;
 
     protected static final String FLD_GERMLINE_FRAGS = "GermlineFragments";
 
-    public GermlineSvData(final LinxGermlineSv svData)
+    public GermlineSvData(final LinxGermlineSv svData, boolean isReported)
     {
         SvData = svData;
+        mIsReported = isReported;
     }
 
     @Override
@@ -41,8 +43,7 @@ public class GermlineSvData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        // TODO (Charles): Fix
-        //values.add(String.format("%s", SvData.Reported));
+        values.add(String.format("%s", mIsReported));
         values.add(String.format("%d", SvData.GermlineFragments));
         return values;
     }
@@ -50,9 +51,7 @@ public class GermlineSvData implements ComparableItem
     @Override
     public boolean reportable()
     {
-        // TODO (Charles): Fix
-        // return SvData.Reported
-        return false;
+        return mIsReported;
     }
 
     @Override

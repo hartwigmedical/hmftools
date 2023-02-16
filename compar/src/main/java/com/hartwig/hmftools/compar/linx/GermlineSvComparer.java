@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.CommonUtils;
@@ -66,11 +67,23 @@ public class GermlineSvComparer implements ItemComparer
     {
         try
         {
-            final List<LinxGermlineSv> germlineSvs = LinxGermlineSv.read(LinxGermlineSv.generateFilename(fileSources.LinxGermline, sampleId));
+            List<LinxGermlineSv> germlineSvs = LinxGermlineSv.read(LinxGermlineSv.generateFilename(fileSources.LinxGermline, sampleId));
+
+            String germlineBreakendsFile = LinxBreakend.generateFilename(fileSources.LinxGermline, sampleId, true);
+
+            List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendsFile).stream()
+                    .filter(x -> x.reportedDisruption()).collect(Collectors.toList());
 
             CMP_LOGGER.debug("sample({}) loaded {} germline SVs", sampleId, germlineSvs.size());
 
-            return germlineSvs.stream().map(x -> new GermlineSvData(x)).collect(Collectors.toList());
+            List<ComparableItem> items = Lists.newArrayList();
+            for(LinxGermlineSv germlineSv : germlineSvs)
+            {
+                boolean isReported = germlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId);
+                items.add(new GermlineSvData(germlineSv, isReported));
+            }
+
+            return items;
         }
         catch(IOException e)
         {
