@@ -68,7 +68,7 @@ java -jar orange.jar \
 Note that `primary_tumor_doids` can be left blank (""). This parameter is used to look up cancer-type-specific percentiles for various
 tumor characteristics. If primary tumor doids are not provided, percentiles are calculated against the full HMF database only.
 
-### Additional parameters when full genome tumor DNA data is available
+### Additional parameters when whole genome tumor DNA data is available
 
 ```
    -annotated_virus_tsv /path/to/annotated_virus.tsv \
@@ -79,7 +79,7 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
    -sigs_allocation_tsv /path/to/sigs.allocation.tsv 
 ```
 
-### Additional parameters when full genome germline DNA data is available
+### Additional parameters when whole genome germline DNA data is available
 
 ```
     -reference_sample_id reference_sample \
@@ -91,7 +91,7 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
     -peach_genotype_tsv /path/to/peach_genotypes.tsv 
 ```
 
-### Additional parameters when full genome RNA data is available
+### Additional parameters when whole genome RNA data is available
 
 ```
     -rna_sample_id rna_sample \
