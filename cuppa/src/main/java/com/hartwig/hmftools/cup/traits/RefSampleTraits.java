@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST_TR
 import static com.hartwig.hmftools.cup.common.CupConstants.isCandidateCancerType;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.GENDER_RATES;
+import static com.hartwig.hmftools.cup.ref.RefDataConfig.GENDER_RATES_ADULT_DEFAULT;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.FLD_GENDER_FEMALE;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.FLD_GENDER_MALE;
@@ -75,24 +76,29 @@ public class RefSampleTraits implements RefClassifier
 
         if(cmd.hasOption(GENDER_RATES))
         {
-            String[] genderEntries = cmd.getOptionValue(GENDER_RATES).split(DATA_DELIM);
-            for(String genderEntry : genderEntries)
-            {
-                String[] genderData = genderEntry.split(SUBSET_DELIM);
+            String genderRatesStr = cmd.getOptionValue(GENDER_RATES);
 
-                if(genderData.length == 3)
+            if(genderRatesStr.equals(GENDER_RATES_ADULT_DEFAULT))
+            {
+                mGenderRates.put(CANCER_TYPE_BREAST, new double[] {1.0, BREAST_MALE_GENDER_RATE} );
+                mGenderRates.put(CANCER_TYPE_BREAST_TRIPLE_NEGATIVE, new double[] {1.0, BREAST_MALE_GENDER_RATE} );
+            }
+            else
+            {
+                String[] genderEntries = genderRatesStr.split(DATA_DELIM);
+                for(String genderEntry : genderEntries)
                 {
-                    double[] rates = new double[2];
-                    rates[GENDER_MALE_INDEX] = Double.parseDouble(genderData[1 + GENDER_MALE_INDEX]);
-                    rates[GENDER_FEMALE_INDEX] = Double.parseDouble(genderData[1 + GENDER_FEMALE_INDEX]);
-                    mGenderRates.put(genderData[0], rates);
+                    String[] genderData = genderEntry.split(SUBSET_DELIM);
+
+                    if(genderData.length == 3)
+                    {
+                        double[] rates = new double[2];
+                        rates[GENDER_MALE_INDEX] = Double.parseDouble(genderData[1 + GENDER_MALE_INDEX]);
+                        rates[GENDER_FEMALE_INDEX] = Double.parseDouble(genderData[1 + GENDER_FEMALE_INDEX]);
+                        mGenderRates.put(genderData[0], rates);
+                    }
                 }
             }
-        }
-        else
-        {
-            mGenderRates.put(CANCER_TYPE_BREAST, new double[] {1.0, BREAST_MALE_GENDER_RATE} );
-            mGenderRates.put(CANCER_TYPE_BREAST_TRIPLE_NEGATIVE, new double[] {1.0, BREAST_MALE_GENDER_RATE} );
         }
 
         // add in the default zero-prevalence ones

@@ -80,6 +80,9 @@ public class RefAltSpliceJunctions implements RefClassifier
 
             for(final SampleData sample : entry.getValue())
             {
+                if(!sample.hasRna())
+                    continue;
+
                 Integer countsIndex = sampleIndexMap.get(sample.Id);
 
                 if(countsIndex == null)

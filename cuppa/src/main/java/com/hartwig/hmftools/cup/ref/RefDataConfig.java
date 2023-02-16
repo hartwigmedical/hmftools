@@ -80,7 +80,10 @@ public class RefDataConfig
     public static final String ISOFOX_DIR = "isofox_dir";
 
     private static final String REF_FEATURE_OVERRIDE_FILE = "feature_override_file";
+
     public static final String GENDER_RATES = "gender_rates";
+    public static final String GENDER_RATES_ADULT_DEFAULT = "ADULT_DEFAULT";
+
     private static final String WRITE_COHORT_FILES = "write_cohort_files";
 
     private static final String FILE_DELIM = ",";
