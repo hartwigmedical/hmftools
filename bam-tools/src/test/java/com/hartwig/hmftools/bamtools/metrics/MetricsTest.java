@@ -198,7 +198,7 @@ public class MetricsTest
         assertTrue(bamReader.readGroupMap().isEmpty());
 
         baseCoverage.clear();
-        
+
         // supplementary overlaps but not the mate - still checks overlapping bases
         String testCigar = "20M";
         read1 = SamRecordTestUtils.createSamRecord(
