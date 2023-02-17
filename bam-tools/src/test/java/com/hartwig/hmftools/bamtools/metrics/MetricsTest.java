@@ -196,5 +196,35 @@ public class MetricsTest
         }
 
         assertTrue(bamReader.readGroupMap().isEmpty());
+
+        baseCoverage.clear();
+        
+        // supplementary overlaps but not the mate - still checks overlapping bases
+        String testCigar = "20M";
+        read1 = SamRecordTestUtils.createSamRecord(
+                mReadIdGen.nextId(), CHR_1, 10, testBases.substring(0, 20), testCigar, CHR_1, 30,
+                false, false, new SupplementaryReadData(CHR_1, 20, SUPP_POS_STRAND, testCigar, 60));
+
+        bamReader.processRead(read1);
+
+        // now its mate
+        mate1 = SamRecordTestUtils.createSamRecord(
+                read1.getReadName(), CHR_1, 50, testBases.substring(50, 70), testCigar, CHR_1, 10,
+                true, false, null);
+
+        bamReader.processRead(mate1);
+
+        supp1 = SamRecordTestUtils.createSamRecord(
+                read1.getReadName(), CHR_1, 20, testBases.substring(10, 30), testCigar, CHR_1, 10,
+                false, true, new SupplementaryReadData(CHR_1, 10, SUPP_POS_STRAND, testCigar, 60));
+
+        bamReader.processRead(supp1);
+
+        for(int i = 0; i < baseCoverage.baseDepth().length; ++i)
+        {
+            assertTrue(baseCoverage.baseDepth()[i] <= 1);
+        }
+
+        assertTrue(bamReader.readGroupMap().isEmpty());
     }
 }

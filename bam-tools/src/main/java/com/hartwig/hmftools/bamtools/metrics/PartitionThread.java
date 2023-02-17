@@ -31,7 +31,6 @@ public class PartitionThread extends Thread
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
 
         mBamSlicer = new BamSlicer(0, true, true, false);
-        mBamSlicer.setKeepHardClippedSecondaries();
         mBamSlicer.setKeepUnmapped();
 
         start();

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 
@@ -13,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bamtools.common.ReadGroup;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
@@ -99,7 +101,9 @@ public class BamReader
         if(mLogReadIds) // debugging only
         {
             if(mConfig.LogReadIds.contains(read.getReadName()))
+            {
                 BT_LOGGER.debug("specific readId({}) unmapped({})", read.getReadName(), read.getReadUnmappedFlag());
+            }
         }
 
         // cache if the mate read overlaps
@@ -118,7 +122,7 @@ public class BamReader
             return;
         }
 
-        if(mateReadOverlaps(read))
+        if(readHasOverlaps(read))
         {
             readGroup = new ReadGroup(read);
             mReadGroupMap.put(readGroup.id(), readGroup);
@@ -129,22 +133,35 @@ public class BamReader
         mBaseCoverage.processRead(read, null);
     }
 
-    private boolean mateReadOverlaps(final SAMRecord read)
+    private boolean readHasOverlaps(final SAMRecord read)
     {
-        if(mateUnmapped(read))
+        // check the mate and supplementaries for any overlapping bases
+        if(read.getReadPairedFlag() && !read.getMateUnmappedFlag() && read.getReferenceName().equals(read.getMateReferenceName()))
+        {
+            int readLength = read.getReadBases().length;
+            int readStart = read.getAlignmentStart();
+            int readEnd = read.getAlignmentEnd();
+
+            int mateStart = read.getMateAlignmentStart();
+            int mateEnd = mateStart + readLength - 1;
+
+            if(positionsOverlap(readStart, readEnd, mateStart, mateEnd))
+                return true;
+        }
+
+        if(!read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
             return false;
 
-        if(!read.getReferenceName().equals(read.getMateReferenceName()))
+        SupplementaryReadData suppData = SupplementaryReadData.from(read);
+
+        if(suppData == null)
             return false;
 
-        int readLength = read.getReadBases().length;
-        int readStart = read.getAlignmentStart();
-        int readEnd = read.getAlignmentEnd();
+        if(!suppData.Chromosome.equals(read.getReferenceName()))
+            return false;
 
-        int mateStart = read.getMateAlignmentStart();
-        int mateEnd = mateStart + readLength - 1;
-
-        return positionsOverlap(readStart, readEnd, mateStart, mateEnd);
+        int suppReadEnd = suppData.Position + read.getReadBases().length - 1;
+        return positionsOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), suppData.Position, suppReadEnd);
     }
 
     private void processReadGroup(final ReadGroup readGroup)

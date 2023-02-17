@@ -40,6 +40,8 @@ public class BaseCoverage
         // some filters exclude all matched bases
         int alignedBases = read.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
+        // the order in which the filters are applied matters and matches Picard CollectWgsMetrics
+
         if(read.getMappingQuality() < mConfig.MapQualityThreshold)
         {
             mFilterTypeCounts[FilterType.LOW_MAP_QUAL.ordinal()] += alignedBases;
@@ -80,8 +82,8 @@ public class BaseCoverage
                     break;
 
                 case M:
-                    processMatchedBases(
-                            read, position, readIndex, element.getLength(), mateBaseCoords);
+                    processMatchedBases(read, position, readIndex, element.getLength(), mateBaseCoords);
+
                     position += element.getLength();
                     readIndex += element.getLength();
                     break;
