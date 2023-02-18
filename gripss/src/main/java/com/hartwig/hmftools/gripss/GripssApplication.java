@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
+import static com.hartwig.hmftools.gripss.common.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations.REPEAT_MASK_FILE;
 
 import java.io.IOException;
@@ -136,7 +137,7 @@ public class GripssApplication
 
         GR_LOGGER.info("sample({}) processing VCF({})", mConfig.SampleId, vcfFile);
 
-        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, mConfig.ReferenceId, mConfig.SampleId, mConfig.GermlineMode);
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.SampleId, mConfig.GermlineMode);
 
         if(genotypeIds == null)
         {

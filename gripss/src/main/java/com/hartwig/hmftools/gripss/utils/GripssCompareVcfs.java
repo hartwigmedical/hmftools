@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttri
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.gripss.GripssConfig.REFERENCE;
 import static com.hartwig.hmftools.gripss.GripssConfig.SAMPLE;
+import static com.hartwig.hmftools.gripss.common.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
@@ -184,7 +185,7 @@ public class GripssCompareVcfs
                 vcfFile, new VCFCodec(), false);
 
         VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
-        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, mReferenceId, mSampleId, false);
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mReferenceId, mSampleId, false);
 
         if(genotypeIds == null)
         {
@@ -244,7 +245,7 @@ public class GripssCompareVcfs
                 newVcfFile, new VCFCodec(), false);
 
         VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
-        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, "", mSampleId, false);
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, "", mSampleId, false);
 
         if(genotypeIds == null)
             System.exit(1);

@@ -79,41 +79,6 @@ public class VcfUtils
     public static final String VT_ALT_PATH = "ALT_PATH";
     public static final String VT_RESCUE_INFO = "RESCUED";
 
-    public static GenotypeIds parseVcfSampleIds(final VCFHeader header, final String referenceId, final String tumorId, final boolean germlineMode)
-    {
-        List<String> vcfSampleNames = header.getGenotypeSamples();
-
-        int tumorOrdinal = -1;
-        int referenceOrdinal = -1;
-        String vcfTumorId = "";
-        String vcfRefefenceId = "";
-
-        for(int i = 0; i < vcfSampleNames.size(); ++i)
-        {
-            String vcfSampleName = vcfSampleNames.get(i);
-
-            if(vcfSampleName.contains(tumorId))
-            {
-                vcfTumorId = vcfSampleNames.get(i);
-                tumorOrdinal = i;
-            }
-            else if(!referenceId.isEmpty() && vcfSampleName.contains(referenceId))
-            {
-                vcfRefefenceId = vcfSampleNames.get(i);
-                referenceOrdinal = i;
-            }
-        }
-
-        if(tumorOrdinal < 0 || (!referenceId.isEmpty() && referenceOrdinal < 0))
-        {
-            GR_LOGGER.error("missing sample names in VCF: {}", vcfSampleNames);
-            return null;
-        }
-
-        return new GenotypeIds(referenceOrdinal, tumorOrdinal, vcfRefefenceId, vcfTumorId, germlineMode);
-    }
-
-
     public static final Interval confidenceInterval(final VariantContext variantContext, final String attribute)
     {
         if(!variantContext.hasAttribute(attribute))
