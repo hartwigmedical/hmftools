@@ -92,9 +92,9 @@ public final class ExampleAnalysisTestFactory {
             @NotNull PurpleQCStatus purpleQCStatus) {
         String pipelineVersion = "5.31";
         double averageTumorPloidy = 3.1;
-        int tumorMutationalLoad = 185;
-        double tumorMutationalBurden = 13.73;
-        double microsatelliteIndelsPerMb = 0.1203;
+        int tumorMutationalLoad = 186;
+        double tumorMutationalBurden = 13.7394;
+        double microsatelliteIndelsPerMb = 0.1221;
         double hrdValue = 0D;
         ChordStatus hrdStatus = ChordStatus.HR_PROFICIENT;
         String reportDate = DataUtil.formatDate(LocalDate.now());
@@ -114,35 +114,36 @@ public final class ExampleAnalysisTestFactory {
         List<AnnotatedVirus> viruses = Lists.newArrayList();
         Map<String, List<PeachGenotype>> pharmacogeneticsGenotypes = createTestPharmacogeneticsGenotypes();
         HlaAllelesReportingData hlaData = createTestHlaData();
+        List<LohGenesReporting> LOHofMSIGenes = MSILOHGenes();
+        List<LohGenesReporting> LOHofHRDGenes = HRDLOHGenes();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), config.reportGermline(), config.limsCohortConfig());
 
         String summaryWithoutGermline = "Melanoma sample showing:\n"
-                + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
-                + " - complete inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors\n"
-                + " - complete inactivation/loss of PTEN likely resulting in an activation of the PI3K-AKT-mTOR pathway "
-                + "and indicating potential benefit of mTOR/PI3K inhibitors\n"
-                + " - high mutational burden (mutational load (ML) of 180, tumor mutation burden (TMB) of 13.6) that is "
-                + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy";
+                + " - Molecular Tissue of Origin classifier: Melanoma (likelihood: 99.6%).\n"
+                + " - CDKN2A (p.Gly83fs,p.Ala68fs) inactivation. \n"
+                + " - BRAF (p.Val600Glu) activating mutation, potential benefit from BRAF and/or MEK inhibitors (clinical trial). \n"
+                + " - PTEN (copies: 0) loss, potential benefit from PI3K inhibitors (clinical trial). \n"
+                + " - TML (186) positive, potential benefit from checkpoint inhibitors (clinical trial). \n"
+                + " - An overview of all detected oncogenic DNA aberrations can be found in the report. \n";
 
         String summaryWithoutGermlineLowPurity = "Melanoma sample showing:\n"
-                + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
-                + " - complete inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors\n"
-                + " - complete inactivation/loss of PTEN likely resulting in an activation of the PI3K-AKT-mTOR pathway "
-                + "and indicating potential benefit of mTOR/PI3K inhibitors\n"
-                + " - high mutational burden (mutational load (ML) of 180, tumor mutation burden (TMB) of 13.6) that is "
-                + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy\n"
+                + " - Molecular Tissue of Origin classifier: Melanoma (likelihood: 99.6%).\n"
+                + " - CDKN2A (p.Gly83fs,p.Ala68fs) inactivation. \n"
+                + " - BRAF (p.Val600Glu) activating mutation, potential benefit from BRAF and/or MEK inhibitors (clinical trial). \n"
+                + " - PTEN (copies: 0) loss, potential benefit from PI3K inhibitors (clinical trial). \n"
+                + " - TML (186) positive, potential benefit from checkpoint inhibitors (clinical trial). \n"
+                + " - An overview of all detected oncogenic DNA aberrations can be found in the report. \n"
                 + "Due to the lower tumor purity (" + DataUtil.formatPercentage(impliedPurityPercentage) + ") potential (subclonal) "
                 + "DNA aberrations might not have been detected using this test. This result should therefore be considered with caution.";
 
         String summaryWithGermline = "Melanoma sample showing:\n"
-                + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
-                + " - complete inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors. The observed CDKN2A mutation is "
-                + "also present in the germline of the patient. Referral to a genetic specialist should be considered.\n"
-                + " - complete inactivation/loss of PTEN likely resulting in an activation of the PI3K-AKT-mTOR pathway "
-                + "and indicating potential benefit of mTOR/PI3K inhibitors\n"
-                + " - high mutational burden (mutational load (ML) of 180, tumor mutation burden (TMB) of 13.6) that is "
-                + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy";
+                + " - Molecular Tissue of Origin classifier: Melanoma (likelihood: 99.6%).\n"
+                + " - CDKN2A (p.Gly83fs,p.Ala68fs) inactivation. The observed CDKN2A mutation is also present in the germline of the patient. Referral to a genetic specialist should be considered. \n"
+                + " - BRAF (p.Val600Glu) activating mutation, potential benefit from BRAF and/or MEK inhibitors (clinical trial). \n"
+                + " - PTEN (copies: 0) loss, potential benefit from PI3K inhibitors (clinical trial). \n"
+                + " - TML (186) positive, potential benefit from checkpoint inhibitors (clinical trial). \n"
+                + " - An overview of all detected oncogenic DNA aberrations can be found in the report. \n";
 
         String clinicalSummary;
         if (config.includeSummary() && !config.reportGermline()) {
@@ -185,8 +186,8 @@ public final class ExampleAnalysisTestFactory {
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .reportableViruses(viruses)
-                .suspectGeneCopyNumbersMSIWithLOH(MSILOHGenes())
-                .suspectGeneCopyNumbersHRDWithLOH(HRDLOHGenes())
+                .suspectGeneCopyNumbersMSIWithLOH(LOHofMSIGenes)
+                .suspectGeneCopyNumbersHRDWithLOH(LOHofHRDGenes)
                 .build();
 
         MolecularTissueOriginReporting molecularTissueOriginReporting = ImmutableMolecularTissueOriginReporting.builder()
@@ -269,44 +270,44 @@ public final class ExampleAnalysisTestFactory {
     public static List<CnPerChromosomeArmData> extractCnPerChromosome() {
         List<CnPerChromosomeArmData> cnPerChromosomeArm = Lists.newArrayList();
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("1"), ChromosomeArm.P_ARM, 2.577279278488992));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("1"), ChromosomeArm.Q_ARM, 3.923555406796647));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("1"), ChromosomeArm.Q_ARM, 3.918799177307402));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("2"), ChromosomeArm.P_ARM, 3.017299967841595));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("2"), ChromosomeArm.Q_ARM, 3.02120002022585));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("3"), ChromosomeArm.P_ARM, 3.5911825173202274));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("3"), ChromosomeArm.Q_ARM, 4.000879324279213));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("3"), ChromosomeArm.P_ARM, 3.591216277753128));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("3"), ChromosomeArm.Q_ARM, 4.000838339114639));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("4"), ChromosomeArm.P_ARM, 2.0210999604946176));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("4"), ChromosomeArm.Q_ARM, 3.84538439455249));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("4"), ChromosomeArm.Q_ARM, 3.845384394611778));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("5"), ChromosomeArm.P_ARM, 2.0000481443928493));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("5"), ChromosomeArm.Q_ARM, 2.0096989688505156));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("6"), ChromosomeArm.P_ARM, 3.847943829939073));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("5"), ChromosomeArm.Q_ARM, 2.0097004288494347));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("6"), ChromosomeArm.P_ARM, 3.8480004115155264));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("6"), ChromosomeArm.Q_ARM, 2.913192227059896));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("7"), ChromosomeArm.P_ARM, 4.0246200936217384));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("7"), ChromosomeArm.Q_ARM, 4.172712568077476));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("7"), ChromosomeArm.Q_ARM, 4.172730489125538));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("8"), ChromosomeArm.P_ARM, 3.3325999264957695));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("8"), ChromosomeArm.Q_ARM, 3.3429530044399343));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("8"), ChromosomeArm.Q_ARM, 3.3429530048942766));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("9"), ChromosomeArm.P_ARM, 2.7291755500808623));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("9"), ChromosomeArm.Q_ARM, 3.6992000400581495));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("10"), ChromosomeArm.P_ARM, 2.500979668565291));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("10"), ChromosomeArm.Q_ARM, 2.0071004137917052));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("11"), ChromosomeArm.P_ARM, 3.1661436985048503));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("10"), ChromosomeArm.Q_ARM, 2.0071487599595574));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("11"), ChromosomeArm.P_ARM, 3.1786999401872698));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("11"), ChromosomeArm.Q_ARM, 2.9098638260285616));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("12"), ChromosomeArm.P_ARM, 3.0115999171651855));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("12"), ChromosomeArm.Q_ARM, 3.0031553296330964));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("13"), ChromosomeArm.P_ARM, 3.1564998196285714));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("13"), ChromosomeArm.Q_ARM, 3.146714774779385));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("14"), ChromosomeArm.P_ARM, 3.014099827765714));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("14"), ChromosomeArm.Q_ARM, 3.0138727282866444));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("14"), ChromosomeArm.Q_ARM, 3.0139836642446918));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("15"), ChromosomeArm.P_ARM, 3.7023997998702702));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("15"), ChromosomeArm.Q_ARM, 2.5465950447637473));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("16"), ChromosomeArm.P_ARM, 3.191969293780255));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("16"), ChromosomeArm.Q_ARM, 1.989521251230779));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("15"), ChromosomeArm.Q_ARM, 2.54659518784599));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("16"), ChromosomeArm.P_ARM, 3.1922446681639967));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("16"), ChromosomeArm.Q_ARM, 1.9895619634349344));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("17"), ChromosomeArm.P_ARM, 2.9938998740100473));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("17"), ChromosomeArm.Q_ARM, 3.0477000530660465));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("18"), ChromosomeArm.P_ARM, 2.370931614063123));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("18"), ChromosomeArm.Q_ARM, 2.8490432529511334));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("19"), ChromosomeArm.P_ARM, 2.8890213317794795));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("19"), ChromosomeArm.P_ARM, 2.889021334953442));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("19"), ChromosomeArm.Q_ARM, 2.934100089054606));
-        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("20"), ChromosomeArm.P_ARM, 4.013880853952209));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("20"), ChromosomeArm.P_ARM, 4.0138808962887085));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("20"), ChromosomeArm.Q_ARM, 4.0086125804931285));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("21"), ChromosomeArm.P_ARM, 2.991999766033014));
         cnPerChromosomeArm.add(buildCnPerChromosomeArmData(HumanChromosome.fromString("21"), ChromosomeArm.Q_ARM, 2.9982181161009325));
@@ -1331,7 +1332,7 @@ public final class ExampleAnalysisTestFactory {
                 .driverLikelihood(1D)
                 .biallelic(true)
                 .genotypeStatus(GenotypeStatus.HOM_REF)
-                .localPhaseSet(4570)
+                .localPhaseSet(4613)
                 .type(VariantType.MNP)
                 .build();
 
@@ -1359,7 +1360,7 @@ public final class ExampleAnalysisTestFactory {
                 .totalCopyNumber(3.02)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
-                .driverLikelihood(0.1459)
+                .driverLikelihood(0.1458)
                 .biallelic(false)
                 .genotypeStatus(GenotypeStatus.HOM_REF)
                 .localPhaseSet(null)
@@ -1385,9 +1386,9 @@ public final class ExampleAnalysisTestFactory {
                 .totalReadCount(112)
                 .rnaAlleleReadCount(null)
                 .rnaTotalReadCount(null)
-                .alleleCopyNumber(1.678764)
-                .minorAlleleCopyNumber(1.97)
-                .totalCopyNumber(3.98)
+                .alleleCopyNumber(1.6829820000000002)
+                .minorAlleleCopyNumber(1.98)
+                .totalCopyNumber(3.99)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0)
@@ -1486,7 +1487,7 @@ public final class ExampleAnalysisTestFactory {
                 .junctionCopyNumber(2.005)
                 .undisruptedCopyNumber(0.0)
                 .firstAffectedExon(5)
-                .clusterId(69)
+                .clusterId(72)
                 .build();
 
         return Lists.newArrayList(disruption1);
@@ -1539,14 +1540,14 @@ public final class ExampleAnalysisTestFactory {
                 Lists.newArrayList(createHlaReporting().hlaAllele(ImmutableHlaAllele.builder()
                         .gene("HLA-A")
                         .germlineAllele("A*01:01")
-                        .build()).germlineCopies(2.0).tumorCopies(3.83).somaticMutations("None").interpretation("Yes").build()));
+                        .build()).germlineCopies(2D).tumorCopies(3.83).somaticMutations("None").interpretation("Yes").build()));
         alleles.put("HLA-B",
                 Lists.newArrayList(createHlaReporting().hlaAllele(ImmutableHlaAllele.builder()
                                 .gene("HLA-B")
                                 .germlineAllele("B*40:02")
-                                .build()).germlineCopies(1.0).tumorCopies(2.0).somaticMutations("None").interpretation("Yes").build(),
+                                .build()).germlineCopies(1D).tumorCopies(2D).somaticMutations("None").interpretation("Yes").build(),
                         createHlaReporting().hlaAllele(ImmutableHlaAllele.builder().gene("HLA-B").germlineAllele("B*08:01").build())
-                                .germlineCopies(1.0)
+                                .germlineCopies(1D)
                                 .tumorCopies(1.83)
                                 .somaticMutations("None")
                                 .interpretation("Yes")
@@ -1555,10 +1556,10 @@ public final class ExampleAnalysisTestFactory {
                 Lists.newArrayList(createHlaReporting().hlaAllele(ImmutableHlaAllele.builder()
                                 .gene("HLA-C")
                                 .germlineAllele("C*07:01")
-                                .build()).germlineCopies(1.0).tumorCopies(1.83).somaticMutations("None").interpretation("yes").build(),
+                                .build()).germlineCopies(1D).tumorCopies(1.83).somaticMutations("None").interpretation("yes").build(),
                         createHlaReporting().hlaAllele(ImmutableHlaAllele.builder().gene("HLA-C").germlineAllele("C*03:04").build())
-                                .germlineCopies(1.0)
-                                .tumorCopies(2.0)
+                                .germlineCopies(1D)
+                                .tumorCopies(2D)
                                 .somaticMutations("None")
                                 .interpretation("Yes")
                                 .build()));
