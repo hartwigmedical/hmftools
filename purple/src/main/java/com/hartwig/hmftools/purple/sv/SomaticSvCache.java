@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SVTYPE;
+import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_CHANGE;
@@ -20,6 +21,8 @@ import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
@@ -69,7 +72,7 @@ public class SomaticSvCache
     }
 
     public SomaticSvCache(
-            final String version, final String inputVcf, final String outputVcf, final ReferenceData referenceData)
+            final PurpleConfig config, final String version, final String inputVcf, final String outputVcf, final ReferenceData referenceData)
     {
         final VCFFileReader vcfReader = new VCFFileReader(new File(inputVcf), false);
         mOutputVcfFilename = outputVcf;

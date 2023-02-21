@@ -199,7 +199,7 @@ public class PurpleApplication
             final String outputVcf = purpleSomaticSvFile(mConfig.OutputDir, tumorId);
 
             final SomaticSvCache svCache = !sampleDataFiles.SomaticSvVcfFile.isEmpty() ?
-                    new SomaticSvCache(mPurpleVersion.version(), sampleDataFiles.SomaticSvVcfFile, outputVcf, mReferenceData)
+                    new SomaticSvCache(mConfig, mPurpleVersion.version(), sampleDataFiles.SomaticSvVcfFile, outputVcf, mReferenceData)
                     : new SomaticSvCache();
 
             sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache, somaticVariantCache);
@@ -408,7 +408,7 @@ public class PurpleApplication
                 final String outputVcf = purpleGermlineSvFile(mConfig.OutputDir, tumorId);
 
                 germlineSvCache = new GermlineSvCache(
-                        mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, outputVcf, mReferenceData,
+                        mConfig, mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, outputVcf, mReferenceData,
                         fittedRegions, copyNumbers, purityContext);
 
                 germlineSvCache.write();
@@ -593,7 +593,7 @@ public class PurpleApplication
                 // String germlineSvOutputVcf = "";
 
                 GermlineSvCache germlineSvCache = new GermlineSvCache(
-                        mPurpleVersion.version(), germlineSvVcf, germlineSvOutputVcf, mReferenceData, fittedRegions, copyNumbers, purityContext);
+                        mConfig, mPurpleVersion.version(), germlineSvVcf, germlineSvOutputVcf, mReferenceData, fittedRegions, copyNumbers, purityContext);
 
                 germlineSVs.addAll(germlineSvCache.variants());
                 germlineSvCache.write();

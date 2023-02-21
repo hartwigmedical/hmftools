@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.purple.sv.SomaticSvCache.addEnrichedVariantContexts;
@@ -41,6 +42,8 @@ import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantHeader;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.sv.StructuralRefContextEnrichment;
@@ -83,7 +86,7 @@ public class GermlineSvCache
     }
 
     public GermlineSvCache(
-            final String version, final String inputVcf, final String outputVcf, final ReferenceData referenceData,
+            final PurpleConfig config, final String version, final String inputVcf, final String outputVcf, final ReferenceData referenceData,
             final List<ObservedRegion> fittedRegions, final List<PurpleCopyNumber> copyNumbers, final PurityContext purityContext)
     {
         mPurityContext = purityContext;
@@ -93,6 +96,7 @@ public class GermlineSvCache
         final VCFFileReader vcfReader = new VCFFileReader(new File(inputVcf), false);
         mOutputVcfFilename = outputVcf;
         mVcfHeader = Optional.of(generateOutputHeader(version, vcfReader.getFileHeader()));
+
         mVariantCollection = new VariantContextCollection(mVcfHeader.get());
         mRefGenomeFile = referenceData.RefGenome;
 

@@ -176,7 +176,7 @@ public class LoadPurpleData
         // Generate a unique ID for each SV record
         int svId = 0;
 
-        List<StructuralVariantData> structuralVariants = com.google.common.collect.Lists.newArrayList();
+        List<StructuralVariantData> structuralVariants = Lists.newArrayList();
         for (EnrichedStructuralVariant variant : enrichedVariants)
         {
             structuralVariants.add(convertSvData(variant, svId++));
