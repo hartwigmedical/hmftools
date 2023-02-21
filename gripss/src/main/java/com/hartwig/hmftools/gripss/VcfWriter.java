@@ -32,7 +32,9 @@ import com.hartwig.hmftools.gripss.links.LinkStore;
 import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotation;
 
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.variant.variantcontext.FastGenotype;
 import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -84,20 +86,17 @@ public class VcfWriter
         writeHeader(mUnfilteredWriter, vcfHeader, gripssVersion);
     }
 
-    private void writeHeader(
-            final VariantContextWriter writer, final VCFHeader vcfHeader, final String gripssVersion)
+    private void writeHeader(final VariantContextWriter writer, final VCFHeader vcfHeader, final String gripssVersion)
     {
-        VCFHeader newHeader = new VCFHeader(vcfHeader);
-
-        /*
-        newHeader.getGenotypeSamples().clear();
+        // ensure genotype sample IDs match the config - also done per variant
+        List<String> genotypeSampleNames = Lists.newArrayList();
 
         if(!mConfig.ReferenceId.isEmpty())
-            newHeader.getGenotypeSamples().add(mConfig.ReferenceId);
+            genotypeSampleNames.add(mConfig.ReferenceId);
 
-        if(!mConfig.SampleId.isEmpty())
-            newHeader.getGenotypeSamples().add(mConfig.SampleId);
-        */
+        genotypeSampleNames.add(mConfig.SampleId);
+
+        VCFHeader newHeader = new VCFHeader(vcfHeader.getMetaDataInInputOrder(), genotypeSampleNames);
 
         newHeader.addMetaDataLine(new VCFHeaderLine("gripssVersion", gripssVersion));
 
@@ -106,8 +105,7 @@ public class VcfWriter
             if(filter == HARD_FILTERED)
                 continue;
 
-            newHeader.addMetaDataLine(new VCFFilterHeaderLine(
-                    FilterType.vcfName(filter), FilterType.vcfInfoString(filter)));
+            newHeader.addMetaDataLine(new VCFFilterHeaderLine(FilterType.vcfName(filter), FilterType.vcfInfoString(filter)));
         }
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_REALIGN, 1, VCFHeaderLineType.Flag, "Variant was realigned"));
@@ -186,10 +184,14 @@ public class VcfWriter
     {
         final SvData sv = breakend.sv();
 
-        List<Genotype> genotypes = Lists.newArrayList(breakend.Context.getGenotype(mGenotypeIds.TumorOrdinal));
+        List<Genotype> genotypes = Lists.newArrayList();
+
+        genotypes.add(new GenotypeBuilder().copy(breakend.Context.getGenotype(mGenotypeIds.TumorOrdinal)).name(mConfig.SampleId).make());
 
         if(mGenotypeIds.hasReference())
-            genotypes.add(breakend.Context.getGenotype(mGenotypeIds.ReferenceOrdinal));
+        {
+            genotypes.add(new GenotypeBuilder().copy(breakend.Context.getGenotype(mGenotypeIds.ReferenceOrdinal)).name(mConfig.ReferenceId).make());
+        }
 
         VariantContextBuilder builder = new VariantContextBuilder(breakend.Context).genotypes(genotypes).filters();
 
