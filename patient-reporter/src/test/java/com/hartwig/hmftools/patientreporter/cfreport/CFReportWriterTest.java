@@ -64,7 +64,7 @@ public class CFReportWriterTest {
     private static final String COMMENT_STRING_QC_FAIL = "This is a test QC fail report";
     private static final String COMMENT_STRING_QC_FAIL_CORRECTED = "This is a corrected test QC fail report";
 
-    private static final String UDI_DI = "(01) 8720299486010(8012)v5.25";
+    private static final String UDI_DI = "(01)8720299486041(8012)v5.31";
 
     @Test
     public void canGeneratePatientReportForCOLO829() throws IOException {
