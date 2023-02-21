@@ -1,13 +1,19 @@
 package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
+import htsjdk.variant.vcf.VCFFileReader;
 
 public class SampleDataFiles
 {
@@ -76,6 +82,35 @@ public class SampleDataFiles
         RecoveredSvVcfFile = getFilename(cmd, SV_RECOVERY_VCF, SampleDataDir, sampleId, ".gripss.somatic.vcf.gz");
         SomaticVcfFile = getFilename(cmd, SOMATIC_VARIANTS, SampleDataDir, sampleId, ".sage.somatic.filtered.pave.vcf.gz");
         GermlineVcfFile = getFilename(cmd, GERMLINE_VARIANTS, SampleDataDir, sampleId, ".sage.germline.filtered.pave.vcf.gz");
+    }
+
+    public boolean hasValidSampleNames(final PurpleConfig config)
+    {
+        return hasValidVcfSampleNames(SomaticSvVcfFile, config, false)
+            && hasValidVcfSampleNames(GermlineSvVcfFile, config, true)
+            && hasValidVcfSampleNames(SomaticVcfFile, config, false)
+            && hasValidVcfSampleNames(GermlineVcfFile, config, true);
+    }
+
+    private boolean hasValidVcfSampleNames(final String vcfFile, final PurpleConfig config, boolean isGermline)
+    {
+        if(vcfFile.isEmpty())
+            return true;
+
+        boolean referenceFirst = !isGermline;
+
+        VCFFileReader vcfReader = new VCFFileReader(new File(vcfFile), false);
+
+        boolean validVcfNames = GenotypeIds.hasValidSampleIds(
+                vcfReader.getFileHeader(), config.ReferenceId, config.TumorId,  referenceFirst, false);
+
+        if(!validVcfNames)
+        {
+            PPL_LOGGER.error("vcf({}) has invalid sample names: {}", vcfFile, vcfReader.getFileHeader().getGenotypeSamples());
+            return false;
+        }
+
+        return true;
     }
 
     private String getFilename(

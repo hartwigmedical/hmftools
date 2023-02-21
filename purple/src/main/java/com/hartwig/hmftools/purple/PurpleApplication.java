@@ -171,7 +171,35 @@ public class PurpleApplication
     {
         long startTimeMs = System.currentTimeMillis();
 
-        processSample(mConfig.ReferenceId, mConfig.TumorId);
+        try
+        {
+            if(mConfig.DriversOnly)
+            {
+                findDrivers(mConfig.TumorId);
+            }
+            else
+            {
+                final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, mConfig.TumorId, mConfig.ReferenceId);
+
+                if(!sampleDataFiles.hasValidSampleNames(mConfig))
+                    System.exit(1);
+
+                final SampleData sampleData = loadSampleData(mConfig.ReferenceId, mConfig.TumorId, sampleDataFiles);
+
+                if(sampleData == null)
+                    System.exit(1);
+
+                PPL_LOGGER.debug("post-data-loading memory({}mb)", calcMemoryUsage());
+
+                performFit(mConfig.ReferenceId, mConfig.TumorId, sampleDataFiles, sampleData);
+            }
+        }
+        catch(Exception e)
+        {
+            PPL_LOGGER.error("failed processing sample({}): {}", mConfig.TumorId, e.toString());
+            e.printStackTrace();
+            System.exit(1);
+        }
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         PPL_LOGGER.info("Purple complete, runTime({})", format("%.1fs", timeTakenMs/1000.0));
@@ -213,35 +241,6 @@ public class PurpleApplication
             somaticVariantCache.loadSomatics(sampleDataFiles.SomaticVcfFile, mReferenceData.SomaticHotspots);
 
         return sampleData;
-    }
-
-    private void processSample(final String referenceId, final String tumorId)
-    {
-        try
-        {
-            if(mConfig.DriversOnly)
-            {
-                findDrivers(tumorId);
-            }
-            else
-            {
-                final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, tumorId, referenceId);
-                final SampleData sampleData = loadSampleData(referenceId, tumorId, sampleDataFiles);
-
-                if(sampleData == null)
-                    System.exit(1);
-
-                PPL_LOGGER.debug("post-data-loading memory({}mb)", calcMemoryUsage());
-
-                performFit(referenceId, tumorId, sampleDataFiles, sampleData);
-            }
-        }
-        catch(Exception e)
-        {
-            PPL_LOGGER.error("failed processing sample({}): {}", tumorId, e.toString());
-            e.printStackTrace();
-            System.exit(1);
-        }
     }
 
     private void performFit(

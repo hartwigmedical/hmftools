@@ -60,7 +60,6 @@ public class GenotypeIds
                 if(expectedTumorOrdinal >= 0 && i != expectedTumorOrdinal)
                     return false;
             }
-
         }
 
         return true;
