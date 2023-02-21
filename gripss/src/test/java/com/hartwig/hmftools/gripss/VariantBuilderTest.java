@@ -32,7 +32,7 @@ import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 import com.hartwig.hmftools.gripss.filters.KnownHotspot;
@@ -55,9 +55,9 @@ public class VariantBuilderTest
     {
         mHotspotCache = new HotspotCache(null);
         mTargetRegions = new TargetRegions(null);
-        mBuilder = new VariantBuilder(defaultFilterConstants(), mHotspotCache, mTargetRegions);
+        mBuilder = new VariantBuilder(defaultFilterConstants(), mHotspotCache, mTargetRegions, false);
         mIdGenerator = new VcfIdGenerator();
-        mGenotypeIds = new GenotypeIds(0, 1, TEST_REF_ID, TEST_SAMPLE_ID, false);
+        mGenotypeIds = new GenotypeIds(0, 1, TEST_REF_ID, TEST_SAMPLE_ID);
     }
 
     @Test

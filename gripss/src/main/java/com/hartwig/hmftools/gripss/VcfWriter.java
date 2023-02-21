@@ -24,7 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.gripss.common.Breakend;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterType;
 import com.hartwig.hmftools.gripss.links.LinkRescue;
@@ -88,6 +88,17 @@ public class VcfWriter
             final VariantContextWriter writer, final VCFHeader vcfHeader, final String gripssVersion)
     {
         VCFHeader newHeader = new VCFHeader(vcfHeader);
+
+        /*
+        newHeader.getGenotypeSamples().clear();
+
+        if(!mConfig.ReferenceId.isEmpty())
+            newHeader.getGenotypeSamples().add(mConfig.ReferenceId);
+
+        if(!mConfig.SampleId.isEmpty())
+            newHeader.getGenotypeSamples().add(mConfig.SampleId);
+        */
+
         newHeader.addMetaDataLine(new VCFHeaderLine("gripssVersion", gripssVersion));
 
         for(FilterType filter : FilterType.values())

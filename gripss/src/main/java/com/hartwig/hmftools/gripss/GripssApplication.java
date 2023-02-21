@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
-import static com.hartwig.hmftools.gripss.common.GenotypeIds.fromVcfHeader;
+import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations.REPEAT_MASK_FILE;
 
 import java.io.IOException;
@@ -21,9 +21,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.gripss.common.Breakend;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
-import com.hartwig.hmftools.gripss.common.VcfUtils;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.FilterType;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
@@ -86,7 +85,7 @@ public class GripssApplication
         mHotspotCache = new HotspotCache(cmd);
         mTargetRegions = new TargetRegions(cmd);
 
-        mVariantBuilder = new VariantBuilder(mFilterConstants, mHotspotCache, mTargetRegions);
+        mVariantBuilder = new VariantBuilder(mFilterConstants, mHotspotCache, mTargetRegions, mConfig.GermlineMode);
         mSoftFilters = new SoftFilters(mFilterConstants, mConfig.GermlineMode);
         mRealigner = null;
 
@@ -137,10 +136,20 @@ public class GripssApplication
 
         GR_LOGGER.info("sample({}) processing VCF({})", mConfig.SampleId, vcfFile);
 
-        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.SampleId, mConfig.GermlineMode);
+        boolean expectReferenceFirst = !mConfig.GermlineMode;
 
-        if(genotypeIds == null)
+        if(!GenotypeIds.hasValidSampleIds(vcfHeader, mConfig.ReferenceId, mConfig.SampleId, expectReferenceFirst, true))
         {
+            GripssConfig.GR_LOGGER.error("missing sample names(ref={} tumor={}) in VCF: {}",
+                    mConfig.ReferenceId, mConfig.SampleId, vcfHeader.getGenotypeSamples());
+            System.exit(1);
+        }
+
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.SampleId);
+
+        if(genotypeIds.TumorOrdinal < 0 || (!mConfig.ReferenceId.isEmpty() && genotypeIds.ReferenceOrdinal < 0))
+        {
+            GripssConfig.GR_LOGGER.error("missing sample names in VCF: {}", vcfHeader.getGenotypeSamples());
             System.exit(1);
         }
 

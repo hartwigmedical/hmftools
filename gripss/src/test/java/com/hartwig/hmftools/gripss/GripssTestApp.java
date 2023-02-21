@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 
 public class GripssTestApp
@@ -24,7 +24,7 @@ public class GripssTestApp
     {
         IdGen = new VcfIdGenerator();
         RefGenome = new MockRefGenome();
-        GenotypeIds = new GenotypeIds(0, 1, TEST_REF_ID, TEST_SAMPLE_ID, false);
+        GenotypeIds = new GenotypeIds(0, 1, TEST_REF_ID, TEST_SAMPLE_ID);
         DataCache = new SvDataCache();
         FilterCache = new FilterCache();
     }

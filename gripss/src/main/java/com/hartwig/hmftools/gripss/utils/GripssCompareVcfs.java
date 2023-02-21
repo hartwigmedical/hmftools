@@ -22,7 +22,7 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttri
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.gripss.GripssConfig.REFERENCE;
 import static com.hartwig.hmftools.gripss.GripssConfig.SAMPLE;
-import static com.hartwig.hmftools.gripss.common.GenotypeIds.fromVcfHeader;
+import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
@@ -55,9 +55,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.gripss.VariantBuilder;
 import com.hartwig.hmftools.gripss.common.Breakend;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
-import com.hartwig.hmftools.gripss.common.VcfUtils;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 import com.hartwig.hmftools.gripss.filters.TargetRegions;
 
@@ -119,7 +118,7 @@ public class GripssCompareVcfs
         mOriginalSvData = Maps.newHashMap();
         mOriginalCoordsSvData = Maps.newHashMap();
 
-        mVariantBuilder = new VariantBuilder(null, new HotspotCache(cmd), new TargetRegions(null));
+        mVariantBuilder = new VariantBuilder(null, new HotspotCache(cmd), new TargetRegions(null), false);
 
         mIgnorePonDiff = cmd.hasOption(IGNORE_PON_DIFF);
         mKeyByCoords = cmd.hasOption(KEY_BY_COORDS);
@@ -185,7 +184,7 @@ public class GripssCompareVcfs
                 vcfFile, new VCFCodec(), false);
 
         VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
-        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mReferenceId, mSampleId, false);
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mReferenceId, mSampleId);
 
         if(genotypeIds == null)
         {
@@ -245,7 +244,7 @@ public class GripssCompareVcfs
                 newVcfFile, new VCFCodec(), false);
 
         VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
-        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, "", mSampleId, false);
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, "", mSampleId);
 
         if(genotypeIds == null)
             System.exit(1);

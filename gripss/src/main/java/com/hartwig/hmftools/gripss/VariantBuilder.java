@@ -7,8 +7,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
-import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.HardFilters;
@@ -29,9 +28,10 @@ public class VariantBuilder
 
     private int mHardFilteredCount;
 
-    public VariantBuilder(final FilterConstants filterConstants, final HotspotCache hotspotCache, final TargetRegions targetRegions)
+    public VariantBuilder(
+            final FilterConstants filterConstants, final HotspotCache hotspotCache, final TargetRegions targetRegions, final boolean germlineMode)
     {
-        mHardFilters = filterConstants != null ? new HardFilters(filterConstants) : null;
+        mHardFilters = filterConstants != null ? new HardFilters(filterConstants, germlineMode) : null;
         mHotspotCache = hotspotCache;
         mTargetRegions = targetRegions;
 
