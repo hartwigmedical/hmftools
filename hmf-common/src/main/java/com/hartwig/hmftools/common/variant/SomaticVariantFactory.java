@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.variant;
 
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -43,17 +45,15 @@ public class SomaticVariantFactory implements VariantContextFilter
 
     public static final String MAPPABILITY_TAG = "MAPPABILITY";
     private static final String RECOVERED_FLAG = "RECOVERED";
-    public static final String KATAEGIS_FLAG = "KT";
 
     public static final String PASS_FILTER = "PASS";
-    public static final String SUBCLONAL_LIKELIHOOD_FLAG = "SUBCL";
 
     @NotNull
     private final CompoundFilter mFilter;
     private int mCreatedCount;
     private int mFilteredCount;
 
-    public SomaticVariantFactory(@NotNull final VariantContextFilter... filters)
+    public SomaticVariantFactory(final VariantContextFilter... filters)
     {
         mFilter = new CompoundFilter(true);
         mFilter.addAll(Arrays.asList(filters));
@@ -73,24 +73,22 @@ public class SomaticVariantFactory implements VariantContextFilter
         return mFilteredCount;
     }
 
-    @NotNull
-    public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String vcfFile) throws IOException
+    public List<SomaticVariant> fromVCFFile(final String tumor, final String vcfFile) throws IOException
     {
         return fromVCFFile(tumor, null, null, vcfFile);
     }
 
     @NotNull
-    public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @Nullable final String reference,
-            @NotNull final String vcfFile) throws IOException
+    public List<SomaticVariant> fromVCFFile(final String tumor, @Nullable final String reference,
+            final String vcfFile) throws IOException
     {
         final List<SomaticVariant> result = Lists.newArrayList();
         fromVCFFile(tumor, reference, null, vcfFile, true, result::add);
         return result;
     }
 
-    @NotNull
-    public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
-            @NotNull final String vcfFile) throws IOException
+    public List<SomaticVariant> fromVCFFile(
+            final String tumor, @Nullable final String reference, @Nullable final String rna, final String vcfFile) throws IOException
     {
         final List<SomaticVariant> result = Lists.newArrayList();
         fromVCFFile(tumor, reference, rna, vcfFile, true, result::add);
@@ -98,8 +96,8 @@ public class SomaticVariantFactory implements VariantContextFilter
     }
 
     public void fromVCFFile(
-            @NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
-            @NotNull final String vcfFile, boolean useCheckReference, @NotNull Consumer<SomaticVariant> consumer) throws IOException
+            final String tumor, @Nullable final String reference, @Nullable final String rna,
+            final String vcfFile, boolean useCheckReference, Consumer<SomaticVariant> consumer) throws IOException
     {
         try(final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false))
         {
@@ -149,15 +147,13 @@ public class SomaticVariantFactory implements VariantContextFilter
         }
     }
 
-    @NotNull
-    public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context)
+    public Optional<SomaticVariant> createVariant(final String sample, final VariantContext context)
     {
         return createVariant(sample, null, null, context);
     }
 
-    @NotNull
-    public Optional<SomaticVariant> createVariant(@NotNull final String sample, @Nullable final String reference,
-            @Nullable final String rna, @NotNull final VariantContext context)
+    public Optional<SomaticVariant> createVariant(final String sample, @Nullable final String reference,
+            @Nullable final String rna, final VariantContext context)
     {
         final Genotype genotype = context.getGenotype(sample);
 
@@ -192,9 +188,7 @@ public class SomaticVariantFactory implements VariantContextFilter
         return Optional.empty();
     }
 
-    @NotNull
-    private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final AllelicDepth allelicDepth,
-            @NotNull final VariantContext context)
+    private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(final AllelicDepth allelicDepth, final VariantContext context)
     {
         final VariantContextDecorator decorator = new VariantContextDecorator(context);
         final VariantImpact variantImpact = decorator.variantImpact();
@@ -276,7 +270,7 @@ public class SomaticVariantFactory implements VariantContextFilter
         return sj.toString();
     }
 
-    private static boolean sampleInFile(@NotNull final String sample, @NotNull final VCFHeader header)
+    private static boolean sampleInFile(final String sample, final VCFHeader header)
     {
         return header.getSampleNamesInOrder().stream().anyMatch(x -> x.equals(sample));
     }

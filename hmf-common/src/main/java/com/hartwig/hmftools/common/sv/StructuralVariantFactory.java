@@ -18,7 +18,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.filter.ExcludeCNVFilter;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
@@ -53,7 +52,6 @@ public class StructuralVariantFactory
 
     private static final String INS_SEQ = "SVINSSEQ";
     private static final String HOM_SEQ = "HOMSEQ";
-    private static final String BPI_AF = "BPI_AF";
     private static final String SOMATIC_SCORE = "SOMATICSCORE"; // only applicable for Manta and will be removed when fully on GRIDSS
     public static final String IHOMPOS = "IHOMPOS";
 
@@ -89,7 +87,7 @@ public class StructuralVariantFactory
 
     private final CompoundFilter mFilter;
 
-    public StructuralVariantFactory(final @NotNull VariantContextFilter filter)
+    public StructuralVariantFactory(final VariantContextFilter filter)
     {
         mFilter = new CompoundFilter(true);
         mFilter.add(new HumanChromosomeFilter());
@@ -146,7 +144,7 @@ public class StructuralVariantFactory
     }
 
     @Nullable
-    public static String mateId(@NotNull VariantContext context)
+    public static String mateId(final VariantContext context)
     {
         String mate = context.getAttributeAsString(MATE_ID, null);
 
@@ -156,7 +154,6 @@ public class StructuralVariantFactory
         return mate;
     }
 
-    @NotNull
     public List<StructuralVariant> results() { return mCompleteVariants; }
 
     public List<VariantContext> unmatched() { return Lists.newArrayList(mUnmatchedVariants.values()); }
@@ -164,8 +161,7 @@ public class StructuralVariantFactory
     public void removeUnmatchedVariant(final String id) { mUnmatchedVariants.remove(id); }
     public boolean hasUnmatchedVariant(final String id) { return mUnmatchedVariants.containsKey(id); }
 
-    @NotNull
-    public static StructuralVariant create(@NotNull VariantContext first, @NotNull VariantContext second)
+    public static StructuralVariant create(final VariantContext first, final VariantContext second)
     {
         Preconditions.checkArgument(BND.equals(type(first)));
         Preconditions.checkArgument(BND.equals(type(second)));
@@ -182,27 +178,30 @@ public class StructuralVariantFactory
 
         // Local orientation determined by the positioning of the anchoring bases
         final byte startOrientation = (byte) (match.group(1).length() > 0 ? 1 : -1);
+
         // Other orientation determined by the direction of the brackets
         final byte endOrientation = (byte) (match.group(2).equals("]") ? 1 : -1);
+
         // Grab the inserted sequence by removing 1 base from the reference anchoring bases
-        String insertedSequence =
-                match.group(1).length() > 0 ? match.group(1).substring(1) : match.group(4).substring(0, match.group(4).length() - 1);
+        String insertedSequence = match.group(1).length() > 0 ?
+                match.group(1).substring(1) : match.group(4).substring(0, match.group(4).length() - 1);
+
         if(Strings.isNullOrEmpty(insertedSequence))
         {
             insertedSequence = first.getAttributeAsString(INS_SEQ, "");
         }
 
-        final boolean isSmallDelDup =
-                first.getContig().equals(second.getContig()) && Math.abs(first.getStart() - second.getStart()) <= SMALL_DELDUP_SIZE
-                        && startOrientation != endOrientation;
+        final boolean isSmallDelDup = first.getContig().equals(second.getContig())
+                && Math.abs(first.getStart() - second.getStart()) <= SMALL_DELDUP_SIZE
+                && startOrientation != endOrientation;
 
-        final StructuralVariantLeg startLeg =
-                setLegCommon(ImmutableStructuralVariantLegImpl.builder(), first, isSmallDelDup, startOrientation).position(start)
-                        .homology(first.getAttributeAsString(HOM_SEQ, ""))
-                        .alleleFrequency(unadjustedAllelicFrequency(first))
-                        .build();
+        final StructuralVariantLeg startLeg = setLegCommon(first, isSmallDelDup, startOrientation)
+                .position(start)
+                .homology(first.getAttributeAsString(HOM_SEQ, ""))
+                .alleleFrequency(unadjustedAllelicFrequency(first))
+                .build();
 
-        final StructuralVariantLeg endLeg = setLegCommon(ImmutableStructuralVariantLegImpl.builder(), second, isSmallDelDup, endOrientation)
+        final StructuralVariantLeg endLeg = setLegCommon(second, isSmallDelDup, endOrientation)
                 .position(end)
                 .homology(second.getAttributeAsString(HOM_SEQ, ""))
                 .alleleFrequency(unadjustedAllelicFrequency(second))
@@ -229,7 +228,9 @@ public class StructuralVariantFactory
                 inferredType = StructuralVariantType.DEL;
             }
         }
-        return setCommon(ImmutableStructuralVariantImpl.builder(), first).start(startLeg)
+
+        return setCommon(first)
+                .start(startLeg)
                 .end(endLeg)
                 .mateId(second.getID())
                 .insertSequence(insertedSequence)
@@ -240,42 +241,26 @@ public class StructuralVariantFactory
                 .build();
     }
 
-    public static Double unadjustedAllelicFrequency(@NotNull VariantContext context)
+    public static StructuralVariant createSingleBreakend(final VariantContext context)
     {
-        if(context.hasAttribute(TAF))
-        {
-            return context.getAttributeAsDoubleList(TAF, 0.0).get(0);
-        }
-
-        if(context.hasAttribute(BPI_AF))
-        {
-            return context.getAttributeAsDoubleList(BPI_AF, 0.0).get(0);
-        }
-
-        return null;
-    }
-
-    @NotNull
-    public static StructuralVariant createSingleBreakend(@NotNull VariantContext context)
-    {
-        final List<Double> af = context.hasAttribute(BPI_AF)
-                ? context.getAttributeAsDoubleList(BPI_AF, 0.0)
-                : context.hasAttribute(TAF) ? context.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
+        final List<Double> af = context.hasAttribute(TAF) ? context.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
 
         final String alt = context.getAlternateAllele(0).getDisplayString();
 
         // local orientation determined by the positioning of the anchoring bases
         final byte orientation = (byte) (alt.startsWith(".") ? -1 : 1);
         final int refLength = context.getReference().length();
-        final String insertedSequence =
-                orientation == -1 ? alt.substring(1, alt.length() - refLength) : alt.substring(refLength, alt.length() - 1);
 
-        final StructuralVariantLeg startLeg =
-                setLegCommon(ImmutableStructuralVariantLegImpl.builder(), context, false, orientation).homology("")
-                        .alleleFrequency(af.size() >= 1 ? af.get(0) : null)
-                        .build();
+        final String insertedSequence = orientation == -1 ?
+                alt.substring(1, alt.length() - refLength) : alt.substring(refLength, alt.length() - 1);
 
-        return setCommon(ImmutableStructuralVariantImpl.builder(), context).start(startLeg)
+        final StructuralVariantLeg startLeg = setLegCommon(context, false, orientation)
+                .homology("")
+                .alleleFrequency(af.size() >= 1 ? af.get(0) : null)
+                .build();
+
+        return setCommon(context)
+                .start(startLeg)
                 .insertSequence(insertedSequence)
                 .type(context.hasAttribute(INFERRED) ? StructuralVariantType.INF : StructuralVariantType.SGL)
                 .filter(filters(context, null))
@@ -283,9 +268,10 @@ public class StructuralVariantFactory
                 .build();
     }
 
-    private static ImmutableStructuralVariantImpl.Builder setCommon(final ImmutableStructuralVariantImpl.Builder builder,
-            final VariantContext context)
+    private static ImmutableStructuralVariantImpl.Builder setCommon(final VariantContext context)
     {
+        ImmutableStructuralVariantImpl.Builder builder = ImmutableStructuralVariantImpl.builder();
+
         // backwards compatibility for Manta until fully over to GRIDSS
         int somaticScore = context.getAttributeAsInt(SOMATIC_SCORE, 0);
         double qualityScore = context.getPhredScaledQual();
@@ -327,9 +313,10 @@ public class StructuralVariantFactory
         return builder;
     }
 
-    private static ImmutableStructuralVariantLegImpl.Builder setLegCommon(final ImmutableStructuralVariantLegImpl.Builder builder,
+    private static ImmutableStructuralVariantLegImpl.Builder setLegCommon(
             final VariantContext context, boolean ignoreRefpair, byte orientation)
     {
+        ImmutableStructuralVariantLegImpl.Builder builder = ImmutableStructuralVariantLegImpl.builder();
         builder.chromosome(context.getContig());
         builder.position(context.getStart());
         builder.orientation(orientation);
@@ -345,8 +332,10 @@ public class StructuralVariantFactory
                 ciRight = cipos.get(1);
             }
         }
+
         builder.startOffset(ciLeft);
         builder.endOffset(ciRight);
+
         int supportWidth = 0;
         if(context.hasAttribute(ANCHOR_SUPPORT_CIGAR))
         {
@@ -369,6 +358,7 @@ public class StructuralVariantFactory
                 }
             }
         }
+
         if(supportWidth > 0)
         {
             builder.anchoringSupportDistance((orientation == -1 ? -ciLeft : ciRight) + supportWidth);
@@ -408,6 +398,7 @@ public class StructuralVariantFactory
                 builder.normalReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
             }
         }
+
         if(context.getGenotype(tumorOrdinal) != null)
         {
             Genotype geno = context.getGenotype(tumorOrdinal);
@@ -423,7 +414,16 @@ public class StructuralVariantFactory
                 builder.tumorReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
             }
         }
+
         return builder;
+    }
+
+    private static Double unadjustedAllelicFrequency(final VariantContext context)
+    {
+        if(context.hasAttribute(TAF))
+            return context.getAttributeAsDoubleList(TAF, 0.0).get(0);
+
+        return null;
     }
 
     private static Integer asInteger(Object obj)

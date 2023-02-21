@@ -16,12 +16,13 @@ public final class StructuralVariantFileLoader {
     private StructuralVariantFileLoader() {
     }
 
-    @NotNull
-    public static List<StructuralVariant> fromFile(@NotNull String vcfFileLocation, @NotNull VariantContextFilter filter) throws IOException {
+    public static List<StructuralVariant> fromFile(final String vcfFileLocation, final VariantContextFilter filter) throws IOException
+    {
         final StructuralVariantFactory factory = new StructuralVariantFactory(filter);
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
-                new VCFCodec(), false)) {
+                new VCFCodec(), false))
+        {
             reader.iterator().forEach(factory::addVariantContext);
         }
 
