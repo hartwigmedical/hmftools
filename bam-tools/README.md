@@ -63,4 +63,4 @@ log_level | INFO or DEBUG
 threads | Multi-thread count, default 1
 
 ## Version History and Download Links
-- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.0)
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/bam-tools-v1.0)
