@@ -122,7 +122,7 @@ public final class ExampleAnalysisTestFactory {
         String summaryWithoutGermline = "Melanoma sample showing:\n"
                 + " - Molecular Tissue of Origin classifier: Melanoma (likelihood: 99.6%).\n"
                 + " - CDKN2A (p.Gly83fs,p.Ala68fs) inactivation. \n"
-                + " - BRAF (p.Val600Glu) activating mutation, potential benefit from BRAF and/or MEK inhibitors (clinical trial). \n"
+                + " - BRAF (p.Val600Glu) activating mutation, potential benefit from BRAF and/or MEK inhibitors. \n"
                 + " - PTEN (copies: 0) loss, potential benefit from PI3K inhibitors (clinical trial). \n"
                 + " - TML (186) positive, potential benefit from checkpoint inhibitors (clinical trial). \n"
                 + " - An overview of all detected oncogenic DNA aberrations can be found in the report. \n";
@@ -130,7 +130,7 @@ public final class ExampleAnalysisTestFactory {
         String summaryWithoutGermlineLowPurity = "Melanoma sample showing:\n"
                 + " - Molecular Tissue of Origin classifier: Melanoma (likelihood: 99.6%).\n"
                 + " - CDKN2A (p.Gly83fs,p.Ala68fs) inactivation. \n"
-                + " - BRAF (p.Val600Glu) activating mutation, potential benefit from BRAF and/or MEK inhibitors (clinical trial). \n"
+                + " - BRAF (p.Val600Glu) activating mutation, potential benefit from BRAF and/or MEK inhibitors. \n"
                 + " - PTEN (copies: 0) loss, potential benefit from PI3K inhibitors (clinical trial). \n"
                 + " - TML (186) positive, potential benefit from checkpoint inhibitors (clinical trial). \n"
                 + " - An overview of all detected oncogenic DNA aberrations can be found in the report. \n"
@@ -140,7 +140,7 @@ public final class ExampleAnalysisTestFactory {
         String summaryWithGermline = "Melanoma sample showing:\n"
                 + " - Molecular Tissue of Origin classifier: Melanoma (likelihood: 99.6%).\n"
                 + " - CDKN2A (p.Gly83fs,p.Ala68fs) inactivation. The observed CDKN2A mutation is also present in the germline of the patient. Referral to a genetic specialist should be considered. \n"
-                + " - BRAF (p.Val600Glu) activating mutation, potential benefit from BRAF and/or MEK inhibitors (clinical trial). \n"
+                + " - BRAF (p.Val600Glu) activating mutation, potential benefit from BRAF and/or MEK inhibitors. \n"
                 + " - PTEN (copies: 0) loss, potential benefit from PI3K inhibitors (clinical trial). \n"
                 + " - TML (186) positive, potential benefit from checkpoint inhibitors (clinical trial). \n"
                 + " - An overview of all detected oncogenic DNA aberrations can be found in the report. \n";
