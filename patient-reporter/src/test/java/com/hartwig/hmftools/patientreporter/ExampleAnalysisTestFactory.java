@@ -82,7 +82,7 @@ public final class ExampleAnalysisTestFactory {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
     private static final PatientReporterConfig REPORTER_CONFIG = PatientReporterTestFactory.createTestReporterConfig();
 
-    private static final String UDI_DI = "(01) 8720299486010(8012)v5.25";
+    private static final String UDI_DI = "(01)8720299486041(8012)v5.31";
 
     private ExampleAnalysisTestFactory() {
     }
