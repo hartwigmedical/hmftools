@@ -29,13 +29,16 @@ import static com.hartwig.hmftools.cup.somatics.GenomicPositions.excludeChromoso
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.SigContributions.buildCancerSignatureContributions;
 import static com.hartwig.hmftools.cup.somatics.SigContributions.buildSampleSignatureContributions;
-import static com.hartwig.hmftools.cup.somatics.SomaticClassifier.SNV_POS_FREQ_POS_SIZE;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.DEC_3_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_GEN_POS_CHR_X;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_GEN_POS_CHR_X_DESC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.GEN_POS_BUCKET_SIZE_CFG;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.GEN_POS_BUCKET_SIZE_DESC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.GEN_POS_MAX_SAMPLE_COUNT_CFG;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.GEN_POS_MAX_SAMPLE_COUNT_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INTEGER_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_DESC;
@@ -113,9 +116,10 @@ public class RefSomatics implements RefClassifier
         mIncludeAidApobec = cmd.hasOption(INCLUDE_AID_APOBEC);
         mExcludeGenPosChrX = cmd.hasOption(EXCLUDE_GEN_POS_CHR_X);
 
-        int posFreqBucketSize = Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE, String.valueOf(GEN_POS_BUCKET_SIZE)));
+        int posFreqBucketSize = Integer.parseInt(cmd.getOptionValue(GEN_POS_BUCKET_SIZE_CFG, String.valueOf(GEN_POS_BUCKET_SIZE)));
+        int genPosMaxSampleCount = Integer.parseInt(cmd.getOptionValue(GEN_POS_MAX_SAMPLE_COUNT_CFG, String.valueOf(GEN_POS_MAX_SAMPLE_COUNT)));
 
-        mPosFrequencies = new PositionFrequencies(mConfig.RefGenVersion, posFreqBucketSize, GEN_POS_MAX_SAMPLE_COUNT);
+        mPosFrequencies = new PositionFrequencies(mConfig.RefGenVersion, posFreqBucketSize, genPosMaxSampleCount);
     }
 
     public CategoryType categoryType() { return SNV; }
@@ -133,9 +137,10 @@ public class RefSomatics implements RefClassifier
 
     public static void addCmdLineArgs(@NotNull Options options)
     {
-        options.addOption(SNV_POS_FREQ_POS_SIZE, true, "Genomic position bucket size (default: 20000)");
+        options.addOption(GEN_POS_BUCKET_SIZE_CFG, true, GEN_POS_BUCKET_SIZE_DESC);
         options.addOption(INCLUDE_AID_APOBEC, false, INCLUDE_AID_APOBEC_DESC);
         options.addOption(EXCLUDE_GEN_POS_CHR_X, false, EXCLUDE_GEN_POS_CHR_X_DESC);
+        options.addOption(GEN_POS_MAX_SAMPLE_COUNT_CFG, true, GEN_POS_MAX_SAMPLE_COUNT_DESC);
     }
 
     public void buildRefDataSets()
