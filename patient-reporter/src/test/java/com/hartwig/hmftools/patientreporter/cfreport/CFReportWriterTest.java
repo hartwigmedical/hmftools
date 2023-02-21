@@ -393,7 +393,7 @@ public class CFReportWriterTest {
     @Test
     public void generatePanelReport() throws IOException {
         SampleMetadata sampleMetadata = generateSampleMetadata("Sample_panel");
-        ReportData testReportData = PatientReporterTestFactory.loadTestReportData();
+        ReportData testReportData = PatientReporterTestFactory.loadTestReportDataPanel();
         SampleReport sampleReport = generateSampleReport(sampleMetadata);
 
         PanelReport patientReport = ImmutablePanelReport.builder()
@@ -418,7 +418,7 @@ public class CFReportWriterTest {
     @Test
     public void generateFailPanelReport() throws IOException {
         SampleMetadata sampleMetadata = generateSampleMetadata("sample_panel_failed");
-        ReportData testReportData = PatientReporterTestFactory.loadTestReportData();
+        ReportData testReportData = PatientReporterTestFactory.loadTestReportDataPanel();
 
         SampleReport sampleReport = generateSampleReport(sampleMetadata);
         PanelFailReport patientReport = ImmutablePanelFailReport.builder()

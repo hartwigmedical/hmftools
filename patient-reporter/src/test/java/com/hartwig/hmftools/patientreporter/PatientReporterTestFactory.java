@@ -49,6 +49,7 @@ public final class PatientReporterTestFactory {
     private static final String ROSE_TSV = RUN_DIRECTORY + "/rose/tumor_sample.rose.tsv";
     private static final String SIGNATURE_PATH = Resources.getResource("signature/signature_test.png").getPath();
     private static final String RVA_LOGO_PATH = Resources.getResource("rva_logo/rva_logo_test.jpg").getPath();
+    private static final String COMPANY_LOGO_ONCOACT_PATH = Resources.getResource("company_logo/hartwig_logo_oncoact_test.jpg").getPath();
     private static final String COMPANY_LOGO_PATH = Resources.getResource("company_logo/hartwig_logo_test.jpg").getPath();
 
     private static final String SAMPLE_SPECIAL_REMARK_TSV = Resources.getResource("special_remark/sample_special_remark.tsv").getPath();
@@ -115,6 +116,21 @@ public final class PatientReporterTestFactory {
 
     @NotNull
     public static ReportData loadTestReportData() {
+        List<PatientPrimaryTumor> patientPrimaryTumors = Lists.newArrayList();
+        Lims lims = LimsFactory.empty();
+
+        return ImmutableQCFailReportData.builder()
+                .patientPrimaryTumors(patientPrimaryTumors)
+                .limsModel(lims)
+                .signaturePath(SIGNATURE_PATH)
+                .logoRVAPath(RVA_LOGO_PATH)
+                .logoCompanyPath(COMPANY_LOGO_ONCOACT_PATH)
+                .udiDi(UDI_DI)
+                .build();
+    }
+
+    @NotNull
+    public static ReportData loadTestReportDataPanel() {
         List<PatientPrimaryTumor> patientPrimaryTumors = Lists.newArrayList();
         Lims lims = LimsFactory.empty();
 
