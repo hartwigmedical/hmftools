@@ -172,13 +172,14 @@ public class PositionFrequencies
         return chromosomePosIndex + posBucket;
     }
 
-    public static String getChromosomeFromIndex(final Map<String,Integer> chrPosIndexMap, int bucketIndex)
+    public static String getChromosomeFromIndex(
+            final RefGenomeVersion refGenomeVersion, final Map<String,Integer> chrPosIndexMap, int bucketIndex)
     {
         int lastChrStartIndex = -1;
         String lastChromosome = "";
         for(HumanChromosome chr : HumanChromosome.values())
         {
-            final String chromosome = chr.toString();
+            final String chromosome = refGenomeVersion.versionedChromosome(chr.toString());
             int chrStartIndex = chrPosIndexMap.get(chromosome);
 
             if(lastChrStartIndex >= 0)

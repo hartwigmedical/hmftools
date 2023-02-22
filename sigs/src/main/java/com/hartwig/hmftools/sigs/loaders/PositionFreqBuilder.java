@@ -178,7 +178,7 @@ public class PositionFreqBuilder
 
         for(int r = 0; r < oldSampleCounts.Rows; ++r)
         {
-            final String chromosome = getChromosomeFromIndex(mChromosomePosIndex, r);
+            final String chromosome = getChromosomeFromIndex(mRefGenomeVersion, mChromosomePosIndex, r);
             int position = getPositionFromIndex(mChromosomePosIndex, chromosome, r, mBucketSize);
 
             int newIndex = getBucketIndex(mNewBucketSize, newChrPosIndexMap, chromosome, position);
@@ -243,7 +243,7 @@ public class PositionFreqBuilder
             {
                 if(writeCoords)
                 {
-                    final String chromosome = getChromosomeFromIndex(mChromosomePosIndex, b);
+                    final String chromosome = getChromosomeFromIndex(mRefGenomeVersion, mChromosomePosIndex, b);
                     int position = getPositionFromIndex(mChromosomePosIndex, chromosome, b, mBucketSize);
 
                     writer.write(String.format("%s,%d,%d", chromosome, position, bucketFrequencies[b]));
