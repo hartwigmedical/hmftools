@@ -20,12 +20,15 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.isofox.TranscriptExpressionLoader;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.epitope.EpitopeUtils;
 import com.hartwig.hmftools.neo.PeptideData;
+
+import org.jetbrains.annotations.Nullable;
 
 public class NeoScorerTask implements Callable
 {
@@ -39,7 +42,7 @@ public class NeoScorerTask implements Callable
 
     public NeoScorerTask(
             final String sampleId, final NeoScorerConfig config, final BindScorer scorer,
-            final RnaExpressionMatrix transExpression, final NeoDataWriter writers)
+            @Nullable final RnaExpressionMatrix transExpression, final NeoDataWriter writers)
     {
         mSampleId = sampleId;
         mConfig = config;
@@ -51,17 +54,34 @@ public class NeoScorerTask implements Callable
     @Override
     public Long call()
     {
-        processSample();
+        try
+        {
+            processSample();
+        }
+        catch(Exception e)
+        {
+            NE_LOGGER.error("sample({}) failed processing", mSampleId, e.toString());
+            e.printStackTrace();
+            System.exit(1);
+        }
+
         return (long)1;
     }
 
-    public void processSample()
+    public void processSample() throws Exception
     {
         Map<Integer,NeoEpitopeData> neoEpitopeMap = loadNeoEpitopes(mSampleId, mConfig.NeoDataDir);
 
         List<AlleleCoverage> alleleCoverages = loadAlleleCoverage(mSampleId, mConfig.LilacDataDir);
 
         List<RnaNeoEpitope> rnaNeoDataList = loadRnaNeoData(mSampleId, mConfig.IsofoxDataDir);
+
+        Map<String,Double> sampleTPMs = Maps.newHashMap();
+
+        if(mTransExpression == null || !mTransExpression.hasSampleId(mSampleId))
+        {
+            sampleTPMs.putAll(TranscriptExpressionLoader.loadTranscriptExpression(mConfig.IsofoxDataDir, mSampleId));
+        }
 
         List<SomaticVariant> somaticVariants = Lists.newArrayList();
 
@@ -80,7 +100,7 @@ public class NeoScorerTask implements Callable
         {
             NeoEpitopeData neoData = entry.getValue();
 
-            neoData.setExpressionData(mTransExpression, mSampleId);
+            neoData.setExpressionData(mSampleId, sampleTPMs, mTransExpression);
             neoData.setFusionRnaSupport(rnaNeoDataList);
             neoData.setMutationRnaSupport(somaticVariants);
 

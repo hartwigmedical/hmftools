@@ -50,7 +50,8 @@ public class NeoScorer
 
         NE_LOGGER.info("loading cohort transcript expression");
 
-        RnaExpressionMatrix transcriptExpression = new RnaExpressionMatrix(mConfig.SampleTranscriptExpressionFile, EXPRESSION_SCOPE_TRANS);
+        RnaExpressionMatrix transcriptExpression = mConfig.CohortTranscriptExpressionFile != null ?
+                new RnaExpressionMatrix(mConfig.CohortTranscriptExpressionFile, EXPRESSION_SCOPE_TRANS) : null;
 
         NE_LOGGER.info("running neoepitope scoring for {}",
                 mConfig.SampleIds.size() == 1 ? mConfig.SampleIds.get(0) : String.format("%d samples", mConfig.SampleIds.size()));
@@ -71,7 +72,7 @@ public class NeoScorer
         }
         else
         {
-            sampleTasks.forEach(x -> x.processSample());
+            sampleTasks.forEach(x -> x.call());
         }
 
         mWriters.close();

@@ -173,13 +173,6 @@ public class AltSjClassifier implements CuppaClassifier
                 SampleData sample = mSampleDataCache.SampleDataList.get(i);
                 loadSampleAltSJs(sample.Id, i);
                 mSampleIndexMap.put(sample.Id, i);
-
-                /*
-                final String isofoxDir = mConfig.getIsofoxDataDir(sample.Id);
-                final String filename = GeneExpressionFile.generateFilename(isofoxDir, sample.Id);
-                CUP_LOGGER.debug("loading sample alt-SJ data file({})", filename);
-                mSampleFragCounts = loadSampleAltSjMatrixData(filename, mSampleIndexMap, mRefCancerTypeMatrix.Cols);
-                */
             }
         }
 

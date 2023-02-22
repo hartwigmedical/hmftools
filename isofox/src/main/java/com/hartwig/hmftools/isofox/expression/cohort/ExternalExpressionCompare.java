@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_TPM;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
@@ -18,13 +21,10 @@ import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromR
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromRsemTranscript;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromSalmon;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.getExternalSourceFilename;
-import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SPLICED_FRAGS;
-import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_EFFECTIVE_LENGTH;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_FITTED_FRAGMENTS;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_RAW_FRAGMENTS;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

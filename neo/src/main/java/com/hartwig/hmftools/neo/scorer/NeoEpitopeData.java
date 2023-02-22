@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.INVALID_EXP;
 
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
@@ -46,9 +47,9 @@ public class NeoEpitopeData
         RnaData = new NeoRnaData(tpmCancer, tpmCohort);
     }
 
-    public void setExpressionData(final RnaExpressionMatrix transExpression, final String sampleId)
+    public void setExpressionData(final String sampleId, final Map<String,Double> sampleTPMs, final RnaExpressionMatrix transExpression)
     {
-        if(!transExpression.hasSampleId(sampleId))
+        if(transExpression == null && sampleTPMs.isEmpty())
             return;
 
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
@@ -57,7 +58,16 @@ public class NeoEpitopeData
 
             for(String transName : Transcripts[fs])
             {
-                double expression = transExpression.getExpression(transName, sampleId);
+                double expression = 0;
+
+                if(!sampleTPMs.isEmpty())
+                {
+                    expression = sampleTPMs.get(transName);
+                }
+                else
+                {
+                    expression = transExpression.getExpression(transName, sampleId);
+                }
 
                 // distinguish non-existent expression vs zero TPM
                 if(expression != INVALID_EXP)

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.results;
 
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_DATA_FILE_ID;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -51,7 +52,6 @@ import com.hartwig.hmftools.isofox.unmapped.UmrFinder;
 
 public class ResultsWriter
 {
-    public static final String TRANSCRIPT_RESULTS_FILE = "transcript_data.csv";
     public static final String SPLICE_SITE_FILE = "splice_site_data.csv";
     public static final String SUMMARY_FILE = "summary.csv";
 
@@ -209,7 +209,7 @@ public class ResultsWriter
         {
             if(mGeneDataWriter == null)
             {
-                final String outputFileName = mConfig.formOutputFile(GENE_DATA_FILE_ID);
+                final String outputFileName = mConfig.formOutputFile(GENE_EXPRESSION_FILE_ID);
 
                 mGeneDataWriter = createBufferedWriter(outputFileName, false);
                 mGeneDataWriter.write(GeneResult.csvHeader());
@@ -285,7 +285,7 @@ public class ResultsWriter
         {
             if(mTransDataWriter == null)
             {
-                final String outputFileName = mConfig.formOutputFile(TRANSCRIPT_RESULTS_FILE);
+                final String outputFileName = mConfig.formOutputFile(TRANSCRIPT_EXPRESSION_FILE_ID);
 
                 mTransDataWriter = createBufferedWriter(outputFileName, false);
                 mTransDataWriter.write(TranscriptResult.csvHeader());

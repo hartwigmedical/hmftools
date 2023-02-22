@@ -26,7 +26,7 @@ public class NeoScorerConfig
     public final String LilacDataDir;
     public final String RnaSomaticVcf;
     public final String IsofoxDataDir;
-    public final String SampleTranscriptExpressionFile;
+    public final String CohortTranscriptExpressionFile;
 
     public final List<String> SampleIds;
 
@@ -47,7 +47,7 @@ public class NeoScorerConfig
     public static final String RNA_SAMPLE_SUFFIX = "rna_sample_suffix";
     public static final String PREDICTION_DATA_DIR = "mcf_prediction_dir";
     public static final String ISF_DATA_DIR = "isofox_neo_dir";
-    public static final String SAMPLE_TRANS_EXP_FILE = "sample_trans_exp_file";
+    public static final String COHORT_TRANS_EXP_FILE = "cohort_trans_exp_file";
 
     private static final String LIKELIHOOD_THRESHOLD = "rank_threshold";
     private static final String SIMILARITY_THRESHOLD = "sim_threshold";
@@ -72,7 +72,7 @@ public class NeoScorerConfig
         OutputDir = cmd.hasOption(OUTPUT_DIR) ? parseOutputDir(cmd) : sampleDataDir;
         RnaSampleSuffix = cmd.getOptionValue(RNA_SAMPLE_SUFFIX, RNA_SAMPLE_APPEND_SUFFIX);
 
-        SampleTranscriptExpressionFile = cmd.getOptionValue(SAMPLE_TRANS_EXP_FILE);
+        CohortTranscriptExpressionFile = cmd.getOptionValue(COHORT_TRANS_EXP_FILE);
 
         LikelihoodThreshold = Double.parseDouble(cmd.getOptionValue(LIKELIHOOD_THRESHOLD, "0.02"));
         SimilarityThreshold = Double.parseDouble(cmd.getOptionValue(SIMILARITY_THRESHOLD, "10"));
@@ -118,7 +118,7 @@ public class NeoScorerConfig
         options.addOption(RNA_SOMATIC_VCF, true, "Directory for Purple somatic variant RNA-appended files");
         options.addOption(RNA_SAMPLE_SUFFIX, true, "RNA sample suffix in Sage-appended VCF");
         options.addOption(ISF_DATA_DIR, true, "Directory for Isofox neoepitope coverage files");
-        options.addOption(SAMPLE_TRANS_EXP_FILE, true, "Cohort gene expression matrix");
+        options.addOption(COHORT_TRANS_EXP_FILE, true, "Cohort gene expression matrix");
 
         ScoreConfig.addCmdLineArgs(options);
         ConfigUtils.addLoggingOptions(options);

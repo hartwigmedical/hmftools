@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.isofox.results;
 
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_TPM;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_SET_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.util.StringJoiner;
 
@@ -63,8 +65,6 @@ public class GeneResult
     public void setLowMapQualsAllocation(double alloc) { mLowMapQualsAllocation = alloc; }
 
     public static final String FLD_SUPPORTING_TRANS = "SupportingTrans";
-    public static final String FLD_SPLICED_FRAGS = "SplicedFragments";
-    public static final String FLD_UNSPLICED_FRAGS = "UnsplicedFragments";
 
     public static String csvHeader()
     {

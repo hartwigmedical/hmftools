@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaCommon;
 
-public final class IsofoxNovelSpliceJunctionLoader
+public final class NovelSpliceJunctionLoader
 {
     public static List<NovelSpliceJunction> load(final String isofoxAltSpliceJunctionCsv, final AltSjCohortData altSjCohortData)
             throws IOException
