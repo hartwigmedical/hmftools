@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
+import static com.hartwig.hmftools.cup.liftover.LiftoverConfig.MAPPING_FILE;
+import static com.hartwig.hmftools.cup.liftover.LiftoverConfig.SAMPLE;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -27,19 +29,17 @@ import org.jetbrains.annotations.NotNull;
 
 public class SnvLiftover
 {
-    private final String mOutputDir;
-    private final String mSampleVcfDir;
+    private final LiftoverConfig mConfig;
     private final List<String> mSampleIds;
     private final CoordMappingCache mMappingCache;
     private final int mThreads;
 
-    // config
-    private static final String SAMPLE = "sample";
-    private static final String SAMPLE_VCF_DIR = "sample_vcf_dir";
-    private static final String MAPPING_FILE = "mapping_file";
+    public static final String LIFTOVER_FILE = ".snv_liftover.csv";
 
     public SnvLiftover(final CommandLine cmd)
     {
+        mConfig = new LiftoverConfig(cmd);
+
         if(cmd.hasOption(SAMPLE))
         {
             mSampleIds = Lists.newArrayList(cmd.getOptionValue(SAMPLE));
@@ -48,25 +48,20 @@ public class SnvLiftover
         {
             mSampleIds = loadSampleIdsFile(cmd);
         }
-        mOutputDir = parseOutputDir(cmd);
-        mSampleVcfDir = cmd.getOptionValue(SAMPLE_VCF_DIR);
         mThreads = parseThreads(cmd);
 
         mMappingCache = new CoordMappingCache();
 
-        try
+        if(cmd.hasOption(MAPPING_FILE))
         {
-            mMappingCache.loadFile(cmd.getOptionValue(MAPPING_FILE));
-        }
-        catch(Exception e)
-        {
-            System.exit(1);
+            if(!mMappingCache.loadFile(cmd.getOptionValue(MAPPING_FILE)))
+                System.exit(1);
         }
     }
 
     public void run()
     {
-        if(mOutputDir == null || mSampleVcfDir == null || mSampleIds.isEmpty())
+        if(mConfig.OutputDir == null || mConfig.SampleVcfDir == null || mSampleIds.isEmpty())
         {
             CUP_LOGGER.error("invalid config");
             System.exit(1);
@@ -78,9 +73,9 @@ public class SnvLiftover
 
         for(String sampleId : mSampleIds)
         {
-            String purpleDir = mSampleVcfDir.replaceAll("\\*", sampleId);
+            String purpleDir = mConfig.SampleVcfDir.replaceAll("\\*", sampleId);
             String vcfFile = purpleSomaticVcfFile(purpleDir, sampleId);
-            VcfPositionConverter vcfTask = new VcfPositionConverter(sampleId, vcfFile, mOutputDir, mMappingCache);
+            VcfPositionConverter vcfTask = new VcfPositionConverter(sampleId, vcfFile, mMappingCache, mConfig);
             sampleTasks.add(vcfTask);
         }
 
@@ -101,14 +96,7 @@ public class SnvLiftover
     {
         final Options options = new Options();
 
-        addSampleIdFile(options);
-        addOutputOptions(options);
-        addThreadOptions(options);
-        addLoggingOptions(options);
-
-        options.addOption(SAMPLE, true, "Sample ID");
-        options.addOption(SAMPLE_VCF_DIR, true, "Path to sample VCF(s)");
-        options.addOption(MAPPING_FILE, true, "Coordinate mapping file");
+        LiftoverConfig.addOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 

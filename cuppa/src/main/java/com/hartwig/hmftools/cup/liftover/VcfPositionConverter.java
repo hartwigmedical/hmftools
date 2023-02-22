@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.isKnownIndel;
+import static com.hartwig.hmftools.cup.liftover.SnvLiftover.LIFTOVER_FILE;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -15,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.cup.somatics.SomaticVariant;
 
@@ -25,6 +27,7 @@ import htsjdk.variant.vcf.VCFCodec;
 
 public class VcfPositionConverter implements Callable
 {
+    private final LiftoverConfig mConfig;
     private final String mSampleId;
     private final String mVcfFile;
     private final String mOutputFile;
@@ -32,26 +35,29 @@ public class VcfPositionConverter implements Callable
 
     private BufferedWriter mWriter;
     private int mMappingIndex;
+    private final boolean mMappingEnabled;
 
     private static final int UNMAPPED_POSITION = -1;
 
     public VcfPositionConverter(
-            final String sampleId, final String vcfFile, final String outputDir, final CoordMappingCache mappingCache)
+            final String sampleId, final String vcfFile, final CoordMappingCache mappingCache, final LiftoverConfig config)
     {
         mSampleId = sampleId;
-
-        mOutputFile = outputDir + mSampleId + ".snv_liftover.csv";
-        mWriter = null;
+        mConfig = config;
 
         mVcfFile = vcfFile;
         mMappingCache = mappingCache;
+        mMappingEnabled = mMappingCache.hasMappings();
         mMappingIndex = 0;
+
+        mOutputFile = mConfig.OutputDir + mSampleId + LIFTOVER_FILE;
+        mWriter = null;
     }
 
     @Override
     public Long call()
     {
-        if(Files.exists(Paths.get(mOutputFile)))
+        if(mConfig.KeepExisting && Files.exists(Paths.get(mOutputFile)))
         {
             CUP_LOGGER.info("sample({}) output exists, skipping", mSampleId);
             return (long)0;
@@ -67,18 +73,21 @@ public class VcfPositionConverter implements Callable
 
             for(VariantContext variantContext : reader.iterator())
             {
-                if(variantContext.isFiltered())
+                if(mConfig.ApplyFilters && variantContext.isFiltered())
                     continue;
 
                 SomaticVariant variant = SomaticVariant.fromContext(variantContext);
 
-                if(variant.Type == VariantType.MNP)
-                    continue;
+                if(mConfig.ApplyFilters)
+                {
+                    if(variant.Type == VariantType.MNP)
+                        continue;
 
-                if(variant.Type == VariantType.INDEL && !isKnownIndel(variant.Gene, variant.RepeatCount, variant.Type))
-                    continue;
+                    if(variant.Type == VariantType.INDEL && !isKnownIndel(variant.Gene, variant.RepeatCount, variant.Type))
+                        continue;
+                }
 
-                int convertedPosition = convertPosition(variant.Chromosome, variant.Position);
+                int convertedPosition = mMappingEnabled ? convertPosition(variant.Chromosome, variant.Position) : variant.Position;
                 writeVariant(variant, convertedPosition);
                 ++variantCount;
             }
@@ -139,8 +148,10 @@ public class VcfPositionConverter implements Callable
 
         try
         {
+            String outputChr = mMappingEnabled ? RefGenomeVersion.V38.versionedChromosome(variant.Chromosome) : variant.Chromosome;
+
             mWriter.write(format("%s,%d,%s,%s,%s,%d,%s,%s,%d",
-                    variant.Chromosome, newPosition, variant.Ref, variant.Alt, variant.Type,
+                    outputChr, newPosition, variant.Ref, variant.Alt, variant.Type,
                     variant.RepeatCount, variant.Gene, variant.TrinucleotideContext, variant.Position));
             mWriter.newLine();
         }

@@ -12,7 +12,6 @@ public class CoordMappingCache
 {
     private final List<CoordMapping> mMappings;
 
-    // hg37_38_mapping.tsv
     private static final String DELIM = "\t";
     private static final String NEG_ORIENT = "-";
 
@@ -21,6 +20,7 @@ public class CoordMappingCache
         mMappings = Lists.newArrayList();
     }
 
+    public boolean hasMappings() { return !mMappings.isEmpty(); }
     public List<CoordMapping> getMappings() { return mMappings; }
 
     public void addMapping(final String chromosome, int sourceStart, int sourceEnd, int destStart, int destEnd, boolean reverse)
@@ -28,25 +28,37 @@ public class CoordMappingCache
         mMappings.add(new CoordMapping(chromosome, sourceStart, sourceEnd, destStart, destEnd, reverse));
     }
 
-    public void loadFile(final String filename) throws Exception
+    public boolean loadFile(final String filename)
     {
-        List<String> lines = Files.readAllLines(Paths.get(filename));
-        lines.remove(0);
-
-        for(String line : lines)
+        try
         {
-            String[] values = line.split(DELIM, -1);
+            List<String> lines = Files.readAllLines(Paths.get(filename));
+            lines.remove(0);
 
-            if(values.length < 8)
-                throw new Exception("invalid mapping line: " + line);
+            for(String line : lines)
+            {
+                String[] values = line.split(DELIM, -1);
 
-            // note +1 for start positions since source file is in BED style
-            mMappings.add(new CoordMapping(
-                    values[0], Integer.parseInt(values[1]) + 1, Integer.parseInt(values[2]),
-                    Integer.parseInt(values[5]) + 1, Integer.parseInt(values[6]), values[7].equals(NEG_ORIENT)));
+                if(values.length < 8)
+                {
+                    CUP_LOGGER.error("invalid mapping line: {}", line);
+                    return false;
+                }
+
+                // note +1 for start positions since source file is in BED style
+                mMappings.add(new CoordMapping(
+                        values[0], Integer.parseInt(values[1]) + 1, Integer.parseInt(values[2]),
+                        Integer.parseInt(values[5]) + 1, Integer.parseInt(values[6]), values[7].equals(NEG_ORIENT)));
+            }
+
+            CUP_LOGGER.info("loaded {} coordinate mapping entries from file: {}", mMappings.size(), filename);
+            return true;
         }
-
-        CUP_LOGGER.info("loaded {} coordinate mapping entries from file: {}", mMappings.size(), filename);
+        catch(Exception e)
+        {
+            CUP_LOGGER.error("failed to load coordinate mapping entries from file: {}", filename, e.toString());
+            return false;
+        }
     }
 
 }
