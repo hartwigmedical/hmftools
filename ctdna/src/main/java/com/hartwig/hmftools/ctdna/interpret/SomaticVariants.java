@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.ctdna.interpret;
 
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_REALIGNED;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 
 import java.io.IOException;
@@ -108,7 +109,7 @@ public class SomaticVariants
                         .split(LIST_SEPARATOR, -1);
 
                 int qualTotal = 0;
-                for(int i = 0; i < 4; ++i)
+                for(int i = 0; i <= RC_REALIGNED; ++i)
                 {
                     qualTotal += Integer.parseInt(qualCounts[i]);
                 }

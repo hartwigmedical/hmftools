@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_FULL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
-import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_FULL;
 
 import java.util.List;
 

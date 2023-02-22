@@ -2,6 +2,7 @@ package com.hartwig.hmftools.neo.scorer;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
@@ -23,6 +24,7 @@ public class NeoScorerConfig
 {
     public final String NeoDataDir;
     public final String LilacDataDir;
+    public final String RnaSomaticVcf;
     public final String IsofoxDataDir;
     public final String SampleTranscriptExpressionFile;
 
@@ -30,6 +32,7 @@ public class NeoScorerConfig
 
     public final String OutputDir;
     public final String OutputId;
+    public final String RnaSampleSuffix;
     public final List<OutputType> WriteTypes;
 
     public final double LikelihoodThreshold;
@@ -40,6 +43,8 @@ public class NeoScorerConfig
     public static final String SAMPLE_DATA_DIR = "sample_data_dir";
     public static final String NEO_DATA_DIR = "neo_data_dir";
     public static final String LILAC_DATA_DIR = "lilac_data_dir";
+    public static final String RNA_SOMATIC_VCF = "rna_somatic_vcf";
+    public static final String RNA_SAMPLE_SUFFIX = "rna_sample_suffix";
     public static final String PREDICTION_DATA_DIR = "mcf_prediction_dir";
     public static final String ISF_DATA_DIR = "isofox_neo_dir";
     public static final String SAMPLE_TRANS_EXP_FILE = "sample_trans_exp_file";
@@ -49,6 +54,8 @@ public class NeoScorerConfig
 
     private static final String WRITE_TYPES = "write_types";
 
+    public static final String RNA_SAMPLE_APPEND_SUFFIX = "_RNA";
+
     public NeoScorerConfig(final CommandLine cmd)
     {
         if(cmd.hasOption(SAMPLE))
@@ -56,21 +63,14 @@ public class NeoScorerConfig
         else
             SampleIds = loadSampleIdsFile(cmd);
 
-        if(cmd.hasOption(SAMPLE_DATA_DIR))
-        {
-            String sampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
-            NeoDataDir = sampleDataDir;
-            LilacDataDir = sampleDataDir;
-            IsofoxDataDir = sampleDataDir;
-            OutputDir = sampleDataDir;
-        }
-        else
-        {
-            NeoDataDir = cmd.getOptionValue(NEO_DATA_DIR);
-            LilacDataDir = cmd.getOptionValue(LILAC_DATA_DIR);
-            IsofoxDataDir = cmd.getOptionValue(ISF_DATA_DIR);
-            OutputDir = parseOutputDir(cmd);
-        }
+        String sampleDataDir = cmd.hasOption(SAMPLE_DATA_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR)) : "";
+
+        NeoDataDir = cmd.getOptionValue(NEO_DATA_DIR, sampleDataDir);
+        LilacDataDir = cmd.getOptionValue(LILAC_DATA_DIR, sampleDataDir);
+        IsofoxDataDir = cmd.getOptionValue(ISF_DATA_DIR, sampleDataDir);
+        RnaSomaticVcf = cmd.getOptionValue(RNA_SOMATIC_VCF, sampleDataDir);
+        OutputDir = cmd.hasOption(OUTPUT_DIR) ? parseOutputDir(cmd) : sampleDataDir;
+        RnaSampleSuffix = cmd.getOptionValue(RNA_SAMPLE_SUFFIX, RNA_SAMPLE_APPEND_SUFFIX);
 
         SampleTranscriptExpressionFile = cmd.getOptionValue(SAMPLE_TRANS_EXP_FILE);
 
@@ -115,6 +115,8 @@ public class NeoScorerConfig
         options.addOption(NEO_DATA_DIR, true, "Directory for sample neo-epitope files");
         options.addOption(PREDICTION_DATA_DIR, true, "Directory for sample prediction result files");
         options.addOption(LILAC_DATA_DIR, true, "Directory for Lilac coverage files");
+        options.addOption(RNA_SOMATIC_VCF, true, "Directory for Purple somatic variant RNA-appended files");
+        options.addOption(RNA_SAMPLE_SUFFIX, true, "RNA sample suffix in Sage-appended VCF");
         options.addOption(ISF_DATA_DIR, true, "Directory for Isofox neoepitope coverage files");
         options.addOption(SAMPLE_TRANS_EXP_FILE, true, "Cohort gene expression matrix");
 

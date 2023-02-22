@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.neo.scorer;
 
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.AA_SELENOCYSTEINE;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.INVALID_EXP;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
@@ -11,11 +8,14 @@ import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
 import static com.hartwig.hmftools.neo.scorer.DataLoader.loadAlleleCoverage;
 import static com.hartwig.hmftools.neo.scorer.DataLoader.loadNeoEpitopes;
 import static com.hartwig.hmftools.neo.scorer.DataLoader.loadRnaNeoData;
+import static com.hartwig.hmftools.neo.scorer.DataLoader.loadSomaticVariants;
+import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.RNA_SAMPLE_APPEND_SUFFIX;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -63,6 +63,15 @@ public class NeoScorerTask implements Callable
 
         List<RnaNeoEpitope> rnaNeoDataList = loadRnaNeoData(mSampleId, mConfig.IsofoxDataDir);
 
+        List<SomaticVariant> somaticVariants = Lists.newArrayList();
+
+        if(!mConfig.RnaSomaticVcf.isEmpty())
+        {
+            String rnaSampleId = mSampleId + RNA_SAMPLE_APPEND_SUFFIX;
+            List<NeoEpitopeData> pointNeos = neoEpitopeMap.values().stream().filter(x -> x.VariantType.isPointMutation()).collect(Collectors.toList());
+            somaticVariants.addAll(loadSomaticVariants(mSampleId, rnaSampleId, mConfig.RnaSomaticVcf, pointNeos));
+        }
+
         Map<Integer,NeoPredictionData> neoPredictionsMap = Maps.newHashMap();
 
         int peptideAlleleCount = 0;
@@ -71,32 +80,9 @@ public class NeoScorerTask implements Callable
         {
             NeoEpitopeData neoData = entry.getValue();
 
-            if(mTransExpression.hasSampleId(mSampleId))
-            {
-                for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
-                {
-                    neoData.TransExpression[fs] = 0;
-
-                    for(String transName : neoData.Transcripts[fs])
-                    {
-                        double expression = mTransExpression.getExpression(transName, mSampleId);
-
-                        // distinguish non-existent expression vs zero TPM
-                        if(expression != INVALID_EXP)
-                            neoData.TransExpression[fs] += expression;
-                    }
-                }
-            }
-
-            RnaNeoEpitope rnaNeoData = rnaNeoDataList.stream()
-                    .filter(x -> x.Id == neoData.Id && x.VariantInfo.equals(neoData.VariantInfo)).findFirst().orElse(null);
-
-            if(rnaNeoData != null)
-            {
-                neoData.RnaNovelFragments = rnaNeoData.FragmentCount;
-                neoData.RnaBaseDepth[FS_UP] = rnaNeoData.BaseDepth[FS_UP];
-                neoData.RnaBaseDepth[FS_DOWN] = rnaNeoData.BaseDepth[FS_DOWN];
-            }
+            neoData.setExpressionData(mTransExpression, mSampleId);
+            neoData.setFusionRnaSupport(rnaNeoDataList);
+            neoData.setMutationRnaSupport(somaticVariants);
 
             // derive the set of peptides per allele from the novel amino acids
             NeoPredictionData predData = produceAllelePeptides(neoData, alleleCoverages);
@@ -158,7 +144,7 @@ public class NeoScorerTask implements Callable
                 BindData bindData = new BindData(
                         allele.Allele, peptideData.Peptide, "", peptideData.UpFlank, peptideData.DownFlank);
 
-                bindData.setTPM(neoData.getTPM());
+                bindData.setTPM(neoData.RnaData.getTPM());
 
                 bindDataList.add(bindData);
             }

@@ -4,8 +4,6 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
 
@@ -58,16 +56,21 @@ public class NeoDataWriter
 
     private boolean logPeptide(final BindData bindData)
     {
-        if(bindData.likelihoodRank() != INVALID_CALC && bindData.likelihoodRank() <= mConfig.LikelihoodThreshold)
+        if(passesThreshold(bindData.likelihoodRank(), mConfig.LikelihoodThreshold))
             return true;
 
-        if(bindData.recognitionSimilarity() != INVALID_CALC && bindData.recognitionSimilarity() <= mConfig.SimilarityThreshold)
+        if(passesThreshold(bindData.recognitionSimilarity(), mConfig.SimilarityThreshold))
             return true;
 
-        if(bindData.otherAlleleRecognitionSimilarity() != INVALID_CALC && bindData.otherAlleleRecognitionSimilarity() <= mConfig.SimilarityThreshold)
+        if(passesThreshold(bindData.otherAlleleRecognitionSimilarity(), mConfig.SimilarityThreshold))
             return true;
 
         return false;
+    }
+
+    public static boolean passesThreshold(double value, double threshold)
+    {
+        return value != INVALID_CALC && (threshold == 0 || threshold > 0 && value <= threshold);
     }
 
     public synchronized void writePeptideData(
@@ -94,9 +97,11 @@ public class NeoDataWriter
 
                 mPeptideWriter.write(String.format(",%.2f,%s", alleleCoverage.CopyNumber, alleleCoverage.isLost()));
 
+                final NeoRnaData rnaData = neoData.RnaData;
+
                 mPeptideWriter.write(String.format(",%4.3e,%4.3e,%4.3e,%4.3e,%d,%.0f",
-                        neoData.TransExpression[FS_UP], neoData.TransExpression[FS_DOWN], neoData.TpmCancer, neoData.TpmCohort,
-                        neoData.RnaNovelFragments, (neoData.RnaBaseDepth[SE_START] + neoData.RnaBaseDepth[SE_END]) * 0.5));
+                        rnaData.TransExpression[FS_UP], rnaData.TransExpression[FS_DOWN], rnaData.TpmCancer, rnaData.TpmCohort,
+                        rnaData.FragmentSupport, rnaData.baseDepth()));
 
                 mPeptideWriter.newLine();
             }

@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.scorer.AlleleCoverage.EXPECTED_ALLELE_COUNT;
 
+import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,6 +21,13 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.variant.VariantType;
+
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.readers.LineIterator;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFCodec;
 
 public class DataLoader
 {
@@ -87,6 +96,42 @@ public class DataLoader
         return neoDataMap;
     }
 
+    public static List<SomaticVariant> loadSomaticVariants(
+            final String sampleId, final String rnaSampleId, final String rnaSomaticVcf, final List<NeoEpitopeData> pointNeos)
+    {
+        List<SomaticVariant> matchedVariants = Lists.newArrayList();
+
+        String vcfFile = rnaSomaticVcf.replaceAll("\\*", sampleId);
+
+        try
+        {
+            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
+
+            for(VariantContext variantContext : reader.iterator())
+            {
+                if(variantContext.isFiltered())
+                    continue;
+
+                SomaticVariant variant = SomaticVariant.fromContext(variantContext, sampleId, rnaSampleId);
+
+                if(variant == null)
+                    continue;
+
+                String varInfo = variant.variantInfo();
+
+                if(pointNeos.stream().anyMatch(x -> x.VariantInfo.equals(varInfo)))
+                {
+                    matchedVariants.add(variant);
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error(" failed to read somatic VCF file({}): {}", vcfFile, e.toString());
+        }
+
+        return matchedVariants;
+    }
 
     public static List<AlleleCoverage> loadAlleleCoverage(final String sampleId, final String lilacDir)
     {
