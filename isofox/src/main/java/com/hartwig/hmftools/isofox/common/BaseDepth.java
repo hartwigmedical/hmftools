@@ -73,7 +73,7 @@ public class BaseDepth
             int readStartPos = readSection[SE_START];
             int readEndPos = readSection[SE_END];
 
-            if (readStartPos > mBaseRange[SE_END] || readEndPos < mBaseRange[SE_START])
+            if(readStartPos > mBaseRange[SE_END] || readEndPos < mBaseRange[SE_START])
                 continue;
 
             // process this overlap

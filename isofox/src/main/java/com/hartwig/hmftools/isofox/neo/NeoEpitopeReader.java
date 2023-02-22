@@ -74,9 +74,9 @@ public class NeoEpitopeReader
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
-        boolean keepDuplicates = true;
+        boolean keepDuplicates = true; // will be dropped but need them to identify groups since supplementaries aren't marked
         boolean keepSupplementaries = true;
-        boolean keepSecondaries = true;
+        boolean keepSecondaries = false;
         int minMapQuality = keepSecondaries ? 0 : SINGLE_MAP_QUALITY;
 
         mBamSlicer = new BamSlicer(minMapQuality, keepDuplicates, keepSupplementaries, keepSecondaries);
@@ -188,7 +188,7 @@ public class NeoEpitopeReader
 
         if(mConfig.RefGenomeFile != null)
         {
-            for (RegionReadData region : mCurrentGenes.getExonRegions())
+            for(RegionReadData region : mCurrentGenes.getExonRegions())
             {
                 final String regionRefBases = mConfig.RefGenome.getBaseString(region.chromosome(), region.start(), region.end());
                 region.setRefBases(regionRefBases);
@@ -196,7 +196,7 @@ public class NeoEpitopeReader
         }
     }
 
-    private void processSamRecord(@NotNull final SAMRecord record)
+    private void processSamRecord(final SAMRecord record)
     {
         final ReadRecord read = ReadRecord.from(record);
 
@@ -212,7 +212,7 @@ public class NeoEpitopeReader
             return;
         }
 
-        readGroup.Reads.add(read);
+        readGroup.addRead(read);
 
         if(readGroup.isComplete())
         {
@@ -226,10 +226,10 @@ public class NeoEpitopeReader
         // ignore unspliced reads
         if(mCurrentNeoData.isFusion())
         {
-            boolean hasSplitRead = readGroup.Reads.stream().anyMatch(x -> x.containsSplit());
+            if(readGroup.hasSuppAlignment())
+                return true;
 
-            if(!hasSplitRead && !readGroup.hasSuppAlignment())
-                return false;
+            return readGroup.reads().stream().anyMatch(x -> x.containsSplit());
         }
 
         // check for support of the required transcript
@@ -239,10 +239,13 @@ public class NeoEpitopeReader
 
     private void processFragmentReads(final ChimericReadGroup readGroup)
     {
-        if(!isCandidateGroup(readGroup))
+        if(readGroup.reads().stream().anyMatch(x -> x.isDuplicate()))
             return;
 
         checkBaseCoverage(mCurrentNeoData, readGroup);
+
+        if(!isCandidateGroup(readGroup))
+            return;
 
         // each fragment must support at least one of the up & down transcripts by being fully exonic or matching an exon boundary
         // unspliced reads are skipped (in any of the transcripts in question)
@@ -263,7 +266,7 @@ public class NeoEpitopeReader
                 boolean hasTrans = false;
                 boolean hasSupport = true;
 
-                for(ReadRecord read : readGroup.Reads)
+                for(ReadRecord read : readGroup.reads())
                 {
                     // any matched transcript needs to be fully exonic in every region, not just one
                     for(Map.Entry<RegionReadData,RegionMatchType> entry : read.getMappedRegions().entrySet())
@@ -298,7 +301,7 @@ public class NeoEpitopeReader
         {
             final int[] codingBaseRange = mCurrentNeoData.getCodingBaseRange(FS_UP);
 
-            for(ReadRecord read : readGroup.Reads)
+            for(ReadRecord read : readGroup.reads())
             {
                 // check that this read covers some part of the neo section
                 if(read.getMappedRegionCoords(false).stream()
@@ -317,7 +320,7 @@ public class NeoEpitopeReader
             {
                 final int[] codingBaseRange = mCurrentNeoData.getCodingBaseRange(fs);
 
-                for(ReadRecord read : readGroup.Reads)
+                for(ReadRecord read : readGroup.reads())
                 {
                     if(!read.Chromosome.equals(mCurrentNeoData.Chromosomes[fs]))
                         continue;

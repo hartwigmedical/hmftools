@@ -142,6 +142,7 @@ public class ReadRecord
     public byte orientation() { return !isReadReversed() ? POS_ORIENT : NEG_ORIENT; }
 
     public int flags() { return mFlags; }
+    public boolean isReadPaired() { return (mFlags & SAMFlag.READ_PAIRED.intValue()) != 0; }
     public boolean isReadReversed() { return (mFlags & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
     public boolean isFirstOfPair() { return (mFlags & SAMFlag.FIRST_OF_PAIR.intValue()) != 0; }
     public boolean isDuplicate() { return (mFlags & SAMFlag.DUPLICATE_READ.intValue()) != 0; }

@@ -337,8 +337,7 @@ public class NeoFragmentMatcher
     }
 
     public static int compareCodingBases(
-            final ReadRecord read, final String neoCodingBases, final List<int[]> neoCoords,
-            int posStart, int posEnd)
+            final ReadRecord read, final String neoCodingBases, final List<int[]> neoCoords, int posStart, int posEnd)
     {
         int readBaseIndex = 0;
         String readBases = "";
@@ -468,7 +467,7 @@ public class NeoFragmentMatcher
             else
                 refBase = neData.getCodingBaseRange(fs)[neData.Orientations[fs] == POS_ORIENT ? SE_END : SE_START];
 
-            for(ReadRecord read : readGroup.Reads)
+            for(ReadRecord read : readGroup.reads())
             {
                 if(!read.Chromosome.equals(chromosome))
                     continue;
@@ -484,6 +483,4 @@ public class NeoFragmentMatcher
                 ++neData.getFragmentSupport().RefBaseDepth[fs];
         }
     }
-
-
 }

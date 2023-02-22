@@ -217,18 +217,18 @@ public class TestUtils
 
     public static Cigar createCigar(int preSc, int match, int postSc)
     {
-        if (preSc == 0 && match == 0 && postSc == 0)
+        if(preSc == 0 && match == 0 && postSc == 0)
             return null;
 
         Cigar cigar = new Cigar();
 
-        if (preSc > 0)
+        if(preSc > 0)
             cigar.add(new CigarElement(preSc, CigarOperator.SOFT_CLIP));
 
-        if (match > 0)
+        if(match > 0)
             cigar.add(new CigarElement(match, CigarOperator.MATCH_OR_MISMATCH));
 
-        if (postSc > 0)
+        if(postSc > 0)
             cigar.add(new CigarElement(postSc, CigarOperator.SOFT_CLIP));
 
         return cigar;
@@ -236,24 +236,24 @@ public class TestUtils
 
     public static Cigar createCigar(int preSc, int preMatch, int nSplit, int postMatch, int postSc)
     {
-        if (preSc == 0 && preMatch == 0 && nSplit == 0 && postMatch == 0 && postSc == 0)
+        if(preSc == 0 && preMatch == 0 && nSplit == 0 && postMatch == 0 && postSc == 0)
             return null;
 
         Cigar cigar = new Cigar();
 
-        if (preSc > 0)
+        if(preSc > 0)
             cigar.add(new CigarElement(preSc, CigarOperator.SOFT_CLIP));
 
-        if (preMatch > 0)
+        if(preMatch > 0)
             cigar.add(new CigarElement(preMatch, CigarOperator.MATCH_OR_MISMATCH));
 
-        if (nSplit > 0)
+        if(nSplit > 0)
             cigar.add(new CigarElement(nSplit, CigarOperator.SKIPPED_REGION));
 
-        if (postMatch > 0)
+        if(postMatch > 0)
             cigar.add(new CigarElement(postMatch, CigarOperator.MATCH_OR_MISMATCH));
 
-        if (postSc > 0)
+        if(postSc > 0)
             cigar.add(new CigarElement(postSc, CigarOperator.SOFT_CLIP));
 
         return cigar;
@@ -275,6 +275,7 @@ public class TestUtils
                 0, flags, mateChr, mateStartPos);
 
         read.setFlag(SAMFlag.PROPER_PAIR, true);
+        read.setFlag(SAMFlag.READ_PAIRED, true);
         read.setStrand(false, true);
         read.setMapQuality(SINGLE_MAP_QUALITY);
         return read;
@@ -341,8 +342,8 @@ public class TestUtils
         return createMappedRead(id, geneCollection, posStart, posEnd, cigar, readBases);
     }
 
-    public static ReadRecord createMappedRead(final int id, final GeneCollection geneCollection, int posStart, int posEnd,
-            final Cigar cigar, final String readBases)
+    public static ReadRecord createMappedRead(
+            final int id, final GeneCollection geneCollection, int posStart, int posEnd, final Cigar cigar, final String readBases)
     {
         ReadRecord read = createReadRecord(id, geneCollection.chromosome(), posStart, posEnd, readBases, cigar);
 
@@ -461,8 +462,8 @@ public class TestUtils
     public static void addRacReadGroup(
             final RacFragmentCache racFragmentCache, final ChimericReadGroup readGroup, byte juncOrient, int juncPosition)
     {
-        String chromosome = readGroup.Reads.get(0).Chromosome;
-        int gcId = readGroup.Reads.get(0).getGeneCollectons()[SE_START];
+        String chromosome = readGroup.reads().get(0).Chromosome;
+        int gcId = readGroup.reads().get(0).getGeneCollectons()[SE_START];
 
         JunctionRacFragments juncRacFragments = racFragmentCache.getRacFragments(chromosome, gcId);
 
