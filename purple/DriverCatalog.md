@@ -71,4 +71,13 @@ P(Variant|Non-Driver) = 1 - poisson(λ = TMB(Sample) / TMB(Cohort) * (# of passe
 ```
 
 Note that the TMB is calculated separately for INDELs and SNVs.   For TSG dnds rates, we find that biallelic dnds rates are typically much higher than non-biallelic rates reflecting the biology that both alleles are normally required to be knocked out to cause a TSG driver.   To accommodate for this, we use count biallelic TMB in the passenger likelihood for biallelic TSG VUS.
+  
+## Known issues / points for improvement
+ 
+- **Clustered variants** - Pahtogenic variants are likely to occur clustered in specific locations of genes that are functionally important.  This should be reflected in driver likelihood
+- **Cancer type specificity** - DNDS is calculated pan-cancer due to size of cohorts. Ideally this would be calculated cancer type specific, especially for large cohorts.
+- **INFRAME INDELS in repeats with 3 base microhomology** - Generally inframe indels are extremely rare and are likely to be drivers and hece are give driver likelihood = 1.  An exception should be made for 3 base indels found in microsatellites with a repeat length of 3 as this is a common passenger mutaiton, particularly in MSI samples.
+- **AMPLIFICATION PASSENGERS** - All amplifications are given a likelihood of 1.  Since nearby genes are amplified together, some of the amplification drivers may well be passengers, commonly amplified with nearby drivers.  
+- **FUNCTIONAL ANNOTATION** - may improve driver likelihood annotation
+
 

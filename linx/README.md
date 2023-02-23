@@ -861,7 +861,7 @@ Shown below is an example of a SS18-SSX1 fusion:
     <img src="../extended-docs/linx/default.png" width="800" alt="default">
 </p>
 
-# Known issues / points for improvement
+## Known issues / points for improvement
 
 Fusion calling improvements
 - **Chained fusions disrupted by exons of other genes**  - Currently we don't call a fusion if it passes through an exon splice acceptor or donor of another gene.  But this exon may be skipped (especially if from a non-canonical transcript), or the exon may even be inserted into a 3 gene A-B-C fusion.

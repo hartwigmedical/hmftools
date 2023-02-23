@@ -919,6 +919,12 @@ We can determine the likelihood of a variant being subclonal at any given varian
   <img src="src/main/resources/readme/COLO829T.somatic.clonality.png" width="500" alt="Somatic clonality">
 </p>
 
+## Known issues / points for improvement
+
+- **MOSAIC Y LOSS** - Common in adult males.  Should be detected in germline similar to MOSAIC X.  Currently all males are assumed to have 1 copy in germline, which may lead to copy number being under estimated in tumor.  
+- **Subclonal likelihood** - Subclonal likelihood can be very volatile if subclonal peak and clonal peak hardly overlap.  In this case variants in the middle should be highly uncertain (ie. likelihood -> 0.5) 
+- **Biallelic likelihood** - Currently variants are marked as bialllelic = T/F.  This would be better representated as a likelihood as many variants may be uncertain particularly in low purity samples.
+- **Somatic penalty** - Currently this depends on the upper tail of the distribution of VAFs, which may pick up noise and tend to apply a too agressive penalty.   Better would be to strongly penalise clearly defined peaks of variants with variant copy numbers that are inconsistent with the fitted major allele copy number at the location.
 
 ## Version History and Download Links
 - [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.7.2)
