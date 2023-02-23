@@ -15,10 +15,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 
 import java.io.BufferedReader;
@@ -42,6 +40,7 @@ public class FastqAnalyser
 
     private static final String FASTQ_LINE_START = ">";
     private static final char UNMAPPED_BASE = 'N';
+    private static final char NO_BASE = 0;
     private static final int LINE_LOG_COUNT = 1000000;
 
     public FastqAnalyser(final CommandLine cmd)
@@ -50,7 +49,7 @@ public class FastqAnalyser
         mOutputFile = cmd.getOptionValue(OUTPUT_FILE);
         mRepeatFrequencies = new RepeatFrequencies();
         mCurrentSequence = null;
-        mLastBase = 0;
+        mLastBase = NO_BASE;
     }
 
     public void run()
@@ -83,7 +82,16 @@ public class FastqAnalyser
             while((line = fileReader.readLine()) != null)
             {
                 if(line.startsWith(FASTQ_LINE_START))
+                {
+                    if(mCurrentSequence != null)
+                    {
+                        mRepeatFrequencies.registerSequence(mCurrentSequence.toString());
+                        mLastBase = NO_BASE;
+                        mCurrentSequence = null;
+                    }
+
                     continue;
+                }
 
                 processReadBases(line);
                 mLastBase = line.charAt(line.length() - 1);
