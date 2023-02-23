@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.fastqstats;
+package com.hartwig.hmftools.fastqtools.oldstats;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.fastqtools.oldstats.FastqStatsRunner;
 
 import org.junit.Test;
 

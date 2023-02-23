@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.fastqstats;
+package com.hartwig.hmftools.fastqtools.oldstats;
 
-import static com.hartwig.hmftools.fastqstats.FastqStats.getFastqsFromBaseCallsDir;
-import static com.hartwig.hmftools.fastqstats.FastqStats.getFastqsFromDir;
-import static com.hartwig.hmftools.fastqstats.FastqStats.getSingleFastq;
+import static com.hartwig.hmftools.fastqtools.oldstats.FastqStats.getFastqsFromBaseCallsDir;
+import static com.hartwig.hmftools.fastqtools.oldstats.FastqStats.getFastqsFromDir;
+import static com.hartwig.hmftools.fastqtools.oldstats.FastqStats.getSingleFastq;
 
 import java.io.BufferedWriter;
 import java.io.File;

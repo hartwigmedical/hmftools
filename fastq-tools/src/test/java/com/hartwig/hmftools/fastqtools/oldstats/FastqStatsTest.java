@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.fastqstats;
+package com.hartwig.hmftools.fastqtools.oldstats;
 
-import static com.hartwig.hmftools.fastqstats.FastqStats.getFastqsFromBaseCallsDir;
-import static com.hartwig.hmftools.fastqstats.FastqStats.getFastqsFromDir;
-import static com.hartwig.hmftools.fastqstats.FastqStats.getSingleFastq;
-import static com.hartwig.hmftools.fastqstats.FastqStatsRunner.getDir;
+import static com.hartwig.hmftools.fastqtools.oldstats.FastqStats.getFastqsFromBaseCallsDir;
+import static com.hartwig.hmftools.fastqtools.oldstats.FastqStats.getFastqsFromDir;
+import static com.hartwig.hmftools.fastqtools.oldstats.FastqStats.getSingleFastq;
+import static com.hartwig.hmftools.fastqtools.oldstats.FastqStatsRunner.getDir;
 
 import static org.junit.Assert.assertEquals;
 
@@ -13,6 +13,9 @@ import java.net.URL;
 
 import com.google.common.collect.Multimap;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.fastqtools.oldstats.FastqStats;
+import com.hartwig.hmftools.fastqtools.oldstats.FastqStatsRunner;
+import com.hartwig.hmftools.fastqtools.oldstats.FastqTracker;
 
 import org.junit.Test;
 

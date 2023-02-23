@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.fastqstats;
+package com.hartwig.hmftools.fastqtools.oldstats;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

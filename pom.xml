@@ -16,7 +16,7 @@
         <module>compar</module>
         <module>ctdna</module>
         <module>cuppa</module>
-        <module>fastq-stats</module>
+        <module>fastq-tools</module>
         <module>gene-utils</module>
         <module>gripss</module>
         <module>health-checker</module>
@@ -64,6 +64,7 @@
         <compar.version>1.1</compar.version>
         <ctdna.version>1.0</ctdna.version>
         <cuppa.version>1.8</cuppa.version>
+        <fastq-tools.version>1.0</fastq-tools.version>
         <gene-utils.version>1.0</gene-utils.version>
         <gripss.version>2.3.4</gripss.version>
         <health-checker.version>3.3</health-checker.version>
