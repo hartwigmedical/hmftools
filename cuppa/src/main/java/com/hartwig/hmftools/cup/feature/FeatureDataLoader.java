@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE_AMP;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE_DEL;
 import static com.hartwig.hmftools.cup.feature.ViralInsertionType.OTHER;
-import static com.hartwig.hmftools.cup.feature.ViralInsertionType.fromVirusName;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRIVERCATALOG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVFUSION;
@@ -413,7 +412,7 @@ public class FeatureDataLoader
 
     private static List<String> loadSpecificMutations(final String vcfFile, boolean checkIndels)
     {
-        final List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariants(vcfFile, Lists.newArrayList());
+        final List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariantsFromVcf(vcfFile, Lists.newArrayList());
 
         final List<String> mutations = Lists.newArrayList();
 

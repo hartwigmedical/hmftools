@@ -1,12 +1,7 @@
 package com.hartwig.hmftools.cup.liftover;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
@@ -34,6 +29,7 @@ public class SnvLiftover
     private final CoordMappingCache mMappingCache;
     private final int mThreads;
 
+    @Deprecated
     public static final String LIFTOVER_FILE = ".snv_liftover.csv";
 
     public SnvLiftover(final CommandLine cmd)

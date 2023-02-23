@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.isKnownIndel;
-import static com.hartwig.hmftools.cup.liftover.SnvLiftover.LIFTOVER_FILE;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -14,6 +13,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -32,10 +32,14 @@ public class VcfPositionConverter implements Callable
     private final String mVcfFile;
     private final String mOutputFile;
     private final CoordMappingCache mMappingCache;
+    private final boolean mMappingEnabled;
 
     private BufferedWriter mWriter;
-    private int mMappingIndex;
-    private final boolean mMappingEnabled;
+
+    // look-up state
+    private int mCurentMappingIndex;
+    private String mCurrentMappingChromosome;
+    private List<CoordMapping> mChromosomeMappings;
 
     private static final int UNMAPPED_POSITION = -1;
 
@@ -48,9 +52,11 @@ public class VcfPositionConverter implements Callable
         mVcfFile = vcfFile;
         mMappingCache = mappingCache;
         mMappingEnabled = mMappingCache.hasMappings();
-        mMappingIndex = 0;
+        mCurentMappingIndex = 0;
+        mCurrentMappingChromosome = "";
+        mChromosomeMappings = null;
 
-        mOutputFile = mConfig.OutputDir + mSampleId + LIFTOVER_FILE;
+        mOutputFile = SomaticVariant.generateFilename(mConfig.OutputDir, mSampleId);
         mWriter = null;
     }
 
@@ -106,12 +112,16 @@ public class VcfPositionConverter implements Callable
 
     private int convertPosition(final String chromosome, final int position)
     {
-        for(; mMappingIndex < mMappingCache.getMappings().size(); ++mMappingIndex)
+        if(!mCurrentMappingChromosome.equals(chromosome))
         {
-            CoordMapping mapping = mMappingCache.getMappings().get(mMappingIndex);
+            mChromosomeMappings = mMappingCache.getChromosomeMappings(chromosome);
+            mCurrentMappingChromosome = chromosome;
+            mCurentMappingIndex = 0;
+        }
 
-            if(!mapping.Chromosome.equals(chromosome))
-                continue;
+        for(; mCurentMappingIndex < mChromosomeMappings.size(); ++mCurentMappingIndex)
+        {
+            CoordMapping mapping = mChromosomeMappings.get(mCurentMappingIndex);
 
             if(mapping.SourceEnd < position)
                 continue;
@@ -130,7 +140,7 @@ public class VcfPositionConverter implements Callable
         try
         {
             BufferedWriter writer = createBufferedWriter(mOutputFile, false);
-            writer.write("Chromosome,Position,Ref,Alt,Type,RepeatCount,Gene,TriNucContext,PrevPosition");
+            writer.write(format("%s,PrevPosition", SomaticVariant.csvHeader()));
             writer.newLine();
             return writer;
         }
@@ -150,9 +160,9 @@ public class VcfPositionConverter implements Callable
         {
             String outputChr = mMappingEnabled ? RefGenomeVersion.V38.versionedChromosome(variant.Chromosome) : variant.Chromosome;
 
-            mWriter.write(format("%s,%d,%s,%s,%s,%d,%s,%s,%d",
+            mWriter.write(format("%s,%d,%s,%s,%s,%s,%s,%d,%d",
                     outputChr, newPosition, variant.Ref, variant.Alt, variant.Type,
-                    variant.RepeatCount, variant.Gene, variant.TrinucleotideContext, variant.Position));
+                    variant.Gene, variant.TrinucleotideContext, variant.RepeatCount, variant.Position));
             mWriter.newLine();
         }
         catch (IOException e)

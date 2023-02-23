@@ -339,7 +339,7 @@ public class SomaticClassifier implements CuppaClassifier
             {
                 String purpleDir = mConfig.getPurpleDataDir(sampleId);
                 final String somaticVcfFile = purpleSomaticVcfFile(purpleDir, sampleId);
-                somaticVariants.addAll(loadSomaticVariants(somaticVcfFile, Lists.newArrayList(SNP)));
+                somaticVariants.addAll(SomaticDataLoader.loadSomaticVariantsFromVcf(somaticVcfFile, Lists.newArrayList(SNP)));
             }
 
             final double[] triNucCounts = extractTrinucleotideCounts(somaticVariants, triNucBucketNameMap);

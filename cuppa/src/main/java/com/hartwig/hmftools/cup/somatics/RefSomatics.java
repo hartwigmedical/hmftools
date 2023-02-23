@@ -132,7 +132,8 @@ public class RefSomatics implements RefClassifier
         if(config.Categories.contains(SNV))
             return true;
 
-        return !config.CohortSigContribsFile.isEmpty() || !config.Snv96MatrixFile.isEmpty() || !config.PurpleDir.isEmpty();
+        return !config.CohortSigContribsFile.isEmpty() || !config.Snv96MatrixFile.isEmpty() || !config.PurpleDir.isEmpty()
+                || !config.SomaticVariantsDir.isEmpty();
     }
 
     public static void addCmdLineArgs(@NotNull Options options)
@@ -338,10 +339,15 @@ public class RefSomatics implements RefClassifier
             {
                 variants.addAll(loadSomaticVariants(sampleId, mConfig.DbAccess));
             }
-            else
+            else if(!mConfig.PurpleDir.isEmpty())
             {
                 final String somaticVcfFile = PurpleCommon.purpleSomaticVcfFile(mConfig.PurpleDir, sampleId);
-                variants.addAll(loadSomaticVariants(somaticVcfFile, Lists.newArrayList(SNP)));
+                variants.addAll(SomaticDataLoader.loadSomaticVariantsFromVcf(somaticVcfFile, Lists.newArrayList(SNP)));
+            }
+            else
+            {
+                final String somaticGenericFile = SomaticVariant.generateFilename(mConfig.SomaticVariantsDir, sampleId);
+                variants.addAll(SomaticDataLoader.loadGenericSomaticVariants(somaticGenericFile, Lists.newArrayList(SNP)));
             }
 
             if(needsTriNucCounts)
