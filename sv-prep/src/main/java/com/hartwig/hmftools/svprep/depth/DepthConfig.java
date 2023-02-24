@@ -35,6 +35,7 @@ public class DepthConfig
     public final double VafCap;
 
     public final int Threads;
+    public final double PerfLogTime;
     public final List<ChrBaseRegion> SpecificRegions;
 
     private static final String INPUT_VCF = "input_vcf";
@@ -42,6 +43,7 @@ public class DepthConfig
     private static final String SAMPLES = "samples";
     private static final String BAM_FILES = "bam_files";
     private static final String VAF_CAP = "vaf_cap";
+    private static final String PERF_LOG_TIME = "perf_log_time";
 
     protected static final int MAX_GAP = 500;
     protected static final double DEFAULT_VAF_CAP = 0.001;
@@ -57,6 +59,7 @@ public class DepthConfig
         RefGenome = cmd.getOptionValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(cmd);
         VafCap = Double.parseDouble(cmd.getOptionValue(VAF_CAP, String.valueOf(DEFAULT_VAF_CAP)));
+        PerfLogTime = Double.parseDouble(cmd.getOptionValue(PERF_LOG_TIME, "0"));
         Threads = parseThreads(cmd);
 
         SpecificRegions = Lists.newArrayList();
@@ -77,6 +80,7 @@ public class DepthConfig
         options.addOption(SAMPLES, true, "Sample IDs corresponding to BAM files");
         options.addOption(BAM_FILES, true, "BAM file(s) to slice for depth");
         options.addOption(OUTPUT_VCF, true, "Output VCF File");
+        options.addOption(PERF_LOG_TIME, true, "Performance log time threshold (seconds)");
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         addSpecificChromosomesRegionsConfig(options);

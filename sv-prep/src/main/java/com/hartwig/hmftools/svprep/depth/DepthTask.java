@@ -47,11 +47,14 @@ public class DepthTask implements Callable
     private final List<VariantContext> mVariantsList;
     private final String mChromosome;
     private int mBamRecords;
+    private int mCacheRecordCounter;
 
     private final List<SamReader> mSamReaders;
     private final BamSlicer mBamSlicer;
 
     private final Map<String,SamReadGroup> mReadGroups;
+    private int mCurrentVariantStart;
+    private int mCurrentVariantEnd;
 
     private final PerformanceCounter mPerfCounter;
 
@@ -63,9 +66,12 @@ public class DepthTask implements Callable
 
         mVariantsList = Lists.newArrayList();
         mBamRecords = 0;
+        mCacheRecordCounter = 0;
 
         mBamSlicer = new BamSlicer(0, false, true, false);
         mReadGroups = Maps.newHashMap();
+        mCurrentVariantStart = 0;
+        mCurrentVariantEnd = 0;
 
         mSamReaders = Lists.newArrayList();
 
@@ -91,6 +97,8 @@ public class DepthTask implements Callable
     {
         SV_LOGGER.info("chr({}) processing {} variants", mChromosome, mVariantsList.size());
 
+        // process the set of variants by grouping them into those with close positions where they may be able to share
+        // the same reads from a wider slice
         int processed = 0;
         int index = 0;
         while(index < mVariantsList.size())
@@ -122,6 +130,16 @@ public class DepthTask implements Callable
             {
                 SV_LOGGER.debug("chr({}) processed {} variants", mChromosome, processed);
             }
+
+            mCacheRecordCounter += mReadGroups.size();
+            mReadGroups.clear();
+
+            if(mCacheRecordCounter > READ_CACHE_CLEAR_COUNT)
+            {
+                // SV_LOGGER.debug("chr({}) read-group cache count({}) exceeds threshold", mChromosome, mCacheRecordCounter);
+                mCacheRecordCounter = 0;
+                System.gc();
+            }
         }
 
         SV_LOGGER.info("chr({}) complete for {} variants, total reads({})", mChromosome, processed, mBamRecords);
@@ -130,6 +148,8 @@ public class DepthTask implements Callable
 
         return (long)0;
     }
+
+    private static final int READ_CACHE_CLEAR_COUNT = 100000;
 
     private void retrieveDepth(final List<VariantContext> variants, int posStart, int posEnd)
     {
@@ -140,8 +160,12 @@ public class DepthTask implements Callable
         // REFPAIR = fragments with 1 read aligned to the left and 1 read aligned to the right of the breakend with proper orientation and
         // FragmentSize < max size from distribution
 
+        // retrieve reads which may start and end before the first variant to capture read pair counts ie fragments which span the variants
         ChrBaseRegion region = new ChrBaseRegion(
                 mChromosome, posStart - DEFAULT_MAX_FRAGMENT_LENGTH, posEnd + DEFAULT_MAX_FRAGMENT_LENGTH);
+
+        mCurrentVariantStart = posStart;
+        mCurrentVariantEnd = posEnd;
 
         List<RefSupportCounts> sampleTotalCounts = Lists.newArrayList();
 
@@ -178,17 +202,50 @@ public class DepthTask implements Callable
 
             setRefDepthValue(variant, totalCounts.RefSupport, REFERENCE_BREAKEND_READ_COVERAGE);
             setRefDepthValue(variant, totalCounts.RefPairSupport, REFERENCE_BREAKEND_READPAIR_COVERAGE);
-            // variant.getCommonInfo().putAttribute(REFERENCE_BREAKEND_READ_COVERAGE, totalCounts.RefSupport);
-            // variant.getCommonInfo().putAttribute(REFERENCE_BREAKEND_READPAIR_COVERAGE, totalCounts.RefPairSupport);
         }
 
         mPerfCounter.stop();
 
-        if(mPerfCounter.getLastTime() > 2)
+        if(mConfig.PerfLogTime > 0 &&  mPerfCounter.getLastTime() > mConfig.PerfLogTime)
         {
             SV_LOGGER.debug("chr({}) span({}-{}) variants({}) high depth retrieval time({}) totalFrags({})",
                     mChromosome, posStart, posEnd, variants.size(), format("%.3f", mPerfCounter.getLastTime()), readGroupTotal);
         }
+    }
+
+    private void processSamRecord(final SAMRecord read)
+    {
+        ++mBamRecords;
+
+        SamReadGroup readGroup = mReadGroups.get(read.getReadName());
+
+        if(readGroup != null)
+        {
+            readGroup.Reads.add(read);
+            return;
+        }
+
+        // ignore reads which cannot span the current variant(s)
+        if(read.getAlignmentEnd() < mCurrentVariantStart)
+        {
+            if(read.getMateUnmappedFlag() || read.getMateReferenceIndex() != read.getReferenceIndex())
+                return;
+
+            // both reads before the variants
+            if(read.getMateAlignmentStart() + read.getReadBases().length < mCurrentVariantStart)
+                return;
+        }
+        else if(read.getAlignmentStart() > mCurrentVariantEnd)
+        {
+            if(read.getMateUnmappedFlag() || read.getMateReferenceIndex() != read.getReferenceIndex())
+                return;
+
+            // both reads after the variants
+            if(read.getMateAlignmentStart() > mCurrentVariantEnd)
+                return;
+        }
+
+        mReadGroups.put(read.getReadName(), new SamReadGroup(read));
     }
 
     private void calculateVariantSupport(
@@ -253,21 +310,6 @@ public class DepthTask implements Callable
         {
             return alt.startsWith("]") || alt.startsWith("[") ? NEG_ORIENT : POS_ORIENT;
         }
-    }
-
-    private void processSamRecord(final SAMRecord record)
-    {
-        ++mBamRecords;
-
-        SamReadGroup readGroup = mReadGroups.get(record.getReadName());
-
-        if(readGroup == null)
-        {
-            mReadGroups.put(record.getReadName(), new SamReadGroup(record));
-            return;
-        }
-
-        readGroup.Reads.add(record);
     }
 
     private class RefSupportCounts
