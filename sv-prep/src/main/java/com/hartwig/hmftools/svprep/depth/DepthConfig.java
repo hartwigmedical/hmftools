@@ -45,6 +45,7 @@ public class DepthConfig
     private static final String VAF_CAP = "vaf_cap";
     private static final String PERF_LOG_TIME = "perf_log_time";
 
+    private static final int VARIANT_COUNT_BASIS = 500000;
     protected static final int MAX_GAP = 500;
     protected static final double DEFAULT_VAF_CAP = 0.001;
 

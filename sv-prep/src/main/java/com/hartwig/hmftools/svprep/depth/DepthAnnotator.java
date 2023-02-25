@@ -72,6 +72,8 @@ public class DepthAnnotator
             System.exit(1);
         }
 
+        SV_LOGGER.info("SvPrep depth annotation for samples: {}", mConfig.Samples);
+
         long startTimeMs = System.currentTimeMillis();
 
         final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
