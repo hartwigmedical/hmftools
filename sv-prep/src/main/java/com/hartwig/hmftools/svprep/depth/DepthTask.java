@@ -7,7 +7,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READPAIR_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READ_COVERAGE;
@@ -21,7 +20,6 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
-import static com.hartwig.hmftools.svprep.depth.DepthConfig.MAX_GAP;
 
 import java.io.File;
 import java.util.List;
@@ -125,7 +123,7 @@ public class DepthTask implements Callable
             while(nextIndex < mVariantsList.size())
             {
                 VariantInfo nextVariant = mVariantInfoList.get(nextIndex);
-                if(nextVariant.Position - posEnd > MAX_GAP)
+                if(nextVariant.Position - posEnd > mConfig.ProximityDistance)
                     break;
 
                 posEnd = nextVariant.Position;

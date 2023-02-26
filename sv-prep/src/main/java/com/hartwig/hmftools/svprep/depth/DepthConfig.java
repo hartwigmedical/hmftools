@@ -33,6 +33,7 @@ public class DepthConfig
     public final String RefGenome;
     public final RefGenomeVersion RefGenVersion;
     public final double VafCap;
+    public final int ProximityDistance;
 
     public final int Threads;
     public final double PerfLogTime;
@@ -42,11 +43,12 @@ public class DepthConfig
     private static final String OUTPUT_VCF = "output_vcf";
     private static final String SAMPLES = "samples";
     private static final String BAM_FILES = "bam_files";
+    private static final String PROXIMITY_DISTANCE = "proximity_distance";
     private static final String VAF_CAP = "vaf_cap";
     private static final String PERF_LOG_TIME = "perf_log_time";
 
     private static final int VARIANT_COUNT_BASIS = 500000;
-    protected static final int MAX_GAP = 500;
+    protected static final int DEFAULT_PROXIMITY_DISTANCE = 500;
     protected static final double DEFAULT_VAF_CAP = 0.001;
 
     public DepthConfig(final CommandLine cmd)
@@ -60,7 +62,9 @@ public class DepthConfig
         RefGenome = cmd.getOptionValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(cmd);
         VafCap = Double.parseDouble(cmd.getOptionValue(VAF_CAP, String.valueOf(DEFAULT_VAF_CAP)));
+        ProximityDistance = Integer.parseInt(cmd.getOptionValue(PROXIMITY_DISTANCE, String.valueOf(DEFAULT_PROXIMITY_DISTANCE)));
         PerfLogTime = Double.parseDouble(cmd.getOptionValue(PERF_LOG_TIME, "0"));
+
         Threads = parseThreads(cmd);
 
         SpecificRegions = Lists.newArrayList();
@@ -84,6 +88,11 @@ public class DepthConfig
         options.addOption(PERF_LOG_TIME, true, "Performance log time threshold (seconds)");
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+
+        options.addOption(
+                PROXIMITY_DISTANCE, true,
+                "Proximity distance to group variants, default = " + DEFAULT_PROXIMITY_DISTANCE);
+
         addSpecificChromosomesRegionsConfig(options);
         addThreadOptions(options);
     }
