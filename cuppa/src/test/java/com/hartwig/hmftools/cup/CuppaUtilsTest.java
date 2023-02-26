@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedFeatureResult
 import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UNKNOWN;
 import static com.hartwig.hmftools.common.cuppa.ResultType.LIKELIHOOD;
+import static com.hartwig.hmftools.cup.common.CupConstants.FEATURE_DAMPEN_FACTOR_DEFAULT;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
@@ -136,7 +137,7 @@ public class CuppaUtilsTest
 
         results.add(new SampleResult(TEST_SAMPLE_001, FEATURE, LIKELIHOOD, ClassifierType.FEATURE.toString(), "FEAT_02", cancerProbTotals));
 
-        SampleResult combResult = calcCombinedFeatureResult(sample, results, false);
+        SampleResult combResult = calcCombinedFeatureResult(sample, results, false, FEATURE_DAMPEN_FACTOR_DEFAULT);
 
         assertEquals(FEATURE, combResult.Category);
         assertEquals(0.63, combResult.CancerTypeValues.get(TEST_CT_001), 0.01);

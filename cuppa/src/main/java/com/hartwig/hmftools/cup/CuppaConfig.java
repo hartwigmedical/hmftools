@@ -35,6 +35,8 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.isDna;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.isRna;
+import static com.hartwig.hmftools.cup.common.CupConstants.FEATURE_DAMPEN_FACTOR_DEFAULT;
+import static com.hartwig.hmftools.cup.feature.FeatureClassifier.FEATURE_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.ISOFOX_DIR;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.LINX_DIR;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.PURPLE_DIR;
@@ -113,6 +115,7 @@ public class CuppaConfig
 
     public final NoiseRefCache NoiseAdjustments;
     public final boolean NoSubtypeCollapse;
+    public final double FeatureDampenFactor;
 
     // database access
     public final DatabaseAccess DbAccess;
@@ -140,17 +143,6 @@ public class CuppaConfig
     // either a single sample to be tested for a file containing the samples to be tested
     public static final String SPECIFIC_SAMPLE_DATA = "sample_data";
     public static final String SAMPLE_DATA_FILE = "sample_data_file";
-
-    /*
-    private static final String SAMPLE_FEAT_FILE = "sample_feature_file";
-    private static final String SAMPLE_TRAITS_FILE = "sample_traits_file";
-    private static final String SAMPLE_SNV_COUNTS_FILE = "sample_snv_counts_file";
-    private static final String SAMPLE_SNV_POS_FREQ_FILE = "sample_snv_pos_freq_file";
-    private static final String SAMPLE_SIG_CONTRIB_FILE = "sample_sig_contrib_file";
-    private static final String SAMPLE_SV_FILE = "sample_sv_file";
-    private static final String SAMPLE_GENE_EXP_FILE = "sample_gene_exp_file";
-    private static final String SAMPLE_ALT_SJ_FILE = "sample_alt_sj_matrix_file";
-    */
 
     public static final String REF_DATA_DIR = "ref_data_dir";
     public static final String TEST_REF_SAMPLE_DATA = "test_ref_sample_data";
@@ -288,6 +280,8 @@ public class CuppaConfig
 
         NoiseAdjustments = new NoiseRefCache(RefDataDir);
         NoiseAdjustments.loadNoiseAllocations(cmd.getOptionValue(NOISE_ALLOCATIONS));
+
+        FeatureDampenFactor = Double.parseDouble(cmd.getOptionValue(FEATURE_DAMPEN_FACTOR, String.valueOf(FEATURE_DAMPEN_FACTOR_DEFAULT)));
 
         NoSubtypeCollapse = cmd.hasOption(NO_SUBTYPE_COLLAPSE);
 
@@ -505,6 +499,8 @@ public class CuppaConfig
 
         NoiseAdjustments = new NoiseRefCache(null);
         NoSubtypeCollapse = false;
+
+        FeatureDampenFactor = FEATURE_DAMPEN_FACTOR_DEFAULT;
 
         DbAccess = null;
         WriteSimilarities = false;

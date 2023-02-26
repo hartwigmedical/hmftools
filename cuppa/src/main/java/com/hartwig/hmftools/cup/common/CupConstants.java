@@ -44,9 +44,9 @@ public class CupConstants
     public static final double UNDEFINED_PERC_MAX_MULTIPLE = 1.01;
 
     // drivers
-    public static final double DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.10;
-    public static final double NON_DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.01;
-    public static final double FEATURE_DAMPEN_FACTOR = 0.75;
+    public static final double DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT = 0.10;
+    public static final double NON_DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT = 0.01;
+    public static final double FEATURE_DAMPEN_FACTOR_DEFAULT = 0.75;
 
     public static final String CANCER_TYPE_UNKNOWN = "Unknown";
     public static final String CANCER_TYPE_OTHER = "Other";

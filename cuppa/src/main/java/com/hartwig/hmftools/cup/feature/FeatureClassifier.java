@@ -7,8 +7,9 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_PAN;
-import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_ZERO_PREVALENCE_ALLOCATION;
-import static com.hartwig.hmftools.cup.common.CupConstants.NON_DRIVER_ZERO_PREVALENCE_ALLOCATION;
+import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT;
+import static com.hartwig.hmftools.cup.common.CupConstants.FEATURE_DAMPEN_FACTOR_DEFAULT;
+import static com.hartwig.hmftools.cup.common.CupConstants.NON_DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT;
 import static com.hartwig.hmftools.common.cuppa.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.common.cuppa.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
@@ -58,10 +59,14 @@ public class FeatureClassifier implements CuppaClassifier
     private final Map<String,Double> mCancerFeatureAvg; // keyed by cancer type
 
     private final double mNonDriverZeroPrevAllocation;
+    private final double mDriverZeroPrevAllocation;
+
     private final boolean mSplitAmps;
     private final boolean mRestrictAmpGenes;
     private final double mMinAmpCnMultiple;
 
+    public static final String FEATURE_DAMPEN_FACTOR = "feature_dampen_factor";
+    public static final String DRIVER_ZERO_PREV = "driver_zero_prev";
     public static final String NON_DRIVER_ZERO_PREV = "non_driver_zero_prev";
 
     public FeatureClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
@@ -74,7 +79,10 @@ public class FeatureClassifier implements CuppaClassifier
         mSampleDataCache = sampleDataCache;
 
         mNonDriverZeroPrevAllocation = cmd != null && cmd.hasOption(NON_DRIVER_ZERO_PREV) ?
-                Double.parseDouble(cmd.getOptionValue(NON_DRIVER_ZERO_PREV)) : NON_DRIVER_ZERO_PREVALENCE_ALLOCATION;
+                Double.parseDouble(cmd.getOptionValue(NON_DRIVER_ZERO_PREV)) : NON_DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT;
+
+        mDriverZeroPrevAllocation = cmd != null && cmd.hasOption(DRIVER_ZERO_PREV) ?
+                Double.parseDouble(cmd.getOptionValue(DRIVER_ZERO_PREV)) : DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT;
 
         mSplitAmps = cmd == null || !cmd.hasOption(COMBINE_DRIVER_AMP);
         mMinAmpCnMultiple = cmd != null ? Double.parseDouble(cmd.getOptionValue(MIN_AMP_MULTIPLE, "0")) : 0;
@@ -83,7 +91,18 @@ public class FeatureClassifier implements CuppaClassifier
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(NON_DRIVER_ZERO_PREV, true, "Non-driver zero prevalence allocation");
+        options.addOption(
+                FEATURE_DAMPEN_FACTOR, true,
+                "Feature dampening factor, default = " + FEATURE_DAMPEN_FACTOR_DEFAULT);
+
+        options.addOption(
+                DRIVER_ZERO_PREV, true,
+                "Driver zero prevalence allocation, default = " + DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT);
+
+        options.addOption(
+                NON_DRIVER_ZERO_PREV, true,
+                "Non-driver zero prevalence allocation, default = " + NON_DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT);
+
         FeaturesCommon.addCmdLineArgs(options);
     }
 
@@ -328,7 +347,7 @@ public class FeatureClassifier implements CuppaClassifier
     {
         // calculate
         int cancerTypeCount = mCancerFeaturePrevalence.size();
-        double noDriverPrevalence = DRIVER_ZERO_PREVALENCE_ALLOCATION / cancerTypeCount;
+        double noDriverPrevalence = mDriverZeroPrevAllocation / cancerTypeCount;
         double noNonDriverPrevalence = mNonDriverZeroPrevAllocation / cancerTypeCount;
 
         for(Map.Entry<String,FeaturePrevCounts> prevEntry : mFeaturePrevalenceTotals.entrySet())

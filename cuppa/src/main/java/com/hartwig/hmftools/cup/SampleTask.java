@@ -96,7 +96,8 @@ public class SampleTask implements Callable
         }
 
         // combine all features into a single classifier
-        SampleResult combinedFeatureResult = calcCombinedFeatureResult(sample, allResults, mSampleDataCache.SampleIds.size() > 1);
+        SampleResult combinedFeatureResult = calcCombinedFeatureResult(
+                sample, allResults, mSampleDataCache.SampleIds.size() > 1, mConfig.FeatureDampenFactor);
 
         if(combinedFeatureResult != null)
             allResults.add(combinedFeatureResult);
