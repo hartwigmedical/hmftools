@@ -100,13 +100,6 @@ public class GeneExpressionClassifier implements CuppaClassifier
         mRunCancerCss = rnaMethods != null && rnaMethods.contains(CSS_METHOD_CANCER);
         mCssExponent = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT, String.valueOf(GENE_EXP_DIFF_EXPONENT)));
         mMatchReadLength = cmd.hasOption(MATCH_READ_LENGTH);
-
-        if(mRunPairwiseCss && mConfig.RefGeneExpSampleFile.isEmpty())
-            return;
-
-        if(mRunCancerCss && mConfig.RefGeneExpCancerFile.isEmpty())
-            return;
-
     }
 
     public static void addCmdLineArgs(Options options)
