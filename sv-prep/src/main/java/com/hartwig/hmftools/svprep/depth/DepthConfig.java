@@ -85,9 +85,12 @@ public class DepthConfig
         options.addOption(SAMPLES, true, "Sample IDs corresponding to BAM files");
         options.addOption(BAM_FILES, true, "BAM file(s) to slice for depth");
         options.addOption(OUTPUT_VCF, true, "Output VCF File");
-        options.addOption(PERF_LOG_TIME, true, "Performance log time threshold (seconds)");
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+
+        options.addOption(
+                VAF_CAP, true,
+                "Ref support depth limit as function of variant fragments, default = " + DEFAULT_VAF_CAP);
 
         options.addOption(
                 PROXIMITY_DISTANCE, true,
@@ -95,5 +98,7 @@ public class DepthConfig
 
         addSpecificChromosomesRegionsConfig(options);
         addThreadOptions(options);
+
+        options.addOption(PERF_LOG_TIME, true, "Performance log time threshold (seconds)");
     }
 }

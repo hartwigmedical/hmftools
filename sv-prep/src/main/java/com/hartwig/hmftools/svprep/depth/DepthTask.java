@@ -91,10 +91,13 @@ public class DepthTask implements Callable
 
     public void addVariants(final List<VariantContext> variants)
     {
+        List<Integer> genotypeIds = Lists.newArrayList();
+        mConfig.Samples.forEach(x -> genotypeIds.add(mSampleVcfGenotypeIds.get(x)));
+
         for(VariantContext variant : variants)
         {
             mVariantsList.add(variant);
-            mVariantInfoList.add(new VariantInfo(variant, mConfig.Samples.size(), mConfig.VafCap));
+            mVariantInfoList.add(new VariantInfo(variant, genotypeIds, mConfig.VafCap));
         }
     }
 
@@ -116,7 +119,7 @@ public class DepthTask implements Callable
             int posStart = variant.Position;
 
             mSliceRegionState.reset();
-            mSliceRegionState.addVariant(index, variant);
+            mSliceRegionState.addVariant(variant);
 
             int posEnd = posStart;
             int nextIndex = index + 1;
@@ -127,15 +130,15 @@ public class DepthTask implements Callable
                     break;
 
                 posEnd = nextVariant.Position;
-                mSliceRegionState.addVariant(nextIndex, nextVariant);
+                mSliceRegionState.addVariant(nextVariant);
                 ++nextIndex;
             }
 
             sliceSampleBams();
 
-            index += mSliceRegionState.VariantCount;
+            index += mSliceRegionState.variantCount();
 
-            processed += mSliceRegionState.VariantCount;
+            processed += mSliceRegionState.variantCount();
 
             if((processed % 1000) == 0)
             {
@@ -222,6 +225,7 @@ public class DepthTask implements Callable
             SamReader samReader = mSamReaders.get(i);
 
             mReadGroups.clear();
+            mSliceRegionState.resetUncappedVariants();
 
             startTime = System.nanoTime();
             readCount = mTotalReadCount;
@@ -269,14 +273,42 @@ public class DepthTask implements Callable
 
         // check for any support for this read against the current variants
         boolean isRelevant = false;
+        boolean anyUncapped = false;
 
-        for(int i = mSliceRegionState.VariantIndexStart; i <= mSliceRegionState.VariantIndexEnd; ++i)
+        int index = 0;
+        while(index < mSliceRegionState.UncappedVariants.size())
         {
-            if(isRelevantRead(read, mVariantInfoList.get(i)))
+            VariantInfo variantInfo = mSliceRegionState.UncappedVariants.get(index);
+
+            RefSupportCounts variantSampleCounts = variantInfo.SampleSupportCounts[mCurrentSampleIndex];
+
+            if(variantSampleCounts.exceedsMaxDepth())
+            {
+                mSliceRegionState.UncappedVariants.remove(index);
+                mSliceRegionState.MinPositionIndex = max(mSliceRegionState.MinPositionIndex - 1, 0);
+                continue;
+            }
+
+            anyUncapped = true;
+
+            if(isRelevantRead(read, variantInfo))
             {
                 isRelevant = true;
                 break;
             }
+
+            ++index;
+        }
+
+        // stop slicing this region for this sample if all variants have reached their VAF cap
+        if(!anyUncapped)
+        {
+            SV_LOGGER.debug("chr({}) variants({}) range(%d - %d) sampleIndex({}) VAF cap exceeded for all variants",
+                    mChromosome, mSliceRegionState.variantCount(), mSliceRegionState.PositionMin, mSliceRegionState.PositionMax,
+                    mCurrentSampleIndex);
+
+            mBamSlicer.haltProcessing();
+            return;
         }
 
         if(!isRelevant)
@@ -302,7 +334,7 @@ public class DepthTask implements Callable
 
         if(!expectMate && !expectSupplementaries)
         {
-            processReadGroup(new ReadGroup(read, false));
+            processSingleRead(read);
         }
         else
         {
@@ -312,7 +344,7 @@ public class DepthTask implements Callable
 
     private boolean isRelevantRead(final SAMRecord read, VariantInfo variantInfo)
     {
-            // ignore reads which cannot span the current variant(s)
+        // ignore reads which cannot span the current variant(s)
         if(read.getAlignmentEnd() < variantInfo.PositionMin)
         {
             if(read.getMateUnmappedFlag() || read.getMateReferenceIndex() != read.getReferenceIndex())
@@ -336,17 +368,53 @@ public class DepthTask implements Callable
         return true;
     }
 
+    private static final int READ_POSITION_MARGIN = 100;
+
+    private void processSingleRead(final SAMRecord read)
+    {
+        if(mSliceRegionState.UncappedVariants.size() < 10)
+        {
+            processReadGroup(new ReadGroup(read, false));
+            return;
+        }
+
+        int newMinPositionIndex = mSliceRegionState.MinPositionIndex;
+
+        for(int i = mSliceRegionState.MinPositionIndex; i < mSliceRegionState.UncappedVariants.size(); ++i)
+        {
+            VariantInfo variantInfo = mSliceRegionState.UncappedVariants.get(i);
+            if(read.getAlignmentStart() > variantInfo.PositionMax + READ_POSITION_MARGIN)
+            {
+                newMinPositionIndex = i;
+                continue;
+            }
+            else if(read.getAlignmentEnd() < variantInfo.PositionMin - READ_POSITION_MARGIN)
+            {
+                break;
+            }
+
+            RefSupportCounts variantSampleCounts = variantInfo.SampleSupportCounts[mCurrentSampleIndex];
+            checkReadGroupSupport(variantInfo, variantSampleCounts, new ReadGroup(read, false));
+        }
+
+        // record the starting index for the set of current variants
+        mSliceRegionState.MinPositionIndex = newMinPositionIndex;
+    }
+
     private void processReadGroup(final ReadGroup readGroup)
     {
         // find the variants that this group overlaps
-        for(int i = mSliceRegionState.VariantIndexStart; i <= mSliceRegionState.VariantIndexEnd; ++i)
+        int groupMinPosition = readGroup.Reads.stream().mapToInt(x -> x.getAlignmentStart()).min().orElse(0);
+        int groupMaxPosition = readGroup.Reads.stream().mapToInt(x -> x.getAlignmentEnd()).max().orElse(0);
+
+        for(VariantInfo variantInfo : mSliceRegionState.UncappedVariants)
         {
-            VariantInfo variantInfo = mVariantInfoList.get(i);
-            RefSupportCounts variantSampleCounts = variantInfo.SampleSupportCounts[mCurrentSampleIndex];
-
-            if(variantInfo.RefFragsCap > 0 && variantSampleCounts.total() > variantInfo.RefFragsCap)
+            if(groupMinPosition > variantInfo.PositionMax + READ_POSITION_MARGIN)
                 continue;
+            else if(groupMaxPosition < variantInfo.PositionMin - READ_POSITION_MARGIN)
+                break;
 
+            RefSupportCounts variantSampleCounts = variantInfo.SampleSupportCounts[mCurrentSampleIndex];
             checkReadGroupSupport(variantInfo, variantSampleCounts, readGroup);
         }
     }
@@ -424,11 +492,11 @@ public class DepthTask implements Callable
                     variant.Position, variant.PositionMin, variant.PositionMax, readGroup.id(), readGroupPosMin, readGroupPosMax);
         }
 
-        if(variant.RefFragsCap > 0 && supportCounts.total() > variant.RefFragsCap)
+        if(supportCounts.exceedsMaxDepth())
         {
-            SV_LOGGER.debug("var({}:{}) varFrags({}) ref limit({}) reached with support(ref={} pair={})",
-                    mChromosome, variant.Position, variant.FragmentCount, variant.RefFragsCap,
-                    supportCounts.RefSupport, supportCounts.RefPairSupport);
+            SV_LOGGER.trace("var({}:{}) sampleIndex({}) ref limit({}) reached with support(ref={} pair={})",
+                    mChromosome, variant.Position, mCurrentSampleIndex,
+                    supportCounts.VafCap, supportCounts.RefSupport, supportCounts.RefPairSupport);
         }
     }
 

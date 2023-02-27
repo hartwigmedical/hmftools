@@ -20,12 +20,10 @@ class VariantInfo
     public final int PositionMin;
     public final int PositionMax;
     public final byte Orientation;
-    public final int FragmentCount;
-    public final int RefFragsCap;
 
     public final RefSupportCounts[] SampleSupportCounts;
 
-    public VariantInfo(final VariantContext variant, int sampleCount, double vafCap)
+    public VariantInfo(final VariantContext variant, final List<Integer> genotypeIds, double vafCap)
     {
         Position = variant.getStart();
         Orientation = getOrientation(variant);
@@ -42,18 +40,22 @@ class VariantInfo
         PositionMin = Position + homology[0];
         PositionMax = Position + homology[1];
 
-        FragmentCount = max(
-                variant.getAttributeAsInt(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE, 0),
-                variant.getAttributeAsInt(VARIANT_FRAGMENT_BREAKEND_COVERAGE, 0));
+        SampleSupportCounts = new RefSupportCounts[genotypeIds.size()];
 
-        RefFragsCap = vafCap > 0 ? (int) (FragmentCount / vafCap) : 0;
-
-        SampleSupportCounts = new RefSupportCounts[sampleCount];
-
-        for(int i = 0; i < sampleCount; ++i)
+        for(int i = 0; i < genotypeIds.size(); ++i)
         {
-            SampleSupportCounts[i] = new RefSupportCounts();
+            Integer genotypeIndex = genotypeIds.get(i);
+            int sampleFragments = genotypeFragments(variant, genotypeIndex);
+            int refFragsCap = vafCap > 0 ? (int) (max(sampleFragments, 1) / vafCap) : 0;
+            SampleSupportCounts[i] = new RefSupportCounts(refFragsCap);
         }
+    }
+
+    private static int genotypeFragments(final VariantContext variant, int genotypeIndex)
+    {
+        Object sglFrags = variant.getGenotype(genotypeIndex).getExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE);
+        Object svFrags = variant.getGenotype(genotypeIndex).getExtendedAttribute(VARIANT_FRAGMENT_BREAKEND_COVERAGE);
+        return max(sglFrags != null ? Integer.parseInt(sglFrags.toString()) : 0, svFrags != null ? Integer.parseInt(svFrags.toString()) : 0);
     }
 
     public RefSupportCounts totalSupport()
@@ -61,7 +63,8 @@ class VariantInfo
         if(SampleSupportCounts.length == 1)
             return SampleSupportCounts[0];
 
-        RefSupportCounts totalCounts = new RefSupportCounts();
+        RefSupportCounts totalCounts = new RefSupportCounts(0);
+
         for(int i = 0; i < SampleSupportCounts.length; ++i)
         {
             totalCounts.RefSupport += SampleSupportCounts[i].RefSupport;
@@ -87,6 +90,6 @@ class VariantInfo
 
     public String toString()
     {
-        return format("pos(%d %d-%d) Frags(%d cap=%d)", Position, PositionMin, PositionMax, FragmentCount, RefFragsCap);
+        return format("pos(%d %d-%d)", Position, PositionMin, PositionMax);
     }
 }

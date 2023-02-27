@@ -4,35 +4,49 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
+import org.apache.commons.math3.stat.descriptive.rank.Min;
+
 public class SliceRegionState
 {
-    public int VariantIndexStart;
-    public int VariantIndexEnd;
-
     public int PositionMax;
     public int PositionMin;
 
-    public int VariantCount;
+    public final List<VariantInfo> Variants;
+    public final List<VariantInfo> UncappedVariants;
+
+    public int MinPositionIndex;
 
     public SliceRegionState()
     {
+        Variants = Lists.newArrayList();
+        UncappedVariants = Lists.newArrayList();
+        MinPositionIndex = 0;
         reset();
     }
 
     public void reset()
     {
-        VariantIndexStart = 0;
-        VariantIndexEnd = 0;
+        Variants.clear();
         PositionMin = 0;
         PositionMax = 0;
-        VariantCount = 0;
+        MinPositionIndex = 0;
     }
 
-    public void addVariant(final int variantIndex, final VariantInfo variant)
+    public void resetUncappedVariants()
     {
-        if(VariantCount == 0)
+        UncappedVariants.clear();
+        UncappedVariants.addAll(Variants);
+        MinPositionIndex = 0;
+    }
+
+    public void addVariant(final VariantInfo variant)
+    {
+        if(Variants.isEmpty())
         {
-            VariantIndexStart = variantIndex;
             PositionMin = variant.PositionMin;
         }
         else
@@ -40,14 +54,15 @@ public class SliceRegionState
             PositionMin = min(variant.PositionMin, PositionMin);
         }
 
-        VariantIndexEnd = variantIndex;
+        Variants.add(variant);
         PositionMax = max(variant.PositionMax, PositionMax);
-        ++VariantCount;
     }
+
+    public int variantCount() { return Variants.size(); }
 
     public String toString()
     {
-        return format("variants(%d) indices(%d:%d), range(%d - %d)",
-                VariantCount, VariantIndexStart, VariantIndexEnd, PositionMin, PositionMax);
+        return format("variants(%d) uncapped(%d) range(%d - %d) minPosIndex(%d)",
+                Variants.size(), UncappedVariants.size(), PositionMin, PositionMax, MinPositionIndex);
     }
 }
