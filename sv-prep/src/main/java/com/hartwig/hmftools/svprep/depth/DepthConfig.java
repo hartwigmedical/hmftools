@@ -101,4 +101,22 @@ public class DepthConfig
 
         options.addOption(PERF_LOG_TIME, true, "Performance log time threshold (seconds)");
     }
+
+    public DepthConfig(double vcfCap, int proximityDistance)
+    {
+        InputVcf = "";
+        OutputVcf = "";
+
+        Samples = Lists.newArrayList();
+        BamFiles = Lists.newArrayList();
+
+        RefGenome = "";
+        RefGenVersion = V37;
+        VafCap = vcfCap;
+        ProximityDistance = proximityDistance;
+        PerfLogTime = 0;
+        Threads = 0;
+
+        SpecificRegions = Lists.newArrayList();
+    }
 }

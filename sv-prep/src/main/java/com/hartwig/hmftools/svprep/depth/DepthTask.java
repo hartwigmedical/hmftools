@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
@@ -72,14 +73,16 @@ public class DepthTask implements Callable
         mCacheRecordCounter = 0;
         mSliceRegionState = new SliceRegionState();
 
-        mBamSlicer = new BamSlicer(0, false, true, false);
         mReadGroups = Maps.newHashMap();
-
         mSamReaders = Lists.newArrayList();
+        mBamSlicer = new BamSlicer(0, false, true, false);
 
-        for(String bamFile : mConfig.BamFiles)
+        if(!mConfig.BamFiles.isEmpty())
         {
-            mSamReaders.add(SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenome)).open(new File(bamFile)));
+            for(String bamFile : mConfig.BamFiles)
+            {
+                mSamReaders.add(SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenome)).open(new File(bamFile)));
+            }
         }
 
         mCurrentSampleIndex = 0;
@@ -230,7 +233,7 @@ public class DepthTask implements Callable
             startTime = System.nanoTime();
             readCount = mTotalReadCount;
 
-            mBamSlicer.slice(samReader, Lists.newArrayList(region), this::processSamRecord);
+            mBamSlicer.slice(samReader, Lists.newArrayList(region), this::processRead);
 
             times.add((System.nanoTime() - startTime)/NANOS_IN_SECOND);
             readCounts.add(mTotalReadCount - readCount);
@@ -252,7 +255,7 @@ public class DepthTask implements Callable
         }
     }
 
-    private void processSamRecord(final SAMRecord read)
+    private void processRead(final SAMRecord read)
     {
         ++mTotalReadCount;
 
@@ -317,9 +320,10 @@ public class DepthTask implements Callable
         // determine if mate or supp reads are expected within this current slice region
         boolean expectSupplementaries = false;
         boolean expectMate = false;
+        int maxSlicePosition = mSliceRegionState.PositionMax + DEFAULT_MAX_FRAGMENT_LENGTH;
 
         if(read.getReadPairedFlag() && !read.getMateUnmappedFlag()
-        && read.getMateReferenceIndex() == read.getReferenceIndex() && read.getMateAlignmentStart() <= mSliceRegionState.PositionMax)
+        && read.getMateReferenceIndex() == read.getReferenceIndex() && read.getMateAlignmentStart() <= maxSlicePosition)
         {
             expectMate = true;
         }
@@ -327,7 +331,7 @@ public class DepthTask implements Callable
         SupplementaryReadData suppReadData = SupplementaryReadData.from(read);
 
         if(suppReadData != null && suppReadData.Chromosome.equals(mChromosome)
-        && positionWithin(suppReadData.Position, mSliceRegionState.PositionMin, mSliceRegionState.PositionMax))
+        && positionWithin(suppReadData.Position, mSliceRegionState.PositionMin, maxSlicePosition))
         {
             expectSupplementaries = true;
         }
@@ -359,9 +363,6 @@ public class DepthTask implements Callable
             if(read.getMateUnmappedFlag() || read.getMateReferenceIndex() != read.getReferenceIndex())
                 return false;
 
-            // the mate's position isn't checked if it's an earlier read
-            //if(read.getMateAlignmentStart() > variantInfo.PositionMax)
-
             return false;
         }
 
@@ -385,7 +386,7 @@ public class DepthTask implements Callable
             VariantInfo variantInfo = mSliceRegionState.UncappedVariants.get(i);
             if(read.getAlignmentStart() > variantInfo.PositionMax + READ_POSITION_MARGIN)
             {
-                newMinPositionIndex = i;
+                newMinPositionIndex = i + 1;
                 continue;
             }
             else if(read.getAlignmentEnd() < variantInfo.PositionMin - READ_POSITION_MARGIN)
@@ -451,18 +452,18 @@ public class DepthTask implements Callable
                 break;
             }
 
-            if(!isSupplementary)
+            if(!isSupplementary && readGroup.Reads.size() > 1)
             {
                 byte orientation = !read.getReadNegativeStrandFlag() ? POS_ORIENT : NEG_ORIENT;
 
                 if(orientation == POS_ORIENT && readEnd <= max(variant.Position, variant.PositionMax) && !hasLowerPosRead
-                        && abs(read.getInferredInsertSize()) < DEFAULT_MAX_FRAGMENT_LENGTH)
+                && abs(read.getInferredInsertSize()) < DEFAULT_MAX_FRAGMENT_LENGTH)
                 {
                     hasLowerPosRead = true;
                     strandCount += read.getReadNegativeStrandFlag() ? -1 : 1;
                 }
                 else if(orientation == NEG_ORIENT && readStart >= min(variant.Position, variant.PositionMin) && !hasUpperPosRead
-                        && abs(read.getInferredInsertSize()) < DEFAULT_MAX_FRAGMENT_LENGTH)
+                && abs(read.getInferredInsertSize()) < DEFAULT_MAX_FRAGMENT_LENGTH)
                 {
                     hasUpperPosRead = true;
                     strandCount += read.getReadNegativeStrandFlag() ? -1 : 1;
@@ -507,4 +508,40 @@ public class DepthTask implements Callable
 
         variant.getCommonInfo().putAttribute(vcfTag, refCount);
     }
-}
+
+    @VisibleForTesting
+    public void reset()
+    {
+        mVariantInfoList.clear();
+        mVariantsList.clear();
+        mReadGroups.clear();
+        mCurrentSampleIndex = 0;
+        mCacheRecordCounter = 0;
+        mTotalReadCount = 0;
+        mSliceRegionState.reset();
+        mSliceRegionState.reset();
+    }
+
+    @VisibleForTesting
+    public void processSamRecord(final SAMRecord read)
+    {
+        processRead(read);
+    }
+
+    @VisibleForTesting
+    public Map<String,ReadGroup> readGroups() { return mReadGroups; }
+
+    @VisibleForTesting
+    public List<VariantInfo> variantInfos() { return mVariantInfoList; }
+
+    @VisibleForTesting
+    public void addSliceVariants(final List<VariantInfo> variants)
+    {
+        mSliceRegionState.reset();
+        variants.forEach(x -> mSliceRegionState.addVariant(x));
+        mSliceRegionState.resetUncappedVariants();
+    }
+
+    @VisibleForTesting
+    public SliceRegionState sliceRegionState() { return mSliceRegionState; }
+    }

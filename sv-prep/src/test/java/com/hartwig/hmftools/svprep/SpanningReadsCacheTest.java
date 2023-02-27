@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.svprep;
 
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.CHR_1;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.PARTITION_SIZE;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.REGION_1;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.REGION_2;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.REGION_3;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.createSamRecord;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.readIdStr;
+import static com.hartwig.hmftools.svprep.TestUtils.CHR_1;
+import static com.hartwig.hmftools.svprep.TestUtils.PARTITION_SIZE;
+import static com.hartwig.hmftools.svprep.TestUtils.REGION_1;
+import static com.hartwig.hmftools.svprep.TestUtils.REGION_2;
+import static com.hartwig.hmftools.svprep.TestUtils.REGION_3;
+import static com.hartwig.hmftools.svprep.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.svprep.TestUtils.readIdStr;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 
@@ -17,7 +17,6 @@ import static junit.framework.TestCase.assertTrue;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
 import com.hartwig.hmftools.svprep.reads.ReadType;

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.svprep.depth;
 
 import static java.lang.String.format;
 
-class RefSupportCounts
+public class RefSupportCounts
 {
     public int RefSupport = 0;
     public int RefPairSupport = 0;

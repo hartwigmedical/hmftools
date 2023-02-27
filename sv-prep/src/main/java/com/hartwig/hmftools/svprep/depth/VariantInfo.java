@@ -14,7 +14,7 @@ import java.util.List;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-class VariantInfo
+public class VariantInfo
 {
     public final int Position;
     public final int PositionMin;

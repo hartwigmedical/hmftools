@@ -31,6 +31,7 @@ public class SliceRegionState
     public void reset()
     {
         Variants.clear();
+        UncappedVariants.clear();
         PositionMin = 0;
         PositionMax = 0;
         MinPositionIndex = 0;

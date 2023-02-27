@@ -11,7 +11,7 @@ import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 
-public final class SvPrepTestUtils
+public final class TestUtils
 {
     public static final String CHR_1 = "1";
     public static final String CHR_2 = "2";
@@ -94,6 +94,7 @@ public final class SvPrepTestUtils
     {
         SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
         recordBuilder.setUnmappedHasBasesAndQualities(false);
+
         SAMRecord record = recordBuilder.addFrag(
                 readId, 1, readStart, false, false, cigar, readBases, mapQual, false);
 
