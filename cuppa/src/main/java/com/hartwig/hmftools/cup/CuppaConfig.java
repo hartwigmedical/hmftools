@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cup;
 
+import static com.hartwig.hmftools.cup.common.CupConstants.COMBINED_DAMPEN_FACTOR_DEFAULT;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
@@ -116,6 +117,7 @@ public class CuppaConfig
     public final NoiseRefCache NoiseAdjustments;
     public final boolean NoSubtypeCollapse;
     public final double FeatureDampenFactor;
+    public final double CombinedDampenFactor;
 
     // database access
     public final DatabaseAccess DbAccess;
@@ -168,6 +170,9 @@ public class CuppaConfig
     public static final String NOISE_ALLOCATIONS = "noise_allocations";
     public static final String NOISE_ALLOCATIONS_DESC = "Noise allocations by classifier type, or 'NONE' or 'DEFAULTS'";
     public static final String NO_SUBTYPE_COLLAPSE = "no_subtype_collapse";
+
+    public static final String FEATURE_DAMPEN_FACTOR = "feature_dampen_factor";
+    public static final String COMBINED_DAMPEN_FACTOR = "combined_dampen_factor";
 
     public static final String WRITE_SIMS = "write_similarities";
     public static final String WRITE_DETAILED_SCORES = "write_detailed_scores";
@@ -282,6 +287,7 @@ public class CuppaConfig
         NoiseAdjustments.loadNoiseAllocations(cmd.getOptionValue(NOISE_ALLOCATIONS));
 
         FeatureDampenFactor = Double.parseDouble(cmd.getOptionValue(FEATURE_DAMPEN_FACTOR, String.valueOf(FEATURE_DAMPEN_FACTOR_DEFAULT)));
+        CombinedDampenFactor = Double.parseDouble(cmd.getOptionValue(COMBINED_DAMPEN_FACTOR, String.valueOf(COMBINED_DAMPEN_FACTOR_DEFAULT)));
 
         NoSubtypeCollapse = cmd.hasOption(NO_SUBTYPE_COLLAPSE);
 
@@ -442,6 +448,8 @@ public class CuppaConfig
         options.addOption(NOISE_ALLOCATIONS, true, NOISE_ALLOCATIONS_DESC);
         options.addOption(NO_SUBTYPE_COLLAPSE, false, "Keep cancer sub-types separated in final classifiers");
 
+        options.addOption(COMBINED_DAMPEN_FACTOR, true,"Combined classifier dampening factor, default = " + COMBINED_DAMPEN_FACTOR_DEFAULT);
+
         options.addOption(WRITE_SIMS, false, "Write top-20 CSS similarities to file");
         options.addOption(WRITE_DETAILED_SCORES, false, "Cohort-only - write detailed (non-classifier) data");
         options.addOption(WRITE_CONDENSED, false, "Write sample results as single line");
@@ -501,6 +509,7 @@ public class CuppaConfig
         NoSubtypeCollapse = false;
 
         FeatureDampenFactor = FEATURE_DAMPEN_FACTOR_DEFAULT;
+        CombinedDampenFactor = COMBINED_DAMPEN_FACTOR_DEFAULT;
 
         DbAccess = null;
         WriteSimilarities = false;
@@ -510,5 +519,6 @@ public class CuppaConfig
         OutputDir = "";
         OutputFileId = "";
         Threads = 0;
+
     }
 }

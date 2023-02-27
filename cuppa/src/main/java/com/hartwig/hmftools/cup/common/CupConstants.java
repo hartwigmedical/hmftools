@@ -38,7 +38,7 @@ public class CupConstants
 
     // common
     public static final double MIN_CLASSIFIER_SCORE = 0.01;
-    public static final double COMBINED_DAMPEN_FACTOR = 0.4;
+    public static final double COMBINED_DAMPEN_FACTOR_DEFAULT = 0.4;
     public static final double DNA_DAMPEN_FACTOR = 0.65;
     public static final double RNA_DAMPEN_FACTOR = 0.7;
     public static final double UNDEFINED_PERC_MAX_MULTIPLE = 1.01;
