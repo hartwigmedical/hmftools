@@ -254,10 +254,8 @@ public class GripssTestUtils
 
         GenotypesContext genotypesContext = GenotypesContext.create(gtNormal, gtTumor);
 
-        String filters = "";
+        double logError = -(qual / 10.0);
 
-        double logError = -(qual / 10.0)
-;
         return builder
                 .source("SOURCE")
                 .id(vcfId)
