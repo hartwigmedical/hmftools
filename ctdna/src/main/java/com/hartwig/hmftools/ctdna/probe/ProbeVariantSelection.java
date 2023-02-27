@@ -158,7 +158,7 @@ public class ProbeVariantSelection
             catch(Exception e)
             {
                 CT_LOGGER.error("sample data loading error: {}", e.toString());
-                CT_LOGGER.error("failed loading sample data, exiting");
+                e.printStackTrace();
                 System.exit(1);
             }
         }
@@ -174,9 +174,16 @@ public class ProbeVariantSelection
             String filename = mConfig.OutputDir;
 
             if(mConfig.isMultiSample())
-                filename += "cohort_probe_variants.csv";
+                filename += "cohort_probe_variants";
             else
-                filename += mConfig.sample() + ".probe_variants.csv";
+                filename += mConfig.sample() + ".probe_variants";
+
+            if(mConfig.OutputId != null)
+            {
+                filename += "." + mConfig.OutputId;
+            }
+
+            filename += ".csv";
 
             BufferedWriter writer = createBufferedWriter(filename, false);
 

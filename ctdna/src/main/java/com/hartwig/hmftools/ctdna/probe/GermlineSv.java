@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.ctdna.probe.CategoryType.GERMLINE_SV;
 import static com.hartwig.hmftools.ctdna.probe.StructuralVariant.generateSvReferenceSequences;
 import static com.hartwig.hmftools.ctdna.probe.StructuralVariant.generateSvSequence;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -101,10 +103,14 @@ public class GermlineSv extends Variant
         List<Variant> variants = Lists.newArrayList();
 
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
-        String linxDir = PvConfig.getSampleFilePath(sampleId, config.LinxDir);
+        String linxDir = PvConfig.getSampleFilePath(sampleId, config.LinxGermlineDir);
 
         String germlineSvFile = LinxGermlineSv.generateFilename(linxDir, sampleId);
         String germlineBreakendsFile = LinxBreakend.generateFilename(linxDir, sampleId, true);
+
+        if(!Files.exists(Paths.get(germlineSvFile)) || !Files.exists(Paths.get(germlineBreakendsFile)))
+            return variants;
+
         List<LinxGermlineSv> germlineSvs = LinxGermlineSv.read(germlineSvFile);
         List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendsFile).stream()
                 .filter(x -> x.reportedDisruption()).collect(Collectors.toList());
