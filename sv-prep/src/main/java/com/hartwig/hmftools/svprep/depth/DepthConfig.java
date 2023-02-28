@@ -52,7 +52,7 @@ public class DepthConfig
     private static final String PERF_LOG_TIME = "perf_log_time";
     public static final String VCF_TAG_PREFIX = "vcf_tag_prefix";
 
-    protected static final int DEFAULT_PROXIMITY_DISTANCE = 500;
+    protected static final int DEFAULT_PROXIMITY_DISTANCE = 2000;
     protected static final double DEFAULT_VAF_CAP = 0.001;
 
     public DepthConfig(final CommandLine cmd)
