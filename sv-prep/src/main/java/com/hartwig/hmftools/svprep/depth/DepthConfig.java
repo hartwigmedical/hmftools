@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.svprep.depth;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
@@ -34,6 +37,7 @@ public class DepthConfig
     public final RefGenomeVersion RefGenVersion;
     public final double VafCap;
     public final int ProximityDistance;
+    public final String VcfTagPrefix;
 
     public final int Threads;
     public final double PerfLogTime;
@@ -46,8 +50,8 @@ public class DepthConfig
     private static final String PROXIMITY_DISTANCE = "proximity_distance";
     private static final String VAF_CAP = "vaf_cap";
     private static final String PERF_LOG_TIME = "perf_log_time";
+    public static final String VCF_TAG_PREFIX = "vcf_tag_prefix";
 
-    private static final int VARIANT_COUNT_BASIS = 500000;
     protected static final int DEFAULT_PROXIMITY_DISTANCE = 500;
     protected static final double DEFAULT_VAF_CAP = 0.001;
 
@@ -77,6 +81,13 @@ public class DepthConfig
         {
             SV_LOGGER.error("failed to load specific regions");
         }
+
+        VcfTagPrefix = cmd.getOptionValue(VCF_TAG_PREFIX);
+    }
+
+    public String getVcfTag(final String vcfTag)
+    {
+        return VcfTagPrefix != null ? format("%s_%s", VcfTagPrefix, vcfTag) : vcfTag;
     }
 
     public static void addOptions(final Options options)
@@ -85,6 +96,7 @@ public class DepthConfig
         options.addOption(SAMPLES, true, "Sample IDs corresponding to BAM files");
         options.addOption(BAM_FILES, true, "BAM file(s) to slice for depth");
         options.addOption(OUTPUT_VCF, true, "Output VCF File");
+        options.addOption(VCF_TAG_PREFIX, true, "VCF tag prefix for testing & comparison");
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
 
@@ -118,5 +130,6 @@ public class DepthConfig
         Threads = 0;
 
         SpecificRegions = Lists.newArrayList();
+        VcfTagPrefix = "";
     }
 }

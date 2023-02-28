@@ -4,6 +4,10 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION_DESC;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE_DESC;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE_DESC;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -181,8 +185,33 @@ public class DepthAnnotator
                 .build();
 
         if(!header.hasFormatLine(ALLELE_FRACTION))
-        {
             header.addMetaDataLine(new VCFFormatHeaderLine(ALLELE_FRACTION, 1, VCFHeaderLineType.Float, ALLELE_FRACTION_DESC));
+
+        if(!header.hasFormatLine(REF_READ_COVERAGE))
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(REF_READ_COVERAGE, 1, VCFHeaderLineType.Integer, REF_READ_COVERAGE_DESC));
+            header.addMetaDataLine(new VCFInfoHeaderLine(REF_READ_COVERAGE, 1, VCFHeaderLineType.Integer, REF_READ_COVERAGE_DESC));
+        }
+        else if(mConfig.VcfTagPrefix != null)
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(
+                    mConfig.getVcfTag(REF_READ_COVERAGE), 1, VCFHeaderLineType.Integer, REF_READ_COVERAGE_DESC));
+            header.addMetaDataLine(new VCFInfoHeaderLine(
+                    mConfig.getVcfTag(REF_READ_COVERAGE), 1, VCFHeaderLineType.Integer, REF_READ_COVERAGE_DESC));
+        }
+
+        if(!header.hasFormatLine(REF_READPAIR_COVERAGE))
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(REF_READPAIR_COVERAGE, 1, VCFHeaderLineType.Integer, REF_READPAIR_COVERAGE_DESC));
+            header.addMetaDataLine(new VCFInfoHeaderLine(REF_READPAIR_COVERAGE, 1, VCFHeaderLineType.Integer, REF_READPAIR_COVERAGE_DESC));
+        }
+        else if(mConfig.VcfTagPrefix != null)
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(
+                    mConfig.getVcfTag(REF_READPAIR_COVERAGE), 1, VCFHeaderLineType.Integer, REF_READPAIR_COVERAGE_DESC));
+
+            header.addMetaDataLine(new VCFInfoHeaderLine(
+                    mConfig.getVcfTag(REF_READPAIR_COVERAGE), 1, VCFHeaderLineType.Integer, REF_READPAIR_COVERAGE_DESC));
         }
 
         writer.writeHeader(header);

@@ -60,8 +60,15 @@ public class StructuralVariantFactory
 
     public static final String VARIANT_FRAGMENT_BREAKPOINT_COVERAGE = "VF";
     public static final String VARIANT_FRAGMENT_BREAKEND_COVERAGE = "BVF";
-    public static final String REFERENCE_BREAKEND_READ_COVERAGE = "REF";
-    public static final String REFERENCE_BREAKEND_READPAIR_COVERAGE = "REFPAIR";
+
+    public static final String REF_READ_COVERAGE = "REF";
+    public static final String REF_READ_COVERAGE_DESC = "Count of reads mapping across this breakend";
+
+    public static final String REF_READPAIR_COVERAGE = "REFPAIR";
+
+    public static final String REF_READPAIR_COVERAGE_DESC =
+            "Count of reference read pairs spanning this breakend supporting the reference allele";
+
     private static final String EVENT = "EVENT";
 
     public static final String UNTEMPLATED_SEQUENCE_ALIGNMENTS = "BEALN";
@@ -392,8 +399,8 @@ public class StructuralVariantFactory
                 Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) | context.hasAttribute(MATE_ID)
                         ? VARIANT_FRAGMENT_BREAKPOINT_COVERAGE
                         : VARIANT_FRAGMENT_BREAKEND_COVERAGE));
-                Integer ref = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READ_COVERAGE));
-                Integer refpair = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READPAIR_COVERAGE));
+                Integer ref = asInteger(geno.getExtendedAttribute(REF_READ_COVERAGE));
+                Integer refpair = asInteger(geno.getExtendedAttribute(REF_READPAIR_COVERAGE));
                 builder.normalVariantFragmentCount(var);
                 builder.normalReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
             }
@@ -408,8 +415,8 @@ public class StructuralVariantFactory
                 Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) | context.hasAttribute(MATE_ID)
                         ? VARIANT_FRAGMENT_BREAKPOINT_COVERAGE
                         : VARIANT_FRAGMENT_BREAKEND_COVERAGE));
-                Integer ref = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READ_COVERAGE));
-                Integer refpair = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READPAIR_COVERAGE));
+                Integer ref = asInteger(geno.getExtendedAttribute(REF_READ_COVERAGE));
+                Integer refpair = asInteger(geno.getExtendedAttribute(REF_READPAIR_COVERAGE));
                 builder.tumorVariantFragmentCount(var);
                 builder.tumorReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
             }

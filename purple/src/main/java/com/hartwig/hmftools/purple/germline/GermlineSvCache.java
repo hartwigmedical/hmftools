@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.UNKNOWN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READPAIR_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READ_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
@@ -34,7 +34,6 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.ImmutableEnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
@@ -252,8 +251,8 @@ public class GermlineSvCache
         if(genotype.hasExtendedAttribute(ALLELE_FRACTION))
             return getGenotypeAttributeAsDouble(genotype, ALLELE_FRACTION, 0);
 
-        int totalReadCoverage = getGenotypeAttributeAsInt(genotype, REFERENCE_BREAKEND_READ_COVERAGE, 0)
-                + getGenotypeAttributeAsInt(genotype, REFERENCE_BREAKEND_READPAIR_COVERAGE, 0);
+        int totalReadCoverage = getGenotypeAttributeAsInt(genotype, REF_READ_COVERAGE, 0)
+                + getGenotypeAttributeAsInt(genotype, REF_READPAIR_COVERAGE, 0);
 
         int variantFrags = getGenotypeAttributeAsInt(genotype, VARIANT_FRAGMENT_BREAKPOINT_COVERAGE, 0) +
                 getGenotypeAttributeAsInt(genotype, VARIANT_FRAGMENT_BREAKEND_COVERAGE, 0);

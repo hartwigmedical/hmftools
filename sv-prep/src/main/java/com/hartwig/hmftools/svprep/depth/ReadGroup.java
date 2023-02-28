@@ -11,7 +11,7 @@ import htsjdk.samtools.SAMRecord;
 class ReadGroup
 {
     public final List<SAMRecord> Reads;
-    public final boolean WaitForAll;
+    public boolean WaitForAll;
 
     public ReadGroup(final SAMRecord read, boolean waitForAll)
     {

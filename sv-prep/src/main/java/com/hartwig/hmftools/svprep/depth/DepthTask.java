@@ -8,8 +8,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READPAIR_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READ_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_SECOND;
@@ -160,6 +160,9 @@ public class DepthTask implements Callable
         }
 
         // all current variants have had reads assigned to each sample, so now tally up their counts
+        String refVcfTag = mConfig.getVcfTag(REF_READ_COVERAGE);
+        String refPairVcfTag = mConfig.getVcfTag(REF_READPAIR_COVERAGE);
+
         for(int i = 0; i < mVariantsList.size(); ++i)
         {
             VariantContext variant = mVariantsList.get(i);
@@ -173,8 +176,11 @@ public class DepthTask implements Callable
 
                 Genotype genotype = variant.getGenotype(genotypeIndex);
 
-                genotype.getExtendedAttributes().put(REFERENCE_BREAKEND_READ_COVERAGE, sampleCounts.RefSupport);
-                genotype.getExtendedAttributes().put(REFERENCE_BREAKEND_READPAIR_COVERAGE, sampleCounts.RefPairSupport);
+                if(genotype.getExtendedAttributes() == null || genotype.getExtendedAttributes().isEmpty())
+                    continue;
+
+                genotype.getExtendedAttributes().put(refVcfTag, sampleCounts.RefSupport);
+                genotype.getExtendedAttributes().put(refPairVcfTag, sampleCounts.RefPairSupport);
 
                 int variantFrags = getGenotypeAttributeAsInt(genotype, VARIANT_FRAGMENT_BREAKPOINT_COVERAGE, 0) +
                         getGenotypeAttributeAsInt(genotype, VARIANT_FRAGMENT_BREAKEND_COVERAGE, 0);
@@ -186,8 +192,8 @@ public class DepthTask implements Callable
             }
 
             RefSupportCounts totalCounts = variantInfo.totalSupport();
-            setRefDepthValue(variant, totalCounts.RefSupport, REFERENCE_BREAKEND_READ_COVERAGE);
-            setRefDepthValue(variant, totalCounts.RefPairSupport, REFERENCE_BREAKEND_READPAIR_COVERAGE);
+            setRefDepthValue(variant, totalCounts.RefSupport, refVcfTag);
+            setRefDepthValue(variant, totalCounts.RefPairSupport, refPairVcfTag);
         }
 
         SV_LOGGER.info("chr({}) complete for {} variants, total reads({})", mChromosome, processed, mTotalReadCount);
@@ -233,6 +239,7 @@ public class DepthTask implements Callable
             startTime = System.nanoTime();
             readCount = mTotalReadCount;
 
+            SV_LOGGER.trace("sample({}) slice for {} variants", mConfig.Samples.get(i), mSliceRegionState.variantCount());
             mBamSlicer.slice(samReader, Lists.newArrayList(region), this::processRead);
 
             times.add((System.nanoTime() - startTime)/NANOS_IN_SECOND);
@@ -259,11 +266,32 @@ public class DepthTask implements Callable
     {
         ++mTotalReadCount;
 
+        int maxSlicePosition = mSliceRegionState.PositionMax + DEFAULT_MAX_FRAGMENT_LENGTH;
+
         ReadGroup readGroup = mReadGroups.get(read.getReadName());
 
         if(readGroup != null)
         {
             readGroup.Reads.add(read);
+
+            if(!readGroup.WaitForAll)
+            {
+                if(read.getSupplementaryAlignmentFlag())
+                {
+                    readGroup.WaitForAll = true;
+                }
+                else
+                {
+                    // check again for a supplementary
+                    SupplementaryReadData suppReadData = SupplementaryReadData.from(read);
+
+                    if(suppReadData != null && suppReadData.Chromosome.equals(mChromosome)
+                            && positionWithin(suppReadData.Position, mSliceRegionState.PositionMin, maxSlicePosition))
+                    {
+                        readGroup.WaitForAll = true;
+                    }
+                }
+            }
 
             if(!readGroup.WaitForAll)
             {
@@ -306,7 +334,7 @@ public class DepthTask implements Callable
         // stop slicing this region for this sample if all variants have reached their VAF cap
         if(!anyUncapped)
         {
-            SV_LOGGER.debug("chr({}) variants({}) range(%d - %d) sampleIndex({}) VAF cap exceeded for all variants",
+            SV_LOGGER.debug("chr({}) variants({}) range({} - {}) sampleIndex({}) VAF cap exceeded for all variants",
                     mChromosome, mSliceRegionState.variantCount(), mSliceRegionState.PositionMin, mSliceRegionState.PositionMax,
                     mCurrentSampleIndex);
 
@@ -318,9 +346,8 @@ public class DepthTask implements Callable
             return;
 
         // determine if mate or supp reads are expected within this current slice region
-        boolean expectSupplementaries = false;
+        boolean expectSupplementaries = read.getSupplementaryAlignmentFlag();
         boolean expectMate = false;
-        int maxSlicePosition = mSliceRegionState.PositionMax + DEFAULT_MAX_FRAGMENT_LENGTH;
 
         if(read.getReadPairedFlag() && !read.getMateUnmappedFlag()
         && read.getMateReferenceIndex() == read.getReferenceIndex() && read.getMateAlignmentStart() <= maxSlicePosition)
@@ -472,8 +499,8 @@ public class DepthTask implements Callable
 
             if(positionsOverlap(variant.PositionMin, variant.PositionMax, readStart, readEnd))
             {
-                SV_LOGGER.trace("var({}) pos({}-{}) read({}-{}) id({}) has ref support",
-                        variant.Position, variant.PositionMin, variant.PositionMax, readStart, readEnd, read.getReadName());
+                //SV_LOGGER.trace("var({}) pos({}-{}) read({}-{}) id({}) has ref support",
+                //        variant.Position, variant.PositionMin, variant.PositionMax, readStart, readEnd, read.getReadName());
                 readSupportsRef = true;
             }
         }
