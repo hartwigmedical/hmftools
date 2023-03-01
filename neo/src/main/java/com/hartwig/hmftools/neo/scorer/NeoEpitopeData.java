@@ -47,33 +47,35 @@ public class NeoEpitopeData
         RnaData = new NeoRnaData(tpmCancer, tpmCohort);
     }
 
-    public void setExpressionData(final String sampleId, final Map<String,Double> sampleTPMs, final RnaExpressionMatrix transExpression)
+    public void setExpressionData(final String sampleId, final Map<String,Double> sampleTPMs, final RnaExpressionMatrix transExpressionCache)
     {
-        if(transExpression == null && sampleTPMs.isEmpty())
+        if(transExpressionCache == null && sampleTPMs.isEmpty())
             return;
+
+        double[] expression = {0, 0};
 
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
-            RnaData.TransExpression[fs] = 0;
-
             for(String transName : Transcripts[fs])
             {
-                double expression = 0;
+                double transExpression = 0;
 
                 if(!sampleTPMs.isEmpty())
                 {
-                    expression = sampleTPMs.get(transName);
+                    transExpression = sampleTPMs.get(transName);
                 }
                 else
                 {
-                    expression = transExpression.getExpression(transName, sampleId);
+                    transExpression = transExpressionCache.getExpression(transName, sampleId);
                 }
 
                 // distinguish non-existent expression vs zero TPM
-                if(expression != INVALID_EXP)
-                    RnaData.TransExpression[fs] += expression;
+                if(transExpression != INVALID_EXP)
+                    expression[fs] += transExpression;
             }
         }
+
+        RnaData.setExpression(expression);
     }
 
     public void setFusionRnaSupport(final List<RnaNeoEpitope> rnaNeoDataList)
@@ -86,9 +88,7 @@ public class NeoEpitopeData
 
         if(matchedRnaData != null)
         {
-            RnaData.FragmentSupport = matchedRnaData.FragmentCount;
-            RnaData.BaseDepth[FS_UP] = matchedRnaData.BaseDepth[FS_UP];
-            RnaData.BaseDepth[FS_DOWN] = matchedRnaData.BaseDepth[FS_DOWN];
+            RnaData.setCoverage(matchedRnaData.FragmentCount, matchedRnaData.BaseDepth[FS_UP], matchedRnaData.BaseDepth[FS_DOWN]);
         }
     }
 
@@ -102,9 +102,7 @@ public class NeoEpitopeData
 
         if(matchedRnaData != null)
         {
-            RnaData.FragmentSupport = matchedRnaData.RnaFragments;
-            RnaData.BaseDepth[FS_UP] = matchedRnaData.RnaDepth;
-            RnaData.BaseDepth[FS_DOWN] = matchedRnaData.RnaDepth;
+            RnaData.setCoverage(matchedRnaData.RnaFragments, matchedRnaData.RnaDepth, matchedRnaData.RnaDepth);
         }
     }
 

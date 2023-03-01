@@ -100,8 +100,8 @@ public class NeoDataWriter
                 final NeoRnaData rnaData = neoData.RnaData;
 
                 mPeptideWriter.write(String.format(",%4.3e,%4.3e,%4.3e,%4.3e,%d,%.0f",
-                        rnaData.TransExpression[FS_UP], rnaData.TransExpression[FS_DOWN], rnaData.TpmCancer, rnaData.TpmCohort,
-                        rnaData.FragmentSupport, rnaData.baseDepth()));
+                        rnaData.transExpression()[FS_UP], rnaData.transExpression()[FS_DOWN], rnaData.TpmCancer, rnaData.TpmCohort,
+                        rnaData.fragmentSupport(), rnaData.averageBaseDepth()));
 
                 mPeptideWriter.newLine();
             }
