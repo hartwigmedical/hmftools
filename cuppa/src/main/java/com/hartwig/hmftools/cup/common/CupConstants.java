@@ -1,9 +1,15 @@
 package com.hartwig.hmftools.cup.common;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
+import static com.hartwig.hmftools.common.variant.VariantType.SNP;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.cup.feature.KnownMutation;
 
 public class CupConstants
 {
@@ -62,6 +68,33 @@ public class CupConstants
     public static final String CANCER_TYPE_TESTIS = "Testis";
     public static final String CANCER_TYPE_BREAST = "Breast";
     public static final String CANCER_TYPE_BREAST_TRIPLE_NEGATIVE = "Breast triple negative";
+
+    public static final List<KnownMutation> KNOWN_MUTATIONS = Lists.newArrayList();
+
+    public static void loadKnownMutations(final RefGenomeVersion refGenomeVersion)
+    {
+        if(refGenomeVersion.is37())
+        {
+            // p.Thr790Met
+            KNOWN_MUTATIONS.add(new KnownMutation("EGFR", SNP, "C", "T", 55249071, 55249071));
+
+            // p.Leu858Ar
+            KNOWN_MUTATIONS.add(new KnownMutation("EGFR", SNP, "T", "G", 55259515, 55259515));
+
+            // inframe DEL in exon 19 (canonical transcript)
+            KNOWN_MUTATIONS.add(new KnownMutation("EGFR", INDEL, "", "", 55242415, 55242513));
+
+            // exon 20
+            KNOWN_MUTATIONS.add(new KnownMutation("EGFR", INDEL, "", "", 55248986, 55249171));
+        }
+        else
+        {
+            KNOWN_MUTATIONS.add(new KnownMutation("EGFR", SNP, "C", "T", 55181378, 55181378));
+            KNOWN_MUTATIONS.add(new KnownMutation("EGFR", SNP, "T", "G", 55191822, 55191822));
+            KNOWN_MUTATIONS.add(new KnownMutation("EGFR", INDEL, "", "", 55174722, 55174820));
+            KNOWN_MUTATIONS.add(new KnownMutation("EGFR", INDEL, "", "", 55181293, 55181478));
+        }
+    }
 
     // common data types
     public static final String DATA_TYPE_SNV_COUNT = "SNV_COUNT";

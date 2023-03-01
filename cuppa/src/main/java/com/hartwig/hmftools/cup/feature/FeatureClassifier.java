@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.FEATURE_DAMPEN_FACTOR
 import static com.hartwig.hmftools.cup.common.CupConstants.NON_DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT;
 import static com.hartwig.hmftools.common.cuppa.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.common.cuppa.ResultType.PREVALENCE;
+import static com.hartwig.hmftools.cup.common.CupConstants.loadKnownMutations;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
@@ -77,6 +78,8 @@ public class FeatureClassifier implements CuppaClassifier
         mFeaturePrevalenceTotals = Maps.newHashMap();
         mCancerFeatureAvg = Maps.newHashMap();
         mSampleDataCache = sampleDataCache;
+
+        loadKnownMutations(mConfig.RefGenVersion);
 
         mNonDriverZeroPrevAllocation = cmd != null && cmd.hasOption(NON_DRIVER_ZERO_PREV) ?
                 Double.parseDouble(cmd.getOptionValue(NON_DRIVER_ZERO_PREV)) : NON_DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT;

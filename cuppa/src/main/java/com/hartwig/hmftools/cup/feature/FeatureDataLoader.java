@@ -2,16 +2,15 @@ package com.hartwig.hmftools.cup.feature;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
-import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
 import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.HIGH;
 import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.UNKNOWN;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
+import static com.hartwig.hmftools.cup.common.CupConstants.KNOWN_MUTATIONS;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.AMP_CN;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_CHROMOSOME;
@@ -346,31 +345,10 @@ public class FeatureDataLoader
 
     private static final String MUTATION_EGFR = "EGFR";
 
-    private static boolean isKnownEGFRMutation(
+    private static boolean isKnownMutation(
             final String gene, final VariantType variantType, final int position, final String ref, final String alt)
     {
-        if(!gene.equals(MUTATION_EGFR))
-            return false;
-
-        // GRCh37 coords hard-coded for now
-
-        // p.Thr790Met
-        if(variantType == SNP && ref.equals("C") && alt.equals("T") && position == 55249071)
-            return true;
-
-        // p.Leu858Ar
-        if(variantType == SNP && ref.equals("T") && alt.equals("G") && position == 55259515)
-            return true;
-
-        // inframe DEL in exon 19 (canonical transcript)
-        if(variantType == INDEL && positionWithin(position, 55242415, 55242513))
-            return true;
-
-        // exon 20
-        if(variantType == INDEL && positionWithin(position, 55248986, 55249171))
-            return true;
-
-        return false;
+        return KNOWN_MUTATIONS.stream().anyMatch(x -> x.matches(gene, variantType, ref, alt, position));
     }
 
     private static Map<String,List<String>> getSpecificMutations(
@@ -396,7 +374,7 @@ public class FeatureDataLoader
             final String ref = record.getValue(SOMATICVARIANT.REF);
             final String alt = record.getValue(SOMATICVARIANT.ALT);
 
-            if((checkIndels && isKnownIndel(gene, repeatCount, type)) || isKnownEGFRMutation(gene, type, position, ref, alt))
+            if((checkIndels && isKnownIndel(gene, repeatCount, type)) || isKnownMutation(gene, type, position, ref, alt))
             {
                 List<String> genes = sampleMutationMap.get(sampleId);
 
@@ -422,7 +400,7 @@ public class FeatureDataLoader
                 continue;
 
             if((checkIndels && isKnownIndel(variant.Gene, variant.RepeatCount, variant.Type))
-            || isKnownEGFRMutation(variant.Gene, variant.Type, variant.Position, variant.Ref, variant.Alt))
+            || isKnownMutation(variant.Gene, variant.Type, variant.Position, variant.Ref, variant.Alt))
             {
                 mutations.add(variant.Gene);
             }
