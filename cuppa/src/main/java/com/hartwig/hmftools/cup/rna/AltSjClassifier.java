@@ -106,16 +106,7 @@ public class AltSjClassifier implements CuppaClassifier
         mCssWriter = null;
 
         mWeightExponent = Double.parseDouble(cmd.getOptionValue(WEIGHT_EXPONENT, String.valueOf(ALT_SJ_DIFF_EXPONENT)));
-
-        if(cmd.hasOption(FRAG_COUNT_LOG_VALUE))
-        {
-            // zero will mean not applied, ie using averages as-is, otherwise value must be >= 1
-            mFragCountLogValue = max(Double.parseDouble(cmd.getOptionValue(FRAG_COUNT_LOG_VALUE)), 1.0);
-        }
-        else
-        {
-            mFragCountLogValue = 1;
-        }
+        mFragCountLogValue = max(Double.parseDouble(cmd.getOptionValue(FRAG_COUNT_LOG_VALUE, "1")), 1.0);
 
         mMinSampleFragments = Integer.parseInt(cmd.getOptionValue(MIN_SAMPLE_FRAGS, "0"));
 

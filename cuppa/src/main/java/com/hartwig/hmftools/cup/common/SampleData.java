@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cup.common;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.cup.CuppaConfig.CANCER_SUBTYPE_OTHER;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_SUBTYPE;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_TYPE;
@@ -101,6 +103,11 @@ public class SampleData
         }
 
         return sample;
+    }
+
+    public String toString()
+    {
+        return format("%s ct(%s) %s rna(%s)", Id, mCancerType, mIsRefSample ? "ref" : "non-ref", hasRna());
     }
 
     private static String extractOptionalField(

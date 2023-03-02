@@ -170,13 +170,13 @@ public class RefSomatics implements RefClassifier
 
         if(mExcludeGenPosChrX)
         {
-            String chrX = mPosFrequencies.isValidChromosome("X") ? "X" : "chrX";
+            String chrX = mConfig.RefGenVersion.versionedChromosome("X");
             excludeChromosome(mGenPosCounts, mPosFrequencies, chrX);
             mWriteGenPosMatrixData = true;
         }
 
         // always exclude Y, if not already when the counts were made
-        String chrY = mPosFrequencies.isValidChromosome("Y") ? "Y" : "chrY";
+        String chrY = mConfig.RefGenVersion.versionedChromosome("Y");
         excludeChromosome(mGenPosCounts, mPosFrequencies, chrY);
 
         // write out sample matrix data unless they were already correct
