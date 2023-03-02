@@ -360,7 +360,7 @@ public class CuppaConfig
     public String getPurpleDataDir(final String sampleId) { return getSampleDataDir(sampleId, PurpleDir); }
     public String getIsofoxDataDir(final String sampleId) { return getSampleDataDir(sampleId, IsofoxDir); }
 
-    private String getSampleDataDir(final String sampleId, final String specificDir)
+    private String  getSampleDataDir(final String sampleId, final String specificDir)
     {
         return !SampleDataDir.isEmpty() ? formSamplePath(SampleDataDir, sampleId) : formSamplePath(specificDir, sampleId);
     }

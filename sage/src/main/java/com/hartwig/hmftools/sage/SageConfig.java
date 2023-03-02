@@ -141,8 +141,8 @@ public class SageConfig
             TumorIds.addAll(Arrays.asList(cmd.getOptionValue(TUMOR).split(",")));
         }
 
-        SampleDataDir = cmd.hasOption(SAMPLE_DATA_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR)) : "";
-        ResourceDir = cmd.hasOption(RESOURCE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR)) : "";
+        SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR, ""));
+        ResourceDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR, ""));
 
         ReferenceBams = Lists.newArrayList();
         TumorBams = Lists.newArrayList();
