@@ -12,10 +12,13 @@ import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MISMATCH;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.SUPPLEMENTARY;
+import static com.hartwig.hmftools.markdups.umi.IndelConsensusReads.alignedOrSoftClip;
 import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -97,12 +100,21 @@ public class ConsensusReads
         SAMRecord consensusRead = createConsensusRead(consensusState, reads, groupIdentifier);
 
         if(mBaseBuilder.config().Debug)
+        {
             consensusRead.setMappingQuality(0);
 
-        // sanity check the read
-        if(!isValidConsensusRead(consensusRead))
-        {
-            MD_LOGGER.error("invalid consensus read: umi({}) read: {}", groupIdentifier, readToString(consensusRead));
+            // sanity check the read
+            if(!isValidConsensusRead(consensusRead))
+            {
+                MD_LOGGER.error("invalid consensus read: umi({}) readCount({}) {} read: {}",
+                        groupIdentifier, reads.size(), isForward ? "forward" : "reverse", readToString(consensusRead));
+
+                // reads
+                for(int i = 0; i < reads.size(); ++i)
+                {
+                    MD_LOGGER.debug("read {}: {}", i, readToString(reads.get(i)));
+                }
+            }
         }
 
         return new ConsensusReadInfo(consensusRead, consensusState.outcome());
@@ -117,6 +129,29 @@ public class ConsensusReads
 
         if(cigarBaseLength(consensusRead.getCigar()) != baseLength)
             return false;
+
+        int cigarCount = consensusRead.getCigar().getCigarElements().size();
+        if(cigarCount > 1)
+        {
+            for(int i = 0; i < consensusRead.getCigar().getCigarElements().size(); ++i)
+            {
+                CigarElement element = consensusRead.getCigar().getCigarElements().get(i);
+
+                if(i == 0 || i == cigarCount - 1)
+                {
+                    if(!alignedOrSoftClip(element.getOperator()))
+                        return false;
+                }
+                else if(element.getOperator() == S)
+                {
+                    return false;
+                }
+            }
+        }
+        else if(consensusRead.getCigar().getCigarElements().get(0).getOperator() != M)
+        {
+            return false;
+        }
 
         return true;
     }
@@ -224,12 +259,12 @@ public class ConsensusReads
         int alignedBases = consensusState.MaxAlignedPosEnd - consensusState.MinAlignedPosStart + 1;
 
         if(leftSoftClipBases > 0)
-            consensusState.CigarElements.add(new CigarElement(leftSoftClipBases, CigarOperator.S));
+            consensusState.CigarElements.add(new CigarElement(leftSoftClipBases, S));
 
-        consensusState.CigarElements.add(new CigarElement(alignedBases, CigarOperator.M));
+        consensusState.CigarElements.add(new CigarElement(alignedBases, M));
 
         if(rightSoftClipBases > 0)
-            consensusState.CigarElements.add(new CigarElement(rightSoftClipBases, CigarOperator.S));
+            consensusState.CigarElements.add(new CigarElement(rightSoftClipBases, S));
     }
 
 }
