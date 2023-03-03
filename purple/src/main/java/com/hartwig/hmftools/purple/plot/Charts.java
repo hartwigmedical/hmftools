@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
@@ -26,20 +27,19 @@ public class Charts
     public Charts(final PurpleConfig config, final ExecutorService executorService, boolean isHg38) throws IOException
     {
         mRCharts = new RCharts(config, executorService);
-        mCircosCharts = new CircosCharts(config, executorService, isHg38);
 
         mConfig = config;
 
-        ChartConfig chartConfig = config.Charting;
+        createDirectory(config.Charting.PlotDirectory);
 
-        if(chartConfig.CircosBinary.isPresent())
+        if(config.Charting.CircosBinary != null)
         {
-            createDirectory(chartConfig.CircosDirectory);
+            createDirectory(config.Charting.CircosDirectory);
+            mCircosCharts = new CircosCharts(config, executorService, isHg38);
         }
-
-        if(chartConfig.Enabled || chartConfig.CircosBinary.isPresent())
+        else
         {
-            createDirectory(chartConfig.PlotDirectory);
+            mCircosCharts = null;
         }
     }
 
@@ -51,21 +51,26 @@ public class Charts
     {
         final ChartConfig chartConfig = mConfig.Charting;
 
-        mCircosCharts.write(referenceId, sampleId, gender, copyNumbers, somaticVariants, structuralVariants, regions, bafs);
-        final List<Future<Integer>> futures = mCircosCharts.chartFutures();
+        final List<Future<Integer>> chartFutures = Lists.newArrayList();
 
-        if(chartConfig.Enabled)
+        if(mCircosCharts != null)
         {
-            futures.addAll(mRCharts.chartFutures(sampleId, plotSomatics));
+            mCircosCharts.write(referenceId, sampleId, gender, copyNumbers, somaticVariants, structuralVariants, regions, bafs);
+            chartFutures.addAll(mCircosCharts.chartFutures());
         }
 
-        for(final Future<Integer> future : futures)
+        if(!chartConfig.Disabled)
+        {
+            chartFutures.addAll(mRCharts.chartFutures(sampleId, plotSomatics));
+        }
+
+        for(final Future<Integer> future : chartFutures)
         {
             // This (intentionally) has side effect of alerting users to any exceptions
             int result = future.get();
             if(result != 0)
             {
-                PPL_LOGGER.warn("Error generating charts");
+                PPL_LOGGER.warn("error generating charts");
             }
         }
     }

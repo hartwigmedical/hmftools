@@ -27,7 +27,6 @@ import static com.hartwig.hmftools.purple.purity.FittedPurityFactory.createFitte
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -113,7 +112,6 @@ public class PurpleApplication
 
     private final GermlineVariants mGermlineVariants;
     private final Segmentation mSegmentation;
-    private final Charts mCharts;
 
     private static final int THREADS_DEFAULT = 2;
     private static final String VERSION = "version";
@@ -158,12 +156,10 @@ public class PurpleApplication
         if(!mConfig.DriversOnly)
         {
             mSegmentation = new Segmentation(mReferenceData);
-            mCharts = new Charts(mConfig, mExecutorService, mReferenceData.RefGenVersion.is38());
         }
         else
         {
             mSegmentation = null;
-            mCharts = null;
         }
     }
 
@@ -425,13 +421,15 @@ public class PurpleApplication
             GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorId), germlineDeletions.getDeletions());
         }
 
-        if(!mConfig.germlineMode() && (mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent()))
+        if(!mConfig.germlineMode() && !mConfig.Charting.Disabled)
         {
             PPL_LOGGER.info("generating charts");
 
             try
             {
-                mCharts.write(
+                Charts charts = new Charts(mConfig, mExecutorService, mReferenceData.RefGenVersion.is38());
+
+                charts.write(
                         referenceId, tumorId, !sampleDataFiles.SomaticVcfFile.isEmpty(),
                         gender, copyNumbers, somaticStream.downsampledVariants(), sampleData.SvCache.variants(),
                         fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
