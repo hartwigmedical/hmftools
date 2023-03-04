@@ -869,6 +869,9 @@ Fusion calling improvements
 Filtering
 - **Late calling of Artifacts** - Some samples have many false positive translocations and single breakends.   Whilst we try to detect these in LINX based on lack of copy number support, it would be better if these could be identified earlier in the pipeline, to reduce noise in the output.   
 
+LINE annotation
+- **PolyA tail can map to long A or T homopolymers** - LINX uses the polyA tail to identify LINE elements, but these tails sometimes are mapped to regions of the genome with long polyA repeats.  In this case LINX does not recognise the PolyA tail
+
 ## Version History
 - [1.22](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.22)
 - [1.21](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.21)
