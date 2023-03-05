@@ -154,6 +154,11 @@ public class NeoDataWriter
                     neoData.TransExpression[FS_UP], neoData.TransExpression[FS_DOWN], neoData.TpmCancer, neoData.TpmCohort,
                     neoData.RnaNovelFragments, (neoData.RnaBaseDepth[SE_START] + neoData.RnaBaseDepth[SE_END]) * 0.5));
 
+        sj.add(String.format("%6.3e", neo.CancerTpmTotal[FS_UP]));
+        sj.add(String.format("%6.3e", neo.CohortTpmTotal[FS_UP]));
+        sj.add(String.format("%6.3e", neo.CancerTpmTotal[FS_DOWN]));
+        sj.add(String.format("%6.3e", neo.CohortTpmTotal[FS_DOWN]));
+
             mNeoWriter.newLine();
         }
         catch (IOException e)

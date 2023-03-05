@@ -39,7 +39,7 @@ public class NeoScorer
 
     public void run()
     {
-        if(mConfig.SampleIds.isEmpty())
+        if(mConfig.Samples.isEmpty())
             return;
 
         if(!mPeptideScorer.loadScoringData())
@@ -50,17 +50,19 @@ public class NeoScorer
 
         NE_LOGGER.info("loading cohort transcript expression");
 
-        RnaExpressionMatrix transcriptExpression = mConfig.CohortTranscriptExpressionFile != null ?
-                new RnaExpressionMatrix(mConfig.CohortTranscriptExpressionFile, EXPRESSION_SCOPE_TRANS) : null;
+        RnaExpressionMatrix transcriptExpression = mConfig.CohortSampleTpmFile != null ?
+                new RnaExpressionMatrix(mConfig.CohortSampleTpmFile, EXPRESSION_SCOPE_TRANS) : null;
+
+        TpmMediansCache tpmMediansCache = new TpmMediansCache(mConfig.CohortTpmMediansFile);
 
         NE_LOGGER.info("running neoepitope scoring for {}",
-                mConfig.SampleIds.size() == 1 ? mConfig.SampleIds.get(0) : String.format("%d samples", mConfig.SampleIds.size()));
+                mConfig.Samples.size() == 1 ? mConfig.Samples.get(0) : String.format("%d samples", mConfig.Samples.size()));
 
         List<NeoScorerTask> sampleTasks = Lists.newArrayList();
 
-        for(String sampleId : mConfig.SampleIds)
+        for(SampleData sampleData : mConfig.Samples)
         {
-            NeoScorerTask sampleTask = new NeoScorerTask(sampleId, mConfig, mPeptideScorer, transcriptExpression, mWriters);
+            NeoScorerTask sampleTask = new NeoScorerTask(sampleData, mConfig, mPeptideScorer, transcriptExpression, tpmMediansCache, mWriters);
 
             sampleTasks.add(sampleTask);
         }

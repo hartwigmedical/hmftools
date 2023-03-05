@@ -21,8 +21,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
-import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.variant.VariantType;
 
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
@@ -33,9 +31,10 @@ public class DataLoader
 {
     public static final String LILAC_COVERAGE_FILE_ID = ".lilac.csv";
 
-    public static Map<Integer,NeoEpitopeData> loadNeoEpitopes(final String sampleId, final String neoDataDir)
+    public static List<NeoEpitopeData> loadNeoEpitopes(final String sampleId, final String neoDataDir)
     {
-        Map<Integer,NeoEpitopeData> neoDataMap = Maps.newHashMap();
+        // load into lists of neoepitopes by variant
+        List<NeoEpitopeData> neoDataList = Lists.newArrayList();
 
         try
         {
@@ -83,17 +82,17 @@ public class DataLoader
                         neId, NeoEpitopeType.valueOf(items[varTypeIndex]), items[varInfoIndex], geneIdDown, geneName,
                         items[upAaIndex],items[novelAaIndex], items[downAaIndex], transUpNames, transDownNames, tpmCancer, tpmCohort);
 
-                neoDataMap.put(neId, neoData);
+                neoDataList.add(neoData);
             }
 
-            NE_LOGGER.debug("sample({}) loaded {} neo-epitopes", sampleId, lines.size());
+            NE_LOGGER.debug("sample({}) loaded {} neo-epitopes", sampleId, neoDataList.size());
         }
         catch(IOException exception)
         {
             NE_LOGGER.error("failed to read sample({}) neo-epitope file: {}", sampleId, exception.toString());
         }
 
-        return neoDataMap;
+        return neoDataList;
     }
 
     public static List<SomaticVariant> loadSomaticVariants(

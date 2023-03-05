@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.INVALID_EXP;
+import static com.hartwig.hmftools.neo.scorer.TpmMediansCache.CANCER_VALUE;
+import static com.hartwig.hmftools.neo.scorer.TpmMediansCache.PAN_CANCER_VALUE;
 
 import java.util.List;
 import java.util.Map;
@@ -47,12 +49,16 @@ public class NeoEpitopeData
         RnaData = new NeoRnaData(tpmCancer, tpmCohort);
     }
 
-    public void setExpressionData(final String sampleId, final Map<String,Double> sampleTPMs, final RnaExpressionMatrix transExpressionCache)
+    public void setExpressionData(
+            final SampleData sampleData, final Map<String,Double> sampleTPMs, final RnaExpressionMatrix transExpressionCache,
+            final TpmMediansCache cohortTpmMediansCache)
     {
         if(transExpressionCache == null && sampleTPMs.isEmpty())
             return;
 
-        double[] expression = {0, 0};
+        double[] sampleExpression = {0, 0};
+        double[] panCancerTpm = {0, 0};
+        double[] cancerTpm = {0, 0};
 
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
@@ -66,16 +72,21 @@ public class NeoEpitopeData
                 }
                 else
                 {
-                    transExpression = transExpressionCache.getExpression(transName, sampleId);
+                    transExpression = transExpressionCache.getExpression(transName, sampleData.Id);
                 }
 
                 // distinguish non-existent expression vs zero TPM
                 if(transExpression != INVALID_EXP)
-                    expression[fs] += transExpression;
+                    sampleExpression[fs] += transExpression;
+
+                double[] tpmValues = cohortTpmMediansCache.getTranscriptTpm(transName, sampleData.CancerType);
+
+                panCancerTpm[fs] += tpmValues[PAN_CANCER_VALUE];
+                cancerTpm[fs] += tpmValues[CANCER_VALUE];
             }
         }
 
-        RnaData.setExpression(expression);
+        RnaData.setExpression(sampleExpression);
     }
 
     public void setFusionRnaSupport(final List<RnaNeoEpitope> rnaNeoDataList)

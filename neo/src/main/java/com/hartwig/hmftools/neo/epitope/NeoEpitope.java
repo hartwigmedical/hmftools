@@ -263,8 +263,7 @@ public abstract class NeoEpitope
     }
 
     public NeoEpitopeFile toFile(
-            final int neId, final Set<String> upTransNames, final Set<String> downTransNames,
-            final double[] tpmCancer, final double[] tpmCohort)
+            final int neId, final Set<String> upTransNames, final Set<String> downTransNames)
     {
         final StringJoiner upTransStr = new StringJoiner(";");
         final StringJoiner downTransStr = new StringJoiner(";");
@@ -280,7 +279,6 @@ public abstract class NeoEpitope
                 upTransStr.toString(), downTransStr.toString(), wildtypeAcids(),
                 ExtPositions[FS_UP][SE_START], ExtPositions[FS_UP][SE_END], ExtCodingBases[FS_UP], ExtCigars[FS_UP].toString(),
                 ExtPositions[FS_DOWN][SE_START], ExtPositions[FS_DOWN][SE_END], ExtCodingBases[FS_DOWN],
-                ExtCigars[FS_DOWN] != null ? ExtCigars[FS_DOWN].toString() : "",
-                tpmCancer[FS_UP], tpmCohort[FS_UP], tpmCancer[FS_DOWN], tpmCohort[FS_DOWN]);
+                ExtCigars[FS_DOWN] != null ? ExtCigars[FS_DOWN].toString() : "");
     }
 }

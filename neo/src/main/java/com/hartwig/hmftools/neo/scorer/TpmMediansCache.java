@@ -1,5 +1,8 @@
-package com.hartwig.hmftools.neo.epitope;
+package com.hartwig.hmftools.neo.scorer;
 
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
@@ -14,15 +17,15 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 
-public class CohortTpmData
+public class TpmMediansCache
 {
     private Map<String,Map<String,Double>> mTransCancerTpmMap;
 
     private static final String ALL_TYPES = "All";
     public static final int CANCER_VALUE = 0;
-    public static final int COHORT_VALUE = 1;
+    public static final int PAN_CANCER_VALUE = 1;
 
-    public CohortTpmData(final String filename)
+    public TpmMediansCache(final String filename)
     {
         mTransCancerTpmMap = Maps.newHashMap();
 
@@ -38,7 +41,7 @@ public class CohortTpmData
         if(cancerTpmMap != null)
         {
             Double tpm = cancerTpmMap.get(ALL_TYPES);
-            results[COHORT_VALUE] = tpm != null ? tpm : 0;
+            results[PAN_CANCER_VALUE] = tpm != null ? tpm : 0;
 
             if(cancerType != null && !cancerType.isEmpty() && cancerTpmMap.containsKey(cancerType))
             {
@@ -50,10 +53,6 @@ public class CohortTpmData
     }
 
     private static final String GENE_EXP_DELIM = ",";
-    private static final String FLD_GENE_ID = "GeneId";
-    private static final String FLD_GENE_NAME = "GeneName";
-    private static final String FLD_TRANS_NAME = "TransName";
-
 
     private void loadCohortFile(final String filename)
     {

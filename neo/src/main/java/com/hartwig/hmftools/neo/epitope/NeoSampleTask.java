@@ -20,9 +20,7 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPha
 import static com.hartwig.hmftools.neo.NeoCommon.DOWNSTREAM_PRE_GENE_DISTANCE;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.initialiseNeoepitopeWriter;
-import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.initialisePeptideWriter;
 import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.writeNeoepitopes;
-import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.writePeptideHlaData;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -63,35 +61,28 @@ import htsjdk.variant.vcf.VCFCodec;
 
 public class NeoSampleTask implements Callable
 {
-    private final SampleData mSampleData;
+    private final String mSampleId;
 
     private final NeoConfig mConfig;
-    private final List<NeoEpitopeFusion> mFusions;
 
     private final EnsemblDataCache mGeneTransCache;
     private final DatabaseAccess mDbAccess;
-    private final CohortTpmData mCohortTpmData;
 
     private int mNextNeoEpitopeId;
-    private final BufferedWriter mNeoEpitopeWriter;
-    private BufferedWriter mPeptideWriter;
+    private final BufferedWriter mWriter;
 
     public NeoSampleTask(
-            final SampleData sampleData, final NeoConfig config, final EnsemblDataCache ensemblDataCache, final DatabaseAccess dbAccess,
-            final CohortTpmData cohortTpmData)
+            final String sampleId, final NeoConfig config, final EnsemblDataCache ensemblDataCache, final DatabaseAccess dbAccess)
     {
-        mSampleData = sampleData;
+        mSampleId = sampleId;
 
         mConfig = config;
         mGeneTransCache = ensemblDataCache;
         mDbAccess = dbAccess;
-        mCohortTpmData = cohortTpmData;
 
         mNextNeoEpitopeId = 0;
-        mFusions = Lists.newArrayList();
 
-        mNeoEpitopeWriter = initialiseNeoepitopeWriter(mConfig.OutputDir, mSampleData.Id);
-        mPeptideWriter = mConfig.WritePeptides ? initialisePeptideWriter(mConfig.OutputDir, mSampleData.Id) : null;
+        mWriter = initialiseNeoepitopeWriter(mConfig.OutputDir, mSampleId);
     }
 
     @Override
@@ -107,13 +98,12 @@ public class NeoSampleTask implements Callable
         final List<PointMutationData> pointMutations = getSomaticVariants();
 
         NE_LOGGER.info("sample({}) loaded {} fusions and {} point mutations",
-                mSampleData.Id, fusions.size(), pointMutations.size());
+                mSampleId, fusions.size(), pointMutations.size());
 
         addSvFusions(fusions);
         addPointMutations(pointMutations);
 
-        closeBufferedWriter(mNeoEpitopeWriter);
-        closeBufferedWriter(mPeptideWriter);
+        closeBufferedWriter(mWriter);
     }
 
     private final List<PointMutationData> getSomaticVariants()
@@ -128,7 +118,7 @@ public class NeoSampleTask implements Callable
                     .select(SOMATICVARIANT.GENE, SOMATICVARIANT.WORSTCODINGEFFECT, SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION,
                             SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.VARIANTCOPYNUMBER, SOMATICVARIANT.LOCALPHASESET)
                     .from(Tables.SOMATICVARIANT)
-                    .where(Tables.SOMATICVARIANT.SAMPLEID.eq(mSampleData.Id))
+                    .where(Tables.SOMATICVARIANT.SAMPLEID.eq(mSampleId))
                     .and(Tables.SOMATICVARIANT.FILTER.eq(PASS_FILTER))
                     .and(Tables.SOMATICVARIANT.GENE.notEqual(""))
                     .and(Tables.SOMATICVARIANT.WORSTCODINGEFFECT.in(validCodingEffects))
@@ -164,7 +154,7 @@ public class NeoSampleTask implements Callable
                 return pointMutations;
 
             String somaticVcf = mConfig.SomaticVcf.contains("*") ?
-                    mConfig.SomaticVcf.replaceAll("\\*", mSampleData.Id) : mConfig.SomaticVcf;
+                    mConfig.SomaticVcf.replaceAll("\\*", mSampleId) : mConfig.SomaticVcf;
 
             if(!Files.exists(Paths.get(somaticVcf)))
             {
@@ -185,7 +175,7 @@ public class NeoSampleTask implements Callable
                 {
                     if(filter.test(variant))
                     {
-                        final SomaticVariant somaticVariant = variantFactory.createVariant(mSampleData.Id, variant).orElse(null);
+                        final SomaticVariant somaticVariant = variantFactory.createVariant(mSampleId, variant).orElse(null);
 
                         if(somaticVariant == null)
                             continue;
@@ -221,7 +211,7 @@ public class NeoSampleTask implements Callable
         if(mConfig.SvFusionsDir == null)
             return fusions;
 
-        final String filename = generateFilename(mConfig.SvFusionsDir, mSampleData.Id);
+        final String filename = generateFilename(mConfig.SvFusionsDir, mSampleId);
 
         if(!Files.exists(Paths.get(filename)))
         {
@@ -448,8 +438,7 @@ public class NeoSampleTask implements Callable
             }
 
             int neId = mNextNeoEpitopeId++;
-            writeNeoepitopes(mNeoEpitopeWriter, mSampleData, false, mCohortTpmData, neId, neData, upTransNames, downTransNames);
-            writePeptideHlaData(mPeptideWriter, mSampleData, false, mConfig, neId, neData);
+            writeNeoepitopes(mWriter, mSampleId, false, neId, neData, upTransNames, downTransNames);
         }
     }
 }

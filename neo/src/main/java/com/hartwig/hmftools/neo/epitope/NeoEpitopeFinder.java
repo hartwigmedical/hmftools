@@ -1,12 +1,7 @@
 package com.hartwig.hmftools.neo.epitope;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.codon.AminoAcidRna.AA_SELENOCYSTEINE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
 import java.io.BufferedWriter;
@@ -19,12 +14,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.neo.PeptideData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -41,7 +34,6 @@ public class NeoEpitopeFinder
 
     private final EnsemblDataCache mGeneTransCache;
     private final DatabaseAccess mDbAccess;
-    private final CohortTpmData mCohortTpmData;
 
     public NeoEpitopeFinder(final CommandLine cmd)
     {
@@ -56,7 +48,6 @@ public class NeoEpitopeFinder
         mGeneTransCache.createGeneNameIdMap();
 
         mDbAccess = DatabaseAccess.createDatabaseAccess(cmd);
-        mCohortTpmData = new CohortTpmData(cmd.getOptionValue(NeoConfig.CANCER_TPM_FILE));
     }
 
     public void run()
@@ -66,7 +57,7 @@ public class NeoEpitopeFinder
 
         if(mConfig.Samples.size() == 1)
         {
-            NE_LOGGER.info("processing sample({})", mConfig.Samples.get(0).Id);
+            NE_LOGGER.info("processing sample({})", mConfig.Samples.get(0));
         }
         else
         {
@@ -76,9 +67,9 @@ public class NeoEpitopeFinder
         // check required inputs and config
         List<NeoSampleTask> sampleTasks = Lists.newArrayList();
 
-        for(final SampleData sample : mConfig.Samples)
+        for(final String sample : mConfig.Samples)
         {
-            NeoSampleTask sampleTask = new NeoSampleTask(sample, mConfig, mGeneTransCache, mDbAccess, mCohortTpmData);
+            NeoSampleTask sampleTask = new NeoSampleTask(sample, mConfig, mGeneTransCache, mDbAccess);
 
             sampleTasks.add(sampleTask);
         }
@@ -91,27 +82,6 @@ public class NeoEpitopeFinder
         else
         {
             sampleTasks.forEach(x -> x.processSample());
-        }
-    }
-
-    private static void populateTpmMedians(
-            final CohortTpmData cohortTpmData, final String sampleCancerType,
-            final Set<String> upTransNames, final Set<String> downTransNames, final double[] tpmCancer, final double[] tpmCohort)
-    {
-        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
-        {
-            double cancerTotal = 0;
-            double cohortTotal = 0;
-
-            for(String transName : fs == FS_UP ? upTransNames : downTransNames)
-            {
-                final double[] result = cohortTpmData.getTranscriptTpm(transName, sampleCancerType);
-                cancerTotal += result[CohortTpmData.CANCER_VALUE];
-                cohortTotal += result[CohortTpmData.COHORT_VALUE];
-            }
-
-            tpmCancer[fs] = cancerTotal;
-            tpmCohort[fs] = cohortTotal;
         }
     }
 
@@ -142,7 +112,7 @@ public class NeoEpitopeFinder
     }
 
     public synchronized static void writeNeoepitopes(
-            final BufferedWriter writer, final SampleData sampleData, boolean isCohort, final CohortTpmData cohortTpmData,
+            final BufferedWriter writer, final String sampleId, boolean isCohort,
             int neId, final NeoEpitope neData, final Set<String> upTransNames, final Set<String> downTransNames)
     {
         if(writer == null)
@@ -151,106 +121,15 @@ public class NeoEpitopeFinder
         try
         {
             if(isCohort)
-                writer.write(String.format("%s,", sampleData.Id));
+                writer.write(String.format("%s,", sampleId));
 
-            final double[] tpmCancer = {0, 0};
-            final double[] tpmCohort = {0, 0};
-            populateTpmMedians(cohortTpmData, sampleData.CancerType, upTransNames, downTransNames, tpmCancer, tpmCohort);
-
-            final NeoEpitopeFile neFile = neData.toFile(neId, upTransNames, downTransNames, tpmCancer, tpmCohort);
+            final NeoEpitopeFile neFile = neData.toFile(neId, upTransNames, downTransNames);
             writer.write(NeoEpitopeFile.toString(neFile));
             writer.newLine();
         }
         catch (final IOException e)
         {
             NE_LOGGER.error("error writing neo-epitope output file: {}", e.toString());
-        }
-    }
-
-    public static BufferedWriter initialisePeptideWriter(final String outputDir, final String sampleId)
-    {
-        if(sampleId == null)
-            return null;
-
-        try
-        {
-            String outputFileName = outputDir +  sampleId + NeoConfig.HLA_PEPTIDE_FILE_ID;
-            BufferedWriter writer = createBufferedWriter(outputFileName, false);
-
-            if(sampleId == null)
-                writer.write("SampleId,");
-
-            writer.write("NeId,HlaAllele,Peptide,n_flank,c_flank");
-            writer.newLine();
-            return writer;
-        }
-        catch (final IOException e)
-        {
-            NE_LOGGER.error("error initialising HLA peptide output file: {}", e.toString());
-        }
-
-        return null;
-    }
-
-    public synchronized static void writePeptideHlaData(
-            final BufferedWriter writer, final SampleData sampleData, boolean isCohort,
-            final NeoConfig config, int neId, final NeoEpitope neData)
-    {
-        if(writer == null)
-            return;
-
-        if(!config.CommonHlaTypes.isEmpty() && sampleData.HlaTypes.isEmpty())
-        {
-            sampleData.HlaTypes.addAll(config.CommonHlaTypes);
-        }
-
-        if(sampleData.HlaTypes.isEmpty() || config.PeptideLengths[SE_START] == 0 || config.PeptideLengths[SE_END] == 0)
-            return;
-
-        try
-        {
-            if(isCohort)
-                writer.write(String.format("%s,", sampleData.Id));
-
-            final List<PeptideData> peptides = EpitopeUtils.generatePeptides(
-                    neData.UpstreamAcids, neData.NovelAcid, neData.DownstreamAcids, config.PeptideLengths, config.PeptideFlanks);
-
-            Set<String> uniqueHlaTypes = Sets.newHashSet();
-
-            for(String hlaType : sampleData.HlaTypes)
-            {
-                if(uniqueHlaTypes.contains(hlaType))
-                    continue;
-
-                uniqueHlaTypes.add(hlaType);
-
-                final String predictionHlaType = EpitopeUtils.convertHlaTypeForPredictions(hlaType);
-
-                if(predictionHlaType == null)
-                {
-                    NE_LOGGER.error("sample({} skipping invalid HLA type: {}", sampleData.Id, hlaType);
-                    continue;
-                }
-
-                for(PeptideData peptideData : peptides)
-                {
-                    // skip any peptide which is contained within the upstream wildtype AAs
-                    if(neData.UpstreamWildTypeAcids.contains(peptideData.Peptide))
-                        continue;
-
-                    // for now skip any upstream peptide containing the 21st AA until the binding prediction routine can handle it
-                    if(peptideData.Peptide.contains(AA_SELENOCYSTEINE) || peptideData.UpFlank.contains(AA_SELENOCYSTEINE))
-                        continue;
-
-                    writer.write(String.format("%d,%s,%s,%s,%s",
-                            neId, predictionHlaType, peptideData.Peptide, peptideData.UpFlank, peptideData.DownFlank));
-                    writer.newLine();
-                }
-            }
-        }
-        catch (final IOException e)
-        {
-            NE_LOGGER.error("error writing HLA peptide output file: {}", e.toString());
         }
     }
 
