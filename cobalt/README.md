@@ -138,6 +138,8 @@ TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regi
 
 
 ## Version History and Download Links
+- [1.14](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.14)
+  - Automatically consolidating buckets if mean coverage <= 50.
 - [1.13](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.13)
   - Added support for germline only mode.
   - Added support for targeted mode. Activated when run with `-target_region` argument.

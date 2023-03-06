@@ -19,12 +19,18 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SamReaderFactory;
 
-public class CountSupplier
+public class BamReadCounter
 {
     private final int mWindowSize;
     private final int mMinMappingQuality;
+
     Multimap<Chromosome, ReadCount> mReferenceCounts = null;
     Multimap<Chromosome, ReadCount> mTumorCounts = null;
+
+    GCMedianReadCountBuilder mReferenceMedianReadCountBuilder;
+
+    GCMedianReadCountBuilder mTumorMedianReadCountBuilder;
+
     private final ExecutorService mExecutorService;
     private final SamReaderFactory mReaderFactory;
     private final Collection<Chromosome> mChromosomes;
@@ -32,7 +38,7 @@ public class CountSupplier
     public Multimap<Chromosome, ReadCount> getReferenceCounts() { return mReferenceCounts; }
     public Multimap<Chromosome, ReadCount> getTumorCounts() { return mTumorCounts; }
 
-    public CountSupplier(
+    public BamReadCounter(
             final int windowSize, final int minMappingQuality,
             final ExecutorService executorService, final SamReaderFactory readerFactory,
             final Collection<Chromosome> chromosomes)

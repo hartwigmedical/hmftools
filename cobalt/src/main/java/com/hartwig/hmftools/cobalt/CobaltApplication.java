@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt;
 
+import static java.time.format.DateTimeFormatter.ISO_ZONED_DATE_TIME;
+
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.cobalt.RatioSegmentation.applyRatioSegmentation;
@@ -20,7 +22,7 @@ import com.beust.jcommander.ParametersDelegate;
 import com.beust.jcommander.UnixStyleUsageFormatter;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.hartwig.hmftools.cobalt.count.CountSupplier;
+import com.hartwig.hmftools.cobalt.count.BamReadCounter;
 import com.hartwig.hmftools.cobalt.targeted.TargetRegionEnrichment;
 import com.hartwig.hmftools.cobalt.ratio.RatioSupplier;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
@@ -92,7 +94,7 @@ public class CobaltApplication implements AutoCloseable
 
         VersionInfo mVersionInfo = new VersionInfo("cobalt.version");
         CB_LOGGER.info("COBALT version: {}, build timestamp: {}",
-                mVersionInfo.version(), mVersionInfo.buildTime().toLocalTime());
+                mVersionInfo.version(), mVersionInfo.buildTime().format(ISO_ZONED_DATE_TIME));
 
         CB_LOGGER.info("Reading GC Profile from {}", mConfig.GcProfilePath);
 
@@ -107,16 +109,16 @@ public class CobaltApplication implements AutoCloseable
 
             final Multimap<Chromosome, GCProfile> gcProfiles = loadGCContent(chromosomes);
 
-            final CountSupplier countSupplier = new CountSupplier(
+            final BamReadCounter bamReadCounter = new BamReadCounter(
                     WINDOW_SIZE, mConfig.MinMappingQuality,
                     executorService, readerFactory, chromosomes);
 
-            countSupplier.generateCounts(mConfig.ReferenceBamPath, mConfig.TumorBamPath);
+            bamReadCounter.generateCounts(mConfig.ReferenceBamPath, mConfig.TumorBamPath);
 
             final RatioSupplier ratioSupplier = new RatioSupplier(mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir,
-                    gcProfiles, chromosomes, countSupplier.getReferenceCounts(), countSupplier.getTumorCounts());
+                    gcProfiles, chromosomes, bamReadCounter.getReferenceCounts(), bamReadCounter.getTumorCounts());
 
-            if(mConfig.TargetRegionPath != null)
+            if (mConfig.TargetRegionPath != null)
             {
                 TargetRegionEnrichment targetRegionEnrichment = TargetRegionEnrichment.load(mConfig.TargetRegionPath);
                 ratioSupplier.setTargetRegionEnrichment(targetRegionEnrichment);
