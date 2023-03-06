@@ -56,7 +56,7 @@ public class NeoScorer
         TpmMediansCache tpmMediansCache = new TpmMediansCache(mConfig.CohortTpmMediansFile);
 
         NE_LOGGER.info("running neoepitope scoring for {}",
-                mConfig.Samples.size() == 1 ? mConfig.Samples.get(0) : String.format("%d samples", mConfig.Samples.size()));
+                mConfig.Samples.size() == 1 ? mConfig.Samples.get(0).Id : String.format("%d samples", mConfig.Samples.size()));
 
         List<NeoScorerTask> sampleTasks = Lists.newArrayList();
 

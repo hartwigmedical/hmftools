@@ -51,8 +51,6 @@ public class DataLoader
             int geneNameUpIndex = fieldsIndexMap.get("GeneNameUp");
             int geneNameDownIndex = fieldsIndexMap.get("GeneNameDown");
             int geneIdDownIndex = fieldsIndexMap.get("GeneIdDown");
-            int tpmCancerIndex = fieldsIndexMap.get("TpmCancerDown");
-            int tpmCohortIndex = fieldsIndexMap.get("TpmCohortDown");
             int upAaIndex = fieldsIndexMap.get("UpstreamAA");
             int downAaIndex = fieldsIndexMap.get("DownstreamAA");
             int novelAaIndex = fieldsIndexMap.get("NovelAA");
@@ -70,9 +68,6 @@ public class DataLoader
                 String geneIdDown = items[geneIdDownIndex];
                 String geneName = geneNameUp.equals(geneNameDown) ? geneNameUp : geneNameUp + "_" + geneNameDown;
 
-                double tpmCancer = Double.parseDouble(items[tpmCancerIndex]);
-                double tpmCohort = Double.parseDouble(items[tpmCohortIndex]);
-
                 List<String> transUpNames = Lists.newArrayList();
                 List<String> transDownNames = Lists.newArrayList();
 
@@ -80,7 +75,7 @@ public class DataLoader
 
                 NeoEpitopeData neoData = new NeoEpitopeData(
                         neId, NeoEpitopeType.valueOf(items[varTypeIndex]), items[varInfoIndex], geneIdDown, geneName,
-                        items[upAaIndex],items[novelAaIndex], items[downAaIndex], transUpNames, transDownNames, tpmCancer, tpmCohort);
+                        items[upAaIndex],items[novelAaIndex], items[downAaIndex], transUpNames, transDownNames);
 
                 neoDataList.add(neoData);
             }

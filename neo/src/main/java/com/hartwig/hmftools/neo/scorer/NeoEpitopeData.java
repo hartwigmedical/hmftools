@@ -6,12 +6,14 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.INVALID_EXP;
+import static com.hartwig.hmftools.neo.scorer.NeoRnaData.NO_TPM_VALUE;
 import static com.hartwig.hmftools.neo.scorer.TpmMediansCache.CANCER_VALUE;
 import static com.hartwig.hmftools.neo.scorer.TpmMediansCache.PAN_CANCER_VALUE;
 
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
@@ -29,10 +31,12 @@ public class NeoEpitopeData
     public final List<String>[] Transcripts;
     public final NeoRnaData RnaData;
 
+    public final List<PeptideScoreData> mPeptides;
+
     public NeoEpitopeData(
             final int id, final NeoEpitopeType variantType, final String variantInfo, final String geneId, final String geneName,
             final String upAminoAcids, final String novelAminoAcids, final String downAminoAcids,
-            final List<String> transNamesUp, final List<String> transNamesDown, double tpmCancer, double tpmCohort)
+            final List<String> transNamesUp, final List<String> transNamesDown)
     {
         Id = id;
         VariantType = variantType;
@@ -46,7 +50,16 @@ public class NeoEpitopeData
         Transcripts[FS_UP] = transNamesUp;
         Transcripts[FS_DOWN] = transNamesDown;
 
-        RnaData = new NeoRnaData(tpmCancer, tpmCohort);
+        RnaData = new NeoRnaData();
+
+        mPeptides = Lists.newArrayList();
+    }
+
+    public List<PeptideScoreData> peptides() { return mPeptides; }
+
+    public void addPeptides(final List<PeptideScoreData> peptides)
+    {
+        mPeptides.addAll(peptides);
     }
 
     public void setExpressionData(
@@ -81,12 +94,16 @@ public class NeoEpitopeData
 
                 double[] tpmValues = cohortTpmMediansCache.getTranscriptTpm(transName, sampleData.CancerType);
 
-                panCancerTpm[fs] += tpmValues[PAN_CANCER_VALUE];
-                cancerTpm[fs] += tpmValues[CANCER_VALUE];
+                if(tpmValues[PAN_CANCER_VALUE] != NO_TPM_VALUE)
+                    panCancerTpm[fs] += tpmValues[PAN_CANCER_VALUE];
+
+                if(tpmValues[CANCER_VALUE] != NO_TPM_VALUE)
+                    cancerTpm[fs] += tpmValues[CANCER_VALUE];
             }
         }
 
         RnaData.setExpression(sampleExpression);
+        RnaData.setCohortValues(cancerTpm, panCancerTpm);
     }
 
     public void setFusionRnaSupport(final List<RnaNeoEpitope> rnaNeoDataList)

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.neo.scorer;
 
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.AA_SELENOCYSTEINE;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
@@ -42,8 +43,6 @@ public class NeoScorerTask implements Callable
     private final TpmMediansCache mTpmMediansCache;
     private final NeoDataWriter mWriters;
 
-    private static final int[] PEPTIDE_LENGTH_RANGE = new int[] { MIN_PEPTIDE_LENGTH, REF_PEPTIDE_LENGTH };
-
     public NeoScorerTask(
             final SampleData sampleData, final NeoScorerConfig config, final BindScorer scorer,
             @Nullable final RnaExpressionMatrix transExpression, final TpmMediansCache tpmMediansCache, final NeoDataWriter writers)
@@ -80,6 +79,7 @@ public class NeoScorerTask implements Callable
         List<NeoEpitopeData> neoDataList = loadNeoEpitopes(sampleId, mConfig.NeoDataDir);
 
         List<AlleleCoverage> alleleCoverages = loadAlleleCoverage(sampleId, mConfig.LilacDataDir);
+        Set<String> uniqueAlleles = alleleCoverages.stream().map(x -> x.Allele).collect(Collectors.toSet());
 
         List<RnaNeoEpitope> rnaNeoDataList = loadRnaNeoData(sampleId, mConfig.IsofoxDataDir);
 
@@ -110,99 +110,55 @@ public class NeoScorerTask implements Callable
             neoData.setMutationRnaSupport(somaticVariants);
         }
 
-        double tpmNormalisationFactor = calculateTpmNormalisation(neoDataList);
+        TpmCalculator tpmCalculator = new TpmCalculator();
 
-        // derive the set of peptides per allele from the novel amino acids
-        Map<Integer,NeoPredictionData> neoPredictionsMap = Maps.newHashMap();
+        tpmCalculator.compute(sampleId, neoDataList, uniqueAlleles);
 
-        int peptideAlleleCount = 0;
-
-        Map<String,List<NeoEpitopeData>> variantNeoMap = Maps.newHashMap();
+        // build out results per allele and score them
+        int scoreCount = 0;
 
         for(NeoEpitopeData neoData : neoDataList)
         {
-            List<NeoEpitopeData> variantNeos = variantNeoMap.get(neoData.VariantInfo);
-
-            if(variantNeos == null)
-                variantNeoMap.put(neoData.VariantInfo, Lists.newArrayList(neoData));
-            else
-                variantNeos.add(neoData);
-        }
-
-        for(List<NeoEpitopeData> variantNeos : variantNeoMap.values())
-        {
-
-            for(NeoEpitopeData neoData : neoDataList)
+            for(String allele : uniqueAlleles)
             {
-                NeoPredictionData predData = produceAllelePeptides(neoData, alleleCoverages);
-
-                neoPredictionsMap.put(neoData.Id, predData);
-                peptideAlleleCount += predData.getPeptidePredictions().values().stream().mapToInt(x -> x.size()).sum();
-
-                // sum TPM across all transcripts
-
+                neoData.peptides().forEach(x -> x.addAllele(allele));
             }
-        }
 
-        NE_LOGGER.debug("sample({}) neoepitopes({}) derived {} allele-peptides",
-                sampleId, neoDataList.size(), peptideAlleleCount);
-
-        // calculate TPM per allele and peptide
-
-
-
-        // score the peptides
-        for(NeoPredictionData predData : neoPredictionsMap.values())
-        {
-            for(List<BindData> bindDataList : predData.getPeptidePredictions().values())
+            for(PeptideScoreData peptideScoreData : neoData.peptides())
             {
-                for(BindData bindData : bindDataList)
+                for(BindData bindData : peptideScoreData.alleleScoreData())
                 {
                     mScorer.calcScoreData(bindData);
+                    ++scoreCount;
                 }
             }
         }
 
         NE_LOGGER.debug("sample({}) neoepitopes({}) scored {} allele-peptides",
-                sampleId, neoDataList.size(), peptideAlleleCount);
+                sampleId, neoDataList.size(), scoreCount);
 
         if(mConfig.WriteTypes.contains(OutputType.ALLELE_PEPTIDE))
         {
-            for(AlleleCoverage alleleCoverage : alleleCoverages)
+            for(NeoEpitopeData neoData : neoDataList)
             {
-                for(NeoEpitopeData neoData : neoDataList)
-                {
-                    NeoPredictionData predData = neoPredictionsMap.get(neoData.Id);
-
-                    mWriters.writePeptideData(sampleId, neoData, predData, alleleCoverage);
-                }
+                mWriters.writePeptideData(sampleId, neoData, alleleCoverages);
             }
         }
-    }
 
-    private double calculateTpmNormalisation(final Collection<NeoEpitopeData> neoDataList)
-    {
-        double tpmUpTotal = 0;
-        double baseDepthTotal = 0;
-        int dataCount = 0;
-
-        for(NeoEpitopeData neoData : neoDataList)
+        if(mConfig.WriteTypes.contains(OutputType.NEOEPITOPE))
         {
-            if(neoData.VariantType != NeoEpitopeType.MISSENSE)
-                continue;
-
-            if(neoData.RnaData.hasCoverage() && neoData.RnaData.hasExpression())
+            /*
+            for(NeoEpitopeData neoData : neoDataList)
             {
-                tpmUpTotal += neoData.RnaData.transExpression()[FS_UP];
-                baseDepthTotal += neoData.RnaData.averageBaseDepth();
-                ++dataCount;
-            }
-        }
+                NeoPredictionData predData = neoPredictionsMap.get(neoData.Id);
 
-        double tpmNormalisationFactor = dataCount > 0 ? tpmUpTotal / baseDepthTotal : 0;
-        return tpmNormalisationFactor;
+                mWriters.writePeptideData(sampleId, neoData, predData, alleleCoverage);
+            }
+            */
+        }
     }
 
+    /*
     private NeoPredictionData produceAllelePeptides(final NeoEpitopeData neoData, final List<AlleleCoverage> alleleCoverages)
     {
         NeoPredictionData neoPredData = new NeoPredictionData(neoData.Id);
@@ -230,7 +186,7 @@ public class NeoScorerTask implements Callable
                 BindData bindData = new BindData(
                         allele.Allele, peptideData.Peptide, "", peptideData.UpFlank, peptideData.DownFlank);
 
-                bindData.setTPM(neoData.RnaData.getTPM());
+                // bindData.setTPM(neoData.RnaData.getTPM());
 
                 bindDataList.add(bindData);
             }
@@ -238,4 +194,5 @@ public class NeoScorerTask implements Callable
 
         return neoPredData;
     }
+    */
 }

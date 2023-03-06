@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.scorer.NeoRnaData.NO_TPM_VALUE;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -35,18 +36,18 @@ public class TpmMediansCache
 
     public double[] getTranscriptTpm(final String transName, final String cancerType)
     {
-        final double[] results = { 0, 0 };
+        final double[] results = { NO_TPM_VALUE, NO_TPM_VALUE };
         final Map<String,Double> cancerTpmMap = mTransCancerTpmMap.get(transName);
 
         if(cancerTpmMap != null)
         {
             Double tpm = cancerTpmMap.get(ALL_TYPES);
-            results[PAN_CANCER_VALUE] = tpm != null ? tpm : 0;
+
+            if(tpm != null)
+                results[PAN_CANCER_VALUE] = tpm;
 
             if(cancerType != null && !cancerType.isEmpty() && cancerTpmMap.containsKey(cancerType))
-            {
                 results[CANCER_VALUE] = cancerTpmMap.get(cancerType);
-            }
         }
 
         return results;
@@ -100,8 +101,6 @@ public class TpmMediansCache
         catch(IOException e)
         {
             NE_LOGGER.error("failed to load cohort TPM median data file({}): {}", filename, e.toString());
-            return;
         }
-
     }
 }

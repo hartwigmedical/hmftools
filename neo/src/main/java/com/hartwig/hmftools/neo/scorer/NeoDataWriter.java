@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.List;
 
 import com.hartwig.hmftools.neo.bind.BindData;
 
@@ -42,8 +43,9 @@ public class NeoDataWriter
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
             writer.write("SampleId,NeId,VarType,VarInfo,Gene,Allele,Peptide");
             writer.write(",Score,Rank,Likelihood,LikelihoodRank,ExpLikelihood,ExpLikelihoodRank,RecogSim,OtherAlleleRecogSim");
-            writer.write(",AllelCN,AlleleDisrupted");
-            writer.write(",TpmUp,TpmDown,TpmCancer,TpmCohort,RnaFrags,RnaDepth");
+            writer.write(",AllelCN,AlleleDisrupted,RnaFrags,RnaDepth");
+            writer.write(",TpmUp,TpmDown,TpmDownTotal,ExpectedTpm,EffectiveTpm,RawEffectiveTpm");
+            writer.write(",TpmCancerUp,TpmCancerDown,TpmPanCancerUp,TpmPanCancerDown");
             writer.newLine();
             return writer;
         }
@@ -51,6 +53,54 @@ public class NeoDataWriter
         {
             NE_LOGGER.error("failed to create peptide writer: {}", e.toString());
             return null;
+        }
+    }
+
+    public synchronized void writePeptideData(final String sampleId, final NeoEpitopeData neoData, final List<AlleleCoverage> alleleCoverages)
+    {
+        if(mPeptideWriter == null)
+            return;
+
+        try
+        {
+            for(PeptideScoreData peptideScoreData : neoData.peptides())
+            {
+                double expectedTpm = peptideScoreData.tpmUpAllocation(neoData.Id);
+
+                for(BindData bindData : peptideScoreData.alleleScoreData())
+                {
+                    if(!logPeptide(bindData))
+                        continue;
+
+                    AlleleCoverage alleleCoverage = alleleCoverages.stream().filter(x -> x.Allele.equals(bindData.Allele)).findFirst().orElse(null);
+
+                    mPeptideWriter.write(String.format("%s,%d,%s,%s,%s,%s,%s",
+                            sampleId, neoData.Id, neoData.VariantType, neoData.VariantInfo, neoData.GeneName,
+                            bindData.Allele, bindData.Peptide));
+
+                    mPeptideWriter.write(String.format(",%.4f,%.6f,%.6f,%.6f,%.6f,%.6f,%.1f,%.1f",
+                            bindData.score(), bindData.rankPercentile(), bindData.likelihood(), bindData.likelihoodRank(),
+                            bindData.expressionLikelihood(), bindData.expressionLikelihoodRank(),
+                            bindData.recognitionSimilarity(), bindData.otherAlleleRecognitionSimilarity()));
+
+                    mPeptideWriter.write(String.format(",%.2f,%s", alleleCoverage.CopyNumber, alleleCoverage.isLost()));
+
+                    final NeoRnaData rnaData = neoData.RnaData;
+
+                    mPeptideWriter.write(String.format(",%d,%.0f,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e",
+                            rnaData.fragmentSupport(), rnaData.averageBaseDepth(),
+                            rnaData.transExpression()[FS_UP], rnaData.transExpression()[FS_DOWN], peptideScoreData.tpmDownTotal(),
+                            expectedTpm, peptideScoreData.effectiveTpm(), peptideScoreData.rawEffectiveTpm(),
+                            rnaData.tpmCancer()[FS_UP], rnaData.tpmCancer()[FS_DOWN],
+                            rnaData.tpmPanCancer()[FS_UP], rnaData.tpmPanCancer()[FS_DOWN]));
+
+                    mPeptideWriter.newLine();
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            NE_LOGGER.error("failed to write peptide data: {}", e.toString());
         }
     }
 
@@ -71,45 +121,6 @@ public class NeoDataWriter
     public static boolean passesThreshold(double value, double threshold)
     {
         return value != INVALID_CALC && (threshold == 0 || threshold > 0 && value <= threshold);
-    }
-
-    public synchronized void writePeptideData(
-            final String sampleId, final NeoEpitopeData neoData, final NeoPredictionData predData, final AlleleCoverage alleleCoverage)
-    {
-        if(mPeptideWriter == null)
-            return;
-
-        try
-        {
-            for(BindData bindData : predData.getPeptidePredictions(alleleCoverage.Allele))
-            {
-                if(!logPeptide(bindData))
-                    continue;
-
-                mPeptideWriter.write(String.format("%s,%d,%s,%s,%s,%s,%s",
-                        sampleId, neoData.Id, neoData.VariantType, neoData.VariantInfo, neoData.GeneName,
-                        bindData.Allele, bindData.Peptide));
-
-                mPeptideWriter.write(String.format(",%.4f,%.6f,%.6f,%.6f,%.6f,%.6f,%.1f,%.1f",
-                        bindData.score(), bindData.rankPercentile(), bindData.likelihood(), bindData.likelihoodRank(),
-                        bindData.expressionLikelihood(), bindData.expressionLikelihoodRank(),
-                        bindData.recognitionSimilarity(), bindData.otherAlleleRecognitionSimilarity()));
-
-                mPeptideWriter.write(String.format(",%.2f,%s", alleleCoverage.CopyNumber, alleleCoverage.isLost()));
-
-                final NeoRnaData rnaData = neoData.RnaData;
-
-                mPeptideWriter.write(String.format(",%4.3e,%4.3e,%4.3e,%4.3e,%d,%.0f",
-                        rnaData.transExpression()[FS_UP], rnaData.transExpression()[FS_DOWN], rnaData.TpmCancer, rnaData.TpmCohort,
-                        rnaData.fragmentSupport(), rnaData.averageBaseDepth()));
-
-                mPeptideWriter.newLine();
-            }
-        }
-        catch (IOException e)
-        {
-            NE_LOGGER.error("failed to write peptide data: {}", e.toString());
-        }
     }
 
     /*

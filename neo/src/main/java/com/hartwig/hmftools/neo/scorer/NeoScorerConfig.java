@@ -95,7 +95,7 @@ public class NeoScorerConfig
         String filename = OutputDir;
 
         if(Samples.size() == 1)
-            filename += Samples.get(0) + ".neo";
+            filename += Samples.get(0).Id + ".neo";
         else
             filename += "neo_cohort";
 
