@@ -927,6 +927,7 @@ We can determine the likelihood of a variant being subclonal at any given varian
 - **Somatic penalty** - Currently this depends on the upper tail of the distribution of VAFs, which may pick up noise and tend to apply a too agressive penalty.   Better would be to strongly penalise clearly defined peaks of variants with variant copy numbers that are inconsistent with the fitted major allele copy number at the location.
 
 ## Version History and Download Links
+- [3.8](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.8.1)
 - [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.7.2)
 - [3.6](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.6)
 - [3.5](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.5)

@@ -873,6 +873,7 @@ LINE annotation
 - **PolyA tail can map to long A or T homopolymers** - LINX uses the polyA tail to identify LINE elements, but these tails sometimes are mapped to regions of the genome with long polyA repeats.  In this case LINX does not recognise the PolyA tail
 
 ## Version History
+- [1.23](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.23.2)
 - [1.22](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.22)
 - [1.21](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.21)
 - [1.20](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.20)

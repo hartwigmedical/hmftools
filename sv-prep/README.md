@@ -103,4 +103,5 @@ Variants near blacklisted regions - GRIDSS will ignore any read that overlaps a 
 - **Performance** - ComputeSamTags could be done in extraction step
 
 # Version History and Download Links
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.1)
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.0.1)
