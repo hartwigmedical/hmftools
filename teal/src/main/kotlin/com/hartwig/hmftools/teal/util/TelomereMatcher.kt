@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.teal.util
 
-import com.hartwig.hmftools.common.sequence.*
+import com.hartwig.hmftools.common.aligner.*
+
 import com.hartwig.hmftools.teal.TealConstants
 import org.apache.logging.log4j.LogManager
 
@@ -9,6 +10,9 @@ import org.apache.logging.log4j.LogManager
 object TelomereMatcher
 {
     private val LOGGER = LogManager.getLogger(javaClass)
+
+    // we use same score for mismatch and gap, tailored for aligning to TTAGGG template
+    private val sAligner = LocalSequenceAligner(1, -1, -1, -1)
 
     data class TelomereMatch(val matchStart: Int, val matchEnd: Int, val numMatchedBases: Int, val matchedSequence: String)
 
@@ -29,74 +33,20 @@ object TelomereMatcher
         val telomereTemplateLength = (seq.length * 1.2).toInt() + 6
 
         // we provide a template that is 1.5x as long as the original sequence
-        val alignment: SequenceAligner.Alignment = SequenceAligner.alignSubsequence(seq, generateTelomereTemplate(telomereTemplateLength, gRich))
+        val alignment: LocalSequenceAligner.Alignment = sAligner.alignSequence(seq, generateTelomereTemplate(telomereTemplateLength, gRich))
 
-        // we work out longest stretch of telomere which satisfy our matching threshold
+        val numMatch = alignment.operators.count({ op -> op == AlignmentOperator.MATCH })
 
-        val scoreSeq = alignment.alignOps.map { op -> if (op == SequenceAligner.AlignOp.MATCH) 1.0 else 0.0 }.toDoubleArray()
-
-        val longestMatchRange = LongestSegment.longestSegmentAverage(scoreSeq, matchThreshold)
-
-        if (longestMatchRange == null)
-        {
-            return null
-        }
-
-        var alignOpStart = longestMatchRange.minimum
-        var alignOpEnd = longestMatchRange.maximum + 1
-
-        // we want to trim the ends, cause the longest stretch could well include some mismatches at either ends
-        while (alignOpStart < alignOpEnd && alignment.alignOps[alignOpStart] != SequenceAligner.AlignOp.MATCH)
-        {
-            ++alignOpStart
-        }
-
-        while (alignOpStart < alignOpEnd && alignment.alignOps[alignOpEnd - 1] != SequenceAligner.AlignOp.MATCH)
-        {
-            --alignOpEnd
-        }
-
-        if (alignOpStart == alignOpEnd)
+        // at least need to match 6 (TTAGGG)
+        if (numMatch < 6)
             return null
 
-        // now we want to find out where the start and end is actually in relation to our sequence
-        // reason is that the match is actually in relation to the aligned ops, but not to the
-        // sequence we input
-
-
-        // now we go backwards and work out the match sequence
-        var numMatch = 0
-        var seqIndex = -1
-        var matchStart = -1
-        var matchEnd = 0
-        for (i in alignment.alignOps.indices)
-        {
-            val alignOp = alignment.alignOps[i]
-
-            if (alignOp != SequenceAligner.AlignOp.DELETION)
-            {
-                // we need to keep track of where we are at the input sequence
-                ++seqIndex
-            }
-
-            if (alignOp == SequenceAligner.AlignOp.MATCH && i >= alignOpStart && i < alignOpEnd)
-            {
-                ++numMatch
-
-                if (matchStart == -1)
-                {
-                    matchStart = seqIndex
-                }
-                matchEnd = seqIndex + 1
-            }
-        }
-        val matchSegmentLength = matchEnd - matchStart
-        val matchRatio = numMatch.toDouble() / matchSegmentLength
-        val matchSeq = seq.substring(matchStart, matchEnd)
+        val matchRatio = numMatch / alignment.leftSequenceAlignLength
+        val matchSeq = seq.substring(alignment.leftSequenceAlignStart, alignment.leftSequenceAlignEnd)
 
         LOGGER.trace("seq({}) matchSegmentLength({}) numMatch({}) matchSegment({}) ratio({}) threshold({})",
-            seq, matchSegmentLength, numMatch, matchSeq, matchRatio, matchThreshold)
-        return TelomereMatch(matchStart, matchEnd, numMatch, matchSeq)
+            seq, alignment.leftSequenceAlignLength, numMatch, matchSeq, matchRatio, matchThreshold)
+        return TelomereMatch(alignment.leftSequenceAlignStart, alignment.leftSequenceAlignEnd, numMatch, matchSeq)
     }
 
     private fun generateTelomereTemplate(length: Int, gRich: Boolean): String
