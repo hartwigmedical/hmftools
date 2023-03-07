@@ -112,7 +112,7 @@ public class NeoScorerTask implements Callable
 
         TpmCalculator tpmCalculator = new TpmCalculator();
 
-        tpmCalculator.compute(sampleId, neoDataList, uniqueAlleles);
+        tpmCalculator.compute(sampleId, neoDataList);
 
         // build out results per allele and score them
         int scoreCount = 0;

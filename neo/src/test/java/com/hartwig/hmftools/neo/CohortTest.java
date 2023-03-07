@@ -1,6 +1,11 @@
 package com.hartwig.hmftools.neo;
 
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.scorer.AlleleCoverage.EXPECTED_ALLELE_COUNT;
+import static com.hartwig.hmftools.neo.scorer.TpmCalculator.HIGH_PROBABILITY;
+import static com.hartwig.hmftools.neo.scorer.TpmCalculator.LOW_PROBABILITY;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -10,6 +15,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.neo.scorer.PeptidePredictionData;
 import com.hartwig.hmftools.neo.scorer.TpmCalculator;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 public class CohortTest
@@ -51,36 +58,5 @@ public class CohortTest
         PeptidePredictionData.expandHomozygous(predictions);
         assertEquals(EXPECTED_ALLELE_COUNT, predictions.size());
         assertEquals(2, predictions.stream().filter(x -> x.Allele.equals("C0101")).count());
-    }
-
-    @Test
-    public void testEffectiveTpmCalcs()
-    {
-        double reqProbLow = 0.05;
-        double reqProbHigh = 0.95;
-
-        double lowValue = TpmCalculator.calcPoissonObservedGivenProb(10, reqProbLow);
-        double highValue = TpmCalculator.calcPoissonObservedGivenProb(10, reqProbHigh);
-
-        assertEquals(4.5, lowValue, 0.1);
-        assertEquals(15.0, highValue, 0.1);
-
-        lowValue = TpmCalculator.calcPoissonObservedGivenProb(1, reqProbLow);
-        highValue = TpmCalculator.calcPoissonObservedGivenProb(1, reqProbHigh);
-
-        assertEquals(0, lowValue, 0.1);
-        assertEquals(2.5, highValue, 0.1);
-
-        lowValue = TpmCalculator.calcPoissonObservedGivenProb(2, reqProbLow);
-        highValue = TpmCalculator.calcPoissonObservedGivenProb(2, reqProbHigh);
-
-        assertEquals(0, lowValue, 0.1);
-        assertEquals(4, highValue, 0.1);
-
-        lowValue = TpmCalculator.calcPoissonObservedGivenProb(3, reqProbLow);
-        highValue = TpmCalculator.calcPoissonObservedGivenProb(3, reqProbHigh);
-
-        assertEquals(1, lowValue, 0.1);
-        assertEquals(5.7, highValue, 0.1);
     }
 }
