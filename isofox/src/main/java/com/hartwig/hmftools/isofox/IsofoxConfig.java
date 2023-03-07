@@ -62,6 +62,7 @@ public class IsofoxConfig
     private static final String WRITE_EXON_DATA = "write_exon_data";
     private static final String WRITE_READ_DATA = "write_read_data";
     private static final String WRITE_SPLICE_SITE_DATA = "write_splice_sites";
+    private static final String WRITE_SPLICE_JUNC_DATA = "write_splice_junctions";
 
     private static final String BAM_FILE = "bam_file";
     private static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
@@ -110,6 +111,7 @@ public class IsofoxConfig
     public final boolean DropDuplicates;
 
     public final boolean WriteExonData;
+    public final boolean WriteSpliceJunctions;
     public final boolean WriteReadData;
     public final boolean WriteSpliceSiteData;
 
@@ -185,6 +187,7 @@ public class IsofoxConfig
         DropDuplicates = cmd.hasOption(DROP_DUPLICATES);
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
+        WriteSpliceJunctions = cmd.hasOption(WRITE_SPLICE_JUNC_DATA);
         WriteFragmentLengths = cmd.hasOption(WRITE_FRAG_LENGTHS);
         WriteFragmentLengthsByGene = cmd.hasOption(FRAG_LENGTHS_BY_GENE);
         WriteReadData = cmd.hasOption(WRITE_READ_DATA);
@@ -384,6 +387,7 @@ public class IsofoxConfig
         UnmappedCohortFreqFile = null;
 
         WriteExonData = false;
+        WriteSpliceJunctions = false;
         WriteReadData = false;
         WriteSpliceSiteData = false;
         WriteFragmentLengths = false;
@@ -423,6 +427,7 @@ public class IsofoxConfig
         options.addOption(BAM_FILE, true, "RNA BAM file location");
         options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
         options.addOption(WRITE_EXON_DATA, false, "Exon region data");
+        options.addOption(WRITE_SPLICE_JUNC_DATA, false, "Write canonical splice junction counts");
         options.addOption(WRITE_READ_DATA, false, "BAM read data");
         options.addOption(WRITE_SPLICE_SITE_DATA, false, "Write support info for each splice site");
         options.addOption(WRITE_TRANS_COMBO_DATA, false, "Write transcript group data for EM algo");

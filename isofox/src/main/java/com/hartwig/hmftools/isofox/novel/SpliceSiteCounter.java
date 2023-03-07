@@ -57,8 +57,6 @@ public class SpliceSiteCounter
         if(readMappedCoords.size() <= 1)
             return;
 
-        // Set<Integer> skippedSites = Sets.newHashSet();
-
         for(int i = 0; i < readMappedCoords.size() - 1; ++i)
         {
             int[] mappedCoordLower = readMappedCoords.get(i);
@@ -67,7 +65,6 @@ public class SpliceSiteCounter
             int junctionUpper = mappedCoordUpper[SE_START];
 
             // record if a region start or end is traversed entirely by a mapped coord junction
-
             for(RegionReadData region : allRegions)
             {
                 boolean isTraversed = false;

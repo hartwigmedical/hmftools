@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 // matches an exon from or more transcripts in a gene
-public class RegionReadData implements Comparable< RegionReadData>
+public class RegionReadData implements Comparable<RegionReadData>
 {
     public final ChrBaseRegion Region;
 
@@ -39,7 +39,7 @@ public class RegionReadData implements Comparable< RegionReadData>
 
     public RegionReadData from(final GenomeRegion region)
     {
-        return new RegionReadData(region.chromosome(), (int)region.start(), (int)region.end());
+        return new RegionReadData(region.chromosome(), region.start(), region.end());
     }
 
     public RegionReadData(final String chromosome, int posStart, int posEnd)
@@ -167,6 +167,8 @@ public class RegionReadData implements Comparable< RegionReadData>
         ++counts[seIndex][TRANS_COUNT];
     }
 
+    public Map<Integer,int[][]> getTranscriptJunctionCounts() { return mTranscriptJunctionCounts; }
+
     public double averageDepth()
     {
         if(mRefBasesMatched == null)
@@ -291,7 +293,8 @@ public class RegionReadData implements Comparable< RegionReadData>
                 .findFirst().orElse(null);
     }
 
-    public static void generateExonicRegions(final String geneId, final String chromosome, final List<RegionReadData> regions, final List<TranscriptData> transcripts)
+    public static void generateExonicRegions(
+            final String geneId, final String chromosome, final List<RegionReadData> regions, final List<TranscriptData> transcripts)
     {
         // form a genomic region for each unique exon amongst the transcripts
         for(final TranscriptData transData : transcripts)
@@ -304,7 +307,7 @@ public class RegionReadData implements Comparable< RegionReadData>
 
                 RegionReadData exonReadData = findExonRegion(regions, exon.Start, exon.End);
 
-                if (exonReadData == null)
+                if(exonReadData == null)
                 {
                     exonReadData = new RegionReadData(chromosome, exon.Start, exon.End);
                     regions.add(exonReadData);
