@@ -21,7 +21,13 @@ import org.jetbrains.annotations.NotNull;
 //
 // The alignment object contains a list of AlignmentOperators, which are MATCH, MISMATCH, INSERTION or DELETION.
 //
-// We can also use logAlignment function to log the alignment in the format
+// We can also use alignment.log() function to log the alignment in the format:
+//
+//  alignment:
+//  MSMMMMMMMSMMMMMSMMMMMM-MMMMMM+MMSMMMMSMMMSMSMSMSM
+//  TGCAGCTTAACTGAGAGCCGCT CTCTTCTCTTATGTTCCTTGTGTGAC
+//  | ||||||| ||||| |||||| |||||| || |||| ||| | | | |
+//  TCCAGCTTACCTGAGCGCCGCTCCTCTTC-CTCATGTCCCTCGGGGGCC
 //
 // For the scoring function, the match/mismatch score 1/-4 optimizes the scoring for 100% identical sequences and 1/-1 for 75% identical
 // sequences. The default for NCBI Blastn is 2/-3, which is optimal for 89% identical sequences. BWA uses 1/-4.
@@ -34,27 +40,31 @@ public class GlobalSequenceAligner extends AlignerTraits
 {
     public static class Alignment
     {
+        private final String mFirstSequence;
+        private final String mSecondSequence;
+
         private final List<AlignmentOperator> mAlignmentOperators;
         private final int mScore;
 
-        public Alignment(List<AlignmentOperator> alignOps, int score)
+        public Alignment(String firstSequence, String secondSequence, List<AlignmentOperator> alignOps, int score)
         {
+            mFirstSequence = firstSequence;
+            mSecondSequence = secondSequence;
             mAlignmentOperators = alignOps;
             mScore = score;
         }
+
+        public String getFirstSequence() { return mFirstSequence; }
+        public String getSecondSequence() { return mSecondSequence; }
 
         public List<AlignmentOperator> getOperators() { return mAlignmentOperators; }
         public int getScore() { return mScore; }
 
         public String getOperatorsString() { return AlignmentOperator.toString(mAlignmentOperators); }
 
-        public static void logAlignment(
-                @NotNull Logger logger,
-                @NotNull Level logLevel,
-                @NotNull String leftSeq, @NotNull String rightSeq,
-                @NotNull Alignment alignment)
+        public void log(@NotNull Logger logger, @NotNull Level logLevel)
         {
-            AlignmentOperator.logAlignment(logger, logLevel, leftSeq, rightSeq, alignment.getOperators());
+            AlignmentOperator.logAlignment(logger, logLevel, mFirstSequence, mSecondSequence, mAlignmentOperators);
         }
     }
 
@@ -214,7 +224,7 @@ public class GlobalSequenceAligner extends AlignerTraits
         Collections.reverse(alignOps);
 
         int score = matrix.getScore(nRows - 1, nCols - 1);
-        var alignment = new Alignment(alignOps, score);
+        var alignment = new Alignment(seq, refSeq, alignOps, score);
 
         // log matrix
         if (mLogWorkMatrix && LOGGER.isTraceEnabled())
@@ -224,7 +234,7 @@ public class GlobalSequenceAligner extends AlignerTraits
 
         if (LOGGER.isTraceEnabled())
         {
-            Alignment.logAlignment(LOGGER, Level.TRACE, seq, refSeq, alignment);
+            alignment.log(LOGGER, Level.TRACE);
         }
 
         return alignment;

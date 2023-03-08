@@ -135,9 +135,9 @@ public class LocalSequenceAlignerTest
         LocalSequenceAligner aligner = new LocalSequenceAligner(2, -1, -2, -1);
         LocalSequenceAligner.Alignment alignment =  aligner.alignSequence(seq, refSeq);
         assertEquals(expectedAlignOps, alignment.getOperatorsString());
-        assertEquals(seq1AlignStart, alignment.getLeftSequenceAlignStart());
-        assertEquals(seq1AlignEnd, alignment.getLeftSequenceAlignEnd());
-        assertEquals(seq2AlignStart, alignment.getRightSequenceAlignStart());
-        assertEquals(seq2AlignEnd, alignment.getRightSequenceAlignEnd());
+        assertEquals(seq1AlignStart, alignment.getFirstSequenceAlignStart());
+        assertEquals(seq1AlignEnd, alignment.getFirstSequenceAlignEnd());
+        assertEquals(seq2AlignStart, alignment.getSecondSequenceAlignStart());
+        assertEquals(seq2AlignEnd, alignment.getSecondSequenceAlignEnd());
     }
 }

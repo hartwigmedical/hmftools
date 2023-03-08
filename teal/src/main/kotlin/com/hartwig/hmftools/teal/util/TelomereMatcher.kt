@@ -41,12 +41,12 @@ object TelomereMatcher
         if (numMatch < 6)
             return null
 
-        val matchRatio = numMatch / alignment.leftSequenceAlignLength
-        val matchSeq = seq.substring(alignment.leftSequenceAlignStart, alignment.leftSequenceAlignEnd)
+        val matchRatio = numMatch / alignment.firstSequenceAlignLength
+        val matchSeq = seq.substring(alignment.firstSequenceAlignStart, alignment.firstSequenceAlignEnd)
 
         LOGGER.trace("seq({}) matchSegmentLength({}) numMatch({}) matchSegment({}) ratio({}) threshold({})",
-            seq, alignment.leftSequenceAlignLength, numMatch, matchSeq, matchRatio, matchThreshold)
-        return TelomereMatch(alignment.leftSequenceAlignStart, alignment.leftSequenceAlignEnd, numMatch, matchSeq)
+            seq, alignment.firstSequenceAlignLength, numMatch, matchSeq, matchRatio, matchThreshold)
+        return TelomereMatch(alignment.firstSequenceAlignStart, alignment.firstSequenceAlignEnd, numMatch, matchSeq)
     }
 
     private fun generateTelomereTemplate(length: Int, gRich: Boolean): String
