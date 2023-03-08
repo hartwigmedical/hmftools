@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.neo.scorer.DataLoader.loadNeoEpitopes;
 import static com.hartwig.hmftools.neo.scorer.DataLoader.loadRnaNeoData;
 import static com.hartwig.hmftools.neo.scorer.DataLoader.loadSomaticVariants;
 import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.RNA_SAMPLE_APPEND_SUFFIX;
+import static com.hartwig.hmftools.neo.scorer.TpmCalculator.DEFAULT_PEPTIDE_LENGTH_RANGE;
 
 import java.util.Collection;
 import java.util.List;
@@ -110,7 +111,7 @@ public class NeoScorerTask implements Callable
             neoData.setMutationRnaSupport(somaticVariants);
         }
 
-        TpmCalculator tpmCalculator = new TpmCalculator();
+        TpmCalculator tpmCalculator = new TpmCalculator(FLANK_AA_COUNT, DEFAULT_PEPTIDE_LENGTH_RANGE);
 
         tpmCalculator.compute(sampleId, neoDataList);
 
@@ -119,13 +120,13 @@ public class NeoScorerTask implements Callable
 
         for(NeoEpitopeData neoData : neoDataList)
         {
-            for(String allele : uniqueAlleles)
-            {
-                neoData.peptides().forEach(x -> x.addAllele(allele));
-            }
-
             for(PeptideScoreData peptideScoreData : neoData.peptides())
             {
+                if(!peptideScoreData.alleleScoreData().isEmpty())
+                    continue;
+
+                uniqueAlleles.forEach(x -> peptideScoreData.addAllele(x));
+
                 for(BindData bindData : peptideScoreData.alleleScoreData())
                 {
                     mScorer.calcScoreData(bindData);

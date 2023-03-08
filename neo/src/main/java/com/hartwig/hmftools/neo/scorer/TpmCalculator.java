@@ -32,17 +32,21 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 
 public class TpmCalculator
 {
+    private final int mFlankCount;
+    private final int[] mPeptideLengthRange;
     private final Map<Integer,PoissonRangeValues> mPoissonRangeValues;
-
-    private static final int[] PEPTIDE_LENGTH_RANGE = new int[] { MIN_PEPTIDE_LENGTH, REF_PEPTIDE_LENGTH };
 
     public static final double LOW_PROBABILITY = 0.05;
     public static final double HIGH_PROBABILITY = 0.95;
 
     private static final double EFFECTIVE_TPM_ACTUAL_PERC = 0.8;
 
-    public TpmCalculator()
+    public static final int[] DEFAULT_PEPTIDE_LENGTH_RANGE = new int[] { MIN_PEPTIDE_LENGTH, REF_PEPTIDE_LENGTH };
+
+    public TpmCalculator(final int flankCount, final int[] peptideLengthRange)
     {
+        mFlankCount = flankCount;
+        mPeptideLengthRange = peptideLengthRange;
         mPoissonRangeValues = Maps.newHashMap();
         populatePoissonCache();
     }
@@ -71,13 +75,15 @@ public class TpmCalculator
         {
             List<PeptideScoreData> peptideScoreDataList = Lists.newArrayList();
 
+            double totalTpmDown = variantNeos.stream().mapToDouble(x -> x.RnaData.getTPM(FS_DOWN)).sum();
+
             for(NeoEpitopeData neoData : variantNeos)
             {
                 double tpmUp = neoData.RnaData.getTPM(FS_UP);
                 double tpmDown = neoData.RnaData.getTPM(FS_DOWN);
 
                 List<PeptideData> peptides = EpitopeUtils.generatePeptides(
-                        neoData.UpAminoAcids, neoData.NovelAminoAcids, neoData.DownAminoAcids, PEPTIDE_LENGTH_RANGE, FLANK_AA_COUNT);
+                        neoData.UpAminoAcids, neoData.NovelAminoAcids, neoData.DownAminoAcids, mPeptideLengthRange, mFlankCount);
 
                 for(PeptideData peptide : peptides)
                 {
@@ -110,26 +116,30 @@ public class TpmCalculator
                 double rawEffectiveTpm = tpmNormalisationFactor != NO_TPM_VALUE ?
                         neoData.RnaData.fragmentSupport() * tpmNormalisationFactor : NO_TPM_VALUE;
 
-                PoissonRangeValues rangeValues = getOrCalcRangeValues(rawEffectiveTpm);
+                PoissonRangeValues rangeValues = getOrCalcRangeValues(neoData.RnaData.fragmentSupport());
 
                 for(PeptideScoreData peptideData : neoPeptides)
                 {
-                    double expectedTpm = peptideData.tpmUpAllocation(neoData.Id);
+                    // expected TPM is the sum of TPM Down from neoepitopes with this peptide / total TPM down for all neoepitopes of this variant
+                    double expectedTpm = totalTpmDown > 0 ? peptideData.tpmUp() * peptideData.tpmDownTotal() / totalTpmDown : 0;
 
                     double effectiveTpm;
 
-                    if(rawEffectiveTpm != NO_TPM_VALUE)
-                    {
-                        // effectiveTPM = 0.8 * rawEffectiveTPM + 0.2 * max[poisson5%(rawEffectiveTPM), min[Poisson95%(rawEffectiveTPM), expectedTPM]]
-                        effectiveTpm = EFFECTIVE_TPM_ACTUAL_PERC * rawEffectiveTpm
-                                + (1 - EFFECTIVE_TPM_ACTUAL_PERC) * max(rangeValues.LowValue, min(rangeValues.HighValue, expectedTpm));
-                    }
-                    else
+                    if(tpmNormalisationFactor == NO_TPM_VALUE || !neoData.RnaData.hasExpression())
                     {
                         effectiveTpm = expectedTpm;
                     }
+                    else
+                    {
+                        // effectiveTPM = 0.8 * rawEffectiveTPM + 0.2 * max[poisson5%(rawEffectiveTPM), min[Poisson95%(rawEffectiveTPM), expectedTPM]]
+                        double rangeLow = rangeValues.LowValue * tpmNormalisationFactor;
+                        double rangeHigh = rangeValues.HighValue * tpmNormalisationFactor;
 
-                    peptideData.setEffectiveTpms(rawEffectiveTpm, effectiveTpm);
+                        effectiveTpm = EFFECTIVE_TPM_ACTUAL_PERC * rawEffectiveTpm
+                                + (1 - EFFECTIVE_TPM_ACTUAL_PERC) * max(rangeHigh, min(rangeLow, expectedTpm));
+                    }
+
+                    peptideData.setCalculatedTpms(rawEffectiveTpm, effectiveTpm, expectedTpm);
                 }
             }
         }
@@ -189,13 +199,15 @@ public class TpmCalculator
             HighValue = highValue;
         }
 
-        public String toString() { return format("low=%.1f high=%.1f", LowValue, HighValue); }
+        public String toString() { return format("low=%.2f high=%.2f", LowValue, HighValue); }
     }
 
     private void populatePoissonCache()
     {
         List<String> lines = new BufferedReader(new InputStreamReader(
-                    TpmCalculator.class.getResourceAsStream("expected_fragment_ranges.csv"))).lines().collect(Collectors.toList());
+                    TpmCalculator.class.getResourceAsStream("/ref/expected_fragment_ranges.csv"))).lines().collect(Collectors.toList());
+
+        lines.remove(0);
 
         for(String line : lines)
         {
