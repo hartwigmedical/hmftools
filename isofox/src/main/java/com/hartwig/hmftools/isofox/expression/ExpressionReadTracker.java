@@ -206,7 +206,6 @@ public class ExpressionReadTracker
         }
     }
 
-
     public void addGcCounts(final CategoryCountsData catCounts, final List<int[]> readRegions, int minMapQuality)
     {
         int[] gcRatioIndices = { -1, -1 };

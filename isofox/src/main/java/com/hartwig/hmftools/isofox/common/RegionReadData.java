@@ -281,6 +281,14 @@ public class RegionReadData implements Comparable<RegionReadData>
         }
     }
 
+    public int getBoundaryBaseDepth(int seIndex)
+    {
+        if(mRefBasesMatched == null)
+            return 0;
+
+        return seIndex == SE_START ? mRefBasesMatched[0] : mRefBasesMatched[mRefBasesMatched.length - 1];
+    }
+
     public static boolean regionExists(final List<RegionReadData> regions, int posStart, int posEnd)
     {
         return regions.stream().anyMatch(x -> x.start() == posStart && x.end() == posEnd);

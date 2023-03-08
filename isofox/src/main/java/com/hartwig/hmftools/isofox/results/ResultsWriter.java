@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -48,6 +49,7 @@ import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
+import com.hartwig.hmftools.isofox.common.TransExonRef;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.expression.TranscriptExpression;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
@@ -55,6 +57,8 @@ import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 import com.hartwig.hmftools.isofox.novel.SpliceSiteCounter;
 import com.hartwig.hmftools.isofox.unmapped.UmrFinder;
+
+import org.apache.commons.compress.utils.Lists;
 
 public class ResultsWriter
 {
@@ -373,7 +377,7 @@ public class ResultsWriter
 
     private static final int MIN_SPLICE_JUNCTON_FRAGMENTS = 3;
 
-    public synchronized void writeSpliceJunctionData(final GeneReadData geneReadData)
+    public synchronized void writeSpliceJunctionData(final GeneCollection geneCollection)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -391,7 +395,7 @@ public class ResultsWriter
 
             Map<String,SpliceJunctionData> junctionCounts = Maps.newHashMap();
 
-            for(RegionReadData regionReadData : geneReadData.getExonRegions())
+            for(RegionReadData regionReadData : geneCollection.getExonRegions())
             {
                 if(regionReadData.getPreRegions().isEmpty())
                     continue;
@@ -411,27 +415,44 @@ public class ResultsWriter
 
                     Map<Integer, int[][]> prevTransJunctionCounts = prevRegion.getTranscriptJunctionCounts();
 
+                    SpliceJunctionData sjData = null;
+
                     for(Map.Entry<Integer, int[][]> entry : nextTransJunctionCounts.entrySet())
                     {
                         Integer nextTransId = entry.getKey();
 
                         final int[][] prevCounts = prevTransJunctionCounts.get(nextTransId);
 
-                        if(prevCounts != null)
+                        if(prevCounts == null)
+                            continue;
+
+                        TransExonRef transExonRef = regionReadData.getTransExonRefs().stream()
+                                .filter(x -> x.TransId == nextTransId).findFirst().orElse(null);
+
+                        if(transExonRef == null)
+                            continue;
+
+                        if(sjData == null)
                         {
                             final int[][] nextCounts = entry.getValue();
                             int prevSpliceCount = prevCounts[SE_END][TRANS_COUNT];
                             int nextSpliceCount = nextCounts[SE_START][TRANS_COUNT];
 
-                            if(prevSpliceCount == nextSpliceCount)
-                            {
-                                SpliceJunctionData sjData = new SpliceJunctionData(
-                                        prevExonEnd, nextExonStart, (int)prevRegion.averageDepth(),
-                                        (int)regionReadData.averageDepth(), nextSpliceCount);
+                            if(prevSpliceCount != nextSpliceCount) // they should have been incremented equally
+                                continue;
 
-                                junctionCounts.put(junctionStr, sjData);
-                            }
+                            GeneReadData geneData = geneCollection.genes().stream()
+                                    .filter(x -> x.GeneData.GeneId.equals(transExonRef.GeneId)).findFirst().orElse(null);
+
+                            sjData = new SpliceJunctionData(
+                                    geneData.GeneData.GeneId, geneData.GeneData.GeneName,
+                                    prevExonEnd, nextExonStart, prevRegion.getBoundaryBaseDepth(SE_END),
+                                    regionReadData.getBoundaryBaseDepth(SE_START), nextSpliceCount);
+
+                            junctionCounts.put(junctionStr, sjData);
                         }
+
+                        sjData.TranscriptNames.add(transExonRef.TransName);
                     }
                 }
             }
@@ -443,9 +464,12 @@ public class ResultsWriter
                 if(sjData.FragmentCount < MIN_SPLICE_JUNCTON_FRAGMENTS)
                     continue;
 
-                mSpliceJunctionWriter.write(format("%s,%s,%s,%s,%s,%d,%d,%d,N/A",
-                        geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, geneReadData.GeneData.Chromosome,
-                        sjData.SjStart, sjData.SjStart, sjData.FragmentCount, sjData.DepthStart, sjData.DepthEnd));
+                StringJoiner sj = new StringJoiner(ITEM_DELIM);
+                sjData.TranscriptNames.forEach(x -> sj.add(x));
+
+                mSpliceJunctionWriter.write(format("%s,%s,%s,%s,%s,%d,%d,%d,%s",
+                        sjData.GeneId, sjData.GeneName, geneCollection.chromosome(),
+                        sjData.SjStart, sjData.SjEnd, sjData.FragmentCount, sjData.DepthStart, sjData.DepthEnd, sj.toString()));
 
                 mSpliceJunctionWriter.newLine();
             }
@@ -458,19 +482,27 @@ public class ResultsWriter
 
     private class SpliceJunctionData
     {
+        public final String GeneId;
+        public final String GeneName;
         public final int SjStart;
         public final int SjEnd;
         public final int DepthStart;
         public final int DepthEnd;
         public final int FragmentCount;
+        public final List<String> TranscriptNames;
 
-        public SpliceJunctionData(final int sjStart, final int sjEnd, final int depthStart, final int depthEnd, final int fragmentCount)
+        public SpliceJunctionData(
+                final String geneId, final String geneName,
+                final int sjStart, final int sjEnd, final int depthStart, final int depthEnd, final int fragmentCount)
         {
+            GeneId = geneId;
+            GeneName = geneName;
             SjStart = sjStart;
             SjEnd = sjEnd;
             DepthStart = depthStart;
             DepthEnd = depthEnd;
             FragmentCount = fragmentCount;
+            TranscriptNames = Lists.newArrayList();
         }
     }
 

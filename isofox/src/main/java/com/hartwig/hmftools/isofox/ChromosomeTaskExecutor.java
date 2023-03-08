@@ -381,11 +381,11 @@ public class ChromosomeTaskExecutor implements Callable
             {
                 geneReadData.getTranscripts().forEach(x -> mResultsWriter.writeExonData(geneReadData, x));
             }
+        }
 
-            if(mConfig.WriteSpliceJunctions)
-            {
-                mResultsWriter.writeSpliceJunctionData(geneReadData);
-            }
+        if(mConfig.WriteSpliceJunctions)
+        {
+            mResultsWriter.writeSpliceJunctionData(geneCollection);
         }
 
         if(!mConfig.Filters.EnrichedGeneIds.isEmpty())
