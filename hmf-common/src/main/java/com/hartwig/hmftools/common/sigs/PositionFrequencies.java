@@ -117,16 +117,16 @@ public class PositionFrequencies
         final RefGenomeCoordinates refGenome37 = RefGenomeCoordinates.COORDS_37;
         final RefGenomeCoordinates refGenome38 = RefGenomeCoordinates.COORDS_38;
 
-        for(HumanChromosome chr : HumanChromosome.values())
+        for(HumanChromosome chromosome : HumanChromosome.values())
         {
-            final String chromosome = chr.toString();
+            final String chrStr = refGenomeVersion.versionedChromosome(chromosome.toString());
 
             // NOTE: ref data 016 and earlier for v37 were constructed using the max chromosome length across both ref genome versions
             // so continue this for backwards compatibility until the next major ref data regeneration (or alternative approach)
-            int v38Length = refGenome38.lengths().get(chr);
+            int v38Length = refGenome38.lengths().get(chromosome);
 
-            int length = refGenomeVersion.is37() ? max(refGenome37.lengths().get(chr), v38Length) : v38Length;
-            chromosomeLengths.put(chromosome, length);
+            int length = refGenomeVersion.is37() ? max(refGenome37.lengths().get(chromosome), v38Length) : v38Length;
+            chromosomeLengths.put(chrStr, length);
         }
 
         return chromosomeLengths;
