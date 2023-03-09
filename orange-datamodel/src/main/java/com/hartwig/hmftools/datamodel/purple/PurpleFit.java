@@ -4,12 +4,14 @@ import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Set;
+
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PurpleFit {
 
     @NotNull
-    public abstract PurpleQC qc();
+    public abstract Set<PurpleQCStatus> qcStatus();
 
     public abstract boolean hasSufficientQuality();
 
@@ -17,13 +19,5 @@ public abstract class PurpleFit {
 
     public abstract double purity();
 
-    public abstract double minPurity();
-
-    public abstract double maxPurity();
-
     public abstract double ploidy();
-
-    public abstract double minPloidy();
-
-    public abstract double maxPloidy();
 }

@@ -191,6 +191,11 @@
                 <artifactId>patient-db</artifactId>
                 <version>${patient-db.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>orange-datamodel</artifactId>
+                <version>${orange-datamodel.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.github.samtools</groupId>

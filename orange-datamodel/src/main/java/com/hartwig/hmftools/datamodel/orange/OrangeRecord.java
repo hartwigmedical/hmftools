@@ -5,6 +5,7 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
+import com.hartwig.hmftools.datamodel.peach.PeachRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import org.immutables.value.Value;
@@ -16,39 +17,39 @@ import java.util.List;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class OrangeReport {
+public interface OrangeRecord {
 
     @NotNull
-    public abstract String sampleId();
+    String sampleId();
 
     @NotNull
-    public abstract LocalDate experimentDate();
+    LocalDate experimentDate();
 
     @NotNull
-    public abstract OrangeRefGenomeVersion refGenomeVersion();
+    OrangeRefGenomeVersion refGenomeVersion();
 
     @NotNull
-    public abstract PurpleRecord purple();
+    PurpleRecord purple();
 
     @NotNull
-    public abstract LinxRecord linx();
+    LinxRecord linx();
 
     @NotNull
-    public abstract LilacRecord lilac();
+    LilacRecord lilac();
 
     @Nullable
-    public abstract VirusInterpreterData virusInterpreter();
+    VirusInterpreterData virusInterpreter();
 
     @Nullable
-    public abstract ChordRecord chord();
+    ChordRecord chord();
 
     @Nullable
-    public abstract CuppaData cuppa();
+    CuppaData cuppa();
 
     @Nullable
-    public abstract List<PeachGenotype> peach();
+    PeachRecord peach();
 
     @NotNull
-    public abstract OrangePlots plots();
+    OrangePlots plots();
 
 }

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.purple;
+package com.hartwig.hmftools.datamodel.peach;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -8,6 +8,8 @@ import java.util.Set;
 
 @Value.Immutable
 @Value.Style(passAnnotations = {NotNull.class, Nullable.class})
-public abstract class PurpleQC {
-    public abstract Set<PurpleQCStatus> status();
+public abstract class PeachRecord {
+
+    @NotNull
+    public abstract Set<PeachGenotype> entries();
 }
