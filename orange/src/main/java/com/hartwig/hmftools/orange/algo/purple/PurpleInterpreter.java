@@ -30,6 +30,8 @@ import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.orange.algo.linx.BreakendUtil;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 
@@ -319,7 +321,7 @@ public class PurpleInterpreter {
                 .gene(driver.gene())
                 .transcript(driver.transcript())
                 .isCanonical(driver.isCanonical())
-                .interpretation(CopyNumberInterpretation.fromCNADriver(driver))
+                .interpretation(CopyNumberInterpretationUtil.fromCNADriver(driver))
                 .minCopies(Math.round(Math.max(0, driver.minCopyNumber())))
                 .maxCopies(Math.round(Math.max(0, driver.maxCopyNumber())))
                 .build();

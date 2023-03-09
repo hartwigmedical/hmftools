@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
@@ -17,6 +17,8 @@ import com.itextpdf.layout.element.Table;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretationUtil.display;
 
 public final class GainLossTable {
 
@@ -39,7 +41,7 @@ public final class GainLossTable {
         for (PurpleGainLoss gainLoss : sort(gainsLosses)) {
             table.addCell(Cells.createContent(gainLoss.chromosome() + gainLoss.chromosomeBand()));
             table.addCell(Cells.createContent(displayGene(gainLoss)));
-            table.addCell(Cells.createContent(gainLoss.interpretation().display()));
+            table.addCell(Cells.createContent(display(gainLoss.interpretation())));
             table.addCell(Cells.createContent(String.valueOf(gainLoss.minCopies())));
 
             GeneExpression expression = findExpressionForGene(isofox, gainLoss.gene());

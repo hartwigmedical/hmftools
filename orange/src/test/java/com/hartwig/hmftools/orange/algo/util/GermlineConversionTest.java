@@ -1,12 +1,5 @@
 package com.hartwig.hmftools.orange.algo.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -19,22 +12,19 @@ import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
-import com.hartwig.hmftools.orange.algo.purple.ImmutablePurityPloidyFit;
-import com.hartwig.hmftools.orange.algo.purple.PurityPloidyFit;
-import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
-import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
-import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainLossFactory;
-import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
-import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
-
+import com.hartwig.hmftools.orange.algo.purple.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
+
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class GermlineConversionTest {
 

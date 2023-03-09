@@ -264,8 +264,8 @@ public class OrangeReportToRecordConversion {
                 .allSomaticCopyNumbers(() -> purpleInterpretedData.allSomaticCopyNumbers().stream().map(OrangeReportToRecordConversion::convert).iterator())
                 .allSomaticGeneCopyNumbers(() -> purpleInterpretedData.allSomaticGeneCopyNumbers().stream().map(OrangeReportToRecordConversion::convert).iterator())
                 .suspectGeneCopyNumbersWithLOH(() -> purpleInterpretedData.suspectGeneCopyNumbersWithLOH().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .allSomaticGainsLosses(() -> purpleInterpretedData.allSomaticGainsLosses().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .reportableSomaticGainsLosses(() -> purpleInterpretedData.reportableSomaticGainsLosses().stream().map(OrangeReportToRecordConversion::convert).iterator())
+                .allSomaticGainsLosses(purpleInterpretedData.reportableSomaticGainsLosses())
+                .reportableSomaticGainsLosses(purpleInterpretedData.reportableSomaticGainsLosses())
                 .build();
     }
 
@@ -364,19 +364,6 @@ public class OrangeReportToRecordConversion {
                 .gene(geneCopyNumber.geneName())
                 .minCopyNumber(geneCopyNumber.minCopyNumber())
                 .minMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())
-                .build();
-    }
-
-    private static PurpleGainLoss convert(com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss gainLoss) {
-        return ImmutablePurpleGainLoss.builder()
-                .interpretation(CopyNumberInterpretation.valueOf(gainLoss.interpretation().name()))
-                .chromosome(gainLoss.chromosome())
-                .chromosomeBand(gainLoss.chromosomeBand())
-                .gene(gainLoss.gene())
-                .transcript(gainLoss.transcript())
-                .isCanonical(gainLoss.isCanonical())
-                .minCopies(gainLoss.minCopies())
-                .maxCopies(gainLoss.maxCopies())
                 .build();
     }
 }
