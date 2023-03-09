@@ -44,7 +44,7 @@ public class NeoDataWriter
             writer.write("SampleId,NeIds,VarType,VarInfo,Gene,Allele,Peptide");
             writer.write(",Score,Rank,Likelihood,LikelihoodRank,ExpLikelihood,ExpLikelihoodRank,RecogSim,OtherAlleleRecogSim");
             writer.write(",AllelCN,AlleleDisrupted,RnaFrags,RnaDepth");
-            writer.write(",TpmUp,TpmDown,TpmDownTotal,ExpectedTpm,EffectiveTpm,RawEffectiveTpm");
+            writer.write(",TpmUp,TpmDown,ExpectedTpm,EffectiveTpm,RawEffectiveTpm");
             writer.write(",TpmCancerUp,TpmCancerDown,TpmPanCancerUp,TpmPanCancerDown");
             writer.newLine();
             return writer;
@@ -90,9 +90,9 @@ public class NeoDataWriter
 
                     final NeoRnaData rnaData = neoData.RnaData;
 
-                    mPeptideWriter.write(String.format(",%d,%.0f,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e",
+                    mPeptideWriter.write(String.format(",%d,%.0f,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e",
                             rnaData.fragmentSupport(), rnaData.averageBaseDepth(),
-                            rnaData.transExpression()[FS_UP], rnaData.transExpression()[FS_DOWN], peptideScoreData.tpmDownTotal(),
+                            rnaData.transExpression()[FS_UP], rnaData.transExpression()[FS_DOWN],
                             peptideScoreData.expectedTpm(), peptideScoreData.effectiveTpm(), peptideScoreData.rawEffectiveTpm(),
                             rnaData.tpmCancer()[FS_UP], rnaData.tpmCancer()[FS_DOWN],
                             rnaData.tpmPanCancer()[FS_UP], rnaData.tpmPanCancer()[FS_DOWN]));

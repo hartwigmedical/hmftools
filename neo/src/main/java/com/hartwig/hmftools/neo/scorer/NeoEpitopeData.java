@@ -134,6 +134,14 @@ public class NeoEpitopeData
         }
     }
 
+    public boolean matchingTranscripts(final NeoEpitopeData other, int stream)
+    {
+        if(Transcripts[stream].size() != other.Transcripts[stream].size())
+            return false;
+
+        return Transcripts[stream].stream().allMatch(x -> other.Transcripts[stream].contains(x));
+    }
+
     public String toString()
     {
         return format("%d: %s:%s gene(%s)", Id, VariantType, VariantInfo, GeneName);

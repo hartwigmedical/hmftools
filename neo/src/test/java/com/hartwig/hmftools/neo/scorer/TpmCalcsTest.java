@@ -7,12 +7,14 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.pointMutationInfo;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.scorer.TpmCalculator.HIGH_PROBABILITY;
 import static com.hartwig.hmftools.neo.scorer.TpmCalculator.LOW_PROBABILITY;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertTrue;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,9 +26,15 @@ import org.junit.Test;
 
 public class TpmCalcsTest
 {
-    private static double[] TEST_COHORT_CANCER_TPM = { 20, 20 };
-    private static double[] TEST_COHORT_PAN_CANCER_TPM = { 30, 30 };
-    private static int[] TEST_PEPTIDE_LENGTH_RANGE = { 8, 8 };
+    private static final double[] TEST_COHORT_CANCER_TPM = { 20, 20 };
+    private static final double[] TEST_COHORT_PAN_CANCER_TPM = { 30, 30 };
+    private static final int[] TEST_PEPTIDE_LENGTH_RANGE = { 8, 8 };
+
+    private static final String TRANS_NAME_1 = "TRANS_01";
+    private static final String TRANS_NAME_2 = "TRANS_02";
+    private static final String TRANS_NAME_3 = "TRANS_03";
+    private static final String TRANS_NAME_4 = "TRANS_04";
+    private static final String TRANS_NAME_5 = "TRANS_05";
 
     private int mNextNeId;
 
@@ -57,68 +65,75 @@ public class TpmCalcsTest
         tpmCalc.compute("", neoDataList);
 
         assertEquals(7, neoData.peptides().size());
+    }
 
-        PeptideScoreData peptideScoreData = neoData.peptides().get(0);
-        assertEquals(tpms[FS_UP], peptideScoreData.expectedTpm(), 0.01);
-        assertEquals(fragments, peptideScoreData.rawEffectiveTpm(), 0.01);
-        assertEquals(6, peptideScoreData.effectiveTpm(), 0.01);
+    @Test
+    public void testComplexPeptideTpmCalcs()
+    {
+        int peptideLenMin = 4;
+        int peptideLenMax = 6;
 
-        // test again with 3 neoepitopes from the same variant, creating some shared and some unique peptides
-        int frags1 = 2;
-        double[] tpms1 = { 10, 10 };
-        NeoEpitopeData neoData1 = createNeoepitope(
-                pointMutationInfo("2", 1000, "A", "T"), NeoEpitopeType.MISSENSE, frags1, tpms1,
-                "ABCDEFGH", "IJKL");
+        TpmCalculator tpmCalc = new TpmCalculator(0, new int[] { peptideLenMin, peptideLenMax });
 
-        int frags2 = 4;
-        double[] tpms2 = { 10, 20 };
-        NeoEpitopeData neoData2 = createNeoepitope(
-                pointMutationInfo("2", 1000, "A", "T"), NeoEpitopeType.MISSENSE, frags2, tpms2,
-                "ABCDEFGH", "IJMN");
+        int fragments = 5;
+        String varInfo = "1:1000-2:2000";
 
-        int frags3 = 10;
-        double[] tpms3 = { 10, 50 };
-        NeoEpitopeData neoData3 = createNeoepitope(
-                pointMutationInfo("2", 1000, "A", "T"), NeoEpitopeType.MISSENSE, frags3, tpms3,
-                "ABCDEFGH", "IJMP");
+        double[] tpms1 = { 10, 50 };
+        NeoEpitopeData neoData1 = createNeoepitope(varInfo, NeoEpitopeType.INFRAME_FUSION, fragments, tpms1, "ABC", "DEF");
+        neoData1.Transcripts[FS_UP].add(TRANS_NAME_1);
+        neoData1.Transcripts[FS_DOWN].add(TRANS_NAME_1);
 
-        neoDataList = Lists.newArrayList(neoData1, neoData2, neoData3);
+        double[] tpms2 = { 20, 60 };
+        NeoEpitopeData neoData2 = createNeoepitope(varInfo, NeoEpitopeType.INFRAME_FUSION, fragments, tpms2, "XBC", "DEF");
+        neoData2.Transcripts[FS_UP].add(TRANS_NAME_2);
+        neoData2.Transcripts[FS_DOWN].add(TRANS_NAME_3);
+
+        double[] tpms3 = { 30, 70 };
+        NeoEpitopeData neoData3 = createNeoepitope(varInfo, NeoEpitopeType.INFRAME_FUSION, fragments, tpms3, "ZBC", "DEG");
+        neoData3.Transcripts[FS_UP].add(TRANS_NAME_3);
+        neoData3.Transcripts[FS_DOWN].add(TRANS_NAME_4);
+
+        double[] tpms4 = { 10, 80 };
+        NeoEpitopeData neoData4 = createNeoepitope(varInfo, NeoEpitopeType.INFRAME_FUSION, fragments, tpms4, "ABC", "DEH");
+        neoData4.Transcripts[FS_UP].add(TRANS_NAME_1); // matches 1
+        neoData4.Transcripts[FS_DOWN].add(TRANS_NAME_2);
+
+        List<NeoEpitopeData> neoDataList = Lists.newArrayList(neoData1, neoData2, neoData3, neoData4);
 
         tpmCalc.compute("", neoDataList);
 
-        assertEquals(4, neoData1.peptides().size());
+        assertEquals(6, neoData1.peptides().size());
 
-        double tpmDownTotal = tpms1[FS_DOWN] + tpms2[FS_DOWN] + tpms3[FS_DOWN];
+        PeptideScoreData peptide = getPeptide("ABCD", neoDataList);
+        assertEquals(10, peptide.effectiveTpm(), 0.1);
 
-        PeptideScoreData peptide = neoData1.peptides().stream().filter(x -> x.Peptide.equals("BCDEFGHI")).findFirst().orElse(null);
-        assertNotNull(peptide);
-        assertEquals(tpms1[FS_UP], peptide.tpmUp());
-        assertEquals(tpmDownTotal, peptide.tpmDownTotal());
-        assertEquals(tpms1[FS_UP], peptide.expectedTpm(), 0.1);
-        assertEquals(9.5, peptide.effectiveTpm(), 0.1);
+        peptide = getPeptide("ABCDEF", neoDataList);
+        assertEquals(3.8, peptide.effectiveTpm(), 0.1);
 
-        peptide = neoData1.peptides().stream().filter(x -> x.Peptide.equals("DEFGHIJK")).findFirst().orElse(null);
-        assertNotNull(peptide);
-        assertEquals(tpms1[FS_UP], peptide.tpmUp());
-        assertEquals(tpms1[FS_DOWN], peptide.tpmDownTotal());
-        double downTpm = tpms1[FS_DOWN] / tpmDownTotal;
-        assertEquals(tpms1[FS_UP] * downTpm, peptide.expectedTpm(), 0.1);
-        assertEquals(1.75, peptide.effectiveTpm(), 0.1);
+        peptide = getPeptide("XBCD", neoDataList);
+        assertEquals(20, peptide.effectiveTpm(), 0.1);
 
-        double tpmDownTotal2 = tpms2[FS_DOWN] + tpms3[FS_DOWN];
-        peptide = neoData2.peptides().stream().filter(x -> x.Peptide.equals("DEFGHIJM")).findFirst().orElse(null);
-        assertNotNull(peptide);
-        assertEquals(tpms2[FS_UP], peptide.tpmUp());
-        assertEquals(tpmDownTotal2, peptide.tpmDownTotal());
-        assertEquals(tpms2[FS_UP] * tpmDownTotal2 / tpmDownTotal, peptide.expectedTpm(), 0.1);
-        assertEquals(9.25, peptide.effectiveTpm(), 0.1);
+        peptide = getPeptide("BCDE", neoDataList);
+        assertEquals(60, peptide.effectiveTpm(), 0.1);
 
-        peptide = neoData3.peptides().stream().filter(x -> x.Peptide.equals("EFGHIJMP")).findFirst().orElse(null);
-        assertNotNull(peptide);
-        assertEquals(tpms3[FS_UP], peptide.tpmUp());
-        assertEquals(tpms3[FS_DOWN], peptide.tpmDownTotal());
-        assertEquals(tpms3[FS_UP] *  tpms3[FS_DOWN] / tpmDownTotal, peptide.expectedTpm(), 0.1);
-        assertEquals(8.75, peptide.effectiveTpm(), 0.1);
+        peptide = getPeptide("BCDEF", neoDataList);
+        assertEquals(23.8, peptide.effectiveTpm(), 0.1);
+
+        peptide = getPeptide("BCDEH", neoDataList);
+        assertEquals(6.2, peptide.effectiveTpm(), 0.1);
+    }
+
+    private static PeptideScoreData getPeptide(final String peptide, final List<NeoEpitopeData> neoDataList)
+    {
+        for(NeoEpitopeData neoData : neoDataList)
+        {
+            PeptideScoreData peptideScoreData = neoData.peptides().stream().filter(x -> x.Peptide.equals(peptide)).findFirst().orElse(null);
+
+            if(peptideScoreData != null)
+                return peptideScoreData;
+        }
+
+        return null;
     }
 
     private NeoEpitopeData createNeoepitope(
@@ -126,7 +141,7 @@ public class TpmCalcsTest
     {
         NeoEpitopeData neoData = new NeoEpitopeData(
                 nextNeId(), type, variantInfo, GENE_ID_1, GENE_NAME_1, upAAs, "", downAAs,
-                Collections.emptyList(), Collections.emptyList());
+                Lists.newArrayList(), Lists.newArrayList());
 
         neoData.RnaData.setCoverage(rnaFragments, rnaFragments * 2, rnaFragments * 2);
         neoData.RnaData.setExpression(tpms);
