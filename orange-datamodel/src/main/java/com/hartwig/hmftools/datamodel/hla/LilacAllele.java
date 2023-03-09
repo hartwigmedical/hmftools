@@ -8,19 +8,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class LilacAllele {
 
+    @NotNull
     public abstract String allele();
-    public abstract int refFragments();
-    public abstract int refUnique();
-    public abstract int refShared();
-    public abstract int refWild();
-    public abstract int tumorFragments();
-    public abstract int tumorUnique();
-    public abstract int tumorShared();
-    public abstract int tumorWild();
-    public abstract int rnaFragments();
-    public abstract int rnaUnique();
-    public abstract int rnaShared();
-    public abstract int rnaWild();
 
     public abstract double tumorCopyNumber();
 
@@ -29,8 +18,4 @@ public abstract class LilacAllele {
     public abstract double somaticSplice();
     public abstract double somaticSynonymous();
     public abstract double somaticInframeIndel();
-
-    public double somaticVariantCount() {
-        return somaticMissense() + somaticNonsenseOrFrameshift() + somaticSplice() + somaticSynonymous() + somaticInframeIndel();
-    }
 }

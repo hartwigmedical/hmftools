@@ -9,8 +9,6 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class AnnotatedVirus {
 
-    public abstract int taxid();
-
     @NotNull
     public abstract String name();
 
@@ -24,13 +22,5 @@ public abstract class AnnotatedVirus {
 
     public abstract double percentageCovered();
 
-    public abstract double meanCoverage();
-
-    @Nullable
-    public abstract Double expectedClonalCoverage();
-
     public abstract boolean reported();
-
-    @NotNull
-    public abstract VirusLikelihoodType virusDriverLikelihoodType();
 }

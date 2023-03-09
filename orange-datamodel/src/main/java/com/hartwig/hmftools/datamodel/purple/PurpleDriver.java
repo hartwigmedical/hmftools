@@ -1,15 +1,21 @@
-package com.hartwig.hmftools.datamodel.orange;
+package com.hartwig.hmftools.datamodel.purple;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class OrangePlots {
+public interface PurpleDriver {
 
     @NotNull
-    public abstract String purpleFinalCircosPlot();
+    String gene();
+
+    @NotNull
+    String transcript();
+
+    @NotNull
+    PurpleDriverType driver();
+
+    double driverLikelihood();
 }

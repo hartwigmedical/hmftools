@@ -6,14 +6,21 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = {NotNull.class, Nullable.class})
-public abstract class PurpleCopyNumber {
+public abstract class PurpleGeneCopyNumber {
 
     @NotNull
     public abstract String chromosome();
 
-    public abstract int start();
+    @NotNull
+    public abstract String chromosomeBand();
 
-    public abstract int end();
+    @NotNull
+    public abstract String gene();
 
-    public abstract double averageTumorCopyNumber();
+    @Nullable
+    public abstract Double minCopyNumber();
+
+    @Nullable
+    public abstract Double minMinorAlleleCopyNumber();
+
 }

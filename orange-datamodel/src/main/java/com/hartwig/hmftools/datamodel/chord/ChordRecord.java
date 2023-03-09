@@ -1,15 +1,15 @@
-package com.hartwig.hmftools.datamodel.orange;
+package com.hartwig.hmftools.datamodel.chord;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class OrangePlots {
+public abstract class ChordRecord {
+    public abstract double hrdValue();
 
     @NotNull
-    public abstract String purpleFinalCircosPlot();
+    public abstract ChordStatus hrStatus();
+
 }

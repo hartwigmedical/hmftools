@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.datamodel.purple;
 
-import com.hartwig.hmftools.datamodel.variant.CodingEffect;
-import com.hartwig.hmftools.datamodel.variant.impact.VariantEffect;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,9 +28,8 @@ public abstract class PurpleTranscriptImpact {
     public abstract boolean spliceRegion();
 
     @NotNull
-    public abstract Set<VariantEffect> effects();
+    public abstract Set<PurpleVariantEffect> effects();
 
     @NotNull
-    public abstract CodingEffect codingEffect();
-
+    public abstract PurpleCodingEffect codingEffect();
 }

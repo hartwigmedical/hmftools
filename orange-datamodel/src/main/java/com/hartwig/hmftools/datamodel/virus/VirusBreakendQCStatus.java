@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.datamodel.virus;
 
-import org.jetbrains.annotations.NotNull;
-
 public enum VirusBreakendQCStatus {
     NO_ABNORMALITIES,
     LOW_VIRAL_COVERAGE,

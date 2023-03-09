@@ -7,9 +7,4 @@ public enum CopyNumberInterpretation {
     PARTIAL_GAIN,
     FULL_LOSS,
     PARTIAL_LOSS;
-
-    @NotNull
-    public String display() {
-        return this.toString().toLowerCase().replaceAll("_", " ");
-    }
 }

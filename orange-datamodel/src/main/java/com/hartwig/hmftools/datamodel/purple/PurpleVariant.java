@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.datamodel.purple;
 
-import com.hartwig.hmftools.datamodel.genotype.GenotypeStatus;
-import com.hartwig.hmftools.datamodel.variant.*;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,15 +8,13 @@ import java.util.List;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PurpleVariant {
+public abstract class PurpleVariant implements Variant {
 
     @NotNull
-    public abstract VariantType type();
+    public abstract PurpleVariantType type();
 
     @NotNull
     public abstract String gene();
-
-    public abstract int genesAffected();
 
     @NotNull
     public abstract String chromosome();
@@ -32,9 +28,6 @@ public abstract class PurpleVariant {
     public abstract String alt();
 
     @NotNull
-    public abstract CodingEffect worstCodingEffect();
-
-    @NotNull
     public abstract PurpleTranscriptImpact canonicalImpact();
 
     @NotNull
@@ -45,25 +38,10 @@ public abstract class PurpleVariant {
 
     public abstract boolean reported();
 
-    public abstract boolean filtered();
-
     @NotNull
-    public abstract String filter();
-
-    public abstract boolean recovered();
-
-    @NotNull
-    public abstract AllelicDepth tumorDepth();
-
-    @Nullable
-    public abstract AllelicDepth rnaDepth();
-
-    @Nullable
-    public abstract AllelicDepth referenceDepth();
+    public abstract PurpleAllelicDepth tumorDepth();
 
     public abstract double adjustedCopyNumber();
-
-    public abstract double adjustedVAF();
 
     public abstract double minorAlleleCopyNumber();
 
@@ -72,29 +50,7 @@ public abstract class PurpleVariant {
     public abstract boolean biallelic();
 
     @NotNull
-    public abstract GenotypeStatus genotypeStatus();
-
-    @NotNull
-    public abstract GermlineStatus germlineStatus();
-
-    @NotNull
-    public abstract String trinucleotideContext();
-
-    public abstract double mappability();
-
-    @NotNull
-    public abstract String microhomology();
-
-    @NotNull
-    public abstract String repeatSequence();
-
-    public abstract int repeatCount();
-
-    @NotNull
-    public abstract String kataegis();
-
-    @NotNull
-    public abstract VariantTier tier();
+    public abstract PurpleGenotypeStatus genotypeStatus();
 
     public abstract double subclonalLikelihood();
 
