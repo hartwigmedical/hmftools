@@ -6,6 +6,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 

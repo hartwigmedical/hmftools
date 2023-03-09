@@ -9,10 +9,6 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
-import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
-import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;
-import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
@@ -20,7 +16,9 @@ import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.linx.*;
-import com.hartwig.hmftools.datamodel.orange.*;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
@@ -53,15 +51,9 @@ public class OrangeReportToRecordConversion {
                 .lilac(convert(report.lilac()))
                 .virusInterpreter(Optional.ofNullable(report.virusInterpreter()).map(OrangeReportToRecordConversion::convert).orElse(null))
                 .chord(Optional.ofNullable(report.chord()).map(OrangeReportToRecordConversion::convert).orElse(null))
-                .cuppa(Optional.ofNullable(report.cuppa()).map(OrangeReportToRecordConversion::convert).orElse(null))
+                .cuppa(report.cuppa())
                 .peach(Optional.ofNullable(report.peach()).map(OrangeReportToRecordConversion::convert).orElse(null))
-                .plots(convert(report.plots()))
-                .build();
-    }
-
-    private static OrangePlots convert(com.hartwig.hmftools.orange.algo.OrangePlots plots) {
-        return ImmutableOrangePlots.builder()
-                .purpleFinalCircosPlot(plots.purpleFinalCircosPlot())
+                .plots(report.plots())
                 .build();
     }
 
@@ -80,23 +72,6 @@ public class OrangeReportToRecordConversion {
                 .urlPrescriptionInfo(peachGenotype.urlPrescriptionInfo())
                 .panelVersion(peachGenotype.panelVersion())
                 .repoVersion(peachGenotype.repoVersion())
-                .build();
-    }
-
-    private static CuppaData convert(com.hartwig.hmftools.orange.algo.cuppa.CuppaData cuppaData) {
-        return ImmutableCuppaData.builder()
-                .predictions(() -> cuppaData.predictions().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .simpleDups32To200B(cuppaData.simpleDups32To200B())
-                .maxComplexSize(cuppaData.maxComplexSize())
-                .telomericSGLs(cuppaData.telomericSGLs())
-                .LINECount(cuppaData.LINECount())
-                .build();
-    }
-
-    private static CuppaPrediction convert(com.hartwig.hmftools.orange.algo.cuppa.CuppaPrediction cuppaPrediction) {
-        return ImmutableCuppaPrediction.builder()
-                .cancerType(cuppaPrediction.cancerType())
-                .likelihood(cuppaPrediction.likelihood())
                 .build();
     }
 

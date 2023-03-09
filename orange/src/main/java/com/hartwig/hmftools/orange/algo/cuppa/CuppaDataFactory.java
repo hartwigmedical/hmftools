@@ -9,6 +9,10 @@ import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.DataTypes;
 import com.hartwig.hmftools.common.cuppa.SvDataType;
 
+import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;
+import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;

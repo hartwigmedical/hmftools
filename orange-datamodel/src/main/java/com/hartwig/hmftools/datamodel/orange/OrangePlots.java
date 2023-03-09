@@ -10,6 +10,42 @@ import java.util.List;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class OrangePlots {
 
+    @Nullable
+    public abstract String sageReferenceBQRPlot();
+
+    @NotNull
+    public abstract String sageTumorBQRPlot();
+
+    @NotNull
+    public abstract String purpleInputPlot();
+
     @NotNull
     public abstract String purpleFinalCircosPlot();
+
+    @NotNull
+    public abstract String purpleClonalityPlot();
+
+    @NotNull
+    public abstract String purpleCopyNumberPlot();
+
+    @NotNull
+    public abstract String purpleVariantCopyNumberPlot();
+
+    @NotNull
+    public abstract String purplePurityRangePlot();
+
+    @Nullable
+    public abstract String purpleKataegisPlot();
+
+    @NotNull
+    public abstract List<String> linxDriverPlots();
+
+    @Nullable
+    public abstract String cuppaSummaryPlot();
+
+    @Nullable
+    public abstract String cuppaFeaturePlot();
+
+    @Nullable
+    public abstract String cuppaChartPlot();
 }

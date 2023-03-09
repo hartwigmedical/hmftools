@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.orange;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
@@ -21,26 +17,12 @@ import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
-import com.hartwig.hmftools.common.rna.GeneExpression;
-import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
-import com.hartwig.hmftools.common.rna.RnaFusion;
-import com.hartwig.hmftools.common.rna.RnaStatistics;
+import com.hartwig.hmftools.common.rna.*;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
-import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
-import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.common.virus.VirusInterpreterData;
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
-import com.hartwig.hmftools.orange.algo.ExperimentType;
-import com.hartwig.hmftools.orange.algo.ImmutableOrangePlots;
-import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
-import com.hartwig.hmftools.orange.algo.ImmutableOrangeSample;
-import com.hartwig.hmftools.orange.algo.OrangePlots;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.OrangeSample;
+import com.hartwig.hmftools.common.virus.*;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
+import com.hartwig.hmftools.datamodel.orange.OrangePlots;
+import com.hartwig.hmftools.orange.algo.*;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
@@ -52,9 +34,12 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.wildtype.TestWildTypeFactory;
-
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 public final class TestOrangeReportFactory {
 

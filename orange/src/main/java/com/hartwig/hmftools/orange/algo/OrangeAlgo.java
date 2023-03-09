@@ -1,15 +1,5 @@
 package com.hartwig.hmftools.orange.algo;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.text.DecimalFormat;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -45,11 +35,13 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
+import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
-import com.hartwig.hmftools.orange.algo.cuppa.CuppaData;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
-import com.hartwig.hmftools.orange.algo.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
@@ -66,11 +58,7 @@ import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeGene;
-import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
-import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
-import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
-import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
-import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
+import com.hartwig.hmftools.orange.cohort.datamodel.*;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapping;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMappingFile;
@@ -79,11 +67,20 @@ import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentiles;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.text.DecimalFormat;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 public class OrangeAlgo {
 
