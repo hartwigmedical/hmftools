@@ -14,15 +14,12 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStringToList;
 import static com.hartwig.hmftools.neo.NeoCommon.DOWNSTREAM_PRE_GENE_DISTANCE;
 import static com.hartwig.hmftools.neo.NeoCommon.IMMUNE_TRANSCRIPT_PREFIXES;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.initialiseNeoepitopeWriter;
 import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.writeNeoepitopes;
 import static com.hartwig.hmftools.neo.epitope.PointMutationData.isRelevantMutation;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -41,15 +38,8 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
-import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
-
-import org.jooq.Record;
-import org.jooq.Record9;
-import org.jooq.Result;
 
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
@@ -65,19 +55,16 @@ public class NeoSampleTask implements Callable
     private final NeoConfig mConfig;
 
     private final EnsemblDataCache mGeneTransCache;
-    private final DatabaseAccess mDbAccess;
 
     private int mNextNeoEpitopeId;
     private final BufferedWriter mWriter;
 
-    public NeoSampleTask(
-            final String sampleId, final NeoConfig config, final EnsemblDataCache ensemblDataCache, final DatabaseAccess dbAccess)
+    public NeoSampleTask(final String sampleId, final NeoConfig config, final EnsemblDataCache ensemblDataCache)
     {
         mSampleId = sampleId;
 
         mConfig = config;
         mGeneTransCache = ensemblDataCache;
-        mDbAccess = dbAccess;
 
         mNextNeoEpitopeId = 0;
 
@@ -105,102 +92,59 @@ public class NeoSampleTask implements Callable
         closeBufferedWriter(mWriter);
     }
 
-    private final List<PointMutationData> getSomaticVariants()
+    private List<PointMutationData> getSomaticVariants()
     {
         List<PointMutationData> pointMutations = Lists.newArrayList();
 
-        List<String> validCodingEffects = Lists.newArrayList(NONSENSE_OR_FRAMESHIFT.toString(), MISSENSE.toString());
+        if(mConfig.SomaticVcf == null)
+            return pointMutations;
 
-        if(mDbAccess != null)
+        String somaticVcf = mConfig.SomaticVcf.contains("*") ?
+                mConfig.SomaticVcf.replaceAll("\\*", mSampleId) : mConfig.SomaticVcf;
+
+        if(!Files.exists(Paths.get(somaticVcf)))
         {
-            final Result<Record9<String, String, String, Integer, String, String, Double, Double, String>> result = mDbAccess.context()
-                    .select(SOMATICVARIANT.GENE, SOMATICVARIANT.WORSTCODINGEFFECT, SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION,
-                            SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.VARIANTCOPYNUMBER, SOMATICVARIANT.SUBCLONALLIKELIHOOD,
-                            SOMATICVARIANT.LOCALPHASESET)
-                    .from(Tables.SOMATICVARIANT)
-                    .where(Tables.SOMATICVARIANT.SAMPLEID.eq(mSampleId))
-                    .and(Tables.SOMATICVARIANT.FILTER.eq(PASS_FILTER))
-                    .and(Tables.SOMATICVARIANT.GENE.notEqual(""))
-                    .and(Tables.SOMATICVARIANT.WORSTCODINGEFFECT.in(validCodingEffects))
-                    .fetch();
-
-            for(Record record : result)
-            {
-                final String gene = record.getValue(Tables.SOMATICVARIANT.GENE);
-
-                if(gene.isEmpty() || mGeneTransCache.getGeneDataByName(gene) == null)
-                    continue;
-
-                CodingEffect codingEffect = CodingEffect.valueOf(record.getValue(Tables.SOMATICVARIANT.WORSTCODINGEFFECT));
-
-                if(codingEffect != NONSENSE_OR_FRAMESHIFT && codingEffect != MISSENSE)
-                    continue;
-
-                String chromosome = record.getValue(Tables.SOMATICVARIANT.CHROMOSOME);
-                int position = record.getValue(Tables.SOMATICVARIANT.POSITION);
-                String ref = record.getValue(Tables.SOMATICVARIANT.REF);
-                String alt = record.getValue(Tables.SOMATICVARIANT.ALT);
-                double copyNumber = record.getValue(Tables.SOMATICVARIANT.VARIANTCOPYNUMBER);
-                double subclonalLikelihood = record.getValue(Tables.SOMATICVARIANT.SUBCLONALLIKELIHOOD);
-                String localPhaseSetStr = record.get(Tables.SOMATICVARIANT.LOCALPHASESET);
-                List<Integer> localPhaseSets = localPhaseSetsStringToList(localPhaseSetStr);
-
-                pointMutations.add(new PointMutationData(chromosome, position, ref, alt, gene,
-                        codingEffect, copyNumber, subclonalLikelihood, localPhaseSets != null ? localPhaseSets.get(0) : -1));
-            }
+            NE_LOGGER.warn("Purple somatic VCF file({}) not found", somaticVcf);
+            return pointMutations;
         }
-        else
+
+        try
         {
-            if(mConfig.SomaticVcf == null)
-                return pointMutations;
+            CompoundFilter filter = new CompoundFilter(true);
+            filter.add(new PassingVariantFilter());
 
-            String somaticVcf = mConfig.SomaticVcf.contains("*") ?
-                    mConfig.SomaticVcf.replaceAll("\\*", mSampleId) : mConfig.SomaticVcf;
+            SomaticVariantFactory variantFactory = new SomaticVariantFactory(filter);
 
-            if(!Files.exists(Paths.get(somaticVcf)))
+            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(somaticVcf, new VCFCodec(), false);
+
+            for(VariantContext variant : reader.iterator())
             {
-                NE_LOGGER.warn("Purple somatic VCF file({}) not found", somaticVcf);
-                return pointMutations;
-            }
-
-            try
-            {
-                CompoundFilter filter = new CompoundFilter(true);
-                filter.add(new PassingVariantFilter());
-
-                SomaticVariantFactory variantFactory = new SomaticVariantFactory(filter);
-
-                final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(somaticVcf, new VCFCodec(), false);
-
-                for(VariantContext variant : reader.iterator())
+                if(filter.test(variant))
                 {
-                    if(filter.test(variant))
-                    {
-                        final SomaticVariant somaticVariant = variantFactory.createVariant(mSampleId, variant).orElse(null);
+                    final SomaticVariant somaticVariant = variantFactory.createVariant(mSampleId, variant).orElse(null);
 
-                        if(somaticVariant == null)
-                            continue;
+                    if(somaticVariant == null)
+                        continue;
 
-                        if(somaticVariant.gene().isEmpty() || mGeneTransCache.getGeneDataByName(somaticVariant.gene()) == null)
-                            continue;
+                    if(somaticVariant.gene().isEmpty() || mGeneTransCache.getGeneDataByName(somaticVariant.gene()) == null)
+                        continue;
 
-                        if(!isRelevantMutation(somaticVariant))
-                            continue;
+                    if(!isRelevantMutation(somaticVariant))
+                        continue;
 
-                        pointMutations.add(new PointMutationData(
-                                somaticVariant.chromosome(), somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt(),
-                                somaticVariant.gene(), somaticVariant.worstCodingEffect(), somaticVariant.adjustedCopyNumber(),
-                                somaticVariant.subclonalLikelihood(),
-                                somaticVariant.localPhaseSets() != null ? somaticVariant.topLocalPhaseSet() : -1));
-                    }
+                    pointMutations.add(new PointMutationData(
+                            somaticVariant.chromosome(), somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt(),
+                            somaticVariant.gene(), somaticVariant.worstCodingEffect(), somaticVariant.adjustedCopyNumber(),
+                            somaticVariant.subclonalLikelihood(),
+                            somaticVariant.localPhaseSets() != null ? somaticVariant.topLocalPhaseSet() : -1));
                 }
+            }
 
-                NE_LOGGER.debug("loaded {} somatic variants from file({})", pointMutations.size(), somaticVcf);
-            }
-            catch(IOException e)
-            {
-                NE_LOGGER.error(" failed to read somatic VCF file({}): {}", somaticVcf, e.toString());
-            }
+            NE_LOGGER.debug("loaded {} somatic variants from file({})", pointMutations.size(), somaticVcf);
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error(" failed to read somatic VCF file({}): {}", somaticVcf, e.toString());
         }
 
         return pointMutations;

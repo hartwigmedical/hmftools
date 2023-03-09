@@ -18,7 +18,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -108,6 +107,5 @@ public class NeoConfig
         addLoggingOptions(options);
         addOutputOptions(options);
         addThreadOptions(options);
-        DatabaseAccess.addDatabaseCmdLineArgs(options);
     }
 }

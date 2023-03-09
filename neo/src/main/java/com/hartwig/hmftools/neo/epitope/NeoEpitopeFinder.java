@@ -7,18 +7,14 @@ import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
-import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -32,7 +28,6 @@ public class NeoEpitopeFinder
     private final NeoConfig mConfig;
 
     private final EnsemblDataCache mGeneTransCache;
-    private final DatabaseAccess mDbAccess;
 
     public NeoEpitopeFinder(final CommandLine cmd)
     {
@@ -43,8 +38,6 @@ public class NeoEpitopeFinder
         mGeneTransCache.setRestrictedGeneIdList(mConfig.RestrictedGeneIds);
         mGeneTransCache.load(false);
         mGeneTransCache.createGeneNameIdMap();
-
-        mDbAccess = DatabaseAccess.createDatabaseAccess(cmd);
     }
 
     public void run()
@@ -66,7 +59,7 @@ public class NeoEpitopeFinder
 
         for(final String sample : mConfig.Samples)
         {
-            NeoSampleTask sampleTask = new NeoSampleTask(sample, mConfig, mGeneTransCache, mDbAccess);
+            NeoSampleTask sampleTask = new NeoSampleTask(sample, mConfig, mGeneTransCache);
 
             sampleTasks.add(sampleTask);
         }
