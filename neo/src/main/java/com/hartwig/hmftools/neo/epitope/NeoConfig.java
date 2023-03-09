@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -42,8 +43,6 @@ public class NeoConfig
 
     public static final String SAMPLE = "sample";
     public static final String CANCER_TYPE = "cancer_type";
-    public static final String PEPTIDE_LENGTHS = "peptide_lengths";
-    public static final String PEPTIDE_FLANKS = "peptide_flanks";
 
     public static final String MUTATIONS_FILE = "mutations_file";
     public static final String SV_FUSION_DATA_DIR = "sv_fusion_data_dir";
@@ -96,10 +95,9 @@ public class NeoConfig
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(SAMPLE, true, "Sample - Id(s) separated by ';' or CSV file");
+        addSampleIdFile(options);
         options.addOption(CANCER_TYPE, true, "Tumor cancer type (optional) - to retrieve cancer median TPM");
         options.addOption(MUTATIONS_FILE, true, "File with a list of point mutations");
-        options.addOption(PEPTIDE_LENGTHS, true, "Peptide length min-max, separated by '-', eg 8-12");
-        options.addOption(PEPTIDE_FLANKS, true, "Peptide flanking amino acids");
         EnsemblDataCache.addEnsemblDir(options);
         options.addOption(GENE_ID_FILE, true, "Restrict to specific genes");
         addRefGenomeConfig(options);

@@ -30,7 +30,6 @@ import org.jetbrains.annotations.NotNull;
 public class NeoEpitopeFinder
 {
     private final NeoConfig mConfig;
-    private final Map<String,List<NeoEpitopeFusion>> mSampleFusionMap;
 
     private final EnsemblDataCache mGeneTransCache;
     private final DatabaseAccess mDbAccess;
@@ -38,8 +37,6 @@ public class NeoEpitopeFinder
     public NeoEpitopeFinder(final CommandLine cmd)
     {
         mConfig = new NeoConfig(cmd);
-
-        mSampleFusionMap = Maps.newHashMap();
 
         mGeneTransCache = new EnsemblDataCache(cmd, mConfig.RefGenVersion);
         mGeneTransCache.setRequiredData(true, false, false, false);

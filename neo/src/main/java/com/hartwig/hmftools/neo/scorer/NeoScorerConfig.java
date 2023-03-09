@@ -54,6 +54,8 @@ public class NeoScorerConfig
 
     private static final String LIKELIHOOD_THRESHOLD = "rank_threshold";
     private static final String SIMILARITY_THRESHOLD = "sim_threshold";
+    public static final String PEPTIDE_LENGTHS = "peptide_lengths";
+    public static final String PEPTIDE_FLANKS = "peptide_flanks";
 
     private static final String WRITE_TYPES = "write_types";
 
@@ -121,6 +123,9 @@ public class NeoScorerConfig
         options.addOption(ISF_DATA_DIR, true, "Directory for Isofox neoepitope coverage files");
         options.addOption(COHORT_SAMPLE_TPM_FILE, true, "Cohort gene expression matrix");
         options.addOption(COHORT_TPM_MEDIANS_FILE, true, "TPM medians per cancer type and pan-cancer");
+
+        options.addOption(PEPTIDE_LENGTHS, true, "Peptide length min-max, separated by '-', eg 8-12");
+        options.addOption(PEPTIDE_FLANKS, true, "Peptide flanking amino acids");
 
         ScoreConfig.addCmdLineArgs(options);
         ConfigUtils.addLoggingOptions(options);

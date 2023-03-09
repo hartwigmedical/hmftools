@@ -74,6 +74,7 @@ public class SvNeoEpitope extends NeoEpitope
     }
 
     public double copyNumber() { return mSvFusion.JunctionCopyNumber; }
+    public double subclonalLikelihood() { return 0; }
 
     public boolean phaseMatched()
     {

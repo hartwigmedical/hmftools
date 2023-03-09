@@ -30,12 +30,19 @@ import static junit.framework.TestCase.assertTrue;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 public class PmNeoEpitopeTest
 {
+    private PointMutationData createPointMutation(int position, final String ref, final String alt, final CodingEffect codingEffect)
+    {
+        return new PointMutationData(
+                CHR_1, position, ref, alt, GENE_ID_1, codingEffect, 1.0, 0, -1);
+    }
+
     @Test
     public void testSnvPointMutations()
     {
@@ -53,8 +60,7 @@ public class PmNeoEpitopeTest
         TranscriptData transDataPosStrand = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
 
-        PointMutationData pmData = new PointMutationData(
-                CHR_1, 42, chr1Bases.substring(42, 43), "A", GENE_ID_1, MISSENSE, 1, -1);
+        PointMutationData pmData = createPointMutation(42, chr1Bases.substring(42, 43), "A", MISSENSE);
 
         NeoEpitope neData = new PmNeoEpitope(pmData);
 
@@ -87,8 +93,7 @@ public class PmNeoEpitopeTest
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
 
         // SNP requiring all bases plus for phasing
-        pmData = new PointMutationData(
-                CHR_1, 46, chr1Bases.substring(46, 47), "A", GENE_ID_1, MISSENSE, 1, -1);
+        pmData = createPointMutation(46, chr1Bases.substring(46, 47), "A", MISSENSE);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -121,8 +126,7 @@ public class PmNeoEpitopeTest
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
 
         // point mutation on last base of exon
-        pmData = new PointMutationData(
-                CHR_1, 30, chr1Bases.substring(30, 31), "A", GENE_ID_1, MISSENSE, 1, -1);
+        pmData = createPointMutation(30, chr1Bases.substring(30, 31), "A", MISSENSE);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -161,8 +165,7 @@ public class PmNeoEpitopeTest
         TranscriptData transDataNegStrand = createTransExons(
                 GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
 
-        pmData = new PointMutationData(
-                CHR_1, 49, chr1Bases.substring(49, 50), "A", GENE_ID_1, MISSENSE, 1, -1);
+        pmData = createPointMutation(49, chr1Bases.substring(49, 50), "A", MISSENSE);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -191,8 +194,7 @@ public class PmNeoEpitopeTest
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
 
         // point mutation on last base of exon
-        pmData = new PointMutationData(
-                CHR_1, 40, chr1Bases.substring(40, 41), "A", GENE_ID_1, MISSENSE, 1, -1);
+        pmData = createPointMutation(40, chr1Bases.substring(40, 41), "A", MISSENSE);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -237,8 +239,7 @@ public class PmNeoEpitopeTest
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
 
         // mutation of 2 bases at first base of codon
-        PointMutationData pmData = new PointMutationData(
-                CHR_1, 43, chr1Bases.substring(43, 45), "GG", GENE_ID_1, MISSENSE, 1, -1);
+        PointMutationData pmData = createPointMutation(43, chr1Bases.substring(43, 45), "GG", MISSENSE);
 
         NeoEpitope neData = new PmNeoEpitope(pmData);
 
@@ -263,8 +264,8 @@ public class PmNeoEpitopeTest
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
 
         // 2-base MNV mutation on last base of exon, making 1 novel codon
-        pmData = new PointMutationData(
-                CHR_1, 30, chr1Bases.substring(30, 32),"AA", GENE_ID_1, MISSENSE, 1, -1);
+        pmData = createPointMutation(
+                30, chr1Bases.substring(30, 32),"AA", MISSENSE);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -290,9 +291,9 @@ public class PmNeoEpitopeTest
 
 
         // 5-base MNV mutation on second base of exon, making 3 novel codons
-        pmData = new PointMutationData(
-                CHR_1, 42, chr1Bases.substring(42, 47),
-                "AAAAA", GENE_ID_1, MISSENSE, 1, -1);
+        pmData = createPointMutation(
+                42, chr1Bases.substring(42, 47),
+                "AAAAA", MISSENSE);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -322,8 +323,8 @@ public class PmNeoEpitopeTest
         TranscriptData transDataNegStrand = createTransExons(
                 GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
 
-        pmData = new PointMutationData(
-                CHR_1, 49, chr1Bases.substring(49, 50), "A", GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                49, chr1Bases.substring(49, 50), "A", NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -356,8 +357,8 @@ public class PmNeoEpitopeTest
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
 
         // point mutation on last base of exon
-        pmData = new PointMutationData(
-                CHR_1, 40, chr1Bases.substring(40, 41), "A", GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                40, chr1Bases.substring(40, 41), "A", NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -408,8 +409,8 @@ public class PmNeoEpitopeTest
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
 
         // delete - of 3 bases, in phase
-        PointMutationData pmData = new PointMutationData(
-                CHR_1, 41, chr1Bases.substring(41, 45), chr1Bases.substring(41, 42), GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        PointMutationData pmData = createPointMutation(
+                41, chr1Bases.substring(41, 45), chr1Bases.substring(41, 42), NONSENSE_OR_FRAMESHIFT);
 
         PmNeoEpitope neData = new PmNeoEpitope(pmData);
 
@@ -442,9 +443,9 @@ public class PmNeoEpitopeTest
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
 
         // delete - of 2 bases, out of phase
-        pmData = new PointMutationData(
-                CHR_1, 46, chr1Bases.substring(46, 49), chr1Bases.substring(46, 47),
-                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                46, chr1Bases.substring(46, 49), chr1Bases.substring(46, 47),
+                NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -468,9 +469,9 @@ public class PmNeoEpitopeTest
         assertEquals("", neData.CodingBases[FS_DOWN]);
 
         // delete - of 2 bases, out of phase, starting mnid codon
-        pmData = new PointMutationData(
-                CHR_1, 47, chr1Bases.substring(47, 50), chr1Bases.substring(47, 48),
-                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                47, chr1Bases.substring(47, 50), chr1Bases.substring(47, 48),
+                NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -494,9 +495,9 @@ public class PmNeoEpitopeTest
         assertEquals("", neData.CodingBases[FS_DOWN]);
 
         // delete - of 2 bases, out of phase, but deleting a new codon's first 2 bases
-        pmData = new PointMutationData(
-                CHR_1, 42, chr1Bases.substring(42, 45), chr1Bases.substring(42, 43),
-                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                42, chr1Bases.substring(42, 45), chr1Bases.substring(42, 43),
+                NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -520,9 +521,9 @@ public class PmNeoEpitopeTest
         assertEquals("", neData.CodingBases[FS_DOWN]);
 
         // same again but with enough room to get required upstream bases
-        pmData = new PointMutationData(
-                CHR_1, 45, chr1Bases.substring(45, 48), chr1Bases.substring(45, 46),
-                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                45, chr1Bases.substring(45, 48), chr1Bases.substring(45, 46),
+                NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -547,9 +548,9 @@ public class PmNeoEpitopeTest
 
 
         // delete of 3 bases at last base of codon, no novel codon, in phase
-        pmData = new PointMutationData(
-                CHR_1, 42, chr1Bases.substring(42, 46), chr1Bases.substring(42, 43),
-                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                42, chr1Bases.substring(42, 46), chr1Bases.substring(42, 43),
+                NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -577,9 +578,9 @@ public class PmNeoEpitopeTest
         assertEquals(upWildAAs, neData.UpstreamWildTypeAcids);
 
         // same again but allowing for enough coding bases upstream to satisfy the required count
-        pmData = new PointMutationData(
-                CHR_1, 45, chr1Bases.substring(45, 49), chr1Bases.substring(45, 46),
-                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                45, chr1Bases.substring(45, 49), chr1Bases.substring(45, 46),
+                NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -609,8 +610,8 @@ public class PmNeoEpitopeTest
                 GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
 
         // 3 base DEL - deleting a codon
-        pmData = new PointMutationData(
-                CHR_1, 41, chr1Bases.substring(41, 45), chr1Bases.substring(41, 42), GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                41, chr1Bases.substring(41, 45), chr1Bases.substring(41, 42), NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -634,9 +635,9 @@ public class PmNeoEpitopeTest
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
 
         // 3 base DEL - crossing a codon boundary
-        pmData = new PointMutationData(
-                CHR_1, 42, chr1Bases.substring(42, 46), chr1Bases.substring(42, 43),
-                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                42, chr1Bases.substring(42, 46), chr1Bases.substring(42, 43),
+                NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -666,9 +667,9 @@ public class PmNeoEpitopeTest
         assertEquals(upWildAAs, neData.UpstreamWildTypeAcids);
 
         // again but a base up
-        pmData = new PointMutationData(
-                CHR_1, 43, chr1Bases.substring(43, 47), chr1Bases.substring(43, 44),
-                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                43, chr1Bases.substring(43, 47), chr1Bases.substring(43, 44),
+                NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -710,8 +711,8 @@ public class PmNeoEpitopeTest
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
 
         // insert of 2 bases at first base of codon - frameshift
-        PointMutationData pmData = new PointMutationData(
-                CHR_1, 28, chr1Bases.substring(28, 29), "AAA", GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        PointMutationData pmData = createPointMutation(
+                28, chr1Bases.substring(28, 29), "AAA", NONSENSE_OR_FRAMESHIFT);
 
         NeoEpitope neData = new PmNeoEpitope(pmData);
 
@@ -744,9 +745,9 @@ public class PmNeoEpitopeTest
         assertEquals(downBases, neData.NovelCodonBases); // due to lack of phasing
 
         // insert of 3 bases at last base of codon - making 1 novel codon, starting after first base and in phase
-        pmData = new PointMutationData(
-                CHR_1, 42, chr1Bases.substring(42, 43), chr1Bases.substring(42, 43) + "AAA",
-                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                42, chr1Bases.substring(42, 43), chr1Bases.substring(42, 43) + "AAA",
+                NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -771,9 +772,9 @@ public class PmNeoEpitopeTest
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
 
         // insert of 3 bases at 2nd base of codon - 2 novel codons, starting after first base and in phase
-        pmData = new PointMutationData(
-                CHR_1, 41, chr1Bases.substring(41, 42), chr1Bases.substring(41, 42) + "AAA",
-                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                41, chr1Bases.substring(41, 42), chr1Bases.substring(41, 42) + "AAA",
+                NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -805,8 +806,8 @@ public class PmNeoEpitopeTest
         TranscriptData transDataNegStrand = createTransExons(
                 GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
 
-        pmData = new PointMutationData(
-                CHR_1, 43, chr1Bases.substring(43, 44), "AAAA", GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                43, chr1Bases.substring(43, 44), "AAAA", NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -832,9 +833,9 @@ public class PmNeoEpitopeTest
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
 
         // insert of 3 bases, in phase, with inserted bases forming the new codon
-        pmData = new PointMutationData(
-                CHR_1, 44, chr1Bases.substring(44, 45), chr1Bases.substring(44, 45) + "AAA",
-                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+        pmData = createPointMutation(
+                44, chr1Bases.substring(44, 45), chr1Bases.substring(44, 45) + "AAA",
+                NONSENSE_OR_FRAMESHIFT);
 
         neData = new PmNeoEpitope(pmData);
 
@@ -875,8 +876,7 @@ public class PmNeoEpitopeTest
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
 
         // stop-lost
-        PointMutationData pmData = new PointMutationData(
-                CHR_1, 64, chr1Bases.substring(64, 65), "A", GENE_ID_1, MISSENSE, 1, -1);
+        PointMutationData pmData = createPointMutation(64, chr1Bases.substring(64, 65), "A", MISSENSE);
 
         PmNeoEpitope neData = new PmNeoEpitope(pmData);
 

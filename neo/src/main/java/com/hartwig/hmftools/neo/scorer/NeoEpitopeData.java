@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.INVALID_EXP;
+import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.scorer.NeoRnaData.NO_TPM_VALUE;
 import static com.hartwig.hmftools.neo.scorer.TpmMediansCache.CANCER_VALUE;
 import static com.hartwig.hmftools.neo.scorer.TpmMediansCache.PAN_CANCER_VALUE;
@@ -29,6 +30,13 @@ public class NeoEpitopeData
     public final String NovelAminoAcids;
     public final String DownAminoAcids;
     public final List<String>[] Transcripts;
+    public final int[] NmdBases;
+    public final int[] CodingBasesLength;
+    public final int FusedIntronLength;
+    public final int[] SkippedAcceptorsDonors;
+    public final double JunctionCopyNumber;
+    public final double SubclonalLikelihood;
+
     public final NeoRnaData RnaData;
 
     public final List<PeptideScoreData> mPeptides;
@@ -36,7 +44,9 @@ public class NeoEpitopeData
     public NeoEpitopeData(
             final int id, final NeoEpitopeType variantType, final String variantInfo, final String geneId, final String geneName,
             final String upAminoAcids, final String novelAminoAcids, final String downAminoAcids,
-            final List<String> transNamesUp, final List<String> transNamesDown)
+            final List<String> transNamesUp, final List<String> transNamesDown, int nmdBasesMin, int nmdBasesMax,
+            final double junctionCopyNumber, final double subclonalLikelihood,
+            int codingBasesLengthMin, int codingBasesLengthMax, int fusedIntronLength, int skippedDonors, int skippedAcceptors)
     {
         Id = id;
         VariantType = variantType;
@@ -49,6 +59,13 @@ public class NeoEpitopeData
         Transcripts = new List[FS_PAIR];
         Transcripts[FS_UP] = transNamesUp;
         Transcripts[FS_DOWN] = transNamesDown;
+        JunctionCopyNumber = junctionCopyNumber;
+        SubclonalLikelihood = subclonalLikelihood;
+
+        FusedIntronLength = fusedIntronLength;
+        SkippedAcceptorsDonors = new int[] { skippedDonors, skippedAcceptors };
+        NmdBases = new int[] { nmdBasesMin, nmdBasesMax };
+        CodingBasesLength = new int[] { codingBasesLengthMin, codingBasesLengthMax };
 
         RnaData = new NeoRnaData();
 
@@ -77,11 +94,14 @@ public class NeoEpitopeData
         {
             for(String transName : Transcripts[fs])
             {
-                double transExpression = 0;
+                double transExpression = INVALID_EXP;
 
                 if(!sampleTPMs.isEmpty())
                 {
-                    transExpression = sampleTPMs.get(transName);
+                    if(sampleTPMs.containsKey(transName))
+                        transExpression = sampleTPMs.get(transName);
+                    else
+                        NE_LOGGER.warn("sample({}) missing transcript({}) TPM", sampleData.Id, transName);
                 }
                 else
                 {

@@ -65,7 +65,7 @@ public class NeoScorerTask implements Callable
         }
         catch(Exception e)
         {
-            NE_LOGGER.error("sample({}) failed processing", mSampleData, e.toString());
+            NE_LOGGER.error("sample({}) failed processing", mSampleData.Id, e.toString());
             e.printStackTrace();
             System.exit(1);
         }
@@ -88,6 +88,7 @@ public class NeoScorerTask implements Callable
 
         if(mTransExpression == null || !mTransExpression.hasSampleId(sampleId))
         {
+            NE_LOGGER.debug("sample({}) loading transcript expression", sampleId);
             sampleTPMs.putAll(TranscriptExpressionLoader.loadTranscriptExpression(mConfig.IsofoxDataDir, sampleId));
         }
 
@@ -98,6 +99,7 @@ public class NeoScorerTask implements Callable
             String rnaSampleId = sampleId + RNA_SAMPLE_APPEND_SUFFIX;
             List<NeoEpitopeData> pointNeos = neoDataList.stream().filter(x -> x.VariantType.isPointMutation()).collect(Collectors.toList());
             somaticVariants.addAll(loadSomaticVariants(sampleId, rnaSampleId, mConfig.RnaSomaticVcf, pointNeos));
+            NE_LOGGER.debug("sample({}) loaded {} somatic RNA-annotated variants", sampleId, somaticVariants.size());
         }
 
         // set TPM and RNA fragment & depth as available
@@ -148,52 +150,7 @@ public class NeoScorerTask implements Callable
 
         if(mConfig.WriteTypes.contains(OutputType.NEOEPITOPE))
         {
-            /*
-            for(NeoEpitopeData neoData : neoDataList)
-            {
-                NeoPredictionData predData = neoPredictionsMap.get(neoData.Id);
-
-                mWriters.writePeptideData(sampleId, neoData, predData, alleleCoverage);
-            }
-            */
+            neoDataList.forEach(x -> mWriters.writeNeoData(sampleId, x));
         }
     }
-
-    /*
-    private NeoPredictionData produceAllelePeptides(final NeoEpitopeData neoData, final List<AlleleCoverage> alleleCoverages)
-    {
-        NeoPredictionData neoPredData = new NeoPredictionData(neoData.Id);
-
-        final List<PeptideData> peptides = EpitopeUtils.generatePeptides(
-                neoData.UpAminoAcids, neoData.NovelAminoAcids, neoData.DownAminoAcids, PEPTIDE_LENGTH_RANGE, FLANK_AA_COUNT);
-
-        Set<String> uniqueAlleles = Sets.newHashSet();
-
-        for(AlleleCoverage allele : alleleCoverages)
-        {
-            if(uniqueAlleles.contains(allele.Allele))
-                continue;
-
-            uniqueAlleles.add(allele.Allele);
-
-            List<BindData> bindDataList = Lists.newArrayList();
-            neoPredData.getPeptidePredictions().put(allele.Allele, bindDataList);
-
-            for(PeptideData peptideData : peptides)
-            {
-                if(peptideData.Peptide.contains(AA_SELENOCYSTEINE))
-                    continue;
-
-                BindData bindData = new BindData(
-                        allele.Allele, peptideData.Peptide, "", peptideData.UpFlank, peptideData.DownFlank);
-
-                // bindData.setTPM(neoData.RnaData.getTPM());
-
-                bindDataList.add(bindData);
-            }
-        }
-
-        return neoPredData;
-    }
-    */
 }

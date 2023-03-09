@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +24,7 @@ public class NeoEpitopeFile
     public final NeoEpitopeType VariantType;
     public final String VariantInfo;
     public final double CopyNumber;
+    public final double SubclonalLikelihood;
     public final String[] GeneIds;
     public final String[] GeneNames;
 
@@ -48,6 +48,24 @@ public class NeoEpitopeFile
     public static final String FLD_NE_ID = "NeId";
     public static final String FLD_NE_VAR_TYPE = "VariantType";
     public static final String FLD_NE_VAR_INFO = "VariantInfo";
+    public static final String FLD_NE_GENE_ID_UP = "GeneIdUp";
+    public static final String FLD_NE_GENE_ID_DOWN = "GeneIdDown";
+    public static final String FLD_NE_GENE_NAME_UP = "GeneNameUp";
+    public static final String FLD_NE_GENE_NAME_DOWN = "GeneNameDown";
+    public static final String FLD_NE_AA_UP = "UpstreamAA";
+    public static final String FLD_NE_AA_DOWN = "DownstreamAA";
+    public static final String FLD_NE_AA_NOVEL = "NovelAA";
+    public static final String FLD_NE_TRANS_UP = "UpTranscripts";
+    public static final String FLD_NE_TRANS_DOWN = "DownTranscripts";
+    public static final String FLD_NE_NMD_MIN = "NmdMin";
+    public static final String FLD_NE_NMD_MAX = "NmdMax";
+    public static final String FLD_NE_CB_LEN_MIN = "CodingBasesLengthMin";
+    public static final String FLD_NE_CB_LEN_MAX = "CodingBasesLengthMax";
+    public static final String FLD_NE_FUSED_LEN = "FusedIntronLength";
+    public static final String FLD_NE_SKIP_DONORS = "SkippedDonors";
+    public static final String FLD_NE_SKIP_ACCEPTORS = "SkippedAcceptors";
+    public static final String FLD_NE_JCN = "JunctionCopyNumber";
+    public static final String FLD_NE_SC_LIKELIHOOD = "SubclonalLikelihood";
 
     public static final String DELIMITER = ",";
     public static final String ITEM_DELIM = ";";
@@ -55,7 +73,7 @@ public class NeoEpitopeFile
     private static final String FUSION_INFO_DELIM = ";";
 
     public NeoEpitopeFile(
-            int id, final NeoEpitopeType varType, final String varInfo, final double copyNumber,
+            int id, final NeoEpitopeType varType, final String varInfo, final double copyNumber, final double subclonalLikelihood,
             final String geneIdUp, final String geneIdDown, final String geneNameUp, final String geneNameDown,
             final String chrUp, final String chrDown, byte orientUp, byte orientDown,
             final String upAA, final String downAAs, final String novelAAs,
@@ -68,6 +86,7 @@ public class NeoEpitopeFile
         VariantType = varType;
         VariantInfo = varInfo;
         CopyNumber = copyNumber;
+        SubclonalLikelihood = subclonalLikelihood;
         GeneIds = new String[] { geneIdUp, geneIdDown };
         GeneNames = new String[] { geneNameUp, geneNameDown };
         Chromosomes = new String[] { chrUp, chrDown };
@@ -89,7 +108,7 @@ public class NeoEpitopeFile
         CodingBasePositions[FS_DOWN] = new int[] {codingBaseDownPosStart, codingBaseDownPosEnd};
     }
 
-    private static final String FILE_EXTENSION = ".neo.neoepitopes.csv";
+    private static final String FILE_EXTENSION = ".neo.neo_data.csv";
 
     public static String generateFilename(final String basePath, final String sample)
     {
@@ -130,27 +149,28 @@ public class NeoEpitopeFile
         int neIdIndex = fieldsIndexMap.get(FLD_NE_ID);
         int varTypeIndex = fieldsIndexMap.get(FLD_NE_VAR_TYPE);
         int varInfoIndex = fieldsIndexMap.get(FLD_NE_VAR_INFO);
-        int geneIdUpIndex = fieldsIndexMap.get("GeneIdUp");
-        int geneIdDowwIndex = fieldsIndexMap.get("GeneIdDown");
-        int geneNameUpIndex = fieldsIndexMap.get("GeneNameUp");
-        int geneNameDownIndex = fieldsIndexMap.get("GeneNameDown");
+        int geneIdUpIndex = fieldsIndexMap.get(FLD_NE_GENE_NAME_UP);
+        int geneIdDowwIndex = fieldsIndexMap.get(FLD_NE_GENE_ID_DOWN);
+        int geneNameUpIndex = fieldsIndexMap.get(FLD_NE_GENE_NAME_UP);
+        int geneNameDownIndex = fieldsIndexMap.get(FLD_NE_GENE_NAME_DOWN);
         int chrUpIndex = fieldsIndexMap.get("ChrUp");
         int chrDownIndex = fieldsIndexMap.get("ChrDown");
         int orientUpIndex = fieldsIndexMap.get("OrientUp");
         int orientDownIndex = fieldsIndexMap.get("OrientDown");
-        int upAaIndex = fieldsIndexMap.get("UpstreamAA");
-        int downAaIndex = fieldsIndexMap.get("DownstreamAA");
-        int novelAaIndex = fieldsIndexMap.get("NovelAA");
-        int nmdMinIndex = fieldsIndexMap.get("NmdMin");
-        int nmdMaxIndex = fieldsIndexMap.get("NmdMax");
-        int jcnIndex = fieldsIndexMap.get("JunctionCopyNumber");
-        int cbLenMinIndex = fieldsIndexMap.get("CodingBasesLengthMin");
-        int cbLenMaxIndex = fieldsIndexMap.get("CodingBasesLengthMax");
-        int feLenIndex = fieldsIndexMap.get("FusedIntronLength");
-        int skipDonIndex = fieldsIndexMap.get("SkippedDonors");
-        int skipAccIndex = fieldsIndexMap.get("SkippedAcceptors");
-        int upTransIndex = fieldsIndexMap.get("UpTranscripts");
-        int downTransIndex = fieldsIndexMap.get("DownTranscripts");
+        int upAaIndex = fieldsIndexMap.get(FLD_NE_AA_UP);
+        int downAaIndex = fieldsIndexMap.get(FLD_NE_AA_DOWN);
+        int novelAaIndex = fieldsIndexMap.get(FLD_NE_AA_NOVEL);
+        int nmdMinIndex = fieldsIndexMap.get(FLD_NE_NMD_MIN);
+        int nmdMaxIndex = fieldsIndexMap.get(FLD_NE_NMD_MAX);
+        int jcnIndex = fieldsIndexMap.get(FLD_NE_JCN);
+        int sclIndex = fieldsIndexMap.get(FLD_NE_SC_LIKELIHOOD);
+        int cbLenMinIndex = fieldsIndexMap.get(FLD_NE_CB_LEN_MIN);
+        int cbLenMaxIndex = fieldsIndexMap.get(FLD_NE_CB_LEN_MAX);
+        int feLenIndex = fieldsIndexMap.get(FLD_NE_FUSED_LEN);
+        int skipDonIndex = fieldsIndexMap.get(FLD_NE_SKIP_DONORS);
+        int skipAccIndex = fieldsIndexMap.get(FLD_NE_SKIP_ACCEPTORS);
+        int transUpIndex = fieldsIndexMap.get(FLD_NE_TRANS_UP);
+        int transDownIndex = fieldsIndexMap.get(FLD_NE_TRANS_DOWN);
         int wtAaIndex = fieldsIndexMap.get("WildtypeAA");
         int cbUpPosStartIndex = fieldsIndexMap.get("CodingBaseUpPosStart");
         int cbUpPosEndIndex = fieldsIndexMap.get("CodingBaseUpPosEnd");
@@ -166,13 +186,14 @@ public class NeoEpitopeFile
             String[] values = line.split(DELIMITER, -1);
 
             neoepitopes.add(new NeoEpitopeFile(
-                    Integer.parseInt(values[neIdIndex]), NeoEpitopeType.valueOf(values[varTypeIndex]), values[varInfoIndex], Double.parseDouble(values[jcnIndex]),
+                    Integer.parseInt(values[neIdIndex]), NeoEpitopeType.valueOf(values[varTypeIndex]), values[varInfoIndex],
+                    Double.parseDouble(values[jcnIndex]), Double.parseDouble(values[sclIndex]),
                     values[geneIdUpIndex], values[geneIdDowwIndex], values[geneNameUpIndex], values[geneNameDownIndex],
                     values[chrUpIndex], values[chrDownIndex], Byte.parseByte(values[orientUpIndex]), Byte.parseByte(values[orientDownIndex]),
                     values[upAaIndex], values[downAaIndex], values[novelAaIndex], Integer.parseInt(values[nmdMinIndex]), Integer.parseInt(values[nmdMaxIndex]),
                     Integer.parseInt(values[cbLenMinIndex]), Integer.parseInt(values[cbLenMaxIndex]),
                     Integer.parseInt(values[feLenIndex]), Integer.parseInt(values[skipDonIndex]), Integer.parseInt(values[skipAccIndex]),
-                    values[upTransIndex], values[downTransIndex], values[wtAaIndex],
+                    values[transUpIndex], values[transDownIndex], values[wtAaIndex],
                     Integer.parseInt(values[cbUpPosStartIndex]), Integer.parseInt(values[cbUpPosEndIndex]), values[cbUpIndex], values[cbCigUpIndex],
                     Integer.parseInt(values[cbDownPosStartIndex]), Integer.parseInt(values[cbDownPosEndIndex]), values[cbDownIndex], values[cbCigDownIndex]));
         }
@@ -186,27 +207,28 @@ public class NeoEpitopeFile
                 .add(FLD_NE_ID)
                 .add(FLD_NE_VAR_TYPE)
                 .add(FLD_NE_VAR_INFO)
-                .add("JunctionCopyNumber")
-                .add("GeneIdUp")
-                .add("GeneIdDown")
-                .add("GeneNameUp")
-                .add("GeneNameDown")
+                .add(FLD_NE_JCN)
+                .add(FLD_NE_SC_LIKELIHOOD)
+                .add(FLD_NE_GENE_ID_UP)
+                .add(FLD_NE_GENE_ID_DOWN)
+                .add(FLD_NE_GENE_NAME_UP)
+                .add(FLD_NE_GENE_NAME_DOWN)
                 .add("ChrUp")
                 .add("ChrDown")
                 .add("OrientUp")
                 .add("OrientDown")
-                .add("UpstreamAA")
-                .add("DownstreamAA")
-                .add("NovelAA")
-                .add("NmdMin")
-                .add("NmdMax")
-                .add("CodingBasesLengthMin")
-                .add("CodingBasesLengthMax")
-                .add("FusedIntronLength")
-                .add("SkippedDonors")
-                .add("SkippedAcceptors")
-                .add("UpTranscripts")
-                .add("DownTranscripts")
+                .add(FLD_NE_AA_UP)
+                .add(FLD_NE_AA_DOWN)
+                .add(FLD_NE_AA_NOVEL)
+                .add(FLD_NE_NMD_MIN)
+                .add(FLD_NE_NMD_MAX)
+                .add(FLD_NE_CB_LEN_MIN)
+                .add(FLD_NE_CB_LEN_MAX)
+                .add(FLD_NE_FUSED_LEN)
+                .add(FLD_NE_SKIP_DONORS)
+                .add(FLD_NE_SKIP_ACCEPTORS)
+                .add(FLD_NE_TRANS_UP)
+                .add(FLD_NE_TRANS_DOWN)
                 .add("WildtypeAA")
                 .add("CodingBaseUpPosStart")
                 .add("CodingBaseUpPosEnd")
@@ -227,6 +249,7 @@ public class NeoEpitopeFile
         sj.add(neo.VariantType.toString());
         sj.add(neo.VariantInfo);
         sj.add(String.format("%.4f", neo.CopyNumber));
+        sj.add(String.format("%.4f", neo.SubclonalLikelihood));
         sj.add(neo.GeneIds[FS_UP]);
         sj.add(neo.GeneIds[FS_DOWN]);
         sj.add(neo.GeneNames[FS_UP]);

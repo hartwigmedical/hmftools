@@ -117,6 +117,7 @@ public class PmNeoEpitope extends NeoEpitope
     }
 
     public double copyNumber() { return mPointMutation.CopyNumber; }
+    public double subclonalLikelihood() { return mPointMutation.SubclonalLikelihood ; }
 
     public boolean phaseMatched()
     {

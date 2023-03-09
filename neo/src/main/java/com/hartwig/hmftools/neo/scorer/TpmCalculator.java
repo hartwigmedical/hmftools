@@ -58,6 +58,8 @@ public class TpmCalculator
     {
         double tpmNormalisationFactor = calculateTpmNormalisation(neoDataList);
 
+        NE_LOGGER.debug("sample({}) TPM norm-factor({})", sampleId, format("%.3f", tpmNormalisationFactor));
+
         // derive the set of peptides per allele from the novel amino acids
         Map<String,List<NeoEpitopeData>> variantNeoMap = Maps.newHashMap();
 

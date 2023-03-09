@@ -141,7 +141,8 @@ public class TpmCalcsTest
     {
         NeoEpitopeData neoData = new NeoEpitopeData(
                 nextNeId(), type, variantInfo, GENE_ID_1, GENE_NAME_1, upAAs, "", downAAs,
-                Lists.newArrayList(), Lists.newArrayList());
+                Lists.newArrayList(), Lists.newArrayList(), 0, 0, 0.0, 0.0,
+                0, 0, 0, 0, 0);
 
         neoData.RnaData.setCoverage(rnaFragments, rnaFragments * 2, rnaFragments * 2);
         neoData.RnaData.setExpression(tpms);

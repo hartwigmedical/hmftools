@@ -24,7 +24,7 @@ public class PeptideScoreData extends PeptideData
     private boolean mTpmCalculated;
     private boolean mWritten;
 
-    public PeptideScoreData(final PeptideData peptideData, final int neId) // , final double tpmUp, final double tpmDown
+    public PeptideScoreData(final PeptideData peptideData, final int neId)
     {
         super(peptideData.Peptide, peptideData.UpFlank, peptideData.DownFlank);
 

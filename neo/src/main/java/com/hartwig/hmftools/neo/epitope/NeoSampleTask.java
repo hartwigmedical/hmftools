@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_NON
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.generateFilename;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -18,16 +17,16 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAME
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStringToList;
 import static com.hartwig.hmftools.neo.NeoCommon.DOWNSTREAM_PRE_GENE_DISTANCE;
+import static com.hartwig.hmftools.neo.NeoCommon.IMMUNE_TRANSCRIPT_PREFIXES;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.initialiseNeoepitopeWriter;
 import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.writeNeoepitopes;
+import static com.hartwig.hmftools.neo.epitope.PointMutationData.isRelevantMutation;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -49,7 +48,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
 import org.jooq.Record;
-import org.jooq.Record8;
+import org.jooq.Record9;
 import org.jooq.Result;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -114,9 +113,10 @@ public class NeoSampleTask implements Callable
 
         if(mDbAccess != null)
         {
-            final Result<Record8<String, String, String, Integer, String, String, Double, String>> result = mDbAccess.context()
+            final Result<Record9<String, String, String, Integer, String, String, Double, Double, String>> result = mDbAccess.context()
                     .select(SOMATICVARIANT.GENE, SOMATICVARIANT.WORSTCODINGEFFECT, SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION,
-                            SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.VARIANTCOPYNUMBER, SOMATICVARIANT.LOCALPHASESET)
+                            SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.VARIANTCOPYNUMBER, SOMATICVARIANT.SUBCLONALLIKELIHOOD,
+                            SOMATICVARIANT.LOCALPHASESET)
                     .from(Tables.SOMATICVARIANT)
                     .where(Tables.SOMATICVARIANT.SAMPLEID.eq(mSampleId))
                     .and(Tables.SOMATICVARIANT.FILTER.eq(PASS_FILTER))
@@ -141,11 +141,12 @@ public class NeoSampleTask implements Callable
                 String ref = record.getValue(Tables.SOMATICVARIANT.REF);
                 String alt = record.getValue(Tables.SOMATICVARIANT.ALT);
                 double copyNumber = record.getValue(Tables.SOMATICVARIANT.VARIANTCOPYNUMBER);
+                double subclonalLikelihood = record.getValue(Tables.SOMATICVARIANT.SUBCLONALLIKELIHOOD);
                 String localPhaseSetStr = record.get(Tables.SOMATICVARIANT.LOCALPHASESET);
                 List<Integer> localPhaseSets = localPhaseSetsStringToList(localPhaseSetStr);
 
                 pointMutations.add(new PointMutationData(chromosome, position, ref, alt, gene,
-                        codingEffect, copyNumber, localPhaseSets != null ? localPhaseSets.get(0) : -1));
+                        codingEffect, copyNumber, subclonalLikelihood, localPhaseSets != null ? localPhaseSets.get(0) : -1));
             }
         }
         else
@@ -171,7 +172,7 @@ public class NeoSampleTask implements Callable
 
                 final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(somaticVcf, new VCFCodec(), false);
 
-                for (VariantContext variant : reader.iterator())
+                for(VariantContext variant : reader.iterator())
                 {
                     if(filter.test(variant))
                     {
@@ -183,12 +184,13 @@ public class NeoSampleTask implements Callable
                         if(somaticVariant.gene().isEmpty() || mGeneTransCache.getGeneDataByName(somaticVariant.gene()) == null)
                             continue;
 
-                        if(somaticVariant.worstCodingEffect() != NONSENSE_OR_FRAMESHIFT && somaticVariant.worstCodingEffect() != MISSENSE)
+                        if(!isRelevantMutation(somaticVariant))
                             continue;
 
                         pointMutations.add(new PointMutationData(
-                                somaticVariant.chromosome(), (int)somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt(),
+                                somaticVariant.chromosome(), somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt(),
                                 somaticVariant.gene(), somaticVariant.worstCodingEffect(), somaticVariant.adjustedCopyNumber(),
+                                somaticVariant.subclonalLikelihood(),
                                 somaticVariant.localPhaseSets() != null ? somaticVariant.topLocalPhaseSet() : -1));
                     }
                 }
@@ -221,27 +223,8 @@ public class NeoSampleTask implements Callable
 
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine();
-
-            if(line == null)
-            {
-                NE_LOGGER.error("empty Linx neo-epitope file({})", filename);
-                return fusions;
-            }
-
-            int neCount = 0;
-
-            while((line = fileReader.readLine()) != null)
-            {
-                final String[] items = line.split(DELIMITER, -1);
-
-                fusions.add(NeoEpitopeFusion.fromString(line, false));
-                ++neCount;
-            }
-
-            NE_LOGGER.debug("loaded {} Linx neo-epitope candidates from file: {}", neCount, filename);
+            fusions.addAll(NeoEpitopeFusion.read(filename));
+            NE_LOGGER.debug("loaded {} Linx neo-epitope candidates from file: {}", fusions.size(), filename);
         }
         catch(IOException exception)
         {
@@ -334,6 +317,10 @@ public class NeoSampleTask implements Callable
                     continue;
 
                 if(!positionWithin(pointMutation.Position, transData.CodingStart, transData.CodingEnd))
+                    continue;
+
+                // ignore IG and TR transcripts
+                if(IMMUNE_TRANSCRIPT_PREFIXES.stream().anyMatch(x -> transData.BioType.startsWith(x)))
                     continue;
 
                 // check for a mutation within the stop codon at the bounds of the transcript

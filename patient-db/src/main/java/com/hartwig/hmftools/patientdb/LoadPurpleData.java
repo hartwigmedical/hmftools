@@ -139,14 +139,13 @@ public class LoadPurpleData
         // check all somatic files exist before attempting to load
         final String geneCopyNumberFile = GeneCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
         final String copyNumberFile = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
-        final String purityRangeFile = FittedPurityRangeFile.generateFilenameForReading(purpleDir, sampleId);
         final String somaticDriversFile = DriverCatalogFile.generateSomaticFilename(purpleDir, sampleId);
         final String somaticVcf = purpleSomaticVcfFile(purpleDir, sampleId);
         final String svVcf = purpleSomaticSvFile(purpleDir, sampleId);
 
         // skip loading if any files are missing
         List<String> requiredFiles = Lists.newArrayList(
-                geneCopyNumberFile, copyNumberFile, somaticDriversFile, purityRangeFile, somaticVcf, svVcf);
+                geneCopyNumberFile, copyNumberFile, somaticDriversFile, somaticVcf, svVcf);
 
         if(requiredFiles.stream().noneMatch(x -> Files.exists(Paths.get(x))))
         {

@@ -48,10 +48,15 @@ public class NeoScorer
             System.exit(1);
         }
 
-        NE_LOGGER.info("loading cohort transcript expression");
+        RnaExpressionMatrix transcriptExpression = null;
 
-        RnaExpressionMatrix transcriptExpression = mConfig.CohortSampleTpmFile != null ?
-                new RnaExpressionMatrix(mConfig.CohortSampleTpmFile, EXPRESSION_SCOPE_TRANS) : null;
+        if(mConfig.CohortSampleTpmFile != null)
+        {
+            NE_LOGGER.info("loading cohort transcript expression");
+            transcriptExpression = new RnaExpressionMatrix(mConfig.CohortSampleTpmFile, EXPRESSION_SCOPE_TRANS);
+        }
+
+        NE_LOGGER.info("loading cohort transcript medians");
 
         TpmMediansCache tpmMediansCache = new TpmMediansCache(mConfig.CohortTpmMediansFile);
 
@@ -102,5 +107,4 @@ public class NeoScorer
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
 }
