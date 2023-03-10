@@ -15,7 +15,8 @@ import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
-import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.datamodel.peach.ImmutablePeachRecord;
+import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.common.rna.*;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
@@ -24,11 +25,11 @@ import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
+import com.hartwig.hmftools.datamodel.peach.PeachRecord;
 import com.hartwig.hmftools.orange.algo.*;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
-import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
@@ -294,9 +295,9 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static List<PeachGenotype> createTestPeachData() {
-        List<PeachGenotype> genotypes = Lists.newArrayList();
-        genotypes.add(PeachTestFactory.builder().gene("DPYD").haplotype("haplotype").build());
-        return genotypes;
+    private static PeachRecord createTestPeachData() {
+        return ImmutablePeachRecord.builder()
+                .addEntries(OrangeAlgo.asOrangeDatamodel(PeachTestFactory.builder().gene("DPYD").haplotype("haplotype").build()))
+                .build();
     }
 }

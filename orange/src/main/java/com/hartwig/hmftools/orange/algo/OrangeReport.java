@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
+import com.hartwig.hmftools.datamodel.peach.PeachRecord;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeGene;
@@ -80,7 +81,7 @@ public abstract class OrangeReport {
     public abstract CuppaData cuppa();
 
     @Nullable
-    public abstract List<PeachGenotype> peach();
+    public abstract PeachRecord peach();
 
     @Nullable
     public abstract List<SignatureAllocation> sigAllocations();

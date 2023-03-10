@@ -40,6 +40,9 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
+import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
+import com.hartwig.hmftools.datamodel.peach.ImmutablePeachRecord;
+import com.hartwig.hmftools.datamodel.peach.PeachRecord;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
@@ -165,7 +168,7 @@ public class OrangeAlgo {
         LilacSummaryData lilac = loadLilacData(config);
         VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
         CuppaData cuppa = loadCuppaData(config);
-        List<PeachGenotype> peach = loadPeachData(config);
+        PeachRecord peach = loadPeachData(config);
         List<SignatureAllocation> sigAllocations = loadSigAllocations(config);
         IsofoxData isofoxData = loadIsofoxData(config);
 
@@ -499,7 +502,7 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static List<PeachGenotype> loadPeachData(@NotNull OrangeConfig config) throws IOException {
+    private static PeachRecord loadPeachData(@NotNull OrangeConfig config) throws IOException {
         String peachGenotypeTsv = config.peachGenotypeTsv();
 
         if (peachGenotypeTsv == null) {
@@ -508,10 +511,28 @@ public class OrangeAlgo {
         }
 
         LOGGER.info("Loading PEACH from {}", new File(peachGenotypeTsv).getParent());
-        List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(config.peachGenotypeTsv());
+        List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
         LOGGER.info(" Loaded {} PEACH genotypes from {}", peachGenotypes.size(), config.peachGenotypeTsv());
 
-        return peachGenotypes;
+        return asOrangeDatamodel(peachGenotypes);
+    }
+
+    public static PeachRecord asOrangeDatamodel(List<PeachGenotype> peachGenotypes) {
+        return ImmutablePeachRecord.builder()
+                .entries(() -> peachGenotypes.stream().map(OrangeAlgo::asOrangeDatamodel).iterator())
+                .build();
+    }
+
+    public static com.hartwig.hmftools.datamodel.peach.PeachGenotype asOrangeDatamodel(PeachGenotype peachGenotype) {
+        return ImmutablePeachGenotype.builder()
+                .gene(peachGenotype.gene())
+                .haplotype(peachGenotype.haplotype())
+                .function(peachGenotype.function())
+                .linkedDrugs(peachGenotype.linkedDrugs())
+                .urlPrescriptionInfo(peachGenotype.urlPrescriptionInfo())
+                .panelVersion(peachGenotype.panelVersion())
+                .repoVersion(peachGenotype.repoVersion())
+                .build();
     }
 
     @Nullable

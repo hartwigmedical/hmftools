@@ -5,7 +5,6 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
@@ -13,6 +12,8 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
+import com.hartwig.hmftools.datamodel.peach.PeachRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
@@ -363,10 +364,11 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String dpydStatus() {
-        List<PeachGenotype> genotypes = report.peach();
-        if (genotypes == null ) {
+        PeachRecord peach = report.peach();
+        if (peach == null) {
             return ReportResources.NOT_AVAILABLE;
         }
+        Set<PeachGenotype> genotypes = peach.entries();
 
         Set<String> haplotypes = Sets.newHashSet();
         for (PeachGenotype genotype : genotypes) {
@@ -390,7 +392,7 @@ public class FrontPageChapter implements ReportChapter {
             if (cancerType != null && !cancerType.equals(CohortConstants.COHORT_OTHER)
                     && !cancerType.equals(CohortConstants.COHORT_UNKNOWN)) {
                 Double percentile = evaluation.cancerTypePercentile();
-                String cancerTypePercentile = percentile != null ? PERCENTAGE.format(evaluation.cancerTypePercentile() * 100) : "NA";
+                String cancerTypePercentile = percentile != null ? PERCENTAGE.format(percentile * 100) : "NA";
                 addon = addon + " | " + evaluation.cancerType() + " " + cancerTypePercentile;
             }
             addon = addon + ")";

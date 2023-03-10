@@ -47,26 +47,8 @@ public class OrangeReportToRecordConversion {
                 .virusInterpreter(Optional.ofNullable(report.virusInterpreter()).map(OrangeReportToRecordConversion::convert).orElse(null))
                 .chord(Optional.ofNullable(report.chord()).map(OrangeReportToRecordConversion::convert).orElse(null))
                 .cuppa(report.cuppa())
-                .peach(Optional.ofNullable(report.peach()).map(OrangeReportToRecordConversion::convert).orElse(null))
+                .peach(report.peach())
                 .plots(report.plots())
-                .build();
-    }
-
-    private static PeachRecord convert(List<com.hartwig.hmftools.common.peach.PeachGenotype> peachGenotypes) {
-        return ImmutablePeachRecord.builder()
-                .entries(() -> peachGenotypes.stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .build();
-    }
-
-    private static PeachGenotype convert(com.hartwig.hmftools.common.peach.PeachGenotype peachGenotype) {
-        return ImmutablePeachGenotype.builder()
-                .gene(peachGenotype.gene())
-                .haplotype(peachGenotype.haplotype())
-                .function(peachGenotype.function())
-                .linkedDrugs(peachGenotype.linkedDrugs())
-                .urlPrescriptionInfo(peachGenotype.urlPrescriptionInfo())
-                .panelVersion(peachGenotype.panelVersion())
-                .repoVersion(peachGenotype.repoVersion())
                 .build();
     }
 
@@ -118,16 +100,16 @@ public class OrangeReportToRecordConversion {
         var somaticDriverIterator = purpleInterpretedData.somaticDrivers().stream()
                 .map(OrangeReportToRecordConversion::convert)
                 .iterator();
-        var germlineDriverIterator = Objects.requireNonNullElseGet(purpleInterpretedData.germlineDrivers(), List::<DriverCatalog>of).stream()
+        var germlineDriverIterator = argumentOrEmpty(purpleInterpretedData.germlineDrivers()).stream()
                 .map(OrangeReportToRecordConversion::convert)
                 .iterator();
         var somaticVariantIterator = purpleInterpretedData.allSomaticVariants().stream()
                 .map(OrangeReportToRecordConversion::convert)
                 .iterator();
-        var germlineVariantIterator = Objects.requireNonNullElseGet(purpleInterpretedData.allGermlineVariants(), List::<com.hartwig.hmftools.orange.algo.purple.PurpleVariant>of).stream()
+        var germlineVariantIterator = argumentOrEmpty(purpleInterpretedData.allGermlineVariants()).stream()
                 .map(OrangeReportToRecordConversion::convert)
                 .iterator();
-        var reportableGermlineVariantIterator = Objects.requireNonNullElseGet(purpleInterpretedData.reportableGermlineVariants(), List::<com.hartwig.hmftools.orange.algo.purple.PurpleVariant>of).stream()
+        var reportableGermlineVariantIterator = argumentOrEmpty(purpleInterpretedData.reportableGermlineVariants()).stream()
                 .map(OrangeReportToRecordConversion::convert)
                 .iterator();
         return ImmutablePurpleRecord.builder()
@@ -243,5 +225,9 @@ public class OrangeReportToRecordConversion {
                 .minCopyNumber(geneCopyNumber.minCopyNumber())
                 .minMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())
                 .build();
+    }
+
+    private static <T> List<T> argumentOrEmpty(List<T> obj) {
+        return Objects.requireNonNullElseGet(obj, List::of);
     }
 }
