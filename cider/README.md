@@ -43,7 +43,9 @@ java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
 | primer_csv           | Path to csv file containing primers                                               |
 | primer_mismatch_max  | Maximum number of mismatch bases for matching primer sequence                     |
 
-The ensembl data cache can be downloaded available [here](https://console.cloud.google.com/storage/browser/_details/hmf-public/HMFtools-Resources/dna_pipeline/v5_31/38/common/ensembl_data/ensembl_gene_data.csv)
+The ensembl data cache can be downloaded using the following links:
+ [v37](https://console.cloud.google.com/storage/browser/_details/hmf-public/HMFtools-Resources/dna_pipeline/v5_31/37/common/ensembl_data/ensembl_gene_data.csv), 
+ [v38](https://console.cloud.google.com/storage/browser/_details/hmf-public/HMFtools-Resources/dna_pipeline/v5_31/38/common/ensembl_data/ensembl_gene_data.csv)
 
 ## Algorithm
 ### Anchor sequences and coordinates 
