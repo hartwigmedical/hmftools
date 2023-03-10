@@ -19,6 +19,31 @@ java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
    -ensembl_data_dir /path_to_ensembl_data_cache/ \
    -threads 16
 ```
+### Mandatory Arguments
+
+| Argument           | Description                                                                                |
+|--------------------|--------------------------------------------------------------------------------------------|
+| sample             | Name of the sample                                                                         |
+| bam                | Path to indexed BAM file                                                                   |
+| output_dir         | Path to the output directory. This directory will be created if it does not already exist. |
+| ref_genome_version | One of "37" or "38".                                                                       |
+ | ensembl_data_dir   | Path to the directory containing ensembl_gene_data.csv                                     |
+
+### Optional Arguments
+
+| Argument             | Description                                                                       |
+|----------------------|-----------------------------------------------------------------------------------|
+| write_cider_bam      | If specified, write a small bam file of all the extracted reads.                  |
+| threads              | Number of threads to use, defaults to 1                                           |
+| max_fragment_length  | Approximate length of the longest fragment. Defaults to 1000                      |
+| threads              | Number of threads to use, defaults to 1                                           |
+| min_base_quality     | Minimum base quality for a base to be considered a "support" base, defaults to 25 |
+| report_match_ref_seq | When specified, reports VDJ sequences that match reference genome                 |
+| num_trim_bases       | Number of bases to trim on each side of reads. Defaults to 0                      |
+| primer_csv           | Path to csv file containing primers                                               |
+| primer_mismatch_max  | Maximum number of mismatch bases for matching primer sequence                     |
+
+The ensembl data cache can be downloaded available [here](https://console.cloud.google.com/storage/browser/_details/hmf-public/HMFtools-Resources/dna_pipeline/v5_31/38/common/ensembl_data/ensembl_gene_data.csv)
 
 ## Algorithm
 ### Anchor sequences and coordinates 
@@ -60,7 +85,7 @@ If a sequence can be collapsed to multiple longer sequences, then greedily alloc
 
 For merged sequences, find a V and J anchor simply read out the CDR3 sequence between the V-CYS and J-PHE/J-TRP anchors.  
 
-For each V anchored only consensus sequence we search for candidate J-PHE/J-TRP anchor sequences. To do this we compare each complete 10 amino acid kmer downstream of the V-CYS sequence to the set of known 10 amino acid J anchor sequences by summing the log likelihoods from the BLOSUM62 substitution matrix. Truncated partial anchor sequences of 1 or more amino acids are also checked for the final 1-9 amino acids of the consensus sequence. A similarity score is calculated for each anchor sequence as follows: 
+For each V anchored only consensus sequence we search for candidate anchor sequences. To do this we compare each complete 10 amino acid kmer downstream of the V-CYS sequence to the set of known 10 amino acid J anchor sequences by summing the log likelihoods from the BLOSUM62 substitution matrix. Truncated partial anchor sequences of 1 or more amino acids are also checked for the final 1-9 amino acids of the consensus sequence. A similarity score is calculated for each anchor sequence as follows: 
 
 Similarity Score = 3 * Amino Acid length -6 - SUM[Self BLOSUM62 - Anchor BLOSUM62]] 
 
@@ -135,6 +160,8 @@ python cider_blastn.py \
     --ensembl=/path/data/ensembl_data_cache/38/ensembl_gene_data.csv
 ```
 
+The ensembl_gene_data.csv file is available [here](https://console.cloud.google.com/storage/browser/_details/hmf-public/HMFtools-Resources/dna_pipeline/v5_31/38/common/ensembl_data/ensembl_gene_data.csv).
+
 Note that we must use the v38 of ensembl file since the human genome blast database is v38. 
 
 This will create a new file `COLO829.cider.vdj_blastn.tsv` with the original file `COLO829.cider.vdj.tsv.gz` plus the following
@@ -149,15 +176,31 @@ additional fields added:
 | blastnFullMatch                       | True if this whole sequence matches a part of the genome, False otherwise      | 
 | blastnStatus                          | SKIPPED_BLASTN, V_D_J, V_J, V_D, D_J, V_ONLY, D_ONLY, J_ONLY, NO_REARRANGEMENT | 
 
-### setting up BLAST+
+### Post annotation script logic
+Following briefly describe the annotation script logic:
+1. Given cider vdj output, The script would run blastn locally and query the sequences against the human genome database.
+2. The alignments for each VDJ sequence are annotated with against the human ensembl gene data.
+3. Filter alignments to find the V, D, J gene matches. The rules to choose the alignment is follows:
+   + If there is one alignment that can encompass the whole sequence we will select it
+     as it indicates that this sequence matches the ref genome
+   + Then for each aligned section we choose the one that is aligned V, D, J or KDE
+     genes. If there are more than one, we choose the highest score one
+4. If there is a V gene, the D, and J gene loci must match the V locus, otherwise the D and J alignments are filtered out. One
+    exception is we allow TRA and TRD to match each other.
+5. If there is a V or J gene, the D gene locus must match either the V or the J locus. Otherwise the D alignment is removed. We also
+  allow TRA and TRD to match one another.
+6. Finally the V, D, J gene alignment information are combined and added as annotation into the output file.
 
-Follow the instruction in https://www.ncbi.nlm.nih.gov/books/NBK1762/ . And set up the `human_genome` blast DB:
-
-```
-$ cd $BLASTDB
-$ perl $BLAST_INSTALL/bin/update_blastdb.pl --passive --decompress human_genome
-```
-
+### setting up post annotation script
+Below steps are required to run the cider_blastn.py script:
+1. Follow the instruction in https://www.ncbi.nlm.nih.gov/books/NBK1762/. And set up the `human_genome` blast DB:
+    ```
+    $ cd $BLASTDB
+    $ perl $BLAST_INSTALL/bin/update_blastdb.pl --passive --decompress human_genome
+    ```
+   Make sure the `BLASTDB` environment variable is defined.
+2. Download the ensembl_gene_data.csv file [here](https://console.cloud.google.com/storage/browser/_details/hmf-public/HMFtools-Resources/dna_pipeline/v5_31/38/common/ensembl_data/ensembl_gene_data.csv).
+3. Python package pandas must be installed.
 
 ## Limitations / Future improvements
   

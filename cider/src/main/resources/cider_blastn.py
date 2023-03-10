@@ -5,6 +5,7 @@ import os, sys, time
 import re
 import tempfile
 import subprocess
+import unittest
 
 import logging
 
@@ -142,6 +143,11 @@ def get_ensembl(ensembl_gene_data, only_vdj):
     genes = []
     for idx, row in ensembl_df.iterrows():
         gene_name = row["GeneName"]
+
+        # remove pseudo genes
+        if "OR" in gene_name:
+            continue
+
         vdj_type = None
         if (gene_name.startswith("IGH") or
             gene_name.startswith("IGK") or
@@ -184,14 +190,7 @@ class GeneFinder:
                     matching_genes.append(g)
         return matching_genes
 
-def process_blastn_result(blastn_csv, gene_finder):
-
-    df = pd.read_csv(blastn_csv,
-                     names=["qseqid", "qlen", "sseqid", "stitle_chr", "stitle_assembly", "pident", "qcovs", "length",
-                            "mismatch", "gapopen",
-                            "qstart", "qend", "sstart", "send", "qframe", "sframe", "evalue",
-                            "bitscore", "qseq", "sseq"])
-
+def add_gene_data(df, gene_finder):
     # add chromosome number if it applies
     def parse_chromosome(stitle):
         m = re.match("^Homo sapiens chromosome (\w+)$", stitle)
@@ -216,6 +215,7 @@ def process_blastn_result(blastn_csv, gene_finder):
             return matching_genes[0]
 
         # when there are multiple matches, we see if any of them matches IGKJ IGLV etc
+        # we return the first match, which would be the one with the highest alignment score
         for gene in matching_genes:
             if gene.vdj_type is not None:
                 return gene
@@ -224,6 +224,8 @@ def process_blastn_result(blastn_csv, gene_finder):
 
     #start = time.time()
     #print("getting gene info")
+
+    # use the ensembl data to match the alignments to genes
     gene_col = df.apply(identify_gene, axis=1)
     #print(f"finished getting gene info, time taken: {round(time.time() - start, 2)}s")
 
@@ -233,45 +235,87 @@ def process_blastn_result(blastn_csv, gene_finder):
     df["gene_start"] = gene_col.apply(lambda x: x.gene_start if x else None)
     df["gene_end"] = gene_col.apply(lambda x: x.gene_end if x else None)
 
+# locus must either be the same, or TRA match with TRD
+def compatible_locus(gene_segment1, gene_segment2):
+    locus1 = gene_segment1[:3]
+    locus2 = gene_segment2[:3]
+    if locus1 == locus2:
+        return True
+    if locus1 == "TRA" and locus2 == "TRD":
+        return True
+    if locus2 == "TRA" and locus1 == "TRD":
+        return True
+    return False
+
+# from the blastn dataframe, we get the V, D and J alignments
+def get_vdj_alignments(df):
+
+    def get_alignment_df(df, vdj):
+        # vdj is either V, D or J
+        gene_type_alignment = df[df["gene_type"] == vdj].groupby("qseqid")[["gene", "pident", "qstart", "qend"]].first()
+        # rename columns
+        gene_type_alignment.rename(columns={ "gene": vdj.lower() + "Gene",
+                                            "pident": vdj.lower() + "PIdent",
+                                            "qstart": vdj.lower() + "AlignStart",
+                                            "qend": vdj.lower() + "AlignEnd"}, inplace=True)
+        return gene_type_alignment.reset_index()
+
+    # now we have to combine the data and mark
+    v_alignment = get_alignment_df(df, "V")
+    d_alignment = get_alignment_df(df, "D")
+    j_alignment = get_alignment_df(df, "J")
+
+    if not j_alignment.empty:
+        # make sure V and J loci are consistent, since V is much longer gene we favour that
+        # must be in same chromosome
+        j_gene = j_alignment["jGene"][0]
+        v_gene = None
+        if not v_alignment.empty:
+            v_gene = v_alignment["vGene"][0]
+
+        if v_gene is not None and not compatible_locus(v_gene, j_gene):
+            # clear the J gene if loci not compatible with each other
+            logger.debug(f"v gene({v_gene}) not compatible with j gene({j_gene}), clearing j match")
+            j_alignment = j_alignment.head(0)
+
+    if not d_alignment.empty:
+        # since D gene is very short it can sometimes match with
+        # the wrong gene. We make sure they are in the same chromosome
+        d_gene = d_alignment["dGene"][0]
+        vj_gene = None
+        if not v_alignment.empty:
+            vj_gene = v_alignment["vGene"][0]
+        elif not j_alignment.empty:
+            vj_gene = j_alignment["jGene"][0]
+
+        if vj_gene is not None and not compatible_locus(vj_gene, d_gene):
+            # clear the D gene if chromosome does not match
+            logger.debug(f"d gene({d_gene}) not compatible with vj gene({vj_gene}), clearing d match")
+            d_alignment = d_alignment.head(0)
+
+    return v_alignment, d_alignment, j_alignment
+
+def process_blastn_result(blastn_csv, gene_finder):
+
+    df = pd.read_csv(blastn_csv,
+                     names=["qseqid", "qlen", "sseqid", "stitle_chr", "stitle_assembly", "pident", "qcovs", "length",
+                            "mismatch", "gapopen",
+                            "qstart", "qend", "sstart", "send", "qframe", "sframe", "evalue",
+                            "bitscore", "qseq", "sseq"])
+
+    add_gene_data(df, gene_finder)
+
     aligns_to_keep = df.groupby("qseqid").apply(choose_alignments)
     # convert from series of list into just a flat serie
     idx_to_keep = aligns_to_keep.explode()
     filtered_df = df.filter(items=idx_to_keep, axis=0)
     del df
 
-    def get_gene_type_df(df, gene_type):
-        seq_with_gene_type = df[df["gene_type"] == gene_type].groupby("qseqid")[["gene", "pident", "qstart", "qend", "gene_chr"]].first()
-        # rename columns
-        seq_with_gene_type.rename(columns={ "gene": gene_type.lower() + "Gene",
-                                            "pident": gene_type.lower() + "PIdent",
-                                            "qstart": gene_type.lower() + "AlignStart",
-                                            "qend": gene_type.lower() + "AlignEnd"}, inplace=True)
-        return seq_with_gene_type.reset_index()
-
-    # now we have to combine the data and mark
-    seq_with_v = get_gene_type_df(filtered_df, "V")
-    seq_with_d = get_gene_type_df(filtered_df, "D")
-    seq_with_j = get_gene_type_df(filtered_df, "J")
-
-    if not seq_with_d.empty:
-        # since D gene is very short it can sometimes match with
-        # the wrong gene. We make sure they are in the same chromosome
-        vdj_chr = None
-        if not seq_with_v.empty:
-            vdj_chr = seq_with_v["gene_chr"][0]
-        elif not seq_with_j.empty:
-            vdj_chr = seq_with_j["gene_chr"][0]
-
-        if vdj_chr is not None and vdj_chr != seq_with_d["gene_chr"][0]:
-            # clear the D gene if chromosome does not match
-            seq_with_d = seq_with_d.head(0)
-
-    # drop the gene_chr columns
-    for df in [seq_with_v, seq_with_d, seq_with_j]:
-        df.drop(columns="gene_chr", inplace=True)
+    # get the V, D, J alignments as dataframes
+    v_alignment, d_alignment, j_alignment = get_vdj_alignments(filtered_df)
 
     # merge the V, D and J genes together
-    seq_gene_df = seq_with_v.merge(seq_with_d, how="outer", on="qseqid").merge(seq_with_j, how="outer", on="qseqid")
+    seq_gene_df = v_alignment.merge(d_alignment, how="outer", on="qseqid").merge(j_alignment, how="outer", on="qseqid")
 
     # fine genes that matches ref
     seq_match_ref = pd.DataFrame(filtered_df.groupby("qseqid").apply(lambda x: ((x["qlen"] - x["length"]) < 10).any()),
@@ -431,30 +475,59 @@ def choose_alignments(df):
     # next we want to work out which rows are actually duplicates of others
     return [idx for idx, row in rows_to_keep]
 
-def unittest():
-    # first test that if there is one range that encampass them all, we take that one
-    #         qlen, length, qstart, qend, gene_type
-    data = {1: [90,   30,      1,    30,     "V"],
-            2: [90,   60,      31,   90,     "J"],
-            3: [90,   88,      1,    88,     None]}
-    df = pd.DataFrame.from_dict(data, orient='index', columns=["qlen", "length", "qstart", "qend", "gene_type"])
-    assert(len(choose_alignments(df)) == 1)
-    assert (choose_alignments(df)[0] == 3)
+class UnitTests(unittest.TestCase):
 
-    # when there are multiple ones to choose from, we choose the one with V / J genes
-    #         qlen, length, qstart, qend, gene_type
-    data = {1: [90,   30,      1,    30,     None],
-            2: [90,   27,      3,    29,     "V"],
-            3: [90,   28,      3,    30,     "V"],
-            4: [90,   59,      31,   90,     "J"],
-            5: [90,   58,      31,   90,     "J"],
-            6: [90,   60,      31,   90,     None]}
-    df = pd.DataFrame.from_dict(data, orient='index', columns=["qlen", "length", "qstart", "qend", "gene_type"])
-    assert(len(choose_alignments(df)) == 2)
-    # we should keep row 2 and 4
-    assert (choose_alignments(df)[0] == 3)
-    assert (choose_alignments(df)[1] == 4)
+    def test_choose_alignment(self):
+        # first test that if there is one range that encampass them all, we take that one
+        #         qlen, length, qstart, qend, gene_type
+        data = {1: [90,   30,      1,    30,     "V"],
+                2: [90,   60,      31,   90,     "J"],
+                3: [90,   88,      1,    88,     None]}
+        df = pd.DataFrame.from_dict(data, orient='index', columns=["qlen", "length", "qstart", "qend", "gene_type"])
+        self.assertEqual(len(choose_alignments(df)), 1)
+        self.assertEqual(choose_alignments(df)[0], 3)
+
+        # when there are multiple ones to choose from, we choose the one with V / J genes
+        #         qlen, length, qstart, qend, gene_type
+        data = {1: [90,   30,      1,    30,     None],
+                2: [90,   27,      3,    29,     "V"],
+                3: [90,   28,      3,    30,     "V"],
+                4: [90,   59,      31,   90,     "J"],
+                5: [90,   58,      31,   90,     "J"],
+                6: [90,   60,      31,   90,     None]}
+        df = pd.DataFrame.from_dict(data, orient='index', columns=["qlen", "length", "qstart", "qend", "gene_type"])
+        self.assertEqual(len(choose_alignments(df)), 2)
+        # we should keep row 2 and 4
+        self.assertEqual(choose_alignments(df)[0], 3)
+        self.assertEqual(choose_alignments(df)[1], 4)
+
+    def test_gene_finder(self):
+        genes = [
+            Gene(gene_name='IGHV1-18', chromosome="14", strand=-1, gene_start=106184899, gene_end=106185194, vdj_type='V'),
+            Gene(gene_name='IGHJ5', chromosome="14", strand=-1, gene_start=105863814, gene_end=105863864, vdj_type='J'),
+            Gene(gene_name='IGHD6-25', chromosome="14", strand=-1, gene_start=105881539, gene_end=105881556, vdj_type='D')
+        ]
+        gene_finder = GeneFinder(genes)
+
+        # test we can correctly annotate the genes
+        # first test that if there is one range that encampass them all, we take that one
+        #         qlen, stitle, length, qstart, qend, sstart, send, sframe
+        data = {1: [90, "Homo sapiens chromosome 14", 30, 1, 31,   106184899,     106184910, -1],
+                2: [90, "Homo sapiens chromosome 14", 60, 31, 91,  105863814,     105863820, -1],
+                3: [90, "Homo sapiens chromosome 14", 88, 1, 89,   105881539,     105881541, -1],
+                4: [90, "Homo sapiens chromosome 14", 88, 1, 89,   102000000,     102000090, -1]}
+        df = pd.DataFrame.from_dict(data, orient='index',
+                                    columns=["qlen", "stitle_chr", "length", "qstart", "qend", "sstart", "send", "sframe"])
+        # now add gene data
+        add_gene_data(df, gene_finder)
+        self.assertEqual(df.iloc[0]["gene"], "IGHV1-18")
+        self.assertEqual(df.iloc[1]["gene"], "IGHJ5")
+        self.assertEqual(df.iloc[2]["gene"], "IGHD6-25")
+        self.assertIsNone(df.iloc[3]["gene"])
 
 if __name__ == "__main__":
-    main()
-    #unittest()
+    if len(sys.argv) == 2 and sys.argv[1] == "unittest":
+        suite = unittest.TestLoader().loadTestsFromTestCase(UnitTests)
+        unittest.TextTestRunner(verbosity=2).run(suite)
+    else:
+        main()
