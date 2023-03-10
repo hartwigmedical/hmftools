@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_GENE_ID_DOWN
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_GENE_NAME_DOWN;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_GENE_NAME_UP;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_ID;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_JCN;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_CN;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_NMD_MAX;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_NMD_MIN;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_SC_LIKELIHOOD;
@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
@@ -85,7 +84,7 @@ public class DataLoader
             int novelAaIndex = fieldsIndexMap.get(FLD_NE_AA_NOVEL);
             int nmdMinIndex = fieldsIndexMap.get(FLD_NE_NMD_MIN);
             int nmdMaxIndex = fieldsIndexMap.get(FLD_NE_NMD_MAX);
-            int jcnIndex = fieldsIndexMap.get(FLD_NE_JCN);
+            int cnIndex = fieldsIndexMap.get(FLD_NE_CN);
             int sclIndex = fieldsIndexMap.get(FLD_NE_SC_LIKELIHOOD);
             int cbLenMinIndex = fieldsIndexMap.get(FLD_NE_CB_LEN_MIN);
             int cbLenMaxIndex = fieldsIndexMap.get(FLD_NE_CB_LEN_MAX);
@@ -115,7 +114,7 @@ public class DataLoader
                         neId, NeoEpitopeType.valueOf(values[varTypeIndex]), values[varInfoIndex], geneIdDown, geneName,
                         values[upAaIndex],values[novelAaIndex], values[downAaIndex], transUpNames, transDownNames,
                         Integer.parseInt(values[nmdMinIndex]), Integer.parseInt(values[nmdMaxIndex]),
-                        Double.parseDouble(values[jcnIndex]), Double.parseDouble(values[sclIndex]),
+                        Double.parseDouble(values[cnIndex]), Double.parseDouble(values[sclIndex]),
                         Integer.parseInt(values[cbLenMinIndex]), Integer.parseInt(values[cbLenMaxIndex]),
                         Integer.parseInt(values[feLenIndex]), Integer.parseInt(values[skipDonIndex]), Integer.parseInt(values[skipAccIndex]));
 

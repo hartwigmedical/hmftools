@@ -141,7 +141,7 @@ public class TpmCalcsTest
     {
         NeoEpitopeData neoData = new NeoEpitopeData(
                 nextNeId(), type, variantInfo, GENE_ID_1, GENE_NAME_1, upAAs, "", downAAs,
-                Lists.newArrayList(), Lists.newArrayList(), 0, 0, 0.0, 0.0,
+                Lists.newArrayList(), Lists.newArrayList(), 0, 0, 1, 0.0,
                 0, 0, 0, 0, 0);
 
         neoData.RnaData.setCoverage(rnaFragments, rnaFragments * 2, rnaFragments * 2);
@@ -154,14 +154,14 @@ public class TpmCalcsTest
     @Test
     public void testPoissonRangeCalcs()
     {
-        double reqProbLow = 0.05;
-        double reqProbHigh = 0.95;
+        double reqProbLow = LOW_PROBABILITY;
+        double reqProbHigh = HIGH_PROBABILITY;
 
         double lowValue = TpmCalculator.calcPoissonMean(10, reqProbLow);
         double highValue = TpmCalculator.calcPoissonMean(10, reqProbHigh);
 
-        assertEquals(17.0, lowValue, 0.1);
-        assertEquals(6.3, highValue, 0.1);
+        assertEquals(13.0, lowValue, 0.1);
+        assertEquals(8.6, highValue, 0.1);
 
         lowValue = TpmCalculator.calcPoissonMean(0, reqProbLow);
         highValue = TpmCalculator.calcPoissonMean(0, reqProbHigh);
@@ -172,14 +172,14 @@ public class TpmCalcsTest
         lowValue = TpmCalculator.calcPoissonMean(1, reqProbLow);
         highValue = TpmCalculator.calcPoissonMean(1, reqProbHigh);
 
-        assertEquals(4.7, lowValue, 0.1);
-        assertEquals(0.3, highValue, 0.1);
+        assertEquals(2.7, lowValue, 0.1);
+        assertEquals(1.0, highValue, 0.1);
 
         lowValue = TpmCalculator.calcPoissonMean(2, reqProbLow);
         highValue = TpmCalculator.calcPoissonMean(2, reqProbHigh);
 
-        assertEquals(6.3, lowValue, 0.1);
-        assertEquals(0.8, highValue, 0.1);
+        assertEquals(3.9, lowValue, 0.1);
+        assertEquals(1.7, highValue, 0.1);
     }
 
 }

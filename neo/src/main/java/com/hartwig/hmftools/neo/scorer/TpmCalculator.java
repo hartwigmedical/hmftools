@@ -9,11 +9,9 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.AA_SELENOCYSTEINE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.fsIndex;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
-import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
 import static com.hartwig.hmftools.neo.scorer.NeoRnaData.NO_TPM_VALUE;
 
 import java.io.BufferedReader;
@@ -39,8 +37,8 @@ public class TpmCalculator
     private final int[] mPeptideLengthRange;
     private final Map<Integer,PoissonRangeValues> mPoissonRangeValues;
 
-    public static final double LOW_PROBABILITY = 0.05;
-    public static final double HIGH_PROBABILITY = 0.95;
+    public static final double LOW_PROBABILITY = 0.25;
+    public static final double HIGH_PROBABILITY = 1 - LOW_PROBABILITY;
 
     private static final double EFFECTIVE_TPM_ACTUAL_PERC = 0.8;
 
@@ -228,7 +226,10 @@ public class TpmCalculator
                     }
                 }
 
-                double expectedTpm = tpmUp;
+                // EffectiveTPM = effectiveTPM * [1 – subClonalLikelihood*(1-(min(1,variantCN)]
+                double scLikelihood = neoData.VariantType.isPointMutation() ? neoData.SubclonalLikelihood : 1; // note use for fusions
+                double cnFactor = 1 - scLikelihood * (1 - min(1.0, neoData.CopyNumber));
+                double expectedTpm = tpmUp * cnFactor;
 
                 double effectiveTpm;
 

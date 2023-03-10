@@ -64,7 +64,7 @@ public class NeoEpitopeFile
     public static final String FLD_NE_FUSED_LEN = "FusedIntronLength";
     public static final String FLD_NE_SKIP_DONORS = "SkippedDonors";
     public static final String FLD_NE_SKIP_ACCEPTORS = "SkippedAcceptors";
-    public static final String FLD_NE_JCN = "JunctionCopyNumber";
+    public static final String FLD_NE_CN = "CopyNumber";
     public static final String FLD_NE_SC_LIKELIHOOD = "SubclonalLikelihood";
 
     public static final String DELIMITER = ",";
@@ -162,7 +162,7 @@ public class NeoEpitopeFile
         int novelAaIndex = fieldsIndexMap.get(FLD_NE_AA_NOVEL);
         int nmdMinIndex = fieldsIndexMap.get(FLD_NE_NMD_MIN);
         int nmdMaxIndex = fieldsIndexMap.get(FLD_NE_NMD_MAX);
-        int jcnIndex = fieldsIndexMap.get(FLD_NE_JCN);
+        int cnIndex = fieldsIndexMap.get(FLD_NE_CN);
         int sclIndex = fieldsIndexMap.get(FLD_NE_SC_LIKELIHOOD);
         int cbLenMinIndex = fieldsIndexMap.get(FLD_NE_CB_LEN_MIN);
         int cbLenMaxIndex = fieldsIndexMap.get(FLD_NE_CB_LEN_MAX);
@@ -187,7 +187,7 @@ public class NeoEpitopeFile
 
             neoepitopes.add(new NeoEpitopeFile(
                     Integer.parseInt(values[neIdIndex]), NeoEpitopeType.valueOf(values[varTypeIndex]), values[varInfoIndex],
-                    Double.parseDouble(values[jcnIndex]), Double.parseDouble(values[sclIndex]),
+                    Double.parseDouble(values[cnIndex]), Double.parseDouble(values[sclIndex]),
                     values[geneIdUpIndex], values[geneIdDowwIndex], values[geneNameUpIndex], values[geneNameDownIndex],
                     values[chrUpIndex], values[chrDownIndex], Byte.parseByte(values[orientUpIndex]), Byte.parseByte(values[orientDownIndex]),
                     values[upAaIndex], values[downAaIndex], values[novelAaIndex], Integer.parseInt(values[nmdMinIndex]), Integer.parseInt(values[nmdMaxIndex]),
@@ -207,7 +207,7 @@ public class NeoEpitopeFile
                 .add(FLD_NE_ID)
                 .add(FLD_NE_VAR_TYPE)
                 .add(FLD_NE_VAR_INFO)
-                .add(FLD_NE_JCN)
+                .add(FLD_NE_CN)
                 .add(FLD_NE_SC_LIKELIHOOD)
                 .add(FLD_NE_GENE_ID_UP)
                 .add(FLD_NE_GENE_ID_DOWN)

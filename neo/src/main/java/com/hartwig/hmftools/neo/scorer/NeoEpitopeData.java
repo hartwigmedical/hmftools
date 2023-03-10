@@ -24,7 +24,7 @@ public class NeoEpitopeData
     public final int Id;
     public final NeoEpitopeType VariantType;
     public final String VariantInfo;
-    public final String GeneId;
+    // public final String GeneId;
     public final String GeneName;
     public final String UpAminoAcids;
     public final String NovelAminoAcids;
@@ -34,7 +34,7 @@ public class NeoEpitopeData
     public final int[] CodingBasesLength;
     public final int FusedIntronLength;
     public final int[] SkippedAcceptorsDonors;
-    public final double JunctionCopyNumber;
+    public final double CopyNumber;
     public final double SubclonalLikelihood;
 
     public final NeoRnaData RnaData;
@@ -45,13 +45,13 @@ public class NeoEpitopeData
             final int id, final NeoEpitopeType variantType, final String variantInfo, final String geneId, final String geneName,
             final String upAminoAcids, final String novelAminoAcids, final String downAminoAcids,
             final List<String> transNamesUp, final List<String> transNamesDown, int nmdBasesMin, int nmdBasesMax,
-            final double junctionCopyNumber, final double subclonalLikelihood,
+            final double copyNumber, final double subclonalLikelihood,
             int codingBasesLengthMin, int codingBasesLengthMax, int fusedIntronLength, int skippedDonors, int skippedAcceptors)
     {
         Id = id;
         VariantType = variantType;
         VariantInfo = variantInfo;
-        GeneId = geneId;
+        // GeneId = geneId;
         GeneName = geneName;
         UpAminoAcids = upAminoAcids;
         NovelAminoAcids = novelAminoAcids;
@@ -59,7 +59,7 @@ public class NeoEpitopeData
         Transcripts = new List[FS_PAIR];
         Transcripts[FS_UP] = transNamesUp;
         Transcripts[FS_DOWN] = transNamesDown;
-        JunctionCopyNumber = junctionCopyNumber;
+        CopyNumber = copyNumber;
         SubclonalLikelihood = subclonalLikelihood;
 
         FusedIntronLength = fusedIntronLength;
