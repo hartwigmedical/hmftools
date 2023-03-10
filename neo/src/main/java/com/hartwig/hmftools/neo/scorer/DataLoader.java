@@ -159,6 +159,8 @@ public class DataLoader
                     matchedVariants.add(variant);
                 }
             }
+
+            NE_LOGGER.debug("sample({}) loaded {} somatic RNA-annotated variants", sampleId, matchedVariants.size());
         }
         catch(IOException e)
         {
@@ -219,13 +221,13 @@ public class DataLoader
             List<RnaNeoEpitope> rnaNeoDataList = RnaNeoEpitope.read(filename).stream()
                     .filter(x -> x.VariantType.isFusion()).collect(Collectors.toList());
 
-            NE_LOGGER.debug("sample({}) loaded {} RNA neoepitopes", sampleId, rnaNeoDataList.size());
+            NE_LOGGER.debug("sample({}) loaded {} fusion RNA-annotated neoepitopes", sampleId, rnaNeoDataList.size());
 
             return rnaNeoDataList;
         }
         catch(IOException exception)
         {
-            NE_LOGGER.error("failed to read sample({}) predictions file: {}", sampleId, exception.toString());
+            NE_LOGGER.error("failed to read sample({}) Isofox neoepitopes file: {}", sampleId, exception.toString());
             return Lists.newArrayList();
         }
     }

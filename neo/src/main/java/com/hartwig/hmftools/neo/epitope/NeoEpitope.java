@@ -243,26 +243,6 @@ public abstract class NeoEpitope
 
     public String aminoAcidString() { return UpstreamAcids + NovelAcid + DownstreamAcids; }
 
-    public boolean hasWildtypeAminoAcidMatch()
-    {
-        int upstreamAALength = UpstreamAcids.length();
-        if(UpstreamWildTypeAcids.length() < upstreamAALength + 1)
-            return false;
-
-        // check if the first novel or downstream AA matches the first wildtype upstream AA
-        String upWildtypeAA = UpstreamWildTypeAcids.substring(upstreamAALength, upstreamAALength + 1);
-        String downAA;
-
-        if(!NovelAcid.isEmpty())
-            downAA = NovelAcid.substring(0, 1);
-        else if(!DownstreamAcids.isEmpty())
-            downAA = DownstreamAcids.substring(0, 1);
-        else
-            return true;
-
-        return upWildtypeAA.equals(downAA);
-    }
-
     public NeoEpitopeFile toFile(
             final int neId, final Set<String> upTransNames, final Set<String> downTransNames)
     {

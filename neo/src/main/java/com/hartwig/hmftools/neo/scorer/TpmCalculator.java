@@ -329,8 +329,8 @@ public class TpmCalculator
         if(fragmentCount < 0)
             return 0;
 
-        if(fragmentCount == 0)
-            return requiredProb == HIGH_PROBABILITY ? 0 : 3;
+        if(fragmentCount == 0 && requiredProb == HIGH_PROBABILITY)
+            return 0;
 
         // find the mean for a Poisson distribution where the observed fragment count is at the required probability level
         int maxIterations = 20;
@@ -345,6 +345,12 @@ public class TpmCalculator
             currentValue = fragmentCount * 0.5;
             testValueUpper = fragmentCount;
             testValueLower = currentValue * 0.5;
+        }
+        else if(fragmentCount == 0)
+        {
+            currentValue = 1;
+            testValueUpper = currentValue * 2;
+            testValueLower = fragmentCount;
         }
         else
         {

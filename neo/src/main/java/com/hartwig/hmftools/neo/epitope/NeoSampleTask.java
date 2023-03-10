@@ -12,14 +12,15 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.generateFilename;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
-import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.neo.NeoCommon.DOWNSTREAM_PRE_GENE_DISTANCE;
 import static com.hartwig.hmftools.neo.NeoCommon.IMMUNE_TRANSCRIPT_PREFIXES;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.initialiseNeoepitopeWriter;
 import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.writeNeoepitopes;
 import static com.hartwig.hmftools.neo.epitope.PointMutationData.isRelevantMutation;
+import static com.hartwig.hmftools.neo.epitope.SvNeoEpitope.svIsNonDisruptiveInCodingTranscript;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -192,6 +193,15 @@ public class NeoSampleTask implements Callable
             String[] downTransNames = fusion.Transcripts[FS_DOWN].split(ITEM_DELIM, -1);
 
             boolean sameGene = fusion.GeneIds[FS_UP].equals(fusion.GeneIds[FS_DOWN]);
+
+            // for same gene fusions, check that the SV isn't non-disruptive within the coding region of any other transcript(s)
+
+            boolean isNonDisruptiveCoding = sameGene
+                    && fusion.Orientations[FS_UP] == POS_ORIENT && fusion.Orientations[FS_DOWN] == NEG_ORIENT
+                    && upTransDataList.stream().anyMatch(x -> svIsNonDisruptiveInCodingTranscript(fusion.Positions, x));
+
+            if(isNonDisruptiveCoding)
+                continue;
 
             for(String upTransName : upTransNames)
             {

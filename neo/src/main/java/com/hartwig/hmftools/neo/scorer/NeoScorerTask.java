@@ -99,7 +99,6 @@ public class NeoScorerTask implements Callable
             String rnaSampleId = sampleId + RNA_SAMPLE_APPEND_SUFFIX;
             List<NeoEpitopeData> pointNeos = neoDataList.stream().filter(x -> x.VariantType.isPointMutation()).collect(Collectors.toList());
             somaticVariants.addAll(loadSomaticVariants(sampleId, rnaSampleId, mConfig.RnaSomaticVcf, pointNeos));
-            NE_LOGGER.debug("sample({}) loaded {} somatic RNA-annotated variants", sampleId, somaticVariants.size());
         }
 
         // set TPM and RNA fragment & depth as available

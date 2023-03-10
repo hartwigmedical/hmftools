@@ -16,8 +16,10 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.neo.epitope.SvNeoEpitope.svIsNonDisruptiveInCodingTranscript;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertFalse;
 
@@ -136,7 +138,7 @@ public class SvNeoEpitopeTest
         assertEquals(PHASE_0, neData.Phases[FS_DOWN]);
         assertEquals(3, neData.ExonRank[FS_UP]);
         assertEquals(4, neData.ExonRank[FS_DOWN]);
-        Assert.assertTrue(neData.phaseMatched());
+        assertTrue(neData.phaseMatched());
 
         neData.setCodingBases(refGenome, 2);
 
@@ -188,6 +190,33 @@ public class SvNeoEpitopeTest
 
         // intronic to upstream, skips to first splice acceptor
 
+    }
+
+    @Test
+    public void testNonDisruptiveSv()
+    {
+        int[] exonStarts = { 100, 300, 500, 700, 900 };
+        Integer codingStart = Integer.valueOf(150);
+        Integer codingEnd = Integer.valueOf(750);
+
+        TranscriptData transData1 = createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 100, codingStart, codingEnd, false, "");
+
+        final String[] validTrans = new String[] {transData1.TransName, transData1.TransName};
+
+        // intronic DEL
+        int[] svPositions = { 420, 480 };
+
+        assertTrue(svIsNonDisruptiveInCodingTranscript(svPositions, transData1));
+
+        svPositions = new int[] { 320, 480 }; // exonic
+        assertFalse(svIsNonDisruptiveInCodingTranscript(svPositions, transData1));
+
+        svPositions = new int[] { 420, 680 }; // deletes an exon
+        assertFalse(svIsNonDisruptiveInCodingTranscript(svPositions, transData1));
+
+        svPositions = new int[] { 820, 880 }; // UTR region
+        assertFalse(svIsNonDisruptiveInCodingTranscript(svPositions, transData1));
     }
 
 }

@@ -48,7 +48,7 @@ public class NeoScorerConfig
     public static final String RNA_SOMATIC_VCF = "rna_somatic_vcf";
     public static final String RNA_SAMPLE_SUFFIX = "rna_sample_suffix";
     public static final String PREDICTION_DATA_DIR = "mcf_prediction_dir";
-    public static final String ISF_DATA_DIR = "isofox_neo_dir";
+    public static final String ISF_DATA_DIR = "isofox_data_dir";
     public static final String COHORT_SAMPLE_TPM_FILE = "cohort_trans_exp_file";
     public static final String COHORT_TPM_MEDIANS_FILE = "cancer_tpm_medians_file";
 

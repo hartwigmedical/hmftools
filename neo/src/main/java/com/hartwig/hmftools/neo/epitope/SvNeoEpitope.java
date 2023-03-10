@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.fusionInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_FUSION;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.OUT_OF_FRAME_FUSION;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
@@ -22,12 +23,11 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -313,5 +313,25 @@ public class SvNeoEpitope extends NeoEpitope
                 mSvFusion.GeneNames[FS_DOWN], TransData[FS_DOWN].TransName, mSvFusion.Chromosomes[FS_DOWN],
                 mSvFusion.Positions[FS_DOWN], mSvFusion.Orientations[FS_DOWN], phaseMatched(),
                 CodingType[FS_UP], RegionType[FS_UP], CodingType[FS_DOWN], RegionType[FS_DOWN]);
+    }
+
+    public static boolean svIsNonDisruptiveInCodingTranscript(final int[] positions, final TranscriptData transcriptData)
+    {
+        if(transcriptData.nonCoding())
+            return false;
+
+        for(int i = 0; i < transcriptData.exons().size() - 1; ++i)
+        {
+            ExonData exon = transcriptData.exons().get(i);
+            ExonData nextExon = transcriptData.exons().get(i + 1);
+
+            if(positionsWithin(positions[SE_START], positions[SE_END], exon.End, nextExon.Start)
+            && positionsWithin(exon.End, nextExon.Start, transcriptData.CodingStart, transcriptData.CodingEnd))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

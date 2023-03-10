@@ -166,7 +166,7 @@ public class TpmCalcsTest
         lowValue = TpmCalculator.calcPoissonMean(0, reqProbLow);
         highValue = TpmCalculator.calcPoissonMean(0, reqProbHigh);
 
-        assertEquals(3, lowValue, 0.1);
+        assertEquals(1.39, lowValue, 0.1);
         assertEquals(0, highValue, 0.1);
 
         lowValue = TpmCalculator.calcPoissonMean(1, reqProbLow);
