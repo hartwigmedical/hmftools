@@ -35,6 +35,9 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
+import com.hartwig.hmftools.datamodel.chord.ChordRecord;
+import com.hartwig.hmftools.datamodel.chord.ChordStatus;
+import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -164,7 +167,7 @@ public class OrangeAlgo {
         PurpleData purpleData = loadPurpleData(config);
         LinxData linxData = loadLinxData(config);
         Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config);
-        ChordData chord = loadChordAnalysis(config);
+        ChordRecord chord = loadChordAnalysis(config);
         LilacSummaryData lilac = loadLilacData(config);
         VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
         CuppaData cuppa = loadCuppaData(config);
@@ -469,7 +472,7 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static ChordData loadChordAnalysis(@NotNull OrangeConfig config) throws IOException {
+    private static ChordRecord loadChordAnalysis(@NotNull OrangeConfig config) throws IOException {
         String chordPredictionTxt = config.chordPredictionTxt();
         if (chordPredictionTxt == null) {
             LOGGER.debug("Skipping CHORD loading as no input has been provided");
@@ -479,7 +482,17 @@ public class OrangeAlgo {
         LOGGER.info("Loading CHORD data from {}", new File(chordPredictionTxt).getParent());
         ChordData chordData = ChordDataFile.read(chordPredictionTxt);
         LOGGER.info(" HR Status: {} with type '{}'", chordData.hrStatus().display(), chordData.hrdType());
-        return chordData;
+        return asOrangeDatamodel(chordData);
+    }
+
+    public static ChordRecord asOrangeDatamodel(ChordData chordData) {
+        return ImmutableChordRecord.builder()
+                .BRCA1Value(chordData.BRCA1Value())
+                .BRCA2Value(chordData.BRCA2Value())
+                .hrdValue(chordData.hrdValue())
+                .hrStatus(ChordStatus.valueOf(chordData.hrStatus().name()))
+                .hrdType(chordData.hrdType())
+                .build();
     }
 
     @Nullable

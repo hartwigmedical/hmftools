@@ -1,14 +1,10 @@
 package com.hartwig.hmftools.orange.report;
 
-import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.datamodel.chord.ChordRecord;
-import com.hartwig.hmftools.datamodel.chord.ChordStatus;
-import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
@@ -16,10 +12,6 @@ import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
-import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
-import com.hartwig.hmftools.datamodel.peach.ImmutablePeachRecord;
-import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
-import com.hartwig.hmftools.datamodel.peach.PeachRecord;
 import com.hartwig.hmftools.datamodel.purple.*;
 import com.hartwig.hmftools.datamodel.virus.*;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
@@ -45,17 +37,10 @@ public class OrangeReportToRecordConversion {
                 .linx(report.linx())
                 .lilac(convert(report.lilac()))
                 .virusInterpreter(Optional.ofNullable(report.virusInterpreter()).map(OrangeReportToRecordConversion::convert).orElse(null))
-                .chord(Optional.ofNullable(report.chord()).map(OrangeReportToRecordConversion::convert).orElse(null))
+                .chord(report.chord())
                 .cuppa(report.cuppa())
                 .peach(report.peach())
                 .plots(report.plots())
-                .build();
-    }
-
-    private static ChordRecord convert(ChordData chordData) {
-        return ImmutableChordRecord.builder()
-                .hrdValue(chordData.hrdValue())
-                .hrStatus(ChordStatus.valueOf(chordData.hrStatus().name()))
                 .build();
     }
 

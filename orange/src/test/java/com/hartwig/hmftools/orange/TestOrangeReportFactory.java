@@ -64,7 +64,7 @@ public final class TestOrangeReportFactory {
                 .linx(TestLinxInterpretationFactory.createMinimalTestLinxData())
                 .lilac(ImmutableLilacSummaryData.builder().qc(Strings.EMPTY).build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
-                .chord(ChordTestFactory.createMinimalTestChordAnalysis())
+                .chord(OrangeAlgo.asOrangeDatamodel(ChordTestFactory.createMinimalTestChordAnalysis()))
                 .cuppa(TestCuppaFactory.createMinimalCuppaData())
                 .plots(createMinimalOrangePlots());
     }

@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
@@ -75,7 +76,7 @@ public abstract class OrangeReport {
     public abstract VirusInterpreterData virusInterpreter();
 
     @Nullable
-    public abstract ChordData chord();
+    public abstract ChordRecord chord();
 
     @Nullable
     public abstract CuppaData cuppa();

@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.*;
 import com.hartwig.hmftools.common.purple.*;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
@@ -41,11 +42,11 @@ public class PurpleInterpreter {
     @NotNull
     private final LinxRecord linx;
     @Nullable
-    private final ChordData chord;
+    private final ChordRecord chord;
 
     public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
                              @NotNull final GermlineGainLossFactory germlineGainLossFactory, @NotNull final List<DriverGene> driverGenes,
-                             @NotNull final LinxRecord linx, @Nullable final ChordData chord) {
+                             @NotNull final LinxRecord linx, @Nullable final ChordRecord chord) {
         this.purpleVariantFactory = purpleVariantFactory;
         this.germlineGainLossFactory = germlineGainLossFactory;
         this.driverGenes = driverGenes;

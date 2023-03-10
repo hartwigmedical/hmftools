@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.chord.ChordData;
-import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.chord.ChordRecord;
+import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
@@ -340,13 +340,13 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String hrDeficiencyString() {
-        ChordData chord = report.chord();
+        ChordRecord chord = report.chord();
         if (chord == null) {
             return ReportResources.NOT_AVAILABLE;
         }
 
         if (chord.hrStatus() == ChordStatus.CANNOT_BE_DETERMINED) {
-            return ChordStatus.CANNOT_BE_DETERMINED.display();
+            return displayChordStatus(ChordStatus.CANNOT_BE_DETERMINED);
         }
 
         String addon = Strings.EMPTY;
@@ -359,7 +359,16 @@ public class FrontPageChapter implements ReportChapter {
                 addon = chord.hrdType();
             }
         }
-        return SINGLE_DIGIT.format(chord.hrdValue()) + " (" + chord.hrStatus().display() + addon + ")";
+        return SINGLE_DIGIT.format(chord.hrdValue()) + " (" + displayChordStatus(chord.hrStatus()) + addon + ")";
+    }
+
+    private static String displayChordStatus(ChordStatus chordStatus) {
+        switch (chordStatus) {
+            case CANNOT_BE_DETERMINED: return "Cannot be determined";
+            case HR_PROFICIENT: return "Proficient";
+            case HR_DEFICIENT: return "Deficient";
+            default: return "Unknown";
+        }
     }
 
     @NotNull
