@@ -36,29 +36,11 @@ public class OrangeReportToRecordConversion {
                 .purple(convert(report.purple()))
                 .linx(report.linx())
                 .lilac(convert(report.lilac()))
-                .virusInterpreter(Optional.ofNullable(report.virusInterpreter()).map(OrangeReportToRecordConversion::convert).orElse(null))
+                .virusInterpreter(report.virusInterpreter())
                 .chord(report.chord())
                 .cuppa(report.cuppa())
                 .peach(report.peach())
                 .plots(report.plots())
-                .build();
-    }
-
-    private static VirusInterpreterData convert(com.hartwig.hmftools.common.virus.VirusInterpreterData interpreterData) {
-        return ImmutableVirusInterpreterData.builder()
-                .allViruses(() -> interpreterData.allViruses().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .reportableViruses(() -> interpreterData.reportableViruses().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .build();
-    }
-
-    private static AnnotatedVirus convert(com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus) {
-        return ImmutableAnnotatedVirus.builder()
-                .name(annotatedVirus.name())
-                .qcStatus(VirusBreakendQCStatus.valueOf(annotatedVirus.qcStatus().name()))
-                .integrations(annotatedVirus.integrations())
-                .interpretation(annotatedVirus.interpretation())
-                .percentageCovered(annotatedVirus.percentageCovered())
-                .reported(annotatedVirus.reported())
                 .build();
     }
 

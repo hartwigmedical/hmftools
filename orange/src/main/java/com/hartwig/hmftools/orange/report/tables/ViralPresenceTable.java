@@ -3,7 +3,8 @@ package com.hartwig.hmftools.orange.report.tables;
 import java.text.DecimalFormat;
 import java.util.List;
 
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -41,10 +42,18 @@ public final class ViralPresenceTable {
             table.addCell(Cells.createContent(PERCENTAGE.format(virus.percentageCovered())));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(virus.meanCoverage())));
             table.addCell(Cells.createContent(expectedClonalCoverageField(virus)));
-            table.addCell(Cells.createContent(virus.virusDriverLikelihoodType().toString()));
+            table.addCell(Cells.createContent(display(virus.virusDriverLikelihoodType())));
         }
 
         return Tables.createWrapping(table, title);
+    }
+
+    private static String display(VirusLikelihoodType virusLikelihoodType) {
+        switch (virusLikelihoodType) {
+            case HIGH: return "High";
+            case LOW: return "Low";
+            default: return "Unknown";
+        }
     }
 
     @NotNull

@@ -33,7 +33,7 @@ import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.sage.GeneDepthFile;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
-import com.hartwig.hmftools.common.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.virus.*;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
@@ -73,6 +73,7 @@ import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentiles;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
+import com.hartwig.hmftools.orange.report.OrangeReportToRecordConversion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -468,7 +469,25 @@ public class OrangeAlgo {
             return null;
         }
 
-        return VirusInterpreterDataLoader.load(annotatedVirusTsv);
+        return asOrangeDatamodel(VirusInterpreterDataLoader.load(annotatedVirusTsv));
+    }
+
+    private static VirusInterpreterData asOrangeDatamodel(com.hartwig.hmftools.common.virus.VirusInterpreterData interpreterData) {
+        return ImmutableVirusInterpreterData.builder()
+                .allViruses(() -> interpreterData.allViruses().stream().map(OrangeAlgo::asOrangeDatamodel).iterator())
+                .reportableViruses(() -> interpreterData.reportableViruses().stream().map(OrangeAlgo::asOrangeDatamodel).iterator())
+                .build();
+    }
+
+    private static AnnotatedVirus asOrangeDatamodel(com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus) {
+        return ImmutableAnnotatedVirus.builder()
+                .name(annotatedVirus.name())
+                .qcStatus(VirusBreakendQCStatus.valueOf(annotatedVirus.qcStatus().name()))
+                .integrations(annotatedVirus.integrations())
+                .interpretation(annotatedVirus.interpretation())
+                .percentageCovered(annotatedVirus.percentageCovered())
+                .reported(annotatedVirus.reported())
+                .build();
     }
 
     @Nullable

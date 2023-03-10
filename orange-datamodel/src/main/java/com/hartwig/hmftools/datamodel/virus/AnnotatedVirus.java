@@ -22,5 +22,13 @@ public abstract class AnnotatedVirus {
 
     public abstract double percentageCovered();
 
+    public abstract double meanCoverage();
+
+    @Nullable
+    public abstract Double expectedClonalCoverage();
+
     public abstract boolean reported();
+
+    @NotNull
+    public abstract VirusLikelihoodType virusDriverLikelihoodType();
 }

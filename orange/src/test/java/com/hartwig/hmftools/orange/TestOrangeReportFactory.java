@@ -12,20 +12,19 @@ import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
-import com.hartwig.hmftools.datamodel.peach.ImmutablePeachRecord;
-import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.common.rna.*;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.common.virus.*;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
+import com.hartwig.hmftools.datamodel.peach.ImmutablePeachRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachRecord;
+import com.hartwig.hmftools.datamodel.virus.*;
 import com.hartwig.hmftools.orange.algo.*;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
@@ -278,8 +277,7 @@ public final class TestOrangeReportFactory {
     private static VirusInterpreterData createTestVirusInterpreterData() {
         List<AnnotatedVirus> reportableViruses = Lists.newArrayList();
 
-        reportableViruses.add(ImmutableAnnotatedVirus.builder()
-                .taxid(1)
+        reportableViruses.add(com.hartwig.hmftools.datamodel.virus.ImmutableAnnotatedVirus.builder()
                 .name("virus A")
                 .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
                 .integrations(3)
