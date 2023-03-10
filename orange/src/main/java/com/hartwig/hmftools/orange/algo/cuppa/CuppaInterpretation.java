@@ -17,10 +17,10 @@ public final class CuppaInterpretation {
     @NotNull
     public static CuppaPrediction best(@NotNull CuppaData cuppa) {
         CuppaPrediction best = rank(cuppa, 1);
-       if (best == null) {
+        if (best == null) {
            throw new IllegalStateException("Could not determine best prediction from cuppa: " + cuppa);
-       }
-       return best;
+        }
+        return best;
     }
 
     @Nullable
