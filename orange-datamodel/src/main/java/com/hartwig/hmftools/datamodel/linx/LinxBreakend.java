@@ -7,6 +7,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 public abstract class LinxBreakend {
+    public abstract int id();
     public abstract int svId();
     public abstract String gene();
     public abstract String transcriptId();

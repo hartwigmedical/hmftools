@@ -1,21 +1,20 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-import java.util.List;
-
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionCacheTestFactory;
 import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
-import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
+
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class RNAFusionSelectorTest {
 
@@ -30,7 +29,7 @@ public class RNAFusionSelectorTest {
         knownFusionCache.addData(KnownFusionCacheTestFactory.createKnownPair("A", "B"));
         knownFusionCache.addData(KnownFusionCacheTestFactory.createKnownPair("C", "D"));
 
-        List<LinxFusion> linxFusions = Lists.newArrayList(LinxTestFactory.fusionBuilder().geneStart("C").geneEnd("D").build());
+        List<LinxFusion> linxFusions = Lists.newArrayList(LinxOrangeTestFactory.fusionBuilder().geneStart("C").geneEnd("D").build());
 
         List<RnaFusion> novelFusions = RNAFusionSelector.selectNovelKnownFusions(rnaFusions, linxFusions, knownFusionCache);
         assertEquals(1, novelFusions.size());

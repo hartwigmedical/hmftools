@@ -1,20 +1,19 @@
 package com.hartwig.hmftools.orange.algo.util;
 
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
-import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.Map;
 
 public final class ReportLimiter {
 
@@ -72,8 +71,8 @@ public final class ReportLimiter {
     }
 
     @NotNull
-    private static LinxInterpretedData limitLinxDataToOne(@NotNull LinxInterpretedData linx) {
-        return ImmutableLinxInterpretedData.builder()
+    private static LinxRecord limitLinxDataToOne(@NotNull LinxRecord linx) {
+        return ImmutableLinxRecord.builder()
                 .from(linx)
                 .allSomaticStructuralVariants(max1(linx.allSomaticStructuralVariants()))
                 .allSomaticFusions(max1(linx.allSomaticFusions()))

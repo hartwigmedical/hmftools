@@ -1,29 +1,26 @@
 package com.hartwig.hmftools.orange.algo.wildtype;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-import java.util.Set;
-
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.common.linx.HomozygousDisruption;
-import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainLossFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
-
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
+
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.Assert.*;
 
 public class WildTypeAlgoTest {
 
@@ -254,16 +251,16 @@ public class WildTypeAlgoTest {
 
     @NotNull
     private static HomozygousDisruption createHomDisruption(@NotNull String gene) {
-        return LinxTestFactory.homozygousDisruptionBuilder().gene(gene).build();
+        return LinxOrangeTestFactory.homozygousDisruptionBuilder().gene(gene).build();
     }
 
     @NotNull
     public static LinxBreakend createBreakend(@NotNull String gene) {
-        return LinxTestFactory.breakendBuilder().gene(gene).canonical(true).build();
+        return LinxOrangeTestFactory.breakendBuilder().gene(gene).canonical(true).build();
     }
 
     @NotNull
     private static LinxFusion createFusion(@NotNull String geneStart, @NotNull String geneEnd) {
-        return LinxTestFactory.fusionBuilder().geneStart(geneStart).geneEnd(geneEnd).reported(true).build();
+        return LinxOrangeTestFactory.fusionBuilder().geneStart(geneStart).geneEnd(geneEnd).reported(true).build();
     }
 }

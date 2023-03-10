@@ -9,13 +9,10 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
-import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
-import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
-import com.hartwig.hmftools.datamodel.linx.*;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
@@ -24,10 +21,8 @@ import com.hartwig.hmftools.datamodel.peach.ImmutablePeachRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.peach.PeachRecord;
 import com.hartwig.hmftools.datamodel.purple.*;
-import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.virus.*;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurityPloidyFit;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 
@@ -47,7 +42,7 @@ public class OrangeReportToRecordConversion {
                 .experimentDate(report.experimentDate())
                 .refGenomeVersion(OrangeRefGenomeVersion.valueOf(refGenomeVersion.name()))
                 .purple(convert(report.purple()))
-                .linx(convert(report.linx()))
+                .linx(report.linx())
                 .lilac(convert(report.lilac()))
                 .virusInterpreter(Optional.ofNullable(report.virusInterpreter()).map(OrangeReportToRecordConversion::convert).orElse(null))
                 .chord(Optional.ofNullable(report.chord()).map(OrangeReportToRecordConversion::convert).orElse(null))
@@ -116,98 +111,6 @@ public class OrangeReportToRecordConversion {
                 .somaticSplice(allele.somaticSplice())
                 .somaticSynonymous(allele.somaticSynonymous())
                 .somaticInframeIndel(allele.somaticInframeIndel())
-                .build();
-    }
-
-    private static LinxRecord convert(LinxInterpretedData linxInterpretedData) {
-        return ImmutableLinxRecord.builder()
-                .allSomaticStructuralVariants(() -> linxInterpretedData.allSomaticStructuralVariants().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .allSomaticFusions(() -> linxInterpretedData.allSomaticFusions().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .reportableSomaticFusions(() -> linxInterpretedData.reportableSomaticFusions().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .additionalSuspectSomaticFusions(() -> linxInterpretedData.additionalSuspectSomaticFusions().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .allSomaticBreakends(() -> linxInterpretedData.allSomaticBreakends().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .reportableSomaticBreakends(() -> linxInterpretedData.reportableSomaticBreakends().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .additionalSuspectSomaticBreakends(() -> linxInterpretedData.additionalSuspectSomaticBreakends().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .somaticHomozygousDisruptions(() -> linxInterpretedData.somaticHomozygousDisruptions().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .build();
-    }
-
-    private static LinxSvAnnotation convert(com.hartwig.hmftools.common.linx.LinxSvAnnotation linxSvAnnotation) {
-        return ImmutableLinxSvAnnotation.builder()
-                .vcfId(linxSvAnnotation.vcfId())
-                .svId(linxSvAnnotation.svId())
-                .clusterId(linxSvAnnotation.clusterId())
-                .clusterReason(linxSvAnnotation.clusterReason())
-                .fragileSiteStart(linxSvAnnotation.fragileSiteStart())
-                .fragileSiteEnd(linxSvAnnotation.fragileSiteEnd())
-                .isFoldback(linxSvAnnotation.isFoldback())
-                .lineTypeStart(linxSvAnnotation.lineTypeStart())
-                .lineTypeEnd(linxSvAnnotation.lineTypeEnd())
-                .junctionCopyNumberMin(linxSvAnnotation.junctionCopyNumberMin())
-                .junctionCopyNumberMax(linxSvAnnotation.junctionCopyNumberMax())
-                .geneStart(linxSvAnnotation.geneStart())
-                .geneEnd(linxSvAnnotation.geneEnd())
-                .localTopologyIdStart(linxSvAnnotation.localTopologyIdStart())
-                .localTopologyIdEnd(linxSvAnnotation.localTopologyIdEnd())
-                .localTopologyStart(linxSvAnnotation.localTopologyStart())
-                .localTopologyEnd(linxSvAnnotation.localTopologyEnd())
-                .localTICountStart(linxSvAnnotation.localTICountStart())
-                .localTICountEnd(linxSvAnnotation.localTICountEnd())
-                .build();
-    }
-
-    private static LinxFusion convert(com.hartwig.hmftools.common.linx.LinxFusion linxFusion) {
-        return ImmutableLinxFusion.builder()
-                .name(linxFusion.name())
-                .reported(linxFusion.reported())
-                .reportedType(linxFusion.reportedType())
-                .phased(FusionPhasedType.valueOf(linxFusion.phased().name()))
-                .likelihood(FusionLikelihoodType.valueOf(linxFusion.likelihood().name()))
-                .fusedExonUp(linxFusion.fusedExonUp())
-                .fusedExonDown(linxFusion.fusedExonDown())
-                .geneStart(linxFusion.geneStart())
-                .geneContextStart(linxFusion.geneContextStart())
-                .geneTranscriptStart(linxFusion.geneTranscriptStart())
-                .geneEnd(linxFusion.geneEnd())
-                .geneContextEnd(linxFusion.geneContextEnd())
-                .geneTranscriptEnd(linxFusion.geneTranscriptEnd())
-                .junctionCopyNumber(linxFusion.junctionCopyNumber())
-                .build();
-    }
-
-    private static LinxBreakend convert(com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend) {
-        return ImmutableLinxBreakend.builder()
-                .svId(linxBreakend.svId())
-                .gene(linxBreakend.gene())
-                .transcriptId(linxBreakend.transcriptId())
-                .canonical(linxBreakend.canonical())
-                .geneOrientation(linxBreakend.geneOrientation())
-                .canonical(linxBreakend.canonical())
-                .orientation(linxBreakend.orientation())
-                .disruptive(linxBreakend.disruptive())
-                .reportedDisruption(linxBreakend.reportedDisruption())
-                .undisruptedCopyNumber(linxBreakend.undisruptedCopyNumber())
-                .regionType(TranscriptRegionType.valueOf(linxBreakend.regionType().name()))
-                .codingType(TranscriptCodingType.valueOf(linxBreakend.codingType().name()))
-                .nextSpliceExonRank(linxBreakend.nextSpliceExonRank())
-                .type(LinxBreakendType.valueOf(linxBreakend.type().name()))
-                .chromosome(linxBreakend.chromosome())
-                .orientation(linxBreakend.orientation())
-                .strand(linxBreakend.strand())
-                .chrBand(linxBreakend.chrBand())
-                .exonUp(linxBreakend.exonUp())
-                .exonDown(linxBreakend.exonDown())
-                .junctionCopyNumber(linxBreakend.junctionCopyNumber())
-                .build();
-    }
-
-    private static HomozygousDisruption convert(com.hartwig.hmftools.common.linx.HomozygousDisruption homozygousDisruption) {
-        return ImmutableHomozygousDisruption.builder()
-                .chromosome(homozygousDisruption.chromosome())
-                .chromosomeBand(homozygousDisruption.chromosomeBand())
-                .gene(homozygousDisruption.gene())
-                .transcript(homozygousDisruption.transcript())
-                .isCanonical(homozygousDisruption.isCanonical())
                 .build();
     }
 

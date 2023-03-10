@@ -1,18 +1,17 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
-
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 public class IsofoxInterpreter {
 
@@ -23,10 +22,10 @@ public class IsofoxInterpreter {
     @NotNull
     private final KnownFusionCache knownFusionCache;
     @NotNull
-    private final LinxInterpretedData linx;
+    private final LinxRecord linx;
 
     public IsofoxInterpreter(@NotNull final List<DriverGene> driverGenes, @NotNull final KnownFusionCache knownFusionCache,
-            @NotNull final LinxInterpretedData linx) {
+                             @NotNull final LinxRecord linx) {
         this.driverGenes = driverGenes;
         this.knownFusionCache = knownFusionCache;
         this.linx = linx;

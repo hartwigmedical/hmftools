@@ -13,6 +13,9 @@ public abstract class LinxRecord {
     @NotNull
     public abstract List<LinxSvAnnotation> allSomaticStructuralVariants();
 
+    @Nullable
+    public abstract List<LinxSvAnnotation> allGermlineStructuralVariants();
+
     @NotNull
     public abstract List<LinxFusion> allSomaticFusions();
 
@@ -25,8 +28,14 @@ public abstract class LinxRecord {
     @NotNull
     public abstract List<LinxBreakend> allSomaticBreakends();
 
+    @Nullable
+    public abstract List<LinxBreakend> allGermlineBreakends();
+
     @NotNull
     public abstract List<LinxBreakend> reportableSomaticBreakends();
+
+    @Nullable
+    public abstract List<LinxBreakend> reportableGermlineBreakends();
 
     @NotNull
     public abstract List<LinxBreakend> additionalSuspectSomaticBreakends();
@@ -34,4 +43,6 @@ public abstract class LinxRecord {
     @NotNull
     public abstract List<HomozygousDisruption> somaticHomozygousDisruptions();
 
+    @Nullable
+    public abstract List<HomozygousDisruption> germlineHomozygousDisruptions();
 }

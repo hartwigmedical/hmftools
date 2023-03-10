@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
-import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
@@ -20,6 +20,8 @@ import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.common.rna.*;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.virus.*;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.orange.algo.*;
@@ -27,7 +29,7 @@ import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
+import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
@@ -146,9 +148,9 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static LinxInterpretedData createTestLinxData() {
-        LinxFusion fusion = LinxTestFactory.createMinimalTestFusion();
-        return ImmutableLinxInterpretedData.builder()
+    private static LinxRecord createTestLinxData() {
+        LinxFusion fusion = LinxInterpreter.convert(LinxTestFactory.createMinimalTestFusion());
+        return ImmutableLinxRecord.builder()
                 .from(TestLinxInterpretationFactory.createMinimalTestLinxData())
                 .addReportableSomaticFusions(fusion)
                 .addReportableSomaticFusions(fusion)

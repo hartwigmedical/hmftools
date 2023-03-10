@@ -1,15 +1,12 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import java.text.DecimalFormat;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
-import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
-import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
@@ -20,10 +17,13 @@ import com.itextpdf.layout.element.IBlockElement;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
-
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.text.DecimalFormat;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public final class DNAFusionTable {
 
@@ -56,9 +56,9 @@ public final class DNAFusionTable {
             details.addCell(Cells.createKey("RNA support"));
             details.addCell(Cells.createValue(rnaFragmentSupportTable(isofox, fusion)).setKeepTogether(true));
             details.addCell(Cells.createKey("Phasing"));
-            details.addCell(Cells.createValue(fusion.phased().displayStr()));
+            details.addCell(Cells.createValue(display(fusion.phased())));
             details.addCell(Cells.createKey("Reported type (DL)"));
-            details.addCell(Cells.createValue(fusion.reportedType() + " (" + fusion.likelihood().displayStr() + ")"));
+            details.addCell(Cells.createValue(fusion.reportedType() + " (" + display(fusion.likelihood()) + ")"));
             details.addCell(Cells.createKey("Chain links (terminated?)"));
             details.addCell(Cells.createValue(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)")));
             details.addCell(Cells.createKey("Domains kept"));
@@ -70,6 +70,26 @@ public final class DNAFusionTable {
         }
 
         return Tables.createWrapping(table, title);
+    }
+
+    @NotNull
+    private static String display(FusionPhasedType fusionPhasedType) {
+        switch (fusionPhasedType) {
+            case INFRAME: return "Inframe";
+            case SKIPPED_EXONS: return "Skipped exons";
+            case OUT_OF_FRAME: return "Out of frame";
+            default: return "Invalid";
+        }
+    }
+
+    @NotNull
+    private static String display(FusionLikelihoodType fusionLikelihoodType) {
+        switch (fusionLikelihoodType) {
+            case HIGH: return "High";
+            case LOW: return "Low";
+            case NA: return "NA";
+            default: return "Invalid";
+        }
     }
 
     @NotNull

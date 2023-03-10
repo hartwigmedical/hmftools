@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.orange.report.datamodel;
 
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
-
+import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +20,7 @@ public abstract class BreakendEntry {
     public abstract int exonUp();
 
     @NotNull
-    public abstract StructuralVariantType type();
+    public abstract LinxBreakendType type();
 
     @NotNull
     public abstract String range();

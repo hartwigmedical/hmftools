@@ -1,33 +1,27 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.List;
-
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.linx.LinxTestFactory;
-import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
-import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
-import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
-import com.hartwig.hmftools.common.purple.PurpleData;
-import com.hartwig.hmftools.common.purple.PurpleTestFactory;
+import com.hartwig.hmftools.common.purple.*;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
+import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
-
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
+
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class PurpleInterpreterTest {
 
@@ -64,25 +58,25 @@ public class PurpleInterpreterTest {
 
     @Test
     public void canImplyDeletionsFromBreakends() {
-        LinxBreakend left = LinxTestFactory.breakendBuilder()
+        LinxBreakend left = LinxOrangeTestFactory.breakendBuilder()
                 .reportedDisruption(true)
                 .gene(TEST_GENE)
                 .transcriptId("trans 1")
                 .svId(1)
-                .type(StructuralVariantType.DEL)
+                .type(LinxBreakendType.DEL)
                 .undisruptedCopyNumber(0.3)
                 .build();
-        LinxBreakend right = LinxTestFactory.breakendBuilder()
+        LinxBreakend right = LinxOrangeTestFactory.breakendBuilder()
                 .reportedDisruption(true)
                 .gene(TEST_GENE)
                 .transcriptId("trans 1")
                 .svId(1)
-                .type(StructuralVariantType.DEL)
+                .type(LinxBreakendType.DEL)
                 .undisruptedCopyNumber(0.4)
                 .build();
 
         StructuralVariant shortSv = create("vcf id 1", 10, 20);
-        LinxSvAnnotation svAnnotation = LinxTestFactory.svAnnotationBuilder().svId(1).vcfId(shortSv.id()).build();
+        LinxSvAnnotation svAnnotation = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).vcfId(shortSv.id()).build();
 
         List<GermlineDeletion> impliedMatch = PurpleInterpreter.implyDeletionsFromBreakends(Lists.newArrayList(),
                 Lists.newArrayList(left, right),

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import org.jetbrains.annotations.NotNull;
 
 public final class TestLinxInterpretationFactory {
@@ -8,12 +10,12 @@ public final class TestLinxInterpretationFactory {
     }
 
     @NotNull
-    public static LinxInterpretedData createMinimalTestLinxData() {
+    public static LinxRecord createMinimalTestLinxData() {
         return builder().build();
     }
 
     @NotNull
-    public static ImmutableLinxInterpretedData.Builder builder() {
-        return ImmutableLinxInterpretedData.builder();
+    public static ImmutableLinxRecord.Builder builder() {
+        return ImmutableLinxRecord.builder();
     }
 }

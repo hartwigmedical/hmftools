@@ -1,19 +1,18 @@
 package com.hartwig.hmftools.orange.report.datamodel;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.linx.LinxTestFactory;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
-
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
+import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
+
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class BreakendEntryFactoryTest {
 
@@ -21,7 +20,7 @@ public class BreakendEntryFactoryTest {
 
     @Test
     public void canCreateBreakendEntries() {
-        LinxBreakend breakend = LinxTestFactory.breakendBuilder()
+        LinxBreakend breakend = LinxOrangeTestFactory.breakendBuilder()
                 .svId(1)
                 .chromosome("1")
                 .chrBand("p12.1")
@@ -30,12 +29,12 @@ public class BreakendEntryFactoryTest {
                 .exonUp(12)
                 .exonDown(12)
                 .geneOrientation("Upstream")
-                .type(StructuralVariantType.DEL)
+                .type(LinxBreakendType.DEL)
                 .junctionCopyNumber(1.2)
                 .undisruptedCopyNumber(1.4)
                 .build();
 
-        LinxSvAnnotation variant = LinxTestFactory.svAnnotationBuilder().svId(1).clusterId(2).build();
+        LinxSvAnnotation variant = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(2).build();
 
         List<BreakendEntry> entries = BreakendEntryFactory.create(Lists.newArrayList(breakend), Lists.newArrayList(variant));
 
@@ -46,7 +45,7 @@ public class BreakendEntryFactoryTest {
         assertEquals("gene", entry.gene());
         assertTrue(entry.canonical());
         assertEquals(12, entry.exonUp());
-        assertEquals(StructuralVariantType.DEL, entry.type());
+        assertEquals(LinxBreakendType.DEL, entry.type());
         assertEquals("Exon 12 Upstream", entry.range());
         assertEquals(2, entry.clusterId());
         assertEquals(1.2, entry.junctionCopyNumber(), EPSILON);
@@ -55,8 +54,8 @@ public class BreakendEntryFactoryTest {
 
     @Test (expected = IllegalStateException.class)
     public void crashOnMissingSvAnnotation() {
-        LinxBreakend breakend = LinxTestFactory.breakendBuilder().svId(1).build();
-        LinxSvAnnotation variant = LinxTestFactory.svAnnotationBuilder().svId(2).build();
+        LinxBreakend breakend = LinxOrangeTestFactory.breakendBuilder().svId(1).build();
+        LinxSvAnnotation variant = LinxOrangeTestFactory.svAnnotationBuilder().svId(2).build();
 
         BreakendEntryFactory.create(Lists.newArrayList(breakend), Lists.newArrayList(variant));
     }
@@ -71,6 +70,6 @@ public class BreakendEntryFactoryTest {
 
     @NotNull
     private static LinxBreakend create(int exonUp, int exonDown, @NotNull String geneOrientation) {
-        return LinxTestFactory.breakendBuilder().exonUp(exonUp).exonDown(exonDown).geneOrientation(geneOrientation).build();
+        return LinxOrangeTestFactory.breakendBuilder().exonUp(exonUp).exonDown(exonDown).geneOrientation(geneOrientation).build();
     }
 }

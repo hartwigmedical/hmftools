@@ -12,6 +12,12 @@ public abstract class LinxFusion {
     public abstract int fusedExonUp();
     public abstract int fusedExonDown();
 
+    // for orange report
+    public abstract int chainLinks();
+    public abstract boolean chainTerminated();
+    public abstract String domainsKept();
+    public abstract String domainsLost();
+
     // for patient report
     public abstract String geneStart();
     public abstract String geneContextStart();

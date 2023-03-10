@@ -7,15 +7,15 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogTestFactory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
-import com.hartwig.hmftools.common.linx.HomozygousDisruption;
-import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
+import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
+import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.*;
 import org.jetbrains.annotations.NotNull;
@@ -293,19 +293,19 @@ public class GermlineConversionTest {
 
     @Test
     public void canConvertLinx() {
-        LinxSvAnnotation somaticStructuralVariant1 = LinxTestFactory.svAnnotationBuilder().svId(1).clusterId(5).build();
-        LinxSvAnnotation somaticStructuralVariant2 = LinxTestFactory.svAnnotationBuilder().svId(2).clusterId(6).build();
-        LinxBreakend somaticBreakend = LinxTestFactory.breakendBuilder().id(8).svId(1).build();
-        LinxBreakend reportableSomaticBreakend = LinxTestFactory.breakendBuilder().id(9).svId(2).build();
+        LinxSvAnnotation somaticStructuralVariant1 = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(5).build();
+        LinxSvAnnotation somaticStructuralVariant2 = LinxOrangeTestFactory.svAnnotationBuilder().svId(2).clusterId(6).build();
+        LinxBreakend somaticBreakend = LinxOrangeTestFactory.breakendBuilder().id(8).svId(1).build();
+        LinxBreakend reportableSomaticBreakend = LinxOrangeTestFactory.breakendBuilder().id(9).svId(2).build();
 
-        LinxSvAnnotation germlineStructuralVariant1 = LinxTestFactory.svAnnotationBuilder().svId(1).clusterId(5).build();
-        LinxSvAnnotation germlineStructuralVariant2 = LinxTestFactory.svAnnotationBuilder().svId(2).clusterId(6).build();
-        LinxBreakend germlineBreakend = LinxTestFactory.breakendBuilder().id(8).svId(1).build();
-        LinxBreakend reportableGermlineBreakend = LinxTestFactory.breakendBuilder().id(9).svId(2).build();
+        LinxSvAnnotation germlineStructuralVariant1 = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(5).build();
+        LinxSvAnnotation germlineStructuralVariant2 = LinxOrangeTestFactory.svAnnotationBuilder().svId(2).clusterId(6).build();
+        LinxBreakend germlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(8).svId(1).build();
+        LinxBreakend reportableGermlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(9).svId(2).build();
 
-        HomozygousDisruption germlineHomozygousDisruption = LinxTestFactory.homozygousDisruptionBuilder().build();
+        HomozygousDisruption germlineHomozygousDisruption = LinxOrangeTestFactory.homozygousDisruptionBuilder().build();
 
-        LinxInterpretedData linx = TestLinxInterpretationFactory.builder()
+        LinxRecord linx = TestLinxInterpretationFactory.builder()
                 .addAllSomaticStructuralVariants(somaticStructuralVariant1, somaticStructuralVariant2)
                 .addAllSomaticBreakends(somaticBreakend, reportableSomaticBreakend)
                 .addReportableSomaticBreakends(reportableSomaticBreakend)
@@ -315,7 +315,7 @@ public class GermlineConversionTest {
                 .addGermlineHomozygousDisruptions(germlineHomozygousDisruption)
                 .build();
 
-        LinxInterpretedData converted = GermlineConversion.convertLinxGermline(true, linx);
+        LinxRecord converted = GermlineConversion.convertLinxGermline(true, linx);
         assertEquals(4, converted.allSomaticStructuralVariants().size());
         assertEquals(4, GermlineConversion.findMaxSvId(converted.allSomaticStructuralVariants()));
         assertEquals(8, GermlineConversion.findMaxClusterId(converted.allSomaticStructuralVariants()));

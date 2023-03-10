@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.orange.algo.util;
 
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -11,28 +8,25 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
-import com.hartwig.hmftools.common.linx.HomozygousDisruption;
-import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
-import com.hartwig.hmftools.common.linx.ImmutableLinxSvAnnotation;
-import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.datamodel.linx.*;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurityPloidyFit;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurityPloidyFit;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.Map;
 
 public final class GermlineConversion {
 
@@ -236,7 +230,7 @@ public final class GermlineConversion {
 
     @NotNull
     @VisibleForTesting
-    static LinxInterpretedData convertLinxGermline(boolean containsTumorCells, @NotNull LinxInterpretedData linx) {
+    static LinxRecord convertLinxGermline(boolean containsTumorCells, @NotNull LinxRecord linx) {
         List<LinxSvAnnotation> additionalStructuralVariants = Lists.newArrayList();
         List<LinxBreakend> additionalReportableBreakends = Lists.newArrayList();
         List<HomozygousDisruption> additionalHomozygousDisruptions = Lists.newArrayList();
@@ -252,7 +246,7 @@ public final class GermlineConversion {
             additionalHomozygousDisruptions = toSomaticHomozygousDisruptions(linx.germlineHomozygousDisruptions());
         }
 
-        return ImmutableLinxInterpretedData.builder()
+        return ImmutableLinxRecord.builder()
                 .from(linx)
                 .addAllAllSomaticStructuralVariants(additionalStructuralVariants)
                 .addAllAllSomaticBreakends(additionalReportableBreakends)
