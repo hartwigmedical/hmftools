@@ -364,7 +364,10 @@ public class GeneExpressionClassifier implements CuppaClassifier
         CUP_LOGGER.debug("loading sample gene-expression data file({})", filename);
 
         if(!Files.exists(Paths.get(filename)))
+        {
+            CUP_LOGGER.warn("sample({}) file({}) missing", sampleId, filename);
             return false;
+        }
 
         try
         {
@@ -408,7 +411,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
             return true;
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             CUP_LOGGER.error("failed to read RNA sample gene data file({}): {}", filename, e.toString());
             return false;

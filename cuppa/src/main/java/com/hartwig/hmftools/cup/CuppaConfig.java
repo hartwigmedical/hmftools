@@ -271,7 +271,7 @@ public class CuppaConfig
             }
             else
             {
-                CUP_LOGGER.error(format("missing {}, non-ref cohort {} or {} config", SPECIFIC_SAMPLE_DATA, SAMPLE_DATA_FILE, TEST_REF_SAMPLE_DATA));
+                CUP_LOGGER.error("missing {}, non-ref cohort {} or {} config", SPECIFIC_SAMPLE_DATA, SAMPLE_DATA_FILE, TEST_REF_SAMPLE_DATA);
                 mIsValid = false;
             }
 
