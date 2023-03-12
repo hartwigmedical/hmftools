@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
 
@@ -131,6 +132,7 @@ public class NeoScorerConfig
 
         ScoreConfig.addCmdLineArgs(options);
         ConfigUtils.addLoggingOptions(options);
+        EnsemblDataCache.addEnsemblDir(options);
         options.addOption(LIKELIHOOD_THRESHOLD, true, "Rank threshold to write full peptide data");
         options.addOption(SIMILARITY_THRESHOLD, true, "Immunogenic similarity threshold to write full peptide data");
 

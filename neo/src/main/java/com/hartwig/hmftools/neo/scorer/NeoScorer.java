@@ -27,13 +27,13 @@ public class NeoScorer
 {
     private final NeoScorerConfig mConfig;
     private final NeoDataWriter mWriters;
-    private final BindScorer mPeptideScorer;
+    private final ReferenceData mReferenceData;
 
     public NeoScorer(final CommandLine cmd)
     {
         mConfig = new NeoScorerConfig(cmd);
 
-        mPeptideScorer = new BindScorer(new ScoreConfig(cmd));
+        mReferenceData = new ReferenceData(cmd);
 
         mWriters = new NeoDataWriter(mConfig);
     }
@@ -43,7 +43,7 @@ public class NeoScorer
         if(mConfig.Samples.isEmpty())
             return;
 
-        if(!mPeptideScorer.loadScoringData())
+        if(!mReferenceData.PeptideScorer.loadScoringData())
         {
             NE_LOGGER.error("failed to load scoring data");
             System.exit(1);
@@ -68,7 +68,7 @@ public class NeoScorer
 
         for(int i = 0; i < min(mConfig.Threads, mConfig.Samples.size()); ++i)
         {
-            sampleTasks.add(new NeoScorerTask(mConfig, mPeptideScorer, transcriptExpression, tpmMediansCache, mWriters));
+            sampleTasks.add(new NeoScorerTask(mConfig, mReferenceData, mWriters));
         }
 
         int taskIndex = 0;

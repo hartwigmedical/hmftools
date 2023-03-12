@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.neo.scorer;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
 import static com.hartwig.hmftools.neo.scorer.DataLoader.loadAlleleCoverage;
@@ -33,20 +34,15 @@ public class NeoScorerTask implements Callable
     private final List<SampleData> mSamples;
 
     private final NeoScorerConfig mConfig;
-    private final BindScorer mScorer;
-    private final RnaExpressionMatrix mTransExpression;
-    private final TpmMediansCache mTpmMediansCache;
+    private final ReferenceData mReferenceData;
     private final NeoDataWriter mWriters;
 
     public NeoScorerTask(
-            final NeoScorerConfig config, final BindScorer scorer,
-            @Nullable final RnaExpressionMatrix transExpression, final TpmMediansCache tpmMediansCache, final NeoDataWriter writers)
+            final NeoScorerConfig config, final ReferenceData referenceData, final NeoDataWriter writers)
     {
         mSamples = Lists.newArrayList();
         mConfig = config;
-        mScorer = scorer;
-        mTransExpression = transExpression;
-        mTpmMediansCache = tpmMediansCache;
+        mReferenceData = referenceData;
         mWriters = writers;
     }
 
@@ -102,7 +98,7 @@ public class NeoScorerTask implements Callable
 
         Map<String,Double> sampleTPMs = Maps.newHashMap();
 
-        if(mTransExpression == null || !mTransExpression.hasSampleId(sampleId))
+        if(mReferenceData.TranscriptExpression == null || !mReferenceData.TranscriptExpression.hasSampleId(sampleId))
         {
             NE_LOGGER.debug("sample({}) loading transcript expression", sampleId);
 
@@ -137,7 +133,7 @@ public class NeoScorerTask implements Callable
         for(NeoEpitopeData neoData : neoDataList)
         {
             // set sample and cohort TPM values
-            neoData.setExpressionData(sample, sampleTPMs, mTransExpression, mTpmMediansCache);
+            neoData.setExpressionData(sample, sampleTPMs, mReferenceData.TranscriptExpression, mReferenceData.TpmMedians);
 
             // set RNA fragment counts for the specific variant or neoepitope
             neoData.setFusionRnaSupport(rnaNeoDataList);
@@ -153,18 +149,30 @@ public class NeoScorerTask implements Callable
 
         for(NeoEpitopeData neoData : neoDataList)
         {
-            for(PeptideScoreData peptideScoreData : neoData.peptides())
+            int i = 0;
+            while(i < neoData.peptides().size())
             {
-                if(!peptideScoreData.alleleScoreData().isEmpty())
-                    continue;
+                PeptideScoreData peptideScoreData = neoData.peptides().get(i);
 
-                uniqueAlleles.forEach(x -> peptideScoreData.addAllele(x));
-
-                for(BindData bindData : peptideScoreData.alleleScoreData())
+                // check for a wild-type match
+                if(neoData.Transcripts[FS_UP].stream().anyMatch(x -> mReferenceData.peptideMatchesWildtype(peptideScoreData.Peptide, x)))
                 {
-                    mScorer.calcScoreData(bindData);
-                    ++scoreCount;
+                    neoData.peptides().remove(i);
+                    continue;
                 }
+
+                if(peptideScoreData.alleleScoreData().isEmpty())
+                {
+                    uniqueAlleles.forEach(x -> peptideScoreData.addAllele(x));
+
+                    for(BindData bindData : peptideScoreData.alleleScoreData())
+                    {
+                        mReferenceData.PeptideScorer.calcScoreData(bindData);
+                        ++scoreCount;
+                    }
+                }
+
+                ++i;
             }
         }
 

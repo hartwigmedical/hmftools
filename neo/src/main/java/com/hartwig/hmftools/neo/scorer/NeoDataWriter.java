@@ -43,7 +43,7 @@ public class NeoDataWriter
 
         try
         {
-            final String outputFileName = mConfig.formFilename("allele_peptide_scores");
+            final String outputFileName = mConfig.formFilename("peptide_scores");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
