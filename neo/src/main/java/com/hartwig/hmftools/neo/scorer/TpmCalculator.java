@@ -52,7 +52,7 @@ public class TpmCalculator
         populatePoissonCache();
     }
 
-    public void compute(final String sampleId, final List<NeoEpitopeData> neoDataList)
+    public void compute(final String sampleId, final List<NeoEpitopeData> neoDataList, double samplePloidy)
     {
         double tpmNormalisationFactor = calculateTpmNormalisation(neoDataList);
 
@@ -76,7 +76,7 @@ public class TpmCalculator
 
         for(List<NeoEpitopeData> variantNeos : variantNeoMap.values())
         {
-            totalPeptideCount += processVariantNeos(variantNeos, tpmNormalisationFactor);
+            totalPeptideCount += processVariantNeos(variantNeos, tpmNormalisationFactor, samplePloidy);
         }
 
         NE_LOGGER.debug("sample({}) neoepitopes({}) derived {} peptides", sampleId, neoDataList.size(), totalPeptideCount);
@@ -98,7 +98,7 @@ public class TpmCalculator
         public String toString() { return format("neIds(%s) tpmUp(%4.3e) tpmTotalDown(%4.3e)", NeIds, TpmUp, TpmDownTotal); }
     }
 
-    private int processVariantNeos(final List<NeoEpitopeData> variantNeos, final double tpmNormalisationFactor)
+    private int processVariantNeos(final List<NeoEpitopeData> variantNeos, double tpmNormalisationFactor, double samplePloidy)
     {
         // look for neos with shared upstream transcripts
         List<SharedUpstreamGroup> sharedUpstreamGroups = null;
@@ -228,7 +228,8 @@ public class TpmCalculator
 
                 // EffectiveTPM = effectiveTPM * [1 – subClonalLikelihood*(1-(min(1,variantCN)]
                 double scLikelihood = neoData.VariantType.isPointMutation() ? neoData.SubclonalLikelihood : 1; // note use for fusions
-                double cnFactor = 1 - scLikelihood * (1 - min(1.0, neoData.CopyNumber));
+                double adjustedCopyNumber = max(neoData.CopyNumber / samplePloidy, 0);
+                double cnFactor = 1 - scLikelihood * (1 - min(1.0, adjustedCopyNumber));
                 double expectedTpm = tpmUp * cnFactor;
 
                 double effectiveTpm;

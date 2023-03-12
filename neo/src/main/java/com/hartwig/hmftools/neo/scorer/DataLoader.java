@@ -43,6 +43,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
 
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
@@ -55,11 +57,9 @@ public class DataLoader
 
     public static List<NeoEpitopeData> loadNeoEpitopes(final String sampleId, final String neoDataDir)
     {
-        // load into lists of neoepitopes by variant
-        List<NeoEpitopeData> neoDataList = Lists.newArrayList();
-
         try
         {
+            List<NeoEpitopeData> neoDataList = Lists.newArrayList();
             String neoEpitopeFile = NeoEpitopeFile.generateFilename(neoDataDir, sampleId);
 
             if(!Files.exists(Paths.get(neoEpitopeFile)))
@@ -122,24 +122,41 @@ public class DataLoader
             }
 
             NE_LOGGER.debug("sample({}) loaded {} neo-epitopes", sampleId, neoDataList.size());
+            return neoDataList;
         }
         catch(IOException exception)
         {
             NE_LOGGER.error("failed to read sample({}) neo-epitope file: {}", sampleId, exception.toString());
+            return null;
         }
-
-        return neoDataList;
     }
 
-    public static List<SomaticVariant> loadSomaticVariants(
-            final String sampleId, final String rnaSampleId, final String rnaSomaticVcf, final List<NeoEpitopeData> pointNeos)
+    public static PurityContext loadPurpleContext(final String purpleDir, final String sampleId)
     {
-        List<SomaticVariant> matchedVariants = Lists.newArrayList();
-
-        String vcfFile = rnaSomaticVcf.replaceAll("\\*", sampleId);
+        String samplePurpleDir = purpleDir.replaceAll("\\*", sampleId);
 
         try
         {
+            return PurityContextFile.read(samplePurpleDir, sampleId);
+        }
+        catch(Exception e)
+        {
+            NE_LOGGER.error("failed to read sample({}) purity data: {}", sampleId, e.toString());
+            return null;
+        }
+    }
+
+    public static List<SomaticVariant> loadSomaticVariants(
+            final SampleData sample, final String rnaSampleId, final String rnaSomaticVcf, final List<NeoEpitopeData> pointNeos)
+    {
+        String vcfFile = rnaSomaticVcf.replaceAll("\\*", sample.Id);
+
+        if(!Files.exists(Paths.get(vcfFile)))
+            return sample.HasRna ? null : Lists.newArrayList();
+
+        try
+        {
+            List<SomaticVariant> matchedVariants = Lists.newArrayList();
             final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
 
             for(VariantContext variantContext : reader.iterator())
@@ -147,7 +164,7 @@ public class DataLoader
                 if(variantContext.isFiltered())
                     continue;
 
-                SomaticVariant variant = SomaticVariant.fromContext(variantContext, sampleId, rnaSampleId);
+                SomaticVariant variant = SomaticVariant.fromContext(variantContext, sample.Id, rnaSampleId);
 
                 if(variant == null)
                     continue;
@@ -160,23 +177,23 @@ public class DataLoader
                 }
             }
 
-            NE_LOGGER.debug("sample({}) loaded {} somatic RNA-annotated variants", sampleId, matchedVariants.size());
+            NE_LOGGER.debug("sample({}) loaded {} somatic RNA-annotated variants", sample.Id, matchedVariants.size());
+            return matchedVariants;
         }
-        catch(IOException e)
+        catch(Exception e)
         {
             NE_LOGGER.error("failed to read somatic VCF file({}): {}", vcfFile, e.toString());
+            return null;
         }
-
-        return matchedVariants;
     }
 
     public static List<AlleleCoverage> loadAlleleCoverage(final String sampleId, final String lilacDir)
     {
-        List<AlleleCoverage> alleleCoverages = Lists.newArrayListWithExpectedSize(EXPECTED_ALLELE_COUNT);
+        String filename = lilacDir + sampleId + LILAC_COVERAGE_FILE_ID;
 
         try
         {
-            String filename = lilacDir + sampleId + LILAC_COVERAGE_FILE_ID;
+            List<AlleleCoverage> alleleCoverages = Lists.newArrayListWithExpectedSize(EXPECTED_ALLELE_COUNT);
 
             List<String> lines = Files.readAllLines(new File(filename).toPath());
 
@@ -197,38 +214,39 @@ public class DataLoader
             {
                 alleleCoverages.add(AlleleCoverage.fromCsv(line, alleleIndex, tumorCnIndex, somVariantIndices));
             }
+
+            return alleleCoverages;
         }
         catch(IOException exception)
         {
             NE_LOGGER.error("failed to read sample({}) Lilac allele coverage file: {}", sampleId, exception.toString());
+            return null;
         }
-
-        return alleleCoverages;
     }
 
-    public static List<RnaNeoEpitope> loadRnaNeoData(final String sampleId, final String isofoxDataDir)
+    public static List<RnaNeoEpitope> loadRnaNeoData(final SampleData sample, final String isofoxDataDir)
     {
         if(isofoxDataDir == null)
             return Lists.newArrayList();
 
+        String filename = RnaNeoEpitope.generateFilename(isofoxDataDir, sample.Id);
+
+        if(!Files.exists(Paths.get(filename)))
+            return sample.HasRna ? null : Lists.newArrayList();
+
         try
         {
-            String filename = RnaNeoEpitope.generateFilename(isofoxDataDir, sampleId);
-
-            if(!Files.exists(Paths.get(filename)))
-                return Lists.newArrayList();
-
             List<RnaNeoEpitope> rnaNeoDataList = RnaNeoEpitope.read(filename).stream()
                     .filter(x -> x.VariantType.isFusion()).collect(Collectors.toList());
 
-            NE_LOGGER.debug("sample({}) loaded {} fusion RNA-annotated neoepitopes", sampleId, rnaNeoDataList.size());
+            NE_LOGGER.debug("sample({}) loaded {} fusion RNA-annotated neoepitopes", sample.Id, rnaNeoDataList.size());
 
             return rnaNeoDataList;
         }
         catch(IOException exception)
         {
-            NE_LOGGER.error("failed to read sample({}) Isofox neoepitopes file: {}", sampleId, exception.toString());
-            return Lists.newArrayList();
+            NE_LOGGER.error("failed to read sample({}) Isofox neoepitopes file: {}", sample.Id, exception.toString());
+            return null;
         }
     }
 

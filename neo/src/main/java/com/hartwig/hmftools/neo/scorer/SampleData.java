@@ -20,11 +20,13 @@ public class SampleData
 {
     public final String Id;
     public final String CancerType;
+    public final boolean HasRna;
 
-    public SampleData(final String id, final String cancerType)
+    public SampleData(final String id, final String cancerType, boolean hasRna)
     {
         Id = id;
         CancerType = cancerType;
+        HasRna = hasRna;
     }
 
     public static List<SampleData> loadFromConfig(final CommandLine cmd)
@@ -48,6 +50,7 @@ public class SampleData
 
                 int sampleIdIndex = fieldsIndexMap.get("SampleId");
                 Integer cancerTypeIndex = fieldsIndexMap.get("CancerType");
+                Integer rnaIndex = fieldsIndexMap.get("HasRna");
 
                 for(String line : fileContents)
                 {
@@ -56,15 +59,15 @@ public class SampleData
 
                     String[] values = line.split(DELIMITER, -1);
                     String sampleId = values[sampleIdIndex];
-                    String cancerType = cancerTypeIndex != null ?  values[cancerTypeIndex] : "";
-                    samples.add(new SampleData(sampleId, cancerType));
+                    String cancerType = cancerTypeIndex != null ? values[cancerTypeIndex] : "";
+                    boolean hasRna = rnaIndex != null ? Boolean.parseBoolean(values[rnaIndex]) : false;
+                    samples.add(new SampleData(sampleId, cancerType, hasRna));
                 }
             }
             catch (IOException e)
             {
                 NE_LOGGER.error("failed to read sample ID file({}): {}", filename, e.toString());
             }
-
         }
         else if(cmd.hasOption(SAMPLE))
         {
@@ -72,7 +75,8 @@ public class SampleData
             String[] values = sampleData.split(DELIMITER, -1);
             String sampleId = values[0];
             String cancerType = values.length >= 2 ?  values[1] : "";
-            samples.add(new SampleData(sampleId, cancerType));
+            boolean hasRna = values.length >= 3 ? Boolean.parseBoolean(values[2]) : false;
+            samples.add(new SampleData(sampleId, cancerType, hasRna));
         }
 
         return samples;

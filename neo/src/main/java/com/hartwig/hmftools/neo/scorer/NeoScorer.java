@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.neo.scorer;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCOPE_TRANS;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
@@ -21,7 +23,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-//
 public class NeoScorer
 {
     private final NeoScorerConfig mConfig;
@@ -65,26 +66,27 @@ public class NeoScorer
 
         List<NeoScorerTask> sampleTasks = Lists.newArrayList();
 
+        for(int i = 0; i < min(mConfig.Threads, mConfig.Samples.size()); ++i)
+        {
+            sampleTasks.add(new NeoScorerTask(mConfig, mPeptideScorer, transcriptExpression, tpmMediansCache, mWriters));
+        }
+
+        int taskIndex = 0;
         for(SampleData sampleData : mConfig.Samples)
         {
-            NeoScorerTask sampleTask = new NeoScorerTask(sampleData, mConfig, mPeptideScorer, transcriptExpression, tpmMediansCache, mWriters);
+            sampleTasks.get(taskIndex).addSample(sampleData);
 
-            sampleTasks.add(sampleTask);
+            ++taskIndex;
+            if(taskIndex == sampleTasks.size())
+                taskIndex = 0;
         }
 
-        if(mConfig.Threads > 1)
-        {
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mConfig.Threads);
-        }
-        else
-        {
-            sampleTasks.forEach(x -> x.call());
-        }
+        final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+        TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         mWriters.close();
 
-        NE_LOGGER.info("cohort peptide predictions complete");
+        NE_LOGGER.info("cohort neoepitope peptide scoring complete");
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

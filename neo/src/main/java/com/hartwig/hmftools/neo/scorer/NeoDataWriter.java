@@ -149,6 +149,7 @@ public class NeoDataWriter
             writer.write("NeId,VariantType,VariantInfo,GeneName,UpAminoAcids,NovelAminoAcids,DownAminoAcids,PeptideCount");
             writer.write(",RnaFrags,RnaDepth,TpmUp,TpmDown,TpmCancerUp,TpmCancerDown,TpmPanCancerUp,TpmPanCancerDown");
             writer.write(",NmdMin,NmdMax,CodingBasesLengthMin,CodingBasesLengthMax,FusedIntronLength,SkippedDonors,SkippedAcceptors");
+            writer.write(",CopyNumber,SubclonalLikelihood");
 
 
             writer.newLine();
@@ -189,6 +190,8 @@ public class NeoDataWriter
             mNeoWriter.write(format(",%d,%d,%d,%d,%d,%d,%d",
                     neoData.NmdBases[FS_UP], neoData.NmdBases[FS_DOWN], neoData.CodingBasesLength[FS_UP], neoData.CodingBasesLength[FS_DOWN],
                     neoData.FusedIntronLength, neoData.SkippedAcceptorsDonors[FS_UP], neoData.SkippedAcceptorsDonors[FS_DOWN]));
+
+            mNeoWriter.write(format(",%.4f,%.3f", neoData.CopyNumber, neoData.SubclonalLikelihood));
 
             mNeoWriter.newLine();
         }

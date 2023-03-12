@@ -23,10 +23,11 @@ import org.apache.commons.cli.Options;
 
 public class NeoScorerConfig
 {
-    public final String NeoDataDir;
-    public final String LilacDataDir;
+    public final String NeoDir;
+    public final String LilacDir;
     public final String RnaSomaticVcf;
-    public final String IsofoxDataDir;
+    public final String IsofoxDir;
+    public final String PurpleDir;
     public final String CohortSampleTpmFile;
     public final String CohortTpmMediansFile;
 
@@ -43,12 +44,12 @@ public class NeoScorerConfig
 
     public static final String SAMPLE = "sample";
     public static final String SAMPLE_DATA_DIR = "sample_data_dir";
-    public static final String NEO_DATA_DIR = "neo_data_dir";
-    public static final String LILAC_DATA_DIR = "lilac_data_dir";
+    public static final String NEO_DIR = "neo_dir";
+    public static final String PURPLE_DIR = "purple_dir";
+    public static final String LILAC_DIR = "lilac_dir";
     public static final String RNA_SOMATIC_VCF = "rna_somatic_vcf";
     public static final String RNA_SAMPLE_SUFFIX = "rna_sample_suffix";
-    public static final String PREDICTION_DATA_DIR = "mcf_prediction_dir";
-    public static final String ISF_DATA_DIR = "isofox_data_dir";
+    public static final String ISF_DIR = "isofox_dir";
     public static final String COHORT_SAMPLE_TPM_FILE = "cohort_trans_exp_file";
     public static final String COHORT_TPM_MEDIANS_FILE = "cancer_tpm_medians_file";
 
@@ -67,9 +68,10 @@ public class NeoScorerConfig
 
         String sampleDataDir = cmd.hasOption(SAMPLE_DATA_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR)) : "";
 
-        NeoDataDir = cmd.getOptionValue(NEO_DATA_DIR, sampleDataDir);
-        LilacDataDir = cmd.getOptionValue(LILAC_DATA_DIR, sampleDataDir);
-        IsofoxDataDir = cmd.getOptionValue(ISF_DATA_DIR, sampleDataDir);
+        NeoDir = cmd.getOptionValue(NEO_DIR, sampleDataDir);
+        LilacDir = cmd.getOptionValue(LILAC_DIR, sampleDataDir);
+        PurpleDir = cmd.getOptionValue(PURPLE_DIR, sampleDataDir);
+        IsofoxDir = cmd.getOptionValue(ISF_DIR, sampleDataDir);
         RnaSomaticVcf = cmd.getOptionValue(RNA_SOMATIC_VCF, sampleDataDir);
         OutputDir = cmd.hasOption(OUTPUT_DIR) ? parseOutputDir(cmd) : sampleDataDir;
         RnaSampleSuffix = cmd.getOptionValue(RNA_SAMPLE_SUFFIX, RNA_SAMPLE_APPEND_SUFFIX);
@@ -115,12 +117,12 @@ public class NeoScorerConfig
         addSampleIdFile(options);
         options.addOption(SAMPLE, true, "Sample ID for single sample");
         options.addOption(SAMPLE_DATA_DIR, true, "Directory for sample files");
-        options.addOption(NEO_DATA_DIR, true, "Directory for sample neo-epitope files");
-        options.addOption(PREDICTION_DATA_DIR, true, "Directory for sample prediction result files");
-        options.addOption(LILAC_DATA_DIR, true, "Directory for Lilac coverage files");
+        options.addOption(NEO_DIR, true, "Directory for sample neo-epitope files");
+        options.addOption(PURPLE_DIR, true, "Directory for sample Purple files");
+        options.addOption(LILAC_DIR, true, "Directory for Lilac coverage files");
         options.addOption(RNA_SOMATIC_VCF, true, "Directory for Purple somatic variant RNA-appended files");
         options.addOption(RNA_SAMPLE_SUFFIX, true, "RNA sample suffix in Sage-appended VCF");
-        options.addOption(ISF_DATA_DIR, true, "Directory for Isofox neoepitope coverage files");
+        options.addOption(ISF_DIR, true, "Directory for Isofox files (Transcript expresion, Neoepitope coverage)");
         options.addOption(COHORT_SAMPLE_TPM_FILE, true, "Cohort gene expression matrix");
         options.addOption(COHORT_TPM_MEDIANS_FILE, true, "TPM medians per cancer type and pan-cancer");
 

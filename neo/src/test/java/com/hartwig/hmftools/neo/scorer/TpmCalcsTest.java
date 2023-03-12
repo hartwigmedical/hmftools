@@ -62,7 +62,7 @@ public class TpmCalcsTest
 
         neoDataList.add(neoData);
 
-        tpmCalc.compute("", neoDataList);
+        tpmCalc.compute("", neoDataList, 2);
 
         assertEquals(7, neoData.peptides().size());
     }
@@ -100,7 +100,7 @@ public class TpmCalcsTest
 
         List<NeoEpitopeData> neoDataList = Lists.newArrayList(neoData1, neoData2, neoData3, neoData4);
 
-        tpmCalc.compute("", neoDataList);
+        tpmCalc.compute("", neoDataList, 1);
 
         assertEquals(6, neoData1.peptides().size());
 
