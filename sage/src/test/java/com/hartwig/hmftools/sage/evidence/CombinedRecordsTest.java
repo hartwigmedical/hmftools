@@ -11,6 +11,7 @@ import static org.junit.Assert.assertTrue;
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.N;
 import static htsjdk.samtools.CigarOperator.S;
 
 import org.junit.Test;
@@ -135,6 +136,27 @@ public class CombinedRecordsTest
     }
 
     @Test
+    public void testSplitReads()
+    {
+        String readId = "READ_01";
+        String chromosome = "1";
+
+        // first a basic match
+        SAMRecord first = createSamRecord(
+                readId, chromosome, 20, REF_BASES.substring(20, 30) + REF_BASES.substring(60, 80), "10M30N20M");
+
+        SAMRecord second = createSamRecord(
+                readId, chromosome, 10, REF_BASES.substring(10, 30) + REF_BASES.substring(60, 70), "20M30N10M");
+
+        SAMRecord combined = formFragmentRead(first, second);
+        assertNotNull(combined);
+        assertEquals(10, combined.getAlignmentStart());
+        assertEquals(79, combined.getAlignmentEnd());
+        assertEquals(REF_BASES.substring(10, 30) + REF_BASES.substring(60, 80), combined.getReadString());
+        assertEquals("20M30N20M", combined.getCigarString());
+    }
+
+    @Test
     public void testMismatches()
     {
         String readId = "READ_01";
@@ -224,6 +246,20 @@ public class CombinedRecordsTest
         second.add(new CigarElement(40, M));
 
         assertTrue(ReadContextEvidence.compatibleCigars(first, first));
+
+        // can differ in soft-clips and aligned lengths
+        first = new Cigar();
+        first.add(new CigarElement(40, M));
+        first.add(new CigarElement(120, N));
+        first.add(new CigarElement(30, M));
+
+        second = new Cigar();
+        second.add(new CigarElement(30, M));
+        second.add(new CigarElement(120, N));
+        second.add(new CigarElement(40, M));
+
+        assertTrue(ReadContextEvidence.compatibleCigars(first, first));
+
     }
 
     private static SAMRecord formFragmentRead(final SAMRecord first, final SAMRecord second)

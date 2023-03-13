@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.sage.evidence.SyncFragmentType.*;
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.N;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
@@ -371,13 +372,13 @@ public class ReadContextEvidence
         int combinedEffectiveEnd = max(firstEffectivePosEnd, secondEffectivePosEnd);
 
         int firstAdjustedBases = firstCigar.getCigarElements().stream()
-                .filter(x -> x.getOperator().isIndel())
-                .mapToInt(x -> x.getOperator() == D ? -x.getLength() : x.getLength())
+                .filter(x -> x.getOperator().isIndel() || x.getOperator() == N)
+                .mapToInt(x -> isDeleteOrSplit(x.getOperator()) ? -x.getLength() : x.getLength())
                 .sum();
 
         int secondAdjustedBases = secondCigar.getCigarElements().stream()
-                .filter(x -> x.getOperator().isIndel())
-                .mapToInt(x -> x.getOperator() == D ? -x.getLength() : x.getLength())
+                .filter(x -> x.getOperator().isIndel() || x.getOperator() == N)
+                .mapToInt(x -> isDeleteOrSplit(x.getOperator()) ? -x.getLength() : x.getLength())
                 .sum();
 
         if(firstAdjustedBases != secondAdjustedBases && overlappingCigarDiffs(firstCigar, firstPosStart, secondCigar, secondPosStart))
@@ -412,7 +413,7 @@ public class ReadContextEvidence
 
         for(int currentPos = combinedEffectiveStart; currentPos <= combinedEffectiveEnd; ++currentPos)
         {
-            if(currentPos > combinedEffectiveStart && combinedCigarOperator != D)
+            if(currentPos > combinedEffectiveStart && !isDeleteOrSplit(combinedCigarOperator))
                 ++combinedReadIndex;
 
             boolean firstCigarChange = false;
@@ -426,7 +427,7 @@ public class ReadContextEvidence
             }
             else if(currentPos > firstEffectivePosStart && firstElement != null)
             {
-                if(firstElement.getOperator() != D)
+                if(!isDeleteOrSplit(firstElement.getOperator()))
                     ++firstReadIndex;
 
                 if(firstReadIndex >= firstLength)
@@ -434,10 +435,10 @@ public class ReadContextEvidence
                     firstElement = null;
                 }
                 else if(firstReadIndex > firstCigarElementReadIndex + firstElement.getLength() - 1
-                || (firstElement.getOperator() == D && combinedCigarElementLength == firstElement.getLength()))
+                || (isDeleteOrSplit(firstElement.getOperator()) && combinedCigarElementLength == firstElement.getLength()))
                 {
                     // move to next
-                    if(firstElement.getOperator() != D)
+                    if(!isDeleteOrSplit(firstElement.getOperator()))
                         firstCigarElementReadIndex += firstElement.getLength();
 
                     firstElement = firstCigar.getCigarElement(++firstCigarIndex);
@@ -453,7 +454,7 @@ public class ReadContextEvidence
             }
             else if(currentPos > secondEffectivePosStart && secondElement != null)
             {
-                if(secondElement.getOperator() != D)
+                if(!isDeleteOrSplit(secondElement.getOperator()))
                     ++secondReadIndex;
 
                 if(secondReadIndex >= secondLength)
@@ -461,9 +462,9 @@ public class ReadContextEvidence
                     secondElement = null;
                 }
                 else if(secondReadIndex > secondCigarElementReadIndex + secondElement.getLength() - 1
-                || (secondElement.getOperator() == D && combinedCigarElementLength == secondElement.getLength()))
+                || (isDeleteOrSplit(secondElement.getOperator()) && combinedCigarElementLength == secondElement.getLength()))
                 {
-                    if(secondElement.getOperator() != D)
+                    if(!isDeleteOrSplit(secondElement.getOperator()))
                         secondCigarElementReadIndex += secondElement.getLength();
 
                     secondElement = secondCigar.getCigarElement(++secondCigarIndex);
@@ -526,7 +527,7 @@ public class ReadContextEvidence
             {
                 --currentPos;
             }
-            else if(combinedCigarOperator == D)
+            else if(isDeleteOrSplit(combinedCigarOperator))
             {
                 if(combinedCigarElementLength <= firstElement.getLength())
                     continue;
@@ -619,6 +620,11 @@ public class ReadContextEvidence
         return new SyncFragmentOutcome(combinedRecord, COMBINED);
     }
 
+    private static boolean isDeleteOrSplit(final CigarOperator element)
+    {
+        return element == D || element == N;
+    }
+
     private static boolean ignoreCigarOperatorMismatch(final CigarOperator first, final CigarOperator second)
     {
         return (first == M || first == S) && (second == M || second == S);
@@ -636,6 +642,7 @@ public class ReadContextEvidence
                     readPos += element.getLength();
                     break;
                 case D:
+                case N:
                     readPos += element.getLength();
                     firstAdjustedElementPosEnd = readPos + element.getLength();
                     break;

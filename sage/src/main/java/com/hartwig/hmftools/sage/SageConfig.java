@@ -120,7 +120,7 @@ public class SageConfig
     private static final String LOG_LPS_DATA = "log_lps_data";
     private static final String PERF_WARN_TIME = "perf_warn_time";
 
-    public SageConfig(boolean appendMode, @NotNull final String version, @NotNull final CommandLine cmd)
+    public SageConfig(boolean appendMode, final String version, final CommandLine cmd)
     {
         mIsValid = true;
         Version = version;
