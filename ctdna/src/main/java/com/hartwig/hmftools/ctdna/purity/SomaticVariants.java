@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ctdna.interpret;
+package com.hartwig.hmftools.ctdna.purity;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;

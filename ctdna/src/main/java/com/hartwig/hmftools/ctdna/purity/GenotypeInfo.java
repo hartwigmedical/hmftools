@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ctdna.interpret;
+package com.hartwig.hmftools.ctdna.purity;
 
 import static java.lang.String.format;
 

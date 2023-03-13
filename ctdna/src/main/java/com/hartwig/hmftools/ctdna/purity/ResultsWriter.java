@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ctdna.interpret;
+package com.hartwig.hmftools.ctdna.purity;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;

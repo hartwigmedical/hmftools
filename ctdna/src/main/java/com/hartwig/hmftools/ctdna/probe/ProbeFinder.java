@@ -30,14 +30,14 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class ProbeVariantSelection
+public class ProbeFinder
 {
     private final PvConfig mConfig;
     private final List<Variant> mCommonVariants;
     private final RefGenomeInterface mRefGenome;
     private final BufferedWriter mWriter;
 
-    public ProbeVariantSelection(final CommandLine cmd)
+    public ProbeFinder(final CommandLine cmd)
     {
         mConfig = new PvConfig(cmd);
         mRefGenome = loadRefGenome(mConfig.RefGenomeFile);
@@ -249,7 +249,7 @@ public class ProbeVariantSelection
 
             setLogLevel(cmd);
 
-            ProbeVariantSelection application = new ProbeVariantSelection(cmd);
+            ProbeFinder application = new ProbeFinder(cmd);
             application.run();
         }
         catch(ParseException e)

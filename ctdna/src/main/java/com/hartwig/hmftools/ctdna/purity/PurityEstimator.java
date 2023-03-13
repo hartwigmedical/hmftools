@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ctdna.interpret;
+package com.hartwig.hmftools.ctdna.purity;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -11,12 +11,12 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class PatientInterpreter
+public class PurityEstimator
 {
     private final InterpretConfig mConfig;
     private final ResultsWriter mResultsWriter;
 
-    public PatientInterpreter(final CommandLine cmd)
+    public PurityEstimator(final CommandLine cmd)
     {
         mConfig = new InterpretConfig(cmd);
 
@@ -53,8 +53,8 @@ public class PatientInterpreter
 
         setLogLevel(cmd);
 
-        PatientInterpreter patientInterpreter = new PatientInterpreter(cmd);
-        patientInterpreter.run();
+        PurityEstimator purityEstimator = new PurityEstimator(cmd);
+        purityEstimator.run();
 
         CT_LOGGER.info("Sample VCF analyser complete");
     }
