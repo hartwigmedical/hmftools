@@ -33,19 +33,23 @@ import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.sage.GeneDepthFile;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
-import com.hartwig.hmftools.datamodel.virus.*;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
+import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
+import com.hartwig.hmftools.datamodel.hla.LilacAllele;
+import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachRecord;
+import com.hartwig.hmftools.datamodel.virus.*;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
@@ -73,7 +77,6 @@ import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentiles;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
-import com.hartwig.hmftools.orange.report.OrangeReportToRecordConversion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -169,7 +172,7 @@ public class OrangeAlgo {
         LinxData linxData = loadLinxData(config);
         Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config);
         ChordRecord chord = loadChordAnalysis(config);
-        LilacSummaryData lilac = loadLilacData(config);
+        LilacRecord lilac = loadLilacData(config);
         VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
         CuppaData cuppa = loadCuppaData(config);
         PeachRecord peach = loadPeachData(config);
@@ -457,8 +460,30 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static LilacSummaryData loadLilacData(@NotNull OrangeConfig config) throws IOException {
-        return LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
+    private static LilacRecord loadLilacData(@NotNull OrangeConfig config) throws IOException {
+        return asOrangeDatamodel(LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv()));
+    }
+
+    public static LilacRecord asOrangeDatamodel(LilacSummaryData lilacSummaryData) {
+        return ImmutableLilacRecord.builder()
+                .qc(lilacSummaryData.qc())
+                .alleles(() -> lilacSummaryData.alleles().stream().map(OrangeAlgo::asOrangeDatamodel).iterator())
+                .build();
+    }
+
+    public static LilacAllele asOrangeDatamodel(com.hartwig.hmftools.common.hla.LilacAllele allele) {
+        return ImmutableLilacAllele.builder()
+                .allele(allele.allele())
+                .tumorCopyNumber(allele.tumorCopyNumber())
+                .somaticMissense(allele.somaticMissense())
+                .somaticNonsenseOrFrameshift(allele.somaticNonsenseOrFrameshift())
+                .somaticSplice(allele.somaticSplice())
+                .somaticSynonymous(allele.somaticSynonymous())
+                .somaticInframeIndel(allele.somaticInframeIndel())
+                .refFragments(allele.refFragments())
+                .tumorFragments(allele.tumorFragments())
+                .rnaFragments(allele.rnaFragments())
+                .build();
     }
 
     @Nullable

@@ -18,4 +18,9 @@ public abstract class LilacAllele {
     public abstract double somaticSplice();
     public abstract double somaticSynonymous();
     public abstract double somaticInframeIndel();
+
+    // used to create the report
+    public abstract int refFragments();
+    public abstract int tumorFragments();
+    public abstract int rnaFragments();
 }

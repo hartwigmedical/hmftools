@@ -7,9 +7,6 @@ import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.doid.DoidTestFactory;
 import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.hla.ImmutableLilacSummaryData;
-import com.hartwig.hmftools.common.hla.LilacAllele;
-import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
@@ -17,6 +14,9 @@ import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.common.rna.*;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
+import com.hartwig.hmftools.datamodel.hla.LilacAllele;
+import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -61,7 +61,7 @@ public final class TestOrangeReportFactory {
                 .tumorSample(createMinimalOrangeSample())
                 .purple(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
                 .linx(TestLinxInterpretationFactory.createMinimalTestLinxData())
-                .lilac(ImmutableLilacSummaryData.builder().qc(Strings.EMPTY).build())
+                .lilac(ImmutableLilacRecord.builder().qc(Strings.EMPTY).build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(OrangeAlgo.asOrangeDatamodel(ChordTestFactory.createMinimalTestChordAnalysis()))
                 .cuppa(TestCuppaFactory.createMinimalCuppaData())
@@ -167,12 +167,12 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static LilacSummaryData createTestLilacData() {
+    private static LilacRecord createTestLilacData() {
         List<LilacAllele> alleles = Lists.newArrayList();
-        alleles.add(LilacTestFactory.builder().allele("Allele 1").build());
-        alleles.add(LilacTestFactory.builder().allele("Allele 2").somaticInframeIndel(1D).build());
+        alleles.add(OrangeAlgo.asOrangeDatamodel(LilacTestFactory.builder().allele("Allele 1").build()));
+        alleles.add(OrangeAlgo.asOrangeDatamodel(LilacTestFactory.builder().allele("Allele 2").somaticInframeIndel(1D).build()));
 
-        return ImmutableLilacSummaryData.builder().qc("PASS").alleles(alleles).build();
+        return ImmutableLilacRecord.builder().qc("PASS").alleles(alleles).build();
     }
 
     @NotNull

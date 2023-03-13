@@ -2,10 +2,10 @@ package com.hartwig.hmftools.orange.algo;
 
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.peach.PeachRecord;
@@ -68,7 +68,7 @@ public abstract class OrangeReport {
     public abstract IsofoxInterpretedData isofox();
 
     @NotNull
-    public abstract LilacSummaryData lilac();
+    public abstract LilacRecord lilac();
 
     @Nullable
     public abstract VirusInterpreterData virusInterpreter();

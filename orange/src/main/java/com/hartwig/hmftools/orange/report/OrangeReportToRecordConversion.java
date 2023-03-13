@@ -2,25 +2,18 @@ package com.hartwig.hmftools.orange.report;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
-import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
-import com.hartwig.hmftools.datamodel.hla.LilacAllele;
-import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.*;
-import com.hartwig.hmftools.datamodel.virus.*;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.purple.PurityPloidyFit;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 public class OrangeReportToRecordConversion {
 
@@ -35,31 +28,12 @@ public class OrangeReportToRecordConversion {
                 .refGenomeVersion(OrangeRefGenomeVersion.valueOf(refGenomeVersion.name()))
                 .purple(convert(report.purple()))
                 .linx(report.linx())
-                .lilac(convert(report.lilac()))
+                .lilac(report.lilac())
                 .virusInterpreter(report.virusInterpreter())
                 .chord(report.chord())
                 .cuppa(report.cuppa())
                 .peach(report.peach())
                 .plots(report.plots())
-                .build();
-    }
-
-    private static LilacRecord convert(LilacSummaryData lilacSummaryData) {
-        return ImmutableLilacRecord.builder()
-                .qc(lilacSummaryData.qc())
-                .alleles(() -> lilacSummaryData.alleles().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .build();
-    }
-
-    private static LilacAllele convert(com.hartwig.hmftools.common.hla.LilacAllele allele) {
-        return ImmutableLilacAllele.builder()
-                .allele(allele.allele())
-                .tumorCopyNumber(allele.tumorCopyNumber())
-                .somaticMissense(allele.somaticMissense())
-                .somaticNonsenseOrFrameshift(allele.somaticNonsenseOrFrameshift())
-                .somaticSplice(allele.somaticSplice())
-                .somaticSynonymous(allele.somaticSynonymous())
-                .somaticInframeIndel(allele.somaticInframeIndel())
                 .build();
     }
 
