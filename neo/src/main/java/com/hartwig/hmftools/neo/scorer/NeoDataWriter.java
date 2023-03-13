@@ -50,7 +50,7 @@ public class NeoDataWriter
             if(mConfig.Samples.size() > 1)
                 writer.write("SampleId,");
 
-            writer.write("NeIds,VarType,VarInfo,Gene,Allele,Peptide");
+            writer.write("NeIds,VariantType,VariantInfo,Gene,Allele,Peptide");
             writer.write(",Score,Rank,Likelihood,LikelihoodRank,ExpLikelihood,ExpLikelihoodRank,RecogSim,OtherAlleleRecogSim");
             writer.write(",AllelCN,AlleleDisrupted,ExpectedTpm,EffectiveTpm,RawEffectiveTpm");
             writer.newLine();

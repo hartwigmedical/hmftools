@@ -227,6 +227,12 @@ public class SvNeoEpitope extends NeoEpitope
                     downRequiredBases, canStartInExon, true, false);
         }
 
+        if(cbExcerpt.Bases.isEmpty() || cbExcerpt.Positions[SE_START] == 0 || cbExcerpt.Positions[SE_END] == 0)
+        {
+            Valid = false;
+            return;
+        }
+
         ExtPositions[FS_DOWN][SE_START] = cbExcerpt.Positions[SE_START];
         ExtPositions[FS_DOWN][SE_END] = cbExcerpt.Positions[SE_END];
         ExtCodingBases[FS_DOWN] = cbExcerpt.Bases;

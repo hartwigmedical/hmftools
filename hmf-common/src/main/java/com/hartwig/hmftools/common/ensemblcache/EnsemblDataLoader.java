@@ -403,7 +403,7 @@ public final class EnsemblDataLoader
     {
         String filename = dataPath + ENSEMBL_TRANS_AMINO_ACIDS_FILE;
 
-        if (!Files.exists(Paths.get(filename)))
+        if(!Files.exists(Paths.get(filename)))
             return false;
 
         try

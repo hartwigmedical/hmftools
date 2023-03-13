@@ -375,7 +375,7 @@ public class EpitopeUtils
             startPos = 0;
             endPos = 0;
 
-            for (int i = 0; i < exonDataList.size(); ++i)
+            for(int i = 0; i < exonDataList.size(); ++i)
             {
                 final ExonData exon = exonDataList.get(i);
 
