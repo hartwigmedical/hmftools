@@ -35,7 +35,7 @@ public class NeoConfig
 
     public final int RequiredAminoAcids;
     public final boolean WriteTransData;
-    public final String SvFusionsDir;
+    public final String LinxDir;
     public final String SomaticVcf;
     public final String OutputDir;
     public final int Threads;
@@ -44,7 +44,7 @@ public class NeoConfig
     public static final String CANCER_TYPE = "cancer_type";
 
     public static final String MUTATIONS_FILE = "mutations_file";
-    public static final String SV_FUSION_DATA_DIR = "sv_fusion_data_dir";
+    public static final String LINX_DIR = "linx_dir";
     public static final String SOMATIC_VCF = "somatic_vcf";
     public static final String GENE_ID_FILE = "gene_id_file";
     public static final String REQ_AMINO_ACIDS = "req_amino_acids";
@@ -70,7 +70,7 @@ public class NeoConfig
         RefGenome = loadRefGenome(refGenomeFilename);
         RefGenVersion = RefGenomeVersion.from(cmd);
 
-        SvFusionsDir = cmd.getOptionValue(SV_FUSION_DATA_DIR);
+        LinxDir = cmd.getOptionValue(LINX_DIR);
         SomaticVcf = cmd.getOptionValue(SOMATIC_VCF);
         OutputDir = parseOutputDir(cmd);
 
@@ -100,7 +100,7 @@ public class NeoConfig
         EnsemblDataCache.addEnsemblDir(options);
         options.addOption(GENE_ID_FILE, true, "Restrict to specific genes");
         addRefGenomeConfig(options);
-        options.addOption(SV_FUSION_DATA_DIR, true, "Linx neoepitope directory");
+        options.addOption(LINX_DIR, true, "Linx neoepitope directory");
         options.addOption(SOMATIC_VCF, true, "Purple somatic VCF (use '*') as required");
         options.addOption(WRITE_TRANS_DATA, false, "Write transcript data for each neo-epitope");
         options.addOption(REQ_AMINO_ACIDS, true, "Number of amino acids in neo-epitopes (default: 18)");

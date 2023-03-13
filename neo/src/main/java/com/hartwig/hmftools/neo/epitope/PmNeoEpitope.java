@@ -116,6 +116,7 @@ public class PmNeoEpitope extends NeoEpitope
         return pointMutationInfo(mPointMutation.Chromosome, mPointMutation.Position, mPointMutation.Ref, mPointMutation.Alt);
     }
 
+    public double variantCopyNumber() { return mPointMutation.VariantCopyNumber; }
     public double copyNumber() { return mPointMutation.CopyNumber; }
     public double subclonalLikelihood() { return mPointMutation.SubclonalLikelihood ; }
 

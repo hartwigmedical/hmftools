@@ -73,7 +73,8 @@ public class SvNeoEpitope extends NeoEpitope
         return fusionInfo(mSvFusion.Chromosomes, mSvFusion.Positions, mSvFusion.Orientations);
     }
 
-    public double copyNumber() { return mSvFusion.JunctionCopyNumber; }
+    public double variantCopyNumber() { return mSvFusion.JunctionCopyNumber; }
+    public double copyNumber() { return mSvFusion.CopyNumber; }
     public double subclonalLikelihood() { return 0; }
 
     public boolean phaseMatched()

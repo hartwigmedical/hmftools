@@ -107,6 +107,7 @@ public abstract class NeoEpitope
     public abstract void extractCodingBases(final RefGenomeInterface refGenome, int requiredAminoAcids);
     public abstract NeoEpitopeType variantType();
     public abstract String variantInfo();
+    public abstract double variantCopyNumber();
     public abstract double copyNumber();
     public abstract double subclonalLikelihood();
     public abstract boolean phaseMatched();
@@ -252,7 +253,7 @@ public abstract class NeoEpitope
         downTransNames.forEach(x -> downTransStr.add(x));
 
         return new NeoEpitopeFile(
-                neId, variantType(), variantInfo(), copyNumber(), subclonalLikelihood(),
+                neId, variantType(), variantInfo(), variantCopyNumber(), copyNumber(), subclonalLikelihood(),
                 TransData[FS_UP].GeneId, TransData[FS_DOWN].GeneId, geneName(FS_UP), geneName(FS_DOWN),
                 chromosome(FS_UP), chromosome(FS_DOWN), orientation(FS_UP), orientation(FS_DOWN),
                 UpstreamAcids, DownstreamAcids, NovelAcid, NmdBasesMin, NmdBasesMax, CodingBasesLengthMin, CodingBasesLengthMax,

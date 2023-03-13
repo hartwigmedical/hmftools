@@ -345,8 +345,12 @@ public class FusionDisruptionAnalyser
 
             if(mNeoEpitopeWriter != null)
             {
+                double svCopyNumber = var.isSglBreakend() ?
+                    var.copyNumber(true) : (var.copyNumber(true) + var.copyNumber(false)) * 0.5;
+
                 mNeoEpitopeWriter.processFusionCandidate(
-                        genesListStart, genesListEnd, null, null, null, null);
+                        genesListStart, genesListEnd, null, null, null, null,
+                        svCopyNumber);
             }
 
             if(fusions.isEmpty())
@@ -548,8 +552,11 @@ public class FusionDisruptionAnalyser
                     final LinkedPair lowerLink = lpIndex1 == 0 ? null : linkedPairs.get(lpIndex1 - 1);
                     final LinkedPair upperLink = lpIndex2 < linkedPairs.size() ? linkedPairs.get(lpIndex2) : null;
 
+                    double svCopyNumber = upperBreakend != null ?
+                            (lowerBreakend.copyNumber() + upperBreakend.copyNumber()) * 0.5 : lowerBreakend.copyNumber();
+
                     mNeoEpitopeWriter.processFusionCandidate(
-                            genesListLower, genesListUpper, traversedPairs, mDisruptionFinder, lowerLink, upperLink);
+                            genesListLower, genesListUpper, traversedPairs, mDisruptionFinder, lowerLink, upperLink, svCopyNumber);
                 }
 
                 if(fusions.isEmpty())

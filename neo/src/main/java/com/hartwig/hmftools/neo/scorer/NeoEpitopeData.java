@@ -34,6 +34,7 @@ public class NeoEpitopeData
     public final int[] CodingBasesLength;
     public final int FusedIntronLength;
     public final int[] SkippedAcceptorsDonors;
+    public final double VariantCopyNumber;
     public final double CopyNumber;
     public final double SubclonalLikelihood;
 
@@ -45,7 +46,7 @@ public class NeoEpitopeData
             final int id, final NeoEpitopeType variantType, final String variantInfo, final String geneId, final String geneName,
             final String upAminoAcids, final String novelAminoAcids, final String downAminoAcids,
             final List<String> transNamesUp, final List<String> transNamesDown, int nmdBasesMin, int nmdBasesMax,
-            final double copyNumber, final double subclonalLikelihood,
+            final double variantCopyNumber, final double copyNumber, final double subclonalLikelihood,
             int codingBasesLengthMin, int codingBasesLengthMax, int fusedIntronLength, int skippedDonors, int skippedAcceptors)
     {
         Id = id;
@@ -60,6 +61,7 @@ public class NeoEpitopeData
         Transcripts[FS_UP] = transNamesUp;
         Transcripts[FS_DOWN] = transNamesDown;
         CopyNumber = copyNumber;
+        VariantCopyNumber = variantCopyNumber;
         SubclonalLikelihood = subclonalLikelihood;
 
         FusedIntronLength = fusedIntronLength;

@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.isofox.neo;
 
 import static java.lang.Math.max;
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 
 public class NeoFragmentSupport
 {
@@ -52,4 +56,10 @@ public class NeoFragmentSupport
         }
     }
 
+    public String toString()
+    {
+        return format("depth(%d:%d) up(%d:%d) novel(%d:%d) novel(%d:%d)",
+                RefBaseDepth[FS_UP], RefBaseDepth[FS_DOWN], UpFragments[FS_UP], UpFragments[FS_DOWN],
+                NovelFragments[FS_UP], NovelFragments[FS_DOWN], DownFragments[FS_UP], DownFragments[FS_DOWN]);
+    }
 }

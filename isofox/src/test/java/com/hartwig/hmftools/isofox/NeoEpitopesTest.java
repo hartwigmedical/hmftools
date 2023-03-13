@@ -4,9 +4,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.fusionInfo;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.pointMutationInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_FUSION;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeType.MISSENSE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -15,7 +13,6 @@ import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_2;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_2;
-import static com.hartwig.hmftools.isofox.TestUtils.POS_STRAND;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.generateRandomBases;
@@ -23,9 +20,7 @@ import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.calcBaseOverlap
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.calcCoordinatesOverlap;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.expandRange;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.findFusionSupport;
-import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.findPointMutationSupport;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.EXACT_MATCH;
-import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.PARTIAL_MATCH;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -105,80 +100,6 @@ public class NeoEpitopesTest
         coords2.add(new int[] {41, 50});
 
         assertEquals(3, calcCoordinatesOverlap(coords1, coords2));
-    }
-
-    @Test
-    public void testPointMutations()
-    {
-        String codingBases = generateRandomBases(100);
-
-        int cbStart = 20;
-        int cbEnd = 60;
-
-        NeoEpitopeData neData = createPointMutationNeoEpitope(
-                MISSENSE, CHR_1, 40, POS_STRAND, GENE_ID_1, "", cbStart, cbEnd,
-                codingBases.substring(cbStart, cbEnd), createCigar(0, cbEnd - cbStart + 1, 0).toString());
-
-        // first read has no overlap
-        int rbStart = 0;
-        int rbEnd = 19;
-        ReadRecord read = createReadRecord(1, CHR_1, rbStart, rbEnd, codingBases.substring(rbStart, rbEnd + 1),
-                createCigar(0, rbEnd - rbStart + 1, 0));
-
-        NeoFragmentSupport support = findPointMutationSupport(neData, read);
-
-        assertFalse(support.hasAnySupport());
-
-        // insufficient overlap
-        rbStart = 10;
-        rbEnd = 28;
-        read = createReadRecord(1, CHR_1, rbStart, rbEnd, codingBases.substring(rbStart, rbEnd + 1),
-                createCigar(0, rbEnd - rbStart + 1, 0));
-
-        support = findPointMutationSupport(neData, read);
-
-        assertFalse(support.hasAnySupport());
-
-        // upstream exact-match overlap
-        rbStart = 10;
-        rbEnd = 40;
-        read = createReadRecord(1, CHR_1, rbStart, rbEnd, codingBases.substring(rbStart, rbEnd + 1),
-                createCigar(0, rbEnd - rbStart + 1, 0));
-
-        support = findPointMutationSupport(neData, read);
-
-        assertEquals(1, support.UpFragments[EXACT_MATCH]);
-
-        // novel section exact-match overlap
-        rbStart = 25;
-        rbEnd = 55;
-        read = createReadRecord(1, CHR_1, rbStart, rbEnd, codingBases.substring(rbStart, rbEnd + 1),
-                createCigar(0, rbEnd - rbStart + 1, 0));
-
-        support = findPointMutationSupport(neData, read);
-
-        assertEquals(1, support.NovelFragments[EXACT_MATCH]);
-
-        // upstream exact-match overlap
-        rbStart = 40;
-        rbEnd = 80;
-        read = createReadRecord(1, CHR_1, rbStart, rbEnd, codingBases.substring(rbStart, rbEnd + 1),
-                createCigar(0, rbEnd - rbStart + 1, 0));
-
-        support = findPointMutationSupport(neData, read);
-
-        assertEquals(1, support.DownFragments[EXACT_MATCH]);
-
-        // partial matches
-        rbStart = 20;
-        rbEnd = 35;
-        read = createReadRecord(1, CHR_1, rbStart, rbEnd,
-                codingBases.substring(20, 30) + "GG" + codingBases.substring(32, 36),
-                createCigar(0, rbEnd - rbStart + 1, 0));
-
-        support = findPointMutationSupport(neData, read);
-
-        assertEquals(1, support.UpFragments[PARTIAL_MATCH]);
     }
 
     @Test
@@ -366,7 +287,6 @@ public class NeoEpitopesTest
 
         support = findFusionSupport(neData, FS_UP, read);
         assertEquals(1, support.NovelFragments[EXACT_MATCH]);
-
     }
 
     private NeoEpitopeData createFusionNeoEpitope(
@@ -378,32 +298,14 @@ public class NeoEpitopesTest
         final String varInfo = fusionInfo(new String[] {chrUp, chrDown}, new int[] { posUp, posDown}, new byte[] { orientUp, orientDown });
 
         final NeoEpitopeFile neFile = new NeoEpitopeFile(
-                1, varType, varInfo, 1, geneIdUp, geneIdDown, geneIdUp, geneIdDown, chrUp, chrDown, orientUp, orientDown,
-                "", "", "", 0, 0, 0, 0, 0, 0, 0,
+                1, varType, varInfo, 1, 1, 0, geneIdUp, geneIdDown, geneIdUp, geneIdDown,
+                chrUp, chrDown, orientUp, orientDown,
+                "", "", "", 0, 0, 0, 0,
+                0, 0, 0,
                 transcriptsUp, transcriptsDown, "",
                 codingBaseUpPosStart, codingBaseUpPosEnd, codingBasesUp, codingBaseCigarUp,
                 codingBaseDownPosStart, codingBaseDownPosEnd, codingBasesDown, codingBaseCigarDown);
 
         return new NeoEpitopeData(neFile);
     }
-
-    private NeoEpitopeData createPointMutationNeoEpitope(
-            final NeoEpitopeType varType, final String chromosome, int position, byte geneStrand,
-            final String geneId, final String transcripts, int codingBasePosStart, int codingBasePosEnd, final String codingBases, final String codingBaseCigar)
-    {
-        final String varInfo = pointMutationInfo(chromosome, position, "A", "A");
-
-        final NeoEpitopeFile neFile = new NeoEpitopeFile(
-                1, varType, varInfo, 1, geneId, geneId, geneId, geneId,
-                chromosome, chromosome, geneStrand == POS_STRAND ? POS_ORIENT : NEG_ORIENT, geneStrand == POS_STRAND ? NEG_ORIENT : POS_ORIENT,
-                "", "", "", 0, 0, 0, 0, 0, 0, 0,
-                transcripts, transcripts, "",
-                codingBasePosStart, codingBasePosEnd, codingBases, codingBaseCigar, 0, 0, "", "");
-
-        NeoEpitopeData neData = new NeoEpitopeData(neFile);
-        neData.setOrientation(geneStrand);
-        return neData;
-    }
-
-
 }

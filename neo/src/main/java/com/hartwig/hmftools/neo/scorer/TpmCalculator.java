@@ -228,8 +228,12 @@ public class TpmCalculator
 
                 // EffectiveTPM = effectiveTPM * [1 – subClonalLikelihood*(1-(min(1,variantCN)]
                 double scLikelihood = neoData.VariantType.isPointMutation() ? neoData.SubclonalLikelihood : 1; // note use for fusions
-                double adjustedCopyNumber = max(neoData.CopyNumber / samplePloidy, 0);
+
+                double variantCn = max(neoData.VariantCopyNumber, 0);
+                double segmentCn = neoData.RnaData.hasExpression() ? neoData.CopyNumber : samplePloidy;
+                double adjustedCopyNumber = segmentCn > 0 ? variantCn / segmentCn : 1;
                 double cnFactor = 1 - scLikelihood * (1 - min(1.0, adjustedCopyNumber));
+
                 double expectedTpm = tpmUp * cnFactor;
 
                 double effectiveTpm;

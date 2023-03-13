@@ -135,8 +135,8 @@ public class NeoSampleTask implements Callable
 
                     pointMutations.add(new PointMutationData(
                             somaticVariant.chromosome(), somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt(),
-                            somaticVariant.gene(), somaticVariant.worstCodingEffect(), somaticVariant.adjustedCopyNumber(),
-                            somaticVariant.subclonalLikelihood(),
+                            somaticVariant.gene(), somaticVariant.worstCodingEffect(),
+                            somaticVariant.variantCopyNumber(), somaticVariant.adjustedCopyNumber(), somaticVariant.subclonalLikelihood(),
                             somaticVariant.localPhaseSets() != null ? somaticVariant.topLocalPhaseSet() : -1));
                 }
             }
@@ -155,10 +155,10 @@ public class NeoSampleTask implements Callable
     {
         List<NeoEpitopeFusion> fusions = Lists.newArrayList();
 
-        if(mConfig.SvFusionsDir == null)
+        if(mConfig.LinxDir == null)
             return fusions;
 
-        final String filename = generateFilename(mConfig.SvFusionsDir, mSampleId);
+        final String filename = generateFilename(mConfig.LinxDir, mSampleId);
 
         if(!Files.exists(Paths.get(filename)))
         {

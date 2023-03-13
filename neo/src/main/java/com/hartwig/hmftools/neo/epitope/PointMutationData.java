@@ -15,13 +15,14 @@ public class PointMutationData
     public final String Alt;
     public final String Gene;
     public final CodingEffect Effect;
+    public final double VariantCopyNumber;
     public final double CopyNumber;
     public final double SubclonalLikelihood;
     public final int LocalPhaseSet;
 
     public PointMutationData(
             final String chromosome, final int position, final String ref, final String alt, final String gene,
-            final CodingEffect effect, double copyNumber, double subclonalLikelihood, int localPhaseSet)
+            final CodingEffect effect, double variantCopyNumber, double copyNumber, double subclonalLikelihood, int localPhaseSet)
     {
         Chromosome = chromosome;
         Position = position;
@@ -29,6 +30,7 @@ public class PointMutationData
         Alt = alt;
         Gene = gene;
         Effect = effect;
+        VariantCopyNumber = variantCopyNumber;
         CopyNumber = copyNumber;
         SubclonalLikelihood = subclonalLikelihood;
         LocalPhaseSet = localPhaseSet;

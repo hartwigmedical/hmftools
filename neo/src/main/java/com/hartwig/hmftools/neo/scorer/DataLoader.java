@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_SKIP_ACCEPTO
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_SKIP_DONORS;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_TRANS_DOWN;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_TRANS_UP;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_CN;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_INFO;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_TYPE;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.extractTranscriptNames;
@@ -84,6 +85,7 @@ public class DataLoader
             int novelAaIndex = fieldsIndexMap.get(FLD_NE_AA_NOVEL);
             int nmdMinIndex = fieldsIndexMap.get(FLD_NE_NMD_MIN);
             int nmdMaxIndex = fieldsIndexMap.get(FLD_NE_NMD_MAX);
+            int vcnIndex = fieldsIndexMap.get(FLD_NE_VAR_CN);
             int cnIndex = fieldsIndexMap.get(FLD_NE_CN);
             int sclIndex = fieldsIndexMap.get(FLD_NE_SC_LIKELIHOOD);
             int cbLenMinIndex = fieldsIndexMap.get(FLD_NE_CB_LEN_MIN);
@@ -114,7 +116,7 @@ public class DataLoader
                         neId, NeoEpitopeType.valueOf(values[varTypeIndex]), values[varInfoIndex], geneIdDown, geneName,
                         values[upAaIndex],values[novelAaIndex], values[downAaIndex], transUpNames, transDownNames,
                         Integer.parseInt(values[nmdMinIndex]), Integer.parseInt(values[nmdMaxIndex]),
-                        Double.parseDouble(values[cnIndex]), Double.parseDouble(values[sclIndex]),
+                        Double.parseDouble(values[vcnIndex]), Double.parseDouble(values[cnIndex]), Double.parseDouble(values[sclIndex]),
                         Integer.parseInt(values[cbLenMinIndex]), Integer.parseInt(values[cbLenMaxIndex]),
                         Integer.parseInt(values[feLenIndex]), Integer.parseInt(values[skipDonIndex]), Integer.parseInt(values[skipAccIndex]));
 

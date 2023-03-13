@@ -40,7 +40,7 @@ public class PmNeoEpitopeTest
     private PointMutationData createPointMutation(int position, final String ref, final String alt, final CodingEffect codingEffect)
     {
         return new PointMutationData(
-                CHR_1, position, ref, alt, GENE_ID_1, codingEffect, 1.0, 0, -1);
+                CHR_1, position, ref, alt, GENE_ID_1, codingEffect, 1.0, 1, 0, -1);
     }
 
     @Test

@@ -23,6 +23,7 @@ public class NeoEpitopeFile
     public final int Id;
     public final NeoEpitopeType VariantType;
     public final String VariantInfo;
+    public final double VariantCopyNumber;
     public final double CopyNumber;
     public final double SubclonalLikelihood;
     public final String[] GeneIds;
@@ -64,6 +65,7 @@ public class NeoEpitopeFile
     public static final String FLD_NE_FUSED_LEN = "FusedIntronLength";
     public static final String FLD_NE_SKIP_DONORS = "SkippedDonors";
     public static final String FLD_NE_SKIP_ACCEPTORS = "SkippedAcceptors";
+    public static final String FLD_NE_VAR_CN = "VariantCopyNumber";
     public static final String FLD_NE_CN = "CopyNumber";
     public static final String FLD_NE_SC_LIKELIHOOD = "SubclonalLikelihood";
 
@@ -73,7 +75,8 @@ public class NeoEpitopeFile
     private static final String FUSION_INFO_DELIM = ";";
 
     public NeoEpitopeFile(
-            int id, final NeoEpitopeType varType, final String varInfo, final double copyNumber, final double subclonalLikelihood,
+            int id, final NeoEpitopeType varType, final String varInfo,
+            final double variantCopyNumber, final double copyNumber, final double subclonalLikelihood,
             final String geneIdUp, final String geneIdDown, final String geneNameUp, final String geneNameDown,
             final String chrUp, final String chrDown, byte orientUp, byte orientDown,
             final String upAA, final String downAAs, final String novelAAs,
@@ -85,6 +88,7 @@ public class NeoEpitopeFile
         Id = id;
         VariantType = varType;
         VariantInfo = varInfo;
+        VariantCopyNumber = variantCopyNumber;
         CopyNumber = copyNumber;
         SubclonalLikelihood = subclonalLikelihood;
         GeneIds = new String[] { geneIdUp, geneIdDown };
@@ -149,8 +153,8 @@ public class NeoEpitopeFile
         int neIdIndex = fieldsIndexMap.get(FLD_NE_ID);
         int varTypeIndex = fieldsIndexMap.get(FLD_NE_VAR_TYPE);
         int varInfoIndex = fieldsIndexMap.get(FLD_NE_VAR_INFO);
-        int geneIdUpIndex = fieldsIndexMap.get(FLD_NE_GENE_NAME_UP);
-        int geneIdDowwIndex = fieldsIndexMap.get(FLD_NE_GENE_ID_DOWN);
+        int geneIdUpIndex = fieldsIndexMap.get(FLD_NE_GENE_ID_UP);
+        int geneIdDownIndex = fieldsIndexMap.get(FLD_NE_GENE_ID_DOWN);
         int geneNameUpIndex = fieldsIndexMap.get(FLD_NE_GENE_NAME_UP);
         int geneNameDownIndex = fieldsIndexMap.get(FLD_NE_GENE_NAME_DOWN);
         int chrUpIndex = fieldsIndexMap.get("ChrUp");
@@ -162,6 +166,7 @@ public class NeoEpitopeFile
         int novelAaIndex = fieldsIndexMap.get(FLD_NE_AA_NOVEL);
         int nmdMinIndex = fieldsIndexMap.get(FLD_NE_NMD_MIN);
         int nmdMaxIndex = fieldsIndexMap.get(FLD_NE_NMD_MAX);
+        int vcnIndex = fieldsIndexMap.get(FLD_NE_VAR_CN);
         int cnIndex = fieldsIndexMap.get(FLD_NE_CN);
         int sclIndex = fieldsIndexMap.get(FLD_NE_SC_LIKELIHOOD);
         int cbLenMinIndex = fieldsIndexMap.get(FLD_NE_CB_LEN_MIN);
@@ -187,8 +192,8 @@ public class NeoEpitopeFile
 
             neoepitopes.add(new NeoEpitopeFile(
                     Integer.parseInt(values[neIdIndex]), NeoEpitopeType.valueOf(values[varTypeIndex]), values[varInfoIndex],
-                    Double.parseDouble(values[cnIndex]), Double.parseDouble(values[sclIndex]),
-                    values[geneIdUpIndex], values[geneIdDowwIndex], values[geneNameUpIndex], values[geneNameDownIndex],
+                    Double.parseDouble(values[vcnIndex]), Double.parseDouble(values[cnIndex]), Double.parseDouble(values[sclIndex]),
+                    values[geneIdUpIndex], values[geneIdDownIndex], values[geneNameUpIndex], values[geneNameDownIndex],
                     values[chrUpIndex], values[chrDownIndex], Byte.parseByte(values[orientUpIndex]), Byte.parseByte(values[orientDownIndex]),
                     values[upAaIndex], values[downAaIndex], values[novelAaIndex], Integer.parseInt(values[nmdMinIndex]), Integer.parseInt(values[nmdMaxIndex]),
                     Integer.parseInt(values[cbLenMinIndex]), Integer.parseInt(values[cbLenMaxIndex]),
@@ -207,6 +212,7 @@ public class NeoEpitopeFile
                 .add(FLD_NE_ID)
                 .add(FLD_NE_VAR_TYPE)
                 .add(FLD_NE_VAR_INFO)
+                .add(FLD_NE_VAR_CN)
                 .add(FLD_NE_CN)
                 .add(FLD_NE_SC_LIKELIHOOD)
                 .add(FLD_NE_GENE_ID_UP)
@@ -248,6 +254,7 @@ public class NeoEpitopeFile
         sj.add(String.valueOf(neo.Id));
         sj.add(neo.VariantType.toString());
         sj.add(neo.VariantInfo);
+        sj.add(String.format("%.4f", neo.VariantCopyNumber));
         sj.add(String.format("%.4f", neo.CopyNumber));
         sj.add(String.format("%.4f", neo.SubclonalLikelihood));
         sj.add(neo.GeneIds[FS_UP]);
