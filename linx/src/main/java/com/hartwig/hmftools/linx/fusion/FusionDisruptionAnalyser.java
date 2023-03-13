@@ -552,8 +552,8 @@ public class FusionDisruptionAnalyser
                     final LinkedPair lowerLink = lpIndex1 == 0 ? null : linkedPairs.get(lpIndex1 - 1);
                     final LinkedPair upperLink = lpIndex2 < linkedPairs.size() ? linkedPairs.get(lpIndex2) : null;
 
-                    double svCopyNumber = upperBreakend != null ?
-                            (lowerBreakend.copyNumber() + upperBreakend.copyNumber()) * 0.5 : lowerBreakend.copyNumber();
+                    double svCopyNumber = upperBreakend != null && lowerBreakend != null ?
+                            (lowerBreakend.copyNumber() + upperBreakend.copyNumber()) * 0.5 : lowerSV.copyNumber(true);
 
                     mNeoEpitopeWriter.processFusionCandidate(
                             genesListLower, genesListUpper, traversedPairs, mDisruptionFinder, lowerLink, upperLink, svCopyNumber);
