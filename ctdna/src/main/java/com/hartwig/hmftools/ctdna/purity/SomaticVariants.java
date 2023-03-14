@@ -21,10 +21,10 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariants
 {
-    private final InterpretConfig mConfig;
+    private final PurityConfig mConfig;
     private final ResultsWriter mResultsWriter;
 
-    public SomaticVariants(final InterpretConfig config, final ResultsWriter resultsWriter)
+    public SomaticVariants(final PurityConfig config, final ResultsWriter resultsWriter)
     {
         mConfig = config;
         mResultsWriter = resultsWriter;

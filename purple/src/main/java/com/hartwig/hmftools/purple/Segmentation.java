@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.purple;
 
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.purple.segment.PurpleSegmentFactory.validateSegments;
@@ -38,7 +36,7 @@ public class Segmentation
         mWindowSize = WINDOW_SIZE;
 
         PPL_LOGGER.info("reading GC Profiles from {}", referenceData.GcProfileFilename);
-        mGcProfiles = GCProfileFactory.loadGCContent(mWindowSize, referenceData.GcProfileFilename);
+        mGcProfiles = GCProfileFactory.loadGCContent(referenceData.GcProfileFilename);
     }
 
     public List<ObservedRegion> createObservedRegions(

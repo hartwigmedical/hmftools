@@ -8,10 +8,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(of = "new",
              allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public interface GCBucket {
-
-    @NotNull
-    static GCBucket create(@NotNull final GCProfile profile) {
+public interface GCBucket
+{
+    static GCBucket create(final GCProfile profile)
+    {
         return new ImmutableGCBucket((int) Math.round(profile.gcContent() * 100));
     }
 

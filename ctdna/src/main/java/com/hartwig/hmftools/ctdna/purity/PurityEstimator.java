@@ -13,12 +13,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class PurityEstimator
 {
-    private final InterpretConfig mConfig;
+    private final PurityConfig mConfig;
     private final ResultsWriter mResultsWriter;
 
     public PurityEstimator(final CommandLine cmd)
     {
-        mConfig = new InterpretConfig(cmd);
+        mConfig = new PurityConfig(cmd);
 
         mResultsWriter = new ResultsWriter(mConfig);
     }
@@ -47,7 +47,7 @@ public class PurityEstimator
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        InterpretConfig.addCommandLineOptions(options);
+        PurityConfig.addCommandLineOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 

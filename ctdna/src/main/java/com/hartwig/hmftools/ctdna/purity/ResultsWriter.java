@@ -11,10 +11,10 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 
 public class ResultsWriter
 {
-    private final InterpretConfig mConfig;
+    private final PurityConfig mConfig;
     private final BufferedWriter mVariantWriter;
 
-    public ResultsWriter(final InterpretConfig config)
+    public ResultsWriter(final PurityConfig config)
     {
         mConfig = config;
         mVariantWriter = initialiseWriter();
