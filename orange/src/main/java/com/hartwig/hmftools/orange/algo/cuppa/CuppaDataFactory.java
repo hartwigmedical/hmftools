@@ -31,7 +31,7 @@ public final class CuppaDataFactory {
                 .predictions(extractPredictions(entries))
                 .simpleDups32To200B(safeInt(entries, SvDataType.SIMPLE_DUP_32B_200B))
                 .maxComplexSize(safeInt(entries, SvDataType.MAX_COMPLEX_SIZE))
-                .LINECount(safeInt(entries, SvDataType.LINE))
+                .lineCount(safeInt(entries, SvDataType.LINE))
                 .telomericSGLs(safeInt(entries, SvDataType.TELOMERIC_SGL))
                 .build();
     }

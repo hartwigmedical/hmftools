@@ -87,7 +87,7 @@ public class LinxInterpreter {
         return ImmutableLinxFusion.builder()
                 .name(linxFusion.name())
                 .reported(linxFusion.reported())
-                .reportedType(linxFusion.reportedType())
+                .reportedType(LinxFusionType.valueOf(linxFusion.reportedType()))
                 .phased(FusionPhasedType.valueOf(linxFusion.phased().name()))
                 .likelihood(FusionLikelihoodType.valueOf(linxFusion.likelihood().name()))
                 .fusedExonUp(linxFusion.fusedExonUp())

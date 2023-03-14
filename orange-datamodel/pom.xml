@@ -20,6 +20,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.immutables</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.intellij</groupId>
             <artifactId>annotations</artifactId>
         </dependency>

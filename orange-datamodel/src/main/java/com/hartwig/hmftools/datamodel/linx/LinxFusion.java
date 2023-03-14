@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.datamodel.linx;
 
+import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 
+@Gson.TypeAdapters
 @Value.Immutable
 public abstract class LinxFusion {
     public abstract String name();
     public abstract boolean reported();
-    public abstract String reportedType();
+    public abstract LinxFusionType reportedType();
     public abstract FusionPhasedType phased();
     public abstract FusionLikelihoodType likelihood();
     public abstract int fusedExonUp();

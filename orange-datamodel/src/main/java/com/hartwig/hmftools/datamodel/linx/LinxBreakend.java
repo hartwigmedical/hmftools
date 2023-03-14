@@ -3,9 +3,11 @@ package com.hartwig.hmftools.datamodel.linx;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
+import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 
+@Gson.TypeAdapters
 @Value.Immutable
 public abstract class LinxBreakend {
     public abstract int id();

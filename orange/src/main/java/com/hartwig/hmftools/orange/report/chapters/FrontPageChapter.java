@@ -5,6 +5,7 @@ import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
@@ -315,8 +316,9 @@ public class FrontPageChapter implements ReportChapter {
 
         Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
         for (AnnotatedVirus virus : virusInterpreter.reportableViruses()) {
-            if (virus.interpretation() != null) {
-                viruses.add(virus.interpretation());
+            VirusInterpretation interpretation = virus.interpretation();
+            if (interpretation != null) {
+                viruses.add(interpretation.name());
             } else {
                 viruses.add(virus.name());
             }
@@ -352,9 +354,9 @@ public class FrontPageChapter implements ReportChapter {
         String addon = Strings.EMPTY;
         if (chord.hrStatus() == ChordStatus.HR_DEFICIENT) {
             if (chord.hrdType().contains("BRCA1")) {
-                addon = " - BRCA1 (" + TWO_DIGITS.format(chord.BRCA1Value()) + ")";
+                addon = " - BRCA1 (" + TWO_DIGITS.format(chord.brca1Value()) + ")";
             } else if (chord.hrdType().contains("BRCA2")) {
-                addon = " - BRCA2 (" + TWO_DIGITS.format(chord.BRCA2Value()) + ")";
+                addon = " - BRCA2 (" + TWO_DIGITS.format(chord.brca2Value()) + ")";
             } else {
                 addon = chord.hrdType();
             }
@@ -425,7 +427,7 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String lineCountString() {
         CuppaData cuppa = report.cuppa();
-        return cuppa != null ? Integer.toString(cuppa.LINECount()) : ReportResources.NOT_AVAILABLE;
+        return cuppa != null ? Integer.toString(cuppa.lineCount()) : ReportResources.NOT_AVAILABLE;
     }
 
     @NotNull

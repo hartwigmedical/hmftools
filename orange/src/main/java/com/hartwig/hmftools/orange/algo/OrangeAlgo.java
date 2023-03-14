@@ -509,7 +509,7 @@ public class OrangeAlgo {
                 .name(annotatedVirus.name())
                 .qcStatus(VirusBreakendQCStatus.valueOf(annotatedVirus.qcStatus().name()))
                 .integrations(annotatedVirus.integrations())
-                .interpretation(annotatedVirus.interpretation())
+                .interpretation(VirusInterpretation.valueOf(annotatedVirus.interpretation()))
                 .percentageCovered(annotatedVirus.percentageCovered())
                 .reported(annotatedVirus.reported())
                 .build();
@@ -531,8 +531,8 @@ public class OrangeAlgo {
 
     public static ChordRecord asOrangeDatamodel(ChordData chordData) {
         return ImmutableChordRecord.builder()
-                .BRCA1Value(chordData.BRCA1Value())
-                .BRCA2Value(chordData.BRCA2Value())
+                .brca1Value(chordData.BRCA1Value())
+                .brca2Value(chordData.BRCA2Value())
                 .hrdValue(chordData.hrdValue())
                 .hrStatus(ChordStatus.valueOf(chordData.hrStatus().name()))
                 .hrdType(chordData.hrdType())

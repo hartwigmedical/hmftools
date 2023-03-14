@@ -40,7 +40,7 @@ public class CuppaPredictionFactoryTest {
         assertEquals(3, cuppaData.simpleDups32To200B());
         assertEquals(8, cuppaData.maxComplexSize());
         assertEquals(0, cuppaData.telomericSGLs());
-        assertEquals(3, cuppaData.LINECount());
+        assertEquals(3, cuppaData.lineCount());
     }
 
     @NotNull
