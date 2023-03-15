@@ -8,7 +8,7 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
-import com.hartwig.hmftools.datamodel.peach.PeachRecord;
+import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
@@ -80,7 +80,7 @@ public abstract class OrangeReport {
     public abstract CuppaData cuppa();
 
     @Nullable
-    public abstract PeachRecord peach();
+    public abstract Set<PeachGenotype> peach();
 
     @Nullable
     public abstract List<SignatureAllocation> sigAllocations();

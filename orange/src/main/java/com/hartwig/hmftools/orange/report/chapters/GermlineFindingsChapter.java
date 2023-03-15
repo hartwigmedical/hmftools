@@ -178,8 +178,8 @@ public class GermlineFindingsChapter implements ReportChapter {
     private void addPharmacogenetics(@NotNull Document document) {
         var peach = report.peach();
         if (peach != null) {
-            String titlePharmacogenetics = "Pharmacogenetics (" + peach.entries().size() + ")";
-            document.add(PharmacogeneticsTable.build(titlePharmacogenetics, contentWidth(), peach.entries()));
+            String titlePharmacogenetics = "Pharmacogenetics (" + peach.size() + ")";
+            document.add(PharmacogeneticsTable.build(titlePharmacogenetics, contentWidth(), peach));
         }
     }
 }

@@ -75,7 +75,7 @@ public class OrangeReportToRecordConversion {
                 .map(status -> PurpleQCStatus.valueOf(status.name()))
                 .iterator();
         return ImmutablePurpleFit.builder()
-                .qcStatus(() -> qcStatusIterator)
+                .qc(ImmutablePurpleQC.builder().addAllStatus(() -> qcStatusIterator).build())
                 .hasSufficientQuality(fit.hasSufficientQuality())
                 .containsTumorCells(fit.containsTumorCells())
                 .purity(fit.purity())
@@ -162,7 +162,7 @@ public class OrangeReportToRecordConversion {
         return ImmutablePurpleGeneCopyNumber.builder()
                 .chromosome(geneCopyNumber.chromosome())
                 .chromosomeBand(geneCopyNumber.chromosomeBand())
-                .gene(geneCopyNumber.geneName())
+                .geneName(geneCopyNumber.geneName())
                 .minCopyNumber(geneCopyNumber.minCopyNumber())
                 .minMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())
                 .build();

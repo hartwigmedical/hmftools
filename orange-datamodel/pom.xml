@@ -22,6 +22,7 @@
         <dependency>
             <groupId>org.immutables</groupId>
             <artifactId>gson</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.intellij</groupId>

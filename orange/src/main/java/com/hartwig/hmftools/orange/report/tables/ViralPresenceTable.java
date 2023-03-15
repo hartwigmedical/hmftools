@@ -37,7 +37,7 @@ public final class ViralPresenceTable {
         for (AnnotatedVirus virus : viruses) {
             table.addCell(Cells.createContent(virus.name()));
             table.addCell(Cells.createContent(virus.qcStatus().toString()));
-            table.addCell(Cells.createContent(virus.interpretation() != null ? virus.interpretation() : Strings.EMPTY));
+            table.addCell(Cells.createContent(virus.interpretation() != null ? virus.interpretation().name() : Strings.EMPTY));
             table.addCell(Cells.createContent(String.valueOf(virus.integrations())));
             table.addCell(Cells.createContent(PERCENTAGE.format(virus.percentageCovered())));
             table.addCell(Cells.createContent(SINGLE_DIGIT.format(virus.meanCoverage())));

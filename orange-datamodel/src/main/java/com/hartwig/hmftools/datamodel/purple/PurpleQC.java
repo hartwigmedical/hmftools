@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.peach;
+package com.hartwig.hmftools.datamodel.purple;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -9,9 +9,8 @@ import java.util.Set;
 
 @Gson.TypeAdapters
 @Value.Immutable
-@Value.Style(passAnnotations = {NotNull.class, Nullable.class})
-public abstract class PeachRecord {
-
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public interface PurpleQC {
     @NotNull
-    public abstract Set<PeachGenotype> entries();
+    Set<PurpleQCStatus> status();
 }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.datamodel.cuppa;
 
+import com.google.gson.annotations.SerializedName;
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -21,5 +22,6 @@ public abstract class CuppaData {
 
     public abstract int telomericSGLs();
 
+    @SerializedName("LINECount")
     public abstract int lineCount();
 }

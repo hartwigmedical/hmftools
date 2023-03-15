@@ -5,7 +5,6 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
-import com.hartwig.hmftools.datamodel.peach.PeachRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import org.immutables.gson.Gson;
@@ -14,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
 
 @Gson.TypeAdapters
 @Value.Immutable
@@ -49,7 +48,7 @@ public interface OrangeRecord {
     CuppaData cuppa();
 
     @Nullable
-    PeachRecord peach();
+    Set<PeachGenotype> peach();
 
     @NotNull
     OrangePlots plots();

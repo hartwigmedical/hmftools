@@ -14,7 +14,6 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
-import com.hartwig.hmftools.datamodel.peach.PeachRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
@@ -375,11 +374,10 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String dpydStatus() {
-        PeachRecord peach = report.peach();
-        if (peach == null) {
+        Set<PeachGenotype> genotypes = report.peach();
+        if (genotypes == null) {
             return ReportResources.NOT_AVAILABLE;
         }
-        Set<PeachGenotype> genotypes = peach.entries();
 
         Set<String> haplotypes = Sets.newHashSet();
         for (PeachGenotype genotype : genotypes) {

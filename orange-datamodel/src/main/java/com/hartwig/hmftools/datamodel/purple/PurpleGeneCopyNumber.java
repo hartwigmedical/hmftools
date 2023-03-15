@@ -17,7 +17,7 @@ public abstract class PurpleGeneCopyNumber {
     public abstract String chromosomeBand();
 
     @NotNull
-    public abstract String gene();
+    public abstract String geneName();
 
     @Nullable
     public abstract Double minCopyNumber();

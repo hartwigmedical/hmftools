@@ -22,8 +22,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
-import com.hartwig.hmftools.datamodel.peach.ImmutablePeachRecord;
-import com.hartwig.hmftools.datamodel.peach.PeachRecord;
+import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.virus.*;
 import com.hartwig.hmftools.orange.algo.*;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
@@ -42,6 +41,7 @@ import org.jetbrains.annotations.NotNull;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class TestOrangeReportFactory {
 
@@ -281,7 +281,7 @@ public final class TestOrangeReportFactory {
                 .name("virus A")
                 .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
                 .integrations(3)
-                .interpretation("BAD ONE")
+                .interpretation(VirusInterpretation.HPV)
                 .percentageCovered(87D)
                 .meanCoverage(42D)
                 .expectedClonalCoverage(3D)
@@ -293,9 +293,7 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static PeachRecord createTestPeachData() {
-        return ImmutablePeachRecord.builder()
-                .addEntries(OrangeAlgo.asOrangeDatamodel(PeachTestFactory.builder().gene("DPYD").haplotype("haplotype").build()))
-                .build();
+    private static Set<PeachGenotype> createTestPeachData() {
+        return Set.of(OrangeAlgo.asOrangeDatamodel(PeachTestFactory.builder().gene("DPYD").haplotype("haplotype").build()));
     }
 }
