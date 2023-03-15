@@ -1,0 +1,84 @@
+{
+  "sampleId": "TEST",
+  "experimentDate": {
+    "year": 2022,
+    "month": 1,
+    "day": 20
+  },
+  "refGenomeVersion": "V37",
+  "purple": {
+    "fit": {
+      "qc": {
+        "status": [
+        ]
+      },
+      "hasSufficientQuality": false,
+      "containsTumorCells": false,
+      "purity": 0.1,
+      "ploidy": 2
+    },
+    "characteristics": {
+      "microsatelliteIndelsPerMb": 0,
+      "microsatelliteStatus": "MSS",
+      "tumorMutationalBurdenPerMb": 0,
+      "tumorMutationalBurdenStatus": "UNKNOWN",
+      "tumorMutationalLoad": 0,
+      "tumorMutationalLoadStatus": "UNKNOWN"
+    },
+    "somaticDrivers": [],
+    "germlineDrivers": null,
+    "allSomaticVariants": [],
+    "reportableSomaticVariants": [],
+    "allGermlineVariants": null,
+    "reportableGermlineVariants": null,
+    "allSomaticCopyNumbers": [],
+    "allSomaticGeneCopyNumbers": [],
+    "allSomaticGainsLosses": [],
+    "reportableSomaticGainsLosses": [],
+    "suspectGeneCopyNumbersWithLOH": []
+  },
+  "linx": {
+    "allSomaticStructuralVariants": [],
+    "allSomaticFusions": [],
+    "reportableSomaticFusions": [],
+    "allSomaticBreakends": [],
+    "reportableSomaticBreakends": [],
+    "somaticHomozygousDisruptions": [],
+    "additionalSuspectSomaticBreakends": [],
+    "additionalSuspectSomaticFusions": []
+  },
+  "virusInterpreter": {
+    "allViruses": [],
+    "reportableViruses": []
+  },
+  "chord": {
+    "hrdValue": 0,
+    "hrStatus": "HR_PROFICIENT",
+    "BRCA1Value": 0,
+    "BRCA2Value": 0,
+    "hrdType": ""
+  },
+  "peach": [],
+  "cuppa": {
+    "predictions": [
+    ],
+    "simpleDups32To200B": 0,
+    "maxComplexSize": 0,
+    "telomericSGLs": 0,
+    "LINECount": 0
+  },
+  "lilac": {
+    "qc": "FAIL",
+    "alleles": [
+    ]
+  },
+  "plots": {
+    "purpleFinalCircosPlot": "plot/empty.circos.png",
+    "sageTumorBQRPlot": "",
+    "purpleInputPlot": "",
+    "purpleClonalityPlot": "",
+    "purpleCopyNumberPlot": "",
+    "purpleVariantCopyNumberPlot": "",
+    "purplePurityRangePlot": ""
+  }
+}
