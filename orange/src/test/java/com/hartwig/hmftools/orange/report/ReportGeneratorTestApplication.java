@@ -2,12 +2,13 @@ package com.hartwig.hmftools.orange.report;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
@@ -144,11 +145,11 @@ public class ReportGeneratorTestApplication {
 
     @NotNull
     private static List<GeneCopyNumber> retainReportableCopyNumbers(@NotNull List<GeneCopyNumber> geneCopyNumbers,
-            @NotNull List<DriverCatalog> drivers) {
+                                                                    @NotNull List<PurpleDriver> drivers) {
         List<String> copyNumberDriverGenes = Lists.newArrayList();
-        for (DriverCatalog driver : drivers) {
-            if (driver.driver() == DriverType.AMP || driver.driver() == DriverType.PARTIAL_AMP || driver.driver() == DriverType.DEL
-                    || driver.driver() == DriverType.GERMLINE_DELETION) {
+        for (PurpleDriver driver : drivers) {
+            if (driver.driver() == PurpleDriverType.AMP || driver.driver() == PurpleDriverType.PARTIAL_AMP || driver.driver() == PurpleDriverType.DEL
+                    || driver.driver() == PurpleDriverType.GERMLINE_DELETION) {
                 copyNumberDriverGenes.add(driver.gene());
             }
         }

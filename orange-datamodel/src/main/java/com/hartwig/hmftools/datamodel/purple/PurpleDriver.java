@@ -20,4 +20,9 @@ public interface PurpleDriver {
     PurpleDriverType driver();
 
     double driverLikelihood();
+
+    @NotNull
+    PurpleLikelihoodMethod likelihoodMethod();
+
+    boolean isCanonical();
 }

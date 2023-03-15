@@ -37,12 +37,6 @@ public class OrangeReportToRecordConversion {
     }
 
     private static PurpleRecord convert(PurpleInterpretedData purpleInterpretedData) {
-        var somaticDriverIterator = purpleInterpretedData.somaticDrivers().stream()
-                .map(OrangeReportToRecordConversion::convert)
-                .iterator();
-        var germlineDriverIterator = argumentOrEmpty(purpleInterpretedData.germlineDrivers()).stream()
-                .map(OrangeReportToRecordConversion::convert)
-                .iterator();
         var somaticVariantIterator = purpleInterpretedData.allSomaticVariants().stream()
                 .map(OrangeReportToRecordConversion::convert)
                 .iterator();
@@ -54,9 +48,9 @@ public class OrangeReportToRecordConversion {
                 .iterator();
         return ImmutablePurpleRecord.builder()
                 .fit(purpleInterpretedData.fit())
-                .characteristics(convert(purpleInterpretedData.characteristics()))
-                .somaticDrivers(() -> somaticDriverIterator)
-                .germlineDrivers(() -> germlineDriverIterator)
+                .characteristics(purpleInterpretedData.characteristics())
+                .somaticDrivers(purpleInterpretedData.somaticDrivers())
+                .germlineDrivers(purpleInterpretedData.germlineDrivers())
                 .allSomaticVariants(() -> somaticVariantIterator)
                 .reportableSomaticVariants(() -> purpleInterpretedData.reportableSomaticVariants().stream().map(OrangeReportToRecordConversion::convert).iterator())
                 .allGermlineVariants(() -> germlineVariantIterator)
@@ -66,26 +60,6 @@ public class OrangeReportToRecordConversion {
                 .suspectGeneCopyNumbersWithLOH(() -> purpleInterpretedData.suspectGeneCopyNumbersWithLOH().stream().map(OrangeReportToRecordConversion::convert).iterator())
                 .allSomaticGainsLosses(purpleInterpretedData.reportableSomaticGainsLosses())
                 .reportableSomaticGainsLosses(purpleInterpretedData.reportableSomaticGainsLosses())
-                .build();
-    }
-
-    private static PurpleCharacteristics convert(com.hartwig.hmftools.orange.algo.purple.PurpleCharacteristics characteristics) {
-        return ImmutablePurpleCharacteristics.builder()
-                .microsatelliteIndelsPerMb(characteristics.microsatelliteIndelsPerMb())
-                .microsatelliteStatus(PurpleMicrosatelliteStatus.valueOf(characteristics.microsatelliteStatus().name()))
-                .tumorMutationalBurdenPerMb(characteristics.tumorMutationalBurdenPerMb())
-                .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.valueOf(characteristics.tumorMutationalBurdenStatus().name()))
-                .tumorMutationalLoad(characteristics.tumorMutationalLoad())
-                .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.valueOf(characteristics.tumorMutationalLoadStatus().name()))
-                .build();
-    }
-
-    private static PurpleDriver convert(DriverCatalog catalog) {
-        return ImmutablePurpleDriver.builder()
-                .gene(catalog.gene())
-                .transcript(catalog.transcript())
-                .driver(PurpleDriverType.valueOf(catalog.driver().name()))
-                .transcript(catalog.transcript())
                 .build();
     }
 

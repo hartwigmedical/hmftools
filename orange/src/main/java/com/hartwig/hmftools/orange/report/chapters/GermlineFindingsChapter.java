@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
@@ -73,7 +74,7 @@ public class GermlineFindingsChapter implements ReportChapter {
     }
 
     private void addGermlineVariants(@NotNull Document document) {
-        List<DriverCatalog> drivers = report.purple().germlineDrivers();
+        List<PurpleDriver> drivers = report.purple().germlineDrivers();
 
         List<PurpleVariant> reportableVariants = report.purple().reportableGermlineVariants();
         if (drivers != null && reportableVariants != null) {

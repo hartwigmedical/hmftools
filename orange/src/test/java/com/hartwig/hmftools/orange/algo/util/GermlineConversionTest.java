@@ -2,11 +2,6 @@ package com.hartwig.hmftools.orange.algo.util;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogTestFactory;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
-import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -16,8 +11,8 @@ import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
-import com.hartwig.hmftools.orange.algo.purple.*;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
+import com.hartwig.hmftools.orange.algo.purple.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
@@ -90,9 +85,9 @@ public class GermlineConversionTest {
         PurpleGainLoss germlineFullLoss = TestPurpleGainLossFactory.builder().build();
         PurpleGainLoss reportableGermlineFullLoss = TestPurpleGainLossFactory.builder().build();
 
-        DriverCatalog somaticDriver = DriverCatalogTestFactory.builder().driver(DriverType.AMP).build();
-        DriverCatalog germlineMutationDriver = DriverCatalogTestFactory.builder().driver(DriverType.GERMLINE_MUTATION).build();
-        DriverCatalog germlineDisruptionDriver = DriverCatalogTestFactory.builder().driver(DriverType.GERMLINE_DISRUPTION).build();
+        PurpleDriver somaticDriver = PurpleDriverTestFactory.builder().driver(PurpleDriverType.AMP).build();
+        PurpleDriver germlineMutationDriver = PurpleDriverTestFactory.builder().driver(PurpleDriverType.GERMLINE_MUTATION).build();
+        PurpleDriver germlineDisruptionDriver = PurpleDriverTestFactory.builder().driver(PurpleDriverType.GERMLINE_DISRUPTION).build();
 
         PurpleInterpretedData purple = TestPurpleInterpretationFactory.builder()
                 .fit(createWithGermlineAberration())
@@ -115,9 +110,9 @@ public class GermlineConversionTest {
         assertTrue(converted.fit().qc().germlineAberrations().isEmpty());
 
         assertEquals(3, converted.somaticDrivers().size());
-        assertNotNull(findByDriverType(converted.somaticDrivers(), DriverType.AMP));
-        assertNotNull(findByDriverType(converted.somaticDrivers(), DriverType.MUTATION));
-        assertNotNull(findByDriverType(converted.somaticDrivers(), DriverType.DISRUPTION));
+        assertNotNull(findByDriverType(converted.somaticDrivers(), PurpleDriverType.AMP));
+        assertNotNull(findByDriverType(converted.somaticDrivers(), PurpleDriverType.MUTATION));
+        assertNotNull(findByDriverType(converted.somaticDrivers(), PurpleDriverType.DISRUPTION));
 
         assertEquals(4, converted.allSomaticVariants().size());
         assertTrue(converted.allSomaticVariants().contains(reportableGermlineVariant));
@@ -138,7 +133,7 @@ public class GermlineConversionTest {
 
         PurpleInterpretedData unreliableConverted = GermlineConversion.convertPurpleGermline(false, purple);
         assertEquals(1, unreliableConverted.somaticDrivers().size());
-        assertNotNull(findByDriverType(unreliableConverted.somaticDrivers(), DriverType.AMP));
+        assertNotNull(findByDriverType(unreliableConverted.somaticDrivers(), PurpleDriverType.AMP));
 
         assertEquals(1, unreliableConverted.reportableSomaticVariants().size());
         assertTrue(unreliableConverted.reportableSomaticVariants().contains(reportableSomaticVariant));
@@ -157,8 +152,8 @@ public class GermlineConversionTest {
     }
 
     @Nullable
-    private static DriverCatalog findByDriverType(@NotNull List<DriverCatalog> drivers, @NotNull DriverType driverTypeToFind) {
-        for (DriverCatalog driver : drivers) {
+    private static PurpleDriver findByDriverType(@NotNull List<PurpleDriver> drivers, @NotNull PurpleDriverType driverTypeToFind) {
+        for (PurpleDriver driver : drivers) {
             if (driver.driver() == driverTypeToFind) {
                 return driver;
             }
@@ -169,121 +164,109 @@ public class GermlineConversionTest {
 
     @Test
     public void canMergeMutationDrivers() {
-        DriverCatalog somaticDriver1 = DriverCatalogTestFactory.builder()
-                .driver(DriverType.MUTATION)
+        PurpleDriver somaticDriver1 = PurpleDriverTestFactory.builder()
+                .driver(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 1")
                 .driverLikelihood(0.5)
-                .likelihoodMethod(LikelihoodMethod.DNDS)
-                .missense(1)
-                .nonsense(2)
-                .splice(3)
-                .inframe(4)
-                .frameshift(5)
-                .biallelic(false)
+                .likelihoodMethod(PurpleLikelihoodMethod.DNDS)
+//                .missense(1)
+//                .nonsense(2)
+//                .splice(3)
+//                .inframe(4)
+//                .frameshift(5)
+//                .biallelic(false)
                 .build();
 
-        DriverCatalog somaticDriver2 =
-                DriverCatalogTestFactory.builder().driver(DriverType.MUTATION).gene("gene 1").transcript("transcript 2").build();
+        PurpleDriver somaticDriver2 =
+                PurpleDriverTestFactory.builder().driver(PurpleDriverType.MUTATION).gene("gene 1").transcript("transcript 2").build();
 
-        DriverCatalog germlineDriver1 = DriverCatalogTestFactory.builder()
-                .driver(DriverType.GERMLINE_MUTATION)
+        PurpleDriver germlineDriver1 = PurpleDriverTestFactory.builder()
+                .driver(PurpleDriverType.GERMLINE_MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 1")
                 .driverLikelihood(0.8)
-                .likelihoodMethod(LikelihoodMethod.GERMLINE)
-                .missense(1)
-                .nonsense(2)
-                .splice(3)
-                .inframe(4)
-                .frameshift(5)
-                .biallelic(true)
+                .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
                 .build();
 
-        DriverCatalog germlineDriver2 =
-                DriverCatalogTestFactory.builder().driver(DriverType.GERMLINE_MUTATION).gene("gene 2").transcript("transcript 1").build();
+        PurpleDriver germlineDriver2 =
+                PurpleDriverTestFactory.builder().driver(PurpleDriverType.GERMLINE_MUTATION).gene("gene 2").transcript("transcript 1").build();
 
-        List<DriverCatalog> merged = GermlineConversion.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver1, somaticDriver2),
+        List<PurpleDriver> merged = GermlineConversion.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver1, somaticDriver2),
                 Lists.newArrayList(germlineDriver1, germlineDriver2));
 
         assertEquals(3, merged.size());
-        DriverCatalog driver1 = findByGeneTranscript(merged, "gene 1", "transcript 1");
+        PurpleDriver driver1 = findByGeneTranscript(merged, "gene 1", "transcript 1");
         assertNotNull(driver1);
-        assertEquals(DriverType.MUTATION, driver1.driver());
-        assertEquals(LikelihoodMethod.HOTSPOT, driver1.likelihoodMethod());
+        assertEquals(PurpleDriverType.MUTATION, driver1.driver());
+        assertEquals(PurpleLikelihoodMethod.HOTSPOT, driver1.likelihoodMethod());
         assertEquals(0.8, driver1.driverLikelihood(), EPSILON);
-        assertEquals(2, driver1.missense());
-        assertEquals(4, driver1.nonsense());
-        assertEquals(6, driver1.splice());
-        assertEquals(8, driver1.inframe());
-        assertEquals(10, driver1.frameshift());
-        assertTrue(driver1.biallelic());
 
-        DriverCatalog driver2 = findByGeneTranscript(merged, "gene 1", "transcript 2");
+        PurpleDriver driver2 = findByGeneTranscript(merged, "gene 1", "transcript 2");
         assertEquals(somaticDriver2, driver2);
 
-        DriverCatalog driver3 = findByGeneTranscript(merged, "gene 2", "transcript 1");
-        assertEquals(DriverType.MUTATION, driver3.driver());
-        assertEquals(LikelihoodMethod.HOTSPOT, driver3.likelihoodMethod());
+        PurpleDriver driver3 = findByGeneTranscript(merged, "gene 2", "transcript 1");
+        assertEquals(PurpleDriverType.MUTATION, driver3.driver());
+        assertEquals(PurpleLikelihoodMethod.HOTSPOT, driver3.likelihoodMethod());
     }
 
     @Test
     public void canConvertAllTypesOfGermlineDrivers() {
-        DriverCatalog somaticDriver =
-                DriverCatalogTestFactory.builder().gene("gene 1").transcript("transcript 1").driver(DriverType.DEL).build();
+        PurpleDriver somaticDriver =
+                PurpleDriverTestFactory.builder().gene("gene 1").transcript("transcript 1").driver(PurpleDriverType.DEL).build();
 
-        List<DriverCatalog> mergedNoGermline = GermlineConversion.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver), null);
+        List<PurpleDriver> mergedNoGermline = GermlineConversion.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver), null);
         assertEquals(1, mergedNoGermline.size());
         assertTrue(mergedNoGermline.contains(somaticDriver));
 
-        DriverCatalog germlineDriver1 =
-                DriverCatalogTestFactory.builder().gene("gene 1").transcript("transcript 1").driver(DriverType.GERMLINE_DELETION).build();
+        PurpleDriver germlineDriver1 =
+                PurpleDriverTestFactory.builder().gene("gene 1").transcript("transcript 1").driver(PurpleDriverType.GERMLINE_DELETION).build();
 
-        DriverCatalog germlineDriver2 =
-                DriverCatalogTestFactory.builder().gene("gene 2").transcript("transcript 2").driver(DriverType.GERMLINE_DELETION).build();
+        PurpleDriver germlineDriver2 =
+                PurpleDriverTestFactory.builder().gene("gene 2").transcript("transcript 2").driver(PurpleDriverType.GERMLINE_DELETION).build();
 
-        DriverCatalog germlineDriver3 =
-                DriverCatalogTestFactory.builder().gene("gene 3").transcript("transcript 3").driver(DriverType.GERMLINE_MUTATION).build();
+        PurpleDriver germlineDriver3 =
+                PurpleDriverTestFactory.builder().gene("gene 3").transcript("transcript 3").driver(PurpleDriverType.GERMLINE_MUTATION).build();
 
-        DriverCatalog germlineDriver4 = DriverCatalogTestFactory.builder()
+        PurpleDriver germlineDriver4 = PurpleDriverTestFactory.builder()
                 .gene("gene 4")
                 .transcript("transcript 4")
-                .driver(DriverType.GERMLINE_DISRUPTION)
+                .driver(PurpleDriverType.GERMLINE_DISRUPTION)
                 .driverLikelihood(1D)
                 .build();
 
-        DriverCatalog germlineDriver5 = DriverCatalogTestFactory.builder()
+        PurpleDriver germlineDriver5 = PurpleDriverTestFactory.builder()
                 .gene("gene 5")
                 .transcript("transcript 5")
-                .driver(DriverType.GERMLINE_HOM_DUP_DISRUPTION)
+                .driver(PurpleDriverType.GERMLINE_HOM_DUP_DISRUPTION)
                 .driverLikelihood(0D)
                 .build();
 
-        List<DriverCatalog> merged = GermlineConversion.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver),
+        List<PurpleDriver> merged = GermlineConversion.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver),
                 Lists.newArrayList(germlineDriver1, germlineDriver2, germlineDriver3, germlineDriver4, germlineDriver5));
 
         assertEquals(5, merged.size());
         assertTrue(mergedNoGermline.contains(somaticDriver));
 
-        DriverCatalog germlineDeletionDriver = findByGeneTranscript(merged, germlineDriver2.gene(), germlineDriver2.transcript());
-        assertEquals(DriverType.DEL, germlineDeletionDriver.driver());
+        PurpleDriver germlineDeletionDriver = findByGeneTranscript(merged, germlineDriver2.gene(), germlineDriver2.transcript());
+        assertEquals(PurpleDriverType.DEL, germlineDeletionDriver.driver());
 
-        DriverCatalog germlineMutationDriver = findByGeneTranscript(merged, germlineDriver3.gene(), germlineDriver3.transcript());
-        assertEquals(DriverType.MUTATION, germlineMutationDriver.driver());
+        PurpleDriver germlineMutationDriver = findByGeneTranscript(merged, germlineDriver3.gene(), germlineDriver3.transcript());
+        assertEquals(PurpleDriverType.MUTATION, germlineMutationDriver.driver());
 
-        DriverCatalog germlineDisruptionDriver = findByGeneTranscript(merged, germlineDriver4.gene(), germlineDriver4.transcript());
-        assertEquals(DriverType.DISRUPTION, germlineDisruptionDriver.driver());
+        PurpleDriver germlineDisruptionDriver = findByGeneTranscript(merged, germlineDriver4.gene(), germlineDriver4.transcript());
+        assertEquals(PurpleDriverType.DISRUPTION, germlineDisruptionDriver.driver());
         assertEquals(0D, germlineDisruptionDriver.driverLikelihood(), EPSILON);
 
-        DriverCatalog germlineHomDisruptionDriver = findByGeneTranscript(merged, germlineDriver5.gene(), germlineDriver5.transcript());
-        assertEquals(DriverType.HOM_DUP_DISRUPTION, germlineHomDisruptionDriver.driver());
+        PurpleDriver germlineHomDisruptionDriver = findByGeneTranscript(merged, germlineDriver5.gene(), germlineDriver5.transcript());
+        assertEquals(PurpleDriverType.HOM_DUP_DISRUPTION, germlineHomDisruptionDriver.driver());
         assertEquals(1D, germlineHomDisruptionDriver.driverLikelihood(), EPSILON);
     }
 
     @Nullable
-    private static DriverCatalog findByGeneTranscript(@NotNull List<DriverCatalog> drivers, @NotNull String geneToFind,
-            @NotNull String transcriptToFind) {
-        for (DriverCatalog driver : drivers) {
+    private static PurpleDriver findByGeneTranscript(@NotNull List<PurpleDriver> drivers, @NotNull String geneToFind,
+                                                     @NotNull String transcriptToFind) {
+        for (PurpleDriver driver : drivers) {
             if (driver.gene().equals(geneToFind) && driver.transcript().equals(transcriptToFind)) {
                 return driver;
             }

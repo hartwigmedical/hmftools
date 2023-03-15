@@ -9,6 +9,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PurpleCharacteristics {
+    public abstract boolean wholeGenomeDuplication();
+
     public abstract double microsatelliteIndelsPerMb();
 
     @NotNull
@@ -23,4 +25,6 @@ public abstract class PurpleCharacteristics {
 
     @NotNull
     public abstract PurpleTumorMutationalStatus tumorMutationalLoadStatus();
+
+    public abstract int svTumorMutationalBurden();
 }

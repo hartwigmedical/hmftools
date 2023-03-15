@@ -27,12 +27,14 @@
       "maxPloidy": 0
     },
     "characteristics": {
+      "wholeGenomeDuplication": true,
       "microsatelliteIndelsPerMb": 0,
       "microsatelliteStatus": "MSS",
       "tumorMutationalBurdenPerMb": 0,
       "tumorMutationalBurdenStatus": "UNKNOWN",
       "tumorMutationalLoad": 0,
-      "tumorMutationalLoadStatus": "UNKNOWN"
+      "tumorMutationalLoadStatus": "UNKNOWN",
+      "svTumorMutationalBurden": 0
     },
     "somaticDrivers": [],
     "germlineDrivers": null,

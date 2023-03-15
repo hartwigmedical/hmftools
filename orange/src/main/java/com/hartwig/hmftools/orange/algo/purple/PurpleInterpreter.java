@@ -2,18 +2,17 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.drivercatalog.*;
 import com.hartwig.hmftools.common.drivercatalog.panel.*;
 import com.hartwig.hmftools.common.purple.*;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.*;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.PurpleQC;
 import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
@@ -27,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class PurpleInterpreter {
@@ -129,8 +129,8 @@ public class PurpleInterpreter {
         return ImmutablePurpleInterpretedData.builder()
                 .fit(createFit(purple))
                 .characteristics(createCharacteristics(purple))
-                .somaticDrivers(purple.somaticDrivers())
-                .germlineDrivers(purple.germlineDrivers())
+                .somaticDrivers(() -> purple.somaticDrivers().stream().map(PurpleInterpreter::asPurpleDriver).iterator())
+                .germlineDrivers(() -> Objects.requireNonNullElseGet(purple.germlineDrivers(), List::<DriverCatalog>of).stream().map(PurpleInterpreter::asPurpleDriver).iterator())
                 .allSomaticVariants(allSomaticVariants)
                 .reportableSomaticVariants(reportableSomaticVariants)
                 .additionalSuspectSomaticVariants(additionalSuspectSomaticVariants)
@@ -147,6 +147,17 @@ public class PurpleInterpreter {
                 .allGermlineDeletions(allGermlineDeletions)
                 .allGermlineFullLosses(allGermlineFullLosses)
                 .reportableGermlineFullLosses(reportableGermlineFullLosses)
+                .build();
+    }
+
+    public static PurpleDriver asPurpleDriver(DriverCatalog catalog) {
+        return ImmutablePurpleDriver.builder()
+                .gene(catalog.gene())
+                .transcript(catalog.transcript())
+                .driver(PurpleDriverType.valueOf(catalog.driver().name()))
+                .driverLikelihood(catalog.driverLikelihood())
+                .likelihoodMethod(PurpleLikelihoodMethod.valueOf(catalog.likelihoodMethod().name()))
+                .isCanonical(catalog.isCanonical())
                 .build();
     }
 
@@ -346,11 +357,11 @@ public class PurpleInterpreter {
         return ImmutablePurpleCharacteristics.builder()
                 .wholeGenomeDuplication(purple.purityContext().wholeGenomeDuplication())
                 .microsatelliteIndelsPerMb(purple.purityContext().microsatelliteIndelsPerMb())
-                .microsatelliteStatus(purple.purityContext().microsatelliteStatus())
+                .microsatelliteStatus(PurpleMicrosatelliteStatus.valueOf(purple.purityContext().microsatelliteStatus().name()))
                 .tumorMutationalBurdenPerMb(purple.purityContext().tumorMutationalBurdenPerMb())
-                .tumorMutationalBurdenStatus(purple.purityContext().tumorMutationalBurdenStatus())
+                .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalBurdenStatus().name()))
                 .tumorMutationalLoad(purple.purityContext().tumorMutationalLoad())
-                .tumorMutationalLoadStatus(purple.purityContext().tumorMutationalLoadStatus())
+                .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalLoadStatus().name()))
                 .svTumorMutationalBurden(purple.purityContext().svTumorMutationalBurden())
                 .build();
     }

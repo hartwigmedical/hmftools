@@ -28,25 +28,31 @@
       "maxPloidy": 3.15
     },
     "characteristics": {
+      "wholeGenomeDuplication": true,
       "microsatelliteIndelsPerMb": 0.1,
       "microsatelliteStatus": "MSS",
       "tumorMutationalBurdenPerMb": 13.71,
       "tumorMutationalBurdenStatus": "HIGH",
       "tumorMutationalLoad": 185,
-      "tumorMutationalLoadStatus": "HIGH"
+      "tumorMutationalLoadStatus": "HIGH",
+      "svTumorMutationalBurden": 75
     },
     "somaticDrivers": [
       {
         "gene": "SF3B1",
         "transcript": "ENST00000335508",
         "driver": "MUTATION",
-        "driverLikelihood": 0.2
+        "driverLikelihood": 0.2,
+        "likelihoodMethod": "HOTSPOT",
+        "isCanonical": false
       },
       {
         "gene": "SMAD4",
         "transcript": "ENST00000342988",
         "driver": "DEL",
-        "driverLikelihood": 1.0
+        "driverLikelihood": 1.0,
+        "likelihoodMethod": "HOTSPOT",
+        "isCanonical": false
       }
     ],
     "germlineDrivers": [
@@ -54,7 +60,9 @@
         "gene": "BRCA1",
         "transcript": "ENST00000471181",
         "driver": "GERMLINE_MUTATION",
-        "driverLikelihood": 0.8
+        "driverLikelihood": 0.8,
+        "likelihoodMethod": "HOTSPOT",
+        "isCanonical": false
       }
     ],
     "allSomaticVariants": [

@@ -2,11 +2,6 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
-import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
@@ -14,11 +9,13 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.*;
+import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
 import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
-import com.hartwig.hmftools.orange.algo.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
@@ -210,7 +207,7 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String germlineVariantDriverString() {
         List<PurpleVariant> reportableGermlineVariants = report.purple().reportableGermlineVariants();
-        List<DriverCatalog> germlineDrivers = report.purple().germlineDrivers();
+        List<PurpleDriver> germlineDrivers = report.purple().germlineDrivers();
         if (reportableGermlineVariants != null && germlineDrivers != null) {
             return variantDriverString(reportableGermlineVariants, germlineDrivers);
         } else {
@@ -219,14 +216,14 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private static String variantDriverString(@NotNull List<PurpleVariant> variants, @NotNull List<DriverCatalog> drivers) {
+    private static String variantDriverString(@NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers) {
         if (variants.isEmpty()) {
             return NONE;
         }
 
         Set<String> highDriverGenes = Sets.newTreeSet(Comparator.naturalOrder());
         for (PurpleVariant variant : variants) {
-            DriverCatalog driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
+            PurpleDriver driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
             if (driver != null && DriverInterpretation.interpret(driver.driverLikelihood()) == DriverInterpretation.HIGH) {
                 highDriverGenes.add(variant.gene());
             }
@@ -329,14 +326,37 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String msiString() {
         PurpleCharacteristics characteristics = report.purple().characteristics();
-        return SINGLE_DIGIT.format(characteristics.microsatelliteIndelsPerMb()) + " (" + characteristics.microsatelliteStatus().display()
-                + ")";
+        return SINGLE_DIGIT.format(characteristics.microsatelliteIndelsPerMb()) + " (" + display(characteristics.microsatelliteStatus()) + ")";
     }
 
     @NotNull
     private String tmlString() {
         PurpleCharacteristics characteristics = report.purple().characteristics();
-        return characteristics.tumorMutationalLoad() + " (" + characteristics.tumorMutationalLoadStatus().display() + ")";
+        return characteristics.tumorMutationalLoad() + " (" + display(characteristics.tumorMutationalLoadStatus()) + ")";
+    }
+
+    private static String display(PurpleMicrosatelliteStatus microsatelliteStatus) {
+        switch (microsatelliteStatus) {
+            case MSI:
+                return "Unstable";
+            case MSS:
+                return "Stable";
+            case UNKNOWN:
+                return "Unknown";
+        }
+        throw new IllegalStateException();
+    }
+
+    private static String display(@NotNull PurpleTumorMutationalStatus tumorMutationalStatus) {
+        switch (tumorMutationalStatus) {
+            case HIGH:
+                return "High";
+            case LOW:
+                return "Low";
+            case UNKNOWN:
+                return "Unknown";
+        }
+        throw new IllegalStateException();
     }
 
     @NotNull

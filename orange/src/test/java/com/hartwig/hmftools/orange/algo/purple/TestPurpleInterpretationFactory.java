@@ -6,6 +6,7 @@ import com.hartwig.hmftools.datamodel.purple.*;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import org.jetbrains.annotations.NotNull;
 
 public final class TestPurpleInterpretationFactory {
@@ -58,11 +59,11 @@ public final class TestPurpleInterpretationFactory {
         return ImmutablePurpleCharacteristics.builder()
                 .wholeGenomeDuplication(false)
                 .microsatelliteIndelsPerMb(0D)
-                .microsatelliteStatus(MicrosatelliteStatus.UNKNOWN)
+                .microsatelliteStatus(PurpleMicrosatelliteStatus.UNKNOWN)
                 .tumorMutationalBurdenPerMb(0D)
-                .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
+                .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.UNKNOWN)
                 .tumorMutationalLoad(0)
-                .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
+                .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.UNKNOWN)
                 .svTumorMutationalBurden(0)
                 .build();
     }

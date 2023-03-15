@@ -10,6 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.orange.algo.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.interpretation.Drivers;
@@ -24,14 +25,14 @@ public final class VariantEntryFactory {
     }
 
     @NotNull
-    public static List<VariantEntry> create(@NotNull List<PurpleVariant> variants, @NotNull List<DriverCatalog> drivers) {
+    public static List<VariantEntry> create(@NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers) {
         List<VariantEntry> entries = Lists.newArrayList();
         for (PurpleVariant variant : variants) {
-            DriverCatalog driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
+            PurpleDriver driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
             entries.add(toVariantEntry(variant, driver));
         }
 
-        for (DriverCatalog nonCanonicalDriver : Drivers.nonCanonicalMutationEntries(drivers)) {
+        for (PurpleDriver nonCanonicalDriver : Drivers.nonCanonicalMutationEntries(drivers)) {
             PurpleVariant nonCanonicalVariant = findReportedVariantForDriver(variants, nonCanonicalDriver);
             if (nonCanonicalVariant != null) {
                 entries.add(toVariantEntry(nonCanonicalVariant, nonCanonicalDriver));
@@ -42,7 +43,7 @@ public final class VariantEntryFactory {
     }
 
     @NotNull
-    private static VariantEntry toVariantEntry(@NotNull PurpleVariant variant, @Nullable DriverCatalog driver) {
+    private static VariantEntry toVariantEntry(@NotNull PurpleVariant variant, @Nullable PurpleDriver driver) {
         PurpleTranscriptImpact transcriptImpact;
 
         if (driver != null) {
@@ -73,7 +74,7 @@ public final class VariantEntryFactory {
     }
 
     @Nullable
-    private static PurpleVariant findReportedVariantForDriver(@NotNull List<PurpleVariant> variants, @NotNull DriverCatalog driver) {
+    private static PurpleVariant findReportedVariantForDriver(@NotNull List<PurpleVariant> variants, @NotNull PurpleDriver driver) {
         List<PurpleVariant> reportedVariantsForGene = findReportedVariantsForGene(variants, driver.gene());
         for (PurpleVariant variant : reportedVariantsForGene) {
             if (findTranscriptImpact(variant, driver.transcript()) != null) {
@@ -95,7 +96,7 @@ public final class VariantEntryFactory {
         return reportedVariantsForGene;
     }
 
-    @NotNull
+    @Nullable
     @VisibleForTesting
     static PurpleTranscriptImpact findTranscriptImpact(@NotNull PurpleVariant variant, @NotNull String transcriptToFind) {
         if (variant.canonicalImpact().transcript().equals(transcriptToFind)) {

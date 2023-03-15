@@ -14,9 +14,12 @@ import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 
+import com.hartwig.hmftools.orange.algo.util.PurpleDriverTestFactory;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -46,16 +49,16 @@ public class VariantEntryFactoryTest {
                 .canonicalImpact(TestPurpleVariantFactory.impactBuilder().hgvsProteinImpact("impact 3").build())
                 .build();
 
-        DriverCatalog canonicalDriver = DriverCatalogTestFactory.builder()
-                .driver(DriverType.MUTATION)
+        PurpleDriver canonicalDriver = PurpleDriverTestFactory.builder()
+                .driver(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 1")
                 .isCanonical(true)
                 .driverLikelihood(0.5)
                 .build();
 
-        DriverCatalog nonCanonicalDriver = DriverCatalogTestFactory.builder()
-                .driver(DriverType.MUTATION)
+        PurpleDriver nonCanonicalDriver = PurpleDriverTestFactory.builder()
+                .driver(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 2")
                 .isCanonical(false)
@@ -63,7 +66,7 @@ public class VariantEntryFactoryTest {
                 .build();
 
         List<PurpleVariant> variants = Lists.newArrayList(driverVariant, nonDriverVariant);
-        List<DriverCatalog> drivers = Lists.newArrayList(canonicalDriver, nonCanonicalDriver);
+        List<PurpleDriver> drivers = Lists.newArrayList(canonicalDriver, nonCanonicalDriver);
 
         List<VariantEntry> entries = VariantEntryFactory.create(variants, drivers);
 

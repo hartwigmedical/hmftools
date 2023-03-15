@@ -4,6 +4,8 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import org.immutables.value.Value;
@@ -23,10 +25,10 @@ public abstract class PurpleInterpretedData {
     public abstract PurpleCharacteristics characteristics();
 
     @NotNull
-    public abstract List<DriverCatalog> somaticDrivers();
+    public abstract List<PurpleDriver> somaticDrivers();
 
     @Nullable
-    public abstract List<DriverCatalog> germlineDrivers();
+    public abstract List<PurpleDriver> germlineDrivers();
 
     @NotNull
     public abstract List<PurpleVariant> allSomaticVariants();

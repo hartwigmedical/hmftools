@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
@@ -71,7 +72,7 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addSomaticVariants(@NotNull Document document) {
-        List<DriverCatalog> somaticDrivers = report.purple().somaticDrivers();
+        List<PurpleDriver> somaticDrivers = report.purple().somaticDrivers();
 
         List<VariantEntry> reportableVariants =
                 VariantEntryFactory.create(VariantDedup.apply(report.purple().reportableSomaticVariants()), somaticDrivers);
