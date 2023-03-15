@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.neo;
 
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.ITEM_DELIM;
+
+import java.util.Collection;
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
@@ -15,4 +19,11 @@ public class NeoCommon
 
     public static final List<String> IMMUNE_TRANSCRIPT_PREFIXES = Lists.newArrayList(
             "TR_J", "TR_V", "TR_D", "IG_J", "IG_D", "IG_J");
+
+    public static String transcriptsToStr(final Collection<String> transcripts)
+    {
+        final StringJoiner transStr = new StringJoiner(ITEM_DELIM);
+        transcripts.forEach(x -> transStr.add(x));
+        return transStr.toString();
+    }
 }

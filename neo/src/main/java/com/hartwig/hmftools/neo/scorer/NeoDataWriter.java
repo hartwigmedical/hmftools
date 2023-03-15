@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.transcriptsToStr;
 import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
 
 import java.io.BufferedWriter;
@@ -147,7 +148,7 @@ public class NeoDataWriter
             writer.write(",TmpSource,RnaFrags,RnaDepth,TpmUp,TpmDown,ExpectedTpm,RawEffectiveTpm,EffectiveTpm");
             writer.write(",TpmCancerUp,TpmCancerDown,TpmPanCancerUp,TpmPanCancerDown");
             writer.write(",NmdMin,NmdMax,CodingBasesLengthMin,CodingBasesLengthMax,FusedIntronLength,SkippedDonors,SkippedAcceptors");
-            writer.write(",VariantCopyNumber,CopyNumber,SubclonalLikelihood");
+            writer.write(",TranscriptsUp,TranscriptsDown,VariantCopyNumber,CopyNumber,SubclonalLikelihood");
 
 
             writer.newLine();
@@ -191,7 +192,9 @@ public class NeoDataWriter
                     neoData.NmdBases[FS_UP], neoData.NmdBases[FS_DOWN], neoData.CodingBasesLength[FS_UP], neoData.CodingBasesLength[FS_DOWN],
                     neoData.FusedIntronLength, neoData.SkippedAcceptorsDonors[FS_UP], neoData.SkippedAcceptorsDonors[FS_DOWN]));
 
-            mNeoWriter.write(format(",%.4f,%.4f,%.4f", neoData.VariantCopyNumber, neoData.CopyNumber, neoData.SubclonalLikelihood));
+            mNeoWriter.write(format(",%s,%s,%.4f,%.4f,%.4f",
+                    transcriptsToStr(neoData.Transcripts[FS_UP]), transcriptsToStr(neoData.Transcripts[FS_DOWN]),
+                    neoData.VariantCopyNumber, neoData.CopyNumber, neoData.SubclonalLikelihood));
 
             mNeoWriter.newLine();
         }

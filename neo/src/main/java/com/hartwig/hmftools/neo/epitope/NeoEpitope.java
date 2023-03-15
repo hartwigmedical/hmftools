@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.STOP_SYMBOL;
+import static com.hartwig.hmftools.neo.NeoCommon.transcriptsToStr;
 
 import java.util.Set;
 import java.util.StringJoiner;
@@ -244,21 +245,15 @@ public abstract class NeoEpitope
 
     public String aminoAcidString() { return UpstreamAcids + NovelAcid + DownstreamAcids; }
 
-    public NeoEpitopeFile toFile(
-            final int neId, final Set<String> upTransNames, final Set<String> downTransNames)
+    public NeoEpitopeFile toFile(final int neId, final Set<String> upTransNames, final Set<String> downTransNames)
     {
-        final StringJoiner upTransStr = new StringJoiner(";");
-        final StringJoiner downTransStr = new StringJoiner(";");
-        upTransNames.forEach(x -> upTransStr.add(x));
-        downTransNames.forEach(x -> downTransStr.add(x));
-
         return new NeoEpitopeFile(
                 neId, variantType(), variantInfo(), variantCopyNumber(), copyNumber(), subclonalLikelihood(),
                 TransData[FS_UP].GeneId, TransData[FS_DOWN].GeneId, geneName(FS_UP), geneName(FS_DOWN),
                 chromosome(FS_UP), chromosome(FS_DOWN), orientation(FS_UP), orientation(FS_DOWN),
                 UpstreamAcids, DownstreamAcids, NovelAcid, NmdBasesMin, NmdBasesMax, CodingBasesLengthMin, CodingBasesLengthMax,
                 unsplicedDistance(), skippedDonors(), skippedAcceptors(),
-                upTransStr.toString(), downTransStr.toString(), wildtypeAcids(),
+                transcriptsToStr(upTransNames), transcriptsToStr(downTransNames), wildtypeAcids(),
                 ExtPositions[FS_UP][SE_START], ExtPositions[FS_UP][SE_END], ExtCodingBases[FS_UP], ExtCigars[FS_UP].toString(),
                 ExtPositions[FS_DOWN][SE_START], ExtPositions[FS_DOWN][SE_END], ExtCodingBases[FS_DOWN],
                 ExtCigars[FS_DOWN] != null ? ExtCigars[FS_DOWN].toString() : "");

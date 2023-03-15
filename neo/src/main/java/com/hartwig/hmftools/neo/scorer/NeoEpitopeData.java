@@ -56,30 +56,6 @@ public class NeoEpitopeData
     public double expectedTpm() { return mExpectedTpm; }
     public double copyNumberFactor() { return mCopyNumberFactor; }
 
-    public void setCalculatedTpmValues(
-            final double tpmNormalisationFactor, final double samplePloidy, final double probLowValue, final double probHighValue)
-    {
-        mRawEffectiveTpm = tpmNormalisationFactor != NO_TPM_VALUE ? RnaData.fragmentSupport() * tpmNormalisationFactor : NO_TPM_VALUE;
-
-        double scLikelihood = VariantType.isPointMutation() ? SubclonalLikelihood : 1; // note use for fusions
-
-        double variantCn = max(VariantCopyNumber, 0);
-        double segmentCn = RnaData.hasExpression() ? CopyNumber : samplePloidy;
-        double adjustedCopyNumber = segmentCn > 0 ? variantCn / segmentCn : 1;
-        mCopyNumberFactor = 1 - scLikelihood * (1 - min(1.0, adjustedCopyNumber));
-
-        mExpectedTpm = RnaData.getTPM(FS_UP) * mCopyNumberFactor;
-
-        if(tpmNormalisationFactor == NO_TPM_VALUE || !RnaData.hasExpression())
-        {
-            mEffectiveTpm = mExpectedTpm;
-        }
-        else
-        {
-            mEffectiveTpm = calcEffectiveTpm(tpmNormalisationFactor, mRawEffectiveTpm, mExpectedTpm, probLowValue, probHighValue);
-        }
-    }
-
     public NeoEpitopeData(
             final int id, final NeoEpitopeType variantType, final String variantInfo, final String geneId, final String geneName,
             final String upAminoAcids, final String novelAminoAcids, final String downAminoAcids,
@@ -202,6 +178,30 @@ public class NeoEpitopeData
             return false;
 
         return Transcripts[stream].stream().allMatch(x -> other.Transcripts[stream].contains(x));
+    }
+
+    public void setCalculatedTpmValues(
+            final double tpmNormalisationFactor, final double samplePloidy, final double probLowValue, final double probHighValue)
+    {
+        mRawEffectiveTpm = tpmNormalisationFactor != NO_TPM_VALUE ? RnaData.fragmentSupport() * tpmNormalisationFactor : NO_TPM_VALUE;
+
+        double scLikelihood = VariantType.isPointMutation() ? SubclonalLikelihood : 1; // note use for fusions
+
+        double variantCn = max(VariantCopyNumber, 0);
+        double segmentCn = RnaData.hasExpression() ? CopyNumber : samplePloidy;
+        double adjustedCopyNumber = segmentCn > 0 ? variantCn / segmentCn : 1;
+        mCopyNumberFactor = 1 - scLikelihood * (1 - min(1.0, adjustedCopyNumber));
+
+        mExpectedTpm = RnaData.getTPM(FS_UP) * mCopyNumberFactor;
+
+        if(tpmNormalisationFactor == NO_TPM_VALUE || !RnaData.hasExpression())
+        {
+            mEffectiveTpm = mExpectedTpm;
+        }
+        else
+        {
+            mEffectiveTpm = calcEffectiveTpm(tpmNormalisationFactor, mRawEffectiveTpm, mExpectedTpm, probLowValue, probHighValue);
+        }
     }
 
     public String toString()
