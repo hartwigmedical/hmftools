@@ -3,8 +3,11 @@ package com.hartwig.hmftools.ctdna.purity;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,12 +50,9 @@ public class CopyNumberProfile
 
             Map<Chromosome,List<CobaltRatio>> cobaltRatios = CobaltRatioFile.readWithGender(cobaltFilename, null, true);
 
-            // Multimap<Chromosome,GCProfile> gcProfile = GCProfileFactory.loadGCContent(mConfig.GcProfilePath);
-
             List<CopyNumberGcData> copyNumberGcRatios = buildCopyNumberGcRatios(cobaltRatios, copyNumbers);
 
-
-
+            writeCopyNumberSegmentData(sampleId, copyNumberGcRatios);
         }
         catch(Exception e)
         {
@@ -94,17 +94,44 @@ public class CopyNumberProfile
 
             CopyNumberGcData cnSegment = new CopyNumberGcData(
                     copyNumber.chromosome(), copyNumber.start(), copyNumber.end(),
-                    Doubles.round(copyNumber.averageTumorCopyNumber(), 1));
+                    Doubles.round(copyNumber.averageTumorCopyNumber(), 2));
 
             segmentRatios.forEach(x -> cnSegment.addRatio(x.tumorGCRatio()));
 
             copyNumberSegments.add(cnSegment);
 
-            CT_LOGGER.debug(format("segment(%s:%d - %d) copyNumber(%.4f) count(%d) mean(%.4f) median(%.4f)",
+            CT_LOGGER.debug(format("segment(%s:%d - %d) copyNumber(%.2f) count(%d) mean(%.4f) median(%.4f)",
                     cnSegment.Chromosome, cnSegment.SegmentStart, cnSegment.SegmentEnd, cnSegment.CopyNumber,
                     cnSegment.count(), cnSegment.mean(), cnSegment.median()));
         }
 
         return copyNumberSegments;
+    }
+
+    private void writeCopyNumberSegmentData(final String sampleId, final List<CopyNumberGcData> copyNumberSegments)
+    {
+        try
+        {
+            String fileName = mConfig.OutputDir + sampleId + ".cn_segment_data.csv";
+
+            BufferedWriter writer = createBufferedWriter(fileName, false);
+
+            writer.write("Chromosome,SegmentStart,SegmentEnd,CopyNumber,GcRatioCount,GcRatioMedian,GcRatioMean");
+            writer.newLine();
+
+            for(CopyNumberGcData cnSegment : copyNumberSegments)
+            {
+                writer.write(format("%s,%d,%d,%.2f,%d,%.4f,%.4f",
+                        cnSegment.Chromosome, cnSegment.SegmentStart, cnSegment.SegmentEnd, cnSegment.CopyNumber,
+                        cnSegment.count(), cnSegment.median(), cnSegment.mean()));
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            CT_LOGGER.error("failed to write copy number segment file: {}", e.toString());
+        }
     }
 }

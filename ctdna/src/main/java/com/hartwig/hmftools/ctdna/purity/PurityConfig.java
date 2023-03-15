@@ -21,7 +21,6 @@ public class PurityConfig
     public final List<String> SomaticVcfs;
     public final String PurpleDir;
     public final String CobaltDir;
-    public final String GcProfilePath;
     public final String OutputDir;
     public final String OutputId;
 
@@ -60,7 +59,6 @@ public class PurityConfig
 
         PurpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR));
         CobaltDir = checkAddDirSeparator(cmd.getOptionValue(COBALT_DIR));
-        GcProfilePath = cmd.getOptionValue(GC_PROFILE);
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
     }
@@ -72,12 +70,7 @@ public class PurityConfig
         options.addOption(VCF_DIR, true, "Directory for somatic VCF files");
         options.addOption(PURPLE_DIR, true, "Sample Purple directory");
         options.addOption(COBALT_DIR, true, "Sample Cobalt directory");
-        addGcProfilePath(options);
         addOutputOptions(options);
         addLoggingOptions(options);
-
     }
-
-
-
 }
