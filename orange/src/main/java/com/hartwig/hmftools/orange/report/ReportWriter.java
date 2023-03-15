@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import com.google.gson.GsonBuilder;
+import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.chapters.CohortComparisonChapter;
@@ -66,13 +67,8 @@ public class ReportWriter {
             String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.json";
             LOGGER.info("Writing JSON report to {} ", outputFilePath);
 
-            OrangeRecord dataModelVersion = OrangeReportToRecordConversion.convert(report);
-
-            String json = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(dataModelVersion);
-            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath));
-
-            writer.write(json);
-            writer.close();
+            OrangeRecord orangeRecord = OrangeReportToRecordConversion.convert(report);
+            OrangeJson.getInstance().write(orangeRecord, outputFilePath);
         } else {
             LOGGER.info("Generating in-memory JSON report");
         }

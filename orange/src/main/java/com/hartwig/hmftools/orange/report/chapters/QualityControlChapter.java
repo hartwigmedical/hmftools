@@ -5,7 +5,7 @@ import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
-import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;

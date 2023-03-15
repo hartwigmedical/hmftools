@@ -10,12 +10,21 @@
     "fit": {
       "qc": {
         "status": [
-        ]
+        ],
+        "unsupportedCopyNumberSegments": 0,
+        "deletedGenes": 0,
+        "contamination": 0,
+        "amberMeanDepth": 0
       },
+      "fittedPurityMethod": "NORMAL",
       "hasSufficientQuality": false,
       "containsTumorCells": false,
-      "purity": 0.1,
-      "ploidy": 2
+      "purity": 0,
+      "minPurity": 0,
+      "maxPurity": 0,
+      "ploidy": 0,
+      "minPloidy": 0,
+      "maxPloidy": 0
     },
     "characteristics": {
       "microsatelliteIndelsPerMb": 0,

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;

@@ -9,7 +9,6 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.*;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.purple.PurityPloidyFit;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 
 import java.util.List;
@@ -54,7 +53,7 @@ public class OrangeReportToRecordConversion {
                 .map(OrangeReportToRecordConversion::convert)
                 .iterator();
         return ImmutablePurpleRecord.builder()
-                .fit(convert(purpleInterpretedData.fit()))
+                .fit(purpleInterpretedData.fit())
                 .characteristics(convert(purpleInterpretedData.characteristics()))
                 .somaticDrivers(() -> somaticDriverIterator)
                 .germlineDrivers(() -> germlineDriverIterator)
@@ -67,19 +66,6 @@ public class OrangeReportToRecordConversion {
                 .suspectGeneCopyNumbersWithLOH(() -> purpleInterpretedData.suspectGeneCopyNumbersWithLOH().stream().map(OrangeReportToRecordConversion::convert).iterator())
                 .allSomaticGainsLosses(purpleInterpretedData.reportableSomaticGainsLosses())
                 .reportableSomaticGainsLosses(purpleInterpretedData.reportableSomaticGainsLosses())
-                .build();
-    }
-
-    private static PurpleFit convert(PurityPloidyFit fit) {
-        var qcStatusIterator = fit.qc().status().stream()
-                .map(status -> PurpleQCStatus.valueOf(status.name()))
-                .iterator();
-        return ImmutablePurpleFit.builder()
-                .qc(ImmutablePurpleQC.builder().addAllStatus(() -> qcStatusIterator).build())
-                .hasSufficientQuality(fit.hasSufficientQuality())
-                .containsTumorCells(fit.containsTumorCells())
-                .purity(fit.purity())
-                .ploidy(fit.ploidy())
                 .build();
     }
 

@@ -52,13 +52,15 @@ public class OrangeJson {
     }
 
     @NotNull
-    public OrangeRecord read(@NotNull String orangeJsonFilePath) throws FileNotFoundException {
-        var reader = new BufferedReader(new FileReader(orangeJsonFilePath));
-        return gson.fromJson(reader, OrangeRecord.class);
+    public OrangeRecord read(@NotNull String orangeJsonFilePath) throws IOException {
+        try (var reader = new BufferedReader(new FileReader(orangeJsonFilePath))) {
+            return gson.fromJson(reader, OrangeRecord.class);
+        }
     }
 
     public void write(@NotNull OrangeRecord orangeRecord, @NotNull String outputFilePath) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath));
-        gson.toJson(orangeRecord, OrangeRecord.class, writer);
+        try (var writer = new BufferedWriter(new FileWriter(outputFilePath))) {
+            gson.toJson(orangeRecord, OrangeRecord.class, writer);
+        }
     }
 }

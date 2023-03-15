@@ -11,17 +11,26 @@
       "qc": {
         "status": [
           "PASS"
-        ]
+        ],
+        "unsupportedCopyNumberSegments": 0,
+        "deletedGenes": 4,
+        "contamination": 0.0,
+        "amberMeanDepth": 111
       },
+      "fittedPurityMethod": "NORMAL",
       "hasSufficientQuality": true,
       "containsTumorCells": false,
       "purity": 0.12,
-      "ploidy": 3.1
+      "minPurity": 0.97,
+      "maxPurity": 1.0,
+      "ploidy": 3.1,
+      "minPloidy": 3.1,
+      "maxPloidy": 3.15
     },
     "characteristics": {
       "microsatelliteIndelsPerMb": 0.1,
       "microsatelliteStatus": "MSS",
-      "tumorMutationalBurdenPerMb": 13,
+      "tumorMutationalBurdenPerMb": 13.71,
       "tumorMutationalBurdenStatus": "HIGH",
       "tumorMutationalLoad": 185,
       "tumorMutationalLoadStatus": "HIGH"

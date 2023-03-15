@@ -6,14 +6,16 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.drivercatalog.*;
 import com.hartwig.hmftools.common.drivercatalog.panel.*;
 import com.hartwig.hmftools.common.purple.*;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.*;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
+import com.hartwig.hmftools.datamodel.purple.PurpleQC;
 import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
 import com.hartwig.hmftools.orange.algo.linx.BreakendUtil;
 import org.apache.commons.lang3.tuple.Pair;
@@ -250,7 +252,7 @@ public class PurpleInterpreter {
 
     @NotNull
     private static List<PurpleGainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, double ploidy, boolean isTargetRegions,
-            @NotNull List<GeneCopyNumber> allGeneCopyNumbers) {
+                                                              @NotNull List<GeneCopyNumber> allGeneCopyNumbers) {
         List<DriverGene> allGenes = Lists.newArrayList();
         for (GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
             allGenes.add(ImmutableDriverGene.builder()
@@ -313,11 +315,11 @@ public class PurpleInterpreter {
     }
 
     @NotNull
-    private static PurityPloidyFit createFit(@NotNull PurpleData purple) {
-        return ImmutablePurityPloidyFit.builder()
-                .qc(purple.purityContext().qc())
+    private static PurpleFit createFit(@NotNull PurpleData purple) {
+        return ImmutablePurpleFit.builder()
+                .qc(createQC(purple.purityContext().qc()))
                 .hasSufficientQuality(purple.purityContext().qc().pass())
-                .fittedPurityMethod(purple.purityContext().method())
+                .fittedPurityMethod(PurpleFittedPurityMethod.valueOf(purple.purityContext().method().name()))
                 .containsTumorCells(purple.purityContext().method() != FittedPurityMethod.NO_TUMOR)
                 .purity(purple.purityContext().bestFit().purity())
                 .minPurity(purple.purityContext().score().minPurity())
@@ -325,6 +327,17 @@ public class PurpleInterpreter {
                 .ploidy(purple.purityContext().bestFit().ploidy())
                 .minPloidy(purple.purityContext().score().minPloidy())
                 .maxPloidy(purple.purityContext().score().maxPloidy())
+                .build();
+    }
+
+    private static PurpleQC createQC(@NotNull com.hartwig.hmftools.common.purple.PurpleQC purpleQC) {
+        return ImmutablePurpleQC.builder()
+                .status(() -> purpleQC.status().stream().map(i -> com.hartwig.hmftools.datamodel.purple.PurpleQCStatus.valueOf(i.name())).iterator())
+                .germlineAberrations(() -> purpleQC.germlineAberrations().stream().map(i -> PurpleGermlineAberration.valueOf(i.name())).iterator())
+                .amberMeanDepth(purpleQC.amberMeanDepth())
+                .contamination(purpleQC.contamination())
+                .unsupportedCopyNumberSegments(purpleQC.unsupportedCopyNumberSegments())
+                .deletedGenes(purpleQC.deletedGenes())
                 .build();
     }
 

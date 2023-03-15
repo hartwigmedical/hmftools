@@ -15,9 +15,20 @@ public abstract class PurpleFit {
 
     public abstract boolean hasSufficientQuality();
 
+    @NotNull
+    public abstract PurpleFittedPurityMethod fittedPurityMethod();
+
     public abstract boolean containsTumorCells();
 
     public abstract double purity();
 
+    public abstract double minPurity();
+
+    public abstract double maxPurity();
+
     public abstract double ploidy();
+
+    public abstract double minPloidy();
+
+    public abstract double maxPloidy();
 }

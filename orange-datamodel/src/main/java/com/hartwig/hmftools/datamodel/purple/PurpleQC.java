@@ -13,4 +13,15 @@ import java.util.Set;
 public interface PurpleQC {
     @NotNull
     Set<PurpleQCStatus> status();
+
+    @NotNull
+    Set<PurpleGermlineAberration> germlineAberrations();
+
+    int amberMeanDepth();
+
+    double contamination();
+
+    int unsupportedCopyNumberSegments();
+
+    int deletedGenes();
 }

@@ -4,6 +4,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +17,7 @@ import java.util.List;
 public abstract class PurpleInterpretedData {
 
     @NotNull
-    public abstract PurityPloidyFit fit();
+    public abstract PurpleFit fit();
 
     @NotNull
     public abstract PurpleCharacteristics characteristics();

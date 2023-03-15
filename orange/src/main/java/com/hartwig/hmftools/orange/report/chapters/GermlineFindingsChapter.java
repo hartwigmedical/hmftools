@@ -8,6 +8,7 @@ import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -159,12 +160,12 @@ public class GermlineFindingsChapter implements ReportChapter {
     }
 
     private void addGermlineCNAberrations(@NotNull Document document) {
-        Set<GermlineAberration> germlineAberrations = report.purple().fit().qc().germlineAberrations();
+        Set<PurpleGermlineAberration> germlineAberrations = report.purple().fit().qc().germlineAberrations();
         if (!germlineAberrations.isEmpty()) {
             int count = 0;
             StringJoiner germlineAberrationJoiner = new StringJoiner(", ");
-            for (GermlineAberration germlineAberration : germlineAberrations) {
-                if (germlineAberration != GermlineAberration.NONE) {
+            for (PurpleGermlineAberration germlineAberration : germlineAberrations) {
+                if (germlineAberration != PurpleGermlineAberration.NONE) {
                     count++;
                 }
                 germlineAberrationJoiner.add(germlineAberration.toString());

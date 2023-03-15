@@ -7,17 +7,17 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogTestFactory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
-import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.*;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.*;
+import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
@@ -148,11 +148,11 @@ public class GermlineConversionTest {
     }
 
     @NotNull
-    private static PurityPloidyFit createWithGermlineAberration() {
-        PurityPloidyFit base = TestPurpleInterpretationFactory.createMinimalTestFitData();
-        return ImmutablePurityPloidyFit.builder()
+    private static PurpleFit createWithGermlineAberration() {
+        PurpleFit base = TestPurpleInterpretationFactory.createMinimalTestFitData();
+        return ImmutablePurpleFit.builder()
                 .from(base)
-                .qc(ImmutablePurpleQC.builder().from(base.qc()).addGermlineAberrations(GermlineAberration.MOSAIC_X).build())
+                .qc(ImmutablePurpleQC.builder().from(base.qc()).addGermlineAberrations(PurpleGermlineAberration.MOSAIC_X).build())
                 .build();
     }
 

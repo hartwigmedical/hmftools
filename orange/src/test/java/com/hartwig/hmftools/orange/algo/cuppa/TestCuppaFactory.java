@@ -26,7 +26,7 @@ public final class TestCuppaFactory {
                 .simpleDups32To200B(0)
                 .maxComplexSize(0)
                 .telomericSGLs(0)
-                .LINECount(0)
+                .lineCount(0)
                 .build();
     }
 }

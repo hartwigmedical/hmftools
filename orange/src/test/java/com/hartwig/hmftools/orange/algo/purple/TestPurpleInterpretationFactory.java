@@ -2,8 +2,7 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
-import com.hartwig.hmftools.common.purple.PurpleQC;
+import com.hartwig.hmftools.datamodel.purple.*;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
@@ -27,10 +26,10 @@ public final class TestPurpleInterpretationFactory {
     }
 
     @NotNull
-    public static PurityPloidyFit createMinimalTestFitData() {
-        return ImmutablePurityPloidyFit.builder()
+    public static PurpleFit createMinimalTestFitData() {
+        return ImmutablePurpleFit.builder()
                 .qc(qcPass())
-                .fittedPurityMethod(FittedPurityMethod.NORMAL)
+                .fittedPurityMethod(PurpleFittedPurityMethod.NORMAL)
                 .purity(0D)
                 .minPurity(0D)
                 .maxPurity(0D)
@@ -45,15 +44,12 @@ public final class TestPurpleInterpretationFactory {
     @NotNull
     private static PurpleQC qcPass() {
         return ImmutablePurpleQC.builder()
-                .method(FittedPurityMethod.NORMAL)
+                .addStatus(PurpleQCStatus.PASS)
+                .addGermlineAberrations(PurpleGermlineAberration.NONE)
                 .amberMeanDepth(0)
-                .copyNumberSegments(1)
                 .unsupportedCopyNumberSegments(0)
                 .deletedGenes(0)
-                .purity(0.5)
                 .contamination(0D)
-                .cobaltGender(Gender.FEMALE)
-                .amberGender(Gender.FEMALE)
                 .build();
     }
 
