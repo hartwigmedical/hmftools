@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
 
+import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -72,7 +73,7 @@ final class SomaticVariantSelector {
     }
 
     private static boolean isSynonymousWithReportableWorstImpact(@NotNull PurpleVariant variant, @NotNull List<DriverGene> driverGenes) {
-        if (variant.canonicalImpact().codingEffect() != CodingEffect.SYNONYMOUS) {
+        if (variant.canonicalImpact().codingEffect() != PurpleCodingEffect.SYNONYMOUS) {
             return false;
         }
 

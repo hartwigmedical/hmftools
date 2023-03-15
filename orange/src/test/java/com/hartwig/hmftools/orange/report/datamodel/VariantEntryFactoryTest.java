@@ -14,8 +14,10 @@ import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 
@@ -107,29 +109,29 @@ public class VariantEntryFactoryTest {
                 VariantEntryFactory.determineImpact(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact("c.123A>C")
                         .hgvsProteinImpact("p.Gly12Cys")
-                        .addEffects(VariantEffect.MISSENSE)
-                        .codingEffect(CodingEffect.MISSENSE)
+                        .addEffects(PurpleVariantEffect.MISSENSE)
+                        .codingEffect(PurpleCodingEffect.MISSENSE)
                         .build()));
         assertEquals("c.123A>C splice",
                 VariantEntryFactory.determineImpact(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact("c.123A>C")
                         .hgvsProteinImpact("p.?")
-                        .addEffects(VariantEffect.MISSENSE)
-                        .codingEffect(CodingEffect.SPLICE)
+                        .addEffects(PurpleVariantEffect.MISSENSE)
+                        .codingEffect(PurpleCodingEffect.SPLICE)
                         .build()));
         assertEquals("c.123A>C",
                 VariantEntryFactory.determineImpact(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact("c.123A>C")
                         .hgvsProteinImpact(Strings.EMPTY)
-                        .addEffects(VariantEffect.MISSENSE)
-                        .codingEffect(CodingEffect.MISSENSE)
+                        .addEffects(PurpleVariantEffect.MISSENSE)
+                        .codingEffect(PurpleCodingEffect.MISSENSE)
                         .build()));
         assertEquals("missense_variant",
                 VariantEntryFactory.determineImpact(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact(Strings.EMPTY)
                         .hgvsProteinImpact(Strings.EMPTY)
-                        .addEffects(VariantEffect.MISSENSE)
-                        .codingEffect(CodingEffect.MISSENSE)
+                        .addEffects(PurpleVariantEffect.MISSENSE)
+                        .codingEffect(PurpleCodingEffect.MISSENSE)
                         .build()));
     }
 }

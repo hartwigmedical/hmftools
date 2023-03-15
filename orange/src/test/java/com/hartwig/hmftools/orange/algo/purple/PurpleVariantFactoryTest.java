@@ -1,31 +1,23 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
-import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantTier;
-import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.*;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
-import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
-
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
+
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class PurpleVariantFactoryTest {
 
@@ -102,8 +94,8 @@ public class PurpleVariantFactoryTest {
         assertNull(variant.canonicalImpact().affectedExon());
         assertFalse(variant.canonicalImpact().spliceRegion());
         assertEquals(1, variant.canonicalImpact().effects().size());
-        assertTrue(variant.canonicalImpact().effects().contains(VariantEffect.MISSENSE));
-        assertEquals(CodingEffect.MISSENSE, variant.canonicalImpact().codingEffect());
+        assertTrue(variant.canonicalImpact().effects().contains(PurpleVariantEffect.MISSENSE));
+        assertEquals(PurpleCodingEffect.MISSENSE, variant.canonicalImpact().codingEffect());
         assertTrue(variant.otherImpacts().isEmpty());
         assertEquals(Hotspot.NEAR_HOTSPOT, variant.hotspot());
         assertTrue(variant.reported());
@@ -153,8 +145,8 @@ public class PurpleVariantFactoryTest {
         assertNull(impact.affectedExon());
         assertFalse(impact.spliceRegion());
         assertEquals(1, impact.effects().size());
-        assertTrue(impact.effects().contains(VariantEffect.MISSENSE));
-        assertEquals(CodingEffect.MISSENSE, impact.codingEffect());
+        assertTrue(impact.effects().contains(PurpleVariantEffect.MISSENSE));
+        assertEquals(PurpleCodingEffect.MISSENSE, impact.codingEffect());
     }
 
     @NotNull

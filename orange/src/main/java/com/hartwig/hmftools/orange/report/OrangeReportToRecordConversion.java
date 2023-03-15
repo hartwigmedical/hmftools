@@ -64,9 +64,6 @@ public class OrangeReportToRecordConversion {
     }
 
     private static PurpleVariant convert(com.hartwig.hmftools.orange.algo.purple.PurpleVariant variant) {
-        var otherImpactsIterator = variant.otherImpacts().stream()
-                .map(OrangeReportToRecordConversion::convert)
-                .iterator();
         return ImmutablePurpleVariant.builder()
                 .type(PurpleVariantType.valueOf(variant.type().name()))
                 .gene(variant.gene())
@@ -74,11 +71,11 @@ public class OrangeReportToRecordConversion {
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
-                .canonicalImpact(convert(variant.canonicalImpact()))
-                .otherImpacts(() -> otherImpactsIterator)
+                .canonicalImpact(variant.canonicalImpact())
+                .otherImpacts(variant.otherImpacts())
                 .hotspot(Hotspot.valueOf(variant.hotspot().name()))
                 .reported(variant.reported())
-                .tumorDepth(convert(variant.tumorDepth()))
+                .tumorDepth(variant.tumorDepth())
                 .adjustedCopyNumber(variant.adjustedCopyNumber())
                 .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
                 .variantCopyNumber(variant.variantCopyNumber())
@@ -86,27 +83,6 @@ public class OrangeReportToRecordConversion {
                 .genotypeStatus(PurpleGenotypeStatus.valueOf(variant.genotypeStatus().name()))
                 .subclonalLikelihood(variant.subclonalLikelihood())
                 .localPhaseSets(variant.localPhaseSets())
-                .build();
-    }
-
-    private static PurpleTranscriptImpact convert(com.hartwig.hmftools.orange.algo.purple.PurpleTranscriptImpact transcriptImpact) {
-        var effectIterator = transcriptImpact.effects().stream().map(effect -> PurpleVariantEffect.valueOf(effect.name())).iterator();
-        return ImmutablePurpleTranscriptImpact.builder()
-                .transcript(transcriptImpact.transcript())
-                .hgvsCodingImpact(transcriptImpact.hgvsCodingImpact())
-                .hgvsProteinImpact(transcriptImpact.hgvsProteinImpact())
-                .affectedCodon(transcriptImpact.affectedCodon())
-                .affectedExon(transcriptImpact.affectedExon())
-                .spliceRegion(transcriptImpact.spliceRegion())
-                .effects(() -> effectIterator)
-                .codingEffect(PurpleCodingEffect.valueOf(transcriptImpact.codingEffect().name()))
-                .build();
-    }
-
-    private static PurpleAllelicDepth convert(AllelicDepth allelicDepth) {
-        return ImmutablePurpleAllelicDepth.builder()
-                .alleleReadCount(allelicDepth.alleleReadCount())
-                .totalReadCount(allelicDepth.totalReadCount())
                 .build();
     }
 

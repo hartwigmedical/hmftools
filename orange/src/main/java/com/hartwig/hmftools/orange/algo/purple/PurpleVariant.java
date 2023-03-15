@@ -1,18 +1,18 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
-
+import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
@@ -59,13 +59,13 @@ public abstract class PurpleVariant {
     public abstract boolean recovered();
 
     @NotNull
-    public abstract AllelicDepth tumorDepth();
+    public abstract PurpleAllelicDepth tumorDepth();
 
     @Nullable
-    public abstract AllelicDepth rnaDepth();
+    public abstract PurpleAllelicDepth rnaDepth();
 
     @Nullable
-    public abstract AllelicDepth referenceDepth();
+    public abstract PurpleAllelicDepth referenceDepth();
 
     public abstract double adjustedCopyNumber();
 

@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.Hotspot;
 
+import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,7 +46,7 @@ public abstract class VariantEntry {
     public abstract List<Integer> localPhaseSets();
 
     @Nullable
-    public abstract AllelicDepth rnaDepth();
+    public abstract PurpleAllelicDepth rnaDepth();
 
     @NotNull
     public abstract GenotypeStatus genotypeStatus();

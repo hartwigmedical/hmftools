@@ -30,6 +30,9 @@ public abstract class PurpleVariant implements Variant {
     public abstract String alt();
 
     @NotNull
+    public abstract PurpleCodingEffect worstCodingEffect();
+
+    @NotNull
     public abstract PurpleTranscriptImpact canonicalImpact();
 
     @NotNull
@@ -43,7 +46,12 @@ public abstract class PurpleVariant implements Variant {
     @NotNull
     public abstract PurpleAllelicDepth tumorDepth();
 
+    @Nullable
+    public abstract PurpleAllelicDepth rnaDepth();
+
     public abstract double adjustedCopyNumber();
+
+    public abstract double adjustedVAF();
 
     public abstract double minorAlleleCopyNumber();
 
@@ -53,6 +61,8 @@ public abstract class PurpleVariant implements Variant {
 
     @NotNull
     public abstract PurpleGenotypeStatus genotypeStatus();
+
+    public abstract int repeatCount();
 
     public abstract double subclonalLikelihood();
 

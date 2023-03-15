@@ -6,7 +6,8 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
-import com.hartwig.hmftools.orange.algo.purple.PurpleTranscriptImpact;
+import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 
 import org.apache.commons.compress.utils.Lists;
@@ -18,8 +19,8 @@ public final class VariantDedup {
 
     private static final Logger LOGGER = LogManager.getLogger(VariantDedup.class);
 
-    private static final Set<VariantEffect> PHASED_EFFECTS =
-            Sets.newHashSet(VariantEffect.PHASED_INFRAME_DELETION, VariantEffect.PHASED_INFRAME_INSERTION);
+    private static final Set<PurpleVariantEffect> PHASED_EFFECTS =
+            Sets.newHashSet(PurpleVariantEffect.PHASED_INFRAME_DELETION, PurpleVariantEffect.PHASED_INFRAME_INSERTION);
 
     private VariantDedup() {
     }
@@ -38,7 +39,7 @@ public final class VariantDedup {
     }
 
     private static boolean hasCanonicalPhasedEffect(@NotNull PurpleVariant variant) {
-        for (VariantEffect effect : variant.canonicalImpact().effects()) {
+        for (PurpleVariantEffect effect : variant.canonicalImpact().effects()) {
             if (PHASED_EFFECTS.contains(effect)) {
                 return true;
             }

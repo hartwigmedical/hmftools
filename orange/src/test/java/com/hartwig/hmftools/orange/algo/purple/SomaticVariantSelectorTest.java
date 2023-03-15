@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
 
+import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import org.junit.Test;
 
 public class SomaticVariantSelectorTest {
@@ -82,25 +83,25 @@ public class SomaticVariantSelectorTest {
 
         PurpleVariant nonsense = TestPurpleVariantFactory.builder()
                 .gene(gene)
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(PurpleCodingEffect.SYNONYMOUS).build())
                 .worstCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .build();
 
         PurpleVariant splice = TestPurpleVariantFactory.builder()
                 .gene(gene)
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(PurpleCodingEffect.SYNONYMOUS).build())
                 .worstCodingEffect(CodingEffect.SPLICE)
                 .build();
 
         PurpleVariant missense = TestPurpleVariantFactory.builder()
                 .gene(gene)
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(PurpleCodingEffect.SYNONYMOUS).build())
                 .worstCodingEffect(CodingEffect.MISSENSE)
                 .build();
 
         PurpleVariant wrongGene = TestPurpleVariantFactory.builder()
                 .gene("wrong gene")
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(PurpleCodingEffect.SYNONYMOUS).build())
                 .worstCodingEffect(CodingEffect.MISSENSE)
                 .build();
 

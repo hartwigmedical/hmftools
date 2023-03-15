@@ -1,23 +1,21 @@
 package com.hartwig.hmftools.orange.report.datamodel;
 
-import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
+import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.codon.AminoAcids;
+import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
+import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
+import com.hartwig.hmftools.orange.report.interpretation.Drivers;
+import org.apache.commons.compress.utils.Lists;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.codon.AminoAcids;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.variant.impact.VariantEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
-import com.hartwig.hmftools.orange.algo.purple.PurpleTranscriptImpact;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
-import com.hartwig.hmftools.orange.report.interpretation.Drivers;
-
-import org.apache.commons.compress.utils.Lists;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class VariantEntryFactory {
 
@@ -122,17 +120,17 @@ public final class VariantEntryFactory {
 
         String hgvsCodingImpact = impact.hgvsCodingImpact();
         if (!hgvsCodingImpact.isEmpty()) {
-            return impact.codingEffect() == SPLICE ? hgvsCodingImpact + " splice" : hgvsCodingImpact;
+            return impact.codingEffect() == PurpleCodingEffect.SPLICE ? hgvsCodingImpact + " splice" : hgvsCodingImpact;
         }
 
-        Set<VariantEffect> effects = impact.effects();
-        if (effects.contains(VariantEffect.UPSTREAM_GENE)) {
+        Set<PurpleVariantEffect> effects = impact.effects();
+        if (effects.contains(PurpleVariantEffect.UPSTREAM_GENE)) {
             return "upstream";
         }
 
         StringJoiner joiner = new StringJoiner(", ");
-        for (VariantEffect effect : effects) {
-            joiner.add(effect.effect());
+        for (PurpleVariantEffect effect : effects) {
+            joiner.add(VariantEffect.valueOf(effect.name()).effect());
         }
         return joiner.toString();
     }
