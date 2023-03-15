@@ -38,6 +38,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -81,7 +82,9 @@ public class DepthTask implements Callable
         {
             for(String bamFile : mConfig.BamFiles)
             {
-                mSamReaders.add(SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenome)).open(new File(bamFile)));
+                mSamReaders.add(SamReaderFactory.makeDefault()
+                        .validationStringency(mConfig.BamStringency)
+                        .referenceSequence(new File(mConfig.RefGenome)).open(new File(bamFile)));
             }
         }
 

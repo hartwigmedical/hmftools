@@ -117,7 +117,7 @@ public class SageApplication implements AutoCloseable
         final String bam = mConfig.ReferenceBams.isEmpty() ? mConfig.TumorBams.get(0) : mConfig.ReferenceBams.get(0);
 
         SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(mConfig.Stringency)
+                .validationStringency(mConfig.BamStringency)
                 .referenceSource(new ReferenceSource(mRefData.RefGenome))
                 .open(new File(bam));
 

@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
+import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
@@ -21,11 +21,14 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
+import htsjdk.samtools.ValidationStringency;
 
 public class DepthConfig
 {
@@ -38,6 +41,7 @@ public class DepthConfig
     public final double VafCap;
     public final int ProximityDistance;
     public final String VcfTagPrefix;
+    public final ValidationStringency BamStringency;
 
     public final int Threads;
     public final double PerfLogTime;
@@ -67,6 +71,7 @@ public class DepthConfig
         RefGenVersion = RefGenomeVersion.from(cmd);
         VafCap = Double.parseDouble(cmd.getOptionValue(VAF_CAP, String.valueOf(DEFAULT_VAF_CAP)));
         ProximityDistance = Integer.parseInt(cmd.getOptionValue(PROXIMITY_DISTANCE, String.valueOf(DEFAULT_PROXIMITY_DISTANCE)));
+        BamStringency = BamUtils.validationStringency(cmd);
         PerfLogTime = Double.parseDouble(cmd.getOptionValue(PERF_LOG_TIME, "0"));
 
         Threads = parseThreads(cmd);
@@ -108,6 +113,7 @@ public class DepthConfig
                 PROXIMITY_DISTANCE, true,
                 "Proximity distance to group variants, default = " + DEFAULT_PROXIMITY_DISTANCE);
 
+        addValidationStringencyOption(options);
         addSpecificChromosomesRegionsConfig(options);
         addThreadOptions(options);
 
@@ -126,6 +132,7 @@ public class DepthConfig
         RefGenVersion = V37;
         VafCap = vcfCap;
         ProximityDistance = proximityDistance;
+        BamStringency = ValidationStringency.STRICT;
         PerfLogTime = 0;
         Threads = 0;
 

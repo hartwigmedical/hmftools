@@ -74,7 +74,7 @@ public final class Doubles
 
     public static double round(final double value, final int decimalPlaces)
     {
-        double logValue = pow(10, decimalPlaces);
+        double logValue = pow(10, -decimalPlaces);
         return Math.round(value / logValue) * logValue;
     }
 
