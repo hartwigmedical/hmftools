@@ -53,7 +53,7 @@ public class CohortPercentileEvaluator {
         DatabaseAccess database = DatabaseAccess.createDatabaseAccess(cmd);
 
         LOGGER.info("Querying database");
-        List<Sample> samples = SampleQuery.run(database);
+        List<Sample> samples = SampleQuery.selectFromDatarequest(database);
         List<Observation> observations = SvTmbQuery.run(database, samples);
         database.close();
 

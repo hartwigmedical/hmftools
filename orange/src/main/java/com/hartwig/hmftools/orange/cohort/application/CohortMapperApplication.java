@@ -29,9 +29,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class CohortMapperEvaluator {
+public class CohortMapperApplication {
 
-    private static final Logger LOGGER = LogManager.getLogger(CohortMapperEvaluator.class);
+    private static final Logger LOGGER = LogManager.getLogger(CohortMapperApplication.class);
 
     private static final String RESOURCE_DIR = "/data/resources/public";
     private static final String DOID_JSON = RESOURCE_DIR + "/disease_ontology/doid.json";
@@ -40,14 +40,14 @@ public class CohortMapperEvaluator {
     private static final String OUTPUT_EVALUATION_TSV = "/data/experiments/orange/all_mapped_samples.tsv";
 
     public static void main(String[] args) throws IOException, ParseException {
-        LOGGER.info("Running ORANGE Cohort Mapper Evaluator");
+        LOGGER.info("Running ORANGE Cohort Mapper");
 
         CommandLine cmd = new DefaultParser().parse(createOptions(), args);
 
         DatabaseAccess database = DatabaseAccess.createDatabaseAccess(cmd);
 
         LOGGER.info("Loading samples from database");
-        List<Sample> samples = SampleQuery.run(database);
+        List<Sample> samples = SampleQuery.selectFromClinical(database);
         LOGGER.info(" Loaded {} samples from database", samples.size());
         database.close();
 
@@ -74,7 +74,7 @@ public class CohortMapperEvaluator {
     }
 
     @NotNull
-    private static CohortMapper createCohortMapper() throws IOException {
+    private static com.hartwig.hmftools.orange.cohort.mapping.CohortMapper createCohortMapper() throws IOException {
         LOGGER.info("Loading cohort mappings from {}", COHORT_MAPPING_TSV);
         List<CohortMapping> mappings = CohortMappingFile.read(COHORT_MAPPING_TSV);
         LOGGER.info(" Loaded {} mappings", mappings.size());

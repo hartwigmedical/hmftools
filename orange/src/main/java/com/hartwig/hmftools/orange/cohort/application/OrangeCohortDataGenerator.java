@@ -70,7 +70,7 @@ public class OrangeCohortDataGenerator {
         DatabaseAccess database = DatabaseAccess.createDatabaseAccess(commandLine);
 
         LOGGER.info("Loading samples from database");
-        List<Sample> samples = SampleQuery.run(database);
+        List<Sample> samples = SampleQuery.selectFromDatarequest(database);
         LOGGER.info(" Loaded {} samples from database", samples.size());
 
         LOGGER.info("Loading SV TMB from database");
