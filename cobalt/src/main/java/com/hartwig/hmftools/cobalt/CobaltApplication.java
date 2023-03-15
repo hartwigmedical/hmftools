@@ -52,7 +52,6 @@ public class CobaltApplication implements AutoCloseable
 
     public static void main(final String... args) throws IOException, ExecutionException, InterruptedException
     {
-        CB_LOGGER.info("{}", LocalDate.now());
         CB_LOGGER.info("args: {}", String.join(" ", args));
 
         final CobaltApplication application = new CobaltApplication();
