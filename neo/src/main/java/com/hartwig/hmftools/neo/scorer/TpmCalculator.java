@@ -177,7 +177,6 @@ public class TpmCalculator
 
             double rawEffectiveTpm = neoData.rawEffectiveTpm();
 
-
             for(PeptideScoreData peptideData : neoPeptides)
             {
                 // skip if already calculated
@@ -217,7 +216,8 @@ public class TpmCalculator
                                     tpmDown += peptideNeo.RnaData.getTPM(FS_DOWN);
                                 }
 
-                                tpmUp += group.TpmUp * tpmDown / group.TpmDownTotal;
+                                if(group.TpmDownTotal > 0)
+                                    tpmUp += group.TpmUp * tpmDown / group.TpmDownTotal;
                             }
                         }
                         else

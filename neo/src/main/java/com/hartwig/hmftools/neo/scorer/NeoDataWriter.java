@@ -53,7 +53,7 @@ public class NeoDataWriter
 
             writer.write("NeIds,VariantType,VariantInfo,Gene,Allele,Peptide,FlankUp,FlankDown");
             writer.write(",Score,Rank,Likelihood,LikelihoodRank,ExpLikelihood,ExpLikelihoodRank,EffectiveTpm");
-            writer.write(",RecogSim,OtherAlleleRecogSim,AllelCN,AlleleDisrupted");
+            writer.write(",RecogSim,OtherAlleleRecogSim,AlleleCN,AlleleDisrupted");
             writer.newLine();
             return writer;
         }
@@ -145,7 +145,7 @@ public class NeoDataWriter
                 writer.write("SampleId,");
 
             writer.write("NeId,VariantType,VariantInfo,GeneName,UpAminoAcids,NovelAminoAcids,DownAminoAcids,PeptideCount");
-            writer.write(",TmpSource,RnaFrags,RnaDepth,TpmUp,TpmDown,ExpectedTpm,RawEffectiveTpm,EffectiveTpm");
+            writer.write(",TpmSource,RnaFrags,RnaDepth,TpmUp,TpmDown,ExpectedTpm,RawEffectiveTpm,EffectiveTpm");
             writer.write(",TpmCancerUp,TpmCancerDown,TpmPanCancerUp,TpmPanCancerDown");
             writer.write(",NmdMin,NmdMax,CodingBasesLengthMin,CodingBasesLengthMax,FusedIntronLength,SkippedDonors,SkippedAcceptors");
             writer.write(",TranscriptsUp,TranscriptsDown,VariantCopyNumber,CopyNumber,SubclonalLikelihood");

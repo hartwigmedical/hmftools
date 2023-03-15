@@ -31,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class NeoScorerTask implements Callable
 {
+    private final int mThreadId;
     private final List<SampleData> mSamples;
 
     private final NeoScorerConfig mConfig;
@@ -38,8 +39,9 @@ public class NeoScorerTask implements Callable
     private final NeoDataWriter mWriters;
 
     public NeoScorerTask(
-            final NeoScorerConfig config, final ReferenceData referenceData, final NeoDataWriter writers)
+            final int threadId, final NeoScorerConfig config, final ReferenceData referenceData, final NeoDataWriter writers)
     {
+        mThreadId = threadId;
         mSamples = Lists.newArrayList();
         mConfig = config;
         mReferenceData = referenceData;
@@ -51,7 +53,7 @@ public class NeoScorerTask implements Callable
     @Override
     public Long call()
     {
-        NE_LOGGER.info("processing {} samples", mSamples.size());
+        NE_LOGGER.info("{}: processing {} samples", mThreadId, mSamples.size());
 
         int sampleIndex = 0;
 
@@ -63,7 +65,7 @@ public class NeoScorerTask implements Callable
 
                 if(sampleIndex > 0 && (sampleIndex % 10) == 0)
                 {
-                    NE_LOGGER.info("processed {} samples of {}", sampleIndex, mSamples.size());
+                    NE_LOGGER.info("{}: processed {} samples of {}", mThreadId, sampleIndex, mSamples.size());
                 }
             }
         }
@@ -74,7 +76,7 @@ public class NeoScorerTask implements Callable
             System.exit(1);
         }
 
-        NE_LOGGER.info("processing complete", mSamples.size());
+        NE_LOGGER.info("{}: processing complete", mThreadId, mSamples.size());
 
         return (long)1;
     }
@@ -84,10 +86,13 @@ public class NeoScorerTask implements Callable
         String sampleId = sample.Id;
 
         List<NeoEpitopeData> neoDataList = loadNeoEpitopes(sampleId, mConfig.NeoDir);
+
         List<AlleleCoverage> alleleCoverages = loadAlleleCoverage(sampleId, mConfig.LilacDir);
 
         if(neoDataList == null || alleleCoverages == null)
             System.exit(1);
+
+        NE_LOGGER.info("sample({}) processing {} neoepitopes", sampleId, neoDataList.size());
 
         Set<String> uniqueAlleles = alleleCoverages.stream().map(x -> x.Allele).collect(Collectors.toSet());
 
@@ -95,8 +100,6 @@ public class NeoScorerTask implements Callable
         double samplePloidy = purityContext.bestFit().ploidy();
 
         TpmSource tpmSource = null;
-
-        List<RnaNeoEpitope> rnaNeoDataList = loadRnaNeoData(sample, mConfig.IsofoxDir);
 
         Map<String,Double> sampleTPMs = Maps.newHashMap();
 
@@ -135,6 +138,8 @@ public class NeoScorerTask implements Callable
                 tpmSource = TpmSource.COHORT;
         }
 
+        List<RnaNeoEpitope> rnaNeoDataList = loadRnaNeoData(sample, mConfig.IsofoxDir);
+
         List<SomaticVariant> somaticVariants = null;
 
         if(!mConfig.RnaSomaticVcf.isEmpty())
@@ -144,11 +149,10 @@ public class NeoScorerTask implements Callable
             somaticVariants = loadSomaticVariants(sample, rnaSampleId, mConfig.RnaSomaticVcf, pointNeos);
         }
 
-        if(sample.HasRna && (sampleTPMs.isEmpty() || rnaNeoDataList == null || somaticVariants == null))
+        if(sample.HasRna && (rnaNeoDataList == null || somaticVariants == null))
         {
-            NE_LOGGER.error("sample({}) missing required RNA: TPMs({}) fusions({}) variants({})",
-                    sampleId, sampleTPMs.isEmpty() ? "missing" : "present",
-                    rnaNeoDataList == null ? "missing" : "present", somaticVariants == null ? "missing" : "present");
+            NE_LOGGER.error("sample({}) missing required RNA: fusions({}) variants({})",
+                    sampleId, rnaNeoDataList == null ? "missing" : "present", somaticVariants == null ? "missing" : "present");
             System.exit(1);
         }
 

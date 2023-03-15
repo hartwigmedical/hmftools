@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
 
@@ -32,7 +33,6 @@ public class NeoScorer
     public NeoScorer(final CommandLine cmd)
     {
         mConfig = new NeoScorerConfig(cmd);
-
         mReferenceData = new ReferenceData(cmd);
 
         mWriters = new NeoDataWriter(mConfig);
@@ -49,18 +49,6 @@ public class NeoScorer
             System.exit(1);
         }
 
-        RnaExpressionMatrix transcriptExpression = null;
-
-        if(mConfig.CohortSampleTpmFile != null)
-        {
-            NE_LOGGER.info("loading cohort transcript expression");
-            transcriptExpression = new RnaExpressionMatrix(mConfig.CohortSampleTpmFile, EXPRESSION_SCOPE_TRANS);
-        }
-
-        NE_LOGGER.info("loading cohort transcript medians");
-
-        TpmMediansCache tpmMediansCache = new TpmMediansCache(mConfig.CohortTpmMediansFile);
-
         NE_LOGGER.info("running neoepitope scoring for {}",
                 mConfig.Samples.size() == 1 ? mConfig.Samples.get(0).Id : String.format("%d samples", mConfig.Samples.size()));
 
@@ -68,7 +56,7 @@ public class NeoScorer
 
         for(int i = 0; i < min(mConfig.Threads, mConfig.Samples.size()); ++i)
         {
-            sampleTasks.add(new NeoScorerTask(mConfig, mReferenceData, mWriters));
+            sampleTasks.add(new NeoScorerTask(i, mConfig, mReferenceData, mWriters));
         }
 
         int taskIndex = 0;
@@ -82,15 +70,20 @@ public class NeoScorer
         }
 
         final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mConfig.Threads);
+
+        if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
+            System.exit(1);
 
         mWriters.close();
 
-        NE_LOGGER.info("cohort neoepitope peptide scoring complete");
+        NE_LOGGER.info("Neo peptide scoring complete");
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
+        final VersionInfo version = new VersionInfo("neo.version");
+        NE_LOGGER.info("Neo version: {}", version.version());
+
         final Options options = new Options();
 
         NeoScorerConfig.addCmdLineArgs(options);

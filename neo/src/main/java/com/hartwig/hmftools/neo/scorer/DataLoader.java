@@ -123,7 +123,7 @@ public class DataLoader
                 neoDataList.add(neoData);
             }
 
-            NE_LOGGER.debug("sample({}) loaded {} neo-epitopes", sampleId, neoDataList.size());
+            // NE_LOGGER.debug("sample({}) loaded {} neo-epitopes", sampleId, neoDataList.size());
             return neoDataList;
         }
         catch(IOException exception)

@@ -194,7 +194,7 @@ public class NeoEpitopeData
 
         mExpectedTpm = RnaData.getTPM(FS_UP) * mCopyNumberFactor;
 
-        if(tpmNormalisationFactor == NO_TPM_VALUE || !RnaData.hasExpression())
+        if(tpmNormalisationFactor == NO_TPM_VALUE || !RnaData.hasExpression() || mRawEffectiveTpm == NO_TPM_VALUE)
         {
             mEffectiveTpm = mExpectedTpm;
         }

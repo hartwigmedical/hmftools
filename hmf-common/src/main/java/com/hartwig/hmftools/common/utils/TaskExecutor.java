@@ -59,8 +59,9 @@ public class TaskExecutor
                 }
                 catch(Exception e)
                 {
-                    LOGGER.error("task execution error: {} stack: {}", e.toString());
+                    LOGGER.error("task execution error: {}", e.toString());
                     e.printStackTrace();
+                    return false;
                 }
             }
 
