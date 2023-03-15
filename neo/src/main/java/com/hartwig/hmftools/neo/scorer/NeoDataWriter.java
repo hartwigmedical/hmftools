@@ -50,9 +50,9 @@ public class NeoDataWriter
             if(mConfig.Samples.size() > 1)
                 writer.write("SampleId,");
 
-            writer.write("NeIds,VariantType,VariantInfo,Gene,Allele,Peptide");
-            writer.write(",Score,Rank,Likelihood,LikelihoodRank,ExpLikelihood,ExpLikelihoodRank,RecogSim,OtherAlleleRecogSim");
-            writer.write(",AllelCN,AlleleDisrupted,ExpectedTpm,EffectiveTpm,RawEffectiveTpm");
+            writer.write("NeIds,VariantType,VariantInfo,Gene,Allele,Peptide,FlankUp,FlankDown");
+            writer.write(",Score,Rank,Likelihood,LikelihoodRank,ExpLikelihood,ExpLikelihoodRank,EffectiveTpm");
+            writer.write(",RecogSim,OtherAlleleRecogSim,AllelCN,AlleleDisrupted");
             writer.newLine();
             return writer;
         }
@@ -89,19 +89,16 @@ public class NeoDataWriter
                         mPeptideWriter.write(format("%s,",sampleId));
                     }
 
-                    mPeptideWriter.write(format("%s,%s,%s,%s,%s,%s",
+                    mPeptideWriter.write(format("%s,%s,%s,%s,%s,%s,%s,%s",
                             peptideScoreData.neoIdsStr(), neoData.VariantType, neoData.VariantInfo, neoData.GeneName,
-                            bindData.Allele, bindData.Peptide));
+                            bindData.Allele, bindData.Peptide, bindData.UpFlank, bindData.DownFlank));
 
-                    mPeptideWriter.write(format(",%.4f,%.6f,%.6f,%.6f,%.6f,%.6f,%.1f,%.1f",
+                    mPeptideWriter.write(format(",%.4f,%.6f,%.6f,%.6f,%.6f,%.6f,%4.3e,%.1f,%.1f",
                             bindData.score(), bindData.rankPercentile(), bindData.likelihood(), bindData.likelihoodRank(),
-                            bindData.expressionLikelihood(), bindData.expressionLikelihoodRank(),
+                            bindData.expressionLikelihood(), bindData.expressionLikelihoodRank(), peptideScoreData.effectiveTpm(),
                             bindData.recognitionSimilarity(), bindData.otherAlleleRecognitionSimilarity()));
 
                     mPeptideWriter.write(format(",%.2f,%s", alleleCoverage.CopyNumber, alleleCoverage.isLost()));
-
-                    mPeptideWriter.write(format(",%4.3e,%4.3e,%4.3e",
-                            peptideScoreData.expectedTpm(), peptideScoreData.effectiveTpm(), peptideScoreData.rawEffectiveTpm()));
 
                     mPeptideWriter.newLine();
                 }
@@ -147,7 +144,8 @@ public class NeoDataWriter
                 writer.write("SampleId,");
 
             writer.write("NeId,VariantType,VariantInfo,GeneName,UpAminoAcids,NovelAminoAcids,DownAminoAcids,PeptideCount");
-            writer.write(",RnaFrags,RnaDepth,TpmUp,TpmDown,TpmCancerUp,TpmCancerDown,TpmPanCancerUp,TpmPanCancerDown");
+            writer.write(",TmpSource,RnaFrags,RnaDepth,TpmUp,TpmDown,ExpectedTpm,RawEffectiveTpm,EffectiveTpm");
+            writer.write(",TpmCancerUp,TpmCancerDown,TpmPanCancerUp,TpmPanCancerDown");
             writer.write(",NmdMin,NmdMax,CodingBasesLengthMin,CodingBasesLengthMax,FusedIntronLength,SkippedDonors,SkippedAcceptors");
             writer.write(",VariantCopyNumber,CopyNumber,SubclonalLikelihood");
 
@@ -162,7 +160,7 @@ public class NeoDataWriter
         }
     }
 
-    public synchronized void writeNeoData(final String sampleId, final NeoEpitopeData neoData)
+    public synchronized void writeNeoData(final String sampleId, final TpmSource tmpSource, final NeoEpitopeData neoData)
     {
         if(mNeoWriter == null)
             return;
@@ -176,14 +174,16 @@ public class NeoDataWriter
                     neoData.Id, neoData.VariantType, neoData.VariantInfo, neoData.GeneName,
                     neoData.UpAminoAcids, neoData.NovelAminoAcids, neoData.DownAminoAcids));
 
-            mNeoWriter.write(format(",%d",
-                    neoData.peptides().size()));
+            mNeoWriter.write(format(",%d", neoData.peptides().size()));
 
             final NeoRnaData rnaData = neoData.RnaData;
 
-            mNeoWriter.write(format(",%d,%.0f,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e",
-                    rnaData.fragmentSupport(), rnaData.averageBaseDepth(),
+            mNeoWriter.write(format(",%s,%d,%.0f,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e",
+                    tmpSource, rnaData.fragmentSupport(), rnaData.averageBaseDepth(),
                     rnaData.transExpression()[FS_UP], rnaData.transExpression()[FS_DOWN],
+                    neoData.expectedTpm(), neoData.rawEffectiveTpm(), neoData.effectiveTpm()));
+
+            mNeoWriter.write(format(",%4.3e,%4.3e,%4.3e,%4.3e",
                     rnaData.tpmCancer()[FS_UP], rnaData.tpmCancer()[FS_DOWN],
                     rnaData.tpmPanCancer()[FS_UP], rnaData.tpmPanCancer()[FS_DOWN]));
 
@@ -197,7 +197,7 @@ public class NeoDataWriter
         }
         catch (IOException e)
         {
-            NE_LOGGER.error("failed to write neo-epitope data: {}", e.toString());
+            NE_LOGGER.error("failed to write neoepitope data: {}", e.toString());
         }
     }
 }

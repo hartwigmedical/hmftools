@@ -15,9 +15,7 @@ public class PeptideScoreData extends PeptideData
 {
     private final Set<Integer> mNeIds;
 
-    private double mExpectedTpm;
     private double mEffectiveTpm;
-    private double mRawEffectiveTpm;
 
     private final List<BindData> mAlleleScoreData;
 
@@ -30,9 +28,7 @@ public class PeptideScoreData extends PeptideData
 
         mNeIds = Sets.newHashSet(neId);
 
-        mExpectedTpm = 0;
         mEffectiveTpm = 0;
-        mRawEffectiveTpm = 0;
 
         mAlleleScoreData = Lists.newArrayList();
         mWritten = false;
@@ -65,22 +61,17 @@ public class PeptideScoreData extends PeptideData
     public boolean written() { return mWritten; }
     public void setWritten() { mWritten = true; }
 
-    public double expectedTpm() { return mExpectedTpm; }
     public double effectiveTpm() { return mEffectiveTpm; }
-    public double rawEffectiveTpm() { return mRawEffectiveTpm; }
     public boolean tpmCalculated() { return mTpmCalculated; }
 
-    public void setCalculatedTpms(double rawEffective, double effective, double expected)
+    public void setEffectiveTpm(double effectiveTpm)
     {
-        mEffectiveTpm = effective;
-        mRawEffectiveTpm = rawEffective;
-        mExpectedTpm = expected;
+        mEffectiveTpm = effectiveTpm;
         mTpmCalculated = true;
     }
 
     public String toString()
     {
-        return format("%s neIds(%d) expected(%4.3e) effective(%4.3e raw=%4.3e)",
-                Peptide, mNeIds.size(), mExpectedTpm, mEffectiveTpm, mRawEffectiveTpm);
+        return format("%s neIds(%d) effective(%4.3e)", Peptide, mNeIds.size(), mEffectiveTpm);
     }
 }

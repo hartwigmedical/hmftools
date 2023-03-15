@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.neo.scorer;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
@@ -8,6 +10,8 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.INVALID_EXP;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.scorer.NeoRnaData.NO_TPM_VALUE;
+import static com.hartwig.hmftools.neo.scorer.TpmCalculator.EFFECTIVE_TPM_ACTUAL_PERC;
+import static com.hartwig.hmftools.neo.scorer.TpmCalculator.calcEffectiveTpm;
 import static com.hartwig.hmftools.neo.scorer.TpmMediansCache.CANCER_VALUE;
 import static com.hartwig.hmftools.neo.scorer.TpmMediansCache.PAN_CANCER_VALUE;
 
@@ -42,6 +46,40 @@ public class NeoEpitopeData
 
     public final List<PeptideScoreData> mPeptides;
 
+    public double mRawEffectiveTpm;
+    public double mEffectiveTpm;
+    public double mExpectedTpm;
+    public double mCopyNumberFactor;
+
+    public double effectiveTpm() { return mEffectiveTpm; }
+    public double rawEffectiveTpm() { return mRawEffectiveTpm; }
+    public double expectedTpm() { return mExpectedTpm; }
+    public double copyNumberFactor() { return mCopyNumberFactor; }
+
+    public void setCalculatedTpmValues(
+            final double tpmNormalisationFactor, final double samplePloidy, final double probLowValue, final double probHighValue)
+    {
+        mRawEffectiveTpm = tpmNormalisationFactor != NO_TPM_VALUE ? RnaData.fragmentSupport() * tpmNormalisationFactor : NO_TPM_VALUE;
+
+        double scLikelihood = VariantType.isPointMutation() ? SubclonalLikelihood : 1; // note use for fusions
+
+        double variantCn = max(VariantCopyNumber, 0);
+        double segmentCn = RnaData.hasExpression() ? CopyNumber : samplePloidy;
+        double adjustedCopyNumber = segmentCn > 0 ? variantCn / segmentCn : 1;
+        mCopyNumberFactor = 1 - scLikelihood * (1 - min(1.0, adjustedCopyNumber));
+
+        mExpectedTpm = RnaData.getTPM(FS_UP) * mCopyNumberFactor;
+
+        if(tpmNormalisationFactor == NO_TPM_VALUE || !RnaData.hasExpression())
+        {
+            mEffectiveTpm = mExpectedTpm;
+        }
+        else
+        {
+            mEffectiveTpm = calcEffectiveTpm(tpmNormalisationFactor, mRawEffectiveTpm, mExpectedTpm, probLowValue, probHighValue);
+        }
+    }
+
     public NeoEpitopeData(
             final int id, final NeoEpitopeType variantType, final String variantInfo, final String geneId, final String geneName,
             final String upAminoAcids, final String novelAminoAcids, final String downAminoAcids,
@@ -72,6 +110,8 @@ public class NeoEpitopeData
         RnaData = new NeoRnaData();
 
         mPeptides = Lists.newArrayList();
+        mRawEffectiveTpm = NO_TPM_VALUE;
+        mExpectedTpm = NO_TPM_VALUE;
     }
 
     public List<PeptideScoreData> peptides() { return mPeptides; }

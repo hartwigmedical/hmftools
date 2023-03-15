@@ -14,13 +14,16 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Maps;
 
 public class TpmMediansCache
 {
-    private Map<String,Map<String,Double>> mTransCancerTpmMap;
+    private final Map<String,Map<String,Double>> mTransCancerTpmMap;
+    private final Set<String> mCancerTypes;
 
     private static final String ALL_TYPES = "All";
     public static final int CANCER_VALUE = 0;
@@ -29,10 +32,13 @@ public class TpmMediansCache
     public TpmMediansCache(final String filename)
     {
         mTransCancerTpmMap = Maps.newHashMap();
+        mCancerTypes = Sets.newHashSet();
 
         if(filename != null)
             loadCohortFile(filename);
     }
+
+    public boolean hasCancerType(final String cancerType) { return mCancerTypes.contains(cancerType); }
 
     public double[] getTranscriptTpm(final String transName, final String cancerType)
     {
@@ -75,9 +81,9 @@ public class TpmMediansCache
 
             final Map<String,Integer> fieldsMap = createFieldsIndexMap(line, GENE_EXP_DELIM);
 
-            final List<String> cancerTypes = fieldsMap.keySet().stream()
+            fieldsMap.keySet().stream()
                     .filter(x -> !x.equals(FLD_GENE_ID) && !x.equals(FLD_GENE_NAME) && !x.equals(FLD_TRANS_NAME))
-                    .collect(Collectors.toList());
+                    .forEach(x -> mCancerTypes.add(x));
 
             int transNameIndex = fieldsMap.get(FLD_TRANS_NAME);
 
@@ -89,7 +95,7 @@ public class TpmMediansCache
                 final Map<String,Double> cancerTpmMap = Maps.newHashMap();
                 mTransCancerTpmMap.put(transName, cancerTpmMap);
 
-                for(String cancerType : cancerTypes)
+                for(String cancerType : mCancerTypes)
                 {
                     double tpm = Double.parseDouble(items[fieldsMap.get(cancerType)]);
                     cancerTpmMap.put(cancerType, tpm);

@@ -40,7 +40,7 @@ public class TpmCalculator
     public static final double LOW_PROBABILITY = 0.25;
     public static final double HIGH_PROBABILITY = 1 - LOW_PROBABILITY;
 
-    private static final double EFFECTIVE_TPM_ACTUAL_PERC = 0.8;
+    public static final double EFFECTIVE_TPM_ACTUAL_PERC = 0.8;
 
     public static final int[] DEFAULT_PEPTIDE_LENGTH_RANGE = new int[] { MIN_PEPTIDE_LENGTH, REF_PEPTIDE_LENGTH };
 
@@ -171,10 +171,12 @@ public class TpmCalculator
 
             neoData.addPeptides(neoPeptides);
 
-            double rawEffectiveTpm = tpmNormalisationFactor != NO_TPM_VALUE ?
-                    neoData.RnaData.fragmentSupport() * tpmNormalisationFactor : NO_TPM_VALUE;
-
             PoissonRangeValues rangeValues = getOrCalcRangeValues(neoData.RnaData.fragmentSupport());
+
+            neoData.setCalculatedTpmValues(tpmNormalisationFactor, samplePloidy, rangeValues.LowValue, rangeValues.HighValue);
+
+            double rawEffectiveTpm = neoData.rawEffectiveTpm();
+
 
             for(PeptideScoreData peptideData : neoPeptides)
             {
@@ -227,14 +229,7 @@ public class TpmCalculator
                 }
 
                 // EffectiveTPM = effectiveTPM * [1 – subClonalLikelihood*(1-(min(1,variantCN)]
-                double scLikelihood = neoData.VariantType.isPointMutation() ? neoData.SubclonalLikelihood : 1; // note use for fusions
-
-                double variantCn = max(neoData.VariantCopyNumber, 0);
-                double segmentCn = neoData.RnaData.hasExpression() ? neoData.CopyNumber : samplePloidy;
-                double adjustedCopyNumber = segmentCn > 0 ? variantCn / segmentCn : 1;
-                double cnFactor = 1 - scLikelihood * (1 - min(1.0, adjustedCopyNumber));
-
-                double expectedTpm = tpmUp * cnFactor;
+                double expectedTpm = tpmUp * neoData.copyNumberFactor();
 
                 double effectiveTpm;
 
@@ -244,19 +239,27 @@ public class TpmCalculator
                 }
                 else
                 {
-                    // effectiveTPM = 0.8 * rawEffectiveTPM + 0.2 * max[poisson5%(rawEffectiveTPM), min[Poisson95%(rawEffectiveTPM), expectedTPM]]
-                    double rangeLow = rangeValues.LowValue * tpmNormalisationFactor;
-                    double rangeHigh = rangeValues.HighValue * tpmNormalisationFactor;
-
-                    effectiveTpm = EFFECTIVE_TPM_ACTUAL_PERC * rawEffectiveTpm
-                            + (1 - EFFECTIVE_TPM_ACTUAL_PERC) * max(rangeHigh, min(rangeLow, expectedTpm));
+                    effectiveTpm = calcEffectiveTpm(
+                            tpmNormalisationFactor, rawEffectiveTpm, expectedTpm, rangeValues.LowValue, rangeValues.HighValue);
                 }
 
-                peptideData.setCalculatedTpms(rawEffectiveTpm, effectiveTpm, expectedTpm);
+                peptideData.setEffectiveTpm(effectiveTpm);
             }
         }
 
         return peptideCount;
+    }
+
+    public static double calcEffectiveTpm(
+            final double tpmNormalisationFactor, final double rawEffectiveTpm, final double expectedTpm,
+            final double probLowValue, final double probHighValue)
+    {
+        // effectiveTPM = 0.8 * rawEffectiveTPM + 0.2 * max[poisson5%(rawEffectiveTPM), min[Poisson95%(rawEffectiveTPM), expectedTPM]]
+        double rangeLow = probLowValue * tpmNormalisationFactor;
+        double rangeHigh = probHighValue * tpmNormalisationFactor;
+
+        return EFFECTIVE_TPM_ACTUAL_PERC * rawEffectiveTpm
+                + (1 - EFFECTIVE_TPM_ACTUAL_PERC) * max(rangeHigh, min(rangeLow, expectedTpm));
     }
 
     public static double calculateTpmNormalisation(final List<NeoEpitopeData> neoDataList)

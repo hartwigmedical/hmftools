@@ -79,7 +79,7 @@ public class NeoScorerTask implements Callable
         return (long)1;
     }
 
-    public void processSample(final SampleData sample) throws Exception
+    public void processSample(final SampleData sample)
     {
         String sampleId = sample.Id;
 
@@ -94,22 +94,45 @@ public class NeoScorerTask implements Callable
         PurityContext purityContext = loadPurpleContext(mConfig.PurpleDir, sampleId);
         double samplePloidy = purityContext.bestFit().ploidy();
 
+        TpmSource tpmSource = null;
+
         List<RnaNeoEpitope> rnaNeoDataList = loadRnaNeoData(sample, mConfig.IsofoxDir);
 
         Map<String,Double> sampleTPMs = Maps.newHashMap();
 
-        if(mReferenceData.TranscriptExpression == null || !mReferenceData.TranscriptExpression.hasSampleId(sampleId))
+        if(sample.HasRna)
         {
-            NE_LOGGER.debug("sample({}) loading transcript expression", sampleId);
+            if(mReferenceData.TranscriptExpression == null)
+            {
+                NE_LOGGER.debug("sample({}) loading transcript expression", sampleId);
 
-            try
-            {
-                sampleTPMs.putAll(TranscriptExpressionLoader.loadTranscriptExpression(mConfig.IsofoxDir, sampleId));
+                try
+                {
+                    sampleTPMs.putAll(TranscriptExpressionLoader.loadTranscriptExpression(mConfig.IsofoxDir, sampleId));
+                }
+                catch(Exception e)
+                {
+                    NE_LOGGER.error("failed to load sample({}) transcript expression", sampleId, e.toString());
+                    System.exit(1);
+                }
             }
-            catch(Exception e)
+            else
             {
-                NE_LOGGER.error("failed to load sample({}) transcript expression", sampleId, e.toString());
+                if(!mReferenceData.TranscriptExpression.hasSampleId(sampleId))
+                {
+                    NE_LOGGER.error("sample({}) missing from transcript expression matrix", sampleId);
+                    System.exit(1);
+                }
             }
+
+            tpmSource = TpmSource.SAMPLE;
+        }
+        else
+        {
+            if(mReferenceData.TpmMedians.hasCancerType(sample.CancerType))
+                tpmSource = TpmSource.CANCER_TYPE;
+            else
+                tpmSource = TpmSource.COHORT;
         }
 
         List<SomaticVariant> somaticVariants = null;
@@ -189,7 +212,8 @@ public class NeoScorerTask implements Callable
 
         if(mConfig.WriteTypes.contains(OutputType.NEOEPITOPE))
         {
-            neoDataList.forEach(x -> mWriters.writeNeoData(sampleId, x));
+            TpmSource sampleTmpSource = tpmSource;
+            neoDataList.forEach(x -> mWriters.writeNeoData(sampleId, sampleTmpSource, x));
         }
     }
 }

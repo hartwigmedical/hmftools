@@ -50,7 +50,7 @@ public class NeoScorerConfig
     public static final String LILAC_DIR = "lilac_dir";
     public static final String RNA_SOMATIC_VCF = "rna_somatic_vcf";
     public static final String RNA_SAMPLE_SUFFIX = "rna_sample_suffix";
-    public static final String ISF_DIR = "isofox_dir";
+    public static final String ISOFOX_DIR = "isofox_dir";
     public static final String COHORT_SAMPLE_TPM_FILE = "cohort_trans_exp_file";
     public static final String COHORT_TPM_MEDIANS_FILE = "cancer_tpm_medians_file";
 
@@ -72,7 +72,7 @@ public class NeoScorerConfig
         NeoDir = cmd.getOptionValue(NEO_DIR, sampleDataDir);
         LilacDir = cmd.getOptionValue(LILAC_DIR, sampleDataDir);
         PurpleDir = cmd.getOptionValue(PURPLE_DIR, sampleDataDir);
-        IsofoxDir = cmd.getOptionValue(ISF_DIR, sampleDataDir);
+        IsofoxDir = cmd.getOptionValue(ISOFOX_DIR, sampleDataDir);
         RnaSomaticVcf = cmd.getOptionValue(RNA_SOMATIC_VCF, sampleDataDir);
         OutputDir = cmd.hasOption(OUTPUT_DIR) ? parseOutputDir(cmd) : sampleDataDir;
         RnaSampleSuffix = cmd.getOptionValue(RNA_SAMPLE_SUFFIX, RNA_SAMPLE_APPEND_SUFFIX);
@@ -123,7 +123,7 @@ public class NeoScorerConfig
         options.addOption(LILAC_DIR, true, "Directory for Lilac coverage files");
         options.addOption(RNA_SOMATIC_VCF, true, "Directory for Purple somatic variant RNA-appended files");
         options.addOption(RNA_SAMPLE_SUFFIX, true, "RNA sample suffix in Sage-appended VCF");
-        options.addOption(ISF_DIR, true, "Directory for Isofox files (Transcript expresion, Neoepitope coverage)");
+        options.addOption(ISOFOX_DIR, true, "Directory for Isofox files (Transcript expresion, Neoepitope coverage)");
         options.addOption(COHORT_SAMPLE_TPM_FILE, true, "Cohort gene expression matrix");
         options.addOption(COHORT_TPM_MEDIANS_FILE, true, "TPM medians per cancer type and pan-cancer");
 
