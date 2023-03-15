@@ -3,6 +3,7 @@ package com.hartwig.hmftools.neo.epitope;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.logVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -15,6 +16,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -125,6 +127,8 @@ public class NeoEpitopeFinder
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
+        logVersion();
+
         final Options options = new Options();
 
         NeoConfig.addCmdLineArgs(options);

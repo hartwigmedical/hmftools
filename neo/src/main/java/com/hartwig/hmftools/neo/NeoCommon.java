@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,5 +26,11 @@ public class NeoCommon
         final StringJoiner transStr = new StringJoiner(ITEM_DELIM);
         transcripts.forEach(x -> transStr.add(x));
         return transStr.toString();
+    }
+
+    public static void logVersion()
+    {
+        final VersionInfo version = new VersionInfo("neo.version");
+        NE_LOGGER.info("Neo version: {}", version.version());
     }
 }

@@ -53,7 +53,10 @@ public class NeoScorerTask implements Callable
     @Override
     public Long call()
     {
-        NE_LOGGER.info("{}: processing {} samples", mThreadId, mSamples.size());
+        if(mSamples.size() > 1)
+        {
+            NE_LOGGER.info("{}: processing {} samples", mThreadId, mSamples.size());
+        }
 
         int sampleIndex = 0;
 
@@ -76,7 +79,10 @@ public class NeoScorerTask implements Callable
             System.exit(1);
         }
 
-        NE_LOGGER.info("{}: processing complete", mThreadId, mSamples.size());
+        if(mSamples.size() > 1)
+        {
+            NE_LOGGER.info("{}: processing complete", mThreadId, mSamples.size());
+        }
 
         return (long)1;
     }

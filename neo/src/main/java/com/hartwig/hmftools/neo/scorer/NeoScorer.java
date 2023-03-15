@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCOPE_TRANS;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.logVersion;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -81,8 +82,7 @@ public class NeoScorer
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final VersionInfo version = new VersionInfo("neo.version");
-        NE_LOGGER.info("Neo version: {}", version.version());
+        logVersion();
 
         final Options options = new Options();
 
