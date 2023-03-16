@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
-import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.*;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -49,10 +46,10 @@ public abstract class PurpleInterpretedData {
     public abstract List<PurpleCopyNumber> allSomaticCopyNumbers();
 
     @NotNull
-    public abstract List<GeneCopyNumber> allSomaticGeneCopyNumbers();
+    public abstract List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers();
 
     @NotNull
-    public abstract List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH();
+    public abstract List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH();
 
     @NotNull
     public abstract List<PurpleGainLoss> allSomaticGainsLosses();

@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -81,7 +82,7 @@ public class RNAFindingsChapter implements ReportChapter {
 
     private void addExpressionTables(@NotNull Document document) {
         IsofoxInterpretedData isofox = report.isofox();
-        List<GeneCopyNumber> somaticGeneCopyNumbers = report.purple().allSomaticGeneCopyNumbers();
+        List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = report.purple().allSomaticGeneCopyNumbers();
 
         List<GeneExpression> reportableHighExpression = isofox != null ? isofox.reportableHighExpression() : Lists.newArrayList();
         String titleHighExpression = "Genes with high expression (" + reportableHighExpression.size() + ")";

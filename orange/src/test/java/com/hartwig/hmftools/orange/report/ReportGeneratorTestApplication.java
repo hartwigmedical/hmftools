@@ -2,13 +2,12 @@ package com.hartwig.hmftools.orange.report;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
@@ -144,8 +143,8 @@ public class ReportGeneratorTestApplication {
     }
 
     @NotNull
-    private static List<GeneCopyNumber> retainReportableCopyNumbers(@NotNull List<GeneCopyNumber> geneCopyNumbers,
-                                                                    @NotNull List<PurpleDriver> drivers) {
+    private static List<PurpleGeneCopyNumber> retainReportableCopyNumbers(@NotNull List<PurpleGeneCopyNumber> geneCopyNumbers,
+                                                                          @NotNull List<PurpleDriver> drivers) {
         List<String> copyNumberDriverGenes = Lists.newArrayList();
         for (PurpleDriver driver : drivers) {
             if (driver.driver() == PurpleDriverType.AMP || driver.driver() == PurpleDriverType.PARTIAL_AMP || driver.driver() == PurpleDriverType.DEL
@@ -154,8 +153,8 @@ public class ReportGeneratorTestApplication {
             }
         }
 
-        List<GeneCopyNumber> reportable = Lists.newArrayList();
-        for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
+        List<PurpleGeneCopyNumber> reportable = Lists.newArrayList();
+        for (PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers) {
             if (copyNumberDriverGenes.contains(geneCopyNumber.geneName())) {
                 reportable.add(geneCopyNumber);
             }

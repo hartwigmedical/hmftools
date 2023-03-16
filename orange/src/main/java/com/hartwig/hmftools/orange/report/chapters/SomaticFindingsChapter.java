@@ -5,6 +5,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
@@ -194,7 +195,7 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addLossOfHeterozygosity(@NotNull Document document) {
-        List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH = report.purple().suspectGeneCopyNumbersWithLOH();
+        List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH = report.purple().suspectGeneCopyNumbersWithLOH();
         String title = "Potentially interesting LOH events in case of MSI or HRD (" + suspectGeneCopyNumbersWithLOH.size() + ")";
         document.add(LossOfHeterozygosityTable.build(title, contentWidth(), suspectGeneCopyNumbersWithLOH));
     }

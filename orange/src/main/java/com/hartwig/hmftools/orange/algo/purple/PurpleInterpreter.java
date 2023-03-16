@@ -13,7 +13,9 @@ import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.*;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
+import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleQC;
 import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
 import com.hartwig.hmftools.orange.algo.linx.BreakendUtil;
@@ -137,9 +139,9 @@ public class PurpleInterpreter {
                 .allGermlineVariants(allGermlineVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
                 .additionalSuspectGermlineVariants(additionalSuspectGermlineVariants)
-                .allSomaticCopyNumbers(purple.allSomaticCopyNumbers())
-                .allSomaticGeneCopyNumbers(purple.allSomaticGeneCopyNumbers())
-                .suspectGeneCopyNumbersWithLOH(suspectGeneCopyNumbersWithLOH)
+                .allSomaticCopyNumbers(() -> purple.allSomaticCopyNumbers().stream().map(PurpleInterpreter::asPurpleCopyNumber).iterator())
+                .allSomaticGeneCopyNumbers(() -> purple.allSomaticGeneCopyNumbers().stream().map(PurpleInterpreter::asPurpleGeneCopyNumber).iterator())
+                .suspectGeneCopyNumbersWithLOH(() -> suspectGeneCopyNumbersWithLOH.stream().map(PurpleInterpreter::asPurpleGeneCopyNumber).iterator())
                 .allSomaticGainsLosses(allSomaticGainsLosses)
                 .reportableSomaticGainsLosses(reportableSomaticGainsLosses)
                 .nearReportableSomaticGains(nearReportableSomaticGains)
@@ -147,6 +149,25 @@ public class PurpleInterpreter {
                 .allGermlineDeletions(allGermlineDeletions)
                 .allGermlineFullLosses(allGermlineFullLosses)
                 .reportableGermlineFullLosses(reportableGermlineFullLosses)
+                .build();
+    }
+
+    private static PurpleCopyNumber asPurpleCopyNumber(com.hartwig.hmftools.common.purple.PurpleCopyNumber copyNumber) {
+        return ImmutablePurpleCopyNumber.builder()
+                .chromosome(copyNumber.chromosome())
+                .start(copyNumber.start())
+                .end(copyNumber.end())
+                .averageTumorCopyNumber(copyNumber.averageTumorCopyNumber())
+                .build();
+    }
+
+    private static PurpleGeneCopyNumber asPurpleGeneCopyNumber(GeneCopyNumber geneCopyNumber) {
+        return ImmutablePurpleGeneCopyNumber.builder()
+                .chromosome(geneCopyNumber.chromosome())
+                .chromosomeBand(geneCopyNumber.chromosomeBand())
+                .geneName(geneCopyNumber.geneName())
+                .minCopyNumber(geneCopyNumber.minCopyNumber())
+                .minMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())
                 .build();
     }
 

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import com.google.common.primitives.Doubles;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.rna.GeneExpression;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -27,7 +28,7 @@ public final class ExpressionTable {
 
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<GeneExpression> expressions, boolean sortAscending,
-            @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers) {
+            @NotNull List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers) {
         if (expressions.isEmpty()) {
             return Tables.createEmpty(title, width);
         }
@@ -53,8 +54,8 @@ public final class ExpressionTable {
     }
 
     @NotNull
-    private static String lookupTumorCN(@NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull String geneToFind) {
-        GeneCopyNumber geneCopyNumber = findByGene(geneCopyNumbers, geneToFind);
+    private static String lookupTumorCN(@NotNull List<PurpleGeneCopyNumber> geneCopyNumbers, @NotNull String geneToFind) {
+        PurpleGeneCopyNumber geneCopyNumber = findByGene(geneCopyNumbers, geneToFind);
         if (geneCopyNumber == null) {
             LOGGER.warn("Could not find gene copy number for '{}'", geneToFind);
             return ReportResources.NOT_AVAILABLE;
@@ -64,8 +65,8 @@ public final class ExpressionTable {
     }
 
     @Nullable
-    private static GeneCopyNumber findByGene(@NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull String geneToFind) {
-        for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
+    private static PurpleGeneCopyNumber findByGene(@NotNull List<PurpleGeneCopyNumber> geneCopyNumbers, @NotNull String geneToFind) {
+        for (PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers) {
             if (geneCopyNumber.geneName().equals(geneToFind)) {
                 return geneCopyNumber;
             }
