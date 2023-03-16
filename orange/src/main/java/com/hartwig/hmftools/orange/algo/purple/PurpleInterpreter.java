@@ -59,7 +59,7 @@ public class PurpleInterpreter {
     }
 
     @NotNull
-    public PurpleInterpretedData interpret(@NotNull PurpleData purple) {
+    public PurpleRecord interpret(@NotNull PurpleData purple) {
         LOGGER.info("Analysing purple data");
         List<PurpleVariant> allSomaticVariants = purpleVariantFactory.create(purple.allSomaticVariants());
         List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.create(purple.reportableSomaticVariants());
@@ -128,7 +128,7 @@ public class PurpleInterpreter {
                     reportableGermlineFullLosses.size());
         }
 
-        return ImmutablePurpleInterpretedData.builder()
+        return ImmutablePurpleRecord.builder()
                 .fit(createFit(purple))
                 .characteristics(createCharacteristics(purple))
                 .somaticDrivers(() -> purple.somaticDrivers().stream().map(PurpleInterpreter::asPurpleDriver).iterator())
@@ -146,8 +146,6 @@ public class PurpleInterpreter {
                 .reportableSomaticGainsLosses(reportableSomaticGainsLosses)
                 .nearReportableSomaticGains(nearReportableSomaticGains)
                 .additionalSuspectSomaticGainsLosses(additionalSuspectSomaticGainsLosses)
-                .allGermlineDeletions(allGermlineDeletions)
-                .allGermlineFullLosses(allGermlineFullLosses)
                 .reportableGermlineFullLosses(reportableGermlineFullLosses)
                 .build();
     }

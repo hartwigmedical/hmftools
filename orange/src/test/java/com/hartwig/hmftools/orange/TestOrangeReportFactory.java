@@ -23,6 +23,8 @@ import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.virus.*;
 import com.hartwig.hmftools.orange.algo.*;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
@@ -30,8 +32,6 @@ import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
-import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.wildtype.TestWildTypeFactory;
@@ -119,8 +119,8 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static PurpleInterpretedData createTestPurpleData() {
-        return ImmutablePurpleInterpretedData.builder()
+    private static PurpleRecord createTestPurpleData() {
+        return ImmutablePurpleRecord.builder()
                 .from(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
                 .addReportableSomaticVariants(TestPurpleVariantFactory.builder()
                         .gene("ARID1A")
@@ -142,7 +142,6 @@ public final class TestOrangeReportFactory {
                 .allGermlineVariants(Lists.newArrayList())
                 .reportableGermlineVariants(Lists.newArrayList())
                 .additionalSuspectGermlineVariants(Lists.newArrayList())
-                .allGermlineFullLosses(Lists.newArrayList())
                 .reportableGermlineFullLosses(Lists.newArrayList())
                 .build();
     }

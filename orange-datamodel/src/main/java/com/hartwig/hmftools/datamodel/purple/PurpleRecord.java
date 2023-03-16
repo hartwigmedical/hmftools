@@ -30,11 +30,17 @@ public abstract class PurpleRecord {
     @NotNull
     public abstract List<PurpleVariant> reportableSomaticVariants();
 
+    @NotNull
+    public abstract List<PurpleVariant> additionalSuspectSomaticVariants();
+
     @Nullable
     public abstract List<PurpleVariant> allGermlineVariants();
 
     @Nullable
     public abstract List<PurpleVariant> reportableGermlineVariants();
+
+    @Nullable
+    public abstract List<PurpleVariant> additionalSuspectGermlineVariants();
 
     @NotNull
     public abstract List<PurpleCopyNumber> allSomaticCopyNumbers();
@@ -50,4 +56,13 @@ public abstract class PurpleRecord {
 
     @NotNull
     public abstract List<PurpleGainLoss> reportableSomaticGainsLosses();
+
+    @NotNull
+    public abstract List<PurpleGainLoss> nearReportableSomaticGains();
+
+    @NotNull
+    public abstract List<PurpleGainLoss> additionalSuspectSomaticGainsLosses();
+
+    @Nullable
+    public abstract List<PurpleGainLoss> reportableGermlineFullLosses();
 }

@@ -33,8 +33,6 @@ public class GermlineConversionTest {
                         .allGermlineVariants(Lists.newArrayList())
                         .reportableGermlineVariants(Lists.newArrayList())
                         .additionalSuspectGermlineVariants(Lists.newArrayList())
-                        .allGermlineDeletions(Lists.newArrayList())
-                        .allGermlineFullLosses(Lists.newArrayList())
                         .reportableGermlineFullLosses(Lists.newArrayList())
                         .build())
                 .linx(TestLinxInterpretationFactory.builder()
@@ -53,8 +51,6 @@ public class GermlineConversionTest {
         assertNull(converted.purple().allGermlineVariants());
         assertNull(converted.purple().reportableGermlineVariants());
         assertNull(converted.purple().additionalSuspectGermlineVariants());
-        assertNull(converted.purple().allGermlineDeletions());
-        assertNull(converted.purple().allGermlineFullLosses());
         assertNull(converted.purple().reportableGermlineFullLosses());
 
         assertNull(converted.linx().allGermlineStructuralVariants());
@@ -88,7 +84,7 @@ public class GermlineConversionTest {
         PurpleDriver germlineMutationDriver = PurpleDriverTestFactory.builder().driver(PurpleDriverType.GERMLINE_MUTATION).build();
         PurpleDriver germlineDisruptionDriver = PurpleDriverTestFactory.builder().driver(PurpleDriverType.GERMLINE_DISRUPTION).build();
 
-        PurpleInterpretedData purple = TestPurpleInterpretationFactory.builder()
+        PurpleRecord purple = TestPurpleInterpretationFactory.builder()
                 .fit(createWithGermlineAberration())
                 .addSomaticDrivers(somaticDriver)
                 .addGermlineDrivers(germlineMutationDriver, germlineDisruptionDriver)
@@ -100,11 +96,10 @@ public class GermlineConversionTest {
                 .addAdditionalSuspectGermlineVariants(suspectGermlineVariant)
                 .addAllSomaticGainsLosses(somaticGainLoss, reportableSomaticGainLoss)
                 .addReportableSomaticGainsLosses(reportableSomaticGainLoss)
-                .addAllGermlineFullLosses(germlineFullLoss, reportableGermlineFullLoss)
                 .addReportableGermlineFullLosses(reportableGermlineFullLoss)
                 .build();
 
-        PurpleInterpretedData converted = GermlineConversion.convertPurpleGermline(true, purple);
+        PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
 
         assertTrue(converted.fit().qc().germlineAberrations().isEmpty());
 
@@ -130,7 +125,7 @@ public class GermlineConversionTest {
         assertTrue(converted.reportableSomaticGainsLosses().contains(reportableSomaticGainLoss));
         assertTrue(converted.reportableSomaticGainsLosses().contains(reportableGermlineFullLoss));
 
-        PurpleInterpretedData unreliableConverted = GermlineConversion.convertPurpleGermline(false, purple);
+        PurpleRecord unreliableConverted = GermlineConversion.convertPurpleGermline(false, purple);
         assertEquals(1, unreliableConverted.somaticDrivers().size());
         assertNotNull(findByDriverType(unreliableConverted.somaticDrivers(), PurpleDriverType.AMP));
 

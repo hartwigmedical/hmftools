@@ -3,12 +3,12 @@ package com.hartwig.hmftools.orange.algo.util;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,8 +46,8 @@ public final class ReportLimiter {
     }
 
     @NotNull
-    private static PurpleInterpretedData limitPurpleDataToOne(@NotNull PurpleInterpretedData purple) {
-        return ImmutablePurpleInterpretedData.builder()
+    private static PurpleRecord limitPurpleDataToOne(@NotNull PurpleRecord purple) {
+        return ImmutablePurpleRecord.builder()
                 .from(purple)
                 .somaticDrivers(max1(purple.somaticDrivers()))
                 .germlineDrivers(max1(purple.germlineDrivers()))
@@ -64,8 +64,6 @@ public final class ReportLimiter {
                 .reportableSomaticGainsLosses(max1(purple.reportableSomaticGainsLosses()))
                 .nearReportableSomaticGains(max1(purple.nearReportableSomaticGains()))
                 .additionalSuspectSomaticGainsLosses(max1(purple.additionalSuspectSomaticGainsLosses()))
-                .allGermlineDeletions(max1(purple.allGermlineDeletions()))
-                .allGermlineFullLosses(max1(purple.allGermlineFullLosses()))
                 .reportableGermlineFullLosses(max1(purple.reportableGermlineFullLosses()))
                 .build();
     }

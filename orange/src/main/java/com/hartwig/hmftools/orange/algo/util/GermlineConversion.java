@@ -13,8 +13,6 @@ import com.hartwig.hmftools.datamodel.linx.*;
 import com.hartwig.hmftools.datamodel.purple.*;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +42,7 @@ public final class GermlineConversion {
 
     @NotNull
     @VisibleForTesting
-    static PurpleInterpretedData convertPurpleGermline(boolean containsTumorCells, @NotNull PurpleInterpretedData purple) {
+    static PurpleRecord convertPurpleGermline(boolean containsTumorCells, @NotNull PurpleRecord purple) {
         List<PurpleDriver> mergedDrivers;
         List<PurpleVariant> additionalReportableVariants;
         List<PurpleGainLoss> additionalReportableGainsLosses;
@@ -58,7 +56,7 @@ public final class GermlineConversion {
             additionalReportableGainsLosses = Lists.newArrayList();
         }
 
-        return ImmutablePurpleInterpretedData.builder()
+        return ImmutablePurpleRecord.builder()
                 .from(purple)
                 .fit(removeGermlineAberrations(purple.fit()))
                 .somaticDrivers(mergedDrivers)
@@ -70,8 +68,6 @@ public final class GermlineConversion {
                 .additionalSuspectGermlineVariants(null)
                 .addAllAllSomaticGainsLosses(additionalReportableGainsLosses)
                 .addAllReportableSomaticGainsLosses(additionalReportableGainsLosses)
-                .allGermlineDeletions(null)
-                .allGermlineFullLosses(null)
                 .reportableGermlineFullLosses(null)
                 .build();
     }

@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
@@ -102,7 +103,7 @@ public class ReportGeneratorTestApplication {
     private static OrangeReport removeUnreported(@NotNull OrangeReport report) {
         ImmutableOrangeReport.Builder builder = ImmutableOrangeReport.builder()
                 .from(report)
-                .purple(ImmutablePurpleInterpretedData.builder()
+                .purple(ImmutablePurpleRecord.builder()
                         .from(report.purple())
                         .allSomaticVariants(report.purple().reportableSomaticVariants())
                         .additionalSuspectSomaticVariants(Lists.newArrayList())
@@ -115,7 +116,6 @@ public class ReportGeneratorTestApplication {
                         .allSomaticGainsLosses(report.purple().reportableSomaticGainsLosses())
                         .nearReportableSomaticGains(Lists.newArrayList())
                         .additionalSuspectSomaticGainsLosses(Lists.newArrayList())
-                        .allGermlineFullLosses(report.purple().reportableGermlineFullLosses())
                         .build())
                 .linx(ImmutableLinxRecord.builder()
                         .from(report.linx())

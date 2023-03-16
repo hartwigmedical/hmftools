@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
@@ -49,10 +50,7 @@ public class PurpleInterpreterTest {
                 .build();
 
         PurpleInterpreter interpreter = createRealInterpreter();
-        PurpleInterpretedData interpreted = interpreter.interpret(purple);
-
-        assertEquals(3, interpreted.allGermlineDeletions().size());
-        assertEquals(2, interpreted.allGermlineFullLosses().size());
+        PurpleRecord interpreted = interpreter.interpret(purple);
         assertEquals(1, interpreted.reportableGermlineFullLosses().size());
     }
 
