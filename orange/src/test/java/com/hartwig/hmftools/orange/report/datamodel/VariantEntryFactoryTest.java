@@ -8,17 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogTestFactory;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.impact.VariantEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.*;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 
 import com.hartwig.hmftools.orange.algo.util.PurpleDriverTestFactory;

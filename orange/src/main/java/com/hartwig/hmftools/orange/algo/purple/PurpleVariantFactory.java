@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.datamodel.purple.*;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.PaveEntry;
 import org.apache.commons.compress.utils.Lists;
@@ -41,38 +41,26 @@ public class PurpleVariantFactory {
     @NotNull
     private PurpleVariant toPurpleVariant(@NotNull SomaticVariant variant) {
         return ImmutablePurpleVariant.builder()
-                .type(variant.type())
+                .type(PurpleVariantType.valueOf(variant.type().name()))
                 .gene(variant.gene())
-                .genesAffected(variant.genesAffected())
                 .chromosome(variant.chromosome())
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
-                .worstCodingEffect(variant.worstCodingEffect())
+                .worstCodingEffect(PurpleCodingEffect.valueOf(variant.worstCodingEffect().name()))
                 .canonicalImpact(extractCanonicalImpact(variant))
                 .otherImpacts(extractOtherImpacts(variant))
-                .hotspot(variant.hotspot())
+                .hotspot(Hotspot.valueOf(variant.hotspot().name()))
                 .reported(variant.reported())
-                .filtered(variant.isFiltered())
-                .filter(variant.filter())
-                .recovered(variant.recovered())
                 .tumorDepth(extractTumorDepth(variant))
                 .rnaDepth(Optional.ofNullable(variant.rnaDepth()).map(PurpleVariantFactory::convert).orElse(null))
-                .referenceDepth(Optional.ofNullable(variant.referenceDepth()).map(PurpleVariantFactory::convert).orElse(null))
                 .adjustedCopyNumber(variant.adjustedCopyNumber())
                 .adjustedVAF(variant.adjustedVAF())
                 .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
                 .variantCopyNumber(variant.variantCopyNumber())
                 .biallelic(variant.biallelic())
-                .genotypeStatus(variant.genotypeStatus())
-                .germlineStatus(variant.germlineStatus())
-                .trinucleotideContext(variant.trinucleotideContext())
-                .mappability(variant.mappability())
-                .microhomology(variant.microhomology())
-                .repeatSequence(variant.repeatSequence())
+                .genotypeStatus(PurpleGenotypeStatus.valueOf(variant.genotypeStatus().name()))
                 .repeatCount(variant.repeatCount())
-                .kataegis(variant.kataegis())
-                .tier(variant.tier())
                 .subclonalLikelihood(variant.subclonalLikelihood())
                 .localPhaseSets(variant.localPhaseSets())
                 .build();

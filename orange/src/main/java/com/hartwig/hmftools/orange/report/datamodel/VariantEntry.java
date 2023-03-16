@@ -4,9 +4,10 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.Hotspot;
 
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,6 +50,6 @@ public abstract class VariantEntry {
     public abstract PurpleAllelicDepth rnaDepth();
 
     @NotNull
-    public abstract GenotypeStatus genotypeStatus();
+    public abstract PurpleGenotypeStatus genotypeStatus();
 
 }

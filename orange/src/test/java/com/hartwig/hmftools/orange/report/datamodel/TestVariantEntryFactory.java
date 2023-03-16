@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.orange.report.datamodel;
 
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.Hotspot;
 
+import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,6 +28,6 @@ public final class TestVariantEntryFactory {
                 .clonalLikelihood(0D)
                 .localPhaseSets(null)
                 .rnaDepth(null)
-                .genotypeStatus(GenotypeStatus.UNKNOWN);
+                .genotypeStatus(PurpleGenotypeStatus.UNKNOWN);
     }
 }

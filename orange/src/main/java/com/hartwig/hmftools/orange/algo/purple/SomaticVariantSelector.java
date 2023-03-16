@@ -1,18 +1,18 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import java.util.List;
-import java.util.Set;
-
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.VariantType;
-
+import com.hartwig.hmftools.datamodel.purple.Hotspot;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.Set;
 
 final class SomaticVariantSelector {
 
@@ -69,7 +69,7 @@ final class SomaticVariantSelector {
     }
 
     private static boolean isRelevantForCuppa(@NotNull PurpleVariant variant) {
-        return variant.type() == VariantType.INDEL && CUPPA_GENES.contains(variant.gene()) && variant.repeatCount() <= 6;
+        return variant.type() == PurpleVariantType.INDEL && CUPPA_GENES.contains(variant.gene()) && variant.repeatCount() <= 6;
     }
 
     private static boolean isSynonymousWithReportableWorstImpact(@NotNull PurpleVariant variant, @NotNull List<DriverGene> driverGenes) {
@@ -82,10 +82,10 @@ final class SomaticVariantSelector {
             return false;
         }
 
-        CodingEffect worstEffect = variant.worstCodingEffect();
-        boolean nonsenseOrFrameshift = worstEffect == CodingEffect.NONSENSE_OR_FRAMESHIFT && driverGene.reportNonsenseAndFrameshift();
-        boolean splice = worstEffect == CodingEffect.SPLICE && driverGene.reportSplice();
-        boolean missense = worstEffect == CodingEffect.MISSENSE && driverGene.reportMissenseAndInframe();
+        PurpleCodingEffect worstEffect = variant.worstCodingEffect();
+        boolean nonsenseOrFrameshift = worstEffect == PurpleCodingEffect.NONSENSE_OR_FRAMESHIFT && driverGene.reportNonsenseAndFrameshift();
+        boolean splice = worstEffect == PurpleCodingEffect.SPLICE && driverGene.reportSplice();
+        boolean missense = worstEffect == PurpleCodingEffect.MISSENSE && driverGene.reportMissenseAndInframe();
         return nonsenseOrFrameshift || splice || missense;
     }
 

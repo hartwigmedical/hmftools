@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.orange.report;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
@@ -37,52 +35,20 @@ public class OrangeReportToRecordConversion {
     }
 
     private static PurpleRecord convert(PurpleInterpretedData purpleInterpretedData) {
-        var somaticVariantIterator = purpleInterpretedData.allSomaticVariants().stream()
-                .map(OrangeReportToRecordConversion::convert)
-                .iterator();
-        var germlineVariantIterator = argumentOrEmpty(purpleInterpretedData.allGermlineVariants()).stream()
-                .map(OrangeReportToRecordConversion::convert)
-                .iterator();
-        var reportableGermlineVariantIterator = argumentOrEmpty(purpleInterpretedData.reportableGermlineVariants()).stream()
-                .map(OrangeReportToRecordConversion::convert)
-                .iterator();
         return ImmutablePurpleRecord.builder()
                 .fit(purpleInterpretedData.fit())
                 .characteristics(purpleInterpretedData.characteristics())
                 .somaticDrivers(purpleInterpretedData.somaticDrivers())
                 .germlineDrivers(purpleInterpretedData.germlineDrivers())
-                .allSomaticVariants(() -> somaticVariantIterator)
-                .reportableSomaticVariants(() -> purpleInterpretedData.reportableSomaticVariants().stream().map(OrangeReportToRecordConversion::convert).iterator())
-                .allGermlineVariants(() -> germlineVariantIterator)
-                .reportableGermlineVariants(() -> reportableGermlineVariantIterator)
+                .allSomaticVariants(purpleInterpretedData.allSomaticVariants())
+                .reportableSomaticVariants(purpleInterpretedData.reportableSomaticVariants())
+                .allGermlineVariants(purpleInterpretedData.allGermlineVariants())
+                .reportableGermlineVariants(purpleInterpretedData.reportableGermlineVariants())
                 .allSomaticCopyNumbers(() -> purpleInterpretedData.allSomaticCopyNumbers().stream().map(OrangeReportToRecordConversion::convert).iterator())
                 .allSomaticGeneCopyNumbers(() -> purpleInterpretedData.allSomaticGeneCopyNumbers().stream().map(OrangeReportToRecordConversion::convert).iterator())
                 .suspectGeneCopyNumbersWithLOH(() -> purpleInterpretedData.suspectGeneCopyNumbersWithLOH().stream().map(OrangeReportToRecordConversion::convert).iterator())
                 .allSomaticGainsLosses(purpleInterpretedData.reportableSomaticGainsLosses())
                 .reportableSomaticGainsLosses(purpleInterpretedData.reportableSomaticGainsLosses())
-                .build();
-    }
-
-    private static PurpleVariant convert(com.hartwig.hmftools.orange.algo.purple.PurpleVariant variant) {
-        return ImmutablePurpleVariant.builder()
-                .type(PurpleVariantType.valueOf(variant.type().name()))
-                .gene(variant.gene())
-                .chromosome(variant.chromosome())
-                .position(variant.position())
-                .ref(variant.ref())
-                .alt(variant.alt())
-                .canonicalImpact(variant.canonicalImpact())
-                .otherImpacts(variant.otherImpacts())
-                .hotspot(Hotspot.valueOf(variant.hotspot().name()))
-                .reported(variant.reported())
-                .tumorDepth(variant.tumorDepth())
-                .adjustedCopyNumber(variant.adjustedCopyNumber())
-                .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
-                .variantCopyNumber(variant.variantCopyNumber())
-                .biallelic(variant.biallelic())
-                .genotypeStatus(PurpleGenotypeStatus.valueOf(variant.genotypeStatus().name()))
-                .subclonalLikelihood(variant.subclonalLikelihood())
-                .localPhaseSets(variant.localPhaseSets())
                 .build();
     }
 

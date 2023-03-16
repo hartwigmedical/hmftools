@@ -2,8 +2,9 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.Hotspot;
 
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.Nullable;
 

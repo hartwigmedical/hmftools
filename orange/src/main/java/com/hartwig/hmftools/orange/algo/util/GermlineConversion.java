@@ -15,7 +15,6 @@ import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
