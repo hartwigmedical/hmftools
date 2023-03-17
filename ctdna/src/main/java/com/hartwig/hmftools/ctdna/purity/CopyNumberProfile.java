@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.ctdna.purity;
 
-import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.medianIntegerValue;
+import static com.hartwig.hmftools.ctdna.purity.CnPurityResult.INVALID_RESULT;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,18 +25,24 @@ import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 public class CopyNumberProfile
 {
     private final PurityConfig mConfig;
-    private boolean mValid;
+
+    private final List<CopyNumberGcData> mCopyNumberGcRatios;
+    private final CnPurityCalculator mPurityCalculator;
 
     public CopyNumberProfile(final PurityConfig config)
     {
         mConfig = config;
-        mValid = true;
+
+        mCopyNumberGcRatios = Lists.newArrayList();
+        mPurityCalculator = new CnPurityCalculator();
     }
 
-    public boolean isValid() { return mValid; }
+    public List<CopyNumberGcData> copyNumberGcRatios() { return mCopyNumberGcRatios; }
 
-    public void loadSampleData(final String sampleId)
+    public CnPurityResult processSample(final String sampleId, final String cobaltSampleId)
     {
+        mCopyNumberGcRatios.clear();
+
         try
         {
             PurityContext purityContext = PurityContextFile.read(mConfig.PurpleDir, sampleId);
@@ -46,28 +50,40 @@ public class CopyNumberProfile
             List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(
                     PurpleCopyNumberFile.generateFilenameForReading(mConfig.PurpleDir, sampleId));
 
-            final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(mConfig.CobaltDir, sampleId);
+            final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(mConfig.CobaltDir, cobaltSampleId);
 
             Map<Chromosome,List<CobaltRatio>> cobaltRatios = CobaltRatioFile.readWithGender(cobaltFilename, null, true);
 
-            List<CopyNumberGcData> copyNumberGcRatios = buildCopyNumberGcRatios(cobaltRatios, copyNumbers);
+            buildCopyNumberGcRatios(cobaltRatios, copyNumbers);
 
-            writeCopyNumberSegmentData(sampleId, copyNumberGcRatios);
+            double samplePloidy = purityContext.bestFit().ploidy();
+
+            mPurityCalculator.calculatePurity(mCopyNumberGcRatios, purityContext.bestFit().ploidy());
+
+            if(!mPurityCalculator.valid())
+                return INVALID_RESULT;
+
+            CT_LOGGER.info(format("sample(%s ctDNA=%s) ploidy(%.4f) copy number segments(%d) estimated purity(%.6f)",
+                    sampleId, cobaltSampleId, samplePloidy, mCopyNumberGcRatios.size(), mPurityCalculator.estimatedPurity()));
+
+            double medianGcRatioPerSegment = calculateGcRatioCountMedian();
+
+            return new CnPurityResult(
+                    true, mPurityCalculator.fitCoefficient(), mPurityCalculator.fitIntercept(),
+                    mPurityCalculator.residuals(), mPurityCalculator.estimatedPurity(),
+                    mCopyNumberGcRatios.size(), mCopyNumberGcRatios.stream().mapToInt(x -> x.count()).sum(), medianGcRatioPerSegment);
         }
         catch(Exception e)
         {
             CT_LOGGER.error("sample({}) failed to load Purple and Cobalt copy-number data: {}", sampleId, e.toString());
             e.printStackTrace();
-            mValid = false;
+            return INVALID_RESULT;
         }
     }
 
-    private List<CopyNumberGcData> buildCopyNumberGcRatios(
-            final Map<Chromosome,List<CobaltRatio>> cobaltRatios, final List<PurpleCopyNumber> copyNumbers)
+    private void buildCopyNumberGcRatios(final Map<Chromosome,List<CobaltRatio>> cobaltRatios, final List<PurpleCopyNumber> copyNumbers)
     {
         // expand the Purple copy numbers to segments to match GC profile
-        List<CopyNumberGcData> copyNumberSegments = Lists.newArrayList();
-
         String currentChromosome = "";
         List<CobaltRatio> chrCobaltRatios = null;
 
@@ -98,40 +114,18 @@ public class CopyNumberProfile
 
             segmentRatios.forEach(x -> cnSegment.addRatio(x.tumorGCRatio()));
 
-            copyNumberSegments.add(cnSegment);
+            mCopyNumberGcRatios.add(cnSegment);
 
-            CT_LOGGER.debug(format("segment(%s:%d - %d) copyNumber(%.2f) count(%d) mean(%.4f) median(%.4f)",
+            CT_LOGGER.trace(format("segment(%s:%d - %d) copyNumber(%.2f) count(%d) mean(%.4f) median(%.4f)",
                     cnSegment.Chromosome, cnSegment.SegmentStart, cnSegment.SegmentEnd, cnSegment.CopyNumber,
                     cnSegment.count(), cnSegment.mean(), cnSegment.median()));
         }
-
-        return copyNumberSegments;
     }
 
-    private void writeCopyNumberSegmentData(final String sampleId, final List<CopyNumberGcData> copyNumberSegments)
+    private double calculateGcRatioCountMedian()
     {
-        try
-        {
-            String fileName = mConfig.OutputDir + sampleId + ".cn_segment_data.csv";
-
-            BufferedWriter writer = createBufferedWriter(fileName, false);
-
-            writer.write("Chromosome,SegmentStart,SegmentEnd,CopyNumber,GcRatioCount,GcRatioMedian,GcRatioMean");
-            writer.newLine();
-
-            for(CopyNumberGcData cnSegment : copyNumberSegments)
-            {
-                writer.write(format("%s,%d,%d,%.2f,%d,%.4f,%.4f",
-                        cnSegment.Chromosome, cnSegment.SegmentStart, cnSegment.SegmentEnd, cnSegment.CopyNumber,
-                        cnSegment.count(), cnSegment.median(), cnSegment.mean()));
-                writer.newLine();
-            }
-
-            writer.close();
-        }
-        catch(IOException e)
-        {
-            CT_LOGGER.error("failed to write copy number segment file: {}", e.toString());
-        }
+        List<Integer> segmentGcCounts = Lists.newArrayList();
+        mCopyNumberGcRatios.forEach(x -> segmentGcCounts.add(x.count()));
+        return medianIntegerValue(segmentGcCounts);
     }
 }

@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.ctdna.purity;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -25,20 +27,37 @@ public class PurityEstimator
 
     public void run()
     {
-        if(mConfig.PatientIds.isEmpty() || mConfig.PatientIds.size() != mConfig.SomaticVcfs.size())
+        SomaticVariants somaticVariants = new SomaticVariants(mConfig, mResultsWriter);
+
+        for(String vcf : mConfig.SomaticVcfs)
         {
-            CT_LOGGER.error("missing patient IDs or unmatched somatic VCFs in config");
+            if(!somaticVariants.processVcf(vcf))
+            {
+                System.exit(1);
+            }
+        }
+
+        PurityContext purityContext = null;
+
+        try
+        {
+            purityContext = PurityContextFile.read(mConfig.PurpleDir, mConfig.TumorId);
+        }
+        catch(Exception e)
+        {
+            CT_LOGGER.error("failed to load Purple purity: {}", e.toString());
             System.exit(1);
         }
 
-        SomaticVariants somaticVariants = new SomaticVariants(mConfig, mResultsWriter);
+        CopyNumberProfile copyNumberProfile = new CopyNumberProfile(mConfig);
 
-        for(int i = 0; i < mConfig.PatientIds.size(); ++i)
+        for(String ctDnaSample : mConfig.CtDnaSamples)
         {
-            String patientId = mConfig.PatientIds.get(i);
-            String somaticVcf = mConfig.SomaticVcfs.get(i);
+            CnPurityResult cnPurityResult = copyNumberProfile.processSample(mConfig.TumorId, ctDnaSample);
 
-            somaticVariants.processPatientVcf(patientId, somaticVcf);
+            SomaticVariantResult somaticVariantResult = somaticVariants.processSample(ctDnaSample, purityContext);
+
+            mResultsWriter.writeSampleSummary(ctDnaSample, cnPurityResult, somaticVariantResult);
         }
 
         mResultsWriter.close();
@@ -56,7 +75,7 @@ public class PurityEstimator
         PurityEstimator purityEstimator = new PurityEstimator(cmd);
         purityEstimator.run();
 
-        CT_LOGGER.info("Sample VCF analyser complete");
+        CT_LOGGER.info("Patient purity estimator complete");
     }
 
     @NotNull
