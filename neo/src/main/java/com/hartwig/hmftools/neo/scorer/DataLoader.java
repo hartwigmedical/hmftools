@@ -63,11 +63,6 @@ public class DataLoader
             List<NeoEpitopeData> neoDataList = Lists.newArrayList();
             String neoEpitopeFile = NeoEpitopeFile.generateFilename(neoDataDir, sampleId);
 
-            if(!Files.exists(Paths.get(neoEpitopeFile)))
-            {
-                neoEpitopeFile = neoDataDir + sampleId + ".imu.neo_epitopes.csv";
-            }
-
             final List<String> lines = Files.readAllLines(new File(neoEpitopeFile).toPath());
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);

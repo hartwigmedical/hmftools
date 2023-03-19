@@ -62,10 +62,13 @@ public class TrainConfig
 
     public static final String FILE_ID_POS_WEIGHT = "pos_weight";
     public static final String FILE_ID_LIKELIHOOD = "likelihood";
+    public static final String FILE_ID_FLANK_POS_WEIGHT = "flank_pos_weight";
+    public static final String FILE_ID_RECOGNITION = "recognition";
+    public static final String FILE_ID_EXPRESSION_DIST = "expression_dist";
+
     public static final String FILE_ID_RAND_DIST = "rand_dist";
     public static final String FILE_ID_LIKELIHOOD_DIST = "likelihood_rand_dist";
     public static final String FILE_ID_EXP_LIKELIHOOD_DIST = "exp_likelihood_rand_dist";
-    public static final String FILE_ID_FLANK_POS_WEIGHT = "flank_pos_weight";
 
     private static final String APPLY_FLANKS = "apply_flanks";
 

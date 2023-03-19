@@ -1,17 +1,15 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.neo.bind.ExpressionLikelihood.EXP_LIKELIHOOD_FILE;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_EXPRESSION_DIST;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_FLANK_POS_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_LIKELIHOOD;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_POS_WEIGHT;
-import static com.hartwig.hmftools.neo.bind.TrainConfig.RECOGNITION_DATA_FILE;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_RECOGNITION;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.formTrainingFilename;
 
 import org.apache.commons.cli.CommandLine;
@@ -53,16 +51,16 @@ public class ScoreConfig
     public ScoreConfig(final CommandLine cmd)
     {
         ValidationDataFile = cmd.getOptionValue(VALIDATION_DATA_FILE);
-        RecognitionDataFile = cmd.getOptionValue(RECOGNITION_DATA_FILE);
 
-        ScoreFileDir = cmd.hasOption(SCORE_FILE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SCORE_FILE_DIR)) : null;
+        ScoreFileDir = checkAddDirSeparator(cmd.getOptionValue(SCORE_FILE_DIR));
         ScoreFileId = cmd.getOptionValue(SCORE_FILE_ID);
 
         // load reference files either by specific name or using the scoring data dir and file id
         PosWeightsFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_POS_WEIGHT);
         FlankPosWeightsFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_FLANK_POS_WEIGHT);
         BindLikelihoodFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_LIKELIHOOD);
-        ExpressionLikelihoodFile = cmd.getOptionValue(EXP_LIKELIHOOD_FILE);
+        RecognitionDataFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_RECOGNITION);
+        ExpressionLikelihoodFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_EXPRESSION_DIST);
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
@@ -97,14 +95,16 @@ public class ScoreConfig
     public static void addCmdLineArgs(Options options)
     {
         RandomPeptideConfig.addCmdLineArgs(options);
-        options.addOption(VALIDATION_DATA_FILE, true, "Validation data file");
-        options.addOption(RECOGNITION_DATA_FILE, true, "Immunogenic recognition data file");
 
         options.addOption(SCORE_FILE_ID, true, "Reference file id for scoring instead of specifying individual files");
         options.addOption(SCORE_FILE_DIR, true, "Reference file directory");
         options.addOption(scoreFileConfig(FILE_ID_POS_WEIGHT), true, "Binding position weights file");
+        options.addOption(scoreFileConfig(FILE_ID_FLANK_POS_WEIGHT), true, "Binding flank weights file");
         options.addOption(scoreFileConfig(FILE_ID_LIKELIHOOD), true, "Binding likelihood file");
-        options.addOption(EXP_LIKELIHOOD_FILE, true, "Expression likelihood file");
+        options.addOption(scoreFileConfig(FILE_ID_EXPRESSION_DIST), true, "Expression likelihood file");
+        options.addOption(scoreFileConfig(FILE_ID_RECOGNITION), true, "Immunogenic pHLA recognition data file");
+
+        options.addOption(VALIDATION_DATA_FILE, true, "Validation data file");
 
         options.addOption(WRITE_SUMMARY_DATA, false, "Write summary results per allele");
         options.addOption(WRITE_PEPTIDE_SCORES, false, "Write score and rank data per peptide");

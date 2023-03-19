@@ -69,10 +69,10 @@ public class NeoScorerConfig
 
         String sampleDataDir = cmd.hasOption(SAMPLE_DATA_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR)) : "";
 
-        NeoDir = cmd.getOptionValue(NEO_DIR, sampleDataDir);
-        LilacDir = cmd.getOptionValue(LILAC_DIR, sampleDataDir);
-        PurpleDir = cmd.getOptionValue(PURPLE_DIR, sampleDataDir);
-        IsofoxDir = cmd.getOptionValue(ISOFOX_DIR, sampleDataDir);
+        NeoDir = checkAddDirSeparator(cmd.getOptionValue(NEO_DIR, sampleDataDir));
+        LilacDir = checkAddDirSeparator(cmd.getOptionValue(LILAC_DIR, sampleDataDir));
+        PurpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR, sampleDataDir));
+        IsofoxDir = checkAddDirSeparator(cmd.getOptionValue(ISOFOX_DIR, sampleDataDir));
         RnaSomaticVcf = cmd.getOptionValue(RNA_SOMATIC_VCF, sampleDataDir);
         OutputDir = cmd.hasOption(OUTPUT_DIR) ? parseOutputDir(cmd) : sampleDataDir;
         RnaSampleSuffix = cmd.getOptionValue(RNA_SAMPLE_SUFFIX, RNA_SAMPLE_APPEND_SUFFIX);
