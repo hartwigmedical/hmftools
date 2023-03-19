@@ -25,10 +25,20 @@ public final class SampleQuery {
     }
 
     @NotNull
-    public static List<Sample> run(@NotNull DatabaseAccess database) {
+    public static List<Sample> selectFromDatarequest(@NotNull DatabaseAccess database) {
+        return select(database, "datarequest");
+    }
+
+    @NotNull
+    public static List<Sample> selectFromClinical(@NotNull DatabaseAccess database) {
+        return select(database, "clinical");
+    }
+
+    @NotNull
+    private static List<Sample> select(@NotNull DatabaseAccess database, @NotNull String table) {
         List<Sample> samples = Lists.newArrayList();
 
-        Result<Record> result = database.context().resultQuery("select sampleId, doids from datarequest").fetch();
+        Result<Record> result = database.context().resultQuery("select sampleId, doids from " + table).fetch();
         for (Record record : result) {
             String sampleId = (String) record.getValue(0);
             String doidString = (String) record.getValue(1);

@@ -20,6 +20,9 @@ public final class CohortConstants {
 
         // Kidney cancer is a tough one to spread out without affecting either Kidney or Urothelial tract itself.
         DOID_COMBINATIONS_TO_MAP_TO_OTHER.add(Sets.newHashSet("263"));
+
+        // Combination of Urethra cancer and renal cell cancer cannot easily be mapped.
+        DOID_COMBINATIONS_TO_MAP_TO_OTHER.add(Sets.newHashSet("734", "2671", "4450"));
     }
 
     private CohortConstants() {
