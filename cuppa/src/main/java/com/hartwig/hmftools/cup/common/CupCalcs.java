@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.FEATURE;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.applyMinScore;
-import static com.hartwig.hmftools.cup.common.CupConstants.FEATURE_DAMPEN_FACTOR;
+import static com.hartwig.hmftools.cup.common.CupConstants.FEATURE_DAMPEN_FACTOR_DEFAULT;
 import static com.hartwig.hmftools.cup.common.CupConstants.MIN_CLASSIFIER_SCORE;
 import static com.hartwig.hmftools.common.cuppa.ResultType.CLASSIFIER;
 import static com.hartwig.hmftools.common.cuppa.ResultType.LIKELIHOOD;
@@ -88,7 +88,8 @@ public class CupCalcs
         return cancerPrevalences;
     }
 
-    public static SampleResult calcCombinedFeatureResult(final SampleData sample, final List<SampleResult> allResults, boolean purgeContributors)
+    public static SampleResult calcCombinedFeatureResult(
+            final SampleData sample, final List<SampleResult> allResults, boolean purgeContributors, double featureDampenFactor)
     {
         final Map<String,Double> cancerPrevalenceValues = Maps.newHashMap();
 
@@ -115,7 +116,7 @@ public class CupCalcs
             }
         }
 
-        dampenProbabilities(cancerPrevalenceValues, FEATURE_DAMPEN_FACTOR);
+        dampenProbabilities(cancerPrevalenceValues, featureDampenFactor);
         convertToPercentages(cancerPrevalenceValues);
 
         // remove the contributing prevalence likelihood results

@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.rna.RnaStatistics;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 public final class IsofoxDataLoader {
 
@@ -39,7 +38,7 @@ public final class IsofoxDataLoader {
         LOGGER.info(" Loaded {} fusions from {}", fusions.size(), isofoxFusionCsv);
 
         AltSjCohortData altSjData = new AltSjCohortData(isofoxAltSjCohortCsv);
-        List<NovelSpliceJunction> novelSpliceJunctions = IsofoxNovelSpliceJunctionLoader.load(isofoxAltSpliceJunctionCsv, altSjData);
+        List<NovelSpliceJunction> novelSpliceJunctions = NovelSpliceJunctionLoader.load(isofoxAltSpliceJunctionCsv, altSjData);
         LOGGER.info(" Loaded {} novel splice junctions from {}", novelSpliceJunctions.size(), isofoxAltSpliceJunctionCsv);
 
         return ImmutableIsofoxData.builder()

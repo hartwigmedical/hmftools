@@ -2,11 +2,11 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_FULL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_PARTIAL;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
-import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_FULL;
-import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_PARTIAL;
 
 import static org.junit.Assert.assertEquals;
 

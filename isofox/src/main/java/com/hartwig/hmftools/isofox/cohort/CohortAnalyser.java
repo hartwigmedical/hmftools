@@ -98,8 +98,8 @@ public class CohortAnalyser
 
                 case EXPRESSION_DISTRIBUTION:
                 {
-                    ExpressionCohortDistribution transExpDist = new ExpressionCohortDistribution(mConfig, mCmdLineArgs);
-                    transExpDist.produceCohortData();
+                    ExpressionCohortDistribution expressionDistibution = new ExpressionCohortDistribution(mConfig, mCmdLineArgs);
+                    expressionDistibution.produceCohortData();
                     break;
                 }
 

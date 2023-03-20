@@ -181,11 +181,8 @@ public class Fragment
             else
             {
                 ++nonSuppCount;
-            }
 
-            if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
-            {
-                if(!read.getSupplementaryAlignmentFlag())
+                if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
                 {
                     ++expectedSuppCount;
                 }

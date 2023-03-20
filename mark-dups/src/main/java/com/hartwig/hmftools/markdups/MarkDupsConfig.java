@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.common.FilterReadsType;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
@@ -35,6 +37,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class MarkDupsConfig
@@ -47,6 +50,7 @@ public class MarkDupsConfig
 
     public final int PartitionSize;
     public final int BufferSize;
+    public final ValidationStringency BamStringency;
 
     // UMI group config
     public final UmiConfig UMIs;
@@ -113,6 +117,7 @@ public class MarkDupsConfig
         PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_PARTITION_SIZE)));
         BufferSize = Integer.parseInt(cmd.getOptionValue(BUFFER_SIZE, String.valueOf(DEFAULT_POS_BUFFER_SIZE)));
         NoMateCigar = cmd.hasOption(NO_MATE_CIGAR);
+        BamStringency = BamUtils.validationStringency(cmd);
 
         UMIs = UmiConfig.from(cmd);
 
@@ -195,6 +200,7 @@ public class MarkDupsConfig
         options.addOption(READ_OUTPUTS, true, "Write reads: NONE (default), 'MISMATCHES', 'DUPLICATES', 'ALL'");
         options.addOption(WRITE_BAM, false, "Write BAM, default true if not write read output");
         options.addOption(NO_MATE_CIGAR, false, "Mate CIGAR not set by aligner, make no attempt to use it");
+        addValidationStringencyOption(options);
         UmiConfig.addCommandLineOptions(options);
         addThreadOptions(options);
 
@@ -223,6 +229,7 @@ public class MarkDupsConfig
         BufferSize = bufferSize;
         UMIs = new UmiConfig(umiEnabled);
         NoMateCigar = false;
+        BamStringency = ValidationStringency.STRICT;
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();

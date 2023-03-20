@@ -56,6 +56,7 @@ public class RefDataConfig
     public final String LinxDir;
     public final String PurpleDir;
     public final String IsofoxDir;
+    public final String SomaticVariantsDir;
 
     public final DatabaseAccess DbAccess;
 
@@ -77,6 +78,7 @@ public class RefDataConfig
     // pipeline files from Linx, Isofox and Purple
     public static final String LINX_DIR = "linx_dir";
     public static final String PURPLE_DIR = "purple_dir";
+    public static final String SOMATIC_VARIANTS_DIR = "somatic_variants_dir";
     public static final String ISOFOX_DIR = "isofox_dir";
 
     private static final String REF_FEATURE_OVERRIDE_FILE = "feature_override_file";
@@ -104,6 +106,7 @@ public class RefDataConfig
         LinxDir = cmd.getOptionValue(LINX_DIR, "");
         PurpleDir = cmd.getOptionValue(PURPLE_DIR, "");
         IsofoxDir = cmd.getOptionValue(ISOFOX_DIR, "");
+        SomaticVariantsDir = cmd.getOptionValue(SOMATIC_VARIANTS_DIR, "");
 
         GenPosMatrixFile = cmd.getOptionValue(REF_SNV_SAMPLE_POS_FREQ_FILE, "");
         Snv96MatrixFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
@@ -152,6 +155,7 @@ public class RefDataConfig
 
         options.addOption(REF_GENE_EXP_DATA_FILE, true, "Ref sample RNA gene expression cohort data file");
         options.addOption(REF_ALT_SJ_DATA_FILE, true, "Ref sample RNA alternate splice junction cohort data file");
+        options.addOption(SOMATIC_VARIANTS_DIR, true, "Directory with flat file (converted) somatic variant files");
 
         options.addOption(REF_FEATURE_OVERRIDE_FILE, true, "Ref feature override data file");
 

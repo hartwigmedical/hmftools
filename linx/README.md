@@ -861,8 +861,19 @@ Shown below is an example of a SS18-SSX1 fusion:
     <img src="../extended-docs/linx/default.png" width="800" alt="default">
 </p>
 
+## Known issues / points for improvement
+
+Fusion calling improvements
+- **Chained fusions disrupted by exons of other genes**  - Currently we don't call a fusion if it passes through an exon splice acceptor or donor of another gene.  But this exon may be skipped (especially if from a non-canonical transcript), or the exon may even be inserted into a 3 gene A-B-C fusion.
+
+Filtering
+- **Late calling of Artifacts** - Some samples have many false positive translocations and single breakends.   Whilst we try to detect these in LINX based on lack of copy number support, it would be better if these could be identified earlier in the pipeline, to reduce noise in the output.   
+
+LINE annotation
+- **PolyA tail can map to long A or T homopolymers** - LINX uses the polyA tail to identify LINE elements, but these tails sometimes are mapped to regions of the genome with long polyA repeats.  In this case LINX does not recognise the PolyA tail
 
 ## Version History
+- [1.23](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.23.2)
 - [1.22](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.22)
 - [1.21](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.21)
 - [1.20](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.20)

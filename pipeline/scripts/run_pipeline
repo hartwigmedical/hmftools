@@ -105,7 +105,7 @@ if [ "${ref_genome_version}" == "V37" ]; then
   germline_blacklist_bed=${resources_dir}/variants/KnownBlacklist.germline.37.bed
   germline_blacklist_vcf=${resources_dir}/variants/KnownBlacklist.germline.37.vcf.gz
   gnomad_path=${resources_dir}/variants/gnomad_variants_v37.csv.gz
-  pon_artefact_file=${resources_dir}/variants/PanelArtefacts.37.tsv.gz
+  pon_artefact_file=${resources_dir}/variants/PanelArtefacts.37.tsv
 
   # SVs (for Gripss, Linx)
   sv_hotspot_file=${resources_dir}/sv/known_fusions.37.bedpe
@@ -152,7 +152,7 @@ else
   germline_blacklist_bed=${resources_dir}/variants/KnownBlacklist.germline.38.bed
   germline_blacklist_vcf=${resources_dir}/variants/KnownBlacklist.germline.38.vcf.gz
   gnomad_path=${resources_dir}/variants/gnomad/
-  pon_artefact_file=${resources_dir}/variants/PanelArtefacts.38.tsv.gz
+  pon_artefact_file=${resources_dir}/variants/PanelArtefacts.38.tsv
 
   # SVs (for Gripss, Linx)
   sv_hotspot_file=${resources_dir}/sv/known_fusions.38.bedpe

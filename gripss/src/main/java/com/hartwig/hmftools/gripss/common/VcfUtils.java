@@ -7,14 +7,13 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IMPRECISE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.LOCAL_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PAR_ID;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_COUNT;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READPAIR_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READ_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.TAF;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
-import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 
 import java.util.List;
 
@@ -22,7 +21,6 @@ import com.google.common.collect.Lists;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFHeader;
 
 public class VcfUtils
 {
@@ -42,8 +40,8 @@ public class VcfUtils
     public static final String VT_BVF = VARIANT_FRAGMENT_BREAKEND_COVERAGE;
     public static final String VT_RP = "RP";
     public static final String VT_IC = "IC";
-    public static final String VT_REF = REFERENCE_BREAKEND_READ_COVERAGE;
-    public static final String VT_REFPAIR = REFERENCE_BREAKEND_READPAIR_COVERAGE;
+    public static final String VT_REF = REF_READ_COVERAGE;
+    public static final String VT_REFPAIR = REF_READPAIR_COVERAGE;
     public static final String VT_BUM = "BUM";
     public static final String VT_ASRP = "ASRP";
     public static final String VT_ASSR = "ASSR";
@@ -78,41 +76,6 @@ public class VcfUtils
     public static final String VT_EVENT_TYPE = "EVENTTYPE";
     public static final String VT_ALT_PATH = "ALT_PATH";
     public static final String VT_RESCUE_INFO = "RESCUED";
-
-    public static GenotypeIds parseVcfSampleIds(final VCFHeader header, final String referenceId, final String tumorId, final boolean germlineMode)
-    {
-        List<String> vcfSampleNames = header.getGenotypeSamples();
-
-        int tumorOrdinal = -1;
-        int referenceOrdinal = -1;
-        String vcfTumorId = "";
-        String vcfRefefenceId = "";
-
-        for(int i = 0; i < vcfSampleNames.size(); ++i)
-        {
-            String vcfSampleName = vcfSampleNames.get(i);
-
-            if(vcfSampleName.contains(tumorId))
-            {
-                vcfTumorId = vcfSampleNames.get(i);
-                tumorOrdinal = i;
-            }
-            else if(!referenceId.isEmpty() && vcfSampleName.contains(referenceId))
-            {
-                vcfRefefenceId = vcfSampleNames.get(i);
-                referenceOrdinal = i;
-            }
-        }
-
-        if(tumorOrdinal < 0 || (!referenceId.isEmpty() && referenceOrdinal < 0))
-        {
-            GR_LOGGER.error("missing sample names in VCF: {}", vcfSampleNames);
-            return null;
-        }
-
-        return new GenotypeIds(referenceOrdinal, tumorOrdinal, vcfRefefenceId, vcfTumorId, germlineMode);
-    }
-
 
     public static final Interval confidenceInterval(final VariantContext variantContext, final String attribute)
     {

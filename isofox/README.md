@@ -505,6 +505,7 @@ OtherGenesDown | Other genes which match the down breakpoint
 RelatedFusions | Ids of other fusions in the same gene which may be caused by the same structural variant
 
 ## Version History and Download Links
+- [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.6.1)
 - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.5)
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.4)
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.3)

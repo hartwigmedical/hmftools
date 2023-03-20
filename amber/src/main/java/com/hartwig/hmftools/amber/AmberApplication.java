@@ -54,8 +54,7 @@ public class AmberApplication implements AutoCloseable
         mLoggingOptions.setLogLevel();
 
         mVersionInfo = new VersionInfo("amber.version");
-        AMB_LOGGER.info("AMBER version: {}, build timestamp: {}",
-                mVersionInfo.version(), mVersionInfo.buildTime().toLocalTime());
+        AMB_LOGGER.info("AMBER version: {}", mVersionInfo.version());
 
         mPersistence = new AmberPersistence(mConfig);
 

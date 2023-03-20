@@ -28,6 +28,12 @@ public final class SomaticsCommon
     public static final String EXCLUDE_GEN_POS_CHR_X = "exclude_gen_pos_chr_x";
     public static final String EXCLUDE_GEN_POS_CHR_X_DESC = "Exclude chromosome X from genomic position";
 
+    public static final String GEN_POS_MAX_SAMPLE_COUNT_CFG = "gen_pos_max_sample_count";
+    public static final String GEN_POS_MAX_SAMPLE_COUNT_DESC = "Max SNV count per sample for genomic position";
+
+    public static final String GEN_POS_BUCKET_SIZE_CFG = "gen_pos_bucket_size";
+    public static final String GEN_POS_BUCKET_SIZE_DESC = "Genomic position bucket size (default: 500K)";
+
     public static final String INTEGER_FORMAT = "%.0f";
     public static final String DEC_1_FORMAT = "%.1f";
     public static final String DEC_3_FORMAT = "%.3f";

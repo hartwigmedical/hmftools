@@ -488,12 +488,13 @@ public class JunctionTracker
         if(indelCoords == null)
             return;
 
+        // reads with a sufficiently long indel only need to cover a junction with any of their read bases, not the indel itself
         for(JunctionData junctionData : mJunctions)
         {
-            if(indelCoords[SE_START] > junctionData.Position)
+            if(read.start() > junctionData.Position)
                 continue;
 
-            if(junctionData.Position > indelCoords[SE_END])
+            if(junctionData.Position > read.end())
                 break;
 
             if(reachedFragmentCap(junctionData.supportingFragmentCount()))
@@ -501,6 +502,8 @@ public class JunctionTracker
 
             if(supportedJunctions.containsKey(junctionData))
                 continue;
+
+            boolean hasExactSupport = false;
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
@@ -518,6 +521,14 @@ public class JunctionTracker
                 read.setReadType(EXACT_SUPPORT, true);
                 junctionData.addReadType(read, EXACT_SUPPORT);
                 supportedJunctions.put(junctionData, EXACT_SUPPORT);
+                hasExactSupport = true;
+            }
+
+            if(!hasExactSupport)
+            {
+                read.setReadType(SUPPORT, true);
+                junctionData.addReadType(read, SUPPORT);
+                supportedJunctions.put(junctionData, SUPPORT);
             }
         }
     }

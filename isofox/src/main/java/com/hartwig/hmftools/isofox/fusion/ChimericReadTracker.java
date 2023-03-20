@@ -219,7 +219,7 @@ public class ChimericReadTracker
 
             final ChimericReadGroup existingGroup = mChimericReadMap.get(read1.Id);
 
-            for(ReadRecord read : existingGroup.Reads)
+            for(ReadRecord read : existingGroup.reads())
             {
                 ISF_LOGGER.error("existing read: {}", read);
             }
@@ -227,8 +227,8 @@ public class ChimericReadTracker
             ISF_LOGGER.error("new read: {}", read1);
             ISF_LOGGER.error("new read: {}", read2);
 
-            existingGroup.Reads.add(read1);
-            existingGroup.Reads.add(read2);
+            existingGroup.addRead(read1);
+            existingGroup.addRead(read2);
         }
         else
         {
@@ -263,7 +263,7 @@ public class ChimericReadTracker
             if (chimericReads == null)
                 mChimericReadMap.put(read.Id, new ChimericReadGroup(read));
             else
-                chimericReads.Reads.add(read);
+                chimericReads.addRead(read);
         }
 
         // migrate any local chimeric fragments for analysis as alternate splice junctions
@@ -272,7 +272,7 @@ public class ChimericReadTracker
         for(final ChimericReadGroup readGroup : mChimericReadMap.values())
         {
             // skip reads if all will be processed later or have been already
-            final List<ReadRecord> reads = readGroup.Reads;
+            final List<ReadRecord> reads = readGroup.reads();
             final String readId = reads.get(0).Id;
 
             int readCount = reads.size();
@@ -318,7 +318,7 @@ public class ChimericReadTracker
             // and free up other gene & region read data (to avoid retaining large numbers of references/memory)
             for(final ChimericReadGroup readGroup : mChimericReadMap.values())
             {
-                List<FusionRead> reads = convertReads(readGroup.Reads);
+                List<FusionRead> reads = convertReads(readGroup.reads());
                 reads.forEach(x -> x.setReadJunctionDepth(baseDepth));
                 mFusionReadGroupMap.put(readGroup.id(), new FusionReadGroup(readGroup.id(), reads));
             }
@@ -481,7 +481,7 @@ public class ChimericReadTracker
     private void collectCandidateJunctions(final ChimericReadGroup readGroup)
     {
         // type 1: split reads
-        final ReadRecord splitRead = readGroup.Reads.stream()
+        final ReadRecord splitRead = readGroup.reads().stream()
             .filter(x -> x.containsSplit())
             .filter(x -> x.spansGeneCollections() || x.hasInterGeneSplit())
             .findFirst().orElse(null);
@@ -499,7 +499,7 @@ public class ChimericReadTracker
         final int[] junctionPositions = new int[SE_PAIR];
 
         // type 2: supplementary with clipping
-        final ReadRecord suppRead = readGroup.Reads.stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
+        final ReadRecord suppRead = readGroup.reads().stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
         if(suppRead != null)
         {
             ClippedSide scSide = ReadRecord.clippedSide(suppRead);
@@ -515,11 +515,11 @@ public class ChimericReadTracker
         }
 
         // type 3: discordant with at least 1 known-pair gene, must be a single-read group since the other will be distant
-        if(readGroup.Reads.size() > 1 || mKnownGeneIds.isEmpty() || !readInKnownGene(readGroup))
+        if(readGroup.reads().size() > 1 || mKnownGeneIds.isEmpty() || !readInKnownGene(readGroup))
             return;
 
         // select the side with the longest soft-clipping
-        ReadRecord read = readGroup.Reads.get(0);
+        ReadRecord read = readGroup.reads().get(0);
 
         ClippedSide scSide = ReadRecord.clippedSide(read);
 
@@ -552,7 +552,7 @@ public class ChimericReadTracker
         if(mKnownGeneIds.isEmpty())
             return false;
 
-        for(ReadRecord read : readGroup.Reads)
+        for(ReadRecord read : readGroup.reads())
         {
             if(read.getMappedRegions().keySet().stream()
                     .anyMatch(x -> x.getTransExonRefs().stream().anyMatch(y -> mKnownGeneIds.contains(y.GeneId))))

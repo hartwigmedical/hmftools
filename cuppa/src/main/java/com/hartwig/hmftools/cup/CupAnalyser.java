@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
@@ -181,6 +182,9 @@ public class CupAnalyser
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
+        final VersionInfo version = new VersionInfo("cuppa.version");
+        CUP_LOGGER.info("Cuppa version: {}", version.version());
+
         Options options = new Options();
 
         CuppaConfig.addCmdLineArgs(options);

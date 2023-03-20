@@ -3,6 +3,7 @@ package com.hartwig.hmftools.neo.bind;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.logVersion;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 
 import java.io.BufferedWriter;
@@ -17,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.stats.AucCalc;
 import com.hartwig.hmftools.common.stats.AucData;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -413,6 +415,8 @@ public class BindScorer
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
+        logVersion();
+
         final Options options = new Options();
 
         ScoreConfig.addCmdLineArgs(options);

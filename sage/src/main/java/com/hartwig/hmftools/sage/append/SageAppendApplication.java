@@ -267,7 +267,7 @@ public class SageAppendApplication
         final String bam = mConfig.ReferenceBams.get(0);
 
         SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(mConfig.Stringency)
+                .validationStringency(mConfig.BamStringency)
                 .referenceSource(new ReferenceSource(mRefGenome)).open(new File(bam));
 
         SAMSequenceDictionary dictionary = tumorReader.getFileHeader().getSequenceDictionary();

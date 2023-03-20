@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -19,16 +18,14 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-
 public class NeoEpitopeFile
 {
     public final int Id;
     public final NeoEpitopeType VariantType;
     public final String VariantInfo;
+    public final double VariantCopyNumber;
     public final double CopyNumber;
+    public final double SubclonalLikelihood;
     public final String[] GeneIds;
     public final String[] GeneNames;
 
@@ -46,35 +43,54 @@ public class NeoEpitopeFile
     public final int[][] CodingBasePositions;
     public final String[] CodingBases;
     public final String[] CodingBaseCigars;
-    public final double[] CancerTpmTotal;
-    public final double[] CohortTpmTotal;
+
+    public static final String NEO_FILE_ID = "neo";
 
     public static final String FLD_NE_ID = "NeId";
     public static final String FLD_NE_VAR_TYPE = "VariantType";
     public static final String FLD_NE_VAR_INFO = "VariantInfo";
+    public static final String FLD_NE_GENE_ID_UP = "GeneIdUp";
+    public static final String FLD_NE_GENE_ID_DOWN = "GeneIdDown";
+    public static final String FLD_NE_GENE_NAME_UP = "GeneNameUp";
+    public static final String FLD_NE_GENE_NAME_DOWN = "GeneNameDown";
+    public static final String FLD_NE_AA_UP = "UpstreamAA";
+    public static final String FLD_NE_AA_DOWN = "DownstreamAA";
+    public static final String FLD_NE_AA_NOVEL = "NovelAA";
+    public static final String FLD_NE_TRANS_UP = "UpTranscripts";
+    public static final String FLD_NE_TRANS_DOWN = "DownTranscripts";
+    public static final String FLD_NE_NMD_MIN = "NmdMin";
+    public static final String FLD_NE_NMD_MAX = "NmdMax";
+    public static final String FLD_NE_CB_LEN_MIN = "CodingBasesLengthMin";
+    public static final String FLD_NE_CB_LEN_MAX = "CodingBasesLengthMax";
+    public static final String FLD_NE_FUSED_LEN = "FusedIntronLength";
+    public static final String FLD_NE_SKIP_DONORS = "SkippedDonors";
+    public static final String FLD_NE_SKIP_ACCEPTORS = "SkippedAcceptors";
+    public static final String FLD_NE_VAR_CN = "VariantCopyNumber";
+    public static final String FLD_NE_CN = "CopyNumber";
+    public static final String FLD_NE_SC_LIKELIHOOD = "SubclonalLikelihood";
 
     public static final String DELIMITER = ",";
     public static final String ITEM_DELIM = ";";
     public static final String VAR_INFO_DELIM = ":";
     private static final String FUSION_INFO_DELIM = ";";
 
-    protected static final Logger NEO_LOGGER = LogManager.getLogger(NeoEpitopeFile.class);
-
     public NeoEpitopeFile(
-            int id, final NeoEpitopeType varType, final String varInfo, final double copyNumber,
+            int id, final NeoEpitopeType varType, final String varInfo,
+            final double variantCopyNumber, final double copyNumber, final double subclonalLikelihood,
             final String geneIdUp, final String geneIdDown, final String geneNameUp, final String geneNameDown,
             final String chrUp, final String chrDown, byte orientUp, byte orientDown,
             final String upAA, final String downAAs, final String novelAAs,
             int nmdBasesMin, int nmdBasesMax, int codingBasesLengthMin, int codingBasesLengthMax, int fusedIntronLength, int skippedDonors, int skippedAcceptors,
             final String transcriptsUp, final String transcriptsDown, final String wildtypeAAs,
             int codingBaseUpPosStart, int codingBaseUpPosEnd, final String codingBasesUp, final String codingBaseCigarUp,
-            int codingBaseDownPosStart, int codingBaseDownPosEnd, final String codingBasesDown, final String codingBaseCigarDown,
-            double tmpCancerUp, double tmpCohortUp, double tmpCancerDown, double tmpCohortDown)
+            int codingBaseDownPosStart, int codingBaseDownPosEnd, final String codingBasesDown, final String codingBaseCigarDown)
     {
         Id = id;
         VariantType = varType;
         VariantInfo = varInfo;
+        VariantCopyNumber = variantCopyNumber;
         CopyNumber = copyNumber;
+        SubclonalLikelihood = subclonalLikelihood;
         GeneIds = new String[] { geneIdUp, geneIdDown };
         GeneNames = new String[] { geneNameUp, geneNameDown };
         Chromosomes = new String[] { chrUp, chrDown };
@@ -94,37 +110,26 @@ public class NeoEpitopeFile
         CodingBasePositions = new int[FS_PAIR][SE_PAIR];
         CodingBasePositions[FS_UP] = new int[] {codingBaseUpPosStart, codingBaseUpPosEnd};
         CodingBasePositions[FS_DOWN] = new int[] {codingBaseDownPosStart, codingBaseDownPosEnd};
-        CancerTpmTotal = new double[] { tmpCancerUp, tmpCohortUp };
-        CohortTpmTotal = new double[] { tmpCancerDown, tmpCohortDown };
     }
 
-    private static final String FILE_EXTENSION = ".neo.neoepitopes.csv";
-    private static final String OLD_FILE_EXTENSION = ".imu.neo_epitopes.csv";
+    private static final String FILE_EXTENSION = ".neo.neo_data.csv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
-        String filename = basePath + File.separator + sample + OLD_FILE_EXTENSION;
-
-        if(Files.exists(Paths.get(filename)))
-            return filename;
-
         return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
-    @NotNull
     public static List<NeoEpitopeFile> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<NeoEpitopeFile> neos) throws IOException
+    public static void write(final String filename, final List<NeoEpitopeFile> neos) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(neos));
     }
 
-    @NotNull
-    private static List<String> toLines(@NotNull final List<NeoEpitopeFile> neos)
+    private static List<String> toLines(final List<NeoEpitopeFile> neos)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -132,8 +137,7 @@ public class NeoEpitopeFile
         return lines;
     }
 
-    @NotNull
-    private static List<NeoEpitopeFile> fromLines(@NotNull List<String> lines)
+    private static List<NeoEpitopeFile> fromLines(final List<String> lines)
     {
         List<NeoEpitopeFile> neoepitopes = Lists.newArrayList();
 
@@ -146,31 +150,32 @@ public class NeoEpitopeFile
 
         Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
 
-        Integer sampleIndex = fieldsIndexMap.get(FLD_NE_ID);
         int neIdIndex = fieldsIndexMap.get(FLD_NE_ID);
         int varTypeIndex = fieldsIndexMap.get(FLD_NE_VAR_TYPE);
         int varInfoIndex = fieldsIndexMap.get(FLD_NE_VAR_INFO);
-        int geneIdUpIndex = fieldsIndexMap.get("GeneIdUp");
-        int geneIdDowwIndex = fieldsIndexMap.get("GeneIdDown");
-        int geneNameUpIndex = fieldsIndexMap.get("GeneNameUp");
-        int geneNameDownIndex = fieldsIndexMap.get("GeneNameDown");
+        int geneIdUpIndex = fieldsIndexMap.get(FLD_NE_GENE_ID_UP);
+        int geneIdDownIndex = fieldsIndexMap.get(FLD_NE_GENE_ID_DOWN);
+        int geneNameUpIndex = fieldsIndexMap.get(FLD_NE_GENE_NAME_UP);
+        int geneNameDownIndex = fieldsIndexMap.get(FLD_NE_GENE_NAME_DOWN);
         int chrUpIndex = fieldsIndexMap.get("ChrUp");
         int chrDownIndex = fieldsIndexMap.get("ChrDown");
         int orientUpIndex = fieldsIndexMap.get("OrientUp");
         int orientDownIndex = fieldsIndexMap.get("OrientDown");
-        int upAaIndex = fieldsIndexMap.get("UpstreamAA");
-        int downAaIndex = fieldsIndexMap.get("DownstreamAA");
-        int novelAaIndex = fieldsIndexMap.get("NovelAA");
-        int nmdMinIndex = fieldsIndexMap.get("NmdMin");
-        int nmdMaxIndex = fieldsIndexMap.get("NmdMax");
-        int jcnIndex = fieldsIndexMap.get("JunctionCopyNumber");
-        int cbLenMinIndex = fieldsIndexMap.get("CodingBasesLengthMin");
-        int cbLenMaxIndex = fieldsIndexMap.get("CodingBasesLengthMax");
-        int feLenIndex = fieldsIndexMap.get("FusedIntronLength");
-        int skipDonIndex = fieldsIndexMap.get("SkippedDonors");
-        int skipAccIndex = fieldsIndexMap.get("SkippedAcceptors");
-        int upTransIndex = fieldsIndexMap.get("UpTranscripts");
-        int downTransIndex = fieldsIndexMap.get("DownTranscripts");
+        int upAaIndex = fieldsIndexMap.get(FLD_NE_AA_UP);
+        int downAaIndex = fieldsIndexMap.get(FLD_NE_AA_DOWN);
+        int novelAaIndex = fieldsIndexMap.get(FLD_NE_AA_NOVEL);
+        int nmdMinIndex = fieldsIndexMap.get(FLD_NE_NMD_MIN);
+        int nmdMaxIndex = fieldsIndexMap.get(FLD_NE_NMD_MAX);
+        int vcnIndex = fieldsIndexMap.get(FLD_NE_VAR_CN);
+        int cnIndex = fieldsIndexMap.get(FLD_NE_CN);
+        int sclIndex = fieldsIndexMap.get(FLD_NE_SC_LIKELIHOOD);
+        int cbLenMinIndex = fieldsIndexMap.get(FLD_NE_CB_LEN_MIN);
+        int cbLenMaxIndex = fieldsIndexMap.get(FLD_NE_CB_LEN_MAX);
+        int feLenIndex = fieldsIndexMap.get(FLD_NE_FUSED_LEN);
+        int skipDonIndex = fieldsIndexMap.get(FLD_NE_SKIP_DONORS);
+        int skipAccIndex = fieldsIndexMap.get(FLD_NE_SKIP_ACCEPTORS);
+        int transUpIndex = fieldsIndexMap.get(FLD_NE_TRANS_UP);
+        int transDownIndex = fieldsIndexMap.get(FLD_NE_TRANS_DOWN);
         int wtAaIndex = fieldsIndexMap.get("WildtypeAA");
         int cbUpPosStartIndex = fieldsIndexMap.get("CodingBaseUpPosStart");
         int cbUpPosEndIndex = fieldsIndexMap.get("CodingBaseUpPosEnd");
@@ -180,35 +185,22 @@ public class NeoEpitopeFile
         int cbDownPosEndIndex = fieldsIndexMap.get("CodingBaseDownPosEnd");
         int cbDownIndex = fieldsIndexMap.get("CodingBasesDown");
         int cbCigDownIndex = fieldsIndexMap.get("CodingBaseCigarDown");
-        int tpmCanUpIndex = fieldsIndexMap.get("TpmCancerUp");
-        int tpmCohUpIndex = fieldsIndexMap.get("TpmCohortUp");
-        int tpmCanDownIndex = fieldsIndexMap.get("TpmCancerDown");
-        int tpmCohDownIndex = fieldsIndexMap.get("TpmCohortDown");
 
         for(String line : lines)
         {
             String[] values = line.split(DELIMITER, -1);
 
-            try
-            {
-                neoepitopes.add(new NeoEpitopeFile(
-                        Integer.parseInt(values[neIdIndex]), NeoEpitopeType.valueOf(values[varTypeIndex]), values[varInfoIndex], Double.parseDouble(values[jcnIndex]),
-                        values[geneIdUpIndex], values[geneIdDowwIndex], values[geneNameUpIndex], values[geneNameDownIndex],
-                        values[chrUpIndex], values[chrDownIndex], Byte.parseByte(values[orientUpIndex]), Byte.parseByte(values[orientDownIndex]),
-                        values[upAaIndex], values[downAaIndex], values[novelAaIndex], Integer.parseInt(values[nmdMinIndex]), Integer.parseInt(values[nmdMaxIndex]),
-                        Integer.parseInt(values[cbLenMinIndex]), Integer.parseInt(values[cbLenMaxIndex]),
-                        Integer.parseInt(values[feLenIndex]), Integer.parseInt(values[skipDonIndex]), Integer.parseInt(values[skipAccIndex]),
-                        values[upTransIndex], values[downTransIndex], values[wtAaIndex],
-                        Integer.parseInt(values[cbUpPosStartIndex]), Integer.parseInt(values[cbUpPosEndIndex]), values[cbUpIndex], values[cbCigUpIndex],
-                        Integer.parseInt(values[cbDownPosStartIndex]), Integer.parseInt(values[cbDownPosEndIndex]), values[cbDownIndex], values[cbCigDownIndex],
-                        Double.parseDouble(values[tpmCanUpIndex]), Double.parseDouble(values[tpmCohUpIndex]),
-                        Double.parseDouble(values[tpmCanDownIndex]), Double.parseDouble(values[tpmCohDownIndex])));
-            }
-            catch(Exception e)
-            {
-                NEO_LOGGER.error("failed to read neoepitope line: {}", line);
-            }
-
+            neoepitopes.add(new NeoEpitopeFile(
+                    Integer.parseInt(values[neIdIndex]), NeoEpitopeType.valueOf(values[varTypeIndex]), values[varInfoIndex],
+                    Double.parseDouble(values[vcnIndex]), Double.parseDouble(values[cnIndex]), Double.parseDouble(values[sclIndex]),
+                    values[geneIdUpIndex], values[geneIdDownIndex], values[geneNameUpIndex], values[geneNameDownIndex],
+                    values[chrUpIndex], values[chrDownIndex], Byte.parseByte(values[orientUpIndex]), Byte.parseByte(values[orientDownIndex]),
+                    values[upAaIndex], values[downAaIndex], values[novelAaIndex], Integer.parseInt(values[nmdMinIndex]), Integer.parseInt(values[nmdMaxIndex]),
+                    Integer.parseInt(values[cbLenMinIndex]), Integer.parseInt(values[cbLenMaxIndex]),
+                    Integer.parseInt(values[feLenIndex]), Integer.parseInt(values[skipDonIndex]), Integer.parseInt(values[skipAccIndex]),
+                    values[transUpIndex], values[transDownIndex], values[wtAaIndex],
+                    Integer.parseInt(values[cbUpPosStartIndex]), Integer.parseInt(values[cbUpPosEndIndex]), values[cbUpIndex], values[cbCigUpIndex],
+                    Integer.parseInt(values[cbDownPosStartIndex]), Integer.parseInt(values[cbDownPosEndIndex]), values[cbDownIndex], values[cbCigDownIndex]));
         }
 
         return neoepitopes;
@@ -220,27 +212,29 @@ public class NeoEpitopeFile
                 .add(FLD_NE_ID)
                 .add(FLD_NE_VAR_TYPE)
                 .add(FLD_NE_VAR_INFO)
-                .add("JunctionCopyNumber")
-                .add("GeneIdUp")
-                .add("GeneIdDown")
-                .add("GeneNameUp")
-                .add("GeneNameDown")
+                .add(FLD_NE_VAR_CN)
+                .add(FLD_NE_CN)
+                .add(FLD_NE_SC_LIKELIHOOD)
+                .add(FLD_NE_GENE_ID_UP)
+                .add(FLD_NE_GENE_ID_DOWN)
+                .add(FLD_NE_GENE_NAME_UP)
+                .add(FLD_NE_GENE_NAME_DOWN)
                 .add("ChrUp")
                 .add("ChrDown")
                 .add("OrientUp")
                 .add("OrientDown")
-                .add("UpstreamAA")
-                .add("DownstreamAA")
-                .add("NovelAA")
-                .add("NmdMin")
-                .add("NmdMax")
-                .add("CodingBasesLengthMin")
-                .add("CodingBasesLengthMax")
-                .add("FusedIntronLength")
-                .add("SkippedDonors")
-                .add("SkippedAcceptors")
-                .add("UpTranscripts")
-                .add("DownTranscripts")
+                .add(FLD_NE_AA_UP)
+                .add(FLD_NE_AA_DOWN)
+                .add(FLD_NE_AA_NOVEL)
+                .add(FLD_NE_NMD_MIN)
+                .add(FLD_NE_NMD_MAX)
+                .add(FLD_NE_CB_LEN_MIN)
+                .add(FLD_NE_CB_LEN_MAX)
+                .add(FLD_NE_FUSED_LEN)
+                .add(FLD_NE_SKIP_DONORS)
+                .add(FLD_NE_SKIP_ACCEPTORS)
+                .add(FLD_NE_TRANS_UP)
+                .add(FLD_NE_TRANS_DOWN)
                 .add("WildtypeAA")
                 .add("CodingBaseUpPosStart")
                 .add("CodingBaseUpPosEnd")
@@ -250,22 +244,19 @@ public class NeoEpitopeFile
                 .add("CodingBaseDownPosEnd")
                 .add("CodingBasesDown")
                 .add("CodingBaseCigarDown")
-                .add("TpmCancerUp")
-                .add("TpmCohortUp")
-                .add("TpmCancerDown")
-                .add("TpmCohortDown")
                 .toString();
     }
 
-    @NotNull
-    public static String toString(@NotNull final NeoEpitopeFile neo)
+    public static String toString(final NeoEpitopeFile neo)
     {
         StringJoiner sj = new StringJoiner(DELIMITER);
 
         sj.add(String.valueOf(neo.Id));
         sj.add(neo.VariantType.toString());
         sj.add(neo.VariantInfo);
+        sj.add(String.format("%.4f", neo.VariantCopyNumber));
         sj.add(String.format("%.4f", neo.CopyNumber));
+        sj.add(String.format("%.4f", neo.SubclonalLikelihood));
         sj.add(neo.GeneIds[FS_UP]);
         sj.add(neo.GeneIds[FS_DOWN]);
         sj.add(neo.GeneNames[FS_UP]);
@@ -295,39 +286,9 @@ public class NeoEpitopeFile
         sj.add(String.valueOf(neo.CodingBasePositions[FS_DOWN][SE_END]));
         sj.add(neo.CodingBases[FS_DOWN]);
         sj.add(neo.CodingBaseCigars[FS_DOWN]);
-        sj.add(String.format("%6.3e", neo.CancerTpmTotal[FS_UP]));
-        sj.add(String.format("%6.3e", neo.CohortTpmTotal[FS_UP]));
-        sj.add(String.format("%6.3e", neo.CancerTpmTotal[FS_DOWN]));
-        sj.add(String.format("%6.3e", neo.CohortTpmTotal[FS_DOWN]));
 
         return sj.toString();
     }
-
-    /*
-    @NotNull
-    public static NeoEpitopeFile fromString(@NotNull final String data, boolean skipSampleId)
-    {
-        final String[] values = data.split(DELIMITER, -1);
-
-        int index = 0;
-
-        if(skipSampleId)
-            ++index;
-
-        return new NeoEpitopeFile(
-                Integer.parseInt(values[index++]), NeoEpitopeType.valueOf(values[index++]), values[index++], Double.parseDouble(values[index++]),
-                values[index++], values[index++], values[index++], values[index++],
-                values[index++], values[index++], Byte.parseByte(values[index++]), Byte.parseByte(values[index++]),
-                values[index++], values[index++], values[index++], Integer.parseInt(values[index++]), Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]), Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), Integer.parseInt(values[index++]),
-                values[index++], values[index++], values[index++],
-                Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), values[index++], values[index++],
-                Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), values[index++], values[index++],
-                Double.parseDouble(values[index++]), Double.parseDouble(values[index++]),
-                Double.parseDouble(values[index++]), Double.parseDouble(values[index++]));
-    }
-    */
 
     public static String pointMutationInfo(final String chromosome, int position, final String ref, final String alt)
     {
@@ -376,5 +337,4 @@ public class NeoEpitopeFile
         Arrays.stream(transUp.split(ITEM_DELIM)).forEach(x -> upNames.add(x));
         Arrays.stream(transDown.split(ITEM_DELIM)).forEach(x -> downNames.add(x));
     }
-
 }

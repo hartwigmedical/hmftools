@@ -9,7 +9,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface GCProfile extends GenomeRegion {
+public interface GCProfile extends GenomeRegion
+{
 
     double MIN_MAPPABLE_PERCENTAGE = 0.85;
 
@@ -19,7 +20,8 @@ public interface GCProfile extends GenomeRegion {
 
     double mappablePercentage();
 
-    default boolean isMappable() {
+    default boolean isMappable()
+    {
         return Doubles.greaterOrEqual(mappablePercentage(), MIN_MAPPABLE_PERCENTAGE);
     }
 }

@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.isofox.cohort;
 
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.ALT_SJ_FILE_ID;
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_DATA_FILE_ID;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.fusion.FusionWriter.RAW_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.fusion.FusionWriter.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SPLICE_SITE_FILE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.TRANSCRIPT_RESULTS_FILE;
 import static com.hartwig.hmftools.isofox.unmapped.UmrFinder.UNMAPPED_READS_FILE_ID;
 
 public enum AnalysisType
@@ -38,7 +38,7 @@ public enum AnalysisType
         switch(type)
         {
             case GENE_EXPRESSION_COMPARE:
-                return GENE_DATA_FILE_ID;
+                return GENE_EXPRESSION_FILE_ID;
 
             case SUMMARY:
                 return SUMMARY_FILE;
@@ -61,10 +61,10 @@ public enum AnalysisType
                 return PASS_FUSION_FILE_ID;
 
             case GENE_EXPRESSION_MATRIX:
-                return GENE_DATA_FILE_ID;
+                return GENE_EXPRESSION_FILE_ID;
 
             case TRANSCRIPT_EXPRESSION_MATRIX:
-                return TRANSCRIPT_RESULTS_FILE;
+                return TRANSCRIPT_EXPRESSION_FILE_ID;
 
             default:
                 return "";

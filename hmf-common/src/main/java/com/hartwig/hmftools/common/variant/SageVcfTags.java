@@ -30,9 +30,23 @@ public final class SageVcfTags
     public static final String REPEAT_SEQUENCE_FLAG = "REP_S";
     private static final String REPEAT_FLAG_DESCRIPTION = "Repeat sequence";
 
+    public static final String READ_CONTEXT_COUNT = "RC_CNT";
+    public static final String READ_CONTEXT_COUNT_DESCRIPTION =
+            "Read context counts [Full, Partial, Core, Realigned, Alt, Reference, Total]";
+
     public static final String READ_CONTEXT_QUALITY = "RC_QUAL";
     public static final String READ_CONTEXT_QUALITY_DESCRIPTION =
             "Read context quality [Full, Partial, Core, Realigned, Alt, Reference, Total]";
+
+    // indices for read counts and qualities
+    public static final int RC_FULL = 0;
+    public static final int RC_PARTIAL = 1;
+    public static final int RC_CORE = 2;
+    public static final int RC_REALIGNED = 3;
+    public static final int RC_ALT = 4;
+    public static final int RC_REF = 5;
+    public static final int RC_TOTAL = 6;
+    public static final int RC_MAX = RC_TOTAL + 1;
 
     public static final String LIST_SEPARATOR = ",";
 

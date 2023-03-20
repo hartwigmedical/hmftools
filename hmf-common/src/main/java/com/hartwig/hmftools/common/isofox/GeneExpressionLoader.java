@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.isofox;
 
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_TPM;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
@@ -19,11 +22,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class GeneExpressionLoader
 {
-    private static final String FLD_TPM = "AdjTPM";
-
-    private static final String FLD_SPLICED_FRAGS = "SplicedFragments";
-    private static final String FLD_UNSPLICED_FRAGS = "UnsplicedFragments";
-
     @NotNull
     public static List<GeneExpression> loadGeneExpression(
             final String isofoxGeneDataCsv,

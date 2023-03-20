@@ -81,18 +81,18 @@ public class GeneCollection
 
     public int id() { return mId; }
     public String chrId() { return String.format("%s_%d", mChromosome, mId); }
-    public final String chromosome() { return mChromosome; }
-    public final List<GeneReadData> genes() { return mGenes; }
-    public final List<String> geneIds() { return mGeneIds; }
+    public String chromosome() { return mChromosome; }
+    public List<GeneReadData> genes() { return mGenes; }
+    public List<String> geneIds() { return mGeneIds; }
     public final int[] regionBounds() { return mRegionBounds; }
     public void setNonGenicPosition(int se, int position) { mNonGenicPositions[se] = position; }
     public int[] getNonGenicPositions() { return mNonGenicPositions; }
     public boolean isEndOfChromosome() { return mEndOfChromosome; }
     public void setEndOfChromosome() { mEndOfChromosome = true; }
 
-    public final List<TranscriptData> getTranscripts() { return mTranscripts; }
+    public List<TranscriptData> getTranscripts() { return mTranscripts; }
 
-    public final List<RegionReadData> getExonRegions() { return mExonRegions; }
+    public List<RegionReadData> getExonRegions() { return mExonRegions; }
     public List<int[]> getCommonExonicRegions() { return mCommonExonicRegions; }
 
     public int getStrand(int transId)

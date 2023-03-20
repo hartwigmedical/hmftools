@@ -35,7 +35,7 @@ public class BqrThread extends Thread
         mResults = results;
 
         mBamReader = SamReaderFactory.makeDefault()
-                .validationStringency(mConfig.Stringency)
+                .validationStringency(mConfig.BamStringency)
                 .referenceSource(new ReferenceSource(mRefGenome))
                 .open(new File(bamFile));
 

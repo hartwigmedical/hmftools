@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -19,6 +18,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.cobalt.Chromosome;
 import com.hartwig.hmftools.cobalt.count.ReadCount;
 import com.hartwig.hmftools.cobalt.diploid.DiploidRatioLoader;
+import com.hartwig.hmftools.cobalt.lowcov.LowCovBucket;
+import com.hartwig.hmftools.cobalt.lowcov.LowCoverageRatioBuilder;
 import com.hartwig.hmftools.cobalt.targeted.TargetRegionEnrichment;
 import com.hartwig.hmftools.cobalt.targeted.TargetedRatioBuilder;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
@@ -47,11 +48,20 @@ public class RatioSupplier
 
     private TargetRegionEnrichment mTargetRegionEnrichment = null;
 
+    enum SparseBucketPolicy
+    {
+        DO_NOT_CONSOLIDATE,
+        USE_PROVIDED_BUCKETS,
+        CALC_CONSOLIDATED_BUCKETS
+    }
+
     static class SampleRatios
     {
         // processing states
         protected final GcNormalizedRatioBuilder gcNormalizedRatioBuilder;
-        protected final RatioBuilder ratioBuilder;
+        protected RatioBuilder ratioBuilder;
+
+        @Nullable Multimap<Chromosome, LowCovBucket> consolidatedBuckets;
 
         ArrayListMultimap<Chromosome, ReadRatio> getRatios() { return ratioBuilder.ratios(); }
 
@@ -60,18 +70,43 @@ public class RatioSupplier
                 final Multimap<Chromosome, ReadCount> readCounts,
                 final Multimap<Chromosome, GCProfile> gcProfiles,
                 @Nullable TargetRegionEnrichment targetRegionEnrichment,
+                SparseBucketPolicy sparseBucketPolicy,
+                @Nullable Multimap<Chromosome, LowCovBucket> consolidatedBuckets,
                 final String outputDir) throws IOException
         {
+            CB_LOGGER.info("calculating sample ratios for {}", sampleId);
+
             gcNormalizedRatioBuilder = new GcNormalizedRatioBuilder(gcProfiles, readCounts);
+
+            ratioBuilder = gcNormalizedRatioBuilder;
 
             if (targetRegionEnrichment != null)
             {
                 ratioBuilder = new TargetedRatioBuilder(
                         targetRegionEnrichment.regions(), targetRegionEnrichment.regionEnrichment(), gcNormalizedRatioBuilder.ratios());
             }
-            else
+
+            switch (sparseBucketPolicy)
             {
-                ratioBuilder = gcNormalizedRatioBuilder;
+                case DO_NOT_CONSOLIDATE:
+                    this.consolidatedBuckets = null;
+                    break;
+                case USE_PROVIDED_BUCKETS:
+                    this.consolidatedBuckets = consolidatedBuckets;
+                    break;
+                case CALC_CONSOLIDATED_BUCKETS:
+                {
+                    // determine consolidated buckets
+                    // determine the low cov consolidation window count
+                    double medianReadCount = gcNormalizedRatioBuilder.gcMedianReadCount().medianReadCount();
+                    this.consolidatedBuckets = LowCoverageRatioBuilder.calcConsolidateBuckets(gcNormalizedRatioBuilder.ratios(), medianReadCount);
+                    break;
+                }
+            }
+
+            if (this.consolidatedBuckets != null)
+            {
+                ratioBuilder = new LowCoverageRatioBuilder(this.consolidatedBuckets, gcNormalizedRatioBuilder.ratios());
             }
 
             CB_LOGGER.info("Persisting {} gc read count to {}", sampleId, outputDir);
@@ -89,10 +124,12 @@ public class RatioSupplier
                 final Multimap<Chromosome, ReadCount> readCounts,
                 final Multimap<Chromosome, GCProfile> gcProfiles,
                 @Nullable TargetRegionEnrichment targetRegionEnrichment,
+                SparseBucketPolicy sparseBucketPolicy,
+                @Nullable Multimap<Chromosome, LowCovBucket> consolidatedBuckets,
                 final Collection<Chromosome> chromosomes,
                 final String outputDir) throws IOException
         {
-            super(referenceId, readCounts, gcProfiles, targetRegionEnrichment, outputDir);
+            super(referenceId, readCounts, gcProfiles, targetRegionEnrichment, sparseBucketPolicy, consolidatedBuckets, outputDir);
 
             // TODO: check this
             final List<MedianRatio> medianRatios = MedianRatioFactory.createFromReadRatio(toCommonChromosomeMap(getRatios()));
@@ -134,7 +171,8 @@ public class RatioSupplier
             CB_LOGGER.fatal("Tumor count should not be null");
             throw new RuntimeException("tumor count is null");
         }
-        var tumorRatios = new SampleRatios(mTumorId, mTumorCounts, mGcProfiles, mTargetRegionEnrichment, mOutputDir);
+        SparseBucketPolicy sparseBucketPolicy = mTargetRegionEnrichment == null ? SparseBucketPolicy.CALC_CONSOLIDATED_BUCKETS : SparseBucketPolicy.DO_NOT_CONSOLIDATE;
+        var tumorRatios = new SampleRatios(mTumorId, mTumorCounts, mGcProfiles, mTargetRegionEnrichment, sparseBucketPolicy, null, mOutputDir);
         final ArrayListMultimap<Chromosome, ReadRatio> diploidRatios = new DiploidRatioLoader(mChromosomes, diploidBedFile).build();
 
         // merge this ratios together into one cobalt ratio
@@ -151,7 +189,9 @@ public class RatioSupplier
             CB_LOGGER.fatal("Reference count should not be null");
             throw new RuntimeException("reference count is null");
         }
-        var germlineRatios = new GermlineRatios(mReferenceId, mReferenceCounts, mGcProfiles, mTargetRegionEnrichment, mChromosomes, mOutputDir);
+        SparseBucketPolicy sparseBucketPolicy = mTargetRegionEnrichment == null ? SparseBucketPolicy.CALC_CONSOLIDATED_BUCKETS : SparseBucketPolicy.DO_NOT_CONSOLIDATE;
+        var germlineRatios = new GermlineRatios(mReferenceId, mReferenceCounts, mGcProfiles, mTargetRegionEnrichment,
+                sparseBucketPolicy, null, mChromosomes, mOutputDir);
         return mergeRatios(
                 mReferenceCounts, ArrayListMultimap.create(),
                 germlineRatios.getRatios(), ArrayListMultimap.create(), germlineRatios.gcDiploidRatios);
@@ -170,8 +210,17 @@ public class RatioSupplier
             CB_LOGGER.fatal("Tumor count should not be null");
             throw new RuntimeException("tumor count is null");
         }
-        var tumorRatios = new SampleRatios(mTumorId, mTumorCounts, mGcProfiles, mTargetRegionEnrichment, mOutputDir);
-        var germlineRatios = new GermlineRatios(mReferenceId, mReferenceCounts, mGcProfiles, mTargetRegionEnrichment, mChromosomes, mOutputDir);
+        SparseBucketPolicy tumorSparseBucketPolicy = mTargetRegionEnrichment == null ?
+                SparseBucketPolicy.CALC_CONSOLIDATED_BUCKETS : SparseBucketPolicy.DO_NOT_CONSOLIDATE;
+
+        var tumorRatios = new SampleRatios(mTumorId, mTumorCounts, mGcProfiles, mTargetRegionEnrichment,
+                tumorSparseBucketPolicy, null, mOutputDir);
+
+        SparseBucketPolicy germlineSparseBucketPolicy = tumorRatios.consolidatedBuckets == null ?
+                SparseBucketPolicy.DO_NOT_CONSOLIDATE : SparseBucketPolicy.USE_PROVIDED_BUCKETS;
+
+        var germlineRatios = new GermlineRatios(mReferenceId, mReferenceCounts, mGcProfiles, mTargetRegionEnrichment,
+                germlineSparseBucketPolicy, tumorRatios.consolidatedBuckets, mChromosomes, mOutputDir);
 
         return mergeRatios(
                 mReferenceCounts, mTumorCounts,

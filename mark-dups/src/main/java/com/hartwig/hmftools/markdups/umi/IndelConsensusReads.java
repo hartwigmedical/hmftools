@@ -250,7 +250,7 @@ public class IndelConsensusReads
         return operator == D || operator == N;
     }
 
-    private static boolean alignedOrSoftClip(final CigarOperator operator)
+    public static boolean alignedOrSoftClip(final CigarOperator operator)
     {
         return operator == M || operator == S;
     }
@@ -335,6 +335,9 @@ public class IndelConsensusReads
 
         for(ReadParseState read : readStates)
         {
+            if(read.exhausted())
+                continue;
+
             int elementLength = read.remainingElementLength();
             int index = 0;
             while(index < counts.size())
@@ -362,10 +365,14 @@ public class IndelConsensusReads
         {
             if(maxElement != null)
             {
-                if(elementCount.Operator == M && maxElement.Operator == S)
+                if(maxElement.Operator == S && elementCount.Operator != S)
                 {
-                    // favour alignments over soft-clips
+                    // favour anything over soft-clips, even Ds and Is since they'll be followed by Ms
                     maxElement = elementCount;
+                }
+                else if(elementCount.Operator == S && maxElement.Operator != S)
+                {
+                    // keep non-soft-clipped selection
                 }
                 else if(elementCount.Count > maxElement.Count)
                 {

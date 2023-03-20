@@ -13,4 +13,7 @@ public class CobaltConstants
 
     public static final int ROLLING_MEDIAN_MAX_DISTANCE = 5000;
     public static final int ROLLING_MEDIAN_MIN_COVERAGE = 1000;
+
+    // when we consolidate sparse windows we use this to avoid consolidating over centromere
+    public static final int MAX_SPARSE_CONSOLIDATE_DISTANCE = 3_000_000;
 }

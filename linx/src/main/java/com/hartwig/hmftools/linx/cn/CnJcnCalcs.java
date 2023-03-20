@@ -290,7 +290,6 @@ public class CnJcnCalcs
         if(expectedVal <= 0)
             return 0;
 
-        // PoissonDistribution poisson = new PoissonDistribution(new Well19937c(1), expectedVal, DEFAULT_EPSILON, DEFAULT_MAX_ITERATIONS);
         PoissonDistribution poisson = new PoissonDistribution(expectedVal);
 
         int maxIterations = 20;

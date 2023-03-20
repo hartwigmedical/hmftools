@@ -93,7 +93,7 @@ public class CohortConfig
 
     public CohortConfig(final CommandLine cmd)
     {
-        RootDataDir = cmd.hasOption(ROOT_DATA_DIRECTORY) ? checkAddDirSeparator(cmd.getOptionValue(ROOT_DATA_DIRECTORY)) : "";;
+        RootDataDir = checkAddDirSeparator(cmd.getOptionValue(ROOT_DATA_DIRECTORY, ""));;
 
         UseSampleDirectories = cmd.hasOption(USE_SAMPLE_DIRS);
         AllAvailableFiles = !UseSampleDirectories && cmd.hasOption(ALL_AVAILABLE_FILES);

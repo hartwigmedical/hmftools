@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
+import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.addGcProfilePath;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
@@ -74,7 +76,6 @@ public class ReferenceData
 
     private static final String SOMATIC_HOTSPOT = "somatic_hotspots";
     private static final String GERMLINE_HOTSPOT = "germline_hotspots";
-    private static final String GC_PROFILE = "gc_profile";
 
     public static final String TARGET_REGION_BED = "target_regions_bed";
     private static final String TARGET_REGIONS_RATIOS = "target_regions_ratios";
@@ -257,7 +258,7 @@ public class ReferenceData
 
         options.addOption(SOMATIC_HOTSPOT, true, "Path to somatic hotspot VCF");
         options.addOption(GERMLINE_HOTSPOT, true, "Path to germline hotspot VCF");
-        options.addOption(GC_PROFILE, true, "Path to GC profile");
+        addGcProfilePath(options);
         options.addOption(COHORT_DEL_FREQ_FILE, true, "Path to cohort germline deletions frequency file");
         options.addOption(TARGET_REGION_BED, true, "Target regions BED file");
         options.addOption(TARGET_REGIONS_RATIOS, true, "Path to target regions ratios file");

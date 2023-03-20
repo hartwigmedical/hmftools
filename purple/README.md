@@ -518,7 +518,7 @@ Following the successful recovery any structural variants we will rerun the segm
 ### 8. Identify germline gene deletions
 
 PURPLE searches for candidate germline gene deletions based on the combined tumor normal raw segmented copy number files.  
-For the purposes of purity and ploidy fitting and copy number smoothing each segment is already annotated according to its genotype in the germline based on its observedNormal ratio, ie, one of DIPLOID ( = 0.85-1.15), HET_DELETION (0.1-0.85), HOM_DELETION (<0.1), AMPLIFICATION (1.15-2.2) or NOISE. 
+For the purposes of purity and ploidy fitting and copy number smoothing each segment is already annotated according to its genotype in the germline based on its observedNormal ratio, ie, one of DIPLOID ( = 0.8 - 1.2), HET_DELETION (0.1-0.85), HOM_DELETION (<0.1), AMPLIFICATION (1.15-2.2) or NOISE. 
 Any driver gene panel gene with a HET_DELETION or HOM_DELETION segment overlapping (within +/- 500 bases to allow for depth window resolution) an exonic region is marked as a germline gene deletion.    
 
 Deletions  are filtered with the following criteria
@@ -919,8 +919,16 @@ We can determine the likelihood of a variant being subclonal at any given varian
   <img src="src/main/resources/readme/COLO829T.somatic.clonality.png" width="500" alt="Somatic clonality">
 </p>
 
+## Known issues / points for improvement
+
+- **MOSAIC Y LOSS** - Common in adult males.  Should be detected in germline similar to MOSAIC X.  Currently all males are assumed to have 1 copy in germline, which may lead to copy number being under estimated in tumor.  
+- **Subclonal likelihood** - Subclonal likelihood can be very volatile if subclonal peak and clonal peak hardly overlap.  In this case variants in the middle should be highly uncertain (ie. likelihood -> 0.5) 
+- **Biallelic likelihood** - Currently variants are marked as bialllelic = T/F.  This would be better representated as a likelihood as many variants may be uncertain particularly in low purity samples.
+- **Somatic penalty** - Currently this depends on the upper tail of the distribution of VAFs, which may pick up noise and tend to apply a too agressive penalty.   Better would be to strongly penalise clearly defined peaks of variants with variant copy numbers that are inconsistent with the fitted major allele copy number at the location.
+- **Centromeric noise** - regions within 1Mb of the centromere are normally excluded from fitting in most tools.  This should be evaluated.
 
 ## Version History and Download Links
+- [3.8](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.8.1)
 - [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.7.2)
 - [3.6](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.6)
 - [3.5](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.5)

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
@@ -42,7 +43,7 @@ public class RandomPeptideConfig
         OutputId = cmd.getOptionValue(OUTPUT_ID, "");
         RandomPeptidesFile = cmd.getOptionValue(RANDOM_PEPTIDES_FILE);
 
-        String scoreFileDir = cmd.getOptionValue(SCORE_FILE_DIR);
+        String scoreFileDir = checkAddDirSeparator(cmd.getOptionValue(SCORE_FILE_DIR));
         String scoreFileId = cmd.getOptionValue(SCORE_FILE_ID);
 
         ScoreDistributionFile = getScoringFilename(cmd, scoreFileDir, scoreFileId, FILE_ID_RAND_DIST);

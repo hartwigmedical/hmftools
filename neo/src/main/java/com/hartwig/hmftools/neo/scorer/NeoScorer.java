@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.neo.scorer;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCOPE_TRANS;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.logVersion;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -11,6 +14,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
 
@@ -21,66 +25,65 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-//
 public class NeoScorer
 {
     private final NeoScorerConfig mConfig;
     private final NeoDataWriter mWriters;
-    private final BindScorer mPeptideScorer;
+    private final ReferenceData mReferenceData;
 
     public NeoScorer(final CommandLine cmd)
     {
         mConfig = new NeoScorerConfig(cmd);
-
-        mPeptideScorer = new BindScorer(new ScoreConfig(cmd));
+        mReferenceData = new ReferenceData(cmd);
 
         mWriters = new NeoDataWriter(mConfig);
     }
 
     public void run()
     {
-        if(mConfig.SampleIds.isEmpty())
+        if(mConfig.Samples.isEmpty())
             return;
 
-        if(!mPeptideScorer.loadScoringData())
+        if(!mReferenceData.PeptideScorer.loadScoringData())
         {
             NE_LOGGER.error("failed to load scoring data");
             System.exit(1);
         }
 
-        NE_LOGGER.info("loading cohort transcript expression");
-
-        RnaExpressionMatrix transcriptExpression = new RnaExpressionMatrix(mConfig.SampleTranscriptExpressionFile, EXPRESSION_SCOPE_TRANS);
-
         NE_LOGGER.info("running neoepitope scoring for {}",
-                mConfig.SampleIds.size() == 1 ? mConfig.SampleIds.get(0) : String.format("%d samples", mConfig.SampleIds.size()));
+                mConfig.Samples.size() == 1 ? mConfig.Samples.get(0).Id : String.format("%d samples", mConfig.Samples.size()));
 
         List<NeoScorerTask> sampleTasks = Lists.newArrayList();
 
-        for(String sampleId : mConfig.SampleIds)
+        for(int i = 0; i < min(mConfig.Threads, mConfig.Samples.size()); ++i)
         {
-            NeoScorerTask sampleTask = new NeoScorerTask(sampleId, mConfig, mPeptideScorer, transcriptExpression, mWriters);
-
-            sampleTasks.add(sampleTask);
+            sampleTasks.add(new NeoScorerTask(i, mConfig, mReferenceData, mWriters));
         }
 
-        if(mConfig.Threads > 1)
+        int taskIndex = 0;
+        for(SampleData sampleData : mConfig.Samples)
         {
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mConfig.Threads);
+            sampleTasks.get(taskIndex).addSample(sampleData);
+
+            ++taskIndex;
+            if(taskIndex == sampleTasks.size())
+                taskIndex = 0;
         }
-        else
-        {
-            sampleTasks.forEach(x -> x.processSample());
-        }
+
+        final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+
+        if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
+            System.exit(1);
 
         mWriters.close();
 
-        NE_LOGGER.info("cohort peptide predictions complete");
+        NE_LOGGER.info("Neo peptide scoring complete");
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
+        logVersion();
+
         final Options options = new Options();
 
         NeoScorerConfig.addCmdLineArgs(options);
@@ -99,5 +102,4 @@ public class NeoScorer
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
 }

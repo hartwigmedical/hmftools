@@ -33,7 +33,7 @@ public class VersionInfo {
         return value("version=", "UNKNOWN");
     }
 
-    @Nullable
+    @NotNull
     public ZonedDateTime buildTime() {
         String timeStr = value("build.date=", "UNKNOWN");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");

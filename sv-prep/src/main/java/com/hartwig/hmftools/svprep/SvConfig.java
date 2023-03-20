@@ -1,18 +1,15 @@
 package com.hartwig.hmftools.svprep;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.svprep.SvCommon.ITEM_DELIM;
@@ -42,6 +39,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.ReadFilterConfig;
 import com.hartwig.hmftools.svprep.reads.ReadFilters;
@@ -49,6 +47,8 @@ import com.hartwig.hmftools.svprep.reads.ReadFilters;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
+import htsjdk.samtools.ValidationStringency;
 
 public class SvConfig
 {
@@ -65,6 +65,7 @@ public class SvConfig
     public final int PartitionSize;
     public int ReadLength; // can be set from default, config or the fragment length distribution routine
     public final boolean CalcFragmentLength;
+    public final ValidationStringency BamStringency;
 
     public final String OutputDir;
     public final String OutputId;
@@ -162,6 +163,7 @@ public class SvConfig
         }
 
         CalcFragmentLength = cmd.hasOption(CALC_FRAG_LENGTH) || WriteTypes.contains(FRAGMENT_LENGTH_DIST);
+        BamStringency = BamUtils.validationStringency(cmd);
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
@@ -277,6 +279,7 @@ public class SvConfig
 
         CalcFragmentLength = false;
         CaptureDepth = false;
+        BamStringency = ValidationStringency.STRICT;
         WriteTypes = Sets.newHashSet();
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
@@ -321,6 +324,7 @@ public class SvConfig
         options.addOption(NO_CLEAN_UP, false, "Keep candidate cache files");
         options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
         options.addOption(JUNCTION_FRAGS_CAP, true, "Limit to supporting reads added to a junction");
+        addValidationStringencyOption(options);
         ReadFilterConfig.addCmdLineArgs(options);
         addThreadOptions(options);
 

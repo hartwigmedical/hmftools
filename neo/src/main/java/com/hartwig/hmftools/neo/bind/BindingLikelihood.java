@@ -426,7 +426,4 @@ public class BindingLikelihood
             NE_LOGGER.error("failed to initialise binding likelihood file: {}", e.toString());
         }
     }
-
-
-
 }

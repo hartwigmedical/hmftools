@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage.vcf;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT_DESCRIPTION;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY_DESCRIPTION;
 
@@ -54,9 +56,6 @@ public class VariantVCF implements AutoCloseable
     public static final String READ_CONTEXT_EVENTS = "RC_NM";
     private static final String READ_CONTEXT_EVENTS_DESCRIPTION = "Minimum number of events in read";
 
-    public static final String READ_CONTEXT_COUNT = "RC_CNT";
-    private static final String READ_CONTEXT_COUNT_DESCRIPTION =
-            "Read context counts [Full, Partial, Core, Realigned, Alt, Reference, Total]";
     public static final String READ_CONTEXT_REPEAT_SEQUENCE = "RC_REPS";
     private static final String READ_CONTEXT_REPEAT_SEQUENCE_DESCRIPTION = "Repeat sequence at read context";
     public static final String READ_CONTEXT_MICRO_HOMOLOGY = "RC_MH";
@@ -162,8 +161,10 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_BASE_QUALITY, 2, VCFHeaderLineType.Integer, "Raw allelic base quality"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 7, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
+
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
+
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_QUALITY, 7, VCFHeaderLineType.Integer, READ_CONTEXT_QUALITY_DESCRIPTION));
 

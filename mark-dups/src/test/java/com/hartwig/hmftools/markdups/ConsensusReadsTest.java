@@ -185,6 +185,44 @@ public class ConsensusReadsTest
     }
 
     @Test
+    public void testMultipleSoftClipLengths()
+    {
+        final List<SAMRecord> reads = Lists.newArrayList();
+
+        int posStart = 1;
+
+        String consensusBases = REF_BASES.substring(1);
+
+        String cigar1 = "100M";
+        reads.add(createSamRecord(nextReadId(), posStart, consensusBases, cigar1, true));
+        reads.add(createSamRecord(nextReadId(), posStart, consensusBases, cigar1, true));
+
+        String cigar2 = "17S83M";
+        reads.add(createSamRecord(nextReadId(), posStart + 17, consensusBases, cigar2, true));
+
+        String cigar3 = "68S32M";
+        reads.add(createSamRecord(nextReadId(), posStart + 68, consensusBases, cigar3, true));
+
+        String cigar4 = "94S6M";
+        reads.add(createSamRecord(nextReadId(), posStart + 94, consensusBases, cigar4, true));
+        reads.add(createSamRecord(nextReadId(), posStart + 94, consensusBases, cigar4, true));
+        reads.add(createSamRecord(nextReadId(), posStart + 94, consensusBases, cigar4, true));
+        reads.add(createSamRecord(nextReadId(), posStart + 94, consensusBases, cigar4, true));
+
+        String cigar5 = "99S1M";
+        reads.add(createSamRecord(nextReadId(), posStart + 99, consensusBases, cigar5, true));
+
+        // 67S84M, 94S57M ++, 99S52M, 89S62M, 31S120M
+
+        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+        assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
+        assertEquals(cigar1, readInfo.ConsensusRead.getCigarString());
+        assertEquals(posStart, readInfo.ConsensusRead.getAlignmentStart());
+
+    }
+
+    @Test
     public void testReadParseState()
     {
         String bases = "AGGCGGA";

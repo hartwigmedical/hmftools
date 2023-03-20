@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.results;
 
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_TPM;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_ID;
@@ -168,7 +169,6 @@ public class TranscriptResult
     public static final String FLD_FITTED_FRAGMENTS = "FittedFragments";
     public static final String FLD_RAW_FRAGMENTS = "RawFittedFragments";
     public static final String FLD_EFFECTIVE_LENGTH = "EffectiveLength";
-    public static final String FLD_TPM = "AdjTPM";
 
     public static String csvHeader()
     {

@@ -59,7 +59,7 @@ public class SamSlicerFactory
             final String bamFile = allBams.get(i);
 
             SamReader bamReader = SamReaderFactory.makeDefault()
-                    .validationStringency(config.Stringency)
+                    .validationStringency(config.BamStringency)
                     .referenceSource(new ReferenceSource(refGenome))
                     .open(new File(bamFile));
 

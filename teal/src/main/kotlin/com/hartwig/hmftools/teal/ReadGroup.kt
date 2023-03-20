@@ -208,7 +208,7 @@ class ReadGroup(val name: String)
                     {
                         baseRegions.add(ChrBaseRegion(sa.chromosome, sa.position, sa.position))
                         logger.trace(
-                            "{} Missing supplementary read: aligned to {}:{}", Reads[0],
+                            "{} Missing supplementary read: aligned to {}:{}", read,
                             sa.chromosome, sa.position)
                     }
                 }

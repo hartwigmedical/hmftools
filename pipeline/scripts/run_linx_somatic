@@ -35,8 +35,6 @@ args="-sample ${tumor_id} \
   -sv_vcf ${sv_vcf} \
   -purple_dir ${purple_dir} \
   -ref_genome_version ${ref_genome_version} \
-  -fragile_site_file ${fragile_site_file} \
-  -line_element_file ${line_element_file} \
   -ensembl_data_dir ${ensembl_dir} \
   -check_fusions -known_fusion_file ${known_fusion_file} \
   -check_drivers -driver_gene_panel ${driver_gene_panel} \

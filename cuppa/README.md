@@ -430,13 +430,15 @@ Hodgkins Lympohoma | ? | DNA | Poorly match the lymphoid cohort which is dominat
 
 
 ## Version History and Download Links
-- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.0)
-- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.1)
-- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.2)
-- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.3)
-- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.4)
-- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.5)
+- [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.8)
+- [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.7.2)
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.6)
+- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.5)
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.4)
+- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.3)
+- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.2)
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.1)
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.0)
 
 
 

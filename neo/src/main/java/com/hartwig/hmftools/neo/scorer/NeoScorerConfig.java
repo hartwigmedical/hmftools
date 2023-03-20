@@ -2,17 +2,20 @@ package com.hartwig.hmftools.neo.scorer;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.neo.scorer.SampleData.loadFromConfig;
 
 import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
 
@@ -21,15 +24,19 @@ import org.apache.commons.cli.Options;
 
 public class NeoScorerConfig
 {
-    public final String NeoDataDir;
-    public final String LilacDataDir;
-    public final String IsofoxDataDir;
-    public final String SampleTranscriptExpressionFile;
+    public final String NeoDir;
+    public final String LilacDir;
+    public final String RnaSomaticVcf;
+    public final String IsofoxDir;
+    public final String PurpleDir;
+    public final String CohortSampleTpmFile;
+    public final String CohortTpmMediansFile;
 
-    public final List<String> SampleIds;
+    public final List<SampleData> Samples;
 
     public final String OutputDir;
     public final String OutputId;
+    public final String RnaSampleSuffix;
     public final List<OutputType> WriteTypes;
 
     public final double LikelihoodThreshold;
@@ -38,41 +45,40 @@ public class NeoScorerConfig
 
     public static final String SAMPLE = "sample";
     public static final String SAMPLE_DATA_DIR = "sample_data_dir";
-    public static final String NEO_DATA_DIR = "neo_data_dir";
-    public static final String LILAC_DATA_DIR = "lilac_data_dir";
-    public static final String PREDICTION_DATA_DIR = "mcf_prediction_dir";
-    public static final String ISF_DATA_DIR = "isofox_neo_dir";
-    public static final String SAMPLE_TRANS_EXP_FILE = "sample_trans_exp_file";
+    public static final String NEO_DIR = "neo_dir";
+    public static final String PURPLE_DIR = "purple_dir";
+    public static final String LILAC_DIR = "lilac_dir";
+    public static final String RNA_SOMATIC_VCF = "rna_somatic_vcf";
+    public static final String RNA_SAMPLE_SUFFIX = "rna_sample_suffix";
+    public static final String ISOFOX_DIR = "isofox_dir";
+    public static final String COHORT_SAMPLE_TPM_FILE = "cohort_trans_exp_file";
+    public static final String COHORT_TPM_MEDIANS_FILE = "cancer_tpm_medians_file";
 
     private static final String LIKELIHOOD_THRESHOLD = "rank_threshold";
     private static final String SIMILARITY_THRESHOLD = "sim_threshold";
+    public static final String PEPTIDE_LENGTHS = "peptide_lengths";
+    public static final String PEPTIDE_FLANKS = "peptide_flanks";
 
     private static final String WRITE_TYPES = "write_types";
 
+    public static final String RNA_SAMPLE_APPEND_SUFFIX = "_RNA";
+
     public NeoScorerConfig(final CommandLine cmd)
     {
-        if(cmd.hasOption(SAMPLE))
-            SampleIds = Lists.newArrayList(cmd.getOptionValue(SAMPLE));
-        else
-            SampleIds = loadSampleIdsFile(cmd);
+        Samples = loadFromConfig(cmd);
 
-        if(cmd.hasOption(SAMPLE_DATA_DIR))
-        {
-            String sampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
-            NeoDataDir = sampleDataDir;
-            LilacDataDir = sampleDataDir;
-            IsofoxDataDir = sampleDataDir;
-            OutputDir = sampleDataDir;
-        }
-        else
-        {
-            NeoDataDir = cmd.getOptionValue(NEO_DATA_DIR);
-            LilacDataDir = cmd.getOptionValue(LILAC_DATA_DIR);
-            IsofoxDataDir = cmd.getOptionValue(ISF_DATA_DIR);
-            OutputDir = parseOutputDir(cmd);
-        }
+        String sampleDataDir = cmd.hasOption(SAMPLE_DATA_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR)) : "";
 
-        SampleTranscriptExpressionFile = cmd.getOptionValue(SAMPLE_TRANS_EXP_FILE);
+        NeoDir = checkAddDirSeparator(cmd.getOptionValue(NEO_DIR, sampleDataDir));
+        LilacDir = checkAddDirSeparator(cmd.getOptionValue(LILAC_DIR, sampleDataDir));
+        PurpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR, sampleDataDir));
+        IsofoxDir = checkAddDirSeparator(cmd.getOptionValue(ISOFOX_DIR, sampleDataDir));
+        RnaSomaticVcf = cmd.getOptionValue(RNA_SOMATIC_VCF, sampleDataDir);
+        OutputDir = cmd.hasOption(OUTPUT_DIR) ? parseOutputDir(cmd) : sampleDataDir;
+        RnaSampleSuffix = cmd.getOptionValue(RNA_SAMPLE_SUFFIX, RNA_SAMPLE_APPEND_SUFFIX);
+
+        CohortSampleTpmFile = cmd.getOptionValue(COHORT_SAMPLE_TPM_FILE);
+        CohortTpmMediansFile = cmd.getOptionValue(COHORT_TPM_MEDIANS_FILE);
 
         LikelihoodThreshold = Double.parseDouble(cmd.getOptionValue(LIKELIHOOD_THRESHOLD, "0.02"));
         SimilarityThreshold = Double.parseDouble(cmd.getOptionValue(SIMILARITY_THRESHOLD, "10"));
@@ -93,8 +99,8 @@ public class NeoScorerConfig
     {
         String filename = OutputDir;
 
-        if(SampleIds.size() == 1)
-            filename += SampleIds.get(0) + ".neo";
+        if(Samples.size() == 1)
+            filename += Samples.get(0).Id + ".neo";
         else
             filename += "neo_cohort";
 
@@ -112,14 +118,21 @@ public class NeoScorerConfig
         addSampleIdFile(options);
         options.addOption(SAMPLE, true, "Sample ID for single sample");
         options.addOption(SAMPLE_DATA_DIR, true, "Directory for sample files");
-        options.addOption(NEO_DATA_DIR, true, "Directory for sample neo-epitope files");
-        options.addOption(PREDICTION_DATA_DIR, true, "Directory for sample prediction result files");
-        options.addOption(LILAC_DATA_DIR, true, "Directory for Lilac coverage files");
-        options.addOption(ISF_DATA_DIR, true, "Directory for Isofox neoepitope coverage files");
-        options.addOption(SAMPLE_TRANS_EXP_FILE, true, "Cohort gene expression matrix");
+        options.addOption(NEO_DIR, true, "Directory for sample neo-epitope files");
+        options.addOption(PURPLE_DIR, true, "Directory for sample Purple files");
+        options.addOption(LILAC_DIR, true, "Directory for Lilac coverage files");
+        options.addOption(RNA_SOMATIC_VCF, true, "Directory for Purple somatic variant RNA-appended files");
+        options.addOption(RNA_SAMPLE_SUFFIX, true, "RNA sample suffix in Sage-appended VCF");
+        options.addOption(ISOFOX_DIR, true, "Directory for Isofox files (Transcript expresion, Neoepitope coverage)");
+        options.addOption(COHORT_SAMPLE_TPM_FILE, true, "Cohort gene expression matrix");
+        options.addOption(COHORT_TPM_MEDIANS_FILE, true, "TPM medians per cancer type and pan-cancer");
+
+        options.addOption(PEPTIDE_LENGTHS, true, "Peptide length min-max, separated by '-', eg 8-12");
+        options.addOption(PEPTIDE_FLANKS, true, "Peptide flanking amino acids");
 
         ScoreConfig.addCmdLineArgs(options);
         ConfigUtils.addLoggingOptions(options);
+        EnsemblDataCache.addEnsemblDir(options);
         options.addOption(LIKELIHOOD_THRESHOLD, true, "Rank threshold to write full peptide data");
         options.addOption(SIMILARITY_THRESHOLD, true, "Immunogenic similarity threshold to write full peptide data");
 

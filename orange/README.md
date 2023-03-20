@@ -215,7 +215,9 @@ investigate potential causes for QC failure.
 - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
-
+- Upcoming
+  - Combination of urethra cancer and renal cell cancer is mapped to OTHER by ORANGE cohort mapper
+  - The ORANGE cohort mapping application queries clinical view rather than datarequest
 - [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.3)
     - Full support for reporting germline structural variants
       - This includes extended linx & purple datamodels with various germline findings

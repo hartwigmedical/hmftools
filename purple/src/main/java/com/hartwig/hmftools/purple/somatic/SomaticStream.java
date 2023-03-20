@@ -234,7 +234,7 @@ public class SomaticStream
 
     private void checkChartDownsampling(final SomaticVariant variant)
     {
-        if(mConfig.Charting.disabled())
+        if(mConfig.Charting.Disabled)
             return;
 
         if(variant.type() == VariantType.INDEL)

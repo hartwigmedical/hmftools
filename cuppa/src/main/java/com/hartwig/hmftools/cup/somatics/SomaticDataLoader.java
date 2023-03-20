@@ -7,6 +7,14 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.REF_SIG_TYPE_SNV_COUNT;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.convertSignatureName;
+import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_ALT;
+import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_CHR;
+import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_GENE;
+import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_POSITION;
+import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_REF;
+import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_REPEAT_COUNT;
+import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_TRINUC_CONTEXT;
+import static com.hartwig.hmftools.cup.somatics.SomaticVariant.FLD_TYPE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -20,6 +28,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.FileReaderUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -175,7 +184,7 @@ public class SomaticDataLoader
         return variants;
     }
 
-    public static List<SomaticVariant> loadSomaticVariants(final String vcfFile, final List<VariantType> types)
+    public static List<SomaticVariant> loadSomaticVariantsFromVcf(final String vcfFile, final List<VariantType> types)
     {
         CompoundFilter filter = new CompoundFilter(true);
         filter.add(new PassingVariantFilter());
@@ -200,6 +209,51 @@ public class SomaticDataLoader
         catch(IOException e)
         {
             CUP_LOGGER.error(" failed to read somatic VCF file({}): {}", vcfFile, e.toString());
+        }
+
+        return variants;
+    }
+
+    public static List<SomaticVariant> loadGenericSomaticVariants(final String filename, final List<VariantType> types)
+    {
+        List<SomaticVariant> variants = Lists.newArrayList();
+
+        if(filename == null || filename.isEmpty())
+            return variants;
+
+        try
+        {
+            final List<String> lines = Files.readAllLines(new File(filename).toPath());
+            String header = lines.get(0);
+            lines.remove(0);
+
+            Map<String,Integer> fieldsIndexMap = FileReaderUtils.createFieldsIndexMap(header, DATA_DELIM);
+
+            int chrIndex = fieldsIndexMap.get(FLD_CHR);
+            int posIndex = fieldsIndexMap.get(FLD_POSITION);
+            int refIndex = fieldsIndexMap.get(FLD_REF);
+            int altIndex = fieldsIndexMap.get(FLD_ALT);
+            int typeIndex = fieldsIndexMap.get(FLD_TYPE);
+            int rcIndex = fieldsIndexMap.get(FLD_REPEAT_COUNT);
+            int tnIndex = fieldsIndexMap.get(FLD_TRINUC_CONTEXT);
+            int geneIndex = fieldsIndexMap.get(FLD_GENE);
+
+            for(final String line : lines)
+            {
+                final String[] values = line.split(DATA_DELIM);
+                SomaticVariant variant = new SomaticVariant(
+                        values[chrIndex], Integer.parseInt(values[posIndex]), values[refIndex], values[altIndex],
+                        VariantType.valueOf(values[typeIndex]), values[geneIndex], values[tnIndex], Integer.parseInt(values[rcIndex]));
+
+                if(!types.isEmpty() && !types.contains(variant.Type))
+                    continue;
+
+                variants.add(variant);
+            }
+        }
+        catch (IOException e)
+        {
+            CUP_LOGGER.error("failed to read somatic variant flat file({}): {}", filename, e.toString());
         }
 
         return variants;

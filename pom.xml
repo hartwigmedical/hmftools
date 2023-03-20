@@ -16,7 +16,7 @@
         <module>compar</module>
         <module>ctdna</module>
         <module>cuppa</module>
-        <module>fastq-stats</module>
+        <module>fastq-tools</module>
         <module>gene-utils</module>
         <module>gripss</module>
         <module>health-checker</module>
@@ -61,12 +61,13 @@
         <amber.version>3.9</amber.version>
         <bam-tools.version>1.0</bam-tools.version>
         <cider.version>0.6</cider.version>
-        <cobalt.version>1.13</cobalt.version>
+        <cobalt.version>1.14</cobalt.version>
         <compar.version>1.1</compar.version>
         <ctdna.version>1.0</ctdna.version>
         <cuppa.version>1.8</cuppa.version>
+        <fastq-tools.version>1.0</fastq-tools.version>
         <gene-utils.version>1.0</gene-utils.version>
-        <gripss.version>2.3.3</gripss.version>
+        <gripss.version>2.3.4</gripss.version>
         <health-checker.version>3.3</health-checker.version>
         <hmf-id-generator.version>3.0</hmf-id-generator.version>
         <isofox.version>1.6.1</isofox.version>

@@ -116,7 +116,9 @@ public class PmNeoEpitope extends NeoEpitope
         return pointMutationInfo(mPointMutation.Chromosome, mPointMutation.Position, mPointMutation.Ref, mPointMutation.Alt);
     }
 
+    public double variantCopyNumber() { return mPointMutation.VariantCopyNumber; }
     public double copyNumber() { return mPointMutation.CopyNumber; }
+    public double subclonalLikelihood() { return mPointMutation.SubclonalLikelihood ; }
 
     public boolean phaseMatched()
     {
@@ -347,7 +349,8 @@ public class PmNeoEpitope extends NeoEpitope
         if(lastElement.getOperator() == CigarOperator.M && upElements.get(0).getOperator() == CigarOperator.M)
         {
             cigarElements.set(
-                    cigarElements.size() - 1, new CigarElement(lastElement.getLength() + upElements.get(0).getLength(), CigarOperator.M));
+                    cigarElements.size() - 1,
+                    new CigarElement(lastElement.getLength() + upElements.get(0).getLength(), CigarOperator.M));
 
             upElements.remove(0);
         }

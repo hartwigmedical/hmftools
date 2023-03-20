@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.samtools.BamSlicer;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 
 public class PartitionThread extends Thread
 {
@@ -28,7 +29,9 @@ public class PartitionThread extends Thread
         mPartitions = partitions;
 
         mSamReader = mConfig.BamFile != null ?
-                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
+                SamReaderFactory.makeDefault()
+                        .validationStringency(ValidationStringency.SILENT)
+                        .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
 
         mBamSlicer = new BamSlicer(0, true, true, false);
         mBamSlicer.setKeepUnmapped();

@@ -383,6 +383,11 @@ public class ChromosomeTaskExecutor implements Callable
             }
         }
 
+        if(mConfig.WriteSpliceJunctions)
+        {
+            mResultsWriter.writeSpliceJunctionData(geneCollection);
+        }
+
         if(!mConfig.Filters.EnrichedGeneIds.isEmpty())
         {
             long enrichedGeneFragments = geneCollection.genes().stream()

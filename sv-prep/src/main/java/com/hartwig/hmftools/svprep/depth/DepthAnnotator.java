@@ -4,6 +4,10 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION_DESC;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE_DESC;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE_DESC;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -72,6 +76,8 @@ public class DepthAnnotator
             System.exit(1);
         }
 
+        SV_LOGGER.info("SvPrep depth annotation for samples: {}", mConfig.Samples);
+
         long startTimeMs = System.currentTimeMillis();
 
         final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
@@ -130,6 +136,9 @@ public class DepthAnnotator
             return;
         }
 
+        if(mConfig.PerfLogTime > 0)
+            analyseVariantDistribution();
+
         List<DepthTask> depthTasks = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
@@ -176,8 +185,33 @@ public class DepthAnnotator
                 .build();
 
         if(!header.hasFormatLine(ALLELE_FRACTION))
-        {
             header.addMetaDataLine(new VCFFormatHeaderLine(ALLELE_FRACTION, 1, VCFHeaderLineType.Float, ALLELE_FRACTION_DESC));
+
+        if(!header.hasFormatLine(REF_READ_COVERAGE))
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(REF_READ_COVERAGE, 1, VCFHeaderLineType.Integer, REF_READ_COVERAGE_DESC));
+            header.addMetaDataLine(new VCFInfoHeaderLine(REF_READ_COVERAGE, 1, VCFHeaderLineType.Integer, REF_READ_COVERAGE_DESC));
+        }
+        else if(mConfig.VcfTagPrefix != null)
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(
+                    mConfig.getVcfTag(REF_READ_COVERAGE), 1, VCFHeaderLineType.Integer, REF_READ_COVERAGE_DESC));
+            header.addMetaDataLine(new VCFInfoHeaderLine(
+                    mConfig.getVcfTag(REF_READ_COVERAGE), 1, VCFHeaderLineType.Integer, REF_READ_COVERAGE_DESC));
+        }
+
+        if(!header.hasFormatLine(REF_READPAIR_COVERAGE))
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(REF_READPAIR_COVERAGE, 1, VCFHeaderLineType.Integer, REF_READPAIR_COVERAGE_DESC));
+            header.addMetaDataLine(new VCFInfoHeaderLine(REF_READPAIR_COVERAGE, 1, VCFHeaderLineType.Integer, REF_READPAIR_COVERAGE_DESC));
+        }
+        else if(mConfig.VcfTagPrefix != null)
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(
+                    mConfig.getVcfTag(REF_READPAIR_COVERAGE), 1, VCFHeaderLineType.Integer, REF_READPAIR_COVERAGE_DESC));
+
+            header.addMetaDataLine(new VCFInfoHeaderLine(
+                    mConfig.getVcfTag(REF_READPAIR_COVERAGE), 1, VCFHeaderLineType.Integer, REF_READPAIR_COVERAGE_DESC));
         }
 
         writer.writeHeader(header);
@@ -225,6 +259,88 @@ public class DepthAnnotator
         }
 
         return true;
+    }
+
+    private void analyseVariantDistribution()
+    {
+        Map<Integer,Integer> groupFrequencies = Maps.newHashMap();
+
+        int totalGroups = 0;
+        int totalVariants = 0;
+        long estimatedReads = 0;
+
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
+
+            List<VariantContext> variants = mChrVariantMap.get(chrStr);
+
+            if(variants == null)
+                continue;
+
+            int soloVariants = 0;
+            int groupCount = 0;
+
+            int index = 0;
+            while(index < variants.size())
+            {
+                VariantContext variant = variants.get(index);
+
+                int variantCount = 1;
+
+                int posStart = variant.getStart();
+                int posEnd = posStart;
+                int nextIndex = index + 1;
+                while(nextIndex < variants.size())
+                {
+                    VariantContext nextVariant = variants.get(nextIndex);
+
+                    if(nextVariant.getStart() - posEnd > mConfig.ProximityDistance)
+                        break;
+
+                    posEnd = nextVariant.getStart();
+                    ++variantCount;
+                    ++nextIndex;
+                }
+
+                Integer countFrequency = groupFrequencies.get(variantCount);
+                groupFrequencies.put(variantCount, countFrequency != null ? countFrequency + 1 : 1);
+                ++groupCount;
+                ++totalGroups;
+                totalVariants += variantCount;
+
+                if(variantCount == 1)
+                    ++soloVariants;
+
+                estimatedReads += (posEnd - posStart + 2000);
+
+                index += variantCount;
+            }
+
+            SV_LOGGER.debug("chr({}) variants({}) group({}) soloVariants({} pct={})",
+                    chrStr, variants.size(), groupCount, soloVariants, format("%.3f", soloVariants / (double)variants.size()));
+        }
+
+        int largeGroupCount = 0;
+        int largeVariantsCount = 0;
+
+        for(Map.Entry<Integer,Integer> entry : groupFrequencies.entrySet())
+        {
+            if(entry.getKey() >= 25)
+            {
+                ++largeGroupCount;
+                largeVariantsCount += entry.getKey() * entry.getValue();
+            }
+            else
+            {
+                SV_LOGGER.debug("group count({}) frequency({}) total variants({})",
+                        entry.getKey(), entry.getValue(), entry.getKey() * entry.getValue());
+            }
+        }
+
+        SV_LOGGER.debug("large group count({}) total variants({})", largeGroupCount, largeVariantsCount);
+
+        SV_LOGGER.debug("total variants({}) groups({}) estimated reads({})", totalVariants, totalGroups, estimatedReads);
     }
 
     private boolean excludeVariant(final VariantContext variant)

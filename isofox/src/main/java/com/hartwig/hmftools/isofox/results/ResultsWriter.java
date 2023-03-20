@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.isofox.results;
 
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_DATA_FILE_ID;
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -28,7 +31,12 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -41,6 +49,7 @@ import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
+import com.hartwig.hmftools.isofox.common.TransExonRef;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.expression.TranscriptExpression;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
@@ -49,9 +58,10 @@ import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 import com.hartwig.hmftools.isofox.novel.SpliceSiteCounter;
 import com.hartwig.hmftools.isofox.unmapped.UmrFinder;
 
+import org.apache.commons.compress.utils.Lists;
+
 public class ResultsWriter
 {
-    public static final String TRANSCRIPT_RESULTS_FILE = "transcript_data.csv";
     public static final String SPLICE_SITE_FILE = "splice_site_data.csv";
     public static final String SUMMARY_FILE = "summary.csv";
 
@@ -61,6 +71,7 @@ public class ResultsWriter
     private BufferedWriter mGeneCollectionWriter;
     private BufferedWriter mTransDataWriter;
     private BufferedWriter mExonDataWriter;
+    private BufferedWriter mSpliceJunctionWriter;
     private BufferedWriter mCategoryCountsWriter;
 
     // controlled by other components but instantiated once for output synchronosation
@@ -85,6 +96,7 @@ public class ResultsWriter
         mGeneCollectionWriter = null;
         mTransDataWriter = null;
         mExonDataWriter = null;
+        mSpliceJunctionWriter = null;
         mCategoryCountsWriter = null;
         mExpRateWriter = null;
         mReadDataWriter = null;
@@ -110,6 +122,7 @@ public class ResultsWriter
         closeBufferedWriter(mGeneCollectionWriter);
         closeBufferedWriter(mTransDataWriter);
         closeBufferedWriter(mExonDataWriter);
+        closeBufferedWriter(mSpliceJunctionWriter);
         closeBufferedWriter(mCategoryCountsWriter);
         closeBufferedWriter(mExpRateWriter);
         closeBufferedWriter(mReadDataWriter);
@@ -209,7 +222,7 @@ public class ResultsWriter
         {
             if(mGeneDataWriter == null)
             {
-                final String outputFileName = mConfig.formOutputFile(GENE_DATA_FILE_ID);
+                final String outputFileName = mConfig.formOutputFile(GENE_EXPRESSION_FILE_ID);
 
                 mGeneDataWriter = createBufferedWriter(outputFileName, false);
                 mGeneDataWriter.write(GeneResult.csvHeader());
@@ -254,19 +267,19 @@ public class ResultsWriter
 
         try
         {
-            mGeneCollectionWriter.write(String.format("%s,%d,%s,%d,%d",
+            mGeneCollectionWriter.write(format("%s,%d,%s,%d,%d",
                     geneCollection.chrId(), geneCollection.genes().size(), geneCollection.chromosome(),
                     geneCollection.regionBounds()[SE_START], geneCollection.regionBounds()[SE_END]));
 
             final FragmentTypeCounts fragmentCounts = geneCollection.fragmentTypeCounts();
 
-            mGeneCollectionWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d",
+            mGeneCollectionWriter.write(format(",%d,%d,%d,%d,%d,%d,%d,%d,%d",
                     fragmentCounts.typeCount(TOTAL), fragmentCounts.typeCount(DUPLICATE), fragmentCounts.typeCount(TRANS_SUPPORTING),
                     fragmentCounts.typeCount(UNSPLICED), fragmentCounts.typeCount(ALT),
                     fragmentCounts.typeCount(CHIMERIC), fragmentCounts.typeCount(LOW_MAP_QUAL),
                     fragmentCounts.typeCount(FORWARD_STRAND), fragmentCounts.typeCount(REVERSE_STRAND)));
 
-            mGeneCollectionWriter.write(String.format(",%s", geneCollection.geneNames(geneCollection.genes().size())));
+            mGeneCollectionWriter.write(format(",%s", geneCollection.geneNames(geneCollection.genes().size())));
 
             mGeneCollectionWriter.newLine();
         }
@@ -285,7 +298,7 @@ public class ResultsWriter
         {
             if(mTransDataWriter == null)
             {
-                final String outputFileName = mConfig.formOutputFile(TRANSCRIPT_RESULTS_FILE);
+                final String outputFileName = mConfig.formOutputFile(TRANSCRIPT_EXPRESSION_FILE_ID);
 
                 mTransDataWriter = createBufferedWriter(outputFileName, false);
                 mTransDataWriter.write(TranscriptResult.csvHeader());
@@ -327,13 +340,13 @@ public class ResultsWriter
                 ExonData exon = exons.get(i);
 
                 final RegionReadData exonReadData = findExonRegion(geneReadData.getExonRegions(), exon.Start, exon.End);
-                if (exonReadData == null)
+                if(exonReadData == null)
                     continue;
 
-                mExonDataWriter.write(String.format("%s,%s,%d,%s",
+                mExonDataWriter.write(format("%s,%s,%d,%s",
                         geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, transData.TransId, transData.TransName));
 
-                mExonDataWriter.write(String.format(",%d,%d,%d,%d",
+                mExonDataWriter.write(format(",%d,%d,%d,%d",
                         exon.Rank, exon.Start, exon.End, exonReadData.getTransExonRefs().size()));
 
                 int[] matchCounts = exonReadData.getTranscriptReadCount(transData.TransId);
@@ -344,11 +357,11 @@ public class ResultsWriter
                 int uniqueBaseCount = exonReadData.uniqueBaseCount();
                 double uniqueAvgDepth = uniqueBaseCount > 0 ? uniqueBaseTotalDepth / (double)uniqueBaseCount : 0;
 
-                mExonDataWriter.write(String.format(",%d,%.0f,%d,%d,%.0f",
+                mExonDataWriter.write(format(",%d,%.0f,%d,%d,%.0f",
                         exonReadData.baseCoverage(1), exonReadData.averageDepth(),
                         uniqueBaseCount, exonReadData.uniqueBaseCoverage(1), uniqueAvgDepth));
 
-                mExonDataWriter.write(String.format(",%d,%d,%d,%d,%d,%d",
+                mExonDataWriter.write(format(",%d,%d,%d,%d,%d,%d",
                         matchCounts[TRANS_COUNT], matchCounts[UNIQUE_TRANS_COUNT],
                         startSjCounts[TRANS_COUNT], endSjCounts[TRANS_COUNT],
                         startSjCounts[UNIQUE_TRANS_COUNT], endSjCounts[UNIQUE_TRANS_COUNT]));
@@ -359,6 +372,137 @@ public class ResultsWriter
         catch(IOException e)
         {
             ISF_LOGGER.error("failed to write exon expression file: {}", e.toString());
+        }
+    }
+
+    private static final int MIN_SPLICE_JUNCTON_FRAGMENTS = 3;
+
+    public synchronized void writeSpliceJunctionData(final GeneCollection geneCollection)
+    {
+        if(mConfig.OutputDir.isEmpty())
+            return;
+
+        try
+        {
+            if(mSpliceJunctionWriter == null)
+            {
+                final String outputFileName = mConfig.formOutputFile("canonical_splice_junc.csv");
+
+                mSpliceJunctionWriter = createBufferedWriter(outputFileName, false);
+                mSpliceJunctionWriter.write("GeneId,GeneName,Chromosome,SjStart,SjEnd,FragCount,DepthStart,DepthEnd,TranscriptNames");
+                mSpliceJunctionWriter.newLine();
+            }
+
+            Map<String,SpliceJunctionData> junctionCounts = Maps.newHashMap();
+
+            for(RegionReadData regionReadData : geneCollection.getExonRegions())
+            {
+                if(regionReadData.getPreRegions().isEmpty())
+                    continue;
+
+                int nextExonStart = regionReadData.start();
+
+                Map<Integer,int[][]> nextTransJunctionCounts = regionReadData.getTranscriptJunctionCounts();
+
+                for(RegionReadData prevRegion : regionReadData.getPreRegions())
+                {
+                    int prevExonEnd = prevRegion.end();
+
+                    String junctionStr = format("%d_%d", prevExonEnd, nextExonStart);
+
+                    if(junctionCounts.containsKey(junctionStr))
+                        continue;
+
+                    Map<Integer, int[][]> prevTransJunctionCounts = prevRegion.getTranscriptJunctionCounts();
+
+                    SpliceJunctionData sjData = null;
+
+                    for(Map.Entry<Integer, int[][]> entry : nextTransJunctionCounts.entrySet())
+                    {
+                        Integer nextTransId = entry.getKey();
+
+                        final int[][] prevCounts = prevTransJunctionCounts.get(nextTransId);
+
+                        if(prevCounts == null)
+                            continue;
+
+                        TransExonRef transExonRef = regionReadData.getTransExonRefs().stream()
+                                .filter(x -> x.TransId == nextTransId).findFirst().orElse(null);
+
+                        if(transExonRef == null)
+                            continue;
+
+                        if(sjData == null)
+                        {
+                            final int[][] nextCounts = entry.getValue();
+                            int prevSpliceCount = prevCounts[SE_END][TRANS_COUNT];
+                            int nextSpliceCount = nextCounts[SE_START][TRANS_COUNT];
+
+                            if(prevSpliceCount != nextSpliceCount) // they should have been incremented equally
+                                continue;
+
+                            GeneReadData geneData = geneCollection.genes().stream()
+                                    .filter(x -> x.GeneData.GeneId.equals(transExonRef.GeneId)).findFirst().orElse(null);
+
+                            sjData = new SpliceJunctionData(
+                                    geneData.GeneData.GeneId, geneData.GeneData.GeneName,
+                                    prevExonEnd, nextExonStart, prevRegion.getBoundaryBaseDepth(SE_END),
+                                    regionReadData.getBoundaryBaseDepth(SE_START), nextSpliceCount);
+
+                            junctionCounts.put(junctionStr, sjData);
+                        }
+
+                        sjData.TranscriptNames.add(transExonRef.TransName);
+                    }
+                }
+            }
+
+            for(Map.Entry<String,SpliceJunctionData> entry : junctionCounts.entrySet())
+            {
+                SpliceJunctionData sjData = entry.getValue();
+
+                if(sjData.FragmentCount < MIN_SPLICE_JUNCTON_FRAGMENTS)
+                    continue;
+
+                StringJoiner sj = new StringJoiner(ITEM_DELIM);
+                sjData.TranscriptNames.forEach(x -> sj.add(x));
+
+                mSpliceJunctionWriter.write(format("%s,%s,%s,%s,%s,%d,%d,%d,%s",
+                        sjData.GeneId, sjData.GeneName, geneCollection.chromosome(),
+                        sjData.SjStart, sjData.SjEnd, sjData.FragmentCount, sjData.DepthStart, sjData.DepthEnd, sj.toString()));
+
+                mSpliceJunctionWriter.newLine();
+            }
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write splice junction file: {}", e.toString());
+        }
+    }
+
+    private class SpliceJunctionData
+    {
+        public final String GeneId;
+        public final String GeneName;
+        public final int SjStart;
+        public final int SjEnd;
+        public final int DepthStart;
+        public final int DepthEnd;
+        public final int FragmentCount;
+        public final List<String> TranscriptNames;
+
+        public SpliceJunctionData(
+                final String geneId, final String geneName,
+                final int sjStart, final int sjEnd, final int depthStart, final int depthEnd, final int fragmentCount)
+        {
+            GeneId = geneId;
+            GeneName = geneName;
+            SjStart = sjStart;
+            SjEnd = sjEnd;
+            DepthStart = depthStart;
+            DepthEnd = depthEnd;
+            FragmentCount = fragmentCount;
+            TranscriptNames = Lists.newArrayList();
         }
     }
 

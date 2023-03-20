@@ -60,7 +60,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 
@@ -254,10 +254,8 @@ public class GripssTestUtils
 
         GenotypesContext genotypesContext = GenotypesContext.create(gtNormal, gtTumor);
 
-        String filters = "";
+        double logError = -(qual / 10.0);
 
-        double logError = -(qual / 10.0)
-;
         return builder
                 .source("SOURCE")
                 .id(vcfId)

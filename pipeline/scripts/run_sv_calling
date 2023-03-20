@@ -52,8 +52,8 @@ java -Xmx${max_memory}G -jar ${sv_prep_jar} ${args}
 sv_prep_tumor_bam=${output_dir}/${tumor_id}.sv_prep.bam
 sv_prep_tumor_sorted_bam=${output_dir}/${tumor_id}.sv_prep.sorted.bam
 
-samtools sort -O bam ${sv_prep_tumor_bam} -o ${sv_prep_tumor_sorted_bam}
-samtools index ${sv_prep_tumor_sorted_bam}
+samtools sort -@ ${threads} -m 2G -T tmp -O bam ${sv_prep_tumor_bam} -o ${sv_prep_tumor_sorted_bam}
+samtools index -@ ${threads} ${sv_prep_tumor_sorted_bam}
 # rm ${sv_prep_tumor_bam}
 
 if [ "${reference_id}" != "none" ]; then
@@ -69,7 +69,7 @@ if [ "${reference_id}" != "none" ]; then
     -existing_junction_file ${tumor_junction_file} \
     -calc_fragment_length \
     -output_dir ${output_dir} \
-  -  threads ${threads}"
+    -threads ${threads}"
 
   echo "Running SvPrep on reference with args: ${args}"
 
@@ -78,8 +78,8 @@ if [ "${reference_id}" != "none" ]; then
   sv_prep_ref_bam=${output_dir}/${reference_id}.sv_prep.bam
   sv_prep_ref_sorted_bam=${output_dir}/${reference_id}.sv_prep.sorted.bam
 
-  samtools sort -O bam ${sv_prep_ref_bam} -o ${sv_prep_ref_sorted_bam}
-  samtools index ${sv_prep_ref_sorted_bam}
+  samtools sort -@ ${threads} -m 2G -T tmp -O bam ${sv_prep_ref_bam} -o ${sv_prep_ref_sorted_bam}
+  samtools index -@ ${threads} ${sv_prep_ref_sorted_bam}
   # rm ${sv_prep_ref_bam}
 
 fi

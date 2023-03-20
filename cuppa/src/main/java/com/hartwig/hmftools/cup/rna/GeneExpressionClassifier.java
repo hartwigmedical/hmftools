@@ -100,13 +100,6 @@ public class GeneExpressionClassifier implements CuppaClassifier
         mRunCancerCss = rnaMethods != null && rnaMethods.contains(CSS_METHOD_CANCER);
         mCssExponent = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT, String.valueOf(GENE_EXP_DIFF_EXPONENT)));
         mMatchReadLength = cmd.hasOption(MATCH_READ_LENGTH);
-
-        if(mRunPairwiseCss && mConfig.RefGeneExpSampleFile.isEmpty())
-            return;
-
-        if(mRunCancerCss && mConfig.RefGeneExpCancerFile.isEmpty())
-            return;
-
     }
 
     public static void addCmdLineArgs(Options options)
@@ -371,7 +364,10 @@ public class GeneExpressionClassifier implements CuppaClassifier
         CUP_LOGGER.debug("loading sample gene-expression data file({})", filename);
 
         if(!Files.exists(Paths.get(filename)))
+        {
+            CUP_LOGGER.warn("sample({}) file({}) missing", sampleId, filename);
             return false;
+        }
 
         try
         {
@@ -415,7 +411,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
             return true;
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             CUP_LOGGER.error("failed to read RNA sample gene data file({}): {}", filename, e.toString());
             return false;

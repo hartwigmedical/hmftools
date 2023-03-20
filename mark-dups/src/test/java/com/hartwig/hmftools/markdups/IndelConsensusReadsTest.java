@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.markdups.ConsensusReadsTest.UMI_ID_1;
 import static com.hartwig.hmftools.markdups.ConsensusReadsTest.nextUmiReadId;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_A;
+import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MISMATCH;
@@ -37,7 +38,7 @@ public class IndelConsensusReadsTest
 
     public IndelConsensusReadsTest()
     {
-        mConfig = new UmiConfig(true);
+        mConfig = new UmiConfig(true, true);
         mRefGenome = new MockRefGenome();
         mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES);
         mConsensusReads = new ConsensusReads(mConfig, mRefGenome);
@@ -186,6 +187,133 @@ public class IndelConsensusReadsTest
         assertEquals(calcBaseQual, readInfo.ConsensusRead.getBaseQualities()[4]);
         assertEquals(calcBaseQual, readInfo.ConsensusRead.getBaseQualities()[5]);
         assertEquals(calcBaseQual, readInfo.ConsensusRead.getBaseQualities()[6]);
+    }
+
+    @Test
+    public void testMismatchedReads()
+    {
+        // one of the As at the end got deleted
+        SAMRecord read1 = createSamRecord(nextReadId(), 10, "CTTCGATAAT", "7M1D3M", true);
+        SAMRecord read2 = createSamRecord(nextReadId(), 11, "TTCGATAAAT", "10M", true);
+
+        // they are marked as same read cause read is reversed and the end are the same
+        assertEquals(read1.getAlignmentEnd(), read2.getAlignmentEnd());
+
+        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2), UMI_ID_1);
+
+        assertEquals("11M", readInfo.ConsensusRead.getCigarString());
+        assertEquals("CTTCGATAAAT", readInfo.ConsensusRead.getReadString());
+    }
+
+    @Test
+    public void testMismatchedReads2()
+    {
+        // one of the As at the end got deleted
+        SAMRecord read1 = createSamRecord(nextReadId(), 10, "CTTCGATAAT", "7M1D3M", true);
+        SAMRecord read2 = createSamRecord(nextReadId(), 11, "TTCGATAAAT", "10M", true);
+
+        // they are marked as same read cause read is reversed and the end are the same
+        assertEquals(read1.getAlignmentEnd(), read2.getAlignmentEnd());
+
+        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2), UMI_ID_1);
+
+        assertEquals("11M", readInfo.ConsensusRead.getCigarString());
+        assertEquals("CTTCGATAAAT", readInfo.ConsensusRead.getReadString());
+        assertEquals(10, readInfo.ConsensusRead.getAlignmentStart());
+
+        SAMRecord read3 = createSamRecord(nextReadId(), 11, "TTCGATAAAT", "10M", true);
+        readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2, read3), UMI_ID_1);
+
+        assertEquals("11M", readInfo.ConsensusRead.getCigarString());
+        assertEquals("CTTCGATAAAT", readInfo.ConsensusRead.getReadString());
+        assertEquals(10, readInfo.ConsensusRead.getAlignmentStart());
+    }
+
+    @Test
+    public void testMismatchedReadsInsert()
+    {
+        // one of the As at the end got deleted
+        SAMRecord read1 = createSamRecord(nextReadId(), 10, "CTTCGATAAAAT", "7M1I4M", true);
+        SAMRecord read2 = createSamRecord(nextReadId(), 11, "TTCGATAAAT", "10M", true);
+
+        // they are marked as same read cause read is reversed and the end are the same
+        assertEquals(read1.getAlignmentEnd(), read2.getAlignmentEnd());
+
+        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2), UMI_ID_1);
+
+        assertEquals("11M", readInfo.ConsensusRead.getCigarString());
+        assertEquals("CTTCGATAAAT", readInfo.ConsensusRead.getReadString());
+        assertEquals(10, readInfo.ConsensusRead.getAlignmentStart());
+
+        // add one more read so the first C will get chopped
+        SAMRecord read3 = createSamRecord(nextReadId(), 11, "TTCGATAAAT", "10M", true);
+
+        readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2, read3), UMI_ID_1);
+
+        assertEquals("11M", readInfo.ConsensusRead.getCigarString());
+        assertEquals("CTTCGATAAAT", readInfo.ConsensusRead.getReadString());
+        assertEquals(10, readInfo.ConsensusRead.getAlignmentStart());
+    }
+
+    @Test
+    public void testSoftClipDeletes()
+    {
+        // one of the As at the end got deleted
+        SAMRecord read1 = createSamRecord(nextReadId(), 40, REF_BASES.substring(40, 100), "30S30M", true);
+
+        SAMRecord read2 = createSamRecord(
+                nextReadId(), 7,
+                REF_BASES.substring(37, 67) + REF_BASES.substring(70, 100), "30M3D30M", true);
+
+        SAMRecord read3 = createSamRecord(nextReadId(), 40, REF_BASES.substring(40, 100), "30S30M", true);
+        SAMRecord read4 = createSamRecord(nextReadId(), 39, REF_BASES.substring(40, 100), "29S31M", true);
+
+        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2, read3, read4), UMI_ID_1);
+
+        assertEquals("30M2D31M", readInfo.ConsensusRead.getCigarString());
+        String consensusBases = REF_BASES.substring(37, 67) + REF_BASES.substring(69, 100);
+        assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
+        assertEquals(7, readInfo.ConsensusRead.getAlignmentStart());
+
+
+        read1 = createSamRecord(
+                nextReadId(), 8,
+                REF_BASES.substring(8, 38) + REF_BASES.substring(40, 70), "30M2D30M", true);
+
+        read2 = createSamRecord(nextReadId(), 40, REF_BASES.substring(10, 70), "30S30M", true);
+        read3 = createSamRecord(nextReadId(), 39, REF_BASES.substring(10, 70), "29S31M", true);
+
+        readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2, read3), UMI_ID_1);
+
+        assertEquals("30M1D31M", readInfo.ConsensusRead.getCigarString());
+        consensusBases = REF_BASES.substring(8, 38) + REF_BASES.substring(39, 70);
+        assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
+        assertEquals(8, readInfo.ConsensusRead.getAlignmentStart());
+
+
+
+        /*
+        mAlignmentStart = 38446161
+        mAlignmentEnd = 38446313
+        mMappingQuality = 60
+        mCigarString = null
+        mCigar = {Cigar@3199} "66M2D85M"
+
+        mAlignmentStart = 38446229
+        mAlignmentEnd = 38446313
+        mMappingQuality = 60
+        mCigarString = null
+        mCigar = {Cigar@3211} "66S85M"
+
+        mAlignmentStart = 38446228
+        mAlignmentEnd = 38446313
+        mMappingQuality = 60
+        mCigarString = null
+        mCigar = {Cigar@3220} "65S86M"
+         */
+
+
+
     }
 
     private String nextReadId() { return nextUmiReadId(UMI_ID_1, mReadIdGen); }

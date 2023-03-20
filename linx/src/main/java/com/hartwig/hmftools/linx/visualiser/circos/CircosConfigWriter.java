@@ -158,7 +158,6 @@ public class CircosConfigWriter
         return fileName;
     }
 
-    @NotNull
     private String readResource(final String resource) throws IOException
     {
         InputStream in = getClass().getResourceAsStream(resource);
@@ -166,7 +165,6 @@ public class CircosConfigWriter
         return IOUtils.toString(reader);
     }
 
-    @NotNull
     static String cnaAxisPositions(int maxTracks)
     {
         StringJoiner builder = new StringJoiner(",");

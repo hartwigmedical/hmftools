@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cup;
 
+import static com.hartwig.hmftools.cup.common.CupConstants.COMBINED_DAMPEN_FACTOR_DEFAULT;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
@@ -35,6 +36,8 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.isDna;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.isRna;
+import static com.hartwig.hmftools.cup.common.CupConstants.FEATURE_DAMPEN_FACTOR_DEFAULT;
+import static com.hartwig.hmftools.cup.feature.FeatureClassifier.FEATURE_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.ISOFOX_DIR;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.LINX_DIR;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.PURPLE_DIR;
@@ -113,6 +116,8 @@ public class CuppaConfig
 
     public final NoiseRefCache NoiseAdjustments;
     public final boolean NoSubtypeCollapse;
+    public final double FeatureDampenFactor;
+    public final double CombinedDampenFactor;
 
     // database access
     public final DatabaseAccess DbAccess;
@@ -141,17 +146,6 @@ public class CuppaConfig
     public static final String SPECIFIC_SAMPLE_DATA = "sample_data";
     public static final String SAMPLE_DATA_FILE = "sample_data_file";
 
-    /*
-    private static final String SAMPLE_FEAT_FILE = "sample_feature_file";
-    private static final String SAMPLE_TRAITS_FILE = "sample_traits_file";
-    private static final String SAMPLE_SNV_COUNTS_FILE = "sample_snv_counts_file";
-    private static final String SAMPLE_SNV_POS_FREQ_FILE = "sample_snv_pos_freq_file";
-    private static final String SAMPLE_SIG_CONTRIB_FILE = "sample_sig_contrib_file";
-    private static final String SAMPLE_SV_FILE = "sample_sv_file";
-    private static final String SAMPLE_GENE_EXP_FILE = "sample_gene_exp_file";
-    private static final String SAMPLE_ALT_SJ_FILE = "sample_alt_sj_matrix_file";
-    */
-
     public static final String REF_DATA_DIR = "ref_data_dir";
     public static final String TEST_REF_SAMPLE_DATA = "test_ref_sample_data";
 
@@ -176,6 +170,9 @@ public class CuppaConfig
     public static final String NOISE_ALLOCATIONS = "noise_allocations";
     public static final String NOISE_ALLOCATIONS_DESC = "Noise allocations by classifier type, or 'NONE' or 'DEFAULTS'";
     public static final String NO_SUBTYPE_COLLAPSE = "no_subtype_collapse";
+
+    public static final String FEATURE_DAMPEN_FACTOR = "feature_dampen_factor";
+    public static final String COMBINED_DAMPEN_FACTOR = "combined_dampen_factor";
 
     public static final String WRITE_SIMS = "write_similarities";
     public static final String WRITE_DETAILED_SCORES = "write_detailed_scores";
@@ -274,7 +271,7 @@ public class CuppaConfig
             }
             else
             {
-                CUP_LOGGER.error(format("missing {}, non-ref cohort {} or {} config", SPECIFIC_SAMPLE_DATA, SAMPLE_DATA_FILE, TEST_REF_SAMPLE_DATA));
+                CUP_LOGGER.error("missing {}, non-ref cohort {} or {} config", SPECIFIC_SAMPLE_DATA, SAMPLE_DATA_FILE, TEST_REF_SAMPLE_DATA);
                 mIsValid = false;
             }
 
@@ -288,6 +285,9 @@ public class CuppaConfig
 
         NoiseAdjustments = new NoiseRefCache(RefDataDir);
         NoiseAdjustments.loadNoiseAllocations(cmd.getOptionValue(NOISE_ALLOCATIONS));
+
+        FeatureDampenFactor = Double.parseDouble(cmd.getOptionValue(FEATURE_DAMPEN_FACTOR, String.valueOf(FEATURE_DAMPEN_FACTOR_DEFAULT)));
+        CombinedDampenFactor = Double.parseDouble(cmd.getOptionValue(COMBINED_DAMPEN_FACTOR, String.valueOf(COMBINED_DAMPEN_FACTOR_DEFAULT)));
 
         NoSubtypeCollapse = cmd.hasOption(NO_SUBTYPE_COLLAPSE);
 
@@ -360,7 +360,7 @@ public class CuppaConfig
     public String getPurpleDataDir(final String sampleId) { return getSampleDataDir(sampleId, PurpleDir); }
     public String getIsofoxDataDir(final String sampleId) { return getSampleDataDir(sampleId, IsofoxDir); }
 
-    private String getSampleDataDir(final String sampleId, final String specificDir)
+    private String  getSampleDataDir(final String sampleId, final String specificDir)
     {
         return !SampleDataDir.isEmpty() ? formSamplePath(SampleDataDir, sampleId) : formSamplePath(specificDir, sampleId);
     }
@@ -448,6 +448,8 @@ public class CuppaConfig
         options.addOption(NOISE_ALLOCATIONS, true, NOISE_ALLOCATIONS_DESC);
         options.addOption(NO_SUBTYPE_COLLAPSE, false, "Keep cancer sub-types separated in final classifiers");
 
+        options.addOption(COMBINED_DAMPEN_FACTOR, true,"Combined classifier dampening factor, default = " + COMBINED_DAMPEN_FACTOR_DEFAULT);
+
         options.addOption(WRITE_SIMS, false, "Write top-20 CSS similarities to file");
         options.addOption(WRITE_DETAILED_SCORES, false, "Cohort-only - write detailed (non-classifier) data");
         options.addOption(WRITE_CONDENSED, false, "Write sample results as single line");
@@ -506,6 +508,9 @@ public class CuppaConfig
         NoiseAdjustments = new NoiseRefCache(null);
         NoSubtypeCollapse = false;
 
+        FeatureDampenFactor = FEATURE_DAMPEN_FACTOR_DEFAULT;
+        CombinedDampenFactor = COMBINED_DAMPEN_FACTOR_DEFAULT;
+
         DbAccess = null;
         WriteSimilarities = false;
         WriteDetailedScores = false;
@@ -514,5 +519,6 @@ public class CuppaConfig
         OutputDir = "";
         OutputFileId = "";
         Threads = 0;
+
     }
 }

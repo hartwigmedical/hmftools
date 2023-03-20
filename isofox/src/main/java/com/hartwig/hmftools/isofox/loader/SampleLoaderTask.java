@@ -7,7 +7,10 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_F
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_TYPE;
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_DATA_FILE_ID;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_TPM;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
@@ -31,11 +34,8 @@ import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_SV_TYPE;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
 import static com.hartwig.hmftools.isofox.fusion.FusionWriter.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.loader.DataLoadType.NOVEL_JUNCTION;
-import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SPLICED_FRAGS;
-import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.io.BufferedReader;
@@ -48,10 +48,9 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.GeneExpression;
+import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.common.rna.ImmutableGeneExpression;
 import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
@@ -62,7 +61,6 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortCache;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 import com.hartwig.hmftools.patientdb.dao.IsofoxDAO;
 
 import org.jooq.Record;
@@ -225,7 +223,7 @@ public class SampleLoaderTask implements Callable
         final String sampleDataDir = mConfig.GeneDataDir.contains("*") ?
                 mConfig.GeneDataDir.replaceAll("\\*", sampleId) : mConfig.GeneDataDir;
 
-        final String filename = sampleDataDir + sampleId + ISF_FILE_ID + GENE_DATA_FILE_ID;
+        final String filename = GeneExpressionFile.generateFilename(sampleDataDir,sampleId);
 
         try
         {

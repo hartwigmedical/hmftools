@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.gc.GCBucket;
 import com.hartwig.hmftools.common.genome.gc.GCMedianReadCount;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
@@ -21,7 +20,7 @@ public class GCMedianReadCountBuilder {
 
     public GCMedianReadCountBuilder() {
         medianSample = new ReadCountMedian();
-        medianPerGCBucket = Maps.newHashMap();
+        medianPerGCBucket = new HashMap<>();
     }
 
     public void add(@NotNull final GCProfile profile, @NotNull final ReadCount readCount) {

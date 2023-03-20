@@ -68,8 +68,7 @@ public class SomaticSvCache
         mRefGenomeFile = null;
     }
 
-    public SomaticSvCache(
-            final String version, final String inputVcf, final String outputVcf, final ReferenceData referenceData)
+    public SomaticSvCache(final String version, final String inputVcf, final String outputVcf, final ReferenceData referenceData)
     {
         final VCFFileReader vcfReader = new VCFFileReader(new File(inputVcf), false);
         mOutputVcfFilename = outputVcf;

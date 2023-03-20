@@ -9,7 +9,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
@@ -84,12 +83,8 @@ public class CircosCharts
     public List<Future<Integer>> chartFutures()
     {
         final List<Future<Integer>> futures = Lists.newArrayList();
-        final Optional<String> circosBinary = mConfig.CircosBinary;
-        if(circosBinary.isPresent())
-        {
-            futures.add(mExecutorService.submit(() -> generateCircos(circosBinary.get(), "input")));
-            futures.add(mExecutorService.submit(() -> generateCircos(circosBinary.get(), "circos")));
-        }
+        futures.add(mExecutorService.submit(() -> generateCircos(mConfig.CircosBinary, "input")));
+        futures.add(mExecutorService.submit(() -> generateCircos(mConfig.CircosBinary, "circos")));
 
         return futures;
     }
@@ -180,7 +175,6 @@ public class CircosCharts
         Files.write(new File(outputFilename).toPath(), content.getBytes(charset));
     }
 
-    @NotNull
     private String readResource(final String resource) throws IOException
     {
         InputStream in = getClass().getResourceAsStream(resource);
@@ -188,7 +182,6 @@ public class CircosCharts
         return IOUtils.toString(reader);
     }
 
-    @NotNull
     private List<VariantContextDecorator> snp(final List<VariantContextDecorator> somaticVariants)
     {
         return somaticVariants.stream()
@@ -197,7 +190,6 @@ public class CircosCharts
                 .collect(Collectors.toList());
     }
 
-    @NotNull
     private List<VariantContextDecorator> indel(final List<VariantContextDecorator> somaticVariants)
     {
         return somaticVariants.stream()

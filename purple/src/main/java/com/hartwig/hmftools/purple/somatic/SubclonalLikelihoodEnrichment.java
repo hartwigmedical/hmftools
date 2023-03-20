@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.purple.somatic;
 
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.SUBCLONAL_LIKELIHOOD_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG_DESCRIPTION;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
 
 import htsjdk.variant.vcf.VCFHeader;
@@ -13,8 +13,6 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class SubclonalLikelihoodEnrichment
 {
-    private static final String SUBCLONAL_LIKELIHOOD_FLAG_DESCRIPTION = "Non-zero subclonal likelihood";
-
     private final SubclonalLikelihood mSubclonalLikelihood;
 
     public SubclonalLikelihoodEnrichment(double binWidth, final List<PeakModel> peakModel)

@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsem
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.containsFlag;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
@@ -21,8 +22,6 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.ITEM_DELIM;
 
-import static htsjdk.samtools.ValidationStringency.DEFAULT_STRINGENCY;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +32,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
@@ -42,7 +42,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.ValidationStringency;
 
@@ -81,6 +80,7 @@ public class SageConfig
     public final String CoverageBed;
     public final String OutputFile;
     public final boolean LogEvidenceReads;
+    public final ValidationStringency BamStringency;
 
     public final String Version;
     public final int Threads;
@@ -89,7 +89,6 @@ public class SageConfig
 
     private boolean mIsValid;
 
-    public final ValidationStringency Stringency;
 
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
     private static final String RESOURCE_DIR = "resource_dir";
@@ -110,7 +109,6 @@ public class SageConfig
     private static final String SLICE_SIZE = "slice_size";
     private static final String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
     private static final String COVERAGE_BED = "coverage_bed";
-    private static final String VALIDATION_STRINGENCY = "validation_stringency";
     private static final String INCLUDE_MT = "include_mt";
     private static final String EXPECTED_READ_LENGTH = "read_length";
     private static final String SYNC_FRAGMENTS = "sync_fragments";
@@ -120,7 +118,7 @@ public class SageConfig
     private static final String LOG_LPS_DATA = "log_lps_data";
     private static final String PERF_WARN_TIME = "perf_warn_time";
 
-    public SageConfig(boolean appendMode, @NotNull final String version, @NotNull final CommandLine cmd)
+    public SageConfig(boolean appendMode, final String version, final CommandLine cmd)
     {
         mIsValid = true;
         Version = version;
@@ -141,8 +139,8 @@ public class SageConfig
             TumorIds.addAll(Arrays.asList(cmd.getOptionValue(TUMOR).split(",")));
         }
 
-        SampleDataDir = cmd.hasOption(SAMPLE_DATA_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR)) : "";
-        ResourceDir = cmd.hasOption(RESOURCE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR)) : "";
+        SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR, ""));
+        ResourceDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR, ""));
 
         ReferenceBams = Lists.newArrayList();
         TumorBams = Lists.newArrayList();
@@ -191,7 +189,7 @@ public class SageConfig
         Hotspots = getReferenceFile(cmd, HOTSPOTS);
         RefGenomeFile = getReferenceFile(cmd, REF_GENOME);
 
-        Stringency = ValidationStringency.valueOf(cmd.getOptionValue(VALIDATION_STRINGENCY, DEFAULT_STRINGENCY.toString()));
+        BamStringency = BamUtils.validationStringency(cmd);
         RegionSliceSize = getConfigValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE);
         ReadContextFlankSize = getConfigValue(cmd, READ_CONTEXT_FLANK_SIZE, DEFAULT_READ_CONTEXT_FLANK_SIZE);
         MinMapQuality = getConfigValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY);
@@ -328,7 +326,6 @@ public class SageConfig
         options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
         options.addOption(HOTSPOTS, true, "Hotspots");
         options.addOption(COVERAGE_BED, true, "Coverage is calculated for optionally supplied bed");
-        options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
         options.addOption(LOG_LPS_DATA, false, "Log local phasing data");
         options.addOption(PERF_WARN_TIME, true, "Log details of partitions taking longer than X seconds");
 
@@ -360,6 +357,7 @@ public class SageConfig
         options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence in panel [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
         options.addOption(SYNC_FRAGMENTS, false, "Handle overlapping fragment reads in evidence phase");
         options.addOption(LOG_EVIDENCE_READS, false, "Write evidence read data");
+        addValidationStringencyOption(options);
 
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
         QualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);
@@ -401,7 +399,7 @@ public class SageConfig
         LogLpsData = false;
         PerfWarnTime = 0;
         RefGenVersion = V37;
-        Stringency = ValidationStringency.DEFAULT_STRINGENCY;
+        BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
         AppendMode = false;
         SyncFragments = false;
         LogEvidenceReads = false;

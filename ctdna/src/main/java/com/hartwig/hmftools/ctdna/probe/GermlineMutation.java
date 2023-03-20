@@ -92,11 +92,18 @@ public class GermlineMutation extends Variant
         String purpleDir = PvConfig.getSampleFilePath(sampleId, config.PurpleDir);
         String vcfFile = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
 
-        List<GermlineVariant> germlineVariants = GermlineVariantFactory.fromVCFFile(sampleId, vcfFile);
+        try
+        {
+            List<GermlineVariant> germlineVariants = GermlineVariantFactory.fromVCFFile(sampleId, vcfFile);
 
-        germlineVariants.stream().filter(x -> x.reported()).forEach(x -> variants.add(new GermlineMutation(x)));
+            germlineVariants.stream().filter(x -> x.reported()).forEach(x -> variants.add(new GermlineMutation(x)));
 
-        CT_LOGGER.debug("sample({}) loaded {} germline variants", sampleId, variants.size());
+            CT_LOGGER.debug("sample({}) loaded {} germline variants", sampleId, variants.size());
+        }
+        catch(Exception e)
+        {
+            CT_LOGGER.error("sample({}) failed to load germline variants from file: {}", sampleId, vcfFile);
+        }
 
         return variants;
     }

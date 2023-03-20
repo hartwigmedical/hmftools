@@ -27,7 +27,6 @@ import static com.hartwig.hmftools.purple.purity.FittedPurityFactory.createFitte
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -113,7 +112,6 @@ public class PurpleApplication
 
     private final GermlineVariants mGermlineVariants;
     private final Segmentation mSegmentation;
-    private final Charts mCharts;
 
     private static final int THREADS_DEFAULT = 2;
     private static final String VERSION = "version";
@@ -158,12 +156,10 @@ public class PurpleApplication
         if(!mConfig.DriversOnly)
         {
             mSegmentation = new Segmentation(mReferenceData);
-            mCharts = new Charts(mConfig, mExecutorService, mReferenceData.RefGenVersion.is38());
         }
         else
         {
             mSegmentation = null;
-            mCharts = null;
         }
     }
 
@@ -171,7 +167,35 @@ public class PurpleApplication
     {
         long startTimeMs = System.currentTimeMillis();
 
-        processSample(mConfig.ReferenceId, mConfig.TumorId);
+        try
+        {
+            if(mConfig.DriversOnly)
+            {
+                findDrivers(mConfig.TumorId);
+            }
+            else
+            {
+                final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, mConfig.TumorId, mConfig.ReferenceId);
+
+                if(!sampleDataFiles.hasValidSampleNames(mConfig))
+                    System.exit(1);
+
+                final SampleData sampleData = loadSampleData(mConfig.ReferenceId, mConfig.TumorId, sampleDataFiles);
+
+                if(sampleData == null)
+                    System.exit(1);
+
+                PPL_LOGGER.debug("post-data-loading memory({}mb)", calcMemoryUsage());
+
+                performFit(mConfig.ReferenceId, mConfig.TumorId, sampleDataFiles, sampleData);
+            }
+        }
+        catch(Exception e)
+        {
+            PPL_LOGGER.error("failed processing sample({}): {}", mConfig.TumorId, e.toString());
+            e.printStackTrace();
+            System.exit(1);
+        }
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         PPL_LOGGER.info("Purple complete, runTime({})", format("%.1fs", timeTakenMs/1000.0));
@@ -213,35 +237,6 @@ public class PurpleApplication
             somaticVariantCache.loadSomatics(sampleDataFiles.SomaticVcfFile, mReferenceData.SomaticHotspots);
 
         return sampleData;
-    }
-
-    private void processSample(final String referenceId, final String tumorId)
-    {
-        try
-        {
-            if(mConfig.DriversOnly)
-            {
-                findDrivers(tumorId);
-            }
-            else
-            {
-                final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, tumorId, referenceId);
-                final SampleData sampleData = loadSampleData(referenceId, tumorId, sampleDataFiles);
-
-                if(sampleData == null)
-                    System.exit(1);
-
-                PPL_LOGGER.debug("post-data-loading memory({}mb)", calcMemoryUsage());
-
-                performFit(referenceId, tumorId, sampleDataFiles, sampleData);
-            }
-        }
-        catch(Exception e)
-        {
-            PPL_LOGGER.error("failed processing sample({}): {}", tumorId, e.toString());
-            e.printStackTrace();
-            System.exit(1);
-        }
     }
 
     private void performFit(
@@ -408,7 +403,7 @@ public class PurpleApplication
                 final String outputVcf = purpleGermlineSvFile(mConfig.OutputDir, tumorId);
 
                 germlineSvCache = new GermlineSvCache(
-                        mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, outputVcf, mReferenceData,
+                        mConfig, mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, outputVcf, mReferenceData,
                         fittedRegions, copyNumbers, purityContext);
 
                 germlineSvCache.write();
@@ -426,13 +421,15 @@ public class PurpleApplication
             GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorId), germlineDeletions.getDeletions());
         }
 
-        if(!mConfig.germlineMode() && (mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent()))
+        if(!mConfig.germlineMode() && !mConfig.Charting.Disabled)
         {
             PPL_LOGGER.info("generating charts");
 
             try
             {
-                mCharts.write(
+                Charts charts = new Charts(mConfig, mExecutorService, mReferenceData.RefGenVersion.is38());
+
+                charts.write(
                         referenceId, tumorId, !sampleDataFiles.SomaticVcfFile.isEmpty(),
                         gender, copyNumbers, somaticStream.downsampledVariants(), sampleData.SvCache.variants(),
                         fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
@@ -593,7 +590,7 @@ public class PurpleApplication
                 // String germlineSvOutputVcf = "";
 
                 GermlineSvCache germlineSvCache = new GermlineSvCache(
-                        mPurpleVersion.version(), germlineSvVcf, germlineSvOutputVcf, mReferenceData, fittedRegions, copyNumbers, purityContext);
+                        mConfig, mPurpleVersion.version(), germlineSvVcf, germlineSvOutputVcf, mReferenceData, fittedRegions, copyNumbers, purityContext);
 
                 germlineSVs.addAll(germlineSvCache.variants());
                 germlineSvCache.write();

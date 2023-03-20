@@ -7,6 +7,14 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_ALT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_CORE;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_FULL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_MAX;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_PARTIAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_REALIGNED;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_REF;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_TOTAL;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
@@ -86,15 +94,6 @@ public class ReadContextCounter implements VariantHotspot
 
     private List<Integer> mLocalPhaseSets;
     private List<int[]> mLpsCounts;
-
-    public static final int RC_FULL = 0;
-    public static final int RC_PARTIAL = 1;
-    public static final int RC_CORE = 2;
-    public static final int RC_REALIGNED = 3;
-    public static final int RC_ALT = 4;
-    public static final int RC_REF = 5;
-    public static final int RC_TOTAL = 6;
-    public static final int RC_MAX = RC_TOTAL + 1;
 
     public ReadContextCounter(
             final int id, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,

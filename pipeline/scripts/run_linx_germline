@@ -29,7 +29,6 @@ args="-sample ${tumor_id} \
   -germline \
   -sv_vcf ${sv_vcf} \
   -ref_genome_version ${ref_genome_version} \
-  -line_element_file ${line_element_file} \
   -ensembl_data_dir ${ensembl_dir} \
   -driver_gene_panel ${driver_gene_panel} \
   -output_dir ${output_dir}"

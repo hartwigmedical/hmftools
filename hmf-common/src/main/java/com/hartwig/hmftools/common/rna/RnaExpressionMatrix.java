@@ -103,8 +103,8 @@ public class RnaExpressionMatrix
             return null;
         }
 
-        RNA_LOGGER.info("loaded expression for {} {}s and {} samples from file({})",
-                mGeneTransIdIndexMap.size(), scopeType(), mSampleIdIndexMap.size(), filename);
+        // RNA_LOGGER.info("loaded expression for {} {}s and {} samples from file({})",
+        //        mGeneTransIdIndexMap.size(), scopeType(), mSampleIdIndexMap.size(), filename);
 
         return matrix;
     }

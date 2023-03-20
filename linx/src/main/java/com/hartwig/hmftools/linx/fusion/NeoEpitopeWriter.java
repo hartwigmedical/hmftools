@@ -80,7 +80,7 @@ public class NeoEpitopeWriter
     public void processFusionCandidate(
             final List<BreakendGeneData> breakendGenes1, final List<BreakendGeneData> breakendGenes2,
             final List<LinkedPair> traversedPairs, final DisruptionFinder disruptionFinder,
-            final LinkedPair lowerLink, final LinkedPair upperLink)
+            final LinkedPair lowerLink, final LinkedPair upperLink, double svCopyNumber)
     {
         if(breakendGenes1.isEmpty() || breakendGenes2.isEmpty())
             return;
@@ -143,7 +143,7 @@ public class NeoEpitopeWriter
                 NeoEpitopeFusion fusion = new NeoEpitopeFusion(
                         upGene.geneId(), upGene.geneName(), upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.id(),
                         downGene.geneId(), downGene.geneName(), downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.id(),
-                        avgJcn, upGene.insertSequence(), chainLength, new String[] { sjUp.toString(), sjDown.toString()});
+                        avgJcn, svCopyNumber, upGene.insertSequence(), chainLength, new String[] { sjUp.toString(), sjDown.toString()});
 
                 writeData(fusion);
 

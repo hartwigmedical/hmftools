@@ -59,8 +59,11 @@ public final class FileWriterUtils
         return outputDir.mkdirs();
     }
 
-    public static String checkAddDirSeparator(@NotNull final String outputDir)
+    public static String checkAddDirSeparator(final String outputDir)
     {
+        if(outputDir == null || outputDir.isEmpty())
+            return outputDir;
+
         if(outputDir.endsWith(File.separator))
             return outputDir;
 

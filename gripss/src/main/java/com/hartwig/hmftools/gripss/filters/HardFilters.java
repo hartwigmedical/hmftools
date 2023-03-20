@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.sglFragmentCount;
 
 import com.hartwig.hmftools.gripss.common.VariantAltInsertCoords;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -19,10 +19,12 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class HardFilters
 {
     private final FilterConstants mFilterConstants;
+    private final boolean mGermlineMode;
 
-    public HardFilters(final FilterConstants filterConstants)
+    public HardFilters(final FilterConstants filterConstants, final boolean germlineMode)
     {
         mFilterConstants = filterConstants;
+        mGermlineMode = germlineMode;
     }
 
     public boolean isFiltered(final VariantContext variant, final GenotypeIds genotypeIds, boolean isSgl)
@@ -67,7 +69,7 @@ public class HardFilters
 
     private boolean hasExcessiveReferenceSupport(final VariantContext variant, final GenotypeIds genotypeIds, boolean isSgl)
     {
-        if(!genotypeIds.hasReference() || genotypeIds.GermlineMode)
+        if(!genotypeIds.hasReference() || mGermlineMode)
             return false;
 
         Genotype refGenotype = variant.getGenotype(genotypeIds.ReferenceOrdinal);

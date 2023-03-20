@@ -38,6 +38,12 @@ public final class PurpleVcfTags
     public static final String PURPLE_MINOR_ALLELE_CN_INFO = "PURPLE_MACN";
     private static final String PURPLE_MINOR_ALLELE_PLOIDY_DESC = "Purity adjusted minor allele ploidy surrounding variant location";
 
+    public static final String SUBCLONAL_LIKELIHOOD_FLAG = "SUBCL";
+    public static final String SUBCLONAL_LIKELIHOOD_FLAG_DESCRIPTION = "Non-zero subclonal likelihood";
+
+    public static final String KATAEGIS_FLAG = "KT";
+    public static final String KATAEGIS_FLAG_DESCRIPTION = "Forward/reverse kataegis id";
+
     public static VCFHeader addGermlineHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader template)
     {
         template.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));

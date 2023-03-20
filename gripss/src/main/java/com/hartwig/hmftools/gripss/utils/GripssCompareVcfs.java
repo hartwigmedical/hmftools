@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttri
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.gripss.GripssConfig.REFERENCE;
 import static com.hartwig.hmftools.gripss.GripssConfig.SAMPLE;
+import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
@@ -54,9 +55,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.gripss.VariantBuilder;
 import com.hartwig.hmftools.gripss.common.Breakend;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
-import com.hartwig.hmftools.gripss.common.VcfUtils;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 import com.hartwig.hmftools.gripss.filters.TargetRegions;
 
@@ -93,6 +93,7 @@ public class GripssCompareVcfs
     private final boolean mKeyByCoords; // instead of assuming VCF Ids match
     private final boolean mWriteAllDiffs;
     private final boolean mGridssDiffsOnly;
+    private final boolean mRefDepthDiffsOnly;
 
     private final List<VcfCompareField> mVcfCheckFields;
 
@@ -101,7 +102,9 @@ public class GripssCompareVcfs
     private static final String IGNORE_PON_DIFF = "ignore_pon_diff";
     private static final String KEY_BY_COORDS = "key_by_coords";
     private static final String WRITE_ALL_DIFFS = "write_all_diffs";
+
     private static final String GRIDSS_ONLY = "gridss_only";
+    private static final String REF_DEPTH_ONLY = "ref_depth_only";
 
     private static final int DEFAULT_MAX_DIFF = 20;
     private static final double DEFAULT_MAX_DIFF_PERC = 0.2;
@@ -118,14 +121,28 @@ public class GripssCompareVcfs
         mOriginalSvData = Maps.newHashMap();
         mOriginalCoordsSvData = Maps.newHashMap();
 
-        mVariantBuilder = new VariantBuilder(null, new HotspotCache(cmd), new TargetRegions(null));
+        mVariantBuilder = new VariantBuilder(null, new HotspotCache(cmd), new TargetRegions(null), false);
 
         mIgnorePonDiff = cmd.hasOption(IGNORE_PON_DIFF);
         mKeyByCoords = cmd.hasOption(KEY_BY_COORDS);
         mWriteAllDiffs = cmd.hasOption(WRITE_ALL_DIFFS);
         mGridssDiffsOnly = cmd.hasOption(GRIDSS_ONLY);
+        mRefDepthDiffsOnly = cmd.hasOption(REF_DEPTH_ONLY);
 
         mVcfCheckFields = Lists.newArrayList();
+        addComparisonFields();
+
+        mWriter = initialiseWriter();
+    }
+
+    private void addComparisonFields()
+    {
+        if(mRefDepthDiffsOnly)
+        {
+            mVcfCheckFields.add(new VcfCompareField(VT_REF, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+            mVcfCheckFields.add(new VcfCompareField(VT_REFPAIR, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+            return;
+        }
 
         if(!mGridssDiffsOnly)
         {
@@ -156,7 +173,6 @@ public class GripssCompareVcfs
         mVcfCheckFields.add(new VcfCompareField(VT_BASRP, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
         mVcfCheckFields.add(new VcfCompareField(VT_BASSR, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
 
-        mWriter = initialiseWriter();
     }
 
     public void run()
@@ -184,7 +200,7 @@ public class GripssCompareVcfs
                 vcfFile, new VCFCodec(), false);
 
         VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
-        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, mReferenceId, mSampleId, false);
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mReferenceId, mSampleId);
 
         if(genotypeIds == null)
         {
@@ -244,7 +260,7 @@ public class GripssCompareVcfs
                 newVcfFile, new VCFCodec(), false);
 
         VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
-        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, "", mSampleId, false);
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, "", mSampleId);
 
         if(genotypeIds == null)
             System.exit(1);
@@ -609,6 +625,7 @@ public class GripssCompareVcfs
         options.addOption(KEY_BY_COORDS, false, "Match SVs on coords rather than VcfId");
         options.addOption(WRITE_ALL_DIFFS, false, "Write all VCF field diffs, not just the first");
         options.addOption(GRIDSS_ONLY, false, "Only compare fields written by Grids (ie no Gripss)");
+        options.addOption(REF_DEPTH_ONLY, false, "Only compare reference depth fields");
 
         addOutputOptions(options);
         addLoggingOptions(options);

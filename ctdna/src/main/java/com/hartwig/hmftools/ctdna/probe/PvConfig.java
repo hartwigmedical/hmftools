@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
@@ -44,6 +45,7 @@ public class PvConfig
 
     public final int Threads;
     public final String OutputDir;
+    public final String OutputId;
 
     // config strings
     public static final String SAMPLE = "sample";
@@ -92,6 +94,7 @@ public class PvConfig
         LinxGermlineDir = cmd.getOptionValue(LINX_GERMLINE_DIR);
         RefGenomeFile = cmd.getOptionValue(REF_GENOME);
         OutputDir = parseOutputDir(cmd);
+        OutputId = cmd.getOptionValue(OUTPUT_ID);
         ReferenceVariantsFile = cmd.getOptionValue(REFERENCE_VARIANTS_FILE);
 
         RefGenVersion = RefGenomeVersion.from(cmd);
@@ -179,6 +182,7 @@ public class PvConfig
         LinxGermlineDir = "";
         RefGenomeFile = "";
         OutputDir = "";
+        OutputId = "";
         ReferenceVariantsFile = "";
         RefGenVersion = V37;
         WriteAll = false;
