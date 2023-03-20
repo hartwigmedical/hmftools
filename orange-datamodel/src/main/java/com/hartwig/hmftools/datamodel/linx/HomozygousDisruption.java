@@ -9,19 +9,18 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class HomozygousDisruption
-{
+public interface HomozygousDisruption {
     @NotNull
-    public abstract String chromosome();
+    String chromosome();
 
     @NotNull
-    public abstract String chromosomeBand();
+    String chromosomeBand();
 
     @NotNull
-    public abstract String gene();
+    String gene();
 
     @NotNull
-    public abstract String transcript();
+    String transcript();
 
-    public abstract boolean isCanonical();
+    boolean isCanonical();
 }

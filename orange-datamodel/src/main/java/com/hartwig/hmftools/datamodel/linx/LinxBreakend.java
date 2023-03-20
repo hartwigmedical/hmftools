@@ -9,53 +9,53 @@ import org.jetbrains.annotations.NotNull;
 
 @Gson.TypeAdapters
 @Value.Immutable
-public abstract class LinxBreakend {
-    public abstract int id();
+public interface LinxBreakend {
+    int id();
 
-    public abstract int svId();
-
-    @NotNull
-    public abstract String gene();
+    int svId();
 
     @NotNull
-    public abstract String transcriptId();
-
-    public abstract boolean canonical();
+    String gene();
 
     @NotNull
-    public abstract String geneOrientation();
+    String transcriptId();
 
-    public abstract boolean disruptive();
-
-    public abstract boolean reportedDisruption();
-
-    public abstract double undisruptedCopyNumber();
+    boolean canonical();
 
     @NotNull
-    public abstract TranscriptRegionType regionType();
+    String geneOrientation();
+
+    boolean disruptive();
+
+    boolean reportedDisruption();
+
+    double undisruptedCopyNumber();
 
     @NotNull
-    public abstract TranscriptCodingType codingType();
+    TranscriptRegionType regionType();
 
-    public abstract int nextSpliceExonRank();
+    @NotNull
+    TranscriptCodingType codingType();
+
+    int nextSpliceExonRank();
 
     // additional fields for patient report
     @NotNull
-    public abstract LinxBreakendType type();
+    LinxBreakendType type();
 
     @NotNull
-    public abstract String chromosome();
+    String chromosome();
 
-    public abstract int orientation();
+    int orientation();
 
-    public abstract int strand();
+    int strand();
 
     @NotNull
-    public abstract String chrBand();
+    String chrBand();
 
-    public abstract int exonUp();
+    int exonUp();
 
-    public abstract int exonDown();
+    int exonDown();
     
-    public abstract double junctionCopyNumber();
+    double junctionCopyNumber();
 }

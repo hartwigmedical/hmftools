@@ -8,13 +8,13 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Evaluation {
+public interface Evaluation {
 
     @Nullable
-    public abstract String cancerType();
+    String cancerType();
 
-    public abstract double panCancerPercentile();
+    double panCancerPercentile();
 
     @Nullable
-    public abstract Double cancerTypePercentile();
+    Double cancerTypePercentile();
 }

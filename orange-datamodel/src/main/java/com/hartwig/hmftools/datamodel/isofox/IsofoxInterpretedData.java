@@ -11,36 +11,36 @@ import java.util.List;
 
 @Value.Immutable
 @Value.Style(passAnnotations = {NotNull.class, Nullable.class})
-public abstract class IsofoxInterpretedData {
+public interface IsofoxInterpretedData {
 
     @NotNull
-    public abstract IsofoxRnaStatistics summary();
+    IsofoxRnaStatistics summary();
 
     @NotNull
-    public abstract List<GeneExpression> allGeneExpressions();
+    List<GeneExpression> allGeneExpressions();
 
     @NotNull
-    public abstract List<GeneExpression> reportableHighExpression();
+    List<GeneExpression> reportableHighExpression();
 
     @NotNull
-    public abstract List<GeneExpression> reportableLowExpression();
+    List<GeneExpression> reportableLowExpression();
 
     @NotNull
-    public abstract List<RnaFusion> allFusions();
+    List<RnaFusion> allFusions();
 
     @NotNull
-    public abstract List<RnaFusion> reportableNovelKnownFusions();
+    List<RnaFusion> reportableNovelKnownFusions();
 
     @NotNull
-    public abstract List<RnaFusion> reportableNovelPromiscuousFusions();
+    List<RnaFusion> reportableNovelPromiscuousFusions();
 
     @NotNull
-    public abstract List<NovelSpliceJunction> allNovelSpliceJunctions();
+    List<NovelSpliceJunction> allNovelSpliceJunctions();
 
     @NotNull
-    public abstract List<NovelSpliceJunction> reportableSkippedExons();
+    List<NovelSpliceJunction> reportableSkippedExons();
 
     @NotNull
-    public abstract List<NovelSpliceJunction> reportableNovelExonsIntrons();
+    List<NovelSpliceJunction> reportableNovelExonsIntrons();
 
 }

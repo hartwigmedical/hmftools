@@ -10,11 +10,11 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class OrangeSample {
+public interface OrangeSample {
 
     @NotNull
-    public abstract WGSMetrics metrics();
+    WGSMetrics metrics();
 
     @NotNull
-    public abstract Flagstat flagstat();
+    Flagstat flagstat();
 }

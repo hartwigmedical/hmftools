@@ -8,27 +8,27 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PurpleFit {
+public interface PurpleFit {
 
     @NotNull
-    public abstract PurpleQC qc();
+    PurpleQC qc();
 
-    public abstract boolean hasSufficientQuality();
+    boolean hasSufficientQuality();
 
     @NotNull
-    public abstract PurpleFittedPurityMethod fittedPurityMethod();
+    PurpleFittedPurityMethod fittedPurityMethod();
 
-    public abstract boolean containsTumorCells();
+    boolean containsTumorCells();
 
-    public abstract double purity();
+    double purity();
 
-    public abstract double minPurity();
+    double minPurity();
 
-    public abstract double maxPurity();
+    double maxPurity();
 
-    public abstract double ploidy();
+    double ploidy();
 
-    public abstract double minPloidy();
+    double minPloidy();
 
-    public abstract double maxPloidy();
+    double maxPloidy();
 }

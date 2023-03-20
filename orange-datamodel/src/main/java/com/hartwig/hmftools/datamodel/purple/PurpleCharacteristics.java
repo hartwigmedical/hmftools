@@ -8,23 +8,23 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PurpleCharacteristics {
-    public abstract boolean wholeGenomeDuplication();
+public interface PurpleCharacteristics {
+    boolean wholeGenomeDuplication();
 
-    public abstract double microsatelliteIndelsPerMb();
-
-    @NotNull
-    public abstract PurpleMicrosatelliteStatus microsatelliteStatus();
-
-    public abstract double tumorMutationalBurdenPerMb();
+    double microsatelliteIndelsPerMb();
 
     @NotNull
-    public abstract PurpleTumorMutationalStatus tumorMutationalBurdenStatus();
+    PurpleMicrosatelliteStatus microsatelliteStatus();
 
-    public abstract int tumorMutationalLoad();
+    double tumorMutationalBurdenPerMb();
 
     @NotNull
-    public abstract PurpleTumorMutationalStatus tumorMutationalLoadStatus();
+    PurpleTumorMutationalStatus tumorMutationalBurdenStatus();
 
-    public abstract int svTumorMutationalBurden();
+    int tumorMutationalLoad();
+
+    @NotNull
+    PurpleTumorMutationalStatus tumorMutationalLoadStatus();
+
+    int svTumorMutationalBurden();
 }

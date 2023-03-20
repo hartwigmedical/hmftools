@@ -7,30 +7,29 @@ import org.jetbrains.annotations.Nullable;
 
 @Gson.TypeAdapters
 @Value.Immutable
-@Value.Style(allParameters = true,
-             passAnnotations = { NotNull.class, Nullable.class })
-public abstract class AnnotatedVirus {
+@Value.Style(allParameters = true, passAnnotations = { NotNull.class, Nullable.class })
+public interface AnnotatedVirus {
 
     @NotNull
-    public abstract String name();
+    String name();
 
     @NotNull
-    public abstract VirusBreakendQCStatus qcStatus();
+    VirusBreakendQCStatus qcStatus();
 
-    public abstract int integrations();
+    int integrations();
 
     @Nullable
-    public abstract VirusInterpretation interpretation();
+    VirusInterpretation interpretation();
 
-    public abstract double percentageCovered();
+    double percentageCovered();
 
-    public abstract double meanCoverage();
+    double meanCoverage();
 
     @Nullable
-    public abstract Double expectedClonalCoverage();
+    Double expectedClonalCoverage();
 
-    public abstract boolean reported();
+    boolean reported();
 
     @NotNull
-    public abstract VirusLikelihoodType virusDriverLikelihoodType();
+    VirusLikelihoodType virusDriverLikelihoodType();
 }

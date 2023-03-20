@@ -8,21 +8,21 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class LilacAllele {
+public interface LilacAllele {
 
     @NotNull
-    public abstract String allele();
+    String allele();
 
-    public abstract double tumorCopyNumber();
+    double tumorCopyNumber();
 
-    public abstract double somaticMissense();
-    public abstract double somaticNonsenseOrFrameshift();
-    public abstract double somaticSplice();
-    public abstract double somaticSynonymous();
-    public abstract double somaticInframeIndel();
+    double somaticMissense();
+    double somaticNonsenseOrFrameshift();
+    double somaticSplice();
+    double somaticSynonymous();
+    double somaticInframeIndel();
 
     // used to create the report
-    public abstract int refFragments();
-    public abstract int tumorFragments();
-    public abstract int rnaFragments();
+    int refFragments();
+    int tumorFragments();
+    int rnaFragments();
 }

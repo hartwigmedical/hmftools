@@ -3,12 +3,11 @@ package com.hartwig.hmftools.datamodel.rna;
 import org.immutables.value.Value;
 
 @Value.Immutable
-public abstract class GeneExpression
-{
-    public abstract String geneName();
-    public abstract double tpm();
-    public abstract double medianTpmCancer();
-    public abstract double percentileCancer();
-    public abstract double medianTpmCohort();
-    public abstract double percentileCohort();
+public interface GeneExpression {
+    String geneName();
+    double tpm();
+    double medianTpmCancer();
+    double percentileCancer();
+    double medianTpmCohort();
+    double percentileCohort();
 }

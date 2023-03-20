@@ -9,18 +9,18 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ChordRecord {
+public interface ChordRecord {
     @SerializedName("BRCA1Value")
-    public abstract double brca1Value();
+    double brca1Value();
 
     @SerializedName("BRCA2Value")
-    public abstract double brca2Value();
+    double brca2Value();
 
-    public abstract double hrdValue();
-
-    @NotNull
-    public abstract ChordStatus hrStatus();
+    double hrdValue();
 
     @NotNull
-    public abstract String hrdType();
+    ChordStatus hrStatus();
+
+    @NotNull
+    String hrdType();
 }

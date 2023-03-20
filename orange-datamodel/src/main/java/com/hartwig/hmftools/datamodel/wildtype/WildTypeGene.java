@@ -8,8 +8,8 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class WildTypeGene {
+public interface WildTypeGene {
 
     @NotNull
-    public abstract String gene();
+    String gene();
 }

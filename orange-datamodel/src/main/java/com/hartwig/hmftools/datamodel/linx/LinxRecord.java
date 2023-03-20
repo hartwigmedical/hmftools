@@ -10,41 +10,41 @@ import java.util.List;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class LinxRecord {
+public interface LinxRecord {
 
     @NotNull
-    public abstract List<LinxSvAnnotation> allSomaticStructuralVariants();
+    List<LinxSvAnnotation> allSomaticStructuralVariants();
 
     @Nullable
-    public abstract List<LinxSvAnnotation> allGermlineStructuralVariants();
+    List<LinxSvAnnotation> allGermlineStructuralVariants();
 
     @NotNull
-    public abstract List<LinxFusion> allSomaticFusions();
+    List<LinxFusion> allSomaticFusions();
 
     @NotNull
-    public abstract List<LinxFusion> reportableSomaticFusions();
+    List<LinxFusion> reportableSomaticFusions();
 
     @NotNull
-    public abstract List<LinxFusion> additionalSuspectSomaticFusions();
+    List<LinxFusion> additionalSuspectSomaticFusions();
 
     @NotNull
-    public abstract List<LinxBreakend> allSomaticBreakends();
+    List<LinxBreakend> allSomaticBreakends();
 
     @Nullable
-    public abstract List<LinxBreakend> allGermlineBreakends();
+    List<LinxBreakend> allGermlineBreakends();
 
     @NotNull
-    public abstract List<LinxBreakend> reportableSomaticBreakends();
+    List<LinxBreakend> reportableSomaticBreakends();
 
     @Nullable
-    public abstract List<LinxBreakend> reportableGermlineBreakends();
+    List<LinxBreakend> reportableGermlineBreakends();
 
     @NotNull
-    public abstract List<LinxBreakend> additionalSuspectSomaticBreakends();
+    List<LinxBreakend> additionalSuspectSomaticBreakends();
 
     @NotNull
-    public abstract List<HomozygousDisruption> somaticHomozygousDisruptions();
+    List<HomozygousDisruption> somaticHomozygousDisruptions();
 
     @Nullable
-    public abstract List<HomozygousDisruption> germlineHomozygousDisruptions();
+    List<HomozygousDisruption> germlineHomozygousDisruptions();
 }

@@ -10,59 +10,59 @@ import java.util.List;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PurpleRecord {
+public interface PurpleRecord {
 
     @NotNull
-    public abstract PurpleFit fit();
+    PurpleFit fit();
 
     @NotNull
-    public abstract PurpleCharacteristics characteristics();
+    PurpleCharacteristics characteristics();
 
     @NotNull
-    public abstract List<PurpleDriver> somaticDrivers();
+    List<PurpleDriver> somaticDrivers();
 
     @Nullable
-    public abstract List<PurpleDriver> germlineDrivers();
+    List<PurpleDriver> germlineDrivers();
 
     @NotNull
-    public abstract List<PurpleVariant> allSomaticVariants();
+    List<PurpleVariant> allSomaticVariants();
 
     @NotNull
-    public abstract List<PurpleVariant> reportableSomaticVariants();
+    List<PurpleVariant> reportableSomaticVariants();
 
     @NotNull
-    public abstract List<PurpleVariant> additionalSuspectSomaticVariants();
+    List<PurpleVariant> additionalSuspectSomaticVariants();
 
     @Nullable
-    public abstract List<PurpleVariant> allGermlineVariants();
+    List<PurpleVariant> allGermlineVariants();
 
     @Nullable
-    public abstract List<PurpleVariant> reportableGermlineVariants();
+    List<PurpleVariant> reportableGermlineVariants();
 
     @Nullable
-    public abstract List<PurpleVariant> additionalSuspectGermlineVariants();
+    List<PurpleVariant> additionalSuspectGermlineVariants();
 
     @NotNull
-    public abstract List<PurpleCopyNumber> allSomaticCopyNumbers();
+    List<PurpleCopyNumber> allSomaticCopyNumbers();
 
     @NotNull
-    public abstract List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers();
+    List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers();
 
     @NotNull
-    public abstract List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH();
+    List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH();
 
     @NotNull
-    public abstract List<PurpleGainLoss> allSomaticGainsLosses();
+    List<PurpleGainLoss> allSomaticGainsLosses();
 
     @NotNull
-    public abstract List<PurpleGainLoss> reportableSomaticGainsLosses();
+    List<PurpleGainLoss> reportableSomaticGainsLosses();
 
     @NotNull
-    public abstract List<PurpleGainLoss> nearReportableSomaticGains();
+    List<PurpleGainLoss> nearReportableSomaticGains();
 
     @NotNull
-    public abstract List<PurpleGainLoss> additionalSuspectSomaticGainsLosses();
+    List<PurpleGainLoss> additionalSuspectSomaticGainsLosses();
 
     @Nullable
-    public abstract List<PurpleGainLoss> reportableGermlineFullLosses();
+    List<PurpleGainLoss> reportableGermlineFullLosses();
 }

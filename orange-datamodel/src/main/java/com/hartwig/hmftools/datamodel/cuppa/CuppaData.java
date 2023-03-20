@@ -11,17 +11,17 @@ import java.util.List;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CuppaData {
+public interface CuppaData {
 
     @NotNull
-    public abstract List<CuppaPrediction> predictions();
+    List<CuppaPrediction> predictions();
 
-    public abstract int simpleDups32To200B();
+    int simpleDups32To200B();
 
-    public abstract int maxComplexSize();
+    int maxComplexSize();
 
-    public abstract int telomericSGLs();
+    int telomericSGLs();
 
     @SerializedName("LINECount")
-    public abstract int lineCount();
+    int lineCount();
 }

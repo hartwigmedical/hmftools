@@ -10,44 +10,44 @@ import java.util.List;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class OrangePlots {
+public interface OrangePlots {
 
     @Nullable
-    public abstract String sageReferenceBQRPlot();
+    String sageReferenceBQRPlot();
 
     @NotNull
-    public abstract String sageTumorBQRPlot();
+    String sageTumorBQRPlot();
 
     @NotNull
-    public abstract String purpleInputPlot();
+    String purpleInputPlot();
 
     @NotNull
-    public abstract String purpleFinalCircosPlot();
+    String purpleFinalCircosPlot();
 
     @NotNull
-    public abstract String purpleClonalityPlot();
+    String purpleClonalityPlot();
 
     @NotNull
-    public abstract String purpleCopyNumberPlot();
+    String purpleCopyNumberPlot();
 
     @NotNull
-    public abstract String purpleVariantCopyNumberPlot();
+    String purpleVariantCopyNumberPlot();
 
     @NotNull
-    public abstract String purplePurityRangePlot();
+    String purplePurityRangePlot();
 
     @Nullable
-    public abstract String purpleKataegisPlot();
+    String purpleKataegisPlot();
 
     @NotNull
-    public abstract List<String> linxDriverPlots();
+    List<String> linxDriverPlots();
 
     @Nullable
-    public abstract String cuppaSummaryPlot();
+    String cuppaSummaryPlot();
 
     @Nullable
-    public abstract String cuppaFeaturePlot();
+    String cuppaFeaturePlot();
 
     @Nullable
-    public abstract String cuppaChartPlot();
+    String cuppaChartPlot();
 }

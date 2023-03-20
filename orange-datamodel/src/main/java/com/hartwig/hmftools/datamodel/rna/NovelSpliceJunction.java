@@ -3,17 +3,17 @@ package com.hartwig.hmftools.datamodel.rna;
 import org.immutables.value.Value;
 
 @Value.Immutable
-public abstract class NovelSpliceJunction {
-    public abstract String geneName();
+public interface NovelSpliceJunction {
+    String geneName();
 
-    public abstract String chromosome();
-    public abstract int junctionStart();
-    public abstract int junctionEnd();
-    public abstract AltSpliceJunctionType type();
-    public abstract int fragmentCount();
-    public abstract int depthStart();
-    public abstract int depthEnd();
-    public abstract AltSpliceJunctionContext regionStart();
-    public abstract AltSpliceJunctionContext regionEnd();
-    public abstract int cohortFrequency();
+    String chromosome();
+    int junctionStart();
+    int junctionEnd();
+    AltSpliceJunctionType type();
+    int fragmentCount();
+    int depthStart();
+    int depthEnd();
+    AltSpliceJunctionContext regionStart();
+    AltSpliceJunctionContext regionEnd();
+    int cohortFrequency();
 }

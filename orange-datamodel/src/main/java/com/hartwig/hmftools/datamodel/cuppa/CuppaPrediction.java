@@ -8,10 +8,10 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CuppaPrediction {
+public interface CuppaPrediction {
 
     @NotNull
-    public abstract String cancerType();
+    String cancerType();
 
-    public abstract double likelihood();
+    double likelihood();
 }

@@ -3,19 +3,19 @@ package com.hartwig.hmftools.datamodel.rna;
 import org.immutables.value.Value;
 
 @Value.Immutable
-public abstract class RnaFusion {
-    public abstract String name();
-    public abstract String chromosomeUp();
-    public abstract String chromosomeDown();
-    public abstract int positionUp();
-    public abstract int positionDown();
-    public abstract String junctionTypeUp();
-    public abstract String junctionTypeDown();
-    public abstract StructuralVariantType svType();
-    public abstract int splitFragments();
-    public abstract int realignedFrags();
-    public abstract int discordantFrags();
-    public abstract int depthUp();
-    public abstract int depthDown();
-    public abstract int cohortFrequency();
+public interface RnaFusion {
+    String name();
+    String chromosomeUp();
+    String chromosomeDown();
+    int positionUp();
+    int positionDown();
+    String junctionTypeUp();
+    String junctionTypeDown();
+    StructuralVariantType svType();
+    int splitFragments();
+    int realignedFrags();
+    int discordantFrags();
+    int depthUp();
+    int depthDown();
+    int cohortFrequency();
 }

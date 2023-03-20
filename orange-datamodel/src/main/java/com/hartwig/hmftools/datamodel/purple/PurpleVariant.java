@@ -10,62 +10,62 @@ import java.util.List;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PurpleVariant implements Variant {
+public interface PurpleVariant {
 
     @NotNull
-    public abstract PurpleVariantType type();
+    PurpleVariantType type();
 
     @NotNull
-    public abstract String gene();
+    String gene();
 
     @NotNull
-    public abstract String chromosome();
+    String chromosome();
 
-    public abstract int position();
-
-    @NotNull
-    public abstract String ref();
+    int position();
 
     @NotNull
-    public abstract String alt();
+    String ref();
 
     @NotNull
-    public abstract PurpleCodingEffect worstCodingEffect();
+    String alt();
 
     @NotNull
-    public abstract PurpleTranscriptImpact canonicalImpact();
+    PurpleCodingEffect worstCodingEffect();
 
     @NotNull
-    public abstract List<PurpleTranscriptImpact> otherImpacts();
+    PurpleTranscriptImpact canonicalImpact();
 
     @NotNull
-    public abstract Hotspot hotspot();
-
-    public abstract boolean reported();
+    List<PurpleTranscriptImpact> otherImpacts();
 
     @NotNull
-    public abstract PurpleAllelicDepth tumorDepth();
+    Hotspot hotspot();
+
+    boolean reported();
+
+    @NotNull
+    PurpleAllelicDepth tumorDepth();
 
     @Nullable
-    public abstract PurpleAllelicDepth rnaDepth();
+    PurpleAllelicDepth rnaDepth();
 
-    public abstract double adjustedCopyNumber();
+    double adjustedCopyNumber();
 
-    public abstract double adjustedVAF();
+    double adjustedVAF();
 
-    public abstract double minorAlleleCopyNumber();
+    double minorAlleleCopyNumber();
 
-    public abstract double variantCopyNumber();
+    double variantCopyNumber();
 
-    public abstract boolean biallelic();
+    boolean biallelic();
 
     @NotNull
-    public abstract PurpleGenotypeStatus genotypeStatus();
+    PurpleGenotypeStatus genotypeStatus();
 
-    public abstract int repeatCount();
+    int repeatCount();
 
-    public abstract double subclonalLikelihood();
+    double subclonalLikelihood();
 
     @Nullable
-    public abstract List<Integer> localPhaseSets();
+    List<Integer> localPhaseSets();
 }

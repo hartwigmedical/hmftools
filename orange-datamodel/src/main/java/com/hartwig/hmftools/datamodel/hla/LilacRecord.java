@@ -10,10 +10,10 @@ import java.util.List;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = {NotNull.class, Nullable.class})
-public abstract class LilacRecord {
+public interface LilacRecord {
     @NotNull
-    public abstract String qc();
+    String qc();
 
     @NotNull
-    public abstract List<LilacAllele> alleles();
+    List<LilacAllele> alleles();
 }

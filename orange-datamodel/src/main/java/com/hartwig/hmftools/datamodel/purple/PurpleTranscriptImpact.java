@@ -10,28 +10,28 @@ import java.util.Set;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PurpleTranscriptImpact {
+public interface PurpleTranscriptImpact {
 
     @NotNull
-    public abstract String transcript();
+    String transcript();
 
     @NotNull
-    public abstract String hgvsCodingImpact();
+    String hgvsCodingImpact();
 
     @NotNull
-    public abstract String hgvsProteinImpact();
+    String hgvsProteinImpact();
 
     @Nullable
-    public abstract Integer affectedCodon();
+    Integer affectedCodon();
 
     @Nullable
-    public abstract Integer affectedExon();
+    Integer affectedExon();
 
-    public abstract boolean spliceRegion();
-
-    @NotNull
-    public abstract Set<PurpleVariantEffect> effects();
+    boolean spliceRegion();
 
     @NotNull
-    public abstract PurpleCodingEffect codingEffect();
+    Set<PurpleVariantEffect> effects();
+
+    @NotNull
+    PurpleCodingEffect codingEffect();
 }

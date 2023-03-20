@@ -8,21 +8,21 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = {NotNull.class, Nullable.class})
-public abstract class PurpleGeneCopyNumber {
+public interface PurpleGeneCopyNumber {
 
     @NotNull
-    public abstract String chromosome();
+    String chromosome();
 
     @NotNull
-    public abstract String chromosomeBand();
+    String chromosomeBand();
 
     @NotNull
-    public abstract String geneName();
+    String geneName();
 
     @Nullable
-    public abstract Double minCopyNumber();
+    Double minCopyNumber();
 
     @Nullable
-    public abstract Double minMinorAlleleCopyNumber();
+    Double minMinorAlleleCopyNumber();
 
 }

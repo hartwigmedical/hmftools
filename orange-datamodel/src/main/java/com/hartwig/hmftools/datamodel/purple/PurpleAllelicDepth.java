@@ -8,9 +8,9 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PurpleAllelicDepth {
+public interface PurpleAllelicDepth {
 
-    public abstract int totalReadCount();
+    int totalReadCount();
 
-    public abstract int alleleReadCount();
+    int alleleReadCount();
 }

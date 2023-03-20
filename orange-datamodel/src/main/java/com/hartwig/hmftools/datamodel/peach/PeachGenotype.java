@@ -8,26 +8,26 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PeachGenotype {
+public interface PeachGenotype {
 
     @NotNull
-    public abstract String gene();
+    String gene();
 
     @NotNull
-    public abstract String haplotype();
+    String haplotype();
 
     @NotNull
-    public abstract String function();
+    String function();
 
     @NotNull
-    public abstract String linkedDrugs();
+    String linkedDrugs();
 
     @NotNull
-    public abstract String urlPrescriptionInfo();
+    String urlPrescriptionInfo();
 
     @NotNull
-    public abstract String panelVersion();
+    String panelVersion();
 
     @NotNull
-    public abstract String repoVersion();
+    String repoVersion();
 }
