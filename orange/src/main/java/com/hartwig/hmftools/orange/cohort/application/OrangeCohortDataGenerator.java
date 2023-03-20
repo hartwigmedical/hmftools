@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.cohort.application;
 
+import java.io.IOException;
+import java.util.List;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
@@ -16,13 +19,15 @@ import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentiles;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileGenerator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import org.apache.commons.cli.*;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.IOException;
-import java.util.List;
 
 public class OrangeCohortDataGenerator {
 

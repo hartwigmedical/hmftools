@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.algo.util;
 
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
@@ -9,11 +12,9 @@ import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
-import java.util.Map;
 
 public final class ReportLimiter {
 

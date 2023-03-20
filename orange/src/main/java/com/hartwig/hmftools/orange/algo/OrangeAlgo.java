@@ -1,5 +1,15 @@
 package com.hartwig.hmftools.orange.algo;
 
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.text.DecimalFormat;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -9,6 +19,7 @@ import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
+import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
@@ -29,19 +40,27 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.sage.GeneDepthFile;
+import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
+import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.datamodel.hla.LilacRecord;
+import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.orange.*;
+import com.hartwig.hmftools.datamodel.metrics.WGSMetrics;
+import com.hartwig.hmftools.datamodel.orange.ExperimentType;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeSample;
+import com.hartwig.hmftools.datamodel.orange.OrangePlots;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.orange.OrangeSample;
+import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
-import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
-import com.hartwig.hmftools.datamodel.virus.*;
 import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
@@ -69,22 +88,13 @@ import com.hartwig.hmftools.orange.cohort.mapping.DoidCohortMapper;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentiles;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
+import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.text.DecimalFormat;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 public class OrangeAlgo {
 
@@ -157,7 +167,7 @@ public class OrangeAlgo {
 
     @NotNull
     public OrangeRecord run(@NotNull OrangeConfig config) throws IOException {
-        Set<OrangeDoidNode> configuredPrimaryTumor = loadConfiguredPrimaryTumor(config);
+        Set<DoidNode> configuredPrimaryTumor = loadConfiguredPrimaryTumor(config);
         String platinumVersion = determinePlatinumVersion(config);
         OrangeSample refSample = loadSampleData(config, false);
         OrangeSample tumorSample = loadSampleData(config, true);
@@ -166,10 +176,10 @@ public class OrangeAlgo {
         LinxData linxData = loadLinxData(config);
         Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config);
         ChordRecord chord = loadChordAnalysis(config);
-        LilacRecord lilac = loadLilacData(config);
+        LilacSummaryData lilac = loadLilacData(config);
         VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
         CuppaData cuppa = loadCuppaData(config);
-        Set<com.hartwig.hmftools.datamodel.peach.PeachGenotype> peach = loadPeachData(config);
+        List<PeachGenotype> peach = loadPeachData(config);
         List<SignatureAllocation> sigAllocations = loadSigAllocations(config);
         IsofoxData isofoxData = loadIsofoxData(config);
 
@@ -209,7 +219,7 @@ public class OrangeAlgo {
                 .sampleId(config.tumorSampleId())
                 .experimentDate(config.experimentDate())
                 .experimentType(experimentType)
-                .configuredPrimaryTumor(configuredPrimaryTumor)
+                .configuredPrimaryTumor(ConversionUtil.convertCollection(configuredPrimaryTumor, OrangeConversion::convert))
                 .refGenomeVersion(config.refGenomeVersion())
                 .platinumVersion(platinumVersion)
                 .refSample(refSample)
@@ -219,12 +229,12 @@ public class OrangeAlgo {
                 .linx(linx)
                 .wildTypeGenes(wildTypeGenes)
                 .isofox(isofox)
-                .lilac(lilac)
-                .virusInterpreter(virusInterpreter)
+                .lilac(OrangeConversion.convert(lilac))
+                .virusInterpreter(virusInterpreter != null ? OrangeConversion.convert(virusInterpreter) : null)
                 .chord(chord)
                 .cuppa(cuppa)
-                .peach(peach)
-                .sigAllocations(sigAllocations)
+                .peach(ConversionUtil.convertCollection(peach, OrangeConversion::convert))
+                .sigAllocations(ConversionUtil.convertCollection(sigAllocations, OrangeConversion::convert))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();
@@ -241,15 +251,20 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private Set<OrangeDoidNode> loadConfiguredPrimaryTumor(@NotNull OrangeConfig config) {
-        Set<OrangeDoidNode> nodes = Sets.newHashSet();
+    private Set<DoidNode> loadConfiguredPrimaryTumor(@NotNull OrangeConfig config)
+    {
+        Set<DoidNode> nodes = Sets.newHashSet();
         LOGGER.info("Determining configured primary tumor");
-        for (String doid : config.primaryTumorDoids()) {
-            OrangeDoidNode node = resolveDoid(doidEntry.nodes().stream().map(OrangeConversion::asOrangeDatamodel).collect(Collectors.toList()), doid);
-            if (node != null) {
+        for(String doid : config.primaryTumorDoids())
+        {
+            DoidNode node = resolveDoid(doidEntry.nodes(), doid);
+            if(node != null)
+            {
                 LOGGER.info(" Adding DOID {} ({}) as configured primary tumor", doid, node.doidTerm());
                 nodes.add(node);
-            } else {
+            }
+            else
+            {
                 LOGGER.warn("Could not resolve doid '{}'", doid);
             }
         }
@@ -257,9 +272,12 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static OrangeDoidNode resolveDoid(@NotNull List<OrangeDoidNode> nodes, @NotNull String doid) {
-        for (OrangeDoidNode node : nodes) {
-            if (node.doid().equals(doid)) {
+    private static DoidNode resolveDoid(@NotNull List<DoidNode> nodes, @NotNull String doid)
+    {
+        for(DoidNode node : nodes)
+        {
+            if(node.doid().equals(doid))
+            {
                 return node;
             }
         }
@@ -297,11 +315,11 @@ public class OrangeAlgo {
         }
 
         String metricsFile = loadTumorSample ? config.tumorSampleWGSMetricsFile() : config.refSampleWGSMetricsFile();
-        com.hartwig.hmftools.datamodel.metrics.WGSMetrics metrics = OrangeConversion.asOrangeDatamodel(WGSMetricsFile.read(metricsFile));
+        WGSMetrics metrics = OrangeConversion.convert(WGSMetricsFile.read(metricsFile));
         LOGGER.info(" Loaded WGS metrics from {}", metricsFile);
 
         String flagstatFile = loadTumorSample ? config.tumorSampleFlagstatFile() : config.refSampleFlagstatFile();
-        com.hartwig.hmftools.datamodel.flagstat.Flagstat flagstat = OrangeConversion.asOrangeDatamodel(FlagstatFile.read(flagstatFile));
+        Flagstat flagstat = OrangeConversion.convert(FlagstatFile.read(flagstatFile));
         LOGGER.info(" Loaded flagstat from {}", flagstatFile);
 
         return ImmutableOrangeSample.builder().metrics(metrics).flagstat(flagstat).build();
@@ -454,8 +472,9 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static LilacRecord loadLilacData(@NotNull OrangeConfig config) throws IOException {
-        return OrangeConversion.asOrangeDatamodel(LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv()));
+    private static LilacSummaryData loadLilacData(@NotNull OrangeConfig config) throws IOException
+    {
+        return LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
     }
 
     @Nullable
@@ -466,7 +485,7 @@ public class OrangeAlgo {
             return null;
         }
 
-        return OrangeConversion.asOrangeDatamodel(VirusInterpreterDataLoader.load(annotatedVirusTsv));
+        return VirusInterpreterDataLoader.load(annotatedVirusTsv);
     }
 
     @Nullable
@@ -480,7 +499,7 @@ public class OrangeAlgo {
         LOGGER.info("Loading CHORD data from {}", new File(chordPredictionTxt).getParent());
         ChordData chordData = ChordDataFile.read(chordPredictionTxt);
         LOGGER.info(" HR Status: {} with type '{}'", chordData.hrStatus().display(), chordData.hrdType());
-        return OrangeConversion.asOrangeDatamodel(chordData);
+        return OrangeConversion.convert(chordData);
     }
 
     @Nullable
@@ -503,10 +522,12 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static Set<com.hartwig.hmftools.datamodel.peach.PeachGenotype> loadPeachData(@NotNull OrangeConfig config) throws IOException {
+    private static List<PeachGenotype> loadPeachData(@NotNull OrangeConfig config) throws IOException
+    {
         String peachGenotypeTsv = config.peachGenotypeTsv();
 
-        if (peachGenotypeTsv == null) {
+        if(peachGenotypeTsv == null)
+        {
             LOGGER.info("Skipping PEACH loading since no peach genotype tsv has been provided");
             return null;
         }
@@ -515,7 +536,7 @@ public class OrangeAlgo {
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
         LOGGER.info(" Loaded {} PEACH genotypes from {}", peachGenotypes.size(), config.peachGenotypeTsv());
 
-        return OrangeConversion.asOrangeDatamodel(peachGenotypes);
+        return peachGenotypes;
     }
 
     @Nullable
@@ -528,9 +549,7 @@ public class OrangeAlgo {
         }
 
         LOGGER.info("Loading Sigs from {}", new File(sigsAllocationTsv).getParent());
-        List<SignatureAllocation> sigsAllocations = SignatureAllocationFile.read(sigsAllocationTsv).stream()
-                .map(OrangeConversion::asOrangeDatamodel)
-                .collect(Collectors.toList());
+        List<SignatureAllocation> sigsAllocations = SignatureAllocationFile.read(sigsAllocationTsv);
         LOGGER.info(" Loaded {} signature allocations from {}", sigsAllocations.size(), sigsAllocationTsv);
 
         return sigsAllocations;

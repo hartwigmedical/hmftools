@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.orange.report;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
@@ -20,18 +26,13 @@ import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.List;
-import java.util.Map;
 
 public class ReportGeneratorTestApplication {
 
@@ -143,7 +144,7 @@ public class ReportGeneratorTestApplication {
 
     @NotNull
     private static List<PurpleGeneCopyNumber> retainReportableCopyNumbers(@NotNull List<PurpleGeneCopyNumber> geneCopyNumbers,
-                                                                          @NotNull List<PurpleDriver> drivers) {
+            @NotNull List<PurpleDriver> drivers) {
         List<String> copyNumberDriverGenes = Lists.newArrayList();
         for (PurpleDriver driver : drivers) {
             if (driver.driver() == PurpleDriverType.AMP || driver.driver() == PurpleDriverType.PARTIAL_AMP || driver.driver() == PurpleDriverType.DEL

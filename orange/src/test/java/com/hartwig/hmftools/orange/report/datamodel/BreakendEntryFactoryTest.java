@@ -1,18 +1,19 @@
 package com.hartwig.hmftools.orange.report.datamodel;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
-
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class BreakendEntryFactoryTest {
 

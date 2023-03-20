@@ -1,8 +1,19 @@
 package com.hartwig.hmftools.orange.report;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+
 import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.orange.report.chapters.*;
+import com.hartwig.hmftools.orange.report.chapters.CohortComparisonChapter;
+import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
+import com.hartwig.hmftools.orange.report.chapters.GermlineFindingsChapter;
+import com.hartwig.hmftools.orange.report.chapters.ImmunologyChapter;
+import com.hartwig.hmftools.orange.report.chapters.QualityControlChapter;
+import com.hartwig.hmftools.orange.report.chapters.RNAFindingsChapter;
+import com.hartwig.hmftools.orange.report.chapters.ReportChapter;
+import com.hartwig.hmftools.orange.report.chapters.SomaticFindingsChapter;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -10,14 +21,11 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.property.AreaBreakType;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
 
 public class ReportWriter {
 
@@ -42,9 +50,9 @@ public class ReportWriter {
 
     private void writePdf(@NotNull OrangeRecord report) throws IOException {
         ReportChapter[] chapters =
-                new ReportChapter[]{new FrontPageChapter(report, plotPathResolver), new SomaticFindingsChapter(report, plotPathResolver),
+                new ReportChapter[] { new FrontPageChapter(report, plotPathResolver), new SomaticFindingsChapter(report, plotPathResolver),
                         new GermlineFindingsChapter(report), new ImmunologyChapter(report), new RNAFindingsChapter(report),
-                        new CohortComparisonChapter(report, plotPathResolver), new QualityControlChapter(report, plotPathResolver)};
+                        new CohortComparisonChapter(report, plotPathResolver), new QualityControlChapter(report, plotPathResolver) };
 
         String platinumVersion = report.platinumVersion() != null ? report.platinumVersion() : ReportResources.NOT_AVAILABLE;
         writePdfChapters(report.sampleId(), platinumVersion, chapters);

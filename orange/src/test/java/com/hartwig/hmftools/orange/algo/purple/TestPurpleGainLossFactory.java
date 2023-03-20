@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.algo.purple;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 

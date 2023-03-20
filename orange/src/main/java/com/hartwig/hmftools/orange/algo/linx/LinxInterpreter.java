@@ -1,16 +1,18 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.linx.LinxData;
-import com.hartwig.hmftools.datamodel.linx.*;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
-import java.util.Objects;
 
 public class LinxInterpreter {
 
@@ -42,21 +44,18 @@ public class LinxInterpreter {
                 additionalSuspectSomaticBreakends.size());
 
         return ImmutableLinxRecord.builder()
-                .allSomaticStructuralVariants(() -> linx.allSomaticStructuralVariants().stream().map(LinxConversion::convert).iterator())
-                .allGermlineStructuralVariants(() -> argumentOrEmpty(linx.allGermlineStructuralVariants()).stream().map(LinxConversion::convert).iterator())
-                .allSomaticFusions(() -> linx.allSomaticFusions().stream().map(LinxConversion::convert).iterator())
-                .reportableSomaticFusions(() -> linx.reportableSomaticFusions().stream().map(LinxConversion::convert).iterator())
-                .additionalSuspectSomaticFusions(() -> additionalSuspectSomaticFusions.stream().map(LinxConversion::convert).iterator())
-                .allSomaticBreakends(() -> linx.allSomaticBreakends().stream().map(LinxConversion::convert).iterator())
-                .allGermlineBreakends(() -> argumentOrEmpty(linx.allGermlineBreakends()).stream().map(LinxConversion::convert).iterator())
-                .reportableSomaticBreakends(() -> linx.reportableSomaticBreakends().stream().map(LinxConversion::convert).iterator())
-                .reportableGermlineBreakends(() -> argumentOrEmpty(linx.reportableGermlineBreakends()).stream().map(LinxConversion::convert).iterator())
-                .additionalSuspectSomaticBreakends(() -> additionalSuspectSomaticBreakends.stream().map(LinxConversion::convert).iterator())
-                .somaticHomozygousDisruptions(() -> linx.somaticHomozygousDisruptions().stream().map(LinxConversion::convert).iterator())
+                .allSomaticStructuralVariants(ConversionUtil.convertCollection(linx.allSomaticStructuralVariants(), LinxConversion::convert))
+                .allSomaticFusions(ConversionUtil.convertCollection(linx.allSomaticFusions(), LinxConversion::convert))
+                .reportableSomaticFusions(ConversionUtil.convertCollection(linx.reportableSomaticFusions(), LinxConversion::convert))
+                .additionalSuspectSomaticFusions(ConversionUtil.convertCollection(additionalSuspectSomaticFusions, LinxConversion::convert))
+                .allSomaticBreakends(ConversionUtil.convertCollection(linx.allSomaticBreakends(), LinxConversion::convert))
+                .reportableSomaticBreakends(ConversionUtil.convertCollection(linx.reportableSomaticBreakends(), LinxConversion::convert))
+                .additionalSuspectSomaticBreakends(ConversionUtil.convertCollection(additionalSuspectSomaticBreakends, LinxConversion::convert))
+                .somaticHomozygousDisruptions(ConversionUtil.convertCollection(linx.somaticHomozygousDisruptions(), LinxConversion::convert))
+                .allGermlineStructuralVariants(ConversionUtil.convertCollection(linx.allGermlineStructuralVariants(), LinxConversion::convert))
+                .allGermlineBreakends(ConversionUtil.convertCollection(linx.allGermlineBreakends(), LinxConversion::convert))
+                .reportableGermlineBreakends(ConversionUtil.convertCollection(linx.reportableGermlineBreakends(), LinxConversion::convert))
+                .germlineHomozygousDisruptions(ConversionUtil.convertCollection(linx.germlineHomozygousDisruptions(), LinxConversion::convert))
                 .build();
-    }
-
-    private static <T> List<T> argumentOrEmpty(List<T> obj) {
-        return Objects.requireNonNullElseGet(obj, List::of);
     }
 }

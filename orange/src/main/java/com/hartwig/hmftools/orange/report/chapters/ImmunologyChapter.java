@@ -10,6 +10,7 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
+
 import org.jetbrains.annotations.NotNull;
 
 public class ImmunologyChapter implements ReportChapter {

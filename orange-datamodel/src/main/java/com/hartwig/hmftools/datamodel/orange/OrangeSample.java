@@ -2,6 +2,7 @@ package com.hartwig.hmftools.datamodel.orange;
 
 import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
 import com.hartwig.hmftools.datamodel.metrics.WGSMetrics;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -302,7 +302,6 @@
         "maxCopies": 1
       }
     ],
-
     "suspectGeneCopyNumbersWithLOH": [
       {
         "geneName": "gene",

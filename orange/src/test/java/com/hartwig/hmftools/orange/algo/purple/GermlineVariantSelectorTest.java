@@ -8,8 +8,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.purple.Hotspot;
-
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+
 import org.junit.Test;
 
 public class GermlineVariantSelectorTest {

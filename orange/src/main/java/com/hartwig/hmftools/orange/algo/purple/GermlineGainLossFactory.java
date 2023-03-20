@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -10,13 +13,10 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
-import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
-import java.util.Map;
 
 public class GermlineGainLossFactory {
 
@@ -31,14 +31,20 @@ public class GermlineGainLossFactory {
 
     @NotNull
     public Map<PurpleGainLoss, GermlineDeletion> mapDeletions(@NotNull List<GermlineDeletion> germlineDeletions,
-                                                              @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers) {
+            @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
+    {
         Map<PurpleGainLoss, GermlineDeletion> deletionMap = Maps.newHashMap();
-        for (GermlineDeletion germlineDeletion : germlineDeletions) {
-            if (germlineDeletion.TumorStatus == GermlineStatus.HOM_DELETION) {
+        for(GermlineDeletion germlineDeletion : germlineDeletions)
+        {
+            if(germlineDeletion.TumorStatus == GermlineStatus.HOM_DELETION)
+            {
                 PurpleGainLoss gainLoss = toGainLoss(germlineDeletion, allSomaticGeneCopyNumbers);
-                if (deletionMap.containsKey(gainLoss)) {
+                if(deletionMap.containsKey(gainLoss))
+                {
                     LOGGER.warn("Gain loss created that already exists, from germline deletion on gene {}", germlineDeletion.GeneName);
-                } else {
+                }
+                else
+                {
                     deletionMap.put(gainLoss, germlineDeletion);
                 }
             }

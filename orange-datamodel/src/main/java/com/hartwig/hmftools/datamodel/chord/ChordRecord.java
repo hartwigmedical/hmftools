@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.datamodel.chord;
 
 import com.google.gson.annotations.SerializedName;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

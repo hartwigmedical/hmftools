@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.cohort.datamodel;
 
 import com.hartwig.hmftools.datamodel.orange.PercentileType;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

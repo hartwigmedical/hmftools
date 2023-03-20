@@ -1,16 +1,19 @@
 package com.hartwig.hmftools.orange.cohort.percentile;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
 import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
-
-import java.util.List;
-
-import static org.junit.Assert.*;
 
 public class PercentileGeneratorTest {
 

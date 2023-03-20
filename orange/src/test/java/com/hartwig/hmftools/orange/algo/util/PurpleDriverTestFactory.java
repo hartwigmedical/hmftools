@@ -7,7 +7,7 @@ import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 public class PurpleDriverTestFactory {
     public static ImmutablePurpleDriver.Builder builder() {
         var builder = DriverCatalogTestFactory.builder();
-        var driver = PurpleConversion.asPurpleDriver(builder.build());
+        var driver = PurpleConversion.convert(builder.build());
         return ImmutablePurpleDriver.builder().from(driver);
     }
 }

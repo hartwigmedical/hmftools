@@ -5,13 +5,26 @@ import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRnaStatistics;
-import com.hartwig.hmftools.datamodel.rna.*;
+import com.hartwig.hmftools.datamodel.rna.AltSpliceJunctionContext;
+import com.hartwig.hmftools.datamodel.rna.AltSpliceJunctionType;
+import com.hartwig.hmftools.datamodel.rna.GeneExpression;
+import com.hartwig.hmftools.datamodel.rna.ImmutableGeneExpression;
+import com.hartwig.hmftools.datamodel.rna.ImmutableNovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.rna.ImmutableRnaFusion;
+import com.hartwig.hmftools.datamodel.rna.StructuralVariantType;
 
-public class IsofoxConversion {
+import org.jetbrains.annotations.NotNull;
 
-    private IsofoxConversion() {
+public class IsofoxConversion
+{
+
+    private IsofoxConversion()
+    {
     }
-    public static IsofoxRnaStatistics convert(RnaStatistics rnaStatistics) {
+
+    @NotNull
+    public static IsofoxRnaStatistics convert(RnaStatistics rnaStatistics)
+    {
         return ImmutableIsofoxRnaStatistics.builder()
                 .totalFragments(rnaStatistics.totalFragments())
                 .duplicateFragments(rnaStatistics.duplicateFragments())
@@ -19,7 +32,9 @@ public class IsofoxConversion {
                 .build();
     }
 
-    public static GeneExpression convert(com.hartwig.hmftools.common.rna.GeneExpression geneExpression) {
+    @NotNull
+    public static GeneExpression convert(com.hartwig.hmftools.common.rna.GeneExpression geneExpression)
+    {
         return ImmutableGeneExpression.builder()
                 .geneName(geneExpression.geneName())
                 .tpm(geneExpression.tpm())
@@ -30,6 +45,7 @@ public class IsofoxConversion {
                 .build();
     }
 
+    @NotNull
     public static com.hartwig.hmftools.datamodel.rna.RnaFusion convert(RnaFusion rnaFusion) {
         return ImmutableRnaFusion.builder()
                 .name(rnaFusion.name())
@@ -49,6 +65,7 @@ public class IsofoxConversion {
                 .build();
     }
 
+    @NotNull
     public static com.hartwig.hmftools.datamodel.rna.NovelSpliceJunction convert(NovelSpliceJunction novelSpliceJunction) {
         return ImmutableNovelSpliceJunction.builder()
                 .geneName(novelSpliceJunction.geneName())

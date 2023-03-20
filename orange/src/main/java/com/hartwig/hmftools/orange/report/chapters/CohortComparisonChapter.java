@@ -9,6 +9,7 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.property.HorizontalAlignment;
+
 import org.jetbrains.annotations.NotNull;
 
 public class CohortComparisonChapter implements ReportChapter {

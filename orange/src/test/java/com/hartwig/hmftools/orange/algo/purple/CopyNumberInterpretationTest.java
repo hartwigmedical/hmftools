@@ -1,13 +1,15 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretationUtil.display;
+
+import static org.junit.Assert.assertEquals;
+
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogTestFactory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
-import org.junit.Test;
 
-import static com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretationUtil.display;
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 public class CopyNumberInterpretationTest {
 

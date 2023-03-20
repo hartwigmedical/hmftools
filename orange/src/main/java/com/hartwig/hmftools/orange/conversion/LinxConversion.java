@@ -2,14 +2,27 @@ package com.hartwig.hmftools.orange.conversion;
 
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
-import com.hartwig.hmftools.datamodel.linx.*;
+import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
+import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.ImmutableHomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
+import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
+
+import org.jetbrains.annotations.NotNull;
 
 public class LinxConversion {
 
     private LinxConversion() {
     }
 
+    @NotNull
     public static LinxSvAnnotation convert(com.hartwig.hmftools.common.linx.LinxSvAnnotation linxSvAnnotation) {
         return ImmutableLinxSvAnnotation.builder()
                 .vcfId(linxSvAnnotation.vcfId())
@@ -34,6 +47,7 @@ public class LinxConversion {
                 .build();
     }
 
+    @NotNull
     public static LinxFusion convert(com.hartwig.hmftools.common.linx.LinxFusion linxFusion) {
         return ImmutableLinxFusion.builder()
                 .name(linxFusion.name())
@@ -57,6 +71,7 @@ public class LinxConversion {
                 .build();
     }
 
+    @NotNull
     public static LinxBreakend convert(com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend) {
         return ImmutableLinxBreakend.builder()
                 .id(linxBreakend.id())
@@ -84,6 +99,7 @@ public class LinxConversion {
                 .build();
     }
 
+    @NotNull
     public static HomozygousDisruption convert(com.hartwig.hmftools.common.linx.HomozygousDisruption homozygousDisruption) {
         return ImmutableHomozygousDisruption.builder()
                 .chromosome(homozygousDisruption.chromosome())

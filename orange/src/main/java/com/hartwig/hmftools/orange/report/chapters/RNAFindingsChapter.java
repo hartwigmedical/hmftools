@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
+import java.text.DecimalFormat;
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
@@ -18,10 +21,8 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
-import org.jetbrains.annotations.NotNull;
 
-import java.text.DecimalFormat;
-import java.util.List;
+import org.jetbrains.annotations.NotNull;
 
 public class RNAFindingsChapter implements ReportChapter {
 

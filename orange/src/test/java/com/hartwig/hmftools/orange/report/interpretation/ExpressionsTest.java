@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.datamodel.rna.GeneExpression;
 import com.hartwig.hmftools.datamodel.rna.ImmutableGeneExpression;
 import com.hartwig.hmftools.orange.algo.isofox.OrangeIsofoxTestFactory;

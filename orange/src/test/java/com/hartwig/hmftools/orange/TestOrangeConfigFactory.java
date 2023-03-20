@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.orange;
 
+import java.time.LocalDate;
+
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-
-import java.time.LocalDate;
 
 public final class TestOrangeConfigFactory {
 

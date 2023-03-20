@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import com.hartwig.hmftools.common.genotype.GenotypeStatus;
-import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.variant.VariantTier;
-import com.hartwig.hmftools.datamodel.purple.*;
+import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,8 +17,8 @@ public final class TestPurpleVariantFactory {
     }
 
     @NotNull
-    public static com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant.Builder builder() {
-        return com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant.builder()
+    public static ImmutablePurpleVariant.Builder builder() {
+        return ImmutablePurpleVariant.builder()
                 .type(PurpleVariantType.UNDEFINED)
                 .gene(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
@@ -44,8 +48,8 @@ public final class TestPurpleVariantFactory {
     }
 
     @NotNull
-    public static com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact.Builder impactBuilder() {
-        return com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact.builder()
+    public static ImmutablePurpleTranscriptImpact.Builder impactBuilder() {
+        return ImmutablePurpleTranscriptImpact.builder()
                 .transcript(Strings.EMPTY)
                 .hgvsCodingImpact(Strings.EMPTY)
                 .hgvsProteinImpact(Strings.EMPTY)

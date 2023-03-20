@@ -50,10 +50,14 @@ public final class ViralPresenceTable {
 
     private static String display(VirusLikelihoodType virusLikelihoodType) {
         switch (virusLikelihoodType) {
-            case HIGH: return "High";
-            case LOW: return "Low";
-            default: return "Unknown";
+            case HIGH:
+                return "High";
+            case LOW:
+                return "Low";
+            case UNKNOWN:
+                return "Unknown";
         }
+        throw new IllegalStateException();
     }
 
     @NotNull

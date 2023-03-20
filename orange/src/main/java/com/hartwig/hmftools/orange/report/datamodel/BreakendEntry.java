@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.report.datamodel;
 
 import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -1,5 +1,12 @@
 package com.hartwig.hmftools.orange.algo.util;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
@@ -7,20 +14,26 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.datamodel.purple.*;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
+import com.hartwig.hmftools.datamodel.purple.PurpleFit;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
+import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainLossFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
-
-import java.util.List;
-
-import static org.junit.Assert.*;
 
 public class GermlineConversionTest {
 
@@ -79,7 +92,6 @@ public class GermlineConversionTest {
 
         PurpleGainLoss somaticGainLoss = TestPurpleGainLossFactory.builder().build();
         PurpleGainLoss reportableSomaticGainLoss = TestPurpleGainLossFactory.builder().build();
-        PurpleGainLoss germlineFullLoss = TestPurpleGainLossFactory.builder().build();
         PurpleGainLoss reportableGermlineFullLoss = TestPurpleGainLossFactory.builder().build();
 
         PurpleDriver somaticDriver = PurpleDriverTestFactory.builder().driver(PurpleDriverType.AMP).build();
@@ -166,12 +178,6 @@ public class GermlineConversionTest {
                 .transcript("transcript 1")
                 .driverLikelihood(0.5)
                 .likelihoodMethod(PurpleLikelihoodMethod.DNDS)
-//                .missense(1)
-//                .nonsense(2)
-//                .splice(3)
-//                .inframe(4)
-//                .frameshift(5)
-//                .biallelic(false)
                 .build();
 
         PurpleDriver somaticDriver2 =
@@ -261,7 +267,7 @@ public class GermlineConversionTest {
 
     @Nullable
     private static PurpleDriver findByGeneTranscript(@NotNull List<PurpleDriver> drivers, @NotNull String geneToFind,
-                                                     @NotNull String transcriptToFind) {
+            @NotNull String transcriptToFind) {
         for (PurpleDriver driver : drivers) {
             if (driver.gene().equals(geneToFind) && driver.transcript().equals(transcriptToFind)) {
                 return driver;

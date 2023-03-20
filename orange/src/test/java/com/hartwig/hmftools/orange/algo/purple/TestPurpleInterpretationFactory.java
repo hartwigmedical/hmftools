@@ -1,12 +1,19 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import com.hartwig.hmftools.common.purple.FittedPurityMethod;
-import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.datamodel.purple.*;
-import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.PurpleFit;
+import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
+import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
+import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleQC;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
+
 import org.jetbrains.annotations.NotNull;
 
 public final class TestPurpleInterpretationFactory {

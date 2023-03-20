@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionCacheTestFactory;
@@ -8,13 +13,9 @@ import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
+
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
-
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 public class RNAFusionSelectorTest {
 

@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.orange.report.datamodel;
 
-import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.Hotspot;
-
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 

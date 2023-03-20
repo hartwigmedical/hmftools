@@ -1,5 +1,15 @@
 package com.hartwig.hmftools.datamodel;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.Collection;
+
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
@@ -8,44 +18,70 @@ import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
-import com.hartwig.hmftools.datamodel.linx.*;
+import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
+import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
-import com.hartwig.hmftools.datamodel.purple.*;
+import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
+import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
+import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
-import com.hartwig.hmftools.datamodel.virus.*;
+import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.util.Collection;
+public class OrangeJsonTest
+{
 
-import static org.junit.Assert.*;
-
-public class OrangeJsonTest {
-
-    private static final String MINIMALLY_EMPTY_ORANGE_JSON = Thread.currentThread().getContextClassLoader().getResource("minimally.empty.orange.json").getPath();
-    private static final String MINIMALLY_POPULATED_ORANGE_JSON = Thread.currentThread().getContextClassLoader().getResource("minimally.populated.orange.json").getPath();
+    private static final String MINIMALLY_EMPTY_ORANGE_JSON =
+            Thread.currentThread().getContextClassLoader().getResource("minimally.empty.orange.json").getPath();
+    private static final String MINIMALLY_POPULATED_ORANGE_JSON =
+            Thread.currentThread().getContextClassLoader().getResource("minimally.populated.orange.json").getPath();
     private static final String REAL_ORANGE_JSON = Thread.currentThread().getContextClassLoader().getResource("real.orange.json").getPath();
 
     private static final double EPSILON = 1.0E-2;
 
     @Test
-    public void canReadMinimallyEmptyOrangeRecordJson() throws IOException {
+    public void canReadMinimallyEmptyOrangeRecordJson() throws IOException
+    {
         assertNotNull(OrangeJson.getInstance().read(MINIMALLY_EMPTY_ORANGE_JSON));
     }
 
     @Test
-    public void canReadRealOrangeRecordJson() throws IOException {
+    public void canReadRealOrangeRecordJson() throws IOException
+    {
         assertNotNull(OrangeJson.getInstance().read(REAL_ORANGE_JSON));
     }
 
     @Test
-    public void canReadMinimallyPopulatedOrangeRecordJson() throws IOException {
+    public void canReadMinimallyPopulatedOrangeRecordJson() throws IOException
+    {
         OrangeRecord record = OrangeJson.getInstance().read(MINIMALLY_POPULATED_ORANGE_JSON);
 
         assertEquals("TEST", record.sampleId());
@@ -62,7 +98,8 @@ public class OrangeJsonTest {
         assertPlots(record.plots());
     }
 
-    private static void assertPurple(@NotNull PurpleRecord purple) {
+    private static void assertPurple(@NotNull PurpleRecord purple)
+    {
         assertEquals(1, purple.fit().qc().status().size());
         assertTrue(purple.fit().qc().status().contains(PurpleQCStatus.PASS));
         assertTrue(purple.fit().hasSufficientQuality());
@@ -192,9 +229,12 @@ public class OrangeJsonTest {
     }
 
     @NotNull
-    private static PurpleDriver findDriverByGene(@NotNull Iterable<PurpleDriver> drivers, @NotNull String geneToFind) {
-        for (PurpleDriver driver : drivers) {
-            if (driver.gene().equals(geneToFind)) {
+    private static PurpleDriver findDriverByGene(@NotNull Iterable<PurpleDriver> drivers, @NotNull String geneToFind)
+    {
+        for(PurpleDriver driver : drivers)
+        {
+            if(driver.gene().equals(geneToFind))
+            {
                 return driver;
             }
         }
@@ -203,9 +243,12 @@ public class OrangeJsonTest {
     }
 
     @NotNull
-    private static PurpleVariant findVariantByGene(@NotNull Iterable<PurpleVariant> variants, @NotNull String geneToFind) {
-        for (PurpleVariant variant : variants) {
-            if (variant.gene().equals(geneToFind)) {
+    private static PurpleVariant findVariantByGene(@NotNull Iterable<PurpleVariant> variants, @NotNull String geneToFind)
+    {
+        for(PurpleVariant variant : variants)
+        {
+            if(variant.gene().equals(geneToFind))
+            {
                 return variant;
             }
         }
@@ -213,7 +256,8 @@ public class OrangeJsonTest {
         throw new IllegalStateException("Could not find variant for gene: " + geneToFind);
     }
 
-    private static void assertLinx(@NotNull LinxRecord linx) {
+    private static void assertLinx(@NotNull LinxRecord linx)
+    {
         assertEquals(1, linx.allSomaticStructuralVariants().size());
         LinxSvAnnotation structuralVariant = linx.allSomaticStructuralVariants().iterator().next();
         assertEquals("id", structuralVariant.vcfId());
@@ -235,7 +279,6 @@ public class OrangeJsonTest {
         assertEquals("ISOLATED_BE", structuralVariant.localTopologyEnd());
         assertEquals(3, structuralVariant.localTICountStart());
         assertEquals(4, structuralVariant.localTICountEnd());
-
 
         assertEquals(1, linx.somaticHomozygousDisruptions().size());
         HomozygousDisruption homozygousDisruption = linx.somaticHomozygousDisruptions().iterator().next();
@@ -290,7 +333,8 @@ public class OrangeJsonTest {
         assertEquals(fusion, linx.reportableSomaticFusions().iterator().next());
     }
 
-    private static void assertPeach(@NotNull Collection<PeachGenotype> peach) {
+    private static void assertPeach(@NotNull Collection<PeachGenotype> peach)
+    {
         assertEquals(1, peach.size());
         PeachGenotype entry = peach.iterator().next();
         assertEquals("DPYD", entry.gene());
@@ -302,14 +346,16 @@ public class OrangeJsonTest {
         assertEquals("1.7", entry.repoVersion());
     }
 
-    private static void assertCuppa(@NotNull CuppaData cuppa) {
+    private static void assertCuppa(@NotNull CuppaData cuppa)
+    {
         assertEquals(1, cuppa.predictions().size());
         CuppaPrediction prediction = cuppa.predictions().iterator().next();
         assertEquals("Melanoma", prediction.cancerType());
         assertEquals(0.996, prediction.likelihood(), EPSILON);
     }
 
-    private static void assertVirusInterpreter(@NotNull VirusInterpreterData virusInterpreter) {
+    private static void assertVirusInterpreter(@NotNull VirusInterpreterData virusInterpreter)
+    {
         assertEquals(2, virusInterpreter.allViruses().size());
         AnnotatedVirus virus1 = findVirusByName(virusInterpreter.allViruses(), "Human papillomavirus 16");
         assertTrue(virus1.reported());
@@ -332,9 +378,12 @@ public class OrangeJsonTest {
     }
 
     @NotNull
-    private static AnnotatedVirus findVirusByName(@NotNull Iterable<AnnotatedVirus> entries, @NotNull String nameToFind) {
-        for (AnnotatedVirus entry : entries) {
-            if (entry.name().equals(nameToFind)) {
+    private static AnnotatedVirus findVirusByName(@NotNull Iterable<AnnotatedVirus> entries, @NotNull String nameToFind)
+    {
+        for(AnnotatedVirus entry : entries)
+        {
+            if(entry.name().equals(nameToFind))
+            {
                 return entry;
             }
         }
@@ -342,7 +391,8 @@ public class OrangeJsonTest {
         throw new IllegalStateException("Could not find virus with name: " + nameToFind);
     }
 
-    private static void assertLilac(@NotNull LilacRecord lilac) {
+    private static void assertLilac(@NotNull LilacRecord lilac)
+    {
         assertEquals("PASS", lilac.qc());
 
         assertEquals(1, lilac.alleles().size());
@@ -356,12 +406,14 @@ public class OrangeJsonTest {
         assertEquals(1.0, allele.somaticInframeIndel(), EPSILON);
     }
 
-    private static void assertChord(@NotNull ChordRecord chord) {
+    private static void assertChord(@NotNull ChordRecord chord)
+    {
         assertEquals(0.01, chord.hrdValue(), EPSILON);
         assertEquals(ChordStatus.HR_PROFICIENT, chord.hrStatus());
     }
 
-    private static void assertPlots(@NotNull OrangePlots plots) {
+    private static void assertPlots(@NotNull OrangePlots plots)
+    {
         assertEquals("plot/empty.circos.png", plots.purpleFinalCircosPlot());
     }
 }

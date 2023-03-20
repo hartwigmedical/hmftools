@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
+import java.text.DecimalFormat;
+import java.util.StringJoiner;
+
 import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
 import com.hartwig.hmftools.datamodel.metrics.WGSMetrics;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
@@ -16,12 +19,10 @@ import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.HorizontalAlignment;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.text.DecimalFormat;
-import java.util.StringJoiner;
 
 public class QualityControlChapter implements ReportChapter {
 

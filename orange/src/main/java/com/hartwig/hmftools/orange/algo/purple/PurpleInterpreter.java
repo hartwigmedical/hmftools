@@ -1,32 +1,58 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.*;
-import com.hartwig.hmftools.common.drivercatalog.panel.*;
-import com.hartwig.hmftools.common.purple.*;
+import com.hartwig.hmftools.common.drivercatalog.AmplificationDrivers;
+import com.hartwig.hmftools.common.drivercatalog.DeletionDrivers;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogKey;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogMap;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
+import com.hartwig.hmftools.common.purple.FittedPurityMethod;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.datamodel.purple.*;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.PurpleFit;
+import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
 import com.hartwig.hmftools.orange.algo.linx.BreakendUtil;
+import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 
 public class PurpleInterpreter {
 
@@ -46,8 +72,9 @@ public class PurpleInterpreter {
     private final ChordRecord chord;
 
     public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
-                             @NotNull final GermlineGainLossFactory germlineGainLossFactory, @NotNull final List<DriverGene> driverGenes,
-                             @NotNull final LinxRecord linx, @Nullable final ChordRecord chord) {
+            @NotNull final GermlineGainLossFactory germlineGainLossFactory, @NotNull final List<DriverGene> driverGenes,
+            @NotNull final LinxRecord linx, @Nullable final ChordRecord chord)
+    {
         this.purpleVariantFactory = purpleVariantFactory;
         this.germlineGainLossFactory = germlineGainLossFactory;
         this.driverGenes = driverGenes;
@@ -128,17 +155,17 @@ public class PurpleInterpreter {
         return ImmutablePurpleRecord.builder()
                 .fit(createFit(purple))
                 .characteristics(createCharacteristics(purple))
-                .somaticDrivers(() -> purple.somaticDrivers().stream().map(PurpleConversion::asPurpleDriver).iterator())
-                .germlineDrivers(() -> Objects.requireNonNullElseGet(purple.germlineDrivers(), List::<DriverCatalog>of).stream().map(PurpleConversion::asPurpleDriver).iterator())
+                .somaticDrivers(ConversionUtil.convertCollection(purple.somaticDrivers(), PurpleConversion::convert))
+                .germlineDrivers(ConversionUtil.convertCollection(purple.germlineDrivers(), PurpleConversion::convert))
                 .allSomaticVariants(allSomaticVariants)
                 .reportableSomaticVariants(reportableSomaticVariants)
                 .additionalSuspectSomaticVariants(additionalSuspectSomaticVariants)
                 .allGermlineVariants(allGermlineVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
                 .additionalSuspectGermlineVariants(additionalSuspectGermlineVariants)
-                .allSomaticCopyNumbers(() -> purple.allSomaticCopyNumbers().stream().map(PurpleConversion::asPurpleCopyNumber).iterator())
-                .allSomaticGeneCopyNumbers(() -> purple.allSomaticGeneCopyNumbers().stream().map(PurpleConversion::asPurpleGeneCopyNumber).iterator())
-                .suspectGeneCopyNumbersWithLOH(() -> suspectGeneCopyNumbersWithLOH.stream().map(PurpleConversion::asPurpleGeneCopyNumber).iterator())
+                .allSomaticCopyNumbers(ConversionUtil.convertCollection(purple.allSomaticCopyNumbers(), PurpleConversion::convert))
+                .allSomaticGeneCopyNumbers(ConversionUtil.convertCollection(purple.allSomaticGeneCopyNumbers(), PurpleConversion::convert))
+                .suspectGeneCopyNumbersWithLOH(ConversionUtil.convertCollection(suspectGeneCopyNumbersWithLOH, PurpleConversion::convert))
                 .allSomaticGainsLosses(allSomaticGainsLosses)
                 .reportableSomaticGainsLosses(reportableSomaticGainsLosses)
                 .nearReportableSomaticGains(nearReportableSomaticGains)
@@ -249,9 +276,11 @@ public class PurpleInterpreter {
 
     @NotNull
     private static List<PurpleGainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, double ploidy, boolean isTargetRegions,
-                                                              @NotNull List<GeneCopyNumber> allGeneCopyNumbers) {
+            @NotNull List<GeneCopyNumber> allGeneCopyNumbers)
+    {
         List<DriverGene> allGenes = Lists.newArrayList();
-        for (GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
+        for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers)
+        {
             allGenes.add(ImmutableDriverGene.builder()
                     .gene(geneCopyNumber.geneName())
                     .reportMissenseAndInframe(false)
@@ -314,7 +343,7 @@ public class PurpleInterpreter {
     @NotNull
     private static PurpleFit createFit(@NotNull PurpleData purple) {
         return ImmutablePurpleFit.builder()
-                .qc(PurpleConversion.createQC(purple.purityContext().qc()))
+                .qc(PurpleConversion.convert(purple.purityContext().qc()))
                 .hasSufficientQuality(purple.purityContext().qc().pass())
                 .fittedPurityMethod(PurpleFittedPurityMethod.valueOf(purple.purityContext().method().name()))
                 .containsTumorCells(purple.purityContext().method() != FittedPurityMethod.NO_TUMOR)

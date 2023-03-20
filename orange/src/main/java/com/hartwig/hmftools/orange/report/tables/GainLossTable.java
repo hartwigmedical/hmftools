@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretationUtil.display;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.datamodel.rna.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.rna.GeneExpression;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
@@ -17,8 +19,6 @@ import com.itextpdf.layout.element.Table;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretationUtil.display;
 
 public final class GainLossTable {
 

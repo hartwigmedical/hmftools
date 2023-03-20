@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
-import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+
+import org.junit.Test;
 
 public class DNAFusionEvaluatorTest {
 

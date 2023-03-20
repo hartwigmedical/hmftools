@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
@@ -16,7 +18,14 @@ import com.hartwig.hmftools.orange.report.datamodel.BreakendEntryFactory;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
-import com.hartwig.hmftools.orange.report.tables.*;
+import com.hartwig.hmftools.orange.report.tables.BreakendTable;
+import com.hartwig.hmftools.orange.report.tables.DNAFusionTable;
+import com.hartwig.hmftools.orange.report.tables.GainLossTable;
+import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
+import com.hartwig.hmftools.orange.report.tables.LossOfHeterozygosityTable;
+import com.hartwig.hmftools.orange.report.tables.SignatureAllocationTable;
+import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
+import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.itextpdf.kernel.geom.PageSize;
@@ -25,10 +34,9 @@ import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.HorizontalAlignment;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public class SomaticFindingsChapter implements ReportChapter {
 

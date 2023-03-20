@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.datamodel.virus;
 
+import java.util.List;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 @Gson.TypeAdapters
 @Value.Immutable

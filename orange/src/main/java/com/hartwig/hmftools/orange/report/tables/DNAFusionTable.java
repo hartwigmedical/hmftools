@@ -1,11 +1,15 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import com.hartwig.hmftools.datamodel.rna.GeneExpression;
+import java.text.DecimalFormat;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
+import com.hartwig.hmftools.datamodel.rna.GeneExpression;
 import com.hartwig.hmftools.datamodel.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.datamodel.rna.RnaFusion;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -17,13 +21,10 @@ import com.itextpdf.layout.element.IBlockElement;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
+
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.text.DecimalFormat;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public final class DNAFusionTable {
 
@@ -78,8 +79,8 @@ public final class DNAFusionTable {
             case INFRAME: return "Inframe";
             case SKIPPED_EXONS: return "Skipped exons";
             case OUT_OF_FRAME: return "Out of frame";
-            default: return "Invalid";
         }
+        throw new IllegalStateException();
     }
 
     @NotNull
@@ -88,8 +89,8 @@ public final class DNAFusionTable {
             case HIGH: return "High";
             case LOW: return "Low";
             case NA: return "NA";
-            default: return "Invalid";
         }
+        throw new IllegalStateException();
     }
 
     @NotNull

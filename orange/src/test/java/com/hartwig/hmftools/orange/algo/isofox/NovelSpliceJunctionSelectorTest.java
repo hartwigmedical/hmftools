@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
@@ -10,12 +14,9 @@ import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
-
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 public class NovelSpliceJunctionSelectorTest {
 

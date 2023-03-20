@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
+import java.text.DecimalFormat;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+import java.util.StringJoiner;
+
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
@@ -12,7 +18,13 @@ import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
-import com.hartwig.hmftools.datamodel.purple.*;
+import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
@@ -32,15 +44,10 @@ import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.HorizontalAlignment;
 import com.itextpdf.layout.property.UnitValue;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.text.DecimalFormat;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
 
 public class FrontPageChapter implements ReportChapter {
 
@@ -347,7 +354,8 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     private static String display(@NotNull PurpleTumorMutationalStatus tumorMutationalStatus) {
-        switch (tumorMutationalStatus) {
+        switch (tumorMutationalStatus)
+        {
             case HIGH:
                 return "High";
             case LOW:

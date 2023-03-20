@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.orange;
 
+import java.io.IOException;
+
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.report.ReportWriter;
 import com.hartwig.hmftools.orange.report.ReportWriterFactory;
+
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -11,8 +14,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.IOException;
 
 public class OrangeApplication {
 

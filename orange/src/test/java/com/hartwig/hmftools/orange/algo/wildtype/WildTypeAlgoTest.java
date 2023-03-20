@@ -1,5 +1,12 @@
 package com.hartwig.hmftools.orange.algo.wildtype;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+import java.util.Set;
+
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -15,13 +22,9 @@ import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainLossFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
-
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.Assert.*;
 
 public class WildTypeAlgoTest {
 
