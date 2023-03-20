@@ -72,8 +72,8 @@ public class PurpleConversion
     public static PurpleQC convert(@NotNull com.hartwig.hmftools.common.purple.PurpleQC purpleQC)
     {
         return ImmutablePurpleQC.builder()
-                .status(ConversionUtil.convertCollection(purpleQC.status(), PurpleConversion::convert))
-                .germlineAberrations(ConversionUtil.convertCollection(purpleQC.germlineAberrations(), PurpleConversion::convert))
+                .status(ConversionUtil.mapToIterable(purpleQC.status(), PurpleConversion::convert))
+                .germlineAberrations(ConversionUtil.mapToIterable(purpleQC.germlineAberrations(), PurpleConversion::convert))
                 .amberMeanDepth(purpleQC.amberMeanDepth())
                 .contamination(purpleQC.contamination())
                 .unsupportedCopyNumberSegments(purpleQC.unsupportedCopyNumberSegments())

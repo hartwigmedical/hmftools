@@ -39,7 +39,7 @@ public class IsofoxInterpreter {
 
     @NotNull
     public IsofoxInterpretedData interpret(@NotNull IsofoxData isofox) {
-        List<GeneExpression> geneExpressions = ConversionUtil.mapCollection(isofox.geneExpressions(), IsofoxConversion::convert);
+        List<GeneExpression> geneExpressions = ConversionUtil.mapToList(isofox.geneExpressions(), IsofoxConversion::convert);
         List<GeneExpression> highExpressionGenes = ExpressionSelector.selectHighExpressionGenes(geneExpressions, driverGenes);
         LOGGER.info(" Found {} genes with high expression", highExpressionGenes.size());
 
@@ -67,12 +67,12 @@ public class IsofoxInterpreter {
                 .allGeneExpressions(geneExpressions)
                 .reportableHighExpression(highExpressionGenes)
                 .reportableLowExpression(lowExpressionGenes)
-                .allFusions(ConversionUtil.convertCollection(isofox.fusions(), IsofoxConversion::convert))
-                .reportableNovelKnownFusions(ConversionUtil.convertCollection(novelKnownFusions, IsofoxConversion::convert))
-                .reportableNovelPromiscuousFusions(ConversionUtil.convertCollection(novelPromiscuousFusions, IsofoxConversion::convert))
-                .allNovelSpliceJunctions(ConversionUtil.convertCollection(isofox.novelSpliceJunctions(), IsofoxConversion::convert))
-                .reportableSkippedExons(ConversionUtil.convertCollection(suspiciousSkippedExons, IsofoxConversion::convert))
-                .reportableNovelExonsIntrons(ConversionUtil.convertCollection(suspiciousNovelExonsIntrons, IsofoxConversion::convert))
+                .allFusions(ConversionUtil.mapToIterable(isofox.fusions(), IsofoxConversion::convert))
+                .reportableNovelKnownFusions(ConversionUtil.mapToIterable(novelKnownFusions, IsofoxConversion::convert))
+                .reportableNovelPromiscuousFusions(ConversionUtil.mapToIterable(novelPromiscuousFusions, IsofoxConversion::convert))
+                .allNovelSpliceJunctions(ConversionUtil.mapToIterable(isofox.novelSpliceJunctions(), IsofoxConversion::convert))
+                .reportableSkippedExons(ConversionUtil.mapToIterable(suspiciousSkippedExons, IsofoxConversion::convert))
+                .reportableNovelExonsIntrons(ConversionUtil.mapToIterable(suspiciousNovelExonsIntrons, IsofoxConversion::convert))
                 .build();
     }
 }

@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.drivercatalog.AmplificationDrivers;
 import com.hartwig.hmftools.common.drivercatalog.DeletionDrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -26,7 +27,6 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
@@ -69,11 +69,11 @@ public class PurpleInterpreter {
     @NotNull
     private final LinxRecord linx;
     @Nullable
-    private final ChordRecord chord;
+    private final ChordData chord;
 
     public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
             @NotNull final GermlineGainLossFactory germlineGainLossFactory, @NotNull final List<DriverGene> driverGenes,
-            @NotNull final LinxRecord linx, @Nullable final ChordRecord chord)
+            @NotNull final LinxRecord linx, @Nullable final ChordData chord)
     {
         this.purpleVariantFactory = purpleVariantFactory;
         this.germlineGainLossFactory = germlineGainLossFactory;
@@ -155,17 +155,17 @@ public class PurpleInterpreter {
         return ImmutablePurpleRecord.builder()
                 .fit(createFit(purple))
                 .characteristics(createCharacteristics(purple))
-                .somaticDrivers(ConversionUtil.convertCollection(purple.somaticDrivers(), PurpleConversion::convert))
-                .germlineDrivers(ConversionUtil.convertCollection(purple.germlineDrivers(), PurpleConversion::convert))
+                .somaticDrivers(ConversionUtil.mapToIterable(purple.somaticDrivers(), PurpleConversion::convert))
+                .germlineDrivers(ConversionUtil.mapToIterable(purple.germlineDrivers(), PurpleConversion::convert))
                 .allSomaticVariants(allSomaticVariants)
                 .reportableSomaticVariants(reportableSomaticVariants)
                 .additionalSuspectSomaticVariants(additionalSuspectSomaticVariants)
                 .allGermlineVariants(allGermlineVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
                 .additionalSuspectGermlineVariants(additionalSuspectGermlineVariants)
-                .allSomaticCopyNumbers(ConversionUtil.convertCollection(purple.allSomaticCopyNumbers(), PurpleConversion::convert))
-                .allSomaticGeneCopyNumbers(ConversionUtil.convertCollection(purple.allSomaticGeneCopyNumbers(), PurpleConversion::convert))
-                .suspectGeneCopyNumbersWithLOH(ConversionUtil.convertCollection(suspectGeneCopyNumbersWithLOH, PurpleConversion::convert))
+                .allSomaticCopyNumbers(ConversionUtil.mapToIterable(purple.allSomaticCopyNumbers(), PurpleConversion::convert))
+                .allSomaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.allSomaticGeneCopyNumbers(), PurpleConversion::convert))
+                .suspectGeneCopyNumbersWithLOH(ConversionUtil.mapToIterable(suspectGeneCopyNumbersWithLOH, PurpleConversion::convert))
                 .allSomaticGainsLosses(allSomaticGainsLosses)
                 .reportableSomaticGainsLosses(reportableSomaticGainsLosses)
                 .nearReportableSomaticGains(nearReportableSomaticGains)

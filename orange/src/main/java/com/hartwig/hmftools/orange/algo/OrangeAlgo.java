@@ -44,7 +44,6 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
-import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
@@ -175,7 +174,7 @@ public class OrangeAlgo {
         PurpleData purpleData = loadPurpleData(config);
         LinxData linxData = loadLinxData(config);
         Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config);
-        ChordRecord chord = loadChordAnalysis(config);
+        ChordData chord = loadChordAnalysis(config);
         LilacSummaryData lilac = loadLilacData(config);
         VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
         CuppaData cuppa = loadCuppaData(config);
@@ -219,7 +218,7 @@ public class OrangeAlgo {
                 .sampleId(config.tumorSampleId())
                 .experimentDate(config.experimentDate())
                 .experimentType(experimentType)
-                .configuredPrimaryTumor(ConversionUtil.convertCollection(configuredPrimaryTumor, OrangeConversion::convert))
+                .configuredPrimaryTumor(ConversionUtil.mapToIterable(configuredPrimaryTumor, OrangeConversion::convert))
                 .refGenomeVersion(config.refGenomeVersion())
                 .platinumVersion(platinumVersion)
                 .refSample(refSample)
@@ -231,10 +230,10 @@ public class OrangeAlgo {
                 .isofox(isofox)
                 .lilac(OrangeConversion.convert(lilac))
                 .virusInterpreter(virusInterpreter != null ? OrangeConversion.convert(virusInterpreter) : null)
-                .chord(chord)
+                .chord(chord != null ? OrangeConversion.convert(chord) : null)
                 .cuppa(cuppa)
-                .peach(ConversionUtil.convertCollection(peach, OrangeConversion::convert))
-                .sigAllocations(ConversionUtil.convertCollection(sigAllocations, OrangeConversion::convert))
+                .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
+                .sigAllocations(ConversionUtil.mapToIterable(sigAllocations, OrangeConversion::convert))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();
@@ -489,7 +488,7 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static ChordRecord loadChordAnalysis(@NotNull OrangeConfig config) throws IOException {
+    private static ChordData loadChordAnalysis(@NotNull OrangeConfig config) throws IOException {
         String chordPredictionTxt = config.chordPredictionTxt();
         if (chordPredictionTxt == null) {
             LOGGER.debug("Skipping CHORD loading as no input has been provided");
@@ -499,7 +498,7 @@ public class OrangeAlgo {
         LOGGER.info("Loading CHORD data from {}", new File(chordPredictionTxt).getParent());
         ChordData chordData = ChordDataFile.read(chordPredictionTxt);
         LOGGER.info(" HR Status: {} with type '{}'", chordData.hrStatus().display(), chordData.hrdType());
-        return OrangeConversion.convert(chordData);
+        return chordData;
     }
 
     @Nullable

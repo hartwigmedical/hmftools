@@ -90,7 +90,7 @@ public class PurpleVariantFactory {
 
         PaveEntry paveEntry = paveAlgo.run(variant.gene(), variant.canonicalTranscript(), variant.position());
         List<VariantEffect> variantEffects = VariantEffect.effectsToList(variant.canonicalEffect());
-        List<PurpleVariantEffect> purpleVariantEffects = ConversionUtil.mapCollection(variantEffects, PurpleConversion::convert);
+        List<PurpleVariantEffect> purpleVariantEffects = ConversionUtil.mapToList(variantEffects, PurpleConversion::convert);
         return ImmutablePurpleTranscriptImpact.builder()
                 .transcript(variant.canonicalTranscript())
                 .hgvsCodingImpact(variant.canonicalHgvsCodingImpact())
@@ -114,7 +114,7 @@ public class PurpleVariantFactory {
         {
             PaveEntry paveEntry = paveAlgo.run(variant.gene(), altInfo.TransName, variant.position());
             List<VariantEffect> variantEffects = VariantEffect.effectsToList(altInfo.Effects);
-            List<PurpleVariantEffect> purpleVariantEffects = ConversionUtil.mapCollection(variantEffects, PurpleConversion::convert);
+            List<PurpleVariantEffect> purpleVariantEffects = ConversionUtil.mapToList(variantEffects, PurpleConversion::convert);
             otherImpacts.add(ImmutablePurpleTranscriptImpact.builder()
                     .transcript(altInfo.TransName)
                     .hgvsCodingImpact(altInfo.HgvsCoding)

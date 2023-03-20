@@ -105,8 +105,8 @@ public class OrangeConversion
     public static VirusInterpreterData convert(com.hartwig.hmftools.common.virus.VirusInterpreterData interpreterData)
     {
         return ImmutableVirusInterpreterData.builder()
-                .allViruses(ConversionUtil.convertCollection(interpreterData.allViruses(), OrangeConversion::convert))
-                .reportableViruses(ConversionUtil.convertCollection(interpreterData.reportableViruses(), OrangeConversion::convert))
+                .allViruses(ConversionUtil.mapToIterable(interpreterData.allViruses(), OrangeConversion::convert))
+                .reportableViruses(ConversionUtil.mapToIterable(interpreterData.reportableViruses(), OrangeConversion::convert))
                 .build();
     }
 

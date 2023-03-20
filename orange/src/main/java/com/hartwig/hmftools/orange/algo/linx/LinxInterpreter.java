@@ -44,18 +44,18 @@ public class LinxInterpreter {
                 additionalSuspectSomaticBreakends.size());
 
         return ImmutableLinxRecord.builder()
-                .allSomaticStructuralVariants(ConversionUtil.convertCollection(linx.allSomaticStructuralVariants(), LinxConversion::convert))
-                .allSomaticFusions(ConversionUtil.convertCollection(linx.allSomaticFusions(), LinxConversion::convert))
-                .reportableSomaticFusions(ConversionUtil.convertCollection(linx.reportableSomaticFusions(), LinxConversion::convert))
-                .additionalSuspectSomaticFusions(ConversionUtil.convertCollection(additionalSuspectSomaticFusions, LinxConversion::convert))
-                .allSomaticBreakends(ConversionUtil.convertCollection(linx.allSomaticBreakends(), LinxConversion::convert))
-                .reportableSomaticBreakends(ConversionUtil.convertCollection(linx.reportableSomaticBreakends(), LinxConversion::convert))
-                .additionalSuspectSomaticBreakends(ConversionUtil.convertCollection(additionalSuspectSomaticBreakends, LinxConversion::convert))
-                .somaticHomozygousDisruptions(ConversionUtil.convertCollection(linx.somaticHomozygousDisruptions(), LinxConversion::convert))
-                .allGermlineStructuralVariants(ConversionUtil.convertCollection(linx.allGermlineStructuralVariants(), LinxConversion::convert))
-                .allGermlineBreakends(ConversionUtil.convertCollection(linx.allGermlineBreakends(), LinxConversion::convert))
-                .reportableGermlineBreakends(ConversionUtil.convertCollection(linx.reportableGermlineBreakends(), LinxConversion::convert))
-                .germlineHomozygousDisruptions(ConversionUtil.convertCollection(linx.germlineHomozygousDisruptions(), LinxConversion::convert))
+                .allSomaticStructuralVariants(ConversionUtil.mapToIterable(linx.allSomaticStructuralVariants(), LinxConversion::convert))
+                .allSomaticFusions(ConversionUtil.mapToIterable(linx.allSomaticFusions(), LinxConversion::convert))
+                .reportableSomaticFusions(ConversionUtil.mapToIterable(linx.reportableSomaticFusions(), LinxConversion::convert))
+                .additionalSuspectSomaticFusions(ConversionUtil.mapToIterable(additionalSuspectSomaticFusions, LinxConversion::convert))
+                .allSomaticBreakends(ConversionUtil.mapToIterable(linx.allSomaticBreakends(), LinxConversion::convert))
+                .reportableSomaticBreakends(ConversionUtil.mapToIterable(linx.reportableSomaticBreakends(), LinxConversion::convert))
+                .additionalSuspectSomaticBreakends(ConversionUtil.mapToIterable(additionalSuspectSomaticBreakends, LinxConversion::convert))
+                .somaticHomozygousDisruptions(ConversionUtil.mapToIterable(linx.somaticHomozygousDisruptions(), LinxConversion::convert))
+                .allGermlineStructuralVariants(ConversionUtil.mapToIterable(linx.allGermlineStructuralVariants(), LinxConversion::convert))
+                .allGermlineBreakends(ConversionUtil.mapToIterable(linx.allGermlineBreakends(), LinxConversion::convert))
+                .reportableGermlineBreakends(ConversionUtil.mapToIterable(linx.reportableGermlineBreakends(), LinxConversion::convert))
+                .germlineHomozygousDisruptions(ConversionUtil.mapToIterable(linx.germlineHomozygousDisruptions(), LinxConversion::convert))
                 .build();
     }
 }
