@@ -10,24 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface PurpleVariant {
-
-    @NotNull
-    PurpleVariantType type();
-
-    @NotNull
-    String gene();
-
-    @NotNull
-    String chromosome();
-
-    int position();
-
-    @NotNull
-    String ref();
-
-    @NotNull
-    String alt();
+public interface PurpleVariant extends Variant {
 
     @NotNull
     PurpleCodingEffect worstCodingEffect();
