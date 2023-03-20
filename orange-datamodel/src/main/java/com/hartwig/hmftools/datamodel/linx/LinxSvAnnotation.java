@@ -5,8 +5,7 @@ import org.immutables.value.Value;
 
 @Gson.TypeAdapters
 @Value.Immutable
-public interface LinxSvAnnotation
-{
+public interface LinxSvAnnotation {
     String vcfId();
     int svId();
     int clusterId();

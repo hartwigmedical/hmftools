@@ -31,20 +31,14 @@ public class GermlineGainLossFactory {
 
     @NotNull
     public Map<PurpleGainLoss, GermlineDeletion> mapDeletions(@NotNull List<GermlineDeletion> germlineDeletions,
-            @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
-    {
+            @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers) {
         Map<PurpleGainLoss, GermlineDeletion> deletionMap = Maps.newHashMap();
-        for(GermlineDeletion germlineDeletion : germlineDeletions)
-        {
-            if(germlineDeletion.TumorStatus == GermlineStatus.HOM_DELETION)
-            {
+        for (GermlineDeletion germlineDeletion : germlineDeletions) {
+            if (germlineDeletion.TumorStatus == GermlineStatus.HOM_DELETION) {
                 PurpleGainLoss gainLoss = toGainLoss(germlineDeletion, allSomaticGeneCopyNumbers);
-                if(deletionMap.containsKey(gainLoss))
-                {
+                if (deletionMap.containsKey(gainLoss)) {
                     LOGGER.warn("Gain loss created that already exists, from germline deletion on gene {}", germlineDeletion.GeneName);
-                }
-                else
-                {
+                } else {
                     deletionMap.put(gainLoss, germlineDeletion);
                 }
             }

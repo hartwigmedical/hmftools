@@ -42,16 +42,6 @@ public class OrangeJson {
     }
 
     @NotNull
-    public OrangeRecord deserialize(String orangeJson) {
-        return gson.fromJson(orangeJson, OrangeRecord.class);
-    }
-
-    @NotNull
-    public String serialize(OrangeRecord orangeRecord) {
-        return gson.toJson(orangeRecord);
-    }
-
-    @NotNull
     public OrangeRecord read(@NotNull String orangeJsonFilePath) throws IOException {
         try (var reader = new BufferedReader(new FileReader(orangeJsonFilePath))) {
             return gson.fromJson(reader, OrangeRecord.class);

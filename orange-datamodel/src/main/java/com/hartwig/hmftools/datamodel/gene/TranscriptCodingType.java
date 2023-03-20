@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.datamodel.gene;
 
-public enum TranscriptCodingType
-{
+public enum TranscriptCodingType {
     UNKNOWN,
     CODING,
     UTR_5P,

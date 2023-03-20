@@ -25,16 +25,13 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PurpleConversion
-{
+public class PurpleConversion {
 
-    private PurpleConversion()
-    {
+    private PurpleConversion() {
     }
 
     @NotNull
-    public static PurpleCopyNumber convert(com.hartwig.hmftools.common.purple.PurpleCopyNumber copyNumber)
-    {
+    public static PurpleCopyNumber convert(com.hartwig.hmftools.common.purple.PurpleCopyNumber copyNumber) {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome(copyNumber.chromosome())
                 .start(copyNumber.start())
@@ -44,8 +41,7 @@ public class PurpleConversion
     }
 
     @NotNull
-    public static PurpleGeneCopyNumber convert(GeneCopyNumber geneCopyNumber)
-    {
+    public static PurpleGeneCopyNumber convert(GeneCopyNumber geneCopyNumber) {
         return ImmutablePurpleGeneCopyNumber.builder()
                 .chromosome(geneCopyNumber.chromosome())
                 .chromosomeBand(geneCopyNumber.chromosomeBand())
@@ -56,8 +52,7 @@ public class PurpleConversion
     }
 
     @NotNull
-    public static PurpleDriver convert(DriverCatalog catalog)
-    {
+    public static PurpleDriver convert(DriverCatalog catalog) {
         return ImmutablePurpleDriver.builder()
                 .gene(catalog.gene())
                 .transcript(catalog.transcript())
@@ -69,8 +64,7 @@ public class PurpleConversion
     }
 
     @NotNull
-    public static PurpleQC convert(@NotNull com.hartwig.hmftools.common.purple.PurpleQC purpleQC)
-    {
+    public static PurpleQC convert(@NotNull com.hartwig.hmftools.common.purple.PurpleQC purpleQC) {
         return ImmutablePurpleQC.builder()
                 .status(ConversionUtil.mapToIterable(purpleQC.status(), PurpleConversion::convert))
                 .germlineAberrations(ConversionUtil.mapToIterable(purpleQC.germlineAberrations(), PurpleConversion::convert))
@@ -82,8 +76,7 @@ public class PurpleConversion
     }
 
     @NotNull
-    public static PurpleAllelicDepth convert(AllelicDepth allelicDepth)
-    {
+    public static PurpleAllelicDepth convert(AllelicDepth allelicDepth) {
         return ImmutablePurpleAllelicDepth.builder()
                 .alleleReadCount(allelicDepth.alleleReadCount())
                 .totalReadCount(allelicDepth.totalReadCount())
@@ -91,25 +84,21 @@ public class PurpleConversion
     }
 
     @NotNull
-    public static PurpleGermlineAberration convert(GermlineAberration i)
-    {
+    public static PurpleGermlineAberration convert(GermlineAberration i) {
         return PurpleGermlineAberration.valueOf(i.name());
     }
 
     @NotNull
-    public static PurpleQCStatus convert(com.hartwig.hmftools.common.purple.PurpleQCStatus i)
-    {
+    public static PurpleQCStatus convert(com.hartwig.hmftools.common.purple.PurpleQCStatus i) {
         return PurpleQCStatus.valueOf(i.name());
     }
 
-    public static PurpleCodingEffect convert(CodingEffect effect)
-    {
+    public static PurpleCodingEffect convert(CodingEffect effect) {
         return PurpleCodingEffect.valueOf(effect.name());
     }
 
     @NotNull
-    public static PurpleVariantEffect convert(VariantEffect effect)
-    {
+    public static PurpleVariantEffect convert(VariantEffect effect) {
         return PurpleVariantEffect.valueOf(effect.name());
     }
 }

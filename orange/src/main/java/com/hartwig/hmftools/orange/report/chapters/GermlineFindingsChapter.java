@@ -12,6 +12,7 @@ import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
@@ -184,7 +185,7 @@ public class GermlineFindingsChapter implements ReportChapter {
     }
 
     private void addPharmacogenetics(@NotNull Document document) {
-        var peach = report.peach();
+        Set<PeachGenotype> peach = report.peach();
         if (peach != null) {
             String titlePharmacogenetics = "Pharmacogenetics (" + peach.size() + ")";
             document.add(PharmacogeneticsTable.build(titlePharmacogenetics, contentWidth(), peach));

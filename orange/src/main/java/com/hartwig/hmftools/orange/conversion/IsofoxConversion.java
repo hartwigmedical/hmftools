@@ -15,16 +15,13 @@ import com.hartwig.hmftools.datamodel.rna.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-public class IsofoxConversion
-{
+public class IsofoxConversion {
 
-    private IsofoxConversion()
-    {
+    private IsofoxConversion() {
     }
 
     @NotNull
-    public static IsofoxRnaStatistics convert(RnaStatistics rnaStatistics)
-    {
+    public static IsofoxRnaStatistics convert(RnaStatistics rnaStatistics) {
         return ImmutableIsofoxRnaStatistics.builder()
                 .totalFragments(rnaStatistics.totalFragments())
                 .duplicateFragments(rnaStatistics.duplicateFragments())
@@ -33,8 +30,7 @@ public class IsofoxConversion
     }
 
     @NotNull
-    public static GeneExpression convert(com.hartwig.hmftools.common.rna.GeneExpression geneExpression)
-    {
+    public static GeneExpression convert(com.hartwig.hmftools.common.rna.GeneExpression geneExpression) {
         return ImmutableGeneExpression.builder()
                 .geneName(geneExpression.geneName())
                 .tpm(geneExpression.tpm())

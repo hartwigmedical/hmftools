@@ -68,20 +68,17 @@ public class OrangeJsonTest
     private static final double EPSILON = 1.0E-2;
 
     @Test
-    public void canReadMinimallyEmptyOrangeRecordJson() throws IOException
-    {
+    public void canReadMinimallyEmptyOrangeRecordJson() throws IOException {
         assertNotNull(OrangeJson.getInstance().read(MINIMALLY_EMPTY_ORANGE_JSON));
     }
 
     @Test
-    public void canReadRealOrangeRecordJson() throws IOException
-    {
+    public void canReadRealOrangeRecordJson() throws IOException {
         assertNotNull(OrangeJson.getInstance().read(REAL_ORANGE_JSON));
     }
 
     @Test
-    public void canReadMinimallyPopulatedOrangeRecordJson() throws IOException
-    {
+    public void canReadMinimallyPopulatedOrangeRecordJson() throws IOException {
         OrangeRecord record = OrangeJson.getInstance().read(MINIMALLY_POPULATED_ORANGE_JSON);
 
         assertEquals("TEST", record.sampleId());
@@ -98,8 +95,7 @@ public class OrangeJsonTest
         assertPlots(record.plots());
     }
 
-    private static void assertPurple(@NotNull PurpleRecord purple)
-    {
+    private static void assertPurple(@NotNull PurpleRecord purple) {
         assertEquals(1, purple.fit().qc().status().size());
         assertTrue(purple.fit().qc().status().contains(PurpleQCStatus.PASS));
         assertTrue(purple.fit().hasSufficientQuality());
@@ -229,12 +225,9 @@ public class OrangeJsonTest
     }
 
     @NotNull
-    private static PurpleDriver findDriverByGene(@NotNull Iterable<PurpleDriver> drivers, @NotNull String geneToFind)
-    {
-        for(PurpleDriver driver : drivers)
-        {
-            if(driver.gene().equals(geneToFind))
-            {
+    private static PurpleDriver findDriverByGene(@NotNull Iterable<PurpleDriver> drivers, @NotNull String geneToFind) {
+        for (PurpleDriver driver : drivers) {
+            if (driver.gene().equals(geneToFind)) {
                 return driver;
             }
         }
@@ -243,21 +236,16 @@ public class OrangeJsonTest
     }
 
     @NotNull
-    private static PurpleVariant findVariantByGene(@NotNull Iterable<PurpleVariant> variants, @NotNull String geneToFind)
-    {
-        for(PurpleVariant variant : variants)
-        {
-            if(variant.gene().equals(geneToFind))
-            {
+    private static PurpleVariant findVariantByGene(@NotNull Iterable<PurpleVariant> variants, @NotNull String geneToFind) {
+        for (PurpleVariant variant : variants) {
+            if (variant.gene().equals(geneToFind)) {
                 return variant;
             }
         }
-
         throw new IllegalStateException("Could not find variant for gene: " + geneToFind);
     }
 
-    private static void assertLinx(@NotNull LinxRecord linx)
-    {
+    private static void assertLinx(@NotNull LinxRecord linx) {
         assertEquals(1, linx.allSomaticStructuralVariants().size());
         LinxSvAnnotation structuralVariant = linx.allSomaticStructuralVariants().iterator().next();
         assertEquals("id", structuralVariant.vcfId());
@@ -333,8 +321,7 @@ public class OrangeJsonTest
         assertEquals(fusion, linx.reportableSomaticFusions().iterator().next());
     }
 
-    private static void assertPeach(@NotNull Collection<PeachGenotype> peach)
-    {
+    private static void assertPeach(@NotNull Collection<PeachGenotype> peach) {
         assertEquals(1, peach.size());
         PeachGenotype entry = peach.iterator().next();
         assertEquals("DPYD", entry.gene());
@@ -346,16 +333,14 @@ public class OrangeJsonTest
         assertEquals("1.7", entry.repoVersion());
     }
 
-    private static void assertCuppa(@NotNull CuppaData cuppa)
-    {
+    private static void assertCuppa(@NotNull CuppaData cuppa) {
         assertEquals(1, cuppa.predictions().size());
         CuppaPrediction prediction = cuppa.predictions().iterator().next();
         assertEquals("Melanoma", prediction.cancerType());
         assertEquals(0.996, prediction.likelihood(), EPSILON);
     }
 
-    private static void assertVirusInterpreter(@NotNull VirusInterpreterData virusInterpreter)
-    {
+    private static void assertVirusInterpreter(@NotNull VirusInterpreterData virusInterpreter) {
         assertEquals(2, virusInterpreter.allViruses().size());
         AnnotatedVirus virus1 = findVirusByName(virusInterpreter.allViruses(), "Human papillomavirus 16");
         assertTrue(virus1.reported());
@@ -378,21 +363,16 @@ public class OrangeJsonTest
     }
 
     @NotNull
-    private static AnnotatedVirus findVirusByName(@NotNull Iterable<AnnotatedVirus> entries, @NotNull String nameToFind)
-    {
-        for(AnnotatedVirus entry : entries)
-        {
-            if(entry.name().equals(nameToFind))
-            {
+    private static AnnotatedVirus findVirusByName(@NotNull Iterable<AnnotatedVirus> entries, @NotNull String nameToFind) {
+        for (AnnotatedVirus entry : entries) {
+            if (entry.name().equals(nameToFind)) {
                 return entry;
             }
         }
-
         throw new IllegalStateException("Could not find virus with name: " + nameToFind);
     }
 
-    private static void assertLilac(@NotNull LilacRecord lilac)
-    {
+    private static void assertLilac(@NotNull LilacRecord lilac) {
         assertEquals("PASS", lilac.qc());
 
         assertEquals(1, lilac.alleles().size());
@@ -406,14 +386,12 @@ public class OrangeJsonTest
         assertEquals(1.0, allele.somaticInframeIndel(), EPSILON);
     }
 
-    private static void assertChord(@NotNull ChordRecord chord)
-    {
+    private static void assertChord(@NotNull ChordRecord chord) {
         assertEquals(0.01, chord.hrdValue(), EPSILON);
         assertEquals(ChordStatus.HR_PROFICIENT, chord.hrStatus());
     }
 
-    private static void assertPlots(@NotNull OrangePlots plots)
-    {
+    private static void assertPlots(@NotNull OrangePlots plots) {
         assertEquals("plot/empty.circos.png", plots.purpleFinalCircosPlot());
     }
 }

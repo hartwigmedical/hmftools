@@ -84,8 +84,7 @@ public class PurpleVariantFactory {
     }
 
     @NotNull
-    private PurpleTranscriptImpact extractCanonicalImpact(@NotNull SomaticVariant variant)
-    {
+    private PurpleTranscriptImpact extractCanonicalImpact(@NotNull SomaticVariant variant) {
         // TODO Move effect parsing into SomaticVariant
 
         PaveEntry paveEntry = paveAlgo.run(variant.gene(), variant.canonicalTranscript(), variant.position());
@@ -110,8 +109,7 @@ public class PurpleVariantFactory {
         // TODO Move effect parsing into SomaticVariant
         // TODO Add "splice region" details to non-canonical effects
 
-        for (AltTranscriptReportableInfo altInfo : AltTranscriptReportableInfo.parseAltTranscriptInfo(variant.otherReportedEffects()))
-        {
+        for (AltTranscriptReportableInfo altInfo : AltTranscriptReportableInfo.parseAltTranscriptInfo(variant.otherReportedEffects())) {
             PaveEntry paveEntry = paveAlgo.run(variant.gene(), altInfo.TransName, variant.position());
             List<VariantEffect> variantEffects = VariantEffect.effectsToList(altInfo.Effects);
             List<PurpleVariantEffect> purpleVariantEffects = ConversionUtil.mapToList(variantEffects, PurpleConversion::convert);

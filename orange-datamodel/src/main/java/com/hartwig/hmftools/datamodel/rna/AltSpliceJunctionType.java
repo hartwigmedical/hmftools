@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.datamodel.rna;
 
-public enum AltSpliceJunctionType
-{
+public enum AltSpliceJunctionType {
     SKIPPED_EXONS,
     NOVEL_5_PRIME,
     NOVEL_3_PRIME,

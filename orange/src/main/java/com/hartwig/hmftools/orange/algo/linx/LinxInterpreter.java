@@ -4,7 +4,9 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxData;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
@@ -31,12 +33,12 @@ public class LinxInterpreter {
     @NotNull
     public LinxRecord interpret(@NotNull LinxData linx) {
         LOGGER.info("Analysing linx data");
-        List<com.hartwig.hmftools.common.linx.LinxFusion> additionalSuspectSomaticFusions =
+        List<LinxFusion> additionalSuspectSomaticFusions =
                 DNAFusionSelector.selectInterestingUnreportedFusions(linx.allSomaticFusions(), driverGenes);
         LOGGER.info(" Found an additional {} suspect somatic fusions that are potentially interesting",
                 additionalSuspectSomaticFusions.size());
 
-        List<com.hartwig.hmftools.common.linx.LinxBreakend> additionalSuspectSomaticBreakends =
+        List<LinxBreakend> additionalSuspectSomaticBreakends =
                 BreakendSelector.selectInterestingUnreportedBreakends(linx.allSomaticBreakends(),
                         linx.reportableSomaticFusions(),
                         knownFusionCache);

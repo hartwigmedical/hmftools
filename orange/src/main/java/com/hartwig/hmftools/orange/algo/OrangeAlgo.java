@@ -250,20 +250,15 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private Set<DoidNode> loadConfiguredPrimaryTumor(@NotNull OrangeConfig config)
-    {
+    private Set<DoidNode> loadConfiguredPrimaryTumor(@NotNull OrangeConfig config) {
         Set<DoidNode> nodes = Sets.newHashSet();
         LOGGER.info("Determining configured primary tumor");
-        for(String doid : config.primaryTumorDoids())
-        {
+        for (String doid : config.primaryTumorDoids()) {
             DoidNode node = resolveDoid(doidEntry.nodes(), doid);
-            if(node != null)
-            {
+            if (node != null) {
                 LOGGER.info(" Adding DOID {} ({}) as configured primary tumor", doid, node.doidTerm());
                 nodes.add(node);
-            }
-            else
-            {
+            } else {
                 LOGGER.warn("Could not resolve doid '{}'", doid);
             }
         }
@@ -271,12 +266,9 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static DoidNode resolveDoid(@NotNull List<DoidNode> nodes, @NotNull String doid)
-    {
-        for(DoidNode node : nodes)
-        {
-            if(node.doid().equals(doid))
-            {
+    private static DoidNode resolveDoid(@NotNull List<DoidNode> nodes, @NotNull String doid) {
+        for (DoidNode node : nodes) {
+            if (node.doid().equals(doid)) {
                 return node;
             }
         }
@@ -471,8 +463,7 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static LilacSummaryData loadLilacData(@NotNull OrangeConfig config) throws IOException
-    {
+    private static LilacSummaryData loadLilacData(@NotNull OrangeConfig config) throws IOException {
         return LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
     }
 
@@ -521,12 +512,10 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static List<PeachGenotype> loadPeachData(@NotNull OrangeConfig config) throws IOException
-    {
+    private static List<PeachGenotype> loadPeachData(@NotNull OrangeConfig config) throws IOException {
         String peachGenotypeTsv = config.peachGenotypeTsv();
 
-        if(peachGenotypeTsv == null)
-        {
+        if (peachGenotypeTsv == null) {
             LOGGER.info("Skipping PEACH loading since no peach genotype tsv has been provided");
             return null;
         }

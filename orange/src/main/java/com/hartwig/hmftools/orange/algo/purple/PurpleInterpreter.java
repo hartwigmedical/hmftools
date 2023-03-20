@@ -73,8 +73,7 @@ public class PurpleInterpreter {
 
     public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
             @NotNull final GermlineGainLossFactory germlineGainLossFactory, @NotNull final List<DriverGene> driverGenes,
-            @NotNull final LinxRecord linx, @Nullable final ChordData chord)
-    {
+            @NotNull final LinxRecord linx, @Nullable final ChordData chord) {
         this.purpleVariantFactory = purpleVariantFactory;
         this.germlineGainLossFactory = germlineGainLossFactory;
         this.driverGenes = driverGenes;
@@ -276,11 +275,9 @@ public class PurpleInterpreter {
 
     @NotNull
     private static List<PurpleGainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, double ploidy, boolean isTargetRegions,
-            @NotNull List<GeneCopyNumber> allGeneCopyNumbers)
-    {
+            @NotNull List<GeneCopyNumber> allGeneCopyNumbers) {
         List<DriverGene> allGenes = Lists.newArrayList();
-        for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers)
-        {
+        for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
             allGenes.add(ImmutableDriverGene.builder()
                     .gene(geneCopyNumber.geneName())
                     .reportMissenseAndInframe(false)
