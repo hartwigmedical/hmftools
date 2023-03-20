@@ -25,14 +25,14 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.rna.*;
 import com.hartwig.hmftools.datamodel.virus.*;
-import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
 import com.hartwig.hmftools.orange.algo.isofox.OrangeIsofoxTestFactory;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.wildtype.TestWildTypeFactory;
+import com.hartwig.hmftools.orange.conversion.LinxConversion;
+import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -61,7 +61,7 @@ public final class TestOrangeReportFactory {
                 .linx(TestLinxInterpretationFactory.createMinimalTestLinxData())
                 .lilac(ImmutableLilacRecord.builder().qc(Strings.EMPTY).build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
-                .chord(OrangeAlgo.asOrangeDatamodel(ChordTestFactory.createMinimalTestChordAnalysis()))
+                .chord(OrangeConversion.asOrangeDatamodel(ChordTestFactory.createMinimalTestChordAnalysis()))
                 .cuppa(TestCuppaFactory.createMinimalCuppaData())
                 .plots(createMinimalOrangePlots());
     }
@@ -74,7 +74,7 @@ public final class TestOrangeReportFactory {
     @NotNull
     public static OrangeRecord createProperTestReport() {
         return builder().experimentType(ExperimentType.FULL_GENOME)
-                .addConfiguredPrimaryTumor(OrangeAlgo.asOrangeDatamodel(DoidTestFactory.createDoidNode("1", "cancer type")))
+                .addConfiguredPrimaryTumor(OrangeConversion.asOrangeDatamodel(DoidTestFactory.createDoidNode("1", "cancer type")))
                 .platinumVersion("v5.31")
                 .refSample(createMinimalOrangeSample())
                 .germlineMVLHPerGene(createTestGermlineMVLHPerGene())
@@ -91,8 +91,8 @@ public final class TestOrangeReportFactory {
     @NotNull
     private static OrangeSample createMinimalOrangeSample() {
         return ImmutableOrangeSample.builder()
-                .metrics(OrangeAlgo.asOrangeDatamodel(WGSMetricsTestFactory.createMinimalTestWGSMetrics()))
-                .flagstat(OrangeAlgo.asOrangeDatamodel(FlagstatTestFactory.createMinimalTestFlagstat()))
+                .metrics(OrangeConversion.asOrangeDatamodel(WGSMetricsTestFactory.createMinimalTestWGSMetrics()))
+                .flagstat(OrangeConversion.asOrangeDatamodel(FlagstatTestFactory.createMinimalTestFlagstat()))
                 .build();
     }
 
@@ -146,7 +146,7 @@ public final class TestOrangeReportFactory {
 
     @NotNull
     private static LinxRecord createTestLinxData() {
-        LinxFusion fusion = LinxInterpreter.convert(LinxTestFactory.createMinimalTestFusion());
+        LinxFusion fusion = LinxConversion.convert(LinxTestFactory.createMinimalTestFusion());
         return ImmutableLinxRecord.builder()
                 .from(TestLinxInterpretationFactory.createMinimalTestLinxData())
                 .addReportableSomaticFusions(fusion)
@@ -166,8 +166,8 @@ public final class TestOrangeReportFactory {
     @NotNull
     private static LilacRecord createTestLilacData() {
         List<LilacAllele> alleles = Lists.newArrayList();
-        alleles.add(OrangeAlgo.asOrangeDatamodel(LilacTestFactory.builder().allele("Allele 1").build()));
-        alleles.add(OrangeAlgo.asOrangeDatamodel(LilacTestFactory.builder().allele("Allele 2").somaticInframeIndel(1D).build()));
+        alleles.add(OrangeConversion.asOrangeDatamodel(LilacTestFactory.builder().allele("Allele 1").build()));
+        alleles.add(OrangeConversion.asOrangeDatamodel(LilacTestFactory.builder().allele("Allele 2").somaticInframeIndel(1D).build()));
 
         return ImmutableLilacRecord.builder().qc("PASS").alleles(alleles).build();
     }
@@ -291,6 +291,6 @@ public final class TestOrangeReportFactory {
 
     @NotNull
     private static Set<PeachGenotype> createTestPeachData() {
-        return Set.of(OrangeAlgo.asOrangeDatamodel(PeachTestFactory.builder().gene("DPYD").haplotype("haplotype").build()));
+        return Set.of(OrangeConversion.asOrangeDatamodel(PeachTestFactory.builder().gene("DPYD").haplotype("haplotype").build()));
     }
 }

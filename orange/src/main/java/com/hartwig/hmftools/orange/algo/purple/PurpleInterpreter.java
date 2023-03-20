@@ -13,12 +13,9 @@ import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.*;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCopyNumber;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
-import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.datamodel.purple.PurpleQC;
 import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
 import com.hartwig.hmftools.orange.algo.linx.BreakendUtil;
+import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -131,52 +128,22 @@ public class PurpleInterpreter {
         return ImmutablePurpleRecord.builder()
                 .fit(createFit(purple))
                 .characteristics(createCharacteristics(purple))
-                .somaticDrivers(() -> purple.somaticDrivers().stream().map(PurpleInterpreter::asPurpleDriver).iterator())
-                .germlineDrivers(() -> Objects.requireNonNullElseGet(purple.germlineDrivers(), List::<DriverCatalog>of).stream().map(PurpleInterpreter::asPurpleDriver).iterator())
+                .somaticDrivers(() -> purple.somaticDrivers().stream().map(PurpleConversion::asPurpleDriver).iterator())
+                .germlineDrivers(() -> Objects.requireNonNullElseGet(purple.germlineDrivers(), List::<DriverCatalog>of).stream().map(PurpleConversion::asPurpleDriver).iterator())
                 .allSomaticVariants(allSomaticVariants)
                 .reportableSomaticVariants(reportableSomaticVariants)
                 .additionalSuspectSomaticVariants(additionalSuspectSomaticVariants)
                 .allGermlineVariants(allGermlineVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
                 .additionalSuspectGermlineVariants(additionalSuspectGermlineVariants)
-                .allSomaticCopyNumbers(() -> purple.allSomaticCopyNumbers().stream().map(PurpleInterpreter::asPurpleCopyNumber).iterator())
-                .allSomaticGeneCopyNumbers(() -> purple.allSomaticGeneCopyNumbers().stream().map(PurpleInterpreter::asPurpleGeneCopyNumber).iterator())
-                .suspectGeneCopyNumbersWithLOH(() -> suspectGeneCopyNumbersWithLOH.stream().map(PurpleInterpreter::asPurpleGeneCopyNumber).iterator())
+                .allSomaticCopyNumbers(() -> purple.allSomaticCopyNumbers().stream().map(PurpleConversion::asPurpleCopyNumber).iterator())
+                .allSomaticGeneCopyNumbers(() -> purple.allSomaticGeneCopyNumbers().stream().map(PurpleConversion::asPurpleGeneCopyNumber).iterator())
+                .suspectGeneCopyNumbersWithLOH(() -> suspectGeneCopyNumbersWithLOH.stream().map(PurpleConversion::asPurpleGeneCopyNumber).iterator())
                 .allSomaticGainsLosses(allSomaticGainsLosses)
                 .reportableSomaticGainsLosses(reportableSomaticGainsLosses)
                 .nearReportableSomaticGains(nearReportableSomaticGains)
                 .additionalSuspectSomaticGainsLosses(additionalSuspectSomaticGainsLosses)
                 .reportableGermlineFullLosses(reportableGermlineFullLosses)
-                .build();
-    }
-
-    private static PurpleCopyNumber asPurpleCopyNumber(com.hartwig.hmftools.common.purple.PurpleCopyNumber copyNumber) {
-        return ImmutablePurpleCopyNumber.builder()
-                .chromosome(copyNumber.chromosome())
-                .start(copyNumber.start())
-                .end(copyNumber.end())
-                .averageTumorCopyNumber(copyNumber.averageTumorCopyNumber())
-                .build();
-    }
-
-    private static PurpleGeneCopyNumber asPurpleGeneCopyNumber(GeneCopyNumber geneCopyNumber) {
-        return ImmutablePurpleGeneCopyNumber.builder()
-                .chromosome(geneCopyNumber.chromosome())
-                .chromosomeBand(geneCopyNumber.chromosomeBand())
-                .geneName(geneCopyNumber.geneName())
-                .minCopyNumber(geneCopyNumber.minCopyNumber())
-                .minMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())
-                .build();
-    }
-
-    public static PurpleDriver asPurpleDriver(DriverCatalog catalog) {
-        return ImmutablePurpleDriver.builder()
-                .gene(catalog.gene())
-                .transcript(catalog.transcript())
-                .driver(PurpleDriverType.valueOf(catalog.driver().name()))
-                .driverLikelihood(catalog.driverLikelihood())
-                .likelihoodMethod(PurpleLikelihoodMethod.valueOf(catalog.likelihoodMethod().name()))
-                .isCanonical(catalog.isCanonical())
                 .build();
     }
 
@@ -347,7 +314,7 @@ public class PurpleInterpreter {
     @NotNull
     private static PurpleFit createFit(@NotNull PurpleData purple) {
         return ImmutablePurpleFit.builder()
-                .qc(createQC(purple.purityContext().qc()))
+                .qc(PurpleConversion.createQC(purple.purityContext().qc()))
                 .hasSufficientQuality(purple.purityContext().qc().pass())
                 .fittedPurityMethod(PurpleFittedPurityMethod.valueOf(purple.purityContext().method().name()))
                 .containsTumorCells(purple.purityContext().method() != FittedPurityMethod.NO_TUMOR)
@@ -357,17 +324,6 @@ public class PurpleInterpreter {
                 .ploidy(purple.purityContext().bestFit().ploidy())
                 .minPloidy(purple.purityContext().score().minPloidy())
                 .maxPloidy(purple.purityContext().score().maxPloidy())
-                .build();
-    }
-
-    private static PurpleQC createQC(@NotNull com.hartwig.hmftools.common.purple.PurpleQC purpleQC) {
-        return ImmutablePurpleQC.builder()
-                .status(() -> purpleQC.status().stream().map(i -> com.hartwig.hmftools.datamodel.purple.PurpleQCStatus.valueOf(i.name())).iterator())
-                .germlineAberrations(() -> purpleQC.germlineAberrations().stream().map(i -> PurpleGermlineAberration.valueOf(i.name())).iterator())
-                .amberMeanDepth(purpleQC.amberMeanDepth())
-                .contamination(purpleQC.contamination())
-                .unsupportedCopyNumberSegments(purpleQC.unsupportedCopyNumberSegments())
-                .deletedGenes(purpleQC.deletedGenes())
                 .build();
     }
 

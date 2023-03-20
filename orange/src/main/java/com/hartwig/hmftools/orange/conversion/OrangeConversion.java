@@ -1,0 +1,142 @@
+package com.hartwig.hmftools.orange.conversion;
+
+import com.hartwig.hmftools.common.chord.ChordData;
+import com.hartwig.hmftools.common.doid.DoidNode;
+import com.hartwig.hmftools.common.flagstat.Flagstat;
+import com.hartwig.hmftools.common.hla.LilacSummaryData;
+import com.hartwig.hmftools.common.metrics.WGSMetrics;
+import com.hartwig.hmftools.datamodel.chord.ChordRecord;
+import com.hartwig.hmftools.datamodel.chord.ChordStatus;
+import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
+import com.hartwig.hmftools.datamodel.flagstat.ImmutableFlagstat;
+import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
+import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
+import com.hartwig.hmftools.datamodel.hla.LilacAllele;
+import com.hartwig.hmftools.datamodel.hla.LilacRecord;
+import com.hartwig.hmftools.datamodel.metrics.ImmutableWGSMetrics;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
+import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
+import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
+import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
+import com.hartwig.hmftools.datamodel.sigs.ImmutableSignatureAllocation;
+import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
+import com.hartwig.hmftools.datamodel.virus.*;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+public class OrangeConversion {
+
+    private OrangeConversion() {
+    }
+
+
+    public static com.hartwig.hmftools.datamodel.flagstat.Flagstat asOrangeDatamodel(Flagstat flagstat) {
+        return ImmutableFlagstat.builder()
+                .uniqueReadCount(flagstat.uniqueReadCount())
+                .secondaryCount(flagstat.secondaryCount())
+                .supplementaryCount(flagstat.supplementaryCount())
+                .mappedProportion(flagstat.mappedProportion())
+                .build();
+    }
+
+    public static com.hartwig.hmftools.datamodel.metrics.WGSMetrics asOrangeDatamodel(WGSMetrics wgsMetrics) {
+        return ImmutableWGSMetrics.builder()
+                .meanCoverage(wgsMetrics.meanCoverage())
+                .sdCoverage(wgsMetrics.sdCoverage())
+                .medianCoverage(wgsMetrics.medianCoverage())
+                .madCoverage(wgsMetrics.madCoverage())
+                .pctExcAdapter(wgsMetrics.pctExcAdapter())
+                .pctExcMapQ(wgsMetrics.pctExcMapQ())
+                .pctExcDupe(wgsMetrics.pctExcDupe())
+                .pctExcUnpaired(wgsMetrics.pctExcUnpaired())
+                .pctExcBaseQ(wgsMetrics.pctExcBaseQ())
+                .pctExcOverlap(wgsMetrics.pctExcOverlap())
+                .pctExcCapped(wgsMetrics.pctExcCapped())
+                .pctExcTotal(wgsMetrics.pctExcTotal())
+                .build();
+    }
+
+    public static OrangeDoidNode asOrangeDatamodel(@NotNull DoidNode doidNode) {
+        return ImmutableOrangeDoidNode.builder()
+                .doid(doidNode.doid())
+                .doidTerm(doidNode.doidTerm())
+                .build();
+    }
+
+    public static LilacRecord asOrangeDatamodel(LilacSummaryData lilacSummaryData) {
+        return ImmutableLilacRecord.builder()
+                .qc(lilacSummaryData.qc())
+                .alleles(() -> lilacSummaryData.alleles().stream().map(OrangeConversion::asOrangeDatamodel).iterator())
+                .build();
+    }
+
+    public static LilacAllele asOrangeDatamodel(com.hartwig.hmftools.common.hla.LilacAllele allele) {
+        return ImmutableLilacAllele.builder()
+                .allele(allele.allele())
+                .tumorCopyNumber(allele.tumorCopyNumber())
+                .somaticMissense(allele.somaticMissense())
+                .somaticNonsenseOrFrameshift(allele.somaticNonsenseOrFrameshift())
+                .somaticSplice(allele.somaticSplice())
+                .somaticSynonymous(allele.somaticSynonymous())
+                .somaticInframeIndel(allele.somaticInframeIndel())
+                .refFragments(allele.refFragments())
+                .tumorFragments(allele.tumorFragments())
+                .rnaFragments(allele.rnaFragments())
+                .build();
+    }
+
+    public static VirusInterpreterData asOrangeDatamodel(com.hartwig.hmftools.common.virus.VirusInterpreterData interpreterData) {
+        return ImmutableVirusInterpreterData.builder()
+                .allViruses(() -> interpreterData.allViruses().stream().map(OrangeConversion::asOrangeDatamodel).iterator())
+                .reportableViruses(() -> interpreterData.reportableViruses().stream().map(OrangeConversion::asOrangeDatamodel).iterator())
+                .build();
+    }
+
+    private static AnnotatedVirus asOrangeDatamodel(com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus) {
+        return ImmutableAnnotatedVirus.builder()
+                .name(annotatedVirus.name())
+                .qcStatus(VirusBreakendQCStatus.valueOf(annotatedVirus.qcStatus().name()))
+                .integrations(annotatedVirus.integrations())
+                .interpretation(VirusInterpretation.valueOf(annotatedVirus.interpretation()))
+                .percentageCovered(annotatedVirus.percentageCovered())
+                .reported(annotatedVirus.reported())
+                .build();
+    }
+
+    public static ChordRecord asOrangeDatamodel(ChordData chordData) {
+        return ImmutableChordRecord.builder()
+                .brca1Value(chordData.BRCA1Value())
+                .brca2Value(chordData.BRCA2Value())
+                .hrdValue(chordData.hrdValue())
+                .hrStatus(ChordStatus.valueOf(chordData.hrStatus().name()))
+                .hrdType(chordData.hrdType())
+                .build();
+    }
+
+    public static Set<PeachGenotype> asOrangeDatamodel(List<com.hartwig.hmftools.common.peach.PeachGenotype> peachGenotypes) {
+        return peachGenotypes.stream().map(OrangeConversion::asOrangeDatamodel).collect(Collectors.toSet());
+    }
+
+    public static PeachGenotype asOrangeDatamodel(com.hartwig.hmftools.common.peach.PeachGenotype peachGenotype) {
+        return ImmutablePeachGenotype.builder()
+                .gene(peachGenotype.gene())
+                .haplotype(peachGenotype.haplotype())
+                .function(peachGenotype.function())
+                .linkedDrugs(peachGenotype.linkedDrugs())
+                .urlPrescriptionInfo(peachGenotype.urlPrescriptionInfo())
+                .panelVersion(peachGenotype.panelVersion())
+                .repoVersion(peachGenotype.repoVersion())
+                .build();
+    }
+
+    public static SignatureAllocation asOrangeDatamodel(com.hartwig.hmftools.common.sigs.SignatureAllocation signatureAllocation) {
+        return ImmutableSignatureAllocation.builder()
+                .signature(signatureAllocation.signature())
+                .allocation(signatureAllocation.allocation())
+                .percent(signatureAllocation.percent())
+                .build();
+    }
+}
