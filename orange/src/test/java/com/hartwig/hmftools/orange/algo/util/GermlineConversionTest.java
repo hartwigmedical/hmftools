@@ -6,12 +6,14 @@ import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.*;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
-import com.hartwig.hmftools.orange.algo.purple.*;
+import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainLossFactory;
+import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
+import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
@@ -26,7 +28,7 @@ public class GermlineConversionTest {
 
     @Test
     public void wipesAllGermlineUponConversion() {
-        OrangeReport report = TestOrangeReportFactory.builder()
+        OrangeRecord report = TestOrangeReportFactory.builder()
                 .germlineMVLHPerGene(Maps.newHashMap())
                 .purple(TestPurpleInterpretationFactory.builder()
                         .germlineDrivers(Lists.newArrayList())
@@ -43,7 +45,7 @@ public class GermlineConversionTest {
                         .build())
                 .build();
 
-        OrangeReport converted = GermlineConversion.convertGermlineToSomatic(report);
+        OrangeRecord converted = GermlineConversion.convertGermlineToSomatic(report);
 
         assertNull(converted.germlineMVLHPerGene());
 
@@ -61,7 +63,7 @@ public class GermlineConversionTest {
 
     @Test
     public void canConvertMinimalPurpleData() {
-        OrangeReport minimal = TestOrangeReportFactory.createMinimalTestReport();
+        OrangeRecord minimal = TestOrangeReportFactory.createMinimalTestReport();
 
         assertNotNull(GermlineConversion.convertPurpleGermline(true, minimal.purple()));
     }

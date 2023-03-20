@@ -3,21 +3,21 @@ package com.hartwig.hmftools.orange.report.chapters;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
+import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.*;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
 import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -51,11 +51,11 @@ public class FrontPageChapter implements ReportChapter {
     private static final String NONE = "None";
 
     @NotNull
-    private final OrangeReport report;
+    private final OrangeRecord report;
     @NotNull
     private final PlotPathResolver plotPathResolver;
 
-    public FrontPageChapter(@NotNull final OrangeReport report, @NotNull final PlotPathResolver plotPathResolver) {
+    public FrontPageChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver) {
         this.report = report;
         this.plotPathResolver = plotPathResolver;
     }

@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import java.text.DecimalFormat;
-import java.util.StringJoiner;
-
 import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
 import com.hartwig.hmftools.datamodel.metrics.WGSMetrics;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -19,10 +16,12 @@ import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.HorizontalAlignment;
-
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.text.DecimalFormat;
+import java.util.StringJoiner;
 
 public class QualityControlChapter implements ReportChapter {
 
@@ -30,11 +29,11 @@ public class QualityControlChapter implements ReportChapter {
     private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#'%'");
 
     @NotNull
-    private final OrangeReport report;
+    private final OrangeRecord report;
     @NotNull
     private final PlotPathResolver plotPathResolver;
 
-    public QualityControlChapter(@NotNull final OrangeReport report, @NotNull final PlotPathResolver plotPathResolver) {
+    public QualityControlChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver) {
         this.report = report;
         this.plotPathResolver = plotPathResolver;
     }

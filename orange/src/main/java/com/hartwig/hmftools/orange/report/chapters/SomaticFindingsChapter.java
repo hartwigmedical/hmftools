@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
@@ -8,7 +9,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
@@ -33,11 +33,11 @@ import java.util.List;
 public class SomaticFindingsChapter implements ReportChapter {
 
     @NotNull
-    private final OrangeReport report;
+    private final OrangeRecord report;
     @NotNull
     private final PlotPathResolver plotPathResolver;
 
-    public SomaticFindingsChapter(@NotNull final OrangeReport report, @NotNull final PlotPathResolver plotPathResolver) {
+    public SomaticFindingsChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver) {
         this.report = report;
         this.plotPathResolver = plotPathResolver;
     }

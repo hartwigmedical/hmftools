@@ -4,11 +4,11 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntryFactory;
@@ -35,9 +35,9 @@ public class GermlineFindingsChapter implements ReportChapter {
     private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#.0'%'");
 
     @NotNull
-    private final OrangeReport report;
+    private final OrangeRecord report;
 
-    public GermlineFindingsChapter(@NotNull final OrangeReport report) {
+    public GermlineFindingsChapter(@NotNull final OrangeRecord report) {
         this.report = report;
     }
 

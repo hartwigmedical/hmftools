@@ -1,15 +1,12 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import java.text.DecimalFormat;
-import java.util.List;
-
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.rna.GeneExpression;
 import com.hartwig.hmftools.datamodel.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.datamodel.rna.RnaFusion;
-import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
-import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.ExpressionTable;
 import com.hartwig.hmftools.orange.report.tables.NovelSpliceJunctionTable;
@@ -21,17 +18,19 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
-
 import org.jetbrains.annotations.NotNull;
+
+import java.text.DecimalFormat;
+import java.util.List;
 
 public class RNAFindingsChapter implements ReportChapter {
 
     private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#'%'");
 
     @NotNull
-    private final OrangeReport report;
+    private final OrangeRecord report;
 
-    public RNAFindingsChapter(@NotNull final OrangeReport report) {
+    public RNAFindingsChapter(@NotNull final OrangeRecord report) {
         this.report = report;
     }
 

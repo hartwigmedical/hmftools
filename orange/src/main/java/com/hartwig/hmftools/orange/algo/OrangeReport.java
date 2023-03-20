@@ -1,22 +1,17 @@
 package com.hartwig.hmftools.orange.algo;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
-import com.hartwig.hmftools.datamodel.orange.OrangePlots;
-import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
-import com.hartwig.hmftools.datamodel.orange.OrangeSample;
-import com.hartwig.hmftools.datamodel.orange.PercentileType;
+import com.hartwig.hmftools.datamodel.orange.*;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
-import com.hartwig.hmftools.orange.algo.wildtype.WildTypeGene;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
+import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -25,10 +25,7 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.rna.*;
 import com.hartwig.hmftools.datamodel.virus.*;
-import com.hartwig.hmftools.orange.algo.ExperimentType;
-import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
 import com.hartwig.hmftools.orange.algo.isofox.OrangeIsofoxTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
@@ -53,8 +50,8 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    public static ImmutableOrangeReport.Builder builder() {
-        return ImmutableOrangeReport.builder()
+    public static ImmutableOrangeRecord.Builder builder() {
+        return ImmutableOrangeRecord.builder()
                 .sampleId(TEST_SAMPLE)
                 .experimentDate(LocalDate.of(2021, 11, 19))
                 .experimentType(ExperimentType.TARGETED)
@@ -70,12 +67,12 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    public static OrangeReport createMinimalTestReport() {
+    public static OrangeRecord createMinimalTestReport() {
         return builder().build();
     }
 
     @NotNull
-    public static OrangeReport createProperTestReport() {
+    public static OrangeRecord createProperTestReport() {
         return builder().experimentType(ExperimentType.FULL_GENOME)
                 .addConfiguredPrimaryTumor(OrangeAlgo.asOrangeDatamodel(DoidTestFactory.createDoidNode("1", "cancer type")))
                 .platinumVersion("v5.31")

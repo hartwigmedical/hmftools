@@ -2,11 +2,14 @@ package com.hartwig.hmftools.orange.report;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cohort.ImmutableEvaluation;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxInterpretedData;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -16,10 +19,7 @@ import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
-import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -59,35 +59,35 @@ public class ReportGeneratorTestApplication {
     }
 
     @NotNull
-    private static OrangeReport buildReport(@NotNull OrangeConfig config) throws IOException {
+    private static OrangeRecord buildReport(@NotNull OrangeConfig config) throws IOException {
         if (USE_MOCK_DATA_FOR_REPORT) {
             return TestOrangeReportFactory.createProperTestReport();
         }
 
-        OrangeReport report = OrangeAlgo.fromConfig(config).run(config);
+        OrangeRecord report = OrangeAlgo.fromConfig(config).run(config);
 
-        OrangeReport withPercentiles = overwriteCohortPercentiles(report);
+        OrangeRecord withPercentiles = overwriteCohortPercentiles(report);
 
-        OrangeReport filtered;
+        OrangeRecord filtered;
         if (REMOVE_UNREPORTED_VARIANTS) {
             filtered = removeUnreported(withPercentiles);
         } else {
             filtered = withPercentiles;
         }
 
-        OrangeReport finalReport = ImmutableOrangeReport.builder().from(filtered).sampleId("Test").build();
+        OrangeRecord finalReport = ImmutableOrangeRecord.builder().from(filtered).sampleId("Test").build();
 
         return finalReport;
     }
 
     @NotNull
-    private static OrangeReport overwriteCohortPercentiles(@NotNull OrangeReport report) {
+    private static OrangeRecord overwriteCohortPercentiles(@NotNull OrangeRecord report) {
         // Need to overwrite percentiles since test code doesn't have access to real production cohort percentile files.
         Map<PercentileType, Evaluation> evaluations = Maps.newHashMap();
         evaluations.put(PercentileType.SV_TMB,
                 ImmutableEvaluation.builder().cancerType("Skin").panCancerPercentile(0.22).cancerTypePercentile(0.34).build());
 
-        return ImmutableOrangeReport.builder().from(report).cohortEvaluations(evaluations).build();
+        return ImmutableOrangeRecord.builder().from(report).cohortEvaluations(evaluations).build();
     }
 
     @NotNull
@@ -99,8 +99,8 @@ public class ReportGeneratorTestApplication {
     }
 
     @NotNull
-    private static OrangeReport removeUnreported(@NotNull OrangeReport report) {
-        ImmutableOrangeReport.Builder builder = ImmutableOrangeReport.builder()
+    private static OrangeRecord removeUnreported(@NotNull OrangeRecord report) {
+        ImmutableOrangeRecord.Builder builder = ImmutableOrangeRecord.builder()
                 .from(report)
                 .purple(ImmutablePurpleRecord.builder()
                         .from(report.purple())

@@ -6,6 +6,38 @@
     "day": 20
   },
   "refGenomeVersion": "V37",
+  "tumorSample": {
+    "metrics": {
+      "meanCoverage": 0,
+      "sdCoverage": 0,
+      "medianCoverage": 0,
+      "madCoverage": 0,
+      "pctExcAdapter": 0,
+      "pctExcMapQ": 0,
+      "pctExcDupe": 0,
+      "pctExcUnpaired": 0,
+      "pctExcBaseQ": 0,
+      "pctExcOverlap": 0,
+      "pctExcCapped": 0,
+      "pctExcTotal": 0,
+      "coverage1xPercentage": 0,
+      "coverage10xPercentage": 0,
+      "coverage20xPercentage": 0,
+      "coverage30xPercentage": 0,
+      "coverage60xPercentage": 0
+    },
+    "flagstat": {
+      "uniqueReadCount": 0,
+      "secondaryCount": 0,
+      "supplementaryCount": 0,
+      "duplicateProportion": 0,
+      "mappedProportion": 0,
+      "pairedInSequencingProportion": 0,
+      "properlyPairedProportion": 0,
+      "withItselfAndMateMappedProportion": 0,
+      "singletonProportion": 0
+    }
+  },
   "purple": {
     "fit": {
       "qc": {

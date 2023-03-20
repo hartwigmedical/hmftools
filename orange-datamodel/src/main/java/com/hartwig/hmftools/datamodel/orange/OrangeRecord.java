@@ -10,6 +10,7 @@ import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +23,7 @@ import java.util.Set;
 
 @Gson.TypeAdapters
 @Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+@Value.Style(passAnnotations = {NotNull.class, Nullable.class})
 public interface OrangeRecord {
 
     @NotNull
@@ -30,6 +31,9 @@ public interface OrangeRecord {
 
     @NotNull
     LocalDate experimentDate();
+
+    @Nullable
+    ExperimentType experimentType();
 
     @NotNull
     Set<OrangeDoidNode> configuredPrimaryTumor();
@@ -57,6 +61,9 @@ public interface OrangeRecord {
 
     @NotNull
     LinxRecord linx();
+
+    @NotNull
+    List<WildTypeGene> wildTypeGenes();
 
     @NotNull
     LilacRecord lilac();

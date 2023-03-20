@@ -32,35 +32,32 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.sage.GeneDepthFile;
-import com.hartwig.hmftools.datamodel.flagstat.ImmutableFlagstat;
-import com.hartwig.hmftools.datamodel.metrics.ImmutableWGSMetrics;
-import com.hartwig.hmftools.datamodel.sigs.ImmutableSignatureAllocation;
-import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
+import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.flagstat.ImmutableFlagstat;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
-import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
-import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeSample;
-import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
-import com.hartwig.hmftools.datamodel.orange.OrangePlots;
-import com.hartwig.hmftools.datamodel.orange.OrangeSample;
+import com.hartwig.hmftools.datamodel.metrics.ImmutableWGSMetrics;
+import com.hartwig.hmftools.datamodel.orange.*;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.sigs.ImmutableSignatureAllocation;
+import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.*;
+import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
-import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
@@ -73,8 +70,6 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
-import com.hartwig.hmftools.orange.algo.wildtype.WildTypeGene;
-import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
 import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
@@ -86,7 +81,6 @@ import com.hartwig.hmftools.orange.cohort.mapping.DoidCohortMapper;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentiles;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
-import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -173,7 +167,7 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    public OrangeReport run(@NotNull OrangeConfig config) throws IOException {
+    public OrangeRecord run(@NotNull OrangeConfig config) throws IOException {
         Set<OrangeDoidNode> configuredPrimaryTumor = loadConfiguredPrimaryTumor(config);
         String platinumVersion = determinePlatinumVersion(config);
         OrangeSample refSample = loadSampleData(config, false);
@@ -222,7 +216,7 @@ public class OrangeAlgo {
             LOGGER.info("Wild-type calling skipped due to insufficient tumor sample quality");
         }
 
-        OrangeReport report = ImmutableOrangeReport.builder()
+        OrangeRecord report = ImmutableOrangeRecord.builder()
                 .sampleId(config.tumorSampleId())
                 .experimentDate(config.experimentDate())
                 .experimentType(experimentType)
