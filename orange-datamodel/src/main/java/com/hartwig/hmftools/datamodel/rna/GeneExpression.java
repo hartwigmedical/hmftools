@@ -12,9 +12,14 @@ public interface GeneExpression {
 
     @NotNull
     String geneName();
+
     double tpm();
+
     double medianTpmCancer();
+
     double percentileCancer();
+
     double medianTpmCohort();
+
     double percentileCohort();
 }
