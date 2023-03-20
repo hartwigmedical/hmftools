@@ -10,18 +10,22 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.common.variant.VariantType;
 
 public class ResultsWriter
 {
     private final PurityConfig mConfig;
     private final BufferedWriter mSampleWriter;
     private final BufferedWriter mVariantWriter;
+    private final BufferedWriter mCnRatioWriter;
 
     public ResultsWriter(final PurityConfig config)
     {
         mConfig = config;
         mSampleWriter = initialiseWriter();
         mVariantWriter = config.WriteVariants ? initialiseVariantWriter() : null;
+        mCnRatioWriter = config.WriteCnRatios ? initialiseCnRatioWriter() : null;
     }
 
     private BufferedWriter initialiseWriter()
@@ -93,8 +97,9 @@ public class ResultsWriter
     }
 
     public synchronized void writeVariant(
-            final String sampleId, final VariantContextDecorator variant,
-            double subclonalLikelihood, int alleleCount, int depth, double qualPerAlleleCount)
+            final String sampleId, final String chromosome, final int position, final String ref, final String alt, final VariantTier tier,
+            final VariantType type, final int repeatCount, final double mappability, final double subclonalLikelihood,
+            int alleleCount, int depth, double qualPerAlleleCount)
     {
         if(mVariantWriter == null)
             return;
@@ -102,10 +107,10 @@ public class ResultsWriter
         try
         {
             mVariantWriter.write(format("%s,%s,%d,%s,%s",
-                    sampleId, variant.chromosome(), variant.position(), variant.ref(), variant.alt()));
+                    sampleId, chromosome, position, ref, alt));
 
             mVariantWriter.write(format(",%s,%s,%d,%.3f,%.3f",
-                    variant.tier(), variant.type(), variant.repeatCount(), variant.mappability(), subclonalLikelihood));
+                    tier, type, repeatCount, mappability, subclonalLikelihood));
 
             mVariantWriter.write(format(",%d,%d,%.1f", alleleCount, depth, qualPerAlleleCount));
 
@@ -117,10 +122,53 @@ public class ResultsWriter
         }
     }
 
+    private BufferedWriter initialiseCnRatioWriter()
+    {
+        try
+        {
+            String fileName = mConfig.OutputDir + mConfig.PatientId + ".cn_segment_data";
+
+            if(mConfig.OutputId != null)
+                fileName += "." + mConfig.OutputId;
+
+            fileName += ".csv";
+
+            BufferedWriter writer = createBufferedWriter(fileName, false);
+
+            writer.write("SampleId,Chromosome,SegmentStart,SegmentEnd,CopyNumber,GcRatioCount,GcRatioMedian,GcRatioMean");
+            writer.newLine();
+            return writer;
+        }
+        catch(IOException e)
+        {
+            CT_LOGGER.error("failed to initialise copy number segment file: {}", e.toString());
+            return null;
+        }
+    }
+
+    public synchronized void writeCnSegmentData(final String sampleId, final CopyNumberGcData cnSegment)
+    {
+        if(mCnRatioWriter == null)
+            return;
+
+        try
+        {
+            mCnRatioWriter.write(format("%s,%s,%d,%d,%.2f,%d,%.4f,%.4f",
+                    sampleId, cnSegment.Chromosome, cnSegment.SegmentStart, cnSegment.SegmentEnd, cnSegment.CopyNumber,
+                    cnSegment.count(), cnSegment.median(), cnSegment.mean()));
+            mCnRatioWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            CT_LOGGER.error("failed to write copy number segment file: {}", e.toString());
+        }
+    }
+
     public void close()
     {
         closeBufferedWriter(mVariantWriter);
         closeBufferedWriter(mSampleWriter);
+        closeBufferedWriter(mCnRatioWriter);
     }
 
 }

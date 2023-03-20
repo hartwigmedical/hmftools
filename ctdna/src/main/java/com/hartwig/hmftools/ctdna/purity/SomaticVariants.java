@@ -19,7 +19,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -131,7 +130,9 @@ public class SomaticVariants
 
             if(somaticVariant == null)
             {
-                somaticVariant = new SomaticVariant(variant.chromosome(), variant.position(), variant.ref(), variant.alt(), variant.tier());
+                somaticVariant = new SomaticVariant(
+                        variant.chromosome(), variant.position(), variant.ref(), variant.alt(), variant.tier(),
+                        variant.type(), variant.repeatCount(), variant.mappability(), subclonalLikelihood);
                 mVariants.add(somaticVariant);
             }
 
@@ -140,23 +141,20 @@ public class SomaticVariants
 
             int depth = genotype.getDP();
             int alleleCount = genotype.getAD()[1];
-            double qualPerAlleleCount = 0;
+            int qualTotal = 0;
 
             if(alleleCount > 0)
             {
                 final String[] qualCounts = genotype.getExtendedAttribute(READ_CONTEXT_QUALITY, 0).toString()
                         .split(LIST_SEPARATOR, -1);
 
-                int qualTotal = 0;
                 for(int i = 0; i <= RC_REALIGNED; ++i)
                 {
                     qualTotal += Integer.parseInt(qualCounts[i]);
                 }
-
-                qualPerAlleleCount = qualTotal / (double) alleleCount;
             }
 
-            somaticVariant.Samples.add(new GenotypeData(genotype.getSampleName(), alleleCount, depth, qualPerAlleleCount));
+            somaticVariant.Samples.add(new GenotypeData(genotype.getSampleName(), alleleCount, depth, qualTotal));
         }
     }
 
@@ -175,7 +173,7 @@ public class SomaticVariants
             if(sampleData == null)
                 continue;
 
-            if(sampleData.QualPerAlleleCount < MIN_QUAL_PER_AD && sampleData.AlleleCount > 0)
+            if(!(sampleData.qualPerAlleleFragment() >= MIN_QUAL_PER_AD || sampleData.AlleleCount == 0))
                 continue;
 
             GenotypeData tumorData = variant.findGenotypeData(mConfig.TumorId);
@@ -185,16 +183,18 @@ public class SomaticVariants
 
             ++variantCount;
 
-            sampleCounts.QualPerAdTotal += sampleData.QualPerAlleleCount;
+            sampleCounts.AllelelQualTotal += sampleData.QualTotal;
             sampleCounts.VariantDepths.add(sampleData.Depth);
             sampleCounts.AlleleFragmentTotal += sampleData.AlleleCount;
 
-            tumorCounts.QualPerAdTotal += tumorData.QualPerAlleleCount;
+            tumorCounts.AllelelQualTotal += tumorData.QualTotal;
             tumorCounts.VariantDepths.add(tumorData.Depth);
             tumorCounts.AlleleFragmentTotal += tumorData.AlleleCount;
 
-            //mResultsWriter.writeVariant(
-            //        mConfig.PatientId, sampleId, variant, subclonalLikelihood, alleleCount, depth, qualPerAlleleCount);
+            mResultsWriter.writeVariant(
+                    sampleId, variant.Chromosome, variant.Position, variant.Ref, variant.Alt, variant.Tier, variant.Type,
+                    variant.RepeatCount, variant.Mappability, variant.SubclonalPerc,
+                    sampleData.AlleleCount, sampleData.Depth, sampleData.qualPerAlleleFragment());
         }
 
         if(variantCount == 0)
@@ -221,7 +221,7 @@ public class SomaticVariants
 
         double samplePurity = 2 * sampleVaf / (tumorPloidy * adjustedTumorVaf + sampleVaf * (2 - tumorPloidy));
 
-        double qualPerAllele = sampleCounts.QualPerAdTotal / sampleCounts.AlleleFragmentTotal;
+        double qualPerAllele = sampleCounts.AllelelQualTotal / (double)sampleCounts.AlleleFragmentTotal;
 
         return new SomaticVariantResult(
                 true, variantCount, sampleCounts.AlleleFragmentTotal, qualPerAllele, sampleCounts.medianDepth(),
@@ -231,7 +231,7 @@ public class SomaticVariants
     private class SomaticVariantCounts
     {
         public int AlleleFragmentTotal;
-        public double QualPerAdTotal;
+        public double AllelelQualTotal;
 
         public final List<Integer> VariantDepths;
 
@@ -239,7 +239,7 @@ public class SomaticVariants
         {
             VariantDepths = Lists.newArrayList();
             AlleleFragmentTotal = 0;
-            QualPerAdTotal = 0;
+            AllelelQualTotal = 0;
         }
 
         public int depthTotal()
@@ -254,7 +254,7 @@ public class SomaticVariants
 
         public String toString()
         {
-            return format("AF(%d) avgQualTotal(%.1f) depthCounts(%d)", AlleleFragmentTotal, QualPerAdTotal, VariantDepths.size());
+            return format("AF(%d) avgQualTotal(%.1f) depthCounts(%d)", AlleleFragmentTotal, AllelelQualTotal, VariantDepths.size());
         }
     }
 
@@ -286,15 +286,17 @@ public class SomaticVariants
         public final String SampleName;
         public final int AlleleCount;
         public final int Depth;
-        public final double QualPerAlleleCount;
+        public final double QualTotal;
 
-        public GenotypeData(final String sampleName, final int alleleCount, final int depth, final double qualPerAlleleCount)
+        public GenotypeData(final String sampleName, final int alleleCount, final int depth, final double qualTotal)
         {
             SampleName = sampleName;
             AlleleCount = alleleCount;
             Depth = depth;
-            QualPerAlleleCount = qualPerAlleleCount;
+            QualTotal = qualTotal;
         }
+
+        public double qualPerAlleleFragment() { return AlleleCount > 0 ? QualTotal / AlleleCount : 0; }
     }
 
     private class SomaticVariant
@@ -304,17 +306,26 @@ public class SomaticVariants
         public final String Ref;
         public final String Alt;
         public final VariantTier Tier;
+        public final VariantType Type;
+        public final int RepeatCount;
+        public final double Mappability;
+        public final double SubclonalPerc;
 
         public final List<GenotypeData> Samples;
 
         public SomaticVariant(
-                final String chromosome, final int position, final String ref, final String alt, final VariantTier tier)
+                final String chromosome, final int position, final String ref, final String alt, final VariantTier tier,
+                final VariantType type, final int repeatCount, final double mappability, final double subclonalPerc)
         {
             Chromosome = chromosome;
             Position = position;
             Ref = ref;
             Alt = alt;
             Tier = tier;
+            Type = type;
+            RepeatCount = repeatCount;
+            Mappability = mappability;
+            SubclonalPerc = subclonalPerc;
             Samples = Lists.newArrayList();
         }
 
@@ -323,118 +334,4 @@ public class SomaticVariants
             return Samples.stream().filter(x -> x.SampleName.equals(sampleId)).findFirst().orElse(null);
         }
     }
-
-    /*
-        public SomaticVariantResult processPatientVcf(final String sampleId, final String somaticVcf)
-    {
-        CT_LOGGER.info("sampleId({}) reading somatic VCF: {}", sampleId, somaticVcf);
-
-        AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                somaticVcf, new VCFCodec(), false);
-
-        VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
-
-        int genotypeIndex = 0;
-        for(int i = 0; i < vcfHeader.getGenotypeSamples().size(); ++i)
-        {
-            if(vcfHeader.getGenotypeSamples().get(i).equals(sampleId))
-            {
-                genotypeIndex = i;
-                break;
-            }
-        }
-
-        SomaticVariantResult somaticVariantResult = new SomaticVariantResult();
-
-        try
-        {
-            for(VariantContext variantContext : reader.iterator())
-            {
-                if(variantContext.isFiltered())
-                    continue;
-
-                try
-                {
-                    processVariant(sampleId, genotypeIndex, somaticVariantResult, variantContext);
-                }
-                catch(Exception e)
-                {
-                    e.printStackTrace();
-                    CT_LOGGER.error("patient({}) error processing variant", sampleId, e.toString());
-                    return INVALID_RESULT;
-                }
-
-                if(somaticVariantResult.TotalVariantCount > 0 && (somaticVariantResult.TotalVariantCount % 100000) == 0)
-                {
-                    CT_LOGGER.info("processed {} variants", somaticVariantResult.TotalVariantCount);
-                }
-            }
-
-        }
-        catch(IOException e)
-        {
-            CT_LOGGER.error("error reading vcf files: {}", e.toString());
-            return INVALID_RESULT;
-        }
-
-        CT_LOGGER.info("sample({}) processed {} somatic variants",
-                sampleId, somaticVariantResult.TotalVariantCount);
-
-        return somaticVariantResult;
-    }
-
-    private void processVariant(
-            final String patientId, final int genotypeIndex, final SomaticVariantResult somaticVariantResult, final VariantContext variantContext)
-    {
-        VariantContextDecorator variant = new VariantContextDecorator(variantContext);
-
-        Genotype genotype = variantContext.getGenotype(genotypeIndex);
-
-        if(genotype == null || genotype.getExtendedAttributes().isEmpty())
-        {
-            //CT_LOGGER.warn("patientId({}) genotypeInfo({}) missing for variant({}:{}:{}>{})",
-            //        patientId, genotypeInfo, variant.chromosome(), variant.position(), variant.ref(), variant.alt());
-            return;
-        }
-
-        ++somaticVariantResult.TotalVariantCount;
-
-        double subclonalLikelihood = variant.context().getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0);
-
-        if(filterVariant(variant, subclonalLikelihood))
-            return;
-
-        int alleleCount = genotype.getAD()[1];
-        int depth = genotype.getDP();
-        double qualPerAlleleCount = 0;
-
-        if(alleleCount > 0)
-        {
-            final String[] qualCounts = genotype.getExtendedAttribute(READ_CONTEXT_QUALITY, 0).toString()
-                    .split(LIST_SEPARATOR, -1);
-
-            int qualTotal = 0;
-            for(int i = 0; i <= RC_REALIGNED; ++i)
-            {
-                qualTotal += Integer.parseInt(qualCounts[i]);
-            }
-
-            qualPerAlleleCount = qualTotal / (double) alleleCount;
-
-            if(qualPerAlleleCount < MIN_QUAL_PER_AD)
-                return;
-        }
-
-        ++somaticVariantResult.VariantCount;
-
-        somaticVariantResult.QualPerAdTotal += qualPerAlleleCount;
-        somaticVariantResult.VariantDepths.add(depth);
-        somaticVariantResult.AlleleFragmentTotal += alleleCount;
-
-        mResultsWriter.writeVariant(
-                patientId, genotype.getSampleName(), variant, subclonalLikelihood, alleleCount, depth, qualPerAlleleCount);
-    }
-
-     */
-
 }

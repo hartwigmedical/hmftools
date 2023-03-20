@@ -49,11 +49,11 @@ public class PurityEstimator
             System.exit(1);
         }
 
-        CopyNumberProfile copyNumberProfile = new CopyNumberProfile(mConfig);
+        CopyNumberProfile copyNumberProfile = new CopyNumberProfile(mConfig, mResultsWriter);
 
         for(String ctDnaSample : mConfig.CtDnaSamples)
         {
-            CnPurityResult cnPurityResult = copyNumberProfile.processSample(mConfig.TumorId, ctDnaSample);
+            CnPurityResult cnPurityResult = copyNumberProfile.processSample(ctDnaSample);
 
             SomaticVariantResult somaticVariantResult = somaticVariants.processSample(ctDnaSample, purityContext);
 

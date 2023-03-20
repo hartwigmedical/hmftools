@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.ctdna.purity;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.collect.Lists;

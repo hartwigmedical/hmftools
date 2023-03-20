@@ -73,9 +73,9 @@ public class SomaticVariantResult
         sj.add(format("%.1f", DepthMedian));
         sj.add(format("%d", AlleleFragmentTotal));
         sj.add(format("%.1f", QualPerAdTotal));
-        sj.add(format("%.4f", TumorVaf));
-        sj.add(format("%.4f", AdjustedTumorVaf));
-        sj.add(format("%.4f", SampleVaf));
+        sj.add(format("%4.3e", TumorVaf));
+        sj.add(format("%4.3e", AdjustedTumorVaf));
+        sj.add(format("%4.3e", SampleVaf));
 
         return sj.toString();
     }

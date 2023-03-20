@@ -41,8 +41,8 @@ public class CopyNumberProfiler
         String sampleId = cmd.getOptionValue(SAMPLE);
         String cobaltSampleId = cmd.getOptionValue(COBALT_SAMPLE, sampleId);
 
-        CopyNumberProfile cnProfile = new CopyNumberProfile(purityConfig);
-        cnProfile.processSample(sampleId, cobaltSampleId);
+        CopyNumberProfile cnProfile = new CopyNumberProfile(purityConfig, null);
+        cnProfile.processSample(cobaltSampleId);
 
         try
         {
@@ -67,7 +67,6 @@ public class CopyNumberProfiler
         {
             CT_LOGGER.error("failed to write copy number segment file: {}", e.toString());
         }
-
 
         CT_LOGGER.info("Sample VCF analyser complete");
     }

@@ -25,6 +25,7 @@ public class PurityConfig
     public final String OutputDir;
     public final String OutputId;
     public final boolean WriteVariants;
+    public final boolean WriteCnRatios;
 
     private static final String PATIENT_ID = "patient_id";
     private static final String TUMOR_ID = "tumor_id";
@@ -33,6 +34,7 @@ public class PurityConfig
     private static final String PURPLE_DIR = "purple_dir";
     private static final String COBALT_DIR = "cobalt_dir";
     private static final String WRITE_VARIANTS = "write_variants";
+    private static final String WRITE_CN_RATIOS = "write_cn_ratios";
 
     public PurityConfig(final CommandLine cmd)
     {
@@ -60,7 +62,9 @@ public class PurityConfig
         CobaltDir = checkAddDirSeparator(cmd.getOptionValue(COBALT_DIR));
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
+
         WriteVariants = cmd.hasOption(WRITE_VARIANTS);
+        WriteCnRatios = cmd.hasOption(WRITE_CN_RATIOS);
     }
 
     public static void addCommandLineOptions(final Options options)
@@ -72,6 +76,7 @@ public class PurityConfig
         options.addOption(PURPLE_DIR, true, "Sample Purple directory");
         options.addOption(COBALT_DIR, true, "Sample Cobalt directory");
         options.addOption(WRITE_VARIANTS, false, "Write variants");
+        options.addOption(WRITE_CN_RATIOS, false, "Write copy number segment GC ratio summary");
         addOutputOptions(options);
         addLoggingOptions(options);
     }

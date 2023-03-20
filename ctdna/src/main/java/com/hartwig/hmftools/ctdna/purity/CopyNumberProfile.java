@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.medianIntegerValue;
 import static com.hartwig.hmftools.ctdna.purity.CnPurityResult.INVALID_RESULT;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,46 +27,74 @@ import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 public class CopyNumberProfile
 {
     private final PurityConfig mConfig;
+    private final ResultsWriter mResultsWriter;
+
+    private PurityContext mPurityContext;
+    private final List<PurpleCopyNumber> mCopyNumbers;
 
     private final List<CopyNumberGcData> mCopyNumberGcRatios;
     private final CnPurityCalculator mPurityCalculator;
 
-    public CopyNumberProfile(final PurityConfig config)
+    public CopyNumberProfile(final PurityConfig config, final ResultsWriter resultsWriter)
     {
         mConfig = config;
+        mResultsWriter = resultsWriter;
+
+        mCopyNumbers = Lists.newArrayList();
+        mPurityContext = null;
 
         mCopyNumberGcRatios = Lists.newArrayList();
         mPurityCalculator = new CnPurityCalculator();
+
+        try
+        {
+            mPurityContext = PurityContextFile.read(mConfig.PurpleDir, mConfig.TumorId);
+
+            mCopyNumbers.addAll(PurpleCopyNumberFile.read(
+                    PurpleCopyNumberFile.generateFilenameForReading(mConfig.PurpleDir, mConfig.TumorId)));
+        }
+        catch(Exception e)
+        {
+            CT_LOGGER.error("sample({}) failed to load Purple data: {}", mConfig.TumorId, e.toString());
+        }
     }
 
     public List<CopyNumberGcData> copyNumberGcRatios() { return mCopyNumberGcRatios; }
 
-    public CnPurityResult processSample(final String sampleId, final String cobaltSampleId)
+    public CnPurityResult processSample(final String sampleId)
     {
         mCopyNumberGcRatios.clear();
 
+        if(mPurityContext == null || mCopyNumbers.isEmpty())
+            return INVALID_RESULT;
+
         try
         {
-            PurityContext purityContext = PurityContextFile.read(mConfig.PurpleDir, sampleId);
+            final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(mConfig.CobaltDir, sampleId);
 
-            List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(
-                    PurpleCopyNumberFile.generateFilenameForReading(mConfig.PurpleDir, sampleId));
+            if(!Files.exists(Paths.get(cobaltFilename)))
+            {
+                CT_LOGGER.warn("sample({}) missing Cobalt ctDNA GC ratios file: {}", sampleId, cobaltFilename);
+                return INVALID_RESULT;
 
-            final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(mConfig.CobaltDir, cobaltSampleId);
+            }
 
             Map<Chromosome,List<CobaltRatio>> cobaltRatios = CobaltRatioFile.readWithGender(cobaltFilename, null, true);
 
-            buildCopyNumberGcRatios(cobaltRatios, copyNumbers);
+            buildCopyNumberGcRatios(cobaltRatios);
 
-            double samplePloidy = purityContext.bestFit().ploidy();
+            if(mResultsWriter != null)
+                mCopyNumberGcRatios.forEach(x -> mResultsWriter.writeCnSegmentData(sampleId, x));
 
-            mPurityCalculator.calculatePurity(mCopyNumberGcRatios, purityContext.bestFit().ploidy());
+            double samplePloidy = mPurityContext.bestFit().ploidy();
+
+            mPurityCalculator.calculatePurity(mCopyNumberGcRatios, samplePloidy);
 
             if(!mPurityCalculator.valid())
                 return INVALID_RESULT;
 
-            CT_LOGGER.info(format("sample(%s ctDNA=%s) ploidy(%.4f) copy number segments(%d) estimated purity(%.6f)",
-                    sampleId, cobaltSampleId, samplePloidy, mCopyNumberGcRatios.size(), mPurityCalculator.estimatedPurity()));
+            CT_LOGGER.info(format("sample(%s) ploidy(%.4f) copy number segments(%d) estimated purity(%.6f)",
+                    sampleId, samplePloidy, mCopyNumberGcRatios.size(), mPurityCalculator.estimatedPurity()));
 
             double medianGcRatioPerSegment = calculateGcRatioCountMedian();
 
@@ -81,13 +111,13 @@ public class CopyNumberProfile
         }
     }
 
-    private void buildCopyNumberGcRatios(final Map<Chromosome,List<CobaltRatio>> cobaltRatios, final List<PurpleCopyNumber> copyNumbers)
+    private void buildCopyNumberGcRatios(final Map<Chromosome,List<CobaltRatio>> cobaltRatios)
     {
         // expand the Purple copy numbers to segments to match GC profile
         String currentChromosome = "";
         List<CobaltRatio> chrCobaltRatios = null;
 
-        for(PurpleCopyNumber copyNumber : copyNumbers)
+        for(PurpleCopyNumber copyNumber : mCopyNumbers)
         {
             if(!currentChromosome.equals(copyNumber.chromosome()))
             {
