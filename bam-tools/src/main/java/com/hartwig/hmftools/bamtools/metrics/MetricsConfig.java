@@ -10,13 +10,16 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.checkFileExists;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.loadSpecificRegionsConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -86,7 +89,16 @@ public class MetricsConfig
         SampleId = cmd.getOptionValue(SAMPLE);
         BamFile = cmd.getOptionValue(BAM_FILE);
         RefGenomeFile = cmd.getOptionValue(REF_GENOME);
-        OutputDir = parseOutputDir(cmd);
+
+        if(cmd.hasOption(OUTPUT_DIR))
+        {
+            OutputDir = parseOutputDir(cmd);
+        }
+        else
+        {
+            OutputDir = checkAddDirSeparator(Paths.get(BamFile).getParent().toString());
+        }
+
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
         if(BamFile == null || OutputDir == null || RefGenomeFile == null)

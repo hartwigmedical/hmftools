@@ -68,13 +68,15 @@ public class BaseCoverage
             switch(element.getOperator())
             {
                 case S:
-                case H:
                     readIndex += element.getLength();
                     break;
 
                 case D:
                 case N:
                     position += element.getLength();
+                    break;
+
+                case H:
                     break;
 
                 case I:

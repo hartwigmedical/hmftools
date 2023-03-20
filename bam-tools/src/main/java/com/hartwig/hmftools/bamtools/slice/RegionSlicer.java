@@ -11,6 +11,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -64,6 +65,11 @@ public class RegionSlicer
 
         for(Map.Entry<String,List<RemotePosition>> entry : readCache.chrRemotePositions().entrySet())
         {
+            String chromosome = entry.getKey();
+
+            if(!HumanChromosome.contains(chromosome))
+                continue;
+
             remoteReadSlicers.add(new RemoteReadSlicer(entry.getKey(), entry.getValue(), mConfig, sliceWriter));
 
         }
