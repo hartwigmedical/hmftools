@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.rna.GeneExpression;
-import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
-import com.hartwig.hmftools.common.rna.RnaFusion;
+import com.hartwig.hmftools.datamodel.rna.GeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
-import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
+import com.hartwig.hmftools.datamodel.rna.NovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.rna.RnaFusion;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -108,8 +108,7 @@ public final class DNAFusionTable {
             return new Paragraph(ReportResources.NOT_AVAILABLE);
         }
 
-        if (fusion.reportedType().equals(KnownFusionType.IG_KNOWN_PAIR.toString()) || fusion.reportedType()
-                .equals(KnownFusionType.IG_PROMISCUOUS.toString())) {
+        if (fusion.reportedType().equals(LinxFusionType.IG_KNOWN_PAIR) || fusion.reportedType().equals(LinxFusionType.IG_PROMISCUOUS)) {
             return supportFromExpressionOfGeneEnd(isofox, fusion);
         } else if (fusion.geneStart().equals(fusion.geneEnd())) {
             return supportFromSpliceJunctions(isofox, fusion);

@@ -1,22 +1,20 @@
-package com.hartwig.hmftools.orange.algo.isofox;
+package com.hartwig.hmftools.datamodel.isofox;
 
-import java.util.List;
-
-import com.hartwig.hmftools.common.rna.GeneExpression;
-import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
-import com.hartwig.hmftools.common.rna.RnaFusion;
-import com.hartwig.hmftools.common.rna.RnaStatistics;
-
+import com.hartwig.hmftools.datamodel.rna.GeneExpression;
+import com.hartwig.hmftools.datamodel.rna.NovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.rna.RnaFusion;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 @Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+@Value.Style(passAnnotations = {NotNull.class, Nullable.class})
 public abstract class IsofoxInterpretedData {
 
     @NotNull
-    public abstract RnaStatistics summary();
+    public abstract IsofoxRnaStatistics summary();
 
     @NotNull
     public abstract List<GeneExpression> allGeneExpressions();

@@ -1,22 +1,21 @@
 package com.hartwig.hmftools.orange.cohort.percentile;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.io.Resources;
+import com.hartwig.hmftools.datamodel.orange.PercentileType;
+import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.io.Resources;
-import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
-
-import org.jetbrains.annotations.NotNull;
-import org.junit.Test;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class CohortPercentilesFileTest {
 

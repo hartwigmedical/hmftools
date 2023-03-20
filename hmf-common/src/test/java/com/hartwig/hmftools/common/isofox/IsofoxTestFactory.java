@@ -80,6 +80,7 @@ public final class IsofoxTestFactory {
     @NotNull
     public static ImmutableNovelSpliceJunction.Builder novelSpliceJunctionBuilder() {
         return ImmutableNovelSpliceJunction.builder()
+                .geneName(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
                 .junctionStart(0)
                 .junctionEnd(0)

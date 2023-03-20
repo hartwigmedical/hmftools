@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
+import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.*;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
@@ -16,9 +17,8 @@ import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
 import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
-import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
+import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
-import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Drivers;
@@ -101,9 +101,9 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private static String configuredPrimaryTumor(@NotNull Set<DoidNode> nodes) {
+    private static String configuredPrimaryTumor(@NotNull Set<OrangeDoidNode> nodes) {
         Set<String> configured = Sets.newHashSet();
-        for (DoidNode node : nodes) {
+        for (OrangeDoidNode node : nodes) {
             configured.add(node.doidTerm() + " (DOID " + node.doid() + ")");
         }
 

@@ -1,20 +1,22 @@
 package com.hartwig.hmftools.orange.algo;
 
-import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
+import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
+import com.hartwig.hmftools.datamodel.orange.OrangeSample;
+import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
-import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeGene;
-import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
-import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
+import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,10 +40,10 @@ public abstract class OrangeReport {
     public abstract ExperimentType experimentType();
 
     @NotNull
-    public abstract Set<DoidNode> configuredPrimaryTumor();
+    public abstract Set<OrangeDoidNode> configuredPrimaryTumor();
 
     @NotNull
-    public abstract RefGenomeVersion refGenomeVersion();
+    public abstract OrangeRefGenomeVersion refGenomeVersion();
 
     @Nullable
     public abstract String platinumVersion();

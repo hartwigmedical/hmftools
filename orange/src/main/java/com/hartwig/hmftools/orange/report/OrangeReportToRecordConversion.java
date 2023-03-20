@@ -12,11 +12,10 @@ public class OrangeReportToRecordConversion {
     }
 
     public static OrangeRecord convert(OrangeReport report) {
-        RefGenomeVersion refGenomeVersion = report.refGenomeVersion();
         return ImmutableOrangeRecord.builder()
                 .sampleId(report.sampleId())
                 .experimentDate(report.experimentDate())
-                .refGenomeVersion(OrangeRefGenomeVersion.valueOf(refGenomeVersion.name()))
+                .refGenomeVersion(report.refGenomeVersion())
                 .purple(report.purple())
                 .linx(report.linx())
                 .lilac(report.lilac())

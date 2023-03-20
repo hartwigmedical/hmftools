@@ -6,30 +6,31 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.doid.DoidTestFactory;
 import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
-import com.hartwig.hmftools.common.rna.*;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxInterpretedData;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRnaStatistics;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
-import com.hartwig.hmftools.datamodel.orange.OrangePlots;
+import com.hartwig.hmftools.datamodel.orange.*;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.rna.*;
 import com.hartwig.hmftools.datamodel.virus.*;
-import com.hartwig.hmftools.orange.algo.*;
+import com.hartwig.hmftools.orange.algo.ExperimentType;
+import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
+import com.hartwig.hmftools.orange.algo.OrangeAlgo;
+import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
-import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
-import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.orange.algo.isofox.OrangeIsofoxTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
@@ -57,7 +58,7 @@ public final class TestOrangeReportFactory {
                 .sampleId(TEST_SAMPLE)
                 .experimentDate(LocalDate.of(2021, 11, 19))
                 .experimentType(ExperimentType.TARGETED)
-                .refGenomeVersion(RefGenomeVersion.V37)
+                .refGenomeVersion(OrangeRefGenomeVersion.V37)
                 .tumorSample(createMinimalOrangeSample())
                 .purple(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
                 .linx(TestLinxInterpretationFactory.createMinimalTestLinxData())
@@ -76,7 +77,7 @@ public final class TestOrangeReportFactory {
     @NotNull
     public static OrangeReport createProperTestReport() {
         return builder().experimentType(ExperimentType.FULL_GENOME)
-                .addConfiguredPrimaryTumor(DoidTestFactory.createDoidNode("1", "cancer type"))
+                .addConfiguredPrimaryTumor(OrangeAlgo.asOrangeDatamodel(DoidTestFactory.createDoidNode("1", "cancer type")))
                 .platinumVersion("v5.31")
                 .refSample(createMinimalOrangeSample())
                 .germlineMVLHPerGene(createTestGermlineMVLHPerGene())
@@ -93,8 +94,8 @@ public final class TestOrangeReportFactory {
     @NotNull
     private static OrangeSample createMinimalOrangeSample() {
         return ImmutableOrangeSample.builder()
-                .metrics(WGSMetricsTestFactory.createMinimalTestWGSMetrics())
-                .flagstat(FlagstatTestFactory.createMinimalTestFlagstat())
+                .metrics(OrangeAlgo.asOrangeDatamodel(WGSMetricsTestFactory.createMinimalTestWGSMetrics()))
+                .flagstat(OrangeAlgo.asOrangeDatamodel(FlagstatTestFactory.createMinimalTestFlagstat()))
                 .build();
     }
 
@@ -176,9 +177,9 @@ public final class TestOrangeReportFactory {
 
     @NotNull
     private static IsofoxInterpretedData createTestIsofoxData() {
-        RnaStatistics statistics = IsofoxTestFactory.rnaStatisticsBuilder().totalFragments(120000).duplicateFragments(60000).build();
+        IsofoxRnaStatistics statistics = OrangeIsofoxTestFactory.rnaStatisticsBuilder().totalFragments(120000).duplicateFragments(60000).build();
 
-        GeneExpression highExpression = IsofoxTestFactory.geneExpressionBuilder()
+        GeneExpression highExpression = OrangeIsofoxTestFactory.geneExpressionBuilder()
                 .geneName("MYC")
                 .tpm(126.27)
                 .medianTpmCancer(41)
@@ -187,7 +188,7 @@ public final class TestOrangeReportFactory {
                 .percentileCohort(0.93)
                 .build();
 
-        GeneExpression lowExpression = IsofoxTestFactory.geneExpressionBuilder()
+        GeneExpression lowExpression = OrangeIsofoxTestFactory.geneExpressionBuilder()
                 .geneName("CDKN2A")
                 .tpm(5.34)
                 .medianTpmCancer(18.32)
@@ -196,13 +197,13 @@ public final class TestOrangeReportFactory {
                 .percentileCohort(0.07)
                 .build();
 
-        RnaFusion novelKnownFusion = IsofoxTestFactory.rnaFusionBuilder()
+        RnaFusion novelKnownFusion = OrangeIsofoxTestFactory.rnaFusionBuilder()
                 .name("PTPRK_RSPO3")
                 .chromosomeUp("6")
                 .positionUp(128841405)
                 .chromosomeDown("6")
                 .positionDown(127469792)
-                .svType(StructuralVariantType.INV)
+                .svType(com.hartwig.hmftools.datamodel.rna.StructuralVariantType.INV)
                 .junctionTypeUp("KNOWN")
                 .junctionTypeDown("KNOWN")
                 .depthUp(73)
@@ -213,7 +214,7 @@ public final class TestOrangeReportFactory {
                 .cohortFrequency(3)
                 .build();
 
-        RnaFusion novelPromiscuousFusion = IsofoxTestFactory.rnaFusionBuilder()
+        RnaFusion novelPromiscuousFusion = OrangeIsofoxTestFactory.rnaFusionBuilder()
                 .name("NAP1L4_BRAF")
                 .chromosomeUp("11")
                 .positionUp(2972480)
@@ -230,7 +231,7 @@ public final class TestOrangeReportFactory {
                 .cohortFrequency(1)
                 .build();
 
-        NovelSpliceJunction novelSkippedExon = IsofoxTestFactory.novelSpliceJunctionBuilder()
+        NovelSpliceJunction novelSkippedExon = OrangeIsofoxTestFactory.novelSpliceJunctionBuilder()
                 .chromosome("1")
                 .geneName("ALK")
                 .junctionStart(50403003)
@@ -244,7 +245,7 @@ public final class TestOrangeReportFactory {
                 .cohortFrequency(3)
                 .build();
 
-        NovelSpliceJunction novelIntron = IsofoxTestFactory.novelSpliceJunctionBuilder()
+        NovelSpliceJunction novelIntron = OrangeIsofoxTestFactory.novelSpliceJunctionBuilder()
                 .chromosome("1")
                 .geneName("ALK")
                 .junctionStart(50403003)

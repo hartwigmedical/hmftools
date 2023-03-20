@@ -4,8 +4,9 @@ import java.util.Collection;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
-import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableEvaluation;
+import com.hartwig.hmftools.datamodel.cohort.ImmutableEvaluation;
+import com.hartwig.hmftools.datamodel.orange.PercentileType;
+import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;

@@ -9,8 +9,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
-import com.hartwig.hmftools.common.rna.GeneExpression;
+import com.hartwig.hmftools.datamodel.rna.GeneExpression;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -53,7 +52,7 @@ public class ExpressionSelectorTest {
 
     @NotNull
     private static GeneExpression create(@NotNull String gene, double percentileCohort, double percentileCancer) {
-        return IsofoxTestFactory.geneExpressionBuilder()
+        return OrangeIsofoxTestFactory.geneExpressionBuilder()
                 .geneName(gene)
                 .percentileCohort(percentileCohort)
                 .percentileCancer(percentileCancer)
