@@ -65,7 +65,7 @@
         <ctdna.version>1.0</ctdna.version>
         <cuppa.version>1.8</cuppa.version>
         <fastq-tools.version>1.0</fastq-tools.version>
-        <gene-utils.version>1.0</gene-utils.version>
+        <gene-utils.version>1.1</gene-utils.version>
         <gripss.version>2.3.4</gripss.version>
         <health-checker.version>3.3</health-checker.version>
         <hmf-id-generator.version>3.0</hmf-id-generator.version>

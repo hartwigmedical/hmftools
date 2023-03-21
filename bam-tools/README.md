@@ -58,7 +58,7 @@ ref_genome | Reference genome file used to create the BAM
 ref_genome_version | Reference genome version, V37 (default) or V38
 regions_bed_file | Optional BED file to restrict the sections of the genome analysed
 specific_regions | Optional list of regions to analyse. Format 'chr:posStart-posEnd; etc'
-output_dir | Path for output file(s)
+output_dir | Path for output file, if omitted will write to same directory as BAM file
 log_level | INFO or DEBUG
 threads | Multi-thread count, default 1
 

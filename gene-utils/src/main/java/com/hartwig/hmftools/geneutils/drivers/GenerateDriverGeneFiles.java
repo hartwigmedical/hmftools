@@ -11,6 +11,9 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSepar
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR_DESC;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.getEnsemblDirectory;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,11 +56,9 @@ public class GenerateDriverGeneFiles
 
     // config
     private static final String DRIVER_GENE_PANEL_TSV = "driver_gene_panel";
-    private static final String RESOURCE_REPO_DIR = "resource_repo_dir";
 
     private static final String GENE_PANEL_DIR = "gene_panel";
     private static final String SAGE_DIR = "sage";
-    private static final String ENSEMBL_DIR = "ensembl_data_cache";
     private static final String PANEL_GENE_OVERRIDES = "panel_gene_overrides";
 
     public GenerateDriverGeneFiles(final CommandLine cmd)
@@ -132,7 +133,7 @@ public class GenerateDriverGeneFiles
 
     private void writeGenePanelRegions(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes, final String sageDir)
     {
-        String ensemblDir = mResourceRepoDir + ENSEMBL_DIR + File.separator + refGenomeVersion.identifier();
+        String ensemblDir = getEnsemblDirectory(refGenomeVersion, mResourceRepoDir);
 
         EnsemblDataCache ensemblDataCache = new EnsemblDataCache(ensemblDir, refGenomeVersion);
         ensemblDataCache.setRequiredData(true, false, false, true);
@@ -356,7 +357,7 @@ public class GenerateDriverGeneFiles
         Options options = new Options();
 
         options.addOption(DRIVER_GENE_PANEL_TSV, true, "File containing the driver gene panel for 37");
-        options.addOption(RESOURCE_REPO_DIR, true, "The directory holding the public hmf resources repo");
+        options.addOption(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
         options.addOption(PANEL_GENE_OVERRIDES, true, "List of comma-separated genes to include in panel");
         addOutputDir(options);
         addLoggingOptions(options);
