@@ -62,31 +62,13 @@ public class GenerateFusionFiles
         mOutputDir = parseOutputDir(cmd);
     }
 
-    public void run() throws IOException
+    public void run()
     {
-        createFusionFiles(RefGenomeVersion.V37);
-        createFusionFiles(RefGenomeVersion.V38);
-
-        GU_LOGGER.info("fusion reference file generation complete");
-    }
-
-    private static String formVersionFile(
-            final String outputDir, final String filename, final RefGenomeVersion refGenomeVersion)
-    {
-        return format("%s/%s", outputDir, refGenomeVersion.addVersionToFilePath(filename));
-    }
-
-    public void createFusionFiles(final RefGenomeVersion refGenomeVersion)
-    {
-        // String sageDir = mOutputDir + SAGE_DIR + File.separator + refGenomeVersion.identifier();
-
         // step 1: load fusion knowledge database file
         List<FusionRefData> fusionRefData = loadFusionRefData();
 
         if(fusionRefData.isEmpty())
-        {
             System.exit(1);
-        }
 
         // step 2: check for duplicates
         for(int i = 0; i < fusionRefData.size() - 1; ++i)
@@ -105,6 +87,14 @@ public class GenerateFusionFiles
             }
         }
 
+        createFusionFiles(RefGenomeVersion.V37, fusionRefData);
+        createFusionFiles(RefGenomeVersion.V38, fusionRefData);
+
+        GU_LOGGER.info("fusion reference file generation complete");
+    }
+
+    public void createFusionFiles(final RefGenomeVersion refGenomeVersion, final List<FusionRefData> fusionRefData)
+    {
         // step 3: load Ensembl data cache files
         String ensemblDir = getEnsemblDirectory(refGenomeVersion, mResourceRepoDir);
 
