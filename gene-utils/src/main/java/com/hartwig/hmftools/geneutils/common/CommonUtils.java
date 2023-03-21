@@ -13,6 +13,7 @@ import java.util.List;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
@@ -31,6 +32,12 @@ public final class CommonUtils
     public static final String ENSEMBL_DIR = "ensembl_data_cache";
 
     public static final String FILE_DELIM = "\t";
+
+    public static void logVersion()
+    {
+        final VersionInfo version = new VersionInfo("gene-utils.version");
+        GU_LOGGER.info("GeneUtils version: {}", version.version());
+    }
 
     public static String getEnsemblDirectory(final RefGenomeVersion refGenomeVersion, final String resourceRepoDir)
     {

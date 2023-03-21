@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR_DESC;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.getEnsemblDirectory;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.logVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -505,6 +506,8 @@ public class GenerateFusionFiles
 
     public static void main(String[] args) throws IOException, ParseException
     {
+        logVersion();
+
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 

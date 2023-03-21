@@ -10,7 +10,7 @@
 
     <artifactId>gene-utils</artifactId>
     <packaging>jar</packaging>
-    <version>1.0</version>
+    <version>${gene-utils.version}</version>
     <name>HMF Tools - Gene Reference Data Utilities</name>
 
     <dependencies>
@@ -37,6 +37,12 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

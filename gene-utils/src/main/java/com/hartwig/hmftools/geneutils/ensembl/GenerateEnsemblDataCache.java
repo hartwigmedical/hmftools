@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.logVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -220,6 +221,8 @@ public class GenerateEnsemblDataCache
     @NotNull
     private static Options createBasicOptions()
     {
+        logVersion();
+
         final Options options = new Options();
         addLoggingOptions(options);
         addOutputDir(options);
