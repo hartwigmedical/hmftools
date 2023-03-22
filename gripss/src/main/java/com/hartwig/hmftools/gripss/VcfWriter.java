@@ -65,7 +65,7 @@ public class VcfWriter
         mFilterCache = filterCache;
         mDataCache = dataCache;
 
-        String fileSampleId = config.GermlineMode ? config.ReferenceId : config.SampleId;
+        String fileSampleId = config.GermlineMode && !config.ReferenceId.isEmpty() ? config.ReferenceId : config.SampleId;
         final String suffix = config.OutputId != null ? "." + config.OutputId + ".vcf.gz" : ".vcf.gz";
         final String unfilteredVcf = config.OutputDir + fileSampleId + ".gripss" + suffix;
         final String filteredVcf = config.OutputDir + fileSampleId + ".gripss.filtered" + suffix;
