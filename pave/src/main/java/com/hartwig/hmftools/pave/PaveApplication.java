@@ -161,6 +161,12 @@ public class PaveApplication
 
             for(VariantContext variantContext : reader.iterator())
             {
+                if(!mConfig.SpecificRegions.isEmpty())
+                {
+                    if(mConfig.SpecificRegions.stream().noneMatch(x -> x.containsPosition(variantContext.getContig(), variantContext.getStart())))
+                        continue;
+                }
+
                 processVariant(variantContext);
                 ++variantCount;
 

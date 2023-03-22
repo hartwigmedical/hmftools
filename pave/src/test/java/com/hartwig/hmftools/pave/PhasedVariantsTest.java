@@ -242,6 +242,36 @@ public class PhasedVariantsTest
         assertFalse(impact2.codingContext().IsFrameShift);
         assertFalse(impact2.hasEffect(FRAMESHIFT));
         assertTrue(impact2.hasEffect(PHASED_INFRAME_DELETION));
+
+        // again but with the DEL conservative and not overlapping with the SNV despite its ref codon bases overlapping
+        // 13-18 are deleted, SNV is at 20
+        pos = 12;
+        ref = mRefBases.substring(pos, pos + 7);
+        alt = mRefBases.substring(pos, pos + 1);
+
+        var1 = new VariantData(CHR_1, pos, ref, alt);
+        var1.setVariantDetails(1, "", "", 0);
+        impact1 = classifyVariant(var1, transDataPos);
+
+        assertTrue(impact1.hasEffect(INFRAME_DELETION));
+        assertEquals("SIDR", impact1.proteinContext().RefAminoAcids);
+        assertEquals("SR", impact1.proteinContext().AltAminoAcids);
+
+        pos = 20;
+        ref = mRefBases.substring(pos, pos + 1);
+        alt =  "T";
+
+        var2 = new VariantData(CHR_1, pos, ref, alt);
+        var2.setVariantDetails(1, "", "", 0);
+        impact2 = classifyVariant(var2, transDataPos);
+
+        assertTrue(impact2.hasEffect(MISSENSE));
+        assertEquals("R", impact2.proteinContext().RefAminoAcids);
+        assertEquals("L", impact2.proteinContext().AltAminoAcids);
+
+        mClassifier.processPhasedVariants(NO_LOCAL_PHASE_SET);
+
+        assertFalse(impact1.phasedFrameshift());
     }
 
     @Test
@@ -399,6 +429,4 @@ public class PhasedVariantsTest
         var.addImpact(GENE_NAME_1, impact);
         return impact;
     }
-
-
 }

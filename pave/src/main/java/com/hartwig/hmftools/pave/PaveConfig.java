@@ -1,22 +1,26 @@
 package com.hartwig.hmftools.pave;
 
-import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
-import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +41,7 @@ public class PaveConfig
     public final boolean ReadPassOnly;
     public final boolean WritePassOnly;
     public final boolean SetReportable;
+    public final List<ChrBaseRegion> SpecificRegions;
 
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
@@ -71,6 +76,17 @@ public class PaveConfig
         ReadPassOnly = cmd.hasOption(READ_PASS_ONLY);
         WritePassOnly = cmd.hasOption(WRITE_PASS_ONLY);
         SetReportable = cmd.hasOption(SET_REPORTABLE);
+
+        SpecificRegions = Lists.newArrayList();
+
+        try
+        {
+            SpecificRegions.addAll(loadSpecificRegions(cmd));
+        }
+        catch(Exception e)
+        {
+            PV_LOGGER.error("failed to load specific regions");
+        }
 
         OutputDir = parseOutputDir(cmd);
     }
@@ -110,6 +126,7 @@ public class PaveConfig
         Mappability.addCmdLineArgs(options);
         ClinvarAnnotation.addCmdLineArgs(options);
         Blacklistings.addCmdLineArgs(options);
+        addSpecificChromosomesRegionsConfig(options);
 
         addOutputDir(options);
         addLoggingOptions(options);

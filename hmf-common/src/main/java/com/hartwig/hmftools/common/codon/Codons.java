@@ -17,11 +17,13 @@ public final class Codons
 
     public static final char UNKNOWN = '.';
 
+    public static final int CODON_LENGTH = 3;
+
     private static final char[] sCodonLookup = {'K', 'N', 'N', 'K', 'I', 'I', 'I', 'M', 'T', 'T', 'T', 'T', 'R', 'S', 'S', 'R',
             'X', 'Y', 'Y', 'X', 'L', 'F', 'F', 'L', 'S', 'S', 'S', 'S', 'X', 'C', 'C', 'W', 'Q', 'H', 'H', 'Q', 'L', 'L', 'L', 'L',
             'P', 'P', 'P', 'P', 'R', 'R', 'R', 'R', 'E', 'D', 'D', 'E', 'V', 'V', 'V', 'V', 'A', 'A', 'A', 'A', 'G', 'G', 'G', 'G'};
 
-    public static boolean isCodonMultiple(int bases) { return (bases % 3) == 0; }
+    public static boolean isCodonMultiple(int bases) { return (bases % CODON_LENGTH) == 0; }
 
     public static boolean isStopCodon(final String codon)
     {
@@ -102,11 +104,10 @@ public final class Codons
         throw new IllegalArgumentException("unknown base: " + base);
     }
 
-    @NotNull
-    public static String aminoAcidFromBases(@NotNull String dna)
+    public static String aminoAcidFromBases(final String dna)
     {
         StringBuilder builder = new StringBuilder();
-        for(int i = 0; i < dna.length() - 2; i += 3)
+        for(int i = 0; i < dna.length() - 2; i += CODON_LENGTH)
         {
             builder.append(codonToAminoAcid(dna, i));
         }

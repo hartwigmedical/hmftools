@@ -84,7 +84,7 @@ public final class AminoAcids
     private static final Logger LOGGER = LogManager.getLogger(AminoAcids.class);
 
     @Nullable
-    public static String findAminoAcidForCodon(@NotNull String codon)
+    public static String findAminoAcidForCodon(final String codon)
     {
         // only diff is ignores the stop codon
         if(codon.length() != 3)
@@ -101,8 +101,7 @@ public final class AminoAcids
         return String.valueOf(aminoAcid);
     }
 
-    @NotNull
-    public static String forceSingleLetterProteinAnnotation(@NotNull String proteinAnnotation)
+    public static String forceSingleLetterProteinAnnotation(final String proteinAnnotation)
     {
         String convertedProteinAnnotation = proteinAnnotation;
         for(Map.Entry<String, String> mapping : TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.entrySet())
@@ -112,7 +111,6 @@ public final class AminoAcids
         return convertedProteinAnnotation;
     }
 
-    @NotNull
     @VisibleForTesting
     static Map<String,List<String>> aminoAcidToTrinucleotidesMap()
     {

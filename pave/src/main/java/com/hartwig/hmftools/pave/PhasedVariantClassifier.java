@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
@@ -81,7 +83,6 @@ public class PhasedVariantClassifier
         return completeVariants;
     }
 
-    public List<PhasedVariants> allPhasedVariants() { return mPhasedVariants; }
     public void clear() { mPhasedVariants.clear(); }
 
     public static void reclassifyPhasedVariants(final PhasedVariants phasedVariants, final RefGenomeInterface refGenome)
@@ -189,10 +190,10 @@ public class PhasedVariantClassifier
             VariantTransImpact nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
 
             boolean overlapsOnStart = prevTransImpact != null && prevTransImpact.hasCodingBases()
-                    && prevTransImpact.proteinContext().refCodingBaseEnd() >= transImpact.proteinContext().refCodingBaseStart();
+                    && impactedRefCodingBasePosition(prevTransImpact, SE_END) >= impactedRefCodingBasePosition(transImpact, SE_START);
 
             boolean overlapsOnEnd = nextTransImpact != null && nextTransImpact.hasCodingBases()
-                    && nextTransImpact.proteinContext().refCodingBaseStart() <= transImpact.proteinContext().refCodingBaseEnd();
+                    && impactedRefCodingBasePosition(nextTransImpact, SE_START) <= impactedRefCodingBasePosition(transImpact, SE_END);
 
             if(!overlapsOnStart && !overlapsOnEnd)
                 ignoredVariants.add(variant);
@@ -231,13 +232,13 @@ public class PhasedVariantClassifier
             if(!transImpact.hasCodingBases())
                 continue;
 
-            int refCodonStart = transImpact.proteinContext().refCodingBaseStart();
-            int refCodonEnd = transImpact.proteinContext().refCodingBaseEnd();
+            int refCodonStart = impactedRefCodingBasePosition(transImpact, SE_START);
+            int refCodonEnd = impactedRefCodingBasePosition(transImpact, SE_END);
 
             VariantTransImpact nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
 
             int nextRefCodonStart = nextTransImpact != null && nextTransImpact.hasCodingBases()
-                    ? nextTransImpact.proteinContext().refCodingBaseStart() : 0;
+                    ? impactedRefCodingBasePosition(nextTransImpact, SE_START) : 0;
 
             boolean overlapsOnStart = lastRefCodonEnd > 0 && refCodonStart <= lastRefCodonEnd;
             boolean overlapsOnEnd = nextRefCodonStart > 0 && refCodonEnd >= nextRefCodonStart;
@@ -253,8 +254,6 @@ public class PhasedVariantClassifier
 
             if(overlapsOnStart)
             {
-                // VariantData prevVariant = i > 0 ? variants.get(i - 1) : null;
-
                 // first build the ref codons
                 int refOverlap = lastRefCodonEnd - refCodonStart + 1;
 
@@ -305,7 +304,7 @@ public class PhasedVariantClassifier
                 combinedAltCodons += transImpact.proteinContext().AltCodonBases;
             }
 
-            lastRefCodonEnd = max(transImpact.proteinContext().refCodingBaseEnd(), lastRefCodonEnd);
+            lastRefCodonEnd = max(refCodonEnd, lastRefCodonEnd);
         }
 
         if(!isCodonMultiple(combinedRefCodons.length()) || !isCodonMultiple(combinedAltCodons.length()))
@@ -394,5 +393,11 @@ public class PhasedVariantClassifier
             transImpact.effects().clear();
             combinedEffects.forEach(x -> transImpact.addEffect(x));
         }
+    }
+
+    private static int impactedRefCodingBasePosition(final VariantTransImpact transImpact, int seIndex)
+    {
+        boolean inframeIndel = transImpact.hasEffect(INFRAME_DELETION) || transImpact.hasEffect(INFRAME_INSERTION);
+        return transImpact.proteinContext().impactedRefCodingBasePosition(seIndex, inframeIndel);
     }
 }
