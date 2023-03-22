@@ -81,6 +81,8 @@ public final class GermlineConversion {
                 .additionalSuspectGermlineVariants(null)
                 .addAllAllSomaticGainsLosses(additionalReportableGainsLosses)
                 .addAllReportableSomaticGainsLosses(additionalReportableGainsLosses)
+                .allGermlineDeletions(null)
+                .allGermlineFullLosses(null)
                 .reportableGermlineFullLosses(null)
                 .build();
     }
