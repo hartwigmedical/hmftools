@@ -2,9 +2,9 @@ package com.hartwig.hmftools.orange.algo.isofox;
 
 import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRnaStatistics;
-import com.hartwig.hmftools.datamodel.rna.ImmutableGeneExpression;
-import com.hartwig.hmftools.datamodel.rna.ImmutableNovelSpliceJunction;
-import com.hartwig.hmftools.datamodel.rna.ImmutableRnaFusion;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableGeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableNovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableRnaFusion;
 import com.hartwig.hmftools.orange.conversion.IsofoxConversion;
 
 import org.jetbrains.annotations.NotNull;

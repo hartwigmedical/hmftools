@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface ChordRecord {
+
     @SerializedName("BRCA1Value")
     double brca1Value();
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.rna;
+package com.hartwig.hmftools.datamodel.isofox;
 
 public enum AltSpliceJunctionContext {
     SPLICE_JUNC,

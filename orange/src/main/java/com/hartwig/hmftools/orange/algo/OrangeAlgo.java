@@ -48,7 +48,7 @@ import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
-import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.metrics.WGSMetrics;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
@@ -182,7 +182,7 @@ public class OrangeAlgo {
         List<SignatureAllocation> sigAllocations = loadSigAllocations(config);
         IsofoxData isofoxData = loadIsofoxData(config);
 
-        ExperimentType experimentType = purpleData.purityContext().targeted() ? ExperimentType.TARGETED : ExperimentType.FULL_GENOME;
+        ExperimentType experimentType = purpleData.purityContext().targeted() ? ExperimentType.TARGETED : ExperimentType.WHOLE_GENOME;
         LOGGER.info("Determined experiment type to be '{}'", experimentType);
 
         LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
@@ -194,7 +194,7 @@ public class OrangeAlgo {
                 new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, driverGenes, linx, chord);
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 
-        IsofoxInterpretedData isofox = null;
+        IsofoxRecord isofox = null;
         if (isofoxData != null) {
             IsofoxInterpreter isofoxInterpreter = new IsofoxInterpreter(driverGenes, knownFusionCache, linx);
             isofox = isofoxInterpreter.interpret(isofoxData);

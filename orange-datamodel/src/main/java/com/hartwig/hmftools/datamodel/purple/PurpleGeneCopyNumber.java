@@ -19,10 +19,8 @@ public interface PurpleGeneCopyNumber {
     @NotNull
     String geneName();
 
-    @Nullable
-    Double minCopyNumber();
+    double minCopyNumber();
 
-    @Nullable
-    Double minMinorAlleleCopyNumber();
+    double minMinorAlleleCopyNumber();
 
 }

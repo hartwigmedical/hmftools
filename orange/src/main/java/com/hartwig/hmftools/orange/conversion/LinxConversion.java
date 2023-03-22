@@ -13,11 +13,11 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 
 import org.jetbrains.annotations.NotNull;
 
-public class LinxConversion {
+public final class LinxConversion {
 
     private LinxConversion() {
     }

@@ -6,7 +6,7 @@ import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CopyNumberInterpretationUtil {
+public final class CopyNumberInterpretationUtil {
 
     private CopyNumberInterpretationUtil() {
     }

@@ -4,12 +4,12 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
-import com.hartwig.hmftools.datamodel.rna.GeneExpression;
-import com.hartwig.hmftools.datamodel.rna.NovelSpliceJunction;
-import com.hartwig.hmftools.datamodel.rna.RnaFusion;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.ExpressionTable;
 import com.hartwig.hmftools.orange.report.tables.NovelSpliceJunctionTable;
@@ -80,7 +80,7 @@ public class RNAFindingsChapter implements ReportChapter {
     }
 
     private void addExpressionTables(@NotNull Document document) {
-        IsofoxInterpretedData isofox = report.isofox();
+        IsofoxRecord isofox = report.isofox();
         List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = report.purple().allSomaticGeneCopyNumbers();
 
         List<GeneExpression> reportableHighExpression = isofox != null ? isofox.reportableHighExpression() : Lists.newArrayList();
@@ -93,7 +93,7 @@ public class RNAFindingsChapter implements ReportChapter {
     }
 
     private void addRNAFusionTables(@NotNull Document document) {
-        IsofoxInterpretedData isofox = report.isofox();
+        IsofoxRecord isofox = report.isofox();
 
         List<RnaFusion> reportableNovelKnownFusions = isofox != null ? isofox.reportableNovelKnownFusions() : Lists.newArrayList();
         String titleKnownFusions = "Known fusions detected in RNA and not in DNA (" + reportableNovelKnownFusions.size() + ")";
@@ -105,7 +105,7 @@ public class RNAFindingsChapter implements ReportChapter {
     }
 
     private void addNovelSpliceJunctionTables(@NotNull Document document) {
-        IsofoxInterpretedData isofox = report.isofox();
+        IsofoxRecord isofox = report.isofox();
 
         List<NovelSpliceJunction> reportableSkippedExons = isofox != null ? isofox.reportableSkippedExons() : Lists.newArrayList();
         String titleSkippedExonJunctions =

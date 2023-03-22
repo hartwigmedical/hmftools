@@ -10,7 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cohort.ImmutableEvaluation;
-import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxInterpretedData;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
@@ -131,7 +131,7 @@ public class ReportGeneratorTestApplication {
                         .build());
 
         if (report.isofox() != null) {
-            builder.isofox(ImmutableIsofoxInterpretedData.builder()
+            builder.isofox(ImmutableIsofoxRecord.builder()
                     .from(report.isofox())
                     .allGeneExpressions(Lists.newArrayList())
                     .allFusions(Lists.newArrayList())

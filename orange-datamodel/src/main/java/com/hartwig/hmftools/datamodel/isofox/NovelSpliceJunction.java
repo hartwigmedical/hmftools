@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.rna;
+package com.hartwig.hmftools.datamodel.isofox;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;

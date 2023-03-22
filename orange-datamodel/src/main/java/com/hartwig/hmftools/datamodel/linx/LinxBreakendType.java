@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.sv;
+package com.hartwig.hmftools.datamodel.linx;
 
 public enum LinxBreakendType {
     BND,

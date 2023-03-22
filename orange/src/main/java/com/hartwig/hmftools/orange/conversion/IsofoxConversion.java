@@ -5,17 +5,17 @@ import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRnaStatistics;
-import com.hartwig.hmftools.datamodel.rna.AltSpliceJunctionContext;
-import com.hartwig.hmftools.datamodel.rna.AltSpliceJunctionType;
-import com.hartwig.hmftools.datamodel.rna.GeneExpression;
-import com.hartwig.hmftools.datamodel.rna.ImmutableGeneExpression;
-import com.hartwig.hmftools.datamodel.rna.ImmutableNovelSpliceJunction;
-import com.hartwig.hmftools.datamodel.rna.ImmutableRnaFusion;
-import com.hartwig.hmftools.datamodel.rna.StructuralVariantType;
+import com.hartwig.hmftools.datamodel.isofox.AltSpliceJunctionContext;
+import com.hartwig.hmftools.datamodel.isofox.AltSpliceJunctionType;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableGeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableNovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableRnaFusion;
+import com.hartwig.hmftools.datamodel.isofox.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-public class IsofoxConversion {
+public final class IsofoxConversion {
 
     private IsofoxConversion() {
     }
@@ -42,7 +42,7 @@ public class IsofoxConversion {
     }
 
     @NotNull
-    public static com.hartwig.hmftools.datamodel.rna.RnaFusion convert(RnaFusion rnaFusion) {
+    public static com.hartwig.hmftools.datamodel.isofox.RnaFusion convert(RnaFusion rnaFusion) {
         return ImmutableRnaFusion.builder()
                 .name(rnaFusion.name())
                 .chromosomeUp(rnaFusion.chromosomeUp())
@@ -62,7 +62,7 @@ public class IsofoxConversion {
     }
 
     @NotNull
-    public static com.hartwig.hmftools.datamodel.rna.NovelSpliceJunction convert(NovelSpliceJunction novelSpliceJunction) {
+    public static com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction convert(NovelSpliceJunction novelSpliceJunction) {
         return ImmutableNovelSpliceJunction.builder()
                 .geneName(novelSpliceJunction.geneName())
                 .chromosome(novelSpliceJunction.chromosome())

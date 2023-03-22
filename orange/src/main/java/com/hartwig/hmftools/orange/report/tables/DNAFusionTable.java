@@ -4,14 +4,14 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
-import com.hartwig.hmftools.datamodel.rna.GeneExpression;
-import com.hartwig.hmftools.datamodel.rna.NovelSpliceJunction;
-import com.hartwig.hmftools.datamodel.rna.RnaFusion;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -35,7 +35,7 @@ public final class DNAFusionTable {
 
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<LinxFusion> fusions,
-            @Nullable IsofoxInterpretedData isofox) {
+            @Nullable IsofoxRecord isofox) {
         if (fusions.isEmpty()) {
             return Tables.createEmpty(title, width);
         }
@@ -104,7 +104,7 @@ public final class DNAFusionTable {
     }
 
     @NotNull
-    private static IBlockElement rnaFragmentSupportTable(@Nullable IsofoxInterpretedData isofox, @NotNull LinxFusion fusion) {
+    private static IBlockElement rnaFragmentSupportTable(@Nullable IsofoxRecord isofox, @NotNull LinxFusion fusion) {
         if (isofox == null) {
             return new Paragraph(ReportResources.NOT_AVAILABLE);
         }
@@ -119,7 +119,7 @@ public final class DNAFusionTable {
     }
 
     @NotNull
-    private static IBlockElement supportFromExpressionOfGeneEnd(@NotNull IsofoxInterpretedData isofox, @NotNull LinxFusion fusion) {
+    private static IBlockElement supportFromExpressionOfGeneEnd(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion) {
         GeneExpression geneEndExpression = Expressions.findByGene(isofox.allGeneExpressions(), fusion.geneEnd());
 
         if (geneEndExpression == null) {
@@ -136,7 +136,7 @@ public final class DNAFusionTable {
     }
 
     @NotNull
-    private static IBlockElement supportFromSpliceJunctions(@NotNull IsofoxInterpretedData isofox, @NotNull LinxFusion fusion) {
+    private static IBlockElement supportFromSpliceJunctions(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion) {
         List<NovelSpliceJunction> matches = Lists.newArrayList();
         for (NovelSpliceJunction junction : isofox.allNovelSpliceJunctions()) {
             if (junction.geneName().equals(fusion.geneStart()) && junction.geneName().equals(fusion.geneEnd())) {
@@ -167,7 +167,7 @@ public final class DNAFusionTable {
     }
 
     @NotNull
-    private static IBlockElement supportFromRnaFusions(@NotNull IsofoxInterpretedData isofox, @NotNull LinxFusion fusion) {
+    private static IBlockElement supportFromRnaFusions(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion) {
         List<RnaFusion> matches = Lists.newArrayList();
         for (RnaFusion rnaFusion : isofox.allFusions()) {
             if (rnaFusion.name().equals(fusion.name())) {

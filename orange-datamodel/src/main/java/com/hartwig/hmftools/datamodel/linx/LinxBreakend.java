@@ -2,7 +2,6 @@ package com.hartwig.hmftools.datamodel.linx;
 
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
-import com.hartwig.hmftools.datamodel.sv.LinxBreakendType;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;

@@ -6,8 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Gson.TypeAdapters
 @Value.Immutable
-public interface LinxSvAnnotation
-{
+public interface LinxSvAnnotation {
 
     @NotNull
     String vcfId();

@@ -29,7 +29,7 @@ import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 
 import org.jetbrains.annotations.NotNull;
 
-public class OrangeConversion {
+public final class OrangeConversion {
 
     private OrangeConversion() {
     }

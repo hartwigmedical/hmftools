@@ -9,7 +9,7 @@ import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
-import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
@@ -54,9 +54,6 @@ public interface OrangeRecord {
     @Nullable
     Map<String, Double> germlineMVLHPerGene();
 
-    @Nullable
-    IsofoxInterpretedData isofox();
-
     @NotNull
     PurpleRecord purple();
 
@@ -65,6 +62,9 @@ public interface OrangeRecord {
 
     @NotNull
     List<WildTypeGene> wildTypeGenes();
+
+    @Nullable
+    IsofoxRecord isofox();
 
     @NotNull
     LilacRecord lilac();

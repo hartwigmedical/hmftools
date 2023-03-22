@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.conversion;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
@@ -10,6 +11,7 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGeneCopyNumber;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGermlineDeletion;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
@@ -18,6 +20,9 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
+import com.hartwig.hmftools.datamodel.purple.PurpleGermlineDeletion;
+import com.hartwig.hmftools.datamodel.purple.PurpleGermlineDetectionMethod;
+import com.hartwig.hmftools.datamodel.purple.PurpleGermlineStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleQC;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
@@ -25,7 +30,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PurpleConversion {
+public final class PurpleConversion {
 
     private PurpleConversion() {
     }
@@ -84,13 +89,35 @@ public class PurpleConversion {
     }
 
     @NotNull
-    public static PurpleGermlineAberration convert(GermlineAberration i) {
-        return PurpleGermlineAberration.valueOf(i.name());
+    public static PurpleGermlineDeletion convert(GermlineDeletion germlineDeletion) {
+        return ImmutablePurpleGermlineDeletion.builder()
+                .geneName(germlineDeletion.GeneName)
+                .chromosome(germlineDeletion.Chromosome)
+                .chromosomeBand(germlineDeletion.ChromosomeBand)
+                .regionStart(germlineDeletion.RegionStart)
+                .regionEnd(germlineDeletion.RegionEnd)
+                .depthWindowCount(germlineDeletion.DepthWindowCount)
+                .exonStart(germlineDeletion.ExonStart)
+                .exonEnd(germlineDeletion.ExonEnd)
+                .detectionMethod(PurpleGermlineDetectionMethod.valueOf(germlineDeletion.DetectionMethod.name()))
+                .normalStatus(PurpleGermlineStatus.valueOf(germlineDeletion.NormalStatus.name()))
+                .tumorStatus(PurpleGermlineStatus.valueOf(germlineDeletion.TumorStatus.name()))
+                .germlineCopyNumber(germlineDeletion.GermlineCopyNumber)
+                .tumorCopyNumber(germlineDeletion.TumorCopyNumber)
+                .filter(germlineDeletion.Filter)
+                .cohortFrequency(germlineDeletion.CohortFrequency)
+                .reported(germlineDeletion.Reported)
+                .build();
     }
 
     @NotNull
-    public static PurpleQCStatus convert(com.hartwig.hmftools.common.purple.PurpleQCStatus i) {
-        return PurpleQCStatus.valueOf(i.name());
+    public static PurpleGermlineAberration convert(GermlineAberration aberration) {
+        return PurpleGermlineAberration.valueOf(aberration.name());
+    }
+
+    @NotNull
+    public static PurpleQCStatus convert(com.hartwig.hmftools.common.purple.PurpleQCStatus qcStatus) {
+        return PurpleQCStatus.valueOf(qcStatus.name());
     }
 
     public static PurpleCodingEffect convert(CodingEffect effect) {

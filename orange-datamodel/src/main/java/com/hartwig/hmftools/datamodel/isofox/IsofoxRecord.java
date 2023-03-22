@@ -2,17 +2,15 @@ package com.hartwig.hmftools.datamodel.isofox;
 
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.rna.GeneExpression;
-import com.hartwig.hmftools.datamodel.rna.NovelSpliceJunction;
-import com.hartwig.hmftools.datamodel.rna.RnaFusion;
-
+import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@Gson.TypeAdapters
 @Value.Immutable
-@Value.Style(passAnnotations = {NotNull.class, Nullable.class})
-public interface IsofoxInterpretedData {
+@Value.Style(allParameters = true, passAnnotations = { NotNull.class, Nullable.class })
+public interface IsofoxRecord {
 
     @NotNull
     IsofoxRnaStatistics summary();

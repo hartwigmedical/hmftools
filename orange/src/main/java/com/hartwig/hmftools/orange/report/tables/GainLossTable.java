@@ -5,9 +5,9 @@ import static com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretationUt
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
-import com.hartwig.hmftools.datamodel.rna.GeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
@@ -27,7 +27,7 @@ public final class GainLossTable {
 
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<PurpleGainLoss> gainsLosses,
-            @Nullable IsofoxInterpretedData isofox) {
+            @Nullable IsofoxRecord isofox) {
         if (gainsLosses.isEmpty()) {
             return Tables.createEmpty(title, width);
         }
@@ -64,7 +64,7 @@ public final class GainLossTable {
     }
 
     @Nullable
-    private static GeneExpression findExpressionForGene(@Nullable IsofoxInterpretedData isofox, @NotNull String geneToFind) {
+    private static GeneExpression findExpressionForGene(@Nullable IsofoxRecord isofox, @NotNull String geneToFind) {
         if (isofox == null) {
             return null;
         }

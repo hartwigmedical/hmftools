@@ -16,13 +16,19 @@ public interface LilacAllele {
     double tumorCopyNumber();
 
     double somaticMissense();
+
     double somaticNonsenseOrFrameshift();
+
     double somaticSplice();
+
     double somaticSynonymous();
+
     double somaticInframeIndel();
 
     // used to create the report
     int refFragments();
+
     int tumorFragments();
+
     int rnaFragments();
 }

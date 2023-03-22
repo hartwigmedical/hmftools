@@ -64,5 +64,11 @@ public interface PurpleRecord {
     List<PurpleGainLoss> additionalSuspectSomaticGainsLosses();
 
     @Nullable
+    List<PurpleGermlineDeletion> allGermlineDeletions();
+
+    @Nullable
+    List<PurpleGainLoss> allGermlineFullLosses();
+
+    @Nullable
     List<PurpleGainLoss> reportableGermlineFullLosses();
 }

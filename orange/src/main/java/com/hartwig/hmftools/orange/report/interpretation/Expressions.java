@@ -4,7 +4,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.datamodel.rna.GeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.orange.report.ReportResources;
 
 import org.apache.logging.log4j.LogManager;

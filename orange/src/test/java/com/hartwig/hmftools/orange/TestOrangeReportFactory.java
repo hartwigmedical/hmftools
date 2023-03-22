@@ -18,9 +18,10 @@ import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
-import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxInterpretedData;
-import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRnaStatistics;
+import com.hartwig.hmftools.datamodel.isofox.StructuralVariantType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -35,12 +36,11 @@ import com.hartwig.hmftools.datamodel.orange.OrangeSample;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
-import com.hartwig.hmftools.datamodel.rna.AltSpliceJunctionContext;
-import com.hartwig.hmftools.datamodel.rna.AltSpliceJunctionType;
-import com.hartwig.hmftools.datamodel.rna.GeneExpression;
-import com.hartwig.hmftools.datamodel.rna.NovelSpliceJunction;
-import com.hartwig.hmftools.datamodel.rna.RnaFusion;
-import com.hartwig.hmftools.datamodel.rna.StructuralVariantType;
+import com.hartwig.hmftools.datamodel.isofox.AltSpliceJunctionContext;
+import com.hartwig.hmftools.datamodel.isofox.AltSpliceJunctionType;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
@@ -91,7 +91,7 @@ public final class TestOrangeReportFactory {
 
     @NotNull
     public static OrangeRecord createProperTestReport() {
-        return builder().experimentType(ExperimentType.FULL_GENOME)
+        return builder().experimentType(ExperimentType.WHOLE_GENOME)
                 .addConfiguredPrimaryTumor(OrangeConversion.convert(DoidTestFactory.createDoidNode("1", "cancer type")))
                 .platinumVersion("v5.31")
                 .refSample(createMinimalOrangeSample())
@@ -192,7 +192,7 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static IsofoxInterpretedData createTestIsofoxData() {
+    private static IsofoxRecord createTestIsofoxData() {
         IsofoxRnaStatistics statistics = OrangeIsofoxTestFactory.rnaStatisticsBuilder().totalFragments(120000).duplicateFragments(60000).build();
 
         GeneExpression highExpression = OrangeIsofoxTestFactory.geneExpressionBuilder()
@@ -219,7 +219,7 @@ public final class TestOrangeReportFactory {
                 .positionUp(128841405)
                 .chromosomeDown("6")
                 .positionDown(127469792)
-                .svType(com.hartwig.hmftools.datamodel.rna.StructuralVariantType.INV)
+                .svType(StructuralVariantType.INV)
                 .junctionTypeUp("KNOWN")
                 .junctionTypeDown("KNOWN")
                 .depthUp(73)
@@ -275,7 +275,7 @@ public final class TestOrangeReportFactory {
                 .cohortFrequency(12)
                 .build();
 
-        return ImmutableIsofoxInterpretedData.builder()
+        return ImmutableIsofoxRecord.builder()
                 .summary(statistics)
                 .addAllAllGeneExpressions(Lists.newArrayList(highExpression, lowExpression))
                 .addReportableHighExpression(highExpression)

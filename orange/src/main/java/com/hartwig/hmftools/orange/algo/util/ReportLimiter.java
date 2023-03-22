@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxInterpretedData;
-import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
@@ -65,6 +65,8 @@ public final class ReportLimiter {
                 .reportableSomaticGainsLosses(max1(purple.reportableSomaticGainsLosses()))
                 .nearReportableSomaticGains(max1(purple.nearReportableSomaticGains()))
                 .additionalSuspectSomaticGainsLosses(max1(purple.additionalSuspectSomaticGainsLosses()))
+                .allGermlineDeletions(max1(purple.allGermlineDeletions()))
+                .allGermlineFullLosses(max1(purple.allGermlineFullLosses()))
                 .reportableGermlineFullLosses(max1(purple.reportableGermlineFullLosses()))
                 .build();
     }
@@ -89,12 +91,12 @@ public final class ReportLimiter {
     }
 
     @Nullable
-    private static IsofoxInterpretedData limitIsofoxDataToOne(@Nullable IsofoxInterpretedData isofox) {
+    private static IsofoxRecord limitIsofoxDataToOne(@Nullable IsofoxRecord isofox) {
         if (isofox == null) {
             return null;
         }
 
-        return ImmutableIsofoxInterpretedData.builder()
+        return ImmutableIsofoxRecord.builder()
                 .from(isofox)
                 .allGeneExpressions(max1(isofox.allGeneExpressions()))
                 .reportableHighExpression(max1(isofox.reportableHighExpression()))

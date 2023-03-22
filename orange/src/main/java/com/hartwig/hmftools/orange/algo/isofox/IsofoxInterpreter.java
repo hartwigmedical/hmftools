@@ -7,10 +7,10 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
-import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxInterpretedData;
-import com.hartwig.hmftools.datamodel.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.rna.GeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.IsofoxConversion;
 
@@ -38,7 +38,7 @@ public class IsofoxInterpreter {
     }
 
     @NotNull
-    public IsofoxInterpretedData interpret(@NotNull IsofoxData isofox) {
+    public IsofoxRecord interpret(@NotNull IsofoxData isofox) {
         List<GeneExpression> geneExpressions = ConversionUtil.mapToList(isofox.geneExpressions(), IsofoxConversion::convert);
         List<GeneExpression> highExpressionGenes = ExpressionSelector.selectHighExpressionGenes(geneExpressions, driverGenes);
         LOGGER.info(" Found {} genes with high expression", highExpressionGenes.size());
@@ -62,7 +62,7 @@ public class IsofoxInterpreter {
                 NovelSpliceJunctionSelector.selectNovelExonsIntrons(isofox.novelSpliceJunctions(), driverGenes);
         LOGGER.info(" Found {} suspicious novel exons/introns in RNA", suspiciousNovelExonsIntrons.size());
 
-        return ImmutableIsofoxInterpretedData.builder()
+        return ImmutableIsofoxRecord.builder()
                 .summary(IsofoxConversion.convert(isofox.summary()))
                 .allGeneExpressions(geneExpressions)
                 .reportableHighExpression(highExpressionGenes)
