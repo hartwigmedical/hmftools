@@ -362,7 +362,7 @@ Any read which spans the core read context increments the `TOTAL` tally.
 
 ### Modified Tumor Quality Score
 
-If a `FULL` or `PARTIAL` match is made, we update the quality of the variant. 
+If a `FULL`, `PARTIAL` or `REALIGNED` match is made, we update the quality of the variant. 
 No other match contributes to quality.  
 There are a number of constraints to penalise the quality:
   1. as the variant approaches the edge of a read,
