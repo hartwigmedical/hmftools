@@ -15,11 +15,10 @@ steps:
     id: 'Deploying to Maven'
     entrypoint: mvn
     args: ['deploy', '-B']
+    dir: "orange-datamodel"
     volumes:
       - path: '/cache/.m2'
         name: 'm2_cache'
     env:
       - MAVEN_OPTS=-Dmaven.repo.local=/cache/.m2
 timeout: 4800s
-options:
-  machineType: 'E2_HIGHCPU_8'
