@@ -44,6 +44,9 @@ public final class PurpleVcfTags
     public static final String KATAEGIS_FLAG = "KT";
     public static final String KATAEGIS_FLAG_DESCRIPTION = "Forward/reverse kataegis id";
 
+    public static final String UNCLEAR_GERMLINE_FLAG = "UNCLEAR_GERMLINE";
+    public static final String UNCLEAR_GERMLINE_FLAG_DESCRIPTION = "Tumor-only unclear germline status";
+
     public static VCFHeader addGermlineHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader template)
     {
         template.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));

@@ -141,6 +141,10 @@ public class SomaticStream
                     mConfig.Version, mConfig.ReferenceId, mConfig.TumorId, mReferenceData, purityAdjuster, copyNumbers, fittedRegions, mPeakModel);
 
             final VCFHeader header = enricher.populateHeader(readHeader);
+
+            if(mConfig.tumorOnlyMode() && mConfig.TargetRegionsMode)
+                TumorMutationalLoad.enrichHeader(header);
+
             mVcfWriter.writeHeader(header);
 
             boolean tumorOnly = mConfig.tumorOnlyMode();

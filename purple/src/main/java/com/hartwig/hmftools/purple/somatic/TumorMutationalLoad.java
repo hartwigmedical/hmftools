@@ -7,6 +7,10 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG_DESCRIPTION;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.UNCLEAR_GERMLINE_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.UNCLEAR_GERMLINE_FLAG_DESCRIPTION;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
@@ -18,6 +22,9 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.purple.config.TargetRegionsData;
 
 import htsjdk.variant.vcf.VCFConstants;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class TumorMutationalLoad
 {
@@ -53,6 +60,12 @@ public class TumorMutationalLoad
 
         double calcTml = adjustedLoad * mTargetRegions.tmlRatio() * CODING_BASES_PER_GENOME / mTargetRegions.codingBases();
         return calcTml;
+    }
+
+    public static VCFHeader enrichHeader(final VCFHeader template)
+    {
+        template.addMetaDataLine(new VCFInfoHeaderLine(UNCLEAR_GERMLINE_FLAG, 0, VCFHeaderLineType.Flag, UNCLEAR_GERMLINE_FLAG_DESCRIPTION));
+        return template;
     }
 
     public void processVariant(final SomaticVariant variant, double purity)
@@ -114,9 +127,14 @@ public class TumorMutationalLoad
         }
 
         if(isUnclearGermline)
+        {
+            variant.context().getCommonInfo().putAttribute(UNCLEAR_GERMLINE_FLAG, true);
             ++mUnclearVariants;
+        }
         else
+        {
             ++mBurden;
+        }
 
         if(variantImpact.WorstCodingEffect.equals(CodingEffect.MISSENSE))
             mLoad++;
