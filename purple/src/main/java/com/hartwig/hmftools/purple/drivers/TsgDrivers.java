@@ -162,8 +162,7 @@ public class TsgDrivers
 
         final DndsDriverImpactLikelihood secondImpactLikelihood = likelihood.select(secondImpact);
 
-        final int secondVariantTypeCount =
-                variantCount(secondVariant.biallelic(), secondVariant, standardCounts, biallelicCounts);
+        final int secondVariantTypeCount = variantCount(secondVariant.biallelic(), secondVariant, standardCounts, biallelicCounts);
 
         double multiHit = multiHit(firstVariantTypeCount, secondVariantTypeCount, firstImpactLikelihood, secondImpactLikelihood);
 
@@ -200,7 +199,7 @@ public class TsgDrivers
 
     private static int variantCount(
             boolean useBiallelic, final SomaticVariant variant,
-            final Map<VariantType, Integer> standard, final Map<VariantType, Integer> biallelic)
+            final Map<VariantType, Integer> standard, final Map<VariantType,Integer> biallelic)
     {
         final Map<VariantType, Integer> map;
         if(!useBiallelic)

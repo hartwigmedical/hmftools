@@ -21,8 +21,6 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 public class SomaticVariantDrivers
 {
-    private final DriverGenePanel mGenePanel;
-
     private final Map<VariantType,Integer> mVariantTypeCounts;
     private final Map<VariantType,Integer> mVariantTypeCountsBiallelic;
 
@@ -31,13 +29,17 @@ public class SomaticVariantDrivers
 
     public SomaticVariantDrivers(final DriverGenePanel panel)
     {
-        mGenePanel = panel;
-
         mVariantTypeCounts = Maps.newHashMap();
         mVariantTypeCountsBiallelic = Maps.newHashMap();
 
         mOncoDrivers = new OncoDrivers(panel);
         mTsgDrivers = new TsgDrivers(panel);
+    }
+
+    public void overrideVariantCounts(final Map<VariantType,Integer> variantTypeCounts, final Map<VariantType,Integer> biallelicCounts)
+    {
+        mVariantTypeCounts.putAll(variantTypeCounts);
+        mVariantTypeCountsBiallelic.putAll(biallelicCounts);
     }
 
     public boolean checkSomaticVariant(final SomaticVariant variant)

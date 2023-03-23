@@ -18,7 +18,9 @@ public class PurpleConstants
     public static final double NO_TUMOR_DEPTH_RATIO_MIN = 0.8;
     public static final double NO_TUMOR_DEPTH_RATIO_MAX = 1.2;
 
+    // target regions
     public static final int TARGET_REGIONS_MAX_DELETED_GENES = 1500;
+    public static final double ASSUMED_BIALLELIC_FRACTION = 0.2;
 
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
@@ -39,7 +41,6 @@ public class PurpleConstants
 
     // somatic enrichment
     public static final double BIALLELIC_PROBABILITY = 0.005;
-
 
     // SV recovery
     public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 300;

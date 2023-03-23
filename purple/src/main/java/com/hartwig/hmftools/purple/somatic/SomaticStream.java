@@ -4,6 +4,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.ASSUMED_BIALLELIC_FRACTION;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
 
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
@@ -116,6 +118,26 @@ public class SomaticStream
 
     public List<DriverCatalog> buildDrivers(final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
     {
+        if(mReferenceData.TargetRegions.hasTargetRegions())
+        {
+            // override the counts passed to the DNDS calcs
+            int inferredSnvCount = (int)round(mTml * mReferenceData.TargetRegions.tmbRatio() * MB_PER_GENOME);
+            int inferredIndelCount = (int)round(mMsiIndelPerMb * MB_PER_GENOME);
+
+            Map<VariantType,Integer> variantTypeCounts = Maps.newHashMap();
+            variantTypeCounts.put(VariantType.SNP, inferredSnvCount);
+            variantTypeCounts.put(VariantType.INDEL, inferredIndelCount);
+
+            Map<VariantType,Integer> variantTypeCountsbiallelic = Maps.newHashMap();
+            variantTypeCountsbiallelic.put(VariantType.SNP, (int)(inferredSnvCount * ASSUMED_BIALLELIC_FRACTION));
+            variantTypeCountsbiallelic.put(VariantType.INDEL, (int)(inferredIndelCount * ASSUMED_BIALLELIC_FRACTION));
+
+            PPL_LOGGER.debug("target-regions inferred driver variant counts snv({}) indel({})",
+                    inferredSnvCount, inferredIndelCount);
+
+            mDrivers.overrideVariantCounts(variantTypeCounts, variantTypeCountsbiallelic);
+        }
+
         return mDrivers.buildCatalog(geneCopyNumberMap);
     }
 

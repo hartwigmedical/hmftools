@@ -106,13 +106,6 @@ public class TumorMutationalLoad
             double minorAlleleCn = variant.decorator().minorAlleleCopyNumber();
             double majorAlleleCn = segmentCn - minorAlleleCn;
 
-            /*
-            double diffThreshold = min(TARGET_REGIONS_CN_DIFF, majorAlleleCn * TARGET_REGIONS_CN_PERC_DIFF);
-
-            if(variantCn > majorAlleleCn + diffThreshold)
-               return;
-            */
-
             double refPurity = 1 - purity;
 
             double denom = 2 * refPurity + segmentCn * purity;
