@@ -90,10 +90,15 @@ public class SampleDataFiles
 
     public boolean hasValidSampleNames(final PurpleConfig config)
     {
-        return hasValidVcfSampleNames(SomaticSvVcfFile, config, false)
-            && hasValidVcfSampleNames(GermlineSvVcfFile, config, true)
-            && hasValidVcfSampleNames(SomaticVcfFile, config, false)
-            && hasValidVcfSampleNames(GermlineVcfFile, config, true);
+        boolean germlineValid = !config.runGermline()
+                || (hasValidVcfSampleNames(GermlineSvVcfFile, config, true)
+                && hasValidVcfSampleNames(GermlineVcfFile, config, true));
+
+        boolean tumorValid = !config.runGermline()
+                || (hasValidVcfSampleNames(SomaticSvVcfFile, config, false)
+                && hasValidVcfSampleNames(SomaticVcfFile, config, false));
+
+        return tumorValid && germlineValid;
     }
 
     private boolean hasValidVcfSampleNames(final String vcfFile, final PurpleConfig config, boolean isGermline)
@@ -105,8 +110,11 @@ public class SampleDataFiles
 
         VCFFileReader vcfReader = new VCFFileReader(new File(vcfFile), false);
 
+        String tumorId = config.runTumor() ? config.TumorId : null;
+        String referenceId = config.runGermline() ? config.ReferenceId : null;
+
         boolean validVcfNames = GenotypeIds.hasValidSampleIds(
-                vcfReader.getFileHeader(), config.ReferenceId, config.TumorId,  referenceFirst, false);
+                vcfReader.getFileHeader(), referenceId, tumorId,  referenceFirst, false);
 
         if(!validVcfNames)
         {
