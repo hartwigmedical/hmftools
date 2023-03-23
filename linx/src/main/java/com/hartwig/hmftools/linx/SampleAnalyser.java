@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_PURPLE_SOMATIC;
 import static com.hartwig.hmftools.common.purple.Gender.MALE;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -440,8 +442,14 @@ public class SampleAnalyser implements Callable
             LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
             LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
 
-            DriverCatalogFile.write(LinxDriver.generateCatalogFilename(
-                    mConfig.OutputDataPath, mCurrentSampleId, !mConfig.IsGermline), Collections.EMPTY_LIST);
+            // write out the Purple drivers again as would usually be done with SVs
+            String purpleDriverFile = mConfig.IsGermline ?
+                    DriverCatalogFile.generateGermlineFilename(mConfig.PurpleDataPath, mCurrentSampleId)
+                    : DriverCatalogFile.generateSomaticFilename(mConfig.PurpleDataPath, mCurrentSampleId);
+
+            List<DriverCatalog> purpleDrivers = DriverCatalogFile.read(purpleDriverFile).stream().collect(Collectors.toList());
+
+            DriverCatalogFile.write(LinxDriver.generateCatalogFilename(mConfig.OutputDataPath, mCurrentSampleId, !mConfig.IsGermline), purpleDrivers);
 
             if(mConfig.IsGermline)
             {
