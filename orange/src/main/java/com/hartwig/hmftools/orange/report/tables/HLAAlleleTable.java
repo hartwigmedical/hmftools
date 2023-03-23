@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;

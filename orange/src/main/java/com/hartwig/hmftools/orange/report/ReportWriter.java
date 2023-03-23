@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.orange.report;
 
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 
-import com.google.gson.GsonBuilder;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.datamodel.OrangeJson;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.chapters.CohortComparisonChapter;
 import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
 import com.hartwig.hmftools.orange.report.chapters.GermlineFindingsChapter;
@@ -45,12 +43,12 @@ public class ReportWriter {
         this.plotPathResolver = plotPathResolver;
     }
 
-    public void write(@NotNull OrangeReport report) throws IOException {
+    public void write(@NotNull OrangeRecord report) throws IOException {
         writePdf(report);
         writeJson(report);
     }
 
-    private void writePdf(@NotNull OrangeReport report) throws IOException {
+    private void writePdf(@NotNull OrangeRecord report) throws IOException {
         ReportChapter[] chapters =
                 new ReportChapter[] { new FrontPageChapter(report, plotPathResolver), new SomaticFindingsChapter(report, plotPathResolver),
                         new GermlineFindingsChapter(report), new ImmunologyChapter(report), new RNAFindingsChapter(report),
@@ -60,16 +58,12 @@ public class ReportWriter {
         writePdfChapters(report.sampleId(), platinumVersion, chapters);
     }
 
-    private void writeJson(@NotNull OrangeReport report) throws IOException {
+    private void writeJson(@NotNull OrangeRecord report) throws IOException {
         if (writeToDisk && outputDir != null) {
             String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.json";
             LOGGER.info("Writing JSON report to {} ", outputFilePath);
 
-            String json = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(report);
-            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath));
-
-            writer.write(json);
-            writer.close();
+            OrangeJson.getInstance().write(report, outputFilePath);
         } else {
             LOGGER.info("Generating in-memory JSON report");
         }

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Images;
@@ -15,11 +15,11 @@ import org.jetbrains.annotations.NotNull;
 public class CohortComparisonChapter implements ReportChapter {
 
     @NotNull
-    private final OrangeReport report;
+    private final OrangeRecord report;
     @NotNull
     private final PlotPathResolver plotPathResolver;
 
-    public CohortComparisonChapter(@NotNull final OrangeReport report, @NotNull final PlotPathResolver plotPathResolver) {
+    public CohortComparisonChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver) {
         this.report = report;
         this.plotPathResolver = plotPathResolver;
     }

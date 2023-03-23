@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 
@@ -82,7 +82,7 @@ public final class Variants {
 
     @NotNull
     public static String rnaDepthField(@NotNull VariantEntry variant) {
-        AllelicDepth rnaDepth = variant.rnaDepth();
+        PurpleAllelicDepth rnaDepth = variant.rnaDepth();
 
         if (rnaDepth == null) {
             return ReportResources.NOT_AVAILABLE;

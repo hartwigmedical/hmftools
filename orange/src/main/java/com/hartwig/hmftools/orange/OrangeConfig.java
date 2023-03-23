@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.orange.util.Config;
 
 import org.apache.commons.cli.CommandLine;
@@ -146,7 +147,7 @@ public interface OrangeConfig {
     LocalDate experimentDate();
 
     @NotNull
-    RefGenomeVersion refGenomeVersion();
+    OrangeRefGenomeVersion refGenomeVersion();
 
     @NotNull
     String outputDir();
@@ -277,7 +278,7 @@ public interface OrangeConfig {
                 .rnaConfig(OrangeRNAConfig.createConfig(cmd))
                 .primaryTumorDoids(toStringSet(Config.nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .experimentDate(experimentDate)
-                .refGenomeVersion(RefGenomeVersion.from(Config.nonOptionalValue(cmd, REF_GENOME_VERSION)))
+                .refGenomeVersion(OrangeRefGenomeVersion.valueOf(RefGenomeVersion.from(Config.nonOptionalValue(cmd, REF_GENOME_VERSION)).name()))
                 .outputDir(Config.outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(Config.nonOptionalFile(cmd, DOID_JSON))
                 .cohortMappingTsv(Config.nonOptionalFile(cmd, COHORT_MAPPING_TSV))

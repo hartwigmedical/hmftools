@@ -8,14 +8,14 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogTestFactory;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.impact.VariantEffect;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
+import com.hartwig.hmftools.orange.algo.util.PurpleDriverTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -46,16 +46,16 @@ public class VariantEntryFactoryTest {
                 .canonicalImpact(TestPurpleVariantFactory.impactBuilder().hgvsProteinImpact("impact 3").build())
                 .build();
 
-        DriverCatalog canonicalDriver = DriverCatalogTestFactory.builder()
-                .driver(DriverType.MUTATION)
+        PurpleDriver canonicalDriver = PurpleDriverTestFactory.builder()
+                .driver(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 1")
                 .isCanonical(true)
                 .driverLikelihood(0.5)
                 .build();
 
-        DriverCatalog nonCanonicalDriver = DriverCatalogTestFactory.builder()
-                .driver(DriverType.MUTATION)
+        PurpleDriver nonCanonicalDriver = PurpleDriverTestFactory.builder()
+                .driver(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 2")
                 .isCanonical(false)
@@ -63,7 +63,7 @@ public class VariantEntryFactoryTest {
                 .build();
 
         List<PurpleVariant> variants = Lists.newArrayList(driverVariant, nonDriverVariant);
-        List<DriverCatalog> drivers = Lists.newArrayList(canonicalDriver, nonCanonicalDriver);
+        List<PurpleDriver> drivers = Lists.newArrayList(canonicalDriver, nonCanonicalDriver);
 
         List<VariantEntry> entries = VariantEntryFactory.create(variants, drivers);
 
@@ -104,29 +104,29 @@ public class VariantEntryFactoryTest {
                 VariantEntryFactory.determineImpact(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact("c.123A>C")
                         .hgvsProteinImpact("p.Gly12Cys")
-                        .addEffects(VariantEffect.MISSENSE)
-                        .codingEffect(CodingEffect.MISSENSE)
+                        .addEffects(PurpleVariantEffect.MISSENSE)
+                        .codingEffect(PurpleCodingEffect.MISSENSE)
                         .build()));
         assertEquals("c.123A>C splice",
                 VariantEntryFactory.determineImpact(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact("c.123A>C")
                         .hgvsProteinImpact("p.?")
-                        .addEffects(VariantEffect.MISSENSE)
-                        .codingEffect(CodingEffect.SPLICE)
+                        .addEffects(PurpleVariantEffect.MISSENSE)
+                        .codingEffect(PurpleCodingEffect.SPLICE)
                         .build()));
         assertEquals("c.123A>C",
                 VariantEntryFactory.determineImpact(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact("c.123A>C")
                         .hgvsProteinImpact(Strings.EMPTY)
-                        .addEffects(VariantEffect.MISSENSE)
-                        .codingEffect(CodingEffect.MISSENSE)
+                        .addEffects(PurpleVariantEffect.MISSENSE)
+                        .codingEffect(PurpleCodingEffect.MISSENSE)
                         .build()));
         assertEquals("missense_variant",
                 VariantEntryFactory.determineImpact(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact(Strings.EMPTY)
                         .hgvsProteinImpact(Strings.EMPTY)
-                        .addEffects(VariantEffect.MISSENSE)
-                        .codingEffect(CodingEffect.MISSENSE)
+                        .addEffects(PurpleVariantEffect.MISSENSE)
+                        .codingEffect(PurpleCodingEffect.MISSENSE)
                         .build()));
     }
 }

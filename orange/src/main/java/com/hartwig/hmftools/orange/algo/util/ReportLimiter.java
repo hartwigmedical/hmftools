@@ -4,14 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
-import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
-import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,8 +22,8 @@ public final class ReportLimiter {
     }
 
     @NotNull
-    public static OrangeReport limitAllListsToMaxOne(@NotNull OrangeReport report) {
-        return ImmutableOrangeReport.builder()
+    public static OrangeRecord limitAllListsToMaxOne(@NotNull OrangeRecord report) {
+        return ImmutableOrangeRecord.builder()
                 .from(report)
                 .germlineMVLHPerGene(limitGermlineMVLHToOne(report.germlineMVLHPerGene()))
                 .purple(limitPurpleDataToOne(report.purple()))
@@ -47,8 +47,8 @@ public final class ReportLimiter {
     }
 
     @NotNull
-    private static PurpleInterpretedData limitPurpleDataToOne(@NotNull PurpleInterpretedData purple) {
-        return ImmutablePurpleInterpretedData.builder()
+    private static PurpleRecord limitPurpleDataToOne(@NotNull PurpleRecord purple) {
+        return ImmutablePurpleRecord.builder()
                 .from(purple)
                 .somaticDrivers(max1(purple.somaticDrivers()))
                 .germlineDrivers(max1(purple.germlineDrivers()))
@@ -72,8 +72,8 @@ public final class ReportLimiter {
     }
 
     @NotNull
-    private static LinxInterpretedData limitLinxDataToOne(@NotNull LinxInterpretedData linx) {
-        return ImmutableLinxInterpretedData.builder()
+    private static LinxRecord limitLinxDataToOne(@NotNull LinxRecord linx) {
+        return ImmutableLinxRecord.builder()
                 .from(linx)
                 .allSomaticStructuralVariants(max1(linx.allSomaticStructuralVariants()))
                 .allSomaticFusions(max1(linx.allSomaticFusions()))
@@ -91,12 +91,12 @@ public final class ReportLimiter {
     }
 
     @Nullable
-    private static IsofoxInterpretedData limitIsofoxDataToOne(@Nullable IsofoxInterpretedData isofox) {
+    private static IsofoxRecord limitIsofoxDataToOne(@Nullable IsofoxRecord isofox) {
         if (isofox == null) {
             return null;
         }
 
-        return ImmutableIsofoxInterpretedData.builder()
+        return ImmutableIsofoxRecord.builder()
                 .from(isofox)
                 .allGeneExpressions(max1(isofox.allGeneExpressions()))
                 .reportableHighExpression(max1(isofox.reportableHighExpression()))

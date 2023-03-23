@@ -2,6 +2,8 @@ package com.hartwig.hmftools.orange.algo.cuppa;
 
 import java.util.Comparator;
 
+import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+
 import org.jetbrains.annotations.NotNull;
 
 public class CuppaPredictionComparator implements Comparator<CuppaPrediction> {

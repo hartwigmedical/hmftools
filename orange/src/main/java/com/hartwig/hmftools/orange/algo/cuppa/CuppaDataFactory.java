@@ -8,6 +8,10 @@ import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.DataTypes;
 import com.hartwig.hmftools.common.cuppa.SvDataType;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;
+import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +31,7 @@ public final class CuppaDataFactory {
                 .predictions(extractPredictions(entries))
                 .simpleDups32To200B(safeInt(entries, SvDataType.SIMPLE_DUP_32B_200B))
                 .maxComplexSize(safeInt(entries, SvDataType.MAX_COMPLEX_SIZE))
-                .LINECount(safeInt(entries, SvDataType.LINE))
+                .lineCount(safeInt(entries, SvDataType.LINE))
                 .telomericSGLs(safeInt(entries, SvDataType.TELOMERIC_SGL))
                 .build();
     }

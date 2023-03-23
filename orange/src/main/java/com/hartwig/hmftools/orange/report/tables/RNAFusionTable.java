@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.report.tables;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.rna.RnaFusion;
+import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;

@@ -8,15 +8,15 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
-import com.hartwig.hmftools.common.linx.HomozygousDisruption;
-import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.peach.PeachGenotype;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntryFactory;
@@ -45,9 +45,9 @@ public class GermlineFindingsChapter implements ReportChapter {
     private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#.0'%'");
 
     @NotNull
-    private final OrangeReport report;
+    private final OrangeRecord report;
 
-    public GermlineFindingsChapter(@NotNull final OrangeReport report) {
+    public GermlineFindingsChapter(@NotNull final OrangeRecord report) {
         this.report = report;
     }
 
@@ -81,7 +81,7 @@ public class GermlineFindingsChapter implements ReportChapter {
     }
 
     private void addGermlineVariants(@NotNull Document document) {
-        List<DriverCatalog> drivers = report.purple().germlineDrivers();
+        List<PurpleDriver> drivers = report.purple().germlineDrivers();
 
         List<PurpleVariant> reportableVariants = report.purple().reportableGermlineVariants();
         if (drivers != null && reportableVariants != null) {
@@ -168,12 +168,12 @@ public class GermlineFindingsChapter implements ReportChapter {
     }
 
     private void addGermlineCNAberrations(@NotNull Document document) {
-        Set<GermlineAberration> germlineAberrations = report.purple().fit().qc().germlineAberrations();
+        Set<PurpleGermlineAberration> germlineAberrations = report.purple().fit().qc().germlineAberrations();
         if (!germlineAberrations.isEmpty()) {
             int count = 0;
             StringJoiner germlineAberrationJoiner = new StringJoiner(", ");
-            for (GermlineAberration germlineAberration : germlineAberrations) {
-                if (germlineAberration != GermlineAberration.NONE) {
+            for (PurpleGermlineAberration germlineAberration : germlineAberrations) {
+                if (germlineAberration != PurpleGermlineAberration.NONE) {
                     count++;
                 }
                 germlineAberrationJoiner.add(germlineAberration.toString());
@@ -185,7 +185,7 @@ public class GermlineFindingsChapter implements ReportChapter {
     }
 
     private void addPharmacogenetics(@NotNull Document document) {
-        List<PeachGenotype> peach = report.peach();
+        Set<PeachGenotype> peach = report.peach();
         if (peach != null) {
             String titlePharmacogenetics = "Pharmacogenetics (" + peach.size() + ")";
             document.add(PharmacogeneticsTable.build(titlePharmacogenetics, contentWidth(), peach));

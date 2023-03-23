@@ -6,9 +6,9 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
-import com.hartwig.hmftools.common.rna.GeneExpression;
-import com.hartwig.hmftools.common.rna.ImmutableGeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableGeneExpression;
+import com.hartwig.hmftools.orange.algo.isofox.OrangeIsofoxTestFactory;
 import com.hartwig.hmftools.orange.report.ReportResources;
 
 import org.jetbrains.annotations.NotNull;
@@ -47,6 +47,6 @@ public class ExpressionsTest {
 
     @NotNull
     private static ImmutableGeneExpression.Builder builder() {
-        return IsofoxTestFactory.geneExpressionBuilder();
+        return OrangeIsofoxTestFactory.geneExpressionBuilder();
     }
 }

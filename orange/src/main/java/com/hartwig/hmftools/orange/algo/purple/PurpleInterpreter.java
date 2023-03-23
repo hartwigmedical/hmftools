@@ -19,8 +19,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporti
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
-import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
@@ -29,9 +27,25 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.PurpleFit;
+import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.orange.algo.linx.BreakendUtil;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
+import com.hartwig.hmftools.orange.conversion.ConversionUtil;
+import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -53,13 +67,13 @@ public class PurpleInterpreter {
     @NotNull
     private final List<DriverGene> driverGenes;
     @NotNull
-    private final LinxInterpretedData linx;
+    private final LinxRecord linx;
     @Nullable
     private final ChordData chord;
 
     public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
             @NotNull final GermlineGainLossFactory germlineGainLossFactory, @NotNull final List<DriverGene> driverGenes,
-            @NotNull final LinxInterpretedData linx, @Nullable final ChordData chord) {
+            @NotNull final LinxRecord linx, @Nullable final ChordData chord) {
         this.purpleVariantFactory = purpleVariantFactory;
         this.germlineGainLossFactory = germlineGainLossFactory;
         this.driverGenes = driverGenes;
@@ -68,7 +82,7 @@ public class PurpleInterpreter {
     }
 
     @NotNull
-    public PurpleInterpretedData interpret(@NotNull PurpleData purple) {
+    public PurpleRecord interpret(@NotNull PurpleData purple) {
         LOGGER.info("Analysing purple data");
         List<PurpleVariant> allSomaticVariants = purpleVariantFactory.create(purple.allSomaticVariants());
         List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.create(purple.reportableSomaticVariants());
@@ -137,25 +151,25 @@ public class PurpleInterpreter {
                     reportableGermlineFullLosses.size());
         }
 
-        return ImmutablePurpleInterpretedData.builder()
+        return ImmutablePurpleRecord.builder()
                 .fit(createFit(purple))
                 .characteristics(createCharacteristics(purple))
-                .somaticDrivers(purple.somaticDrivers())
-                .germlineDrivers(purple.germlineDrivers())
+                .somaticDrivers(ConversionUtil.mapToIterable(purple.somaticDrivers(), PurpleConversion::convert))
+                .germlineDrivers(ConversionUtil.mapToIterable(purple.germlineDrivers(), PurpleConversion::convert))
                 .allSomaticVariants(allSomaticVariants)
                 .reportableSomaticVariants(reportableSomaticVariants)
                 .additionalSuspectSomaticVariants(additionalSuspectSomaticVariants)
                 .allGermlineVariants(allGermlineVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
                 .additionalSuspectGermlineVariants(additionalSuspectGermlineVariants)
-                .allSomaticCopyNumbers(purple.allSomaticCopyNumbers())
-                .allSomaticGeneCopyNumbers(purple.allSomaticGeneCopyNumbers())
-                .suspectGeneCopyNumbersWithLOH(suspectGeneCopyNumbersWithLOH)
+                .allSomaticCopyNumbers(ConversionUtil.mapToIterable(purple.allSomaticCopyNumbers(), PurpleConversion::convert))
+                .allSomaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.allSomaticGeneCopyNumbers(), PurpleConversion::convert))
+                .suspectGeneCopyNumbersWithLOH(ConversionUtil.mapToIterable(suspectGeneCopyNumbersWithLOH, PurpleConversion::convert))
                 .allSomaticGainsLosses(allSomaticGainsLosses)
                 .reportableSomaticGainsLosses(reportableSomaticGainsLosses)
                 .nearReportableSomaticGains(nearReportableSomaticGains)
                 .additionalSuspectSomaticGainsLosses(additionalSuspectSomaticGainsLosses)
-                .allGermlineDeletions(allGermlineDeletions)
+                .allGermlineDeletions(ConversionUtil.mapToIterable(purple.allGermlineDeletions(), PurpleConversion::convert))
                 .allGermlineFullLosses(allGermlineFullLosses)
                 .reportableGermlineFullLosses(reportableGermlineFullLosses)
                 .build();
@@ -177,7 +191,7 @@ public class PurpleInterpreter {
             LinxBreakend second = breakendPair.getRight();
 
             boolean bothReported = first.reportedDisruption() && second.reportedDisruption();
-            boolean bothDel = first.type() == StructuralVariantType.DEL && second.type() == StructuralVariantType.DEL;
+            boolean bothDel = first.type() == LinxBreakendType.DEL && second.type() == LinxBreakendType.DEL;
             boolean sameGene = first.gene().equals(second.gene());
             boolean sameTranscript = first.transcriptId().equals(second.transcriptId());
             boolean noWildTypeRemaining = first.undisruptedCopyNumber() < 0.5 && second.undisruptedCopyNumber() < 0.5;
@@ -265,7 +279,7 @@ public class PurpleInterpreter {
     private static List<PurpleGainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, double ploidy, boolean isTargetRegions,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers) {
         List<DriverGene> allGenes = Lists.newArrayList();
-        for (GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
+        for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
             allGenes.add(ImmutableDriverGene.builder()
                     .gene(geneCopyNumber.geneName())
                     .reportMissenseAndInframe(false)
@@ -319,18 +333,18 @@ public class PurpleInterpreter {
                 .gene(driver.gene())
                 .transcript(driver.transcript())
                 .isCanonical(driver.isCanonical())
-                .interpretation(CopyNumberInterpretation.fromCNADriver(driver))
+                .interpretation(CopyNumberInterpretationUtil.fromCNADriver(driver))
                 .minCopies(Math.round(Math.max(0, driver.minCopyNumber())))
                 .maxCopies(Math.round(Math.max(0, driver.maxCopyNumber())))
                 .build();
     }
 
     @NotNull
-    private static PurityPloidyFit createFit(@NotNull PurpleData purple) {
-        return ImmutablePurityPloidyFit.builder()
-                .qc(purple.purityContext().qc())
+    private static PurpleFit createFit(@NotNull PurpleData purple) {
+        return ImmutablePurpleFit.builder()
+                .qc(PurpleConversion.convert(purple.purityContext().qc()))
                 .hasSufficientQuality(purple.purityContext().qc().pass())
-                .fittedPurityMethod(purple.purityContext().method())
+                .fittedPurityMethod(PurpleFittedPurityMethod.valueOf(purple.purityContext().method().name()))
                 .containsTumorCells(purple.purityContext().method() != FittedPurityMethod.NO_TUMOR)
                 .purity(purple.purityContext().bestFit().purity())
                 .minPurity(purple.purityContext().score().minPurity())
@@ -346,11 +360,11 @@ public class PurpleInterpreter {
         return ImmutablePurpleCharacteristics.builder()
                 .wholeGenomeDuplication(purple.purityContext().wholeGenomeDuplication())
                 .microsatelliteIndelsPerMb(purple.purityContext().microsatelliteIndelsPerMb())
-                .microsatelliteStatus(purple.purityContext().microsatelliteStatus())
+                .microsatelliteStatus(PurpleMicrosatelliteStatus.valueOf(purple.purityContext().microsatelliteStatus().name()))
                 .tumorMutationalBurdenPerMb(purple.purityContext().tumorMutationalBurdenPerMb())
-                .tumorMutationalBurdenStatus(purple.purityContext().tumorMutationalBurdenStatus())
+                .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalBurdenStatus().name()))
                 .tumorMutationalLoad(purple.purityContext().tumorMutationalLoad())
-                .tumorMutationalLoadStatus(purple.purityContext().tumorMutationalLoadStatus())
+                .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalLoadStatus().name()))
                 .svTumorMutationalBurden(purple.purityContext().svTumorMutationalBurden())
                 .build();
     }

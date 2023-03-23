@@ -3,14 +3,14 @@ package com.hartwig.hmftools.orange.report.chapters;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.sigs.SignatureAllocation;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.VirusInterpreterData;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretation;
-import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
+import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
+import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
@@ -41,11 +41,11 @@ import org.jetbrains.annotations.NotNull;
 public class SomaticFindingsChapter implements ReportChapter {
 
     @NotNull
-    private final OrangeReport report;
+    private final OrangeRecord report;
     @NotNull
     private final PlotPathResolver plotPathResolver;
 
-    public SomaticFindingsChapter(@NotNull final OrangeReport report, @NotNull final PlotPathResolver plotPathResolver) {
+    public SomaticFindingsChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver) {
         this.report = report;
         this.plotPathResolver = plotPathResolver;
     }
@@ -79,7 +79,7 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addSomaticVariants(@NotNull Document document) {
-        List<DriverCatalog> somaticDrivers = report.purple().somaticDrivers();
+        List<PurpleDriver> somaticDrivers = report.purple().somaticDrivers();
 
         List<VariantEntry> reportableVariants =
                 VariantEntryFactory.create(VariantDedup.apply(report.purple().reportableSomaticVariants()), somaticDrivers);
@@ -201,7 +201,7 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addLossOfHeterozygosity(@NotNull Document document) {
-        List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH = report.purple().suspectGeneCopyNumbersWithLOH();
+        List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH = report.purple().suspectGeneCopyNumbersWithLOH();
         String title = "Potentially interesting LOH events in case of MSI or HRD (" + suspectGeneCopyNumbersWithLOH.size() + ")";
         document.add(LossOfHeterozygosityTable.build(title, contentWidth(), suspectGeneCopyNumbersWithLOH));
     }

@@ -6,6 +6,10 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;
+import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
