@@ -6,7 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.Hotspot;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.TestVariantEntryFactory;

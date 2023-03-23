@@ -2,13 +2,23 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.PaveEntry;
+import com.hartwig.hmftools.orange.conversion.ConversionUtil;
+import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -38,47 +48,36 @@ public class PurpleVariantFactory {
 
     @NotNull
     private PurpleVariant toPurpleVariant(@NotNull SomaticVariant variant) {
+        com.hartwig.hmftools.common.variant.AllelicDepth nullable = variant.rnaDepth();
         return ImmutablePurpleVariant.builder()
-                .type(variant.type())
+                .type(PurpleVariantType.valueOf(variant.type().name()))
                 .gene(variant.gene())
-                .genesAffected(variant.genesAffected())
                 .chromosome(variant.chromosome())
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
-                .worstCodingEffect(variant.worstCodingEffect())
+                .worstCodingEffect(PurpleConversion.convert(variant.worstCodingEffect()))
                 .canonicalImpact(extractCanonicalImpact(variant))
                 .otherImpacts(extractOtherImpacts(variant))
-                .hotspot(variant.hotspot())
+                .hotspot(Hotspot.valueOf(variant.hotspot().name()))
                 .reported(variant.reported())
-                .filtered(variant.isFiltered())
-                .filter(variant.filter())
-                .recovered(variant.recovered())
                 .tumorDepth(extractTumorDepth(variant))
-                .rnaDepth(variant.rnaDepth())
-                .referenceDepth(variant.referenceDepth())
+                .rnaDepth(nullable == null ? null : PurpleConversion.convert(nullable))
                 .adjustedCopyNumber(variant.adjustedCopyNumber())
                 .adjustedVAF(variant.adjustedVAF())
                 .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
                 .variantCopyNumber(variant.variantCopyNumber())
                 .biallelic(variant.biallelic())
-                .genotypeStatus(variant.genotypeStatus())
-                .germlineStatus(variant.germlineStatus())
-                .trinucleotideContext(variant.trinucleotideContext())
-                .mappability(variant.mappability())
-                .microhomology(variant.microhomology())
-                .repeatSequence(variant.repeatSequence())
+                .genotypeStatus(PurpleGenotypeStatus.valueOf(variant.genotypeStatus().name()))
                 .repeatCount(variant.repeatCount())
-                .kataegis(variant.kataegis())
-                .tier(variant.tier())
                 .subclonalLikelihood(variant.subclonalLikelihood())
                 .localPhaseSets(variant.localPhaseSets())
                 .build();
     }
 
     @NotNull
-    private static AllelicDepth extractTumorDepth(@NotNull SomaticVariant variant) {
-        return ImmutableAllelicDepthImpl.builder()
+    private static PurpleAllelicDepth extractTumorDepth(@NotNull SomaticVariant variant) {
+        return ImmutablePurpleAllelicDepth.builder()
                 .alleleReadCount(variant.alleleReadCount())
                 .totalReadCount(variant.totalReadCount())
                 .build();
@@ -89,6 +88,8 @@ public class PurpleVariantFactory {
         // TODO Move effect parsing into SomaticVariant
 
         PaveEntry paveEntry = paveAlgo.run(variant.gene(), variant.canonicalTranscript(), variant.position());
+        List<VariantEffect> variantEffects = VariantEffect.effectsToList(variant.canonicalEffect());
+        List<PurpleVariantEffect> purpleVariantEffects = ConversionUtil.mapToList(variantEffects, PurpleConversion::convert);
         return ImmutablePurpleTranscriptImpact.builder()
                 .transcript(variant.canonicalTranscript())
                 .hgvsCodingImpact(variant.canonicalHgvsCodingImpact())
@@ -96,8 +97,8 @@ public class PurpleVariantFactory {
                 .affectedCodon(paveEntry != null ? paveEntry.affectedCodon() : null)
                 .affectedExon(paveEntry != null ? paveEntry.affectedExon() : null)
                 .spliceRegion(variant.spliceRegion())
-                .effects(VariantEffect.effectsToList(variant.canonicalEffect()))
-                .codingEffect(variant.canonicalCodingEffect())
+                .effects(purpleVariantEffects)
+                .codingEffect(PurpleConversion.convert(variant.canonicalCodingEffect()))
                 .build();
     }
 
@@ -110,6 +111,8 @@ public class PurpleVariantFactory {
 
         for (AltTranscriptReportableInfo altInfo : AltTranscriptReportableInfo.parseAltTranscriptInfo(variant.otherReportedEffects())) {
             PaveEntry paveEntry = paveAlgo.run(variant.gene(), altInfo.TransName, variant.position());
+            List<VariantEffect> variantEffects = VariantEffect.effectsToList(altInfo.Effects);
+            List<PurpleVariantEffect> purpleVariantEffects = ConversionUtil.mapToList(variantEffects, PurpleConversion::convert);
             otherImpacts.add(ImmutablePurpleTranscriptImpact.builder()
                     .transcript(altInfo.TransName)
                     .hgvsCodingImpact(altInfo.HgvsCoding)
@@ -117,8 +120,8 @@ public class PurpleVariantFactory {
                     .affectedCodon(paveEntry != null ? paveEntry.affectedCodon() : null)
                     .affectedExon(paveEntry != null ? paveEntry.affectedExon() : null)
                     .spliceRegion(variant.spliceRegion())
-                    .effects(VariantEffect.effectsToList(altInfo.Effects))
-                    .codingEffect(altInfo.Effect)
+                    .effects(purpleVariantEffects)
+                    .codingEffect(PurpleConversion.convert(altInfo.Effect))
                     .build());
         }
         return otherImpacts;

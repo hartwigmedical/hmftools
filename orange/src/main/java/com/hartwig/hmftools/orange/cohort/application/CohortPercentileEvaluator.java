@@ -15,7 +15,8 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidParents;
-import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
+import com.hartwig.hmftools.datamodel.cohort.Evaluation;
+import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
 import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapping;
@@ -24,7 +25,6 @@ import com.hartwig.hmftools.orange.cohort.mapping.DoidCohortMapper;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentiles;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
-import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;

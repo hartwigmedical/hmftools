@@ -24,15 +24,14 @@ import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
-import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
@@ -45,28 +44,38 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
+import com.hartwig.hmftools.datamodel.cohort.Evaluation;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.datamodel.metrics.WGSMetrics;
+import com.hartwig.hmftools.datamodel.orange.ExperimentType;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeSample;
+import com.hartwig.hmftools.datamodel.orange.OrangePlots;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.orange.OrangeSample;
+import com.hartwig.hmftools.datamodel.orange.PercentileType;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRNAConfig;
-import com.hartwig.hmftools.orange.algo.cuppa.CuppaData;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
-import com.hartwig.hmftools.orange.algo.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
 import com.hartwig.hmftools.orange.algo.purple.GermlineGainLossFactory;
-import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
-import com.hartwig.hmftools.orange.algo.wildtype.WildTypeGene;
-import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
 import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
@@ -78,7 +87,8 @@ import com.hartwig.hmftools.orange.cohort.mapping.DoidCohortMapper;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentiles;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
-import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
+import com.hartwig.hmftools.orange.conversion.ConversionUtil;
+import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -155,7 +165,7 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    public OrangeReport run(@NotNull OrangeConfig config) throws IOException {
+    public OrangeRecord run(@NotNull OrangeConfig config) throws IOException {
         Set<DoidNode> configuredPrimaryTumor = loadConfiguredPrimaryTumor(config);
         String platinumVersion = determinePlatinumVersion(config);
         OrangeSample refSample = loadSampleData(config, false);
@@ -172,19 +182,19 @@ public class OrangeAlgo {
         List<SignatureAllocation> sigAllocations = loadSigAllocations(config);
         IsofoxData isofoxData = loadIsofoxData(config);
 
-        ExperimentType experimentType = purpleData.purityContext().targeted() ? ExperimentType.TARGETED : ExperimentType.FULL_GENOME;
+        ExperimentType experimentType = purpleData.purityContext().targeted() ? ExperimentType.TARGETED : ExperimentType.WHOLE_GENOME;
         LOGGER.info("Determined experiment type to be '{}'", experimentType);
 
         LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
-        LinxInterpretedData linx = linxInterpreter.interpret(linxData);
+        LinxRecord linx = linxInterpreter.interpret(linxData);
 
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
         PurpleInterpreter purpleInterpreter =
                 new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, driverGenes, linx, chord);
-        PurpleInterpretedData purple = purpleInterpreter.interpret(purpleData);
+        PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 
-        IsofoxInterpretedData isofox = null;
+        IsofoxRecord isofox = null;
         if (isofoxData != null) {
             IsofoxInterpreter isofoxInterpreter = new IsofoxInterpreter(driverGenes, knownFusionCache, linx);
             isofox = isofoxInterpreter.interpret(isofoxData);
@@ -204,11 +214,11 @@ public class OrangeAlgo {
             LOGGER.info("Wild-type calling skipped due to insufficient tumor sample quality");
         }
 
-        OrangeReport report = ImmutableOrangeReport.builder()
+        OrangeRecord report = ImmutableOrangeRecord.builder()
                 .sampleId(config.tumorSampleId())
                 .experimentDate(config.experimentDate())
                 .experimentType(experimentType)
-                .configuredPrimaryTumor(configuredPrimaryTumor)
+                .configuredPrimaryTumor(ConversionUtil.mapToIterable(configuredPrimaryTumor, OrangeConversion::convert))
                 .refGenomeVersion(config.refGenomeVersion())
                 .platinumVersion(platinumVersion)
                 .refSample(refSample)
@@ -218,12 +228,12 @@ public class OrangeAlgo {
                 .linx(linx)
                 .wildTypeGenes(wildTypeGenes)
                 .isofox(isofox)
-                .lilac(lilac)
-                .virusInterpreter(virusInterpreter)
-                .chord(chord)
+                .lilac(OrangeConversion.convert(lilac))
+                .virusInterpreter(virusInterpreter != null ? OrangeConversion.convert(virusInterpreter) : null)
+                .chord(chord != null ? OrangeConversion.convert(chord) : null)
                 .cuppa(cuppa)
-                .peach(peach)
-                .sigAllocations(sigAllocations)
+                .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
+                .sigAllocations(ConversionUtil.mapToIterable(sigAllocations, OrangeConversion::convert))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();
@@ -296,11 +306,11 @@ public class OrangeAlgo {
         }
 
         String metricsFile = loadTumorSample ? config.tumorSampleWGSMetricsFile() : config.refSampleWGSMetricsFile();
-        WGSMetrics metrics = WGSMetricsFile.read(metricsFile);
+        WGSMetrics metrics = OrangeConversion.convert(WGSMetricsFile.read(metricsFile));
         LOGGER.info(" Loaded WGS metrics from {}", metricsFile);
 
         String flagstatFile = loadTumorSample ? config.tumorSampleFlagstatFile() : config.refSampleFlagstatFile();
-        Flagstat flagstat = FlagstatFile.read(flagstatFile);
+        Flagstat flagstat = OrangeConversion.convert(FlagstatFile.read(flagstatFile));
         LOGGER.info(" Loaded flagstat from {}", flagstatFile);
 
         return ImmutableOrangeSample.builder().metrics(metrics).flagstat(flagstat).build();
@@ -308,7 +318,7 @@ public class OrangeAlgo {
 
     @NotNull
     private static EnsemblDataCache loadEnsemblDataCache(@NotNull OrangeConfig config) {
-        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(config.ensemblDataDirectory(), config.refGenomeVersion());
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(config.ensemblDataDirectory(), RefGenomeVersion.from(config.refGenomeVersion().name()));
         ensemblDataCache.load(false);
         return ensemblDataCache;
     }
@@ -511,7 +521,7 @@ public class OrangeAlgo {
         }
 
         LOGGER.info("Loading PEACH from {}", new File(peachGenotypeTsv).getParent());
-        List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(config.peachGenotypeTsv());
+        List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
         LOGGER.info(" Loaded {} PEACH genotypes from {}", peachGenotypes.size(), config.peachGenotypeTsv());
 
         return peachGenotypes;
@@ -534,7 +544,7 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private Map<PercentileType, Evaluation> evaluateCohortPercentiles(@NotNull OrangeConfig config, @NotNull PurpleInterpretedData purple) {
+    private Map<PercentileType, Evaluation> evaluateCohortPercentiles(@NotNull OrangeConfig config, @NotNull PurpleRecord purple) {
         PercentileType type = PercentileType.SV_TMB;
 
         Observation svTmbObservation = ImmutableObservation.builder()

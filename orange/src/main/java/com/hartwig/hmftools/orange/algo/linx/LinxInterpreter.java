@@ -7,6 +7,10 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.orange.conversion.ConversionUtil;
+import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +31,7 @@ public class LinxInterpreter {
     }
 
     @NotNull
-    public LinxInterpretedData interpret(@NotNull LinxData linx) {
+    public LinxRecord interpret(@NotNull LinxData linx) {
         LOGGER.info("Analysing linx data");
         List<LinxFusion> additionalSuspectSomaticFusions =
                 DNAFusionSelector.selectInterestingUnreportedFusions(linx.allSomaticFusions(), driverGenes);
@@ -41,19 +45,19 @@ public class LinxInterpreter {
         LOGGER.info(" Found an additional {} suspect somatic breakends that are potentially interesting",
                 additionalSuspectSomaticBreakends.size());
 
-        return ImmutableLinxInterpretedData.builder()
-                .allSomaticStructuralVariants(linx.allSomaticStructuralVariants())
-                .allSomaticFusions(linx.allSomaticFusions())
-                .reportableSomaticFusions(linx.reportableSomaticFusions())
-                .additionalSuspectSomaticFusions(additionalSuspectSomaticFusions)
-                .allSomaticBreakends(linx.allSomaticBreakends())
-                .reportableSomaticBreakends(linx.reportableSomaticBreakends())
-                .additionalSuspectSomaticBreakends(additionalSuspectSomaticBreakends)
-                .somaticHomozygousDisruptions(linx.somaticHomozygousDisruptions())
-                .allGermlineStructuralVariants(linx.allGermlineStructuralVariants())
-                .allGermlineBreakends(linx.allGermlineBreakends())
-                .reportableGermlineBreakends(linx.reportableGermlineBreakends())
-                .germlineHomozygousDisruptions(linx.germlineHomozygousDisruptions())
+        return ImmutableLinxRecord.builder()
+                .allSomaticStructuralVariants(ConversionUtil.mapToIterable(linx.allSomaticStructuralVariants(), LinxConversion::convert))
+                .allSomaticFusions(ConversionUtil.mapToIterable(linx.allSomaticFusions(), LinxConversion::convert))
+                .reportableSomaticFusions(ConversionUtil.mapToIterable(linx.reportableSomaticFusions(), LinxConversion::convert))
+                .additionalSuspectSomaticFusions(ConversionUtil.mapToIterable(additionalSuspectSomaticFusions, LinxConversion::convert))
+                .allSomaticBreakends(ConversionUtil.mapToIterable(linx.allSomaticBreakends(), LinxConversion::convert))
+                .reportableSomaticBreakends(ConversionUtil.mapToIterable(linx.reportableSomaticBreakends(), LinxConversion::convert))
+                .additionalSuspectSomaticBreakends(ConversionUtil.mapToIterable(additionalSuspectSomaticBreakends, LinxConversion::convert))
+                .somaticHomozygousDisruptions(ConversionUtil.mapToIterable(linx.somaticHomozygousDisruptions(), LinxConversion::convert))
+                .allGermlineStructuralVariants(ConversionUtil.mapToIterable(linx.allGermlineStructuralVariants(), LinxConversion::convert))
+                .allGermlineBreakends(ConversionUtil.mapToIterable(linx.allGermlineBreakends(), LinxConversion::convert))
+                .reportableGermlineBreakends(ConversionUtil.mapToIterable(linx.reportableGermlineBreakends(), LinxConversion::convert))
+                .germlineHomozygousDisruptions(ConversionUtil.mapToIterable(linx.germlineHomozygousDisruptions(), LinxConversion::convert))
                 .build();
     }
 }

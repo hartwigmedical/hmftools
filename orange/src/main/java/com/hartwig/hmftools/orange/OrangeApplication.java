@@ -2,8 +2,8 @@ package com.hartwig.hmftools.orange;
 
 import java.io.IOException;
 
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportWriter;
 import com.hartwig.hmftools.orange.report.ReportWriterFactory;
 
@@ -49,7 +49,7 @@ public class OrangeApplication {
     private void run() throws IOException {
         LOGGER.info("Generating ORANGE report data");
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
-        OrangeReport report = algo.run(config);
+        OrangeRecord report = algo.run(config);
 
         ReportWriter writer = ReportWriterFactory.createToDiskWriter(config);
         writer.write(report);

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.report.tables;
 import java.text.DecimalFormat;
 import java.util.List;
 
+import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 import com.hartwig.hmftools.orange.report.interpretation.Variants;
@@ -40,9 +41,20 @@ public final class GermlineVariantTable {
             table.addCell(Cells.createContent(Variants.rnaDepthField(variant)));
             table.addCell(Cells.createContent(variant.biallelic() ? "Yes" : "No"));
             table.addCell(Cells.createContent(Variants.hotspotField(variant)));
-            table.addCell(Cells.createContent(variant.genotypeStatus().simplifiedDisplay()));
+            table.addCell(Cells.createContent(simplifiedDisplay(variant.genotypeStatus())));
         }
 
         return Tables.createWrapping(table, title);
+    }
+
+    private static String simplifiedDisplay(PurpleGenotypeStatus genotypeStatus) {
+        switch (genotypeStatus) {
+            case HOM_REF:
+            case HOM_ALT:
+                return "HOM";
+            case HET: return "HET";
+            case UNKNOWN: return "UNKNOWN";
+        }
+        throw new IllegalStateException();
     }
 }

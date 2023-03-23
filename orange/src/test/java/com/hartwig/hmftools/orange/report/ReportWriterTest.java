@@ -2,11 +2,11 @@ package com.hartwig.hmftools.orange.report;
 
 import java.io.IOException;
 
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -30,7 +30,7 @@ public class ReportWriterTest {
 
     @Test
     public void canGenerateTestReportFromMinimalTestData() throws IOException {
-        OrangeReport report = TestOrangeReportFactory.createMinimalTestReport();
+        OrangeRecord report = TestOrangeReportFactory.createMinimalTestReport();
 
         ReportWriter writer = ReportWriterFactory.createInMemoryWriter();
 
@@ -39,7 +39,7 @@ public class ReportWriterTest {
 
     @Test
     public void canGenerateTestReportFromProperTestData() throws IOException {
-        OrangeReport report = TestOrangeReportFactory.createProperTestReport();
+        OrangeRecord report = TestOrangeReportFactory.createProperTestReport();
 
         ReportWriter writer = ReportWriterFactory.createInMemoryWriter();
 
@@ -47,7 +47,7 @@ public class ReportWriterTest {
     }
 
     private static void run(@NotNull OrangeConfig config) throws IOException {
-        OrangeReport report = OrangeAlgo.fromConfig(config).run(config);
+        OrangeRecord report = OrangeAlgo.fromConfig(config).run(config);
 
         ReportWriter writer = ReportWriterFactory.createInMemoryWriter();
 

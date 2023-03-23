@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.orange.report.tables;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
@@ -18,7 +19,7 @@ public final class PharmacogeneticsTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<PeachGenotype> genotypes) {
+    public static Table build(@NotNull String title, float width, @NotNull Set<PeachGenotype> genotypes) {
         if (genotypes.isEmpty()) {
             return Tables.createEmpty(title, width);
         }
@@ -40,7 +41,7 @@ public final class PharmacogeneticsTable {
     }
 
     @NotNull
-    private static List<PeachGenotype> sort(@NotNull List<PeachGenotype> genotypes) {
+    private static List<PeachGenotype> sort(@NotNull Set<PeachGenotype> genotypes) {
         return genotypes.stream().sorted((genotype1, genotype2) -> {
             if (genotype1.gene().equals(genotype2.gene())) {
                 return genotype1.haplotype().compareTo(genotype2.haplotype());

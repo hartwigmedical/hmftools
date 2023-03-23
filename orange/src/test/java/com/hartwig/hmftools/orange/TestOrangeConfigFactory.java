@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange;
 import java.time.LocalDate;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -62,7 +62,7 @@ public final class TestOrangeConfigFactory {
                 .tumorSampleId(TUMOR_SAMPLE_ID)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
                 .experimentDate(LocalDate.now())
-                .refGenomeVersion(RefGenomeVersion.V37)
+                .refGenomeVersion(OrangeRefGenomeVersion.V37)
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)
                 .cohortMappingTsv(COHORT_MAPPING_TSV)

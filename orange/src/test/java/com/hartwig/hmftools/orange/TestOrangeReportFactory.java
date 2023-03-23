@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -10,48 +11,50 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.doid.DoidTestFactory;
 import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.hla.ImmutableLilacSummaryData;
-import com.hartwig.hmftools.common.hla.LilacAllele;
-import com.hartwig.hmftools.common.hla.LilacSummaryData;
-import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.lilac.LilacTestFactory;
-import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
-import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
-import com.hartwig.hmftools.common.rna.GeneExpression;
-import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
-import com.hartwig.hmftools.common.rna.RnaFusion;
-import com.hartwig.hmftools.common.rna.RnaStatistics;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
-import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
-import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.common.virus.VirusInterpreterData;
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
-import com.hartwig.hmftools.orange.algo.ExperimentType;
-import com.hartwig.hmftools.orange.algo.ImmutableOrangePlots;
-import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
-import com.hartwig.hmftools.orange.algo.ImmutableOrangeSample;
-import com.hartwig.hmftools.orange.algo.OrangePlots;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.OrangeSample;
+import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
+import com.hartwig.hmftools.datamodel.hla.LilacAllele;
+import com.hartwig.hmftools.datamodel.hla.LilacRecord;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRnaStatistics;
+import com.hartwig.hmftools.datamodel.isofox.StructuralVariantType;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.datamodel.orange.ExperimentType;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeSample;
+import com.hartwig.hmftools.datamodel.orange.OrangePlots;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
+import com.hartwig.hmftools.datamodel.orange.OrangeSample;
+import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.isofox.AltSpliceJunctionContext;
+import com.hartwig.hmftools.datamodel.isofox.AltSpliceJunctionType;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
+import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData;
+import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
-import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
-import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
-import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
+import com.hartwig.hmftools.orange.algo.isofox.OrangeIsofoxTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
-import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.wildtype.TestWildTypeFactory;
+import com.hartwig.hmftools.orange.conversion.LinxConversion;
+import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -65,31 +68,31 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    public static ImmutableOrangeReport.Builder builder() {
-        return ImmutableOrangeReport.builder()
+    public static ImmutableOrangeRecord.Builder builder() {
+        return ImmutableOrangeRecord.builder()
                 .sampleId(TEST_SAMPLE)
                 .experimentDate(LocalDate.of(2021, 11, 19))
                 .experimentType(ExperimentType.TARGETED)
-                .refGenomeVersion(RefGenomeVersion.V37)
+                .refGenomeVersion(OrangeRefGenomeVersion.V37)
                 .tumorSample(createMinimalOrangeSample())
                 .purple(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
                 .linx(TestLinxInterpretationFactory.createMinimalTestLinxData())
-                .lilac(ImmutableLilacSummaryData.builder().qc(Strings.EMPTY).build())
+                .lilac(ImmutableLilacRecord.builder().qc(Strings.EMPTY).build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
-                .chord(ChordTestFactory.createMinimalTestChordAnalysis())
+                .chord(OrangeConversion.convert(ChordTestFactory.createMinimalTestChordAnalysis()))
                 .cuppa(TestCuppaFactory.createMinimalCuppaData())
                 .plots(createMinimalOrangePlots());
     }
 
     @NotNull
-    public static OrangeReport createMinimalTestReport() {
+    public static OrangeRecord createMinimalTestReport() {
         return builder().build();
     }
 
     @NotNull
-    public static OrangeReport createProperTestReport() {
-        return builder().experimentType(ExperimentType.FULL_GENOME)
-                .addConfiguredPrimaryTumor(DoidTestFactory.createDoidNode("1", "cancer type"))
+    public static OrangeRecord createProperTestReport() {
+        return builder().experimentType(ExperimentType.WHOLE_GENOME)
+                .addConfiguredPrimaryTumor(OrangeConversion.convert(DoidTestFactory.createDoidNode("1", "cancer type")))
                 .platinumVersion("v5.31")
                 .refSample(createMinimalOrangeSample())
                 .germlineMVLHPerGene(createTestGermlineMVLHPerGene())
@@ -106,8 +109,8 @@ public final class TestOrangeReportFactory {
     @NotNull
     private static OrangeSample createMinimalOrangeSample() {
         return ImmutableOrangeSample.builder()
-                .metrics(WGSMetricsTestFactory.createMinimalTestWGSMetrics())
-                .flagstat(FlagstatTestFactory.createMinimalTestFlagstat())
+                .metrics(OrangeConversion.convert(WGSMetricsTestFactory.createMinimalTestWGSMetrics()))
+                .flagstat(OrangeConversion.convert(FlagstatTestFactory.createMinimalTestFlagstat()))
                 .build();
     }
 
@@ -132,8 +135,8 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static PurpleInterpretedData createTestPurpleData() {
-        return ImmutablePurpleInterpretedData.builder()
+    private static PurpleRecord createTestPurpleData() {
+        return ImmutablePurpleRecord.builder()
                 .from(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
                 .addReportableSomaticVariants(TestPurpleVariantFactory.builder()
                         .gene("ARID1A")
@@ -155,15 +158,14 @@ public final class TestOrangeReportFactory {
                 .allGermlineVariants(Lists.newArrayList())
                 .reportableGermlineVariants(Lists.newArrayList())
                 .additionalSuspectGermlineVariants(Lists.newArrayList())
-                .allGermlineFullLosses(Lists.newArrayList())
                 .reportableGermlineFullLosses(Lists.newArrayList())
                 .build();
     }
 
     @NotNull
-    private static LinxInterpretedData createTestLinxData() {
-        LinxFusion fusion = LinxTestFactory.createMinimalTestFusion();
-        return ImmutableLinxInterpretedData.builder()
+    private static LinxRecord createTestLinxData() {
+        LinxFusion fusion = LinxConversion.convert(LinxTestFactory.createMinimalTestFusion());
+        return ImmutableLinxRecord.builder()
                 .from(TestLinxInterpretationFactory.createMinimalTestLinxData())
                 .addReportableSomaticFusions(fusion)
                 .addReportableSomaticFusions(fusion)
@@ -180,19 +182,20 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static LilacSummaryData createTestLilacData() {
+    private static LilacRecord createTestLilacData()
+    {
         List<LilacAllele> alleles = Lists.newArrayList();
-        alleles.add(LilacTestFactory.builder().allele("Allele 1").build());
-        alleles.add(LilacTestFactory.builder().allele("Allele 2").somaticInframeIndel(1D).build());
+        alleles.add(OrangeConversion.convert(LilacTestFactory.builder().allele("Allele 1").build()));
+        alleles.add(OrangeConversion.convert(LilacTestFactory.builder().allele("Allele 2").somaticInframeIndel(1D).build()));
 
-        return ImmutableLilacSummaryData.builder().qc("PASS").alleles(alleles).build();
+        return ImmutableLilacRecord.builder().qc("PASS").alleles(alleles).build();
     }
 
     @NotNull
-    private static IsofoxInterpretedData createTestIsofoxData() {
-        RnaStatistics statistics = IsofoxTestFactory.rnaStatisticsBuilder().totalFragments(120000).duplicateFragments(60000).build();
+    private static IsofoxRecord createTestIsofoxData() {
+        IsofoxRnaStatistics statistics = OrangeIsofoxTestFactory.rnaStatisticsBuilder().totalFragments(120000).duplicateFragments(60000).build();
 
-        GeneExpression highExpression = IsofoxTestFactory.geneExpressionBuilder()
+        GeneExpression highExpression = OrangeIsofoxTestFactory.geneExpressionBuilder()
                 .geneName("MYC")
                 .tpm(126.27)
                 .medianTpmCancer(41)
@@ -201,7 +204,7 @@ public final class TestOrangeReportFactory {
                 .percentileCohort(0.93)
                 .build();
 
-        GeneExpression lowExpression = IsofoxTestFactory.geneExpressionBuilder()
+        GeneExpression lowExpression = OrangeIsofoxTestFactory.geneExpressionBuilder()
                 .geneName("CDKN2A")
                 .tpm(5.34)
                 .medianTpmCancer(18.32)
@@ -210,7 +213,7 @@ public final class TestOrangeReportFactory {
                 .percentileCohort(0.07)
                 .build();
 
-        RnaFusion novelKnownFusion = IsofoxTestFactory.rnaFusionBuilder()
+        RnaFusion novelKnownFusion = OrangeIsofoxTestFactory.rnaFusionBuilder()
                 .name("PTPRK_RSPO3")
                 .chromosomeUp("6")
                 .positionUp(128841405)
@@ -227,7 +230,7 @@ public final class TestOrangeReportFactory {
                 .cohortFrequency(3)
                 .build();
 
-        RnaFusion novelPromiscuousFusion = IsofoxTestFactory.rnaFusionBuilder()
+        RnaFusion novelPromiscuousFusion = OrangeIsofoxTestFactory.rnaFusionBuilder()
                 .name("NAP1L4_BRAF")
                 .chromosomeUp("11")
                 .positionUp(2972480)
@@ -244,7 +247,7 @@ public final class TestOrangeReportFactory {
                 .cohortFrequency(1)
                 .build();
 
-        NovelSpliceJunction novelSkippedExon = IsofoxTestFactory.novelSpliceJunctionBuilder()
+        NovelSpliceJunction novelSkippedExon = OrangeIsofoxTestFactory.novelSpliceJunctionBuilder()
                 .chromosome("1")
                 .geneName("ALK")
                 .junctionStart(50403003)
@@ -258,7 +261,7 @@ public final class TestOrangeReportFactory {
                 .cohortFrequency(3)
                 .build();
 
-        NovelSpliceJunction novelIntron = IsofoxTestFactory.novelSpliceJunctionBuilder()
+        NovelSpliceJunction novelIntron = OrangeIsofoxTestFactory.novelSpliceJunctionBuilder()
                 .chromosome("1")
                 .geneName("ALK")
                 .junctionStart(50403003)
@@ -272,7 +275,7 @@ public final class TestOrangeReportFactory {
                 .cohortFrequency(12)
                 .build();
 
-        return ImmutableIsofoxInterpretedData.builder()
+        return ImmutableIsofoxRecord.builder()
                 .summary(statistics)
                 .addAllAllGeneExpressions(Lists.newArrayList(highExpression, lowExpression))
                 .addReportableHighExpression(highExpression)
@@ -290,12 +293,11 @@ public final class TestOrangeReportFactory {
     private static VirusInterpreterData createTestVirusInterpreterData() {
         List<AnnotatedVirus> reportableViruses = Lists.newArrayList();
 
-        reportableViruses.add(ImmutableAnnotatedVirus.builder()
-                .taxid(1)
+        reportableViruses.add(com.hartwig.hmftools.datamodel.virus.ImmutableAnnotatedVirus.builder()
                 .name("virus A")
                 .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
                 .integrations(3)
-                .interpretation("BAD ONE")
+                .interpretation(VirusInterpretation.HPV)
                 .percentageCovered(87D)
                 .meanCoverage(42D)
                 .expectedClonalCoverage(3D)
@@ -307,9 +309,7 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static List<PeachGenotype> createTestPeachData() {
-        List<PeachGenotype> genotypes = Lists.newArrayList();
-        genotypes.add(PeachTestFactory.builder().gene("DPYD").haplotype("haplotype").build());
-        return genotypes;
+    private static Set<PeachGenotype> createTestPeachData() {
+        return Set.of(OrangeConversion.convert(PeachTestFactory.builder().gene("DPYD").haplotype("haplotype").build()));
     }
 }

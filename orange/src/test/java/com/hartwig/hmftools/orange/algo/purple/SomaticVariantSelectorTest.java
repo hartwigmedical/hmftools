@@ -8,9 +8,10 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 
 import org.junit.Test;
 
@@ -54,13 +55,13 @@ public class SomaticVariantSelectorTest {
     public void canSelectVariantsRelevantForCuppa() {
         String cuppaGene = SomaticVariantSelector.CUPPA_GENES.iterator().next();
         PurpleVariant cuppaRelevant =
-                TestPurpleVariantFactory.builder().gene(cuppaGene).type(VariantType.INDEL).repeatCount(4).reported(false).build();
+                TestPurpleVariantFactory.builder().gene(cuppaGene).type(PurpleVariantType.INDEL).repeatCount(4).reported(false).build();
 
         PurpleVariant cuppaTooManyRepeats =
-                TestPurpleVariantFactory.builder().gene(cuppaGene).type(VariantType.INDEL).repeatCount(10).reported(false).build();
+                TestPurpleVariantFactory.builder().gene(cuppaGene).type(PurpleVariantType.INDEL).repeatCount(10).reported(false).build();
 
         PurpleVariant wrongGene =
-                TestPurpleVariantFactory.builder().gene("wrong gene").type(VariantType.INDEL).repeatCount(4).reported(false).build();
+                TestPurpleVariantFactory.builder().gene("wrong gene").type(PurpleVariantType.INDEL).repeatCount(4).reported(false).build();
 
         List<PurpleVariant> variants = SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(cuppaRelevant,
                 cuppaTooManyRepeats,
@@ -82,26 +83,26 @@ public class SomaticVariantSelectorTest {
 
         PurpleVariant nonsense = TestPurpleVariantFactory.builder()
                 .gene(gene)
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
-                .worstCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(PurpleCodingEffect.SYNONYMOUS).build())
+                .worstCodingEffect(PurpleCodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .build();
 
         PurpleVariant splice = TestPurpleVariantFactory.builder()
                 .gene(gene)
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
-                .worstCodingEffect(CodingEffect.SPLICE)
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(PurpleCodingEffect.SYNONYMOUS).build())
+                .worstCodingEffect(PurpleCodingEffect.SPLICE)
                 .build();
 
         PurpleVariant missense = TestPurpleVariantFactory.builder()
                 .gene(gene)
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
-                .worstCodingEffect(CodingEffect.MISSENSE)
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(PurpleCodingEffect.SYNONYMOUS).build())
+                .worstCodingEffect(PurpleCodingEffect.MISSENSE)
                 .build();
 
         PurpleVariant wrongGene = TestPurpleVariantFactory.builder()
                 .gene("wrong gene")
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
-                .worstCodingEffect(CodingEffect.MISSENSE)
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(PurpleCodingEffect.SYNONYMOUS).build())
+                .worstCodingEffect(PurpleCodingEffect.MISSENSE)
                 .build();
 
         List<PurpleVariant> variants =

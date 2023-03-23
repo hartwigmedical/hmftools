@@ -5,8 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sigs.ImmutableSignatureAllocation;
-import com.hartwig.hmftools.common.sigs.SignatureAllocation;
+import com.hartwig.hmftools.datamodel.sigs.ImmutableSignatureAllocation;
+import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

@@ -6,8 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.linx.LinxTestFactory;
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 
 import org.junit.Test;
 
@@ -15,8 +14,8 @@ public class DNAFusionEvaluatorTest {
 
     @Test
     public void canDetermineIfFusionIsPresent() {
-        LinxFusion fusion1 = LinxTestFactory.fusionBuilder().geneStart("start 1").geneEnd("end 1").build();
-        LinxFusion fusion2 = LinxTestFactory.fusionBuilder().geneStart("start 2").geneEnd("end 1").build();
+        LinxFusion fusion1 = LinxOrangeTestFactory.fusionBuilder().geneStart("start 1").geneEnd("end 1").build();
+        LinxFusion fusion2 = LinxOrangeTestFactory.fusionBuilder().geneStart("start 2").geneEnd("end 1").build();
 
         List<LinxFusion> fusions = Lists.newArrayList(fusion1, fusion2);
         assertTrue(DNAFusionEvaluator.hasFusion(fusions, "start 2", "end 1"));

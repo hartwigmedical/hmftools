@@ -7,27 +7,30 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.chord.ChordData;
-import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.linx.HomozygousDisruption;
-import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.peach.PeachGenotype;
-import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.VirusInterpreterData;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.chord.ChordRecord;
+import com.hartwig.hmftools.datamodel.chord.ChordStatus;
+import com.hartwig.hmftools.datamodel.cohort.Evaluation;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.orange.PercentileType;
+import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
+import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
-import com.hartwig.hmftools.orange.algo.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
-import com.hartwig.hmftools.orange.algo.purple.PurpleCharacteristics;
-import com.hartwig.hmftools.orange.algo.purple.PurpleGainLoss;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
-import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
-import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Drivers;
@@ -55,11 +58,11 @@ public class FrontPageChapter implements ReportChapter {
     private static final String NONE = "None";
 
     @NotNull
-    private final OrangeReport report;
+    private final OrangeRecord report;
     @NotNull
     private final PlotPathResolver plotPathResolver;
 
-    public FrontPageChapter(@NotNull final OrangeReport report, @NotNull final PlotPathResolver plotPathResolver) {
+    public FrontPageChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver) {
         this.report = report;
         this.plotPathResolver = plotPathResolver;
     }
@@ -105,9 +108,9 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private static String configuredPrimaryTumor(@NotNull Set<DoidNode> nodes) {
+    private static String configuredPrimaryTumor(@NotNull Set<OrangeDoidNode> nodes) {
         Set<String> configured = Sets.newHashSet();
-        for (DoidNode node : nodes) {
+        for (OrangeDoidNode node : nodes) {
             configured.add(node.doidTerm() + " (DOID " + node.doid() + ")");
         }
 
@@ -210,7 +213,7 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String germlineVariantDriverString() {
         List<PurpleVariant> reportableGermlineVariants = report.purple().reportableGermlineVariants();
-        List<DriverCatalog> germlineDrivers = report.purple().germlineDrivers();
+        List<PurpleDriver> germlineDrivers = report.purple().germlineDrivers();
         if (reportableGermlineVariants != null && germlineDrivers != null) {
             return variantDriverString(reportableGermlineVariants, germlineDrivers);
         } else {
@@ -219,14 +222,14 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private static String variantDriverString(@NotNull List<PurpleVariant> variants, @NotNull List<DriverCatalog> drivers) {
+    private static String variantDriverString(@NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers) {
         if (variants.isEmpty()) {
             return NONE;
         }
 
         Set<String> highDriverGenes = Sets.newTreeSet(Comparator.naturalOrder());
         for (PurpleVariant variant : variants) {
-            DriverCatalog driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
+            PurpleDriver driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
             if (driver != null && DriverInterpretation.interpret(driver.driverLikelihood()) == DriverInterpretation.HIGH) {
                 highDriverGenes.add(variant.gene());
             }
@@ -315,8 +318,9 @@ public class FrontPageChapter implements ReportChapter {
 
         Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
         for (AnnotatedVirus virus : virusInterpreter.reportableViruses()) {
-            if (virus.interpretation() != null) {
-                viruses.add(virus.interpretation());
+            VirusInterpretation interpretation = virus.interpretation();
+            if (interpretation != null) {
+                viruses.add(interpretation.name());
             } else {
                 viruses.add(virus.name());
             }
@@ -328,44 +332,77 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String msiString() {
         PurpleCharacteristics characteristics = report.purple().characteristics();
-        return SINGLE_DIGIT.format(characteristics.microsatelliteIndelsPerMb()) + " (" + characteristics.microsatelliteStatus().display()
-                + ")";
+        return SINGLE_DIGIT.format(characteristics.microsatelliteIndelsPerMb()) + " (" + display(characteristics.microsatelliteStatus()) + ")";
     }
 
     @NotNull
     private String tmlString() {
         PurpleCharacteristics characteristics = report.purple().characteristics();
-        return characteristics.tumorMutationalLoad() + " (" + characteristics.tumorMutationalLoadStatus().display() + ")";
+        return characteristics.tumorMutationalLoad() + " (" + display(characteristics.tumorMutationalLoadStatus()) + ")";
+    }
+
+    private static String display(PurpleMicrosatelliteStatus microsatelliteStatus) {
+        switch (microsatelliteStatus) {
+            case MSI:
+                return "Unstable";
+            case MSS:
+                return "Stable";
+            case UNKNOWN:
+                return "Unknown";
+        }
+        throw new IllegalStateException();
+    }
+
+    private static String display(@NotNull PurpleTumorMutationalStatus tumorMutationalStatus) {
+        switch (tumorMutationalStatus)
+        {
+            case HIGH:
+                return "High";
+            case LOW:
+                return "Low";
+            case UNKNOWN:
+                return "Unknown";
+        }
+        throw new IllegalStateException();
     }
 
     @NotNull
     private String hrDeficiencyString() {
-        ChordData chord = report.chord();
+        ChordRecord chord = report.chord();
         if (chord == null) {
             return ReportResources.NOT_AVAILABLE;
         }
 
         if (chord.hrStatus() == ChordStatus.CANNOT_BE_DETERMINED) {
-            return ChordStatus.CANNOT_BE_DETERMINED.display();
+            return displayChordStatus(ChordStatus.CANNOT_BE_DETERMINED);
         }
 
         String addon = Strings.EMPTY;
         if (chord.hrStatus() == ChordStatus.HR_DEFICIENT) {
             if (chord.hrdType().contains("BRCA1")) {
-                addon = " - BRCA1 (" + TWO_DIGITS.format(chord.BRCA1Value()) + ")";
+                addon = " - BRCA1 (" + TWO_DIGITS.format(chord.brca1Value()) + ")";
             } else if (chord.hrdType().contains("BRCA2")) {
-                addon = " - BRCA2 (" + TWO_DIGITS.format(chord.BRCA2Value()) + ")";
+                addon = " - BRCA2 (" + TWO_DIGITS.format(chord.brca2Value()) + ")";
             } else {
                 addon = chord.hrdType();
             }
         }
-        return SINGLE_DIGIT.format(chord.hrdValue()) + " (" + chord.hrStatus().display() + addon + ")";
+        return SINGLE_DIGIT.format(chord.hrdValue()) + " (" + displayChordStatus(chord.hrStatus()) + addon + ")";
+    }
+
+    private static String displayChordStatus(ChordStatus chordStatus) {
+        switch (chordStatus) {
+            case CANNOT_BE_DETERMINED: return "Cannot be determined";
+            case HR_PROFICIENT: return "Proficient";
+            case HR_DEFICIENT: return "Deficient";
+            default: return "Unknown";
+        }
     }
 
     @NotNull
     private String dpydStatus() {
-        List<PeachGenotype> genotypes = report.peach();
-        if (genotypes == null ) {
+        Set<PeachGenotype> genotypes = report.peach();
+        if (genotypes == null) {
             return ReportResources.NOT_AVAILABLE;
         }
 
@@ -391,7 +428,7 @@ public class FrontPageChapter implements ReportChapter {
             if (cancerType != null && !cancerType.equals(CohortConstants.COHORT_OTHER)
                     && !cancerType.equals(CohortConstants.COHORT_UNKNOWN)) {
                 Double percentile = evaluation.cancerTypePercentile();
-                String cancerTypePercentile = percentile != null ? PERCENTAGE.format(evaluation.cancerTypePercentile() * 100) : "NA";
+                String cancerTypePercentile = percentile != null ? PERCENTAGE.format(percentile * 100) : "NA";
                 addon = addon + " | " + evaluation.cancerType() + " " + cancerTypePercentile;
             }
             addon = addon + ")";
@@ -415,7 +452,7 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String lineCountString() {
         CuppaData cuppa = report.cuppa();
-        return cuppa != null ? Integer.toString(cuppa.LINECount()) : ReportResources.NOT_AVAILABLE;
+        return cuppa != null ? Integer.toString(cuppa.lineCount()) : ReportResources.NOT_AVAILABLE;
     }
 
     @NotNull

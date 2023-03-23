@@ -4,12 +4,12 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.rna.GeneExpression;
-import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
-import com.hartwig.hmftools.common.rna.RnaFusion;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.ExpressionTable;
 import com.hartwig.hmftools.orange.report.tables.NovelSpliceJunctionTable;
@@ -29,9 +29,9 @@ public class RNAFindingsChapter implements ReportChapter {
     private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#'%'");
 
     @NotNull
-    private final OrangeReport report;
+    private final OrangeRecord report;
 
-    public RNAFindingsChapter(@NotNull final OrangeReport report) {
+    public RNAFindingsChapter(@NotNull final OrangeRecord report) {
         this.report = report;
     }
 
@@ -80,8 +80,8 @@ public class RNAFindingsChapter implements ReportChapter {
     }
 
     private void addExpressionTables(@NotNull Document document) {
-        IsofoxInterpretedData isofox = report.isofox();
-        List<GeneCopyNumber> somaticGeneCopyNumbers = report.purple().allSomaticGeneCopyNumbers();
+        IsofoxRecord isofox = report.isofox();
+        List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = report.purple().allSomaticGeneCopyNumbers();
 
         List<GeneExpression> reportableHighExpression = isofox != null ? isofox.reportableHighExpression() : Lists.newArrayList();
         String titleHighExpression = "Genes with high expression (" + reportableHighExpression.size() + ")";
@@ -93,7 +93,7 @@ public class RNAFindingsChapter implements ReportChapter {
     }
 
     private void addRNAFusionTables(@NotNull Document document) {
-        IsofoxInterpretedData isofox = report.isofox();
+        IsofoxRecord isofox = report.isofox();
 
         List<RnaFusion> reportableNovelKnownFusions = isofox != null ? isofox.reportableNovelKnownFusions() : Lists.newArrayList();
         String titleKnownFusions = "Known fusions detected in RNA and not in DNA (" + reportableNovelKnownFusions.size() + ")";
@@ -105,7 +105,7 @@ public class RNAFindingsChapter implements ReportChapter {
     }
 
     private void addNovelSpliceJunctionTables(@NotNull Document document) {
-        IsofoxInterpretedData isofox = report.isofox();
+        IsofoxRecord isofox = report.isofox();
 
         List<NovelSpliceJunction> reportableSkippedExons = isofox != null ? isofox.reportableSkippedExons() : Lists.newArrayList();
         String titleSkippedExonJunctions =
