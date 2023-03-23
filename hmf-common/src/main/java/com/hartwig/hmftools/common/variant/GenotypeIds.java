@@ -50,12 +50,12 @@ public class GenotypeIds
         {
             String vcfSampleName = vcfSampleNames.get(i);
 
-            if(vcfSampleName.equals(referenceId) || (allowContains && vcfSampleName.contains(referenceId)))
+            if(vcfSampleName.equals(referenceId) || (allowContains && !referenceId.isEmpty() && vcfSampleName.contains(referenceId)))
             {
                 if(expectedRefOrdinal >= 0 && i != expectedRefOrdinal)
                     return false;
             }
-            else if(vcfSampleName.equals(tumorId) || (allowContains && vcfSampleName.contains(tumorId)))
+            else if(vcfSampleName.equals(tumorId) || (allowContains && !tumorId.isEmpty() && vcfSampleName.contains(tumorId)))
             {
                 if(expectedTumorOrdinal >= 0 && i != expectedTumorOrdinal)
                     return false;
@@ -82,12 +82,14 @@ public class GenotypeIds
             {
                 String vcfSampleName = vcfSampleNames.get(i);
 
-                if(tumorOrdinal < 0 && (vcfSampleName.equals(tumorId) || (!checkExact && vcfSampleName.contains(tumorId))))
+                if(tumorOrdinal < 0 && (vcfSampleName.equals(tumorId)
+                || (!checkExact && !tumorId.isEmpty() && vcfSampleName.contains(tumorId))))
                 {
                     vcfTumorId = vcfSampleNames.get(i);
                     tumorOrdinal = i;
                 }
-                else if(referenceOrdinal < 0 && (vcfSampleName.equals(referenceId) || (!checkExact && vcfSampleName.contains(referenceId))))
+                else if(referenceOrdinal < 0 && (vcfSampleName.equals(referenceId)
+                || (!checkExact && !referenceId.isEmpty() && vcfSampleName.contains(referenceId))))
                 {
                     vcfRefefenceId = vcfSampleNames.get(i);
                     referenceOrdinal = i;
