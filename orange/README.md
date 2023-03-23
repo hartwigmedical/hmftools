@@ -216,6 +216,8 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 - Upcoming
+  - The ORANGE datamodel used in the json output has been separated from the ORANGE logic and available as an artifact for 
+    other projects to depend on (see also [ORANGE-datamodel](../orange-datamodel)) 
   - Combination of urethra cancer and renal cell cancer is mapped to OTHER by ORANGE cohort mapper
   - The ORANGE cohort mapping application queries clinical view rather than datarequest
 - [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.3)
