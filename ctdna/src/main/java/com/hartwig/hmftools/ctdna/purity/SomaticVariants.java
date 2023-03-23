@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ctdna.purity;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
@@ -22,6 +23,8 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
+
+import org.apache.commons.math3.distribution.PoissonDistribution;
 
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
@@ -217,15 +220,25 @@ public class SomaticVariants
         // ctDNA_TF = 2 * cfDNA_VAF / [ PLOIDY * ADJ_PRIMARY_VAF + cfDNA_VAF * ( 2 - PLOIDY)]
         // ADJ_PRIMARY_VAF= PRIMARY_VAF * [ PURITY*PLOIDY - 2*(1-PURITY)]/PURITY/PLOIDY
 
-        double sampleVaf = sampleCounts.AlleleFragmentTotal / sampleDepthTotal;
+        double noise = sampleDepthTotal / 1000000.0 * mConfig.NoiseReadsPerMillion;
+
+        double sampleVaf = max(sampleCounts.AlleleFragmentTotal - noise, 0) / sampleDepthTotal;
 
         double samplePurity = 2 * sampleVaf / (tumorPloidy * adjustedTumorVaf + sampleVaf * (2 - tumorPloidy));
 
         double qualPerAllele = sampleCounts.AllelelQualTotal / (double)sampleCounts.AlleleFragmentTotal;
 
+        double probability = 1;
+
+        if(sampleCounts.AlleleFragmentTotal > noise && noise > 0)
+        {
+            PoissonDistribution poisson = new PoissonDistribution(noise);
+            probability = 1 - poisson.cumulativeProbability(sampleCounts.AlleleFragmentTotal - 1);
+        }
+
         return new SomaticVariantResult(
                 true, variantCount, sampleCounts.AlleleFragmentTotal, qualPerAllele, sampleCounts.medianDepth(),
-                tumorVaf, adjustedTumorVaf, sampleVaf, samplePurity);
+                tumorVaf, adjustedTumorVaf, sampleVaf, samplePurity, probability);
     }
 
     private class SomaticVariantCounts

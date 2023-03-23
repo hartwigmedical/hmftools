@@ -16,6 +16,7 @@ public class SomaticVariantResult
     public final double AdjustedTumorVaf;
     public final double SampleVaf;
     public final double SomaticPurity;
+    public final double Probability;
 
     private boolean mValid;
 
@@ -23,7 +24,7 @@ public class SomaticVariantResult
 
     public SomaticVariantResult(
             final boolean valid, final int variantCount, final int alleleFragmentTotal, final double qualPerAdTotal, final double depthMedian,
-            final double tumorVaf, final double adjustedTumorVaf, final double sampleVaf, final double somaticPurity)
+            final double tumorVaf, final double adjustedTumorVaf, final double sampleVaf, final double somaticPurity, double probability)
     {
         VariantCount = variantCount;
         AlleleFragmentTotal = alleleFragmentTotal;
@@ -33,6 +34,7 @@ public class SomaticVariantResult
         AdjustedTumorVaf = adjustedTumorVaf;
         SampleVaf = sampleVaf;
         SomaticPurity = somaticPurity;
+        Probability = probability;
         mValid = valid;
     }
 
@@ -47,6 +49,7 @@ public class SomaticVariantResult
         AdjustedTumorVaf = 0;
         SampleVaf = 0;
         SomaticPurity = 0;
+        Probability = 0;
     }
 
     public boolean valid() { return mValid; }
@@ -55,6 +58,7 @@ public class SomaticVariantResult
     {
         StringJoiner sj = new StringJoiner(DELIMETER);
         sj.add("SomaticPurity");
+        sj.add("SomaticProbability");
         sj.add("VariantCount");
         sj.add("DepthMedian");
         sj.add("AlleleFragmentTotal");
@@ -69,6 +73,7 @@ public class SomaticVariantResult
     {
         StringJoiner sj = new StringJoiner(DELIMETER);
         sj.add(format("%4.3e", SomaticPurity));
+        sj.add(format("%4.3e", Probability));
         sj.add(format("%d", VariantCount));
         sj.add(format("%.1f", DepthMedian));
         sj.add(format("%d", AlleleFragmentTotal));

@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.DELIMETER;
+import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION;
 
 import java.util.List;
 
@@ -26,6 +28,7 @@ public class PurityConfig
     public final String OutputId;
     public final boolean WriteVariants;
     public final boolean WriteCnRatios;
+    public final int NoiseReadsPerMillion;
 
     private static final String PATIENT_ID = "patient_id";
     private static final String TUMOR_ID = "tumor_id";
@@ -35,6 +38,7 @@ public class PurityConfig
     private static final String COBALT_DIR = "cobalt_dir";
     private static final String WRITE_VARIANTS = "write_variants";
     private static final String WRITE_CN_RATIOS = "write_cn_ratios";
+    private static final String NOISE_READS_PER_MILLION = "noise_per_mill";
 
     public PurityConfig(final CommandLine cmd)
     {
@@ -45,7 +49,10 @@ public class PurityConfig
 
         CtDnaSamples = Lists.newArrayList();
 
-        for(String ctDnaSample : cmd.getOptionValue(CTDNA_SAMPLES).split(",", -1))
+        String ctDnaSamples = cmd.getOptionValue(CTDNA_SAMPLES);
+        String sampleDelim = ctDnaSamples.contains(DELIMETER) ? DELIMETER : ";";
+
+        for(String ctDnaSample : ctDnaSamples.split(sampleDelim, -1))
         {
             CT_LOGGER.info("added ctDNA sample({})", ctDnaSample);
             CtDnaSamples.add(ctDnaSample);
@@ -63,6 +70,8 @@ public class PurityConfig
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
+        NoiseReadsPerMillion = Integer.parseInt(cmd.getOptionValue(NOISE_READS_PER_MILLION, String.valueOf(DEFAULT_NOISE_READS_PER_MILLION)));
+
         WriteVariants = cmd.hasOption(WRITE_VARIANTS);
         WriteCnRatios = cmd.hasOption(WRITE_CN_RATIOS);
     }
@@ -77,6 +86,11 @@ public class PurityConfig
         options.addOption(COBALT_DIR, true, "Sample Cobalt directory");
         options.addOption(WRITE_VARIANTS, false, "Write variants");
         options.addOption(WRITE_CN_RATIOS, false, "Write copy number segment GC ratio summary");
+
+        options.addOption(
+                NOISE_READS_PER_MILLION, true,
+                "Expected reads-per-million from noise, default: " + DEFAULT_NOISE_READS_PER_MILLION);
+
         addOutputOptions(options);
         addLoggingOptions(options);
     }
