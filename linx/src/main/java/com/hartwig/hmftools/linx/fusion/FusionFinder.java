@@ -170,7 +170,7 @@ public class FusionFinder
     private static void logInvalidReasonInfo(
             final BreakendTransData trans1, final BreakendTransData trans2, final String reasonType, final String reason)
     {
-        if(!LOG_INVALID_REASON)
+        if(!LOG_INVALID_REASON || !LNX_LOGGER.isTraceEnabled())
             return;
 
         if(trans2 == null)
