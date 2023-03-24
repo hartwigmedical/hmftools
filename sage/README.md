@@ -124,7 +124,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -hotspots /path/to/KnownHotspots.37.vcf.gz \
     -panel_bed /path/to/ActionableCodingPanel.somatic.37.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
-    -ensembl_data_dir /path_to_ensmebl_cache/ \
+    -ensembl_data_dir /path_to_ensembl_cache/ \
     -out /path/to/COLO829v003.sage.vcf.gz
 ```
 
@@ -140,7 +140,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -hotspots /path/to/KnownHotspots.37.vcf.gz \
     -panel_bed /path/to/ActionableCodingPanel.somatic.37.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
-    -ensembl_data_dir /path_to_ensmebl_cache/ \
+    -ensembl_data_dir /path_to_ensembl_cache/ \
     -out /path/to/COLO829v003.sage.vcf.gz
 ```
 
