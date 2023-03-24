@@ -179,9 +179,12 @@ public class VariantPhaser
             }
         }
 
-        SG_LOGGER.trace("region({}) phasing groups(coll={} start={} filtered={}) postMerge({}) assigned({}) rc(pass={} valid={} uniqueRCs={})",
-                mRegion, mPhasedGroupCollections.size(), startCount, startFilteredCount, finalPhasedGroups.size(), assignedLps,
-                passingCounters.size(), validCounters.size(), uniqueRCs != null ? uniqueRCs.size() : 0);
+        if(SG_LOGGER.isTraceEnabled())
+        {
+            SG_LOGGER.trace("region({}) phasing groups(coll={} start={} filtered={}) postMerge({}) assigned({}) rc(pass={} valid={} uniqueRCs={})",
+                    mRegion, mPhasedGroupCollections.size(), startCount, startFilteredCount, finalPhasedGroups.size(), assignedLps,
+                    passingCounters.size(), validCounters.size(), uniqueRCs != null ? uniqueRCs.size() : 0);
+        }
 
         // mPerfCounters.get(PC_FORM_LPS).stop();
     }

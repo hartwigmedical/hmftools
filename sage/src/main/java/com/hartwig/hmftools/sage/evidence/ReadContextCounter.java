@@ -434,7 +434,7 @@ public class ReadContextCounter implements VariantHotspot
 
     private void logReadEvidence(final String sampleId, final SAMRecord record, final String matchType, int readIndex)
     {
-        if(sampleId == null)
+        if(sampleId == null || !SG_LOGGER.isTraceEnabled())
             return;
 
             // Variant,MatchType,ReadId,ReadStart,Cigar,LeftCore,Index,RightCore,ReadIndex

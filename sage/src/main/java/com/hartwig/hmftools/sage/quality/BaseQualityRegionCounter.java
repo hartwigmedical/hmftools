@@ -110,7 +110,7 @@ public class BaseQualityRegionCounter implements CigarHandler
 
     public void run()
     {
-        SG_LOGGER.trace("processing BQR region {}", mRegion);
+        // SG_LOGGER.trace("processing BQR region {}", mRegion);
 
         mPerfCounter.start();
 

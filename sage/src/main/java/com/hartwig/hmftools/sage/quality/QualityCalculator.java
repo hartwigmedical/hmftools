@@ -79,9 +79,12 @@ public class QualityCalculator
 
         double modifiedBaseQuality = modifiedBaseQuality(mConfig, baseQuality, distanceFromReadEdge);
 
-        SG_LOGGER.trace(format("variant(%s) read(%s) distFromEdge(%d) events(%.1f) qual(map=%d rawBase=%.1f base=%.1f) modified(map=%d base=%.1f)",
-                readContextCounter.varString(), record.getReadName(), distanceFromReadEdge, numberOfEvents,
-                mapQuality, rawBaseQual, baseQuality, modifiedMapQuality, modifiedBaseQuality));
+        if(SG_LOGGER.isTraceEnabled())
+        {
+            SG_LOGGER.trace(format("variant(%s) read(%s) distFromEdge(%d) events(%.1f) qual(map=%d rawBase=%.1f base=%.1f) modified(map=%d base=%.1f)",
+                    readContextCounter.varString(), record.getReadName(), distanceFromReadEdge, numberOfEvents,
+                    mapQuality, rawBaseQual, baseQuality, modifiedMapQuality, modifiedBaseQuality));
+        }
     }
 
     public double baseQuality(final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record)
