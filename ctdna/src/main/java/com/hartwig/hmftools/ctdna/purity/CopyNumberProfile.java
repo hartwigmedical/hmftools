@@ -24,6 +24,8 @@ import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
+import org.apache.logging.log4j.Level;
+
 public class CopyNumberProfile
 {
     private final PurityConfig mConfig;
@@ -142,13 +144,16 @@ public class CopyNumberProfile
                     copyNumber.chromosome(), copyNumber.start(), copyNumber.end(),
                     Doubles.round(copyNumber.averageTumorCopyNumber(), 2));
 
-            segmentRatios.forEach(x -> cnSegment.addRatio(x.tumorGCRatio()));
+            segmentRatios.forEach(x -> cnSegment.addRatio(new GcRatioData(x.position(), x.tumorGCRatio())));
 
             mCopyNumberGcRatios.add(cnSegment);
 
-            CT_LOGGER.trace(format("segment(%s:%d - %d) copyNumber(%.2f) count(%d) mean(%.4f) median(%.4f)",
-                    cnSegment.Chromosome, cnSegment.SegmentStart, cnSegment.SegmentEnd, cnSegment.CopyNumber,
-                    cnSegment.count(), cnSegment.mean(), cnSegment.median()));
+            if(CT_LOGGER.isTraceEnabled())
+            {
+                CT_LOGGER.trace(format("segment(%s:%d - %d) copyNumber(%.2f) count(%d) mean(%.4f) median(%.4f)",
+                        cnSegment.Chromosome, cnSegment.SegmentStart, cnSegment.SegmentEnd, cnSegment.CopyNumber,
+                        cnSegment.count(), cnSegment.mean(), cnSegment.median()));
+            }
         }
     }
 

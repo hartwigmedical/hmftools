@@ -19,6 +19,7 @@ public class ResultsWriter
     private final BufferedWriter mSampleWriter;
     private final BufferedWriter mVariantWriter;
     private final BufferedWriter mCnRatioWriter;
+    private final BufferedWriter mGcRatioWriter;
 
     public ResultsWriter(final PurityConfig config)
     {
@@ -26,6 +27,7 @@ public class ResultsWriter
         mSampleWriter = initialiseWriter();
         mVariantWriter = config.WriteVariants ? initialiseVariantWriter() : null;
         mCnRatioWriter = config.WriteCnRatios ? initialiseCnRatioWriter() : null;
+        mGcRatioWriter = config.WriteCnRatios ? initialiseGcRatioWriter() : null;
     }
 
     private BufferedWriter initialiseWriter()
@@ -151,6 +153,8 @@ public class ResultsWriter
         if(mCnRatioWriter == null)
             return;
 
+        // writeGcRatioData(sampleId, cnSegment); // ratios are written before they are sorted for median calcs
+
         try
         {
             mCnRatioWriter.write(format("%s,%s,%d,%d,%.2f,%d,%.4f,%.4f",
@@ -164,11 +168,57 @@ public class ResultsWriter
         }
     }
 
+    private BufferedWriter initialiseGcRatioWriter()
+    {
+        try
+        {
+            String fileName = mConfig.OutputDir + mConfig.PatientId + ".gc_ratio_data";
+
+            if(mConfig.OutputId != null)
+                fileName += "." + mConfig.OutputId;
+
+            fileName += ".csv";
+
+            BufferedWriter writer = createBufferedWriter(fileName, false);
+
+            writer.write("SampleId,Chromosome,Position,SegmentStart,SegmentEnd,CopyNumber,TumorGcRatio");
+            writer.newLine();
+            return writer;
+        }
+        catch(IOException e)
+        {
+            CT_LOGGER.error("failed to initialise copy number segment file: {}", e.toString());
+            return null;
+        }
+    }
+
+    private void writeGcRatioData(final String sampleId, final CopyNumberGcData cnSegment)
+    {
+        if(mGcRatioWriter == null)
+            return;
+
+        try
+        {
+            for(GcRatioData gcRatioData : cnSegment.ratios())
+            {
+                mGcRatioWriter.write(format("%s,%s,%d,%d,%d,%.4f,%.4f",
+                        sampleId, cnSegment.Chromosome, gcRatioData.Position, cnSegment.SegmentStart, cnSegment.SegmentEnd,
+                        cnSegment.CopyNumber, gcRatioData.TumorGcRatio));
+                mGcRatioWriter.newLine();
+            }
+        }
+        catch(IOException e)
+        {
+            CT_LOGGER.error("failed to write copy number GC ratio file: {}", e.toString());
+        }
+    }
+
     public void close()
     {
         closeBufferedWriter(mVariantWriter);
         closeBufferedWriter(mSampleWriter);
         closeBufferedWriter(mCnRatioWriter);
+        closeBufferedWriter(mGcRatioWriter);
     }
 
 }

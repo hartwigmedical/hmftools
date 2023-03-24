@@ -12,7 +12,7 @@ public class CopyNumberGcData
     public final int SegmentEnd;
     public final double CopyNumber;
 
-    private final List<Double> mTumorGcRatios;
+    private final List<GcRatioData> mTumorGcRatios;
 
     private boolean mComputed;
     private double mMean;
@@ -33,7 +33,9 @@ public class CopyNumberGcData
         mMedian = 0;
     }
 
-    public void addRatio(double ratio)
+    public List<GcRatioData> ratios() { return mTumorGcRatios; }
+
+    public void addRatio(final GcRatioData ratio)
     {
         mTumorGcRatios.add(ratio);
         mComputed = false;
@@ -67,21 +69,22 @@ public class CopyNumberGcData
             return;
         }
 
-        Collections.sort(mTumorGcRatios);
+        List<GcRatioData> sortedList = Lists.newArrayList(mTumorGcRatios);
+        Collections.sort(sortedList);
 
-        int index = mTumorGcRatios.size() / 2;
+        int index = sortedList.size() / 2;
 
-        if((mTumorGcRatios.size() % 2) == 0)
+        if((sortedList.size() % 2) == 0)
         {
-            mMedian = (mTumorGcRatios.get(index - 1) + mTumorGcRatios.get(index)) * 0.5;
+            mMedian = (sortedList.get(index - 1).TumorGcRatio + sortedList.get(index).TumorGcRatio) * 0.5;
         }
         else
         {
-            mMedian = mTumorGcRatios.get(index);
+            mMedian = sortedList.get(index).TumorGcRatio;
         }
 
-        double total = mTumorGcRatios.stream().mapToDouble(x -> x).sum();
-        mMean = total / mTumorGcRatios.size();
+        double total = sortedList.stream().mapToDouble(x -> x.TumorGcRatio).sum();
+        mMean = total / sortedList.size();
 
         mComputed = true;
     }
