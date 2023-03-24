@@ -139,7 +139,7 @@ public class TranscriptExpression
 
             double transAllocation = fitAllocations[transIndex];
 
-            if(transAllocation > 0)
+            if(transAllocation > 0 && ISF_LOGGER.isTraceEnabled())
             {
                 ISF_LOGGER.trace("transcript({}) allocated count({})", transName, String.format("%.2f", transAllocation));
             }
