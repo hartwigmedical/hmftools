@@ -97,10 +97,9 @@ public class MicrosatelliteIndels
         if(!repeatContextIsRelevant(repeatCount, repeatSequenceLength))
             return;
 
-        if(mTargetRegions.hasTargetRegions())
+        if(mTargetRegions.hasTargetRegions() && PPL_LOGGER.isTraceEnabled())
         {
-            PPL_LOGGER.trace(format("indel(%s) af(%.2f) included in target-regions TMB",
-                    variant.toString(), variant.alleleFrequency()));
+            PPL_LOGGER.trace(format("indel(%s) af(%.2f) included in target-regions TMB", variant, variant.alleleFrequency()));
         }
 
         mIndelCount++;

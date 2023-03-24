@@ -114,9 +114,12 @@ public class TumorMutationalLoad
 
             isUnclearGermline = abs(majorVAF - rawAf) < mTargetRegions.maxAFDiff() || abs(minorVAF - rawAf) < mTargetRegions.maxAFDiff();
 
-            PPL_LOGGER.trace(format("var(%s) af(%.2f) copyNumber(vcn=%.2f segCn=%.2f majorCn=%.2f minorVaf=%.2f majorVaf=%.2f) status(%s) for target-regions TMB",
-                    variant.toString(), rawAf, variantCn, segmentCn, majorAlleleCn, minorVAF, majorVAF,
-                    isUnclearGermline ? "unclear" : "somatic"));
+            if(PPL_LOGGER.isTraceEnabled())
+            {
+                PPL_LOGGER.trace(format("var(%s) af(%.2f) copyNumber(vcn=%.2f segCn=%.2f majorCn=%.2f minorVaf=%.2f majorVaf=%.2f) status(%s) for target-regions TMB",
+                        variant.toString(), rawAf, variantCn, segmentCn, majorAlleleCn, minorVAF, majorVAF,
+                        isUnclearGermline ? "unclear" : "somatic"));
+            }
         }
 
         if(isUnclearGermline)
