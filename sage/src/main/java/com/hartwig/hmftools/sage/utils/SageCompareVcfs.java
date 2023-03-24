@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.compare;
+package com.hartwig.hmftools.sage.utils;
 
 import static java.lang.Math.max;
 
@@ -23,16 +23,16 @@ import java.util.stream.Collectors;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.compare.DiffType.ALLELE_DEPTH;
-import static com.hartwig.hmftools.sage.compare.DiffType.FILTER_DIFF;
-import static com.hartwig.hmftools.sage.compare.DiffType.FILTER_PASS;
-import static com.hartwig.hmftools.sage.compare.DiffType.LOCAL_PHASE;
-import static com.hartwig.hmftools.sage.compare.DiffType.NO_NEW;
-import static com.hartwig.hmftools.sage.compare.DiffType.NO_ORIG;
-import static com.hartwig.hmftools.sage.compare.DiffType.QUAL;
-import static com.hartwig.hmftools.sage.compare.DiffType.TIER;
-import static com.hartwig.hmftools.sage.compare.DiffType.hasValueDiff;
-import static com.hartwig.hmftools.sage.compare.VariantData.comparePositions;
+import static com.hartwig.hmftools.sage.utils.DiffType.ALLELE_DEPTH;
+import static com.hartwig.hmftools.sage.utils.DiffType.FILTER_DIFF;
+import static com.hartwig.hmftools.sage.utils.DiffType.FILTER_PASS;
+import static com.hartwig.hmftools.sage.utils.DiffType.LOCAL_PHASE;
+import static com.hartwig.hmftools.sage.utils.DiffType.NO_NEW;
+import static com.hartwig.hmftools.sage.utils.DiffType.NO_ORIG;
+import static com.hartwig.hmftools.sage.utils.DiffType.QUAL;
+import static com.hartwig.hmftools.sage.utils.DiffType.TIER;
+import static com.hartwig.hmftools.sage.utils.DiffType.hasValueDiff;
+import static com.hartwig.hmftools.sage.utils.VariantData.comparePositions;
 
 import com.google.common.collect.Sets;
 

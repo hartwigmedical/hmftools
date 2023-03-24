@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.compare;
+package com.hartwig.hmftools.sage.utils;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 

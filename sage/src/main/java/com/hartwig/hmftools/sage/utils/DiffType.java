@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.compare;
+package com.hartwig.hmftools.sage.utils;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
