@@ -327,7 +327,7 @@ public class RnaHealthChecker
         }
     }
 
-    private void writeSampleSummary(final String sampleId, final SampleVariantSummary summaryData)
+    private synchronized void writeSampleSummary(final String sampleId, final SampleVariantSummary summaryData)
     {
         try
         {

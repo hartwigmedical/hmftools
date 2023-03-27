@@ -2,8 +2,8 @@ package com.hartwig.hmftools.ctdna.purity;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.Integers.median;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.ctdna.common.CommonUtils.medianIntegerValue;
 import static com.hartwig.hmftools.ctdna.purity.CnPurityResult.INVALID_RESULT;
 
 import java.nio.file.Files;
@@ -161,6 +161,6 @@ public class CopyNumberProfile
     {
         List<Integer> segmentGcCounts = Lists.newArrayList();
         mCopyNumberGcRatios.forEach(x -> segmentGcCounts.add(x.count()));
-        return medianIntegerValue(segmentGcCounts);
+        return median(segmentGcCounts);
     }
 }
