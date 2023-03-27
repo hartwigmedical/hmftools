@@ -263,12 +263,13 @@ if [ "${reference_id}" != "none" ]; then
     ${threads} ${max_memory} \
 
   # Pave germline
+  sage_germline_vcf=${sage_germline_dir}/${tumor_id}.sage.germline.vcf.gz
   pave_germline_dir=${sample_dir}/pave_germline
   pave_germline_vcf=${pave_germline_dir}/${tumor_id}.sage.germline.pave.vcf.gz
 
   ${scripts_dir}/run_pave_germline ${pave_jar} \
     ${tumor_id}  \
-    ${sage_vcf} ${pave_germline_dir} ${pave_germline_vcf} \
+    ${sage_germline_vcf} ${pave_germline_dir} ${pave_germline_vcf} \
     ${ref_genome_version} ${ref_genome} \
     ${ensembl_dir} ${driver_gene_panel} ${mappability_bed} ${clinvar_vcf} ${germline_blacklist_bed} ${germline_blacklist_vcf} \
 
