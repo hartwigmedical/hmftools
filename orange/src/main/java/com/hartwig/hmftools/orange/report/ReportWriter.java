@@ -16,8 +16,10 @@ import com.hartwig.hmftools.orange.report.chapters.ReportChapter;
 import com.hartwig.hmftools.orange.report.chapters.SomaticFindingsChapter;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.pdf.CompressionConstants;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.WriterProperties;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.property.AreaBreakType;
@@ -99,13 +101,17 @@ public class ReportWriter {
     @NotNull
     private Document initializeReport(@NotNull String sampleId) throws IOException {
         PdfWriter writer;
+        WriterProperties properties = new WriterProperties()
+                .setFullCompressionMode(true)
+                .setCompressionLevel(CompressionConstants.BEST_COMPRESSION)
+                .useSmartMode();
         if (writeToDisk) {
             String outputFilePath = outputDir + File.separator + sampleId + ".orange.pdf";
             LOGGER.info("Writing PDF report to {}", outputFilePath);
-            writer = new PdfWriter(outputFilePath);
+            writer = new PdfWriter(outputFilePath, properties);
         } else {
             LOGGER.info("Generating in-memory PDF report");
-            writer = new PdfWriter(new ByteArrayOutputStream());
+            writer = new PdfWriter(new ByteArrayOutputStream(), properties);
         }
 
         PdfDocument pdf = new PdfDocument(writer);
