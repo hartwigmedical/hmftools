@@ -30,9 +30,12 @@ public class RNAFindingsChapter implements ReportChapter {
 
     @NotNull
     private final OrangeRecord report;
+    @NotNull
+    private final ReportResources reportResources;
 
-    public RNAFindingsChapter(@NotNull final OrangeRecord report) {
+    public RNAFindingsChapter(@NotNull final OrangeRecord report, @NotNull final ReportResources reportResources) {
         this.report = report;
+        this.reportResources = reportResources;
     }
 
     @NotNull
@@ -48,17 +51,17 @@ public class RNAFindingsChapter implements ReportChapter {
     }
 
     @Override
-    public void render(@NotNull final Document document, @NotNull ReportResources reportResources) {
+    public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
-        addKeyQC(document, reportResources);
-        addExpressionTables(document, reportResources);
-        addRNAFusionTables(document, reportResources);
-        addNovelSpliceJunctionTables(document, reportResources);
+        addKeyQC(document);
+        addExpressionTables(document);
+        addRNAFusionTables(document);
+        addNovelSpliceJunctionTables(document);
     }
 
-    private void addKeyQC(@NotNull Document document, @NotNull ReportResources reportResources) {
-        Cells cells = reportResources.cells();
+    private void addKeyQC(@NotNull Document document) {
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(contentWidth(),
                 new float[] { 1, 1, 1, 1 },
                 new Cell[] { cells.createHeader("QC"), cells.createHeader("Total Fragments"), cells.createHeader("Non-Duplicate Fragments"),
@@ -77,10 +80,10 @@ public class RNAFindingsChapter implements ReportChapter {
             table.addCell(cells.createSpanningEntry(table, ReportResources.NOT_AVAILABLE));
         }
 
-        document.add(reportResources.tables().createWrapping(table));
+        document.add(new Tables(reportResources).createWrapping(table));
     }
 
-    private void addExpressionTables(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addExpressionTables(@NotNull Document document) {
         IsofoxRecord isofox = report.isofox();
         List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = report.purple().allSomaticGeneCopyNumbers();
 
@@ -95,7 +98,7 @@ public class RNAFindingsChapter implements ReportChapter {
                 reportResources));
     }
 
-    private void addRNAFusionTables(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addRNAFusionTables(@NotNull Document document) {
         IsofoxRecord isofox = report.isofox();
 
         List<RnaFusion> reportableNovelKnownFusions = isofox != null ? isofox.reportableNovelKnownFusions() : Lists.newArrayList();
@@ -107,7 +110,7 @@ public class RNAFindingsChapter implements ReportChapter {
         document.add(RNAFusionTable.build(titlePromiscuousFusions, contentWidth(), reportableNovelPromiscuous, reportResources));
     }
 
-    private void addNovelSpliceJunctionTables(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addNovelSpliceJunctionTables(@NotNull Document document) {
         IsofoxRecord isofox = report.isofox();
 
         List<NovelSpliceJunction> reportableSkippedExons = isofox != null ? isofox.reportableSkippedExons() : Lists.newArrayList();

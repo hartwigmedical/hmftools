@@ -44,10 +44,14 @@ public class SomaticFindingsChapter implements ReportChapter {
     private final OrangeRecord report;
     @NotNull
     private final PlotPathResolver plotPathResolver;
+    @NotNull
+    private final ReportResources reportResources;
 
-    public SomaticFindingsChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver) {
+    public SomaticFindingsChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver,
+            @NotNull final ReportResources reportResources) {
         this.report = report;
         this.plotPathResolver = plotPathResolver;
+        this.reportResources = reportResources;
     }
 
     @NotNull
@@ -63,22 +67,22 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     @Override
-    public void render(@NotNull final Document document, @NotNull ReportResources reportResources) {
+    public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
-        addSomaticVariants(document, reportResources);
-        addKataegisPlot(document, reportResources);
-        addSomaticAmpDels(document, reportResources);
-        addFusions(document, reportResources);
-        addViralPresence(document, reportResources);
-        addHomozygousDisruptions(document, reportResources);
-        addBreakends(document, reportResources);
-        addLossOfHeterozygosity(document, reportResources);
-        addSignatureAllocations(document, reportResources);
-        addStructuralDriverPlots(document, reportResources);
+        addSomaticVariants(document);
+        addKataegisPlot(document);
+        addSomaticAmpDels(document);
+        addFusions(document);
+        addViralPresence(document);
+        addHomozygousDisruptions(document);
+        addBreakends(document);
+        addLossOfHeterozygosity(document);
+        addSignatureAllocations(document);
+        addStructuralDriverPlots(document);
     }
 
-    private void addSomaticVariants(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addSomaticVariants(@NotNull Document document) {
         List<PurpleDriver> somaticDrivers = report.purple().somaticDrivers();
 
         List<VariantEntry> reportableVariants =
@@ -92,7 +96,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         document.add(SomaticVariantTable.build(titleNonDrivers, contentWidth(), max10(additionalSuspectVariants), reportResources));
     }
 
-    private void addKataegisPlot(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addKataegisPlot(@NotNull Document document) {
         document.add(new Paragraph("Kataegis plot").addStyle(reportResources.tableTitleStyle()));
         String kataegisPlot = report.plots().purpleKataegisPlot();
         if (kataegisPlot != null) {
@@ -105,7 +109,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         }
     }
 
-    private void addSomaticAmpDels(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addSomaticAmpDels(@NotNull Document document) {
         String titleDrivers = "Driver amps/dels (" + report.purple().reportableSomaticGainsLosses().size() + ")";
         document.add(GainLossTable.build(titleDrivers,
                 contentWidth(),
@@ -154,7 +158,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         return losses;
     }
 
-    private void addFusions(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addFusions(@NotNull Document document) {
         String titleDrivers = "Driver fusions (" + report.linx().reportableSomaticFusions().size() + ")";
         document.add(DNAFusionTable.build(titleDrivers, contentWidth(), report.linx().reportableSomaticFusions(), report.isofox(),
                 reportResources));
@@ -166,7 +170,7 @@ public class SomaticFindingsChapter implements ReportChapter {
                 report.isofox(), reportResources));
     }
 
-    private void addViralPresence(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addViralPresence(@NotNull Document document) {
         VirusInterpreterData virusInterpreter = report.virusInterpreter();
 
         if (virusInterpreter != null) {
@@ -185,12 +189,12 @@ public class SomaticFindingsChapter implements ReportChapter {
         }
     }
 
-    private void addHomozygousDisruptions(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addHomozygousDisruptions(@NotNull Document document) {
         String title = "Homozygous disruptions (" + report.linx().somaticHomozygousDisruptions().size() + ")";
         document.add(HomozygousDisruptionTable.build(title, contentWidth(), report.linx().somaticHomozygousDisruptions(), reportResources));
     }
 
-    private void addBreakends(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addBreakends(@NotNull Document document) {
         List<BreakendEntry> reportableBreakends =
                 BreakendEntryFactory.create(report.linx().reportableSomaticBreakends(), report.linx().allSomaticStructuralVariants());
 
@@ -203,13 +207,13 @@ public class SomaticFindingsChapter implements ReportChapter {
         document.add(BreakendTable.build(titleNonDrivers, contentWidth(), additionalSuspectBreakends, reportResources));
     }
 
-    private void addLossOfHeterozygosity(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addLossOfHeterozygosity(@NotNull Document document) {
         List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH = report.purple().suspectGeneCopyNumbersWithLOH();
         String title = "Potentially interesting LOH events in case of MSI or HRD (" + suspectGeneCopyNumbersWithLOH.size() + ")";
         document.add(LossOfHeterozygosityTable.build(title, contentWidth(), suspectGeneCopyNumbersWithLOH, reportResources));
     }
 
-    private void addSignatureAllocations(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addSignatureAllocations(@NotNull Document document) {
         List<SignatureAllocation> sigAllocations = report.sigAllocations();
 
         if (sigAllocations != null) {
@@ -218,11 +222,11 @@ public class SomaticFindingsChapter implements ReportChapter {
         }
     }
 
-    private void addStructuralDriverPlots(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addStructuralDriverPlots(@NotNull Document document) {
         String title = "Structural driver plots (" + report.plots().linxDriverPlots().size() + ")";
         document.add(new Paragraph(title).addStyle(reportResources.tableTitleStyle()));
         Table table = new Table(2);
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         for (String plot : report.plots().linxDriverPlots()) {
             Image image = Images.build(plotPathResolver.resolve(plot));
             image.setMaxWidth(Math.round(contentWidth() / 2D) - 2);

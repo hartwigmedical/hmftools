@@ -18,6 +18,6 @@ public interface ReportChapter {
         return pageSize().getWidth() - (5 + ReportResources.PAGE_MARGIN_LEFT + ReportResources.PAGE_MARGIN_RIGHT);
     }
 
-    void render(@NotNull Document document, @NotNull ReportResources reportResources);
+    void render(@NotNull Document document);
 
 }

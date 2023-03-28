@@ -23,10 +23,10 @@ public final class PharmacogeneticsTable {
     public static Table build(@NotNull String title, float width, @NotNull Set<PeachGenotype> genotypes,
             @NotNull ReportResources reportResources) {
         if (genotypes.isEmpty()) {
-            return reportResources.tables().createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         Table contentTable = Tables.createContent(width,
                 new float[] { 1, 1, 1, 2, 1 },
                 new Cell[] { cells.createHeader("Gene"), cells.createHeader("Genotype"), cells.createHeader("Function"),
@@ -40,7 +40,7 @@ public final class PharmacogeneticsTable {
             contentTable.addCell(cells.createUrl(sourceName(genotype.urlPrescriptionInfo()), url(genotype.urlPrescriptionInfo())));
         }
 
-        return reportResources.tables().createWrapping(contentTable, title);
+        return new Tables(reportResources).createWrapping(contentTable, title);
     }
 
     @NotNull

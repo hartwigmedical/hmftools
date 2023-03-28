@@ -13,7 +13,7 @@ import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class Cells {
+public class Cells {
 
     private final ReportResources reportResources;
 

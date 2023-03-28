@@ -51,13 +51,15 @@ public class ReportWriter {
     }
 
     private void writePdf(@NotNull OrangeRecord report) throws IOException {
-        ReportChapter[] chapters =
-                new ReportChapter[] { new FrontPageChapter(report, plotPathResolver), new SomaticFindingsChapter(report, plotPathResolver),
-                        new GermlineFindingsChapter(report), new ImmunologyChapter(report), new RNAFindingsChapter(report),
-                        new CohortComparisonChapter(report, plotPathResolver), new QualityControlChapter(report, plotPathResolver) };
+        ReportResources reportResources = ReportResources.create();
+        ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, plotPathResolver, reportResources),
+                new SomaticFindingsChapter(report, plotPathResolver, reportResources), new GermlineFindingsChapter(report, reportResources),
+                new ImmunologyChapter(report, reportResources), new RNAFindingsChapter(report, reportResources),
+                new CohortComparisonChapter(report, plotPathResolver, reportResources),
+                new QualityControlChapter(report, plotPathResolver, reportResources) };
 
         String platinumVersion = report.platinumVersion() != null ? report.platinumVersion() : ReportResources.NOT_AVAILABLE;
-        writePdfChapters(report.sampleId(), platinumVersion, chapters);
+        writePdfChapters(report.sampleId(), platinumVersion, chapters, reportResources);
     }
 
     private void writeJson(@NotNull OrangeRecord report) throws IOException {
@@ -71,11 +73,10 @@ public class ReportWriter {
         }
     }
 
-    private void writePdfChapters(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull ReportChapter[] chapters)
-            throws IOException {
+    private void writePdfChapters(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull ReportChapter[] chapters,
+            @NotNull ReportResources reportResources) throws IOException {
         Document doc = initializeReport(sampleId);
         PdfDocument pdfDocument = doc.getPdfDocument();
-        ReportResources reportResources = ReportResources.create();
 
         PageEventHandler pageEventHandler = PageEventHandler.create(sampleId, platinumVersion, reportResources);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
@@ -89,7 +90,7 @@ public class ReportWriter {
             if (i > 0) {
                 doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
             }
-            chapter.render(doc, reportResources);
+            chapter.render(doc);
         }
 
         pageEventHandler.writeTotalPageCount(doc.getPdfDocument());

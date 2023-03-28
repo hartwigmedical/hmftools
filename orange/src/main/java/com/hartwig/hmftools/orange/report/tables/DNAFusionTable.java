@@ -40,10 +40,10 @@ public final class DNAFusionTable {
     public static Table build(@NotNull String title, float width, @NotNull List<LinxFusion> fusions, @Nullable IsofoxRecord isofox,
             @NotNull ReportResources reportResources) {
         if (fusions.isEmpty()) {
-            return reportResources.tables().createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
                 new float[] { 1, 5 },
                 new Cell[] { cells.createHeader("Fusion"), cells.createHeader("Details") });
@@ -72,7 +72,7 @@ public final class DNAFusionTable {
             table.addCell(cells.createContent(details).setKeepTogether(true));
         }
 
-        return reportResources.tables().createWrapping(table, title);
+        return new Tables(reportResources).createWrapping(table, title);
     }
 
     @NotNull

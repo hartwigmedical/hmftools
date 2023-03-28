@@ -29,10 +29,10 @@ public final class ExpressionTable {
     public static Table build(@NotNull String title, float width, @NotNull List<GeneExpression> expressions, boolean sortAscending,
             @NotNull List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers, @NotNull ReportResources reportResources) {
         if (expressions.isEmpty()) {
-            return reportResources.tables().createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 1, 1, 1, 1 },
                 new Cell[] { cells.createHeader("Gene"), cells.createHeader("Tumor CN"), cells.createHeader("TPM"),
@@ -50,7 +50,7 @@ public final class ExpressionTable {
             table.addCell(cells.createContent(Expressions.foldChangeDatabase(expression)));
         }
 
-        return reportResources.tables().createWrapping(table, title);
+        return new Tables(reportResources).createWrapping(table, title);
     }
 
     @NotNull

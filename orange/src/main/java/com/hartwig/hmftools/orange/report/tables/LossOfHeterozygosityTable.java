@@ -23,10 +23,10 @@ public final class LossOfHeterozygosityTable {
     public static Table build(@NotNull String title, float width, @NotNull List<PurpleGeneCopyNumber> lohGenes,
             @NotNull ReportResources reportResources) {
         if (lohGenes.isEmpty()) {
-            return reportResources.tables().createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 1, 3 },
                 new Cell[] { cells.createHeader("Location"), cells.createHeader("Gene"), cells.createHeader("Tumor MACN"),
@@ -40,7 +40,7 @@ public final class LossOfHeterozygosityTable {
             table.addCell(cells.createContent(Strings.EMPTY));
         }
 
-        return reportResources.tables().createWrapping(table, title);
+        return new Tables(reportResources).createWrapping(table, title);
     }
 
     private static long round(double copyNumber) {

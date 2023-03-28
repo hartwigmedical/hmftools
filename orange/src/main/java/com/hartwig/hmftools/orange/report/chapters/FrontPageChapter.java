@@ -63,10 +63,14 @@ public class FrontPageChapter implements ReportChapter {
     private final OrangeRecord report;
     @NotNull
     private final PlotPathResolver plotPathResolver;
+    @NotNull
+    private final ReportResources reportResources;
 
-    public FrontPageChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver) {
+    public FrontPageChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver,
+            @NotNull final ReportResources reportResources) {
         this.report = report;
         this.plotPathResolver = plotPathResolver;
+        this.reportResources = reportResources;
     }
 
     @NotNull
@@ -82,13 +86,13 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @Override
-    public void render(@NotNull Document document, @NotNull ReportResources reportResources) {
-        addSummaryTable(document, reportResources);
-        addDetailsAndPlots(document, reportResources);
+    public void render(@NotNull Document document) {
+        addSummaryTable(document);
+        addDetailsAndPlots(document);
     }
 
-    private void addSummaryTable(@NotNull Document document, @NotNull ReportResources reportResources) {
-        Cells cells = reportResources.cells();
+    private void addSummaryTable(@NotNull Document document) {
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(contentWidth(),
                 new float[] { 3, 2, 1 },
                 new Cell[] { cells.createHeader("Configured Primary Tumor"), cells.createHeader("Cuppa Cancer Type"),
@@ -97,7 +101,7 @@ public class FrontPageChapter implements ReportChapter {
         table.addCell(cells.createContent(configuredPrimaryTumor(report.configuredPrimaryTumor())));
         table.addCell(cells.createContent(cuppaCancerType(report.cuppa())));
         table.addCell(cells.createContent(purpleQCString()));
-        document.add(reportResources.tables().createWrapping(table));
+        document.add(new Tables(reportResources).createWrapping(table));
     }
 
     @NotNull
@@ -129,11 +133,11 @@ public class FrontPageChapter implements ReportChapter {
         return concat(purpleStatuses);
     }
 
-    private void addDetailsAndPlots(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addDetailsAndPlots(@NotNull Document document) {
         Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(contentWidth() - 5);
 
         Table summary = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         Stream.of(Maps.immutableEntry("Purity:", purityString()),
                 Maps.immutableEntry("Ploidy:", ploidyString()),
                 Maps.immutableEntry("Somatic variant drivers:", somaticVariantDriverString()),

@@ -26,10 +26,10 @@ public final class ViralPresenceTable {
     public static Table build(@NotNull String title, float width, @NotNull List<AnnotatedVirus> viruses,
             @NotNull ReportResources reportResources) {
         if (viruses.isEmpty()) {
-            return reportResources.tables().createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
                 new float[] { 4, 3, 1, 1, 2, 2, 2, 2 },
                 new Cell[] { cells.createHeader("Virus"), cells.createHeader("QC Status"), cells.createHeader("Type"),
@@ -47,7 +47,7 @@ public final class ViralPresenceTable {
             table.addCell(cells.createContent(display(virus.virusDriverLikelihoodType())));
         }
 
-        return reportResources.tables().createWrapping(table, title);
+        return new Tables(reportResources).createWrapping(table, title);
     }
 
     private static String display(VirusLikelihoodType virusLikelihoodType) {

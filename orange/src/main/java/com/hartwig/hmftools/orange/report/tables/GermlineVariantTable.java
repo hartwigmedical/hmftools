@@ -24,10 +24,10 @@ public final class GermlineVariantTable {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<VariantEntry> variants, @NotNull ReportResources reportResources) {
         if (variants.isEmpty()) {
-            return reportResources.tables().createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
                 new float[] { 3, 1, 1, 1, 1, 1, 1, 1 },
                 new Cell[] { cells.createHeader("Variant"), cells.createHeader("VCN"), cells.createHeader("CN"), cells.createHeader("MACN"),
@@ -45,7 +45,7 @@ public final class GermlineVariantTable {
             table.addCell(cells.createContent(simplifiedDisplay(variant.genotypeStatus())));
         }
 
-        return reportResources.tables().createWrapping(table, title);
+        return new Tables(reportResources).createWrapping(table, title);
     }
 
     private static String simplifiedDisplay(PurpleGenotypeStatus genotypeStatus) {

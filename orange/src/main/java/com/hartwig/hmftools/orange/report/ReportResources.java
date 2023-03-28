@@ -18,7 +18,7 @@ import com.itextpdf.layout.Style;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ReportResources {
+public class ReportResources {
 
     static final String METADATA_TITLE = "HMF ORANGE Report v" + OrangeApplication.VERSION;
     static final String METADATA_AUTHOR = "Hartwig Platinum Pipeline";
@@ -58,6 +58,7 @@ public final class ReportResources {
         this.fontBold = fontBold;
     }
 
+    @NotNull
     public static ReportResources create() {
         return new ReportResources(createFontFromProgram(loadFontProgram(FONT_REGULAR_PATH)),
                 createFontFromProgram(loadFontProgram(FONT_BOLD_PATH)));
@@ -69,14 +70,7 @@ public final class ReportResources {
         return new DecimalFormat(format, DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     }
 
-    public Cells cells() {
-        return new Cells(this);
-    }
-
-    public Tables tables() {
-        return new Tables(this);
-    }
-
+    @NotNull
     public PdfFont fontBold() {
         return fontBold;
     }

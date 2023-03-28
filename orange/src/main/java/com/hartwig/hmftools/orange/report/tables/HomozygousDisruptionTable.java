@@ -23,10 +23,10 @@ public final class HomozygousDisruptionTable {
     public static Table build(@NotNull String title, float width, @NotNull List<HomozygousDisruption> homozygousDisruptions, @NotNull
             ReportResources reportResources) {
         if (homozygousDisruptions.isEmpty()) {
-            return reportResources.tables().createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 4 },
                 new Cell[] { cells.createHeader("Location"), cells.createHeader("Gene"), cells.createHeader(Strings.EMPTY) });
@@ -37,7 +37,7 @@ public final class HomozygousDisruptionTable {
             table.addCell(cells.createContent(Strings.EMPTY));
         }
 
-        return reportResources.tables().createWrapping(table, title);
+        return new Tables(reportResources).createWrapping(table, title);
     }
 
     @NotNull

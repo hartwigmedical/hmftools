@@ -22,10 +22,10 @@ public final class RNAFusionTable {
     public static Table build(@NotNull String title, float width, @NotNull List<RnaFusion> fusions,
             @NotNull ReportResources reportResources) {
         if (fusions.isEmpty()) {
-            return reportResources.tables().createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
                 new float[] { 2, 2, 2, 1, 2, 1, 2, 1 },
                 new Cell[] { cells.createHeader("Name"), cells.createHeader("Pos (Up)"), cells.createHeader("Pos (Down)"),
@@ -43,7 +43,7 @@ public final class RNAFusionTable {
             table.addCell(cells.createContent(String.valueOf(fusion.cohortFrequency())));
         }
 
-        return reportResources.tables().createWrapping(table, title);
+        return new Tables(reportResources).createWrapping(table, title);
     }
 
     @NotNull

@@ -11,7 +11,7 @@ import com.itextpdf.layout.property.UnitValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class Tables {
+public class Tables {
 
     private static final float TABLE_BOTTOM_MARGIN = 20;
     private final ReportResources reportResources;
@@ -27,7 +27,7 @@ public final class Tables {
         Table table = Tables.createContent(width, new float[] { 1 }, new Cell[] { headerCell });
         table.setKeepTogether(true);
         table.setMarginBottom(TABLE_BOTTOM_MARGIN);
-        table.addCell(reportResources.cells().createContent(new Paragraph(DataUtil.NONE_STRING)));
+        table.addCell(new Cells(reportResources).createContent(new Paragraph(DataUtil.NONE_STRING)));
 
         return table;
     }

@@ -18,10 +18,14 @@ public class CohortComparisonChapter implements ReportChapter {
     private final OrangeRecord report;
     @NotNull
     private final PlotPathResolver plotPathResolver;
+    @NotNull
+    private final ReportResources reportResources;
 
-    public CohortComparisonChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver) {
+    public CohortComparisonChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver,
+            @NotNull ReportResources reportResources) {
         this.report = report;
         this.plotPathResolver = plotPathResolver;
+        this.reportResources = reportResources;
     }
 
     @NotNull
@@ -37,7 +41,7 @@ public class CohortComparisonChapter implements ReportChapter {
     }
 
     @Override
-    public void render(@NotNull final Document document, @NotNull ReportResources reportResources) {
+    public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
         if (report.plots().cuppaSummaryPlot() != null) {

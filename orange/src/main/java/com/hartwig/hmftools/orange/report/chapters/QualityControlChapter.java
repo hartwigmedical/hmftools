@@ -33,10 +33,14 @@ public class QualityControlChapter implements ReportChapter {
     private final OrangeRecord report;
     @NotNull
     private final PlotPathResolver plotPathResolver;
+    @NotNull
+    private final ReportResources reportResources;
 
-    public QualityControlChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver) {
+    public QualityControlChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver,
+            @NotNull final ReportResources reportResources) {
         this.report = report;
         this.plotPathResolver = plotPathResolver;
+        this.reportResources = reportResources;
     }
 
     @NotNull
@@ -52,20 +56,20 @@ public class QualityControlChapter implements ReportChapter {
     }
 
     @Override
-    public void render(@NotNull final Document document, @NotNull ReportResources reportResources) {
+    public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
-        addKeyQC(document, reportResources);
+        addKeyQC(document);
         addPurplePurityFitPlot(document);
-        addFlagstats(document, reportResources);
-        addCoverageStats(document, reportResources);
-        addExcludedPercentages(document, reportResources);
-        addPurpleQCPlots(document, reportResources);
-        addSageBQRPlots(document, reportResources);
+        addFlagstats(document);
+        addCoverageStats(document);
+        addExcludedPercentages(document);
+        addPurpleQCPlots(document);
+        addSageBQRPlots(document);
     }
 
-    private void addKeyQC(@NotNull Document document, @NotNull ReportResources reportResources) {
-        Cells cells = reportResources.cells();
+    private void addKeyQC(@NotNull Document document) {
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(contentWidth(),
                 new float[] { 2, 1, 1, 1, 1, 1, 1 },
                 new Cell[] { cells.createHeader("QC"), cells.createHeader("Ref Genome"), cells.createHeader("Fit Method"),
@@ -80,7 +84,7 @@ public class QualityControlChapter implements ReportChapter {
         table.addCell(cells.createContent(String.valueOf(report.purple().fit().qc().unsupportedCopyNumberSegments())));
         table.addCell(cells.createContent(String.valueOf(report.purple().fit().qc().deletedGenes())));
 
-        document.add(reportResources.tables().createWrapping(table));
+        document.add(new Tables(reportResources).createWrapping(table));
     }
 
     @NotNull
@@ -99,11 +103,11 @@ public class QualityControlChapter implements ReportChapter {
         document.add(image);
     }
 
-    private void addFlagstats(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addFlagstats(@NotNull Document document) {
         Flagstat refFlagstat = report.refSample() != null ? report.refSample().flagstat() : null;
         Flagstat tumorFlagstat = report.tumorSample().flagstat();
 
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         Table flagstat = Tables.createContent(contentWidth(),
                 new float[] { 1, 1, 1, 1, 1 },
                 new Cell[] { cells.createHeader(Strings.EMPTY), cells.createHeader("Unique RC"), cells.createHeader("Secondary RC"),
@@ -123,14 +127,14 @@ public class QualityControlChapter implements ReportChapter {
         flagstat.addCell(cells.createContent(String.valueOf(tumorFlagstat.supplementaryCount())));
         flagstat.addCell(cells.createContent(PERCENTAGE_FORMAT.format(tumorFlagstat.mappedProportion() * 100)));
 
-        document.add(reportResources.tables().createWrapping(flagstat, "Flagstats"));
+        document.add(new Tables(reportResources).createWrapping(flagstat, "Flagstats"));
     }
 
-    private void addCoverageStats(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addCoverageStats(@NotNull Document document) {
         WGSMetrics refMetrics = report.refSample() != null ? report.refSample().metrics() : null;
         WGSMetrics tumorMetrics = report.tumorSample().metrics();
 
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         Table coverage = Tables.createContent(contentWidth(),
                 new float[] { 1, 1, 1, 1, 1 },
                 new Cell[] { cells.createHeader(Strings.EMPTY), cells.createHeader("Mean Coverage"), cells.createHeader("SD Coverage"),
@@ -150,14 +154,14 @@ public class QualityControlChapter implements ReportChapter {
         coverage.addCell(cells.createContent(String.valueOf(tumorMetrics.medianCoverage())));
         coverage.addCell(cells.createContent(String.valueOf(tumorMetrics.madCoverage())));
 
-        document.add(reportResources.tables().createWrapping(coverage, "Coverage Stats"));
+        document.add(new Tables(reportResources).createWrapping(coverage, "Coverage Stats"));
     }
 
-    private void addExcludedPercentages(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addExcludedPercentages(@NotNull Document document) {
         WGSMetrics refMetrics = report.refSample() != null ? report.refSample().metrics() : null;
         WGSMetrics tumorMetrics = report.tumorSample().metrics();
 
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         Table percentages = Tables.createContent(contentWidth(),
                 new float[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 },
                 new Cell[] { cells.createHeader(Strings.EMPTY), cells.createHeader("Adapter"), cells.createHeader("BaseQ"),
@@ -186,7 +190,7 @@ public class QualityControlChapter implements ReportChapter {
         percentages.addCell(cells.createContent(percent(tumorMetrics.pctExcUnpaired())));
         percentages.addCell(cells.createContent(percent(tumorMetrics.pctExcTotal())));
 
-        document.add(reportResources.tables().createWrapping(percentages, "Excluded Percentages"));
+        document.add(new Tables(reportResources).createWrapping(percentages, "Excluded Percentages"));
     }
 
     @NotNull
@@ -194,12 +198,12 @@ public class QualityControlChapter implements ReportChapter {
         return value != null ? PERCENTAGE_FORMAT.format(value * 100) : ReportResources.NOT_AVAILABLE;
     }
 
-    private void addPurpleQCPlots(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addPurpleQCPlots(@NotNull Document document) {
         document.add(new Paragraph("QC plots").addStyle(reportResources.tableTitleStyle()));
 
         long halfContentWidth = Math.round(contentWidth() / 2D) - 2;
         Table table = new Table(2);
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         table.addCell(cells.createImage(Images.build(plotPathResolver.resolve(report.plots().purpleFinalCircosPlot()))
                 .setMaxWidth(halfContentWidth)));
         table.addCell(cells.createImage(Images.build(plotPathResolver.resolve(report.plots().purpleInputPlot()))
@@ -211,7 +215,7 @@ public class QualityControlChapter implements ReportChapter {
         document.add(table);
     }
 
-    private void addSageBQRPlots(@NotNull Document document, @NotNull ReportResources reportResources) {
+    private void addSageBQRPlots(@NotNull Document document) {
         String sageReferenceBQRPlot = report.plots().sageReferenceBQRPlot();
         if (sageReferenceBQRPlot != null) {
             document.add(new Paragraph("Reference Sample BQR plot").addStyle(reportResources.tableTitleStyle()));

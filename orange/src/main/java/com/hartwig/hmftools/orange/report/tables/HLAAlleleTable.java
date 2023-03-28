@@ -27,10 +27,10 @@ public final class HLAAlleleTable {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<LilacAllele> alleles, @NotNull ReportResources reportResources) {
         if (alleles.isEmpty()) {
-            return reportResources.tables().createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 1, 1, 3 },
                 new Cell[] { cells.createHeader("Allele"), cells.createHeader("Ref Frags"), cells.createHeader("Tumor Frags"),
@@ -45,7 +45,7 @@ public final class HLAAlleleTable {
             table.addCell(cells.createContent(mutationString(allele)));
         }
 
-        return reportResources.tables().createWrapping(table, title);
+        return new Tables(reportResources).createWrapping(table, title);
     }
 
     @NotNull

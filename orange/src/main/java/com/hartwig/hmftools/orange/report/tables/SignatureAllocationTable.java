@@ -33,10 +33,10 @@ public final class SignatureAllocationTable {
     public static Table build(@NotNull String title, float width, @NotNull List<SignatureAllocation> signatureAllocations,
             @NotNull ReportResources reportResources) {
         if (signatureAllocations.isEmpty()) {
-            return reportResources.tables().createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
-        Cells cells = reportResources.cells();
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 3 },
                 new Cell[] { cells.createHeader("Signature"), cells.createHeader("Allocation"), cells.createHeader("Percent"),
@@ -49,7 +49,7 @@ public final class SignatureAllocationTable {
             table.addCell(cells.createContent(Strings.EMPTY));
         }
 
-        return reportResources.tables().createWrapping(table, title);
+        return new Tables(reportResources).createWrapping(table, title);
     }
 
     @NotNull
