@@ -149,7 +149,7 @@ _ | Intronic (pre) | c.726-5537_726-5536delTT
 _ | 5’UTR Intronic | c.-147-1093delA
 Duplications | Coding | c.128dupA | Use duplications in case of INS with full homology match.
 _ | Intronic (post) | c.830+11459_830+11461dupGGA
-_ | Start codon overlap | c.-1_1delAA
+_ | Start codon overlap | c.-1_1dupAA
 Insertions | Coding | c.1033_1034insA
 _ | Intronic (post) | c.15+1619_15+1620insTTTGTT
 _ | Intronic (5’UTR) | c.-23-304_-23-303insA
