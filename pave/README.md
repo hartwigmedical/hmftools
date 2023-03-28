@@ -172,12 +172,12 @@ Type | Context | Examples | Notes
 ---|---|---|---
 SYNONYMOUS | Synonymous | p.Leu54= | Snpeff uses p.Leu54Leu but the recommendation has changed (https://www.hgvs.org/mutnomen/disc.html#silent)
 _ | Synonymous (MNV multiple codon) | p.Leu54_Arg55=
-_ | Synonymous( Stop retained) | p.Ter26= | Not supported
+_ | Synonymous (Stop retained) | p.Ter26= | Not supported
 MISSENSE | Missense | p.Trp26Cys
 _ | Missense (MNV multiple codon) | p.Ala100_Val101delinsArgTrp  | SnpEff uses format: p.AlaVal100ArgTrp
 NONSENSE OR FRAMESHIFT  | Stop Gained | p.Trp26*
-_ | Stop Gained (MNV multiple codon - 2nd codon stop)  | p.Cys495_Val496delinsArg*
-_ | Stop Gained(MNV multiple codon - 1st codon stop) | p.Cys495_Val496delins*
+_ | Stop Gained (MNV multiple codon - 2nd codon stop) | p.Cys495_Val496delinsArg*
+_ | Stop Gained (MNV multiple codon - 1st codon stop) | p.Cys495_Val496delins*
 _ | Frameshift | p.Arg97fs | Always use simply fs even if also stop gained
 _ | Stop Lost | p.Ter407Trpext*? | Ie. a STOP at AA407 changes to a W and extends the protein
 _ | Start Lost | p.Met1? | Any variant that disrupts initiator codon
