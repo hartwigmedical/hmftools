@@ -27,29 +27,30 @@ public final class ExpressionTable {
 
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<GeneExpression> expressions, boolean sortAscending,
-            @NotNull List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers) {
+            @NotNull List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers, @NotNull ReportResources reportResources) {
         if (expressions.isEmpty()) {
-            return Tables.createEmpty(title, width);
+            return reportResources.tables().createEmpty(title, width);
         }
 
+        Cells cells = reportResources.cells();
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 1, 1, 1, 1 },
-                new Cell[] { Cells.createHeader("Gene"), Cells.createHeader("Tumor CN"), Cells.createHeader("TPM"),
-                        Cells.createHeader("Perc (Type)"), Cells.createHeader("FC (Type)"), Cells.createHeader("Perc (DB)"),
-                        Cells.createHeader("FC (DB)") });
+                new Cell[] { cells.createHeader("Gene"), cells.createHeader("Tumor CN"), cells.createHeader("TPM"),
+                        cells.createHeader("Perc (Type)"), cells.createHeader("FC (Type)"), cells.createHeader("Perc (DB)"),
+                        cells.createHeader("FC (DB)") });
 
         // TODO Build the expression datamodel table prior to rendering.
         for (GeneExpression expression : sort(expressions, sortAscending)) {
-            table.addCell(Cells.createContent(expression.geneName()));
-            table.addCell(Cells.createContent(lookupTumorCN(allSomaticGeneCopyNumbers, expression.geneName())));
-            table.addCell(Cells.createContent(Expressions.tpm(expression)));
-            table.addCell(Cells.createContent(Expressions.percentileType(expression)));
-            table.addCell(Cells.createContent(Expressions.foldChangeType(expression)));
-            table.addCell(Cells.createContent(Expressions.percentileDatabase(expression)));
-            table.addCell(Cells.createContent(Expressions.foldChangeDatabase(expression)));
+            table.addCell(cells.createContent(expression.geneName()));
+            table.addCell(cells.createContent(lookupTumorCN(allSomaticGeneCopyNumbers, expression.geneName())));
+            table.addCell(cells.createContent(Expressions.tpm(expression)));
+            table.addCell(cells.createContent(Expressions.percentileType(expression)));
+            table.addCell(cells.createContent(Expressions.foldChangeType(expression)));
+            table.addCell(cells.createContent(Expressions.percentileDatabase(expression)));
+            table.addCell(cells.createContent(Expressions.foldChangeDatabase(expression)));
         }
 
-        return Tables.createWrapping(table, title);
+        return reportResources.tables().createWrapping(table, title);
     }
 
     @NotNull

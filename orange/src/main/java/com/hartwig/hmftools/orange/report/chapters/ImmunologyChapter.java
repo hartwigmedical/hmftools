@@ -35,20 +35,21 @@ public class ImmunologyChapter implements ReportChapter {
     }
 
     @Override
-    public void render(@NotNull final Document document) {
-        document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
+    public void render(@NotNull final Document document, @NotNull ReportResources reportResources) {
+        document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
-        addHLAData(document);
+        addHLAData(document, reportResources);
     }
 
-    private void addHLAData(final Document document) {
+    private void addHLAData(final Document document, @NotNull ReportResources reportResources) {
+        Cells cells = reportResources.cells();
         Table qc = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-        qc.addCell(Cells.createKey("QC Status:"));
-        qc.addCell(Cells.createValue(report.lilac().qc()));
+        qc.addCell(cells.createKey("QC Status:"));
+        qc.addCell(cells.createValue(report.lilac().qc()));
 
-        document.add(Tables.createWrapping(qc, "HLA QC"));
+        document.add(reportResources.tables().createWrapping(qc, "HLA QC"));
 
         String title = "HLA Alleles (" + report.lilac().alleles().size() + ")";
-        document.add(HLAAlleleTable.build(title, contentWidth(), report.lilac().alleles()));
+        document.add(HLAAlleleTable.build(title, contentWidth(), report.lilac().alleles(), reportResources));
     }
 }

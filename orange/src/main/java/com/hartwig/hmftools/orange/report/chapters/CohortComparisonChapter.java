@@ -37,14 +37,14 @@ public class CohortComparisonChapter implements ReportChapter {
     }
 
     @Override
-    public void render(@NotNull final Document document) {
-        document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
+    public void render(@NotNull final Document document, @NotNull ReportResources reportResources) {
+        document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
         if (report.plots().cuppaSummaryPlot() != null) {
             addCuppaSummaryPlot(document);
             addCuppaFeaturePlot(document);
         } else {
-            document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(ReportResources.tableContentStyle()));
+            document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(reportResources.tableContentStyle()));
         }
     }
 

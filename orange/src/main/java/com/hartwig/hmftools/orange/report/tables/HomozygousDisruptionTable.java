@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -19,22 +20,24 @@ public final class HomozygousDisruptionTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<HomozygousDisruption> homozygousDisruptions) {
+    public static Table build(@NotNull String title, float width, @NotNull List<HomozygousDisruption> homozygousDisruptions, @NotNull
+            ReportResources reportResources) {
         if (homozygousDisruptions.isEmpty()) {
-            return Tables.createEmpty(title, width);
+            return reportResources.tables().createEmpty(title, width);
         }
 
+        Cells cells = reportResources.cells();
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 4 },
-                new Cell[] { Cells.createHeader("Location"), Cells.createHeader("Gene"), Cells.createHeader(Strings.EMPTY) });
+                new Cell[] { cells.createHeader("Location"), cells.createHeader("Gene"), cells.createHeader(Strings.EMPTY) });
 
         for (HomozygousDisruption homozygousDisruption : sort(homozygousDisruptions)) {
-            table.addCell(Cells.createContent(homozygousDisruption.chromosome() + homozygousDisruption.chromosomeBand()));
-            table.addCell(Cells.createContent(gene(homozygousDisruption)));
-            table.addCell(Cells.createContent(Strings.EMPTY));
+            table.addCell(cells.createContent(homozygousDisruption.chromosome() + homozygousDisruption.chromosomeBand()));
+            table.addCell(cells.createContent(gene(homozygousDisruption)));
+            table.addCell(cells.createContent(Strings.EMPTY));
         }
 
-        return Tables.createWrapping(table, title);
+        return reportResources.tables().createWrapping(table, title);
     }
 
     @NotNull

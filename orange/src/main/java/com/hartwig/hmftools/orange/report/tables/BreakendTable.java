@@ -23,32 +23,33 @@ public final class BreakendTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<BreakendEntry> breakends) {
+    public static Table build(@NotNull String title, float width, @NotNull List<BreakendEntry> breakends, @NotNull ReportResources reportResources) {
         if (breakends.isEmpty()) {
-            return Tables.createEmpty(title, width);
+            return reportResources.tables().createEmpty(title, width);
         }
 
+        Cells cells = reportResources.cells();
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 1, 1, 1, 1 },
-                new Cell[] { Cells.createHeader("Location"), Cells.createHeader("Gene"), Cells.createHeader("Range"),
-                        Cells.createHeader("Type"), Cells.createHeader("Cluster ID"), Cells.createHeader("Junction CN"),
-                        Cells.createHeader("Undisrupted CN") });
+                new Cell[] { cells.createHeader("Location"), cells.createHeader("Gene"), cells.createHeader("Range"),
+                        cells.createHeader("Type"), cells.createHeader("Cluster ID"), cells.createHeader("Junction CN"),
+                        cells.createHeader("Undisrupted CN") });
 
         for (BreakendEntry breakend : sort(breakends)) {
-            table.addCell(Cells.createContent(breakend.location()));
-            table.addCell(Cells.createContent(displayGene(breakend)));
-            table.addCell(Cells.createContent(breakend.range()));
-            table.addCell(Cells.createContent(breakend.type().toString()));
-            table.addCell(Cells.createContent(String.valueOf(breakend.clusterId())));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(breakend.junctionCopyNumber())));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(breakend.undisruptedCopyNumber())));
+            table.addCell(cells.createContent(breakend.location()));
+            table.addCell(cells.createContent(displayGene(breakend)));
+            table.addCell(cells.createContent(breakend.range()));
+            table.addCell(cells.createContent(breakend.type().toString()));
+            table.addCell(cells.createContent(String.valueOf(breakend.clusterId())));
+            table.addCell(cells.createContent(SINGLE_DIGIT.format(breakend.junctionCopyNumber())));
+            table.addCell(cells.createContent(SINGLE_DIGIT.format(breakend.undisruptedCopyNumber())));
         }
 
-        return Tables.createWrapping(table, title);
+        return reportResources.tables().createWrapping(table, title);
     }
 
     @NotNull
-    public static List<BreakendEntry> sort(@NotNull List<BreakendEntry> breakends) {
+    private static List<BreakendEntry> sort(@NotNull List<BreakendEntry> breakends) {
         return breakends.stream().sorted((breakend1, breakend2) -> {
             String location1 = Chromosomes.zeroPrefixed(breakend1.location());
             String location2 = Chromosomes.zeroPrefixed(breakend2.location());

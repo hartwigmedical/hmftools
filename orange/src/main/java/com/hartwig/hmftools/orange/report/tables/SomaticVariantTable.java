@@ -21,30 +21,32 @@ public final class SomaticVariantTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<VariantEntry> variants) {
+    public static Table build(@NotNull String title, float width, @NotNull List<VariantEntry> variants,
+            @NotNull ReportResources reportResources) {
         if (variants.isEmpty()) {
-            return Tables.createEmpty(title, width);
+            return reportResources.tables().createEmpty(title, width);
         }
 
+        Cells cells = reportResources.cells();
         Table table = Tables.createContent(width,
                 new float[] { 3, 1, 1, 1, 1, 1, 1, 1, 1, 2 },
-                new Cell[] { Cells.createHeader("Variant"), Cells.createHeader("VCN"), Cells.createHeader("CN"), Cells.createHeader("MACN"),
-                        Cells.createHeader("Biallelic"), Cells.createHeader("Hotspot"), Cells.createHeader("DL"), Cells.createHeader("CL"),
-                        Cells.createHeader("Phase ID"), Cells.createHeader("RNA Depth") });
+                new Cell[] { cells.createHeader("Variant"), cells.createHeader("VCN"), cells.createHeader("CN"), cells.createHeader("MACN"),
+                        cells.createHeader("Biallelic"), cells.createHeader("Hotspot"), cells.createHeader("DL"), cells.createHeader("CL"),
+                        cells.createHeader("Phase ID"), cells.createHeader("RNA Depth") });
 
         for (VariantEntry variant : Variants.sort(variants)) {
-            table.addCell(Cells.createContent(Variants.variantField(variant)));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.variantCopyNumber())));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.totalCopyNumber())));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.minorAlleleCopyNumber())));
-            table.addCell(Cells.createContent(variant.biallelic() ? "Yes" : "No"));
-            table.addCell(Cells.createContent(Variants.hotspotField(variant)));
-            table.addCell(Cells.createContent(Variants.driverLikelihoodField(variant)));
-            table.addCell(Cells.createContent(Variants.clonalLikelihoodField(variant)));
-            table.addCell(Cells.createContent(Variants.phaseSetField(variant)));
-            table.addCell(Cells.createContent(Variants.rnaDepthField(variant)));
+            table.addCell(cells.createContent(Variants.variantField(variant)));
+            table.addCell(cells.createContent(SINGLE_DIGIT.format(variant.variantCopyNumber())));
+            table.addCell(cells.createContent(SINGLE_DIGIT.format(variant.totalCopyNumber())));
+            table.addCell(cells.createContent(SINGLE_DIGIT.format(variant.minorAlleleCopyNumber())));
+            table.addCell(cells.createContent(variant.biallelic() ? "Yes" : "No"));
+            table.addCell(cells.createContent(Variants.hotspotField(variant)));
+            table.addCell(cells.createContent(Variants.driverLikelihoodField(variant)));
+            table.addCell(cells.createContent(Variants.clonalLikelihoodField(variant)));
+            table.addCell(cells.createContent(Variants.phaseSetField(variant)));
+            table.addCell(cells.createContent(Variants.rnaDepthField(variant)));
         }
 
-        return Tables.createWrapping(table, title);
+        return reportResources.tables().createWrapping(table, title);
     }
 }

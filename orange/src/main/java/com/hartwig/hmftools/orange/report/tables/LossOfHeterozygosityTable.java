@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
+import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -19,25 +20,27 @@ public final class LossOfHeterozygosityTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<PurpleGeneCopyNumber> lohGenes) {
+    public static Table build(@NotNull String title, float width, @NotNull List<PurpleGeneCopyNumber> lohGenes,
+            @NotNull ReportResources reportResources) {
         if (lohGenes.isEmpty()) {
-            return Tables.createEmpty(title, width);
+            return reportResources.tables().createEmpty(title, width);
         }
 
+        Cells cells = reportResources.cells();
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 1, 3 },
-                new Cell[] { Cells.createHeader("Location"), Cells.createHeader("Gene"), Cells.createHeader("Tumor MACN"),
-                        Cells.createHeader("Tumor CN"), Cells.createHeader(Strings.EMPTY) });
+                new Cell[] { cells.createHeader("Location"), cells.createHeader("Gene"), cells.createHeader("Tumor MACN"),
+                        cells.createHeader("Tumor CN"), cells.createHeader(Strings.EMPTY) });
 
         for (PurpleGeneCopyNumber lohGene : sort(lohGenes)) {
-            table.addCell(Cells.createContent(lohGene.chromosome() + lohGene.chromosomeBand()));
-            table.addCell(Cells.createContent(lohGene.geneName()));
-            table.addCell(Cells.createContent(String.valueOf(round(lohGene.minMinorAlleleCopyNumber()))));
-            table.addCell(Cells.createContent(String.valueOf(round(lohGene.minCopyNumber()))));
-            table.addCell(Cells.createContent(Strings.EMPTY));
+            table.addCell(cells.createContent(lohGene.chromosome() + lohGene.chromosomeBand()));
+            table.addCell(cells.createContent(lohGene.geneName()));
+            table.addCell(cells.createContent(String.valueOf(round(lohGene.minMinorAlleleCopyNumber()))));
+            table.addCell(cells.createContent(String.valueOf(round(lohGene.minCopyNumber()))));
+            table.addCell(cells.createContent(Strings.EMPTY));
         }
 
-        return Tables.createWrapping(table, title);
+        return reportResources.tables().createWrapping(table, title);
     }
 
     private static long round(double copyNumber) {

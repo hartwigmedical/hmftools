@@ -48,74 +48,78 @@ public class RNAFindingsChapter implements ReportChapter {
     }
 
     @Override
-    public void render(@NotNull final Document document) {
-        document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
+    public void render(@NotNull final Document document, @NotNull ReportResources reportResources) {
+        document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
-        addKeyQC(document);
-        addExpressionTables(document);
-        addRNAFusionTables(document);
-        addNovelSpliceJunctionTables(document);
+        addKeyQC(document, reportResources);
+        addExpressionTables(document, reportResources);
+        addRNAFusionTables(document, reportResources);
+        addNovelSpliceJunctionTables(document, reportResources);
     }
 
-    private void addKeyQC(@NotNull Document document) {
+    private void addKeyQC(@NotNull Document document, @NotNull ReportResources reportResources) {
+        Cells cells = reportResources.cells();
         Table table = Tables.createContent(contentWidth(),
                 new float[] { 1, 1, 1, 1 },
-                new Cell[] { Cells.createHeader("QC"), Cells.createHeader("Total Fragments"), Cells.createHeader("Non-Duplicate Fragments"),
-                        Cells.createHeader("Duplicate rate") });
+                new Cell[] { cells.createHeader("QC"), cells.createHeader("Total Fragments"), cells.createHeader("Non-Duplicate Fragments"),
+                        cells.createHeader("Duplicate rate") });
 
         if (report.isofox() != null) {
-            table.addCell(Cells.createContent(report.isofox().summary().qcStatus()));
-            table.addCell(Cells.createContent(String.valueOf(report.isofox().summary().totalFragments())));
+            table.addCell(cells.createContent(report.isofox().summary().qcStatus()));
+            table.addCell(cells.createContent(String.valueOf(report.isofox().summary().totalFragments())));
 
             long nonDuplicates = report.isofox().summary().totalFragments() - report.isofox().summary().duplicateFragments();
-            table.addCell(Cells.createContent(String.valueOf(nonDuplicates)));
+            table.addCell(cells.createContent(String.valueOf(nonDuplicates)));
 
             double duplicateRate = report.isofox().summary().duplicateFragments() / (double) report.isofox().summary().totalFragments();
-            table.addCell(Cells.createContent(PERCENTAGE_FORMAT.format(duplicateRate * 100)));
+            table.addCell(cells.createContent(PERCENTAGE_FORMAT.format(duplicateRate * 100)));
         } else {
-            table.addCell(Cells.createSpanningEntry(table, ReportResources.NOT_AVAILABLE));
+            table.addCell(cells.createSpanningEntry(table, ReportResources.NOT_AVAILABLE));
         }
 
-        document.add(Tables.createWrapping(table));
+        document.add(reportResources.tables().createWrapping(table));
     }
 
-    private void addExpressionTables(@NotNull Document document) {
+    private void addExpressionTables(@NotNull Document document, @NotNull ReportResources reportResources) {
         IsofoxRecord isofox = report.isofox();
         List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = report.purple().allSomaticGeneCopyNumbers();
 
         List<GeneExpression> reportableHighExpression = isofox != null ? isofox.reportableHighExpression() : Lists.newArrayList();
         String titleHighExpression = "Genes with high expression (" + reportableHighExpression.size() + ")";
-        document.add(ExpressionTable.build(titleHighExpression, contentWidth(), reportableHighExpression, false, somaticGeneCopyNumbers));
+        document.add(ExpressionTable.build(titleHighExpression, contentWidth(), reportableHighExpression, false, somaticGeneCopyNumbers,
+                reportResources));
 
         List<GeneExpression> reportableLowExpression = isofox != null ? isofox.reportableLowExpression() : Lists.newArrayList();
         String titleLowExpression = "Genes with low expression (" + reportableLowExpression.size() + ")";
-        document.add(ExpressionTable.build(titleLowExpression, contentWidth(), reportableLowExpression, true, somaticGeneCopyNumbers));
+        document.add(ExpressionTable.build(titleLowExpression, contentWidth(), reportableLowExpression, true, somaticGeneCopyNumbers,
+                reportResources));
     }
 
-    private void addRNAFusionTables(@NotNull Document document) {
+    private void addRNAFusionTables(@NotNull Document document, @NotNull ReportResources reportResources) {
         IsofoxRecord isofox = report.isofox();
 
         List<RnaFusion> reportableNovelKnownFusions = isofox != null ? isofox.reportableNovelKnownFusions() : Lists.newArrayList();
         String titleKnownFusions = "Known fusions detected in RNA and not in DNA (" + reportableNovelKnownFusions.size() + ")";
-        document.add(RNAFusionTable.build(titleKnownFusions, contentWidth(), reportableNovelKnownFusions));
+        document.add(RNAFusionTable.build(titleKnownFusions, contentWidth(), reportableNovelKnownFusions, reportResources));
 
         List<RnaFusion> reportableNovelPromiscuous = isofox != null ? isofox.reportableNovelPromiscuousFusions() : Lists.newArrayList();
         String titlePromiscuousFusions = "Promiscuous fusions detected in RNA and not in DNA (" + reportableNovelPromiscuous.size() + ")";
-        document.add(RNAFusionTable.build(titlePromiscuousFusions, contentWidth(), reportableNovelPromiscuous));
+        document.add(RNAFusionTable.build(titlePromiscuousFusions, contentWidth(), reportableNovelPromiscuous, reportResources));
     }
 
-    private void addNovelSpliceJunctionTables(@NotNull Document document) {
+    private void addNovelSpliceJunctionTables(@NotNull Document document, @NotNull ReportResources reportResources) {
         IsofoxRecord isofox = report.isofox();
 
         List<NovelSpliceJunction> reportableSkippedExons = isofox != null ? isofox.reportableSkippedExons() : Lists.newArrayList();
         String titleSkippedExonJunctions =
                 "Potentially interesting novel splice junctions - Skipped exons (" + reportableSkippedExons.size() + ")";
-        document.add(NovelSpliceJunctionTable.build(titleSkippedExonJunctions, contentWidth(), reportableSkippedExons));
+        document.add(NovelSpliceJunctionTable.build(titleSkippedExonJunctions, contentWidth(), reportableSkippedExons, reportResources));
 
         List<NovelSpliceJunction> reportableNovelExonsIntrons =
                 isofox != null ? isofox.reportableNovelExonsIntrons() : Lists.newArrayList();
         String titleNovelExonIntronJunctions =
                 "Potentially interesting novel splice junctions - Novel exon/intron (" + reportableNovelExonsIntrons.size() + ")";
-        document.add(NovelSpliceJunctionTable.build(titleNovelExonIntronJunctions, contentWidth(), reportableNovelExonsIntrons));
+        document.add(NovelSpliceJunctionTable.build(titleNovelExonIntronJunctions, contentWidth(), reportableNovelExonsIntrons,
+                reportResources));
     }
 }

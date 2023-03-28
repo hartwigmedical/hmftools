@@ -73,8 +73,9 @@ public class ReportWriter {
             throws IOException {
         Document doc = initializeReport(sampleId);
         PdfDocument pdfDocument = doc.getPdfDocument();
+        ReportResources reportResources = ReportResources.create();
 
-        PageEventHandler pageEventHandler = PageEventHandler.create(sampleId, platinumVersion);
+        PageEventHandler pageEventHandler = PageEventHandler.create(sampleId, platinumVersion, reportResources);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
         for (int i = 0; i < chapters.length; i++) {
@@ -86,7 +87,7 @@ public class ReportWriter {
             if (i > 0) {
                 doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
             }
-            chapter.render(doc);
+            chapter.render(doc, reportResources);
         }
 
         pageEventHandler.writeTotalPageCount(doc.getPdfDocument());
