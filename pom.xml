@@ -76,7 +76,7 @@
         <mark-dups.version>1.0</mark-dups.version>
         <neo.version>1.0</neo.version>
         <orange.version>2.3</orange.version>
-        <orange-datamodel.version>1.0.1-beta.1</orange-datamodel.version>
+        <orange-datamodel.version>1.0.1-beta.2</orange-datamodel.version>
         <paddle.version>1.0</paddle.version>
         <patient-db.version>5.31.0</patient-db.version>
         <pave.version>1.4.3</pave.version>
@@ -409,26 +409,4 @@
             <url>artifactregistry://europe-west4-maven.pkg.dev/hmf-build/hmf-maven</url>
         </repository>
     </distributionManagement>
-
-    <repositories>
-        <repository>
-            <id>central</id>
-            <name>Central Repository</name>
-            <url>https://repo.maven.apache.org/maven2</url>
-            <layout>default</layout>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>artifact-registry</id>
-            <url>artifactregistry://europe-west4-maven.pkg.dev/hmf-build/hmf-maven</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 </project>
