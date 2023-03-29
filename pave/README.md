@@ -11,10 +11,10 @@ GeneName | HGNC gene name
 Transcript | Ensembl transcript ID
 Effects | list of effects separated by '&'
 SpliceRegion | true/false - if variant overlaps with the 8 intronic bases or 3 exonic bases around a splice junction 
+HgvsCodingImpact | HGVS coding impact
+HgvsProteinImpact | HGVS protein impact 
 
-For any gene with 1 or more impacts, the following summary data is written:
-
-For each impacted transcript it will add the following fields:
+For any variant with one or more impacted transcripts, the following summary data is written:
 
 Field | Description
 ---|---
