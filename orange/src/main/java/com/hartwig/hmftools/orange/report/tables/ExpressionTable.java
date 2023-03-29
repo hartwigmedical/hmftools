@@ -60,7 +60,7 @@ public final class ExpressionTable {
             return ReportResources.NOT_AVAILABLE;
         }
 
-        return String.valueOf(Math.abs(geneCopyNumber.minCopyNumber()));
+        return String.format("%.1f", Math.abs(geneCopyNumber.minCopyNumber()));
     }
 
     @Nullable
