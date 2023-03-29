@@ -334,8 +334,8 @@ public class PurpleInterpreter {
                 .transcript(driver.transcript())
                 .isCanonical(driver.isCanonical())
                 .interpretation(CopyNumberInterpretationUtil.fromCNADriver(driver))
-                .minCopies(Math.abs(driver.minCopyNumber()))
-                .maxCopies(Math.abs(driver.maxCopyNumber()))
+                .minCopies(Math.max(0, driver.minCopyNumber()))
+                .maxCopies(Math.max(0, driver.maxCopyNumber()))
                 .build();
     }
 

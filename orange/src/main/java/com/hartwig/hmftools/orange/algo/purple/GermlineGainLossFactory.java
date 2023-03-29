@@ -51,7 +51,7 @@ public class GermlineGainLossFactory {
         TranscriptData canonicalTranscript = findCanonicalTranscript(deletion.GeneName);
 
         boolean isFullDeletion = deletion.RegionStart < canonicalTranscript.TransStart && deletion.RegionEnd > canonicalTranscript.TransEnd;
-        double minCopies = Math.abs(deletion.TumorCopyNumber);
+        double minCopies = Math.max(0, deletion.TumorCopyNumber);
         double maxCopies = isFullDeletion ? minCopies : maxCopyNumberFromGeneCopyNumber(deletion.GeneName, allSomaticGeneCopyNumbers);
 
         return ImmutablePurpleGainLoss.builder()
@@ -85,7 +85,7 @@ public class GermlineGainLossFactory {
             @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers) {
         for (GeneCopyNumber geneCopyNumber : allSomaticGeneCopyNumbers) {
             if (geneCopyNumber.geneName().equals(geneNameToFind)) {
-                return Math.abs(geneCopyNumber.maxCopyNumber());
+                return Math.max(0, geneCopyNumber.maxCopyNumber());
             }
         }
 

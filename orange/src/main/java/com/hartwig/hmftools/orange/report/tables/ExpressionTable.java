@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -60,7 +62,7 @@ public final class ExpressionTable {
             return ReportResources.NOT_AVAILABLE;
         }
 
-        return String.format("%.1f", Math.abs(geneCopyNumber.minCopyNumber()));
+        return formatSingleDigitDecimal(Math.max(0, geneCopyNumber.minCopyNumber()));
     }
 
     @Nullable

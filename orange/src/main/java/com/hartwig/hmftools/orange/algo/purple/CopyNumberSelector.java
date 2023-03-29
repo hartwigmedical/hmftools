@@ -87,8 +87,8 @@ final class CopyNumberSelector {
                 .transcript(geneCopyNumber.transName())
                 .isCanonical(geneCopyNumber.isCanonical())
                 .interpretation(CopyNumberInterpretation.FULL_GAIN)
-                .minCopies(Math.abs(geneCopyNumber.minCopyNumber()))
-                .maxCopies(Math.abs(geneCopyNumber.maxCopyNumber()))
+                .minCopies(Math.max(0, geneCopyNumber.minCopyNumber()))
+                .maxCopies(Math.max(0, geneCopyNumber.maxCopyNumber()))
                 .build();
     }
 

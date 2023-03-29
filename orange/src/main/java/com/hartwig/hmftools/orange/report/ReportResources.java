@@ -47,9 +47,34 @@ public final class ReportResources {
     private static final String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";
 
     @NotNull
-    public static DecimalFormat decimalFormat(@NotNull String format) {
+    public static String formatSingleDigitDecimal(double num) {
+        return formatDecimal(num, "0.0");
+    }
+
+    @NotNull
+    public static String formatTwoDigitDecimal(double num) {
+        return formatDecimal(num, "0.00");
+    }
+
+    @NotNull
+    public static String formatPercentage(double num) {
+        return formatPercentage(num, true);
+    }
+
+    @NotNull
+    public static String formatPercentage(double num, boolean multiplyBy100) {
+        return formatDecimal(multiplyBy100 ? num * 100 : num, "0'%'");
+    }
+
+    @NotNull
+    public static String formatPercentageOneDecimal(double num) {
+        return formatDecimal(num * 100, "0.0'%'");
+    }
+
+    @NotNull
+    private static String formatDecimal(double num, @NotNull String format) {
         // To make sure every decimal format uses a dot as separator rather than a comma.
-        return new DecimalFormat(format, DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+        return new DecimalFormat(format, DecimalFormatSymbols.getInstance(Locale.ENGLISH)).format(num);
     }
 
     @NotNull

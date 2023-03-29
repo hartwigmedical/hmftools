@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import java.text.DecimalFormat;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -25,8 +26,6 @@ import com.itextpdf.layout.element.Table;
 import org.jetbrains.annotations.NotNull;
 
 public class RNAFindingsChapter implements ReportChapter {
-
-    private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#'%'");
 
     @NotNull
     private final OrangeRecord report;
@@ -71,7 +70,7 @@ public class RNAFindingsChapter implements ReportChapter {
             table.addCell(Cells.createContent(String.valueOf(nonDuplicates)));
 
             double duplicateRate = report.isofox().summary().duplicateFragments() / (double) report.isofox().summary().totalFragments();
-            table.addCell(Cells.createContent(PERCENTAGE_FORMAT.format(duplicateRate * 100)));
+            table.addCell(Cells.createContent(formatPercentage(duplicateRate)));
         } else {
             table.addCell(Cells.createSpanningEntry(table, ReportResources.NOT_AVAILABLE));
         }

@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import java.text.DecimalFormat;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
@@ -25,9 +27,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class QualityControlChapter implements ReportChapter {
-
-    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#0.0");
-    private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#'%'");
 
     @NotNull
     private final OrangeRecord report;
@@ -75,7 +74,7 @@ public class QualityControlChapter implements ReportChapter {
         table.addCell(Cells.createContent(report.refGenomeVersion().toString()));
         table.addCell(Cells.createContent(report.purple().fit().fittedPurityMethod().toString()));
         table.addCell(Cells.createContent(String.valueOf(report.purple().fit().qc().amberMeanDepth())));
-        table.addCell(Cells.createContent(PERCENTAGE_FORMAT.format(report.purple().fit().qc().contamination() * 100)));
+        table.addCell(Cells.createContent(formatPercentage(report.purple().fit().qc().contamination())));
         table.addCell(Cells.createContent(String.valueOf(report.purple().fit().qc().unsupportedCopyNumberSegments())));
         table.addCell(Cells.createContent(String.valueOf(report.purple().fit().qc().deletedGenes())));
 
@@ -112,14 +111,14 @@ public class QualityControlChapter implements ReportChapter {
             flagstat.addCell(Cells.createContent(String.valueOf(refFlagstat.uniqueReadCount())));
             flagstat.addCell(Cells.createContent(String.valueOf(refFlagstat.secondaryCount())));
             flagstat.addCell(Cells.createContent(String.valueOf(refFlagstat.supplementaryCount())));
-            flagstat.addCell(Cells.createContent(PERCENTAGE_FORMAT.format(refFlagstat.mappedProportion() * 100)));
+            flagstat.addCell(Cells.createContent(formatPercentage(refFlagstat.mappedProportion())));
         }
 
         flagstat.addCell(Cells.createContent("Tumor Sample"));
         flagstat.addCell(Cells.createContent(String.valueOf(tumorFlagstat.uniqueReadCount())));
         flagstat.addCell(Cells.createContent(String.valueOf(tumorFlagstat.secondaryCount())));
         flagstat.addCell(Cells.createContent(String.valueOf(tumorFlagstat.supplementaryCount())));
-        flagstat.addCell(Cells.createContent(PERCENTAGE_FORMAT.format(tumorFlagstat.mappedProportion() * 100)));
+        flagstat.addCell(Cells.createContent(formatPercentage(tumorFlagstat.mappedProportion())));
 
         document.add(Tables.createWrapping(flagstat, "Flagstats"));
     }
@@ -135,15 +134,15 @@ public class QualityControlChapter implements ReportChapter {
 
         if (refMetrics != null) {
             coverage.addCell(Cells.createContent("Ref Sample"));
-            coverage.addCell(Cells.createContent(SINGLE_DIGIT.format(refMetrics.meanCoverage())));
-            coverage.addCell(Cells.createContent(SINGLE_DIGIT.format(refMetrics.sdCoverage())));
+            coverage.addCell(Cells.createContent(formatSingleDigitDecimal(refMetrics.meanCoverage())));
+            coverage.addCell(Cells.createContent(formatSingleDigitDecimal(refMetrics.sdCoverage())));
             coverage.addCell(Cells.createContent(String.valueOf(refMetrics.medianCoverage())));
             coverage.addCell(Cells.createContent(String.valueOf(refMetrics.madCoverage())));
         }
 
         coverage.addCell(Cells.createContent("Tumor Sample"));
-        coverage.addCell(Cells.createContent(SINGLE_DIGIT.format(tumorMetrics.meanCoverage())));
-        coverage.addCell(Cells.createContent(SINGLE_DIGIT.format(tumorMetrics.sdCoverage())));
+        coverage.addCell(Cells.createContent(formatSingleDigitDecimal(tumorMetrics.meanCoverage())));
+        coverage.addCell(Cells.createContent(formatSingleDigitDecimal(tumorMetrics.sdCoverage())));
         coverage.addCell(Cells.createContent(String.valueOf(tumorMetrics.medianCoverage())));
         coverage.addCell(Cells.createContent(String.valueOf(tumorMetrics.madCoverage())));
 
@@ -187,7 +186,7 @@ public class QualityControlChapter implements ReportChapter {
 
     @NotNull
     private static String percent(@Nullable Double value) {
-        return value != null ? PERCENTAGE_FORMAT.format(value * 100) : ReportResources.NOT_AVAILABLE;
+        return value != null ? formatPercentage(value) : ReportResources.NOT_AVAILABLE;
     }
 
     private void addPurpleQCPlots(@NotNull Document document) {

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.report.tables;
 
 import static com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretationUtil.display;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,7 +43,7 @@ public final class GainLossTable {
             table.addCell(Cells.createContent(gainLoss.chromosome() + gainLoss.chromosomeBand()));
             table.addCell(Cells.createContent(displayGene(gainLoss)));
             table.addCell(Cells.createContent(display(gainLoss.interpretation())));
-            table.addCell(Cells.createContent(String.format("%.1f", gainLoss.minCopies())));
+            table.addCell(Cells.createContent(formatSingleDigitDecimal(gainLoss.minCopies())));
 
             GeneExpression expression = findExpressionForGene(isofox, gainLoss.gene());
             if (expression != null) {

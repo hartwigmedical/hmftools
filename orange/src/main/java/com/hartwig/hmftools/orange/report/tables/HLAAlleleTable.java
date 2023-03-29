@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+
 import java.text.DecimalFormat;
 import java.util.Comparator;
 import java.util.List;
@@ -17,8 +19,6 @@ import com.itextpdf.layout.element.Table;
 import org.jetbrains.annotations.NotNull;
 
 public final class HLAAlleleTable {
-
-    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
 
     private HLAAlleleTable() {
     }
@@ -39,7 +39,7 @@ public final class HLAAlleleTable {
             table.addCell(Cells.createContent(String.valueOf(allele.refFragments())));
             table.addCell(Cells.createContent(String.valueOf(allele.tumorFragments())));
             table.addCell(Cells.createContent(String.valueOf(allele.rnaFragments())));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(allele.tumorCopyNumber())));
+            table.addCell(Cells.createContent(formatSingleDigitDecimal(allele.tumorCopyNumber())));
             table.addCell(Cells.createContent(mutationString(allele)));
         }
 
@@ -57,23 +57,23 @@ public final class HLAAlleleTable {
     private static String mutationString(@NotNull LilacAllele allele) {
         StringJoiner joiner = new StringJoiner(", ");
         if (Doubles.positive(allele.somaticMissense())) {
-            joiner.add(SINGLE_DIGIT.format(allele.somaticMissense()) + " missense");
+            joiner.add(formatSingleDigitDecimal(allele.somaticMissense()) + " missense");
         }
 
         if (Doubles.positive(allele.somaticNonsenseOrFrameshift())) {
-            joiner.add(SINGLE_DIGIT.format(allele.somaticNonsenseOrFrameshift()) + " nonsense or frameshift");
+            joiner.add(formatSingleDigitDecimal(allele.somaticNonsenseOrFrameshift()) + " nonsense or frameshift");
         }
 
         if (Doubles.positive(allele.somaticSplice())) {
-            joiner.add(SINGLE_DIGIT.format(allele.somaticSplice()) + " splice");
+            joiner.add(formatSingleDigitDecimal(allele.somaticSplice()) + " splice");
         }
 
         if (Doubles.positive(allele.somaticSynonymous())) {
-            joiner.add(SINGLE_DIGIT.format(allele.somaticSynonymous()) + " synonymous");
+            joiner.add(formatSingleDigitDecimal(allele.somaticSynonymous()) + " synonymous");
         }
 
         if (Doubles.positive(allele.somaticInframeIndel())) {
-            joiner.add(SINGLE_DIGIT.format(allele.somaticInframeIndel()) + " inframe indel");
+            joiner.add(formatSingleDigitDecimal(allele.somaticInframeIndel()) + " inframe indel");
         }
 
         String result = joiner.toString();
