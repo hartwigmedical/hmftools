@@ -14,9 +14,11 @@ import org.jetbrains.annotations.Nullable;
 public class Tables {
 
     private static final float TABLE_BOTTOM_MARGIN = 20;
+
+    @NotNull
     private final ReportResources reportResources;
 
-    public Tables(final ReportResources reportResources) {
+    public Tables(@NotNull ReportResources reportResources) {
         this.reportResources = reportResources;
     }
 

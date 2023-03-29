@@ -15,9 +15,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class Cells {
 
+    @NotNull
     private final ReportResources reportResources;
 
-    public Cells(ReportResources reportResources) {
+    public Cells(@NotNull ReportResources reportResources) {
         this.reportResources = reportResources;
     }
 

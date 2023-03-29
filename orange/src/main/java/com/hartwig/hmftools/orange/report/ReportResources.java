@@ -6,8 +6,6 @@ import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
 import com.hartwig.hmftools.orange.OrangeApplication;
-import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.io.font.FontProgram;
 import com.itextpdf.io.font.FontProgramFactory;
 import com.itextpdf.io.font.PdfEncodings;
@@ -75,46 +73,57 @@ public class ReportResources {
         return fontBold;
     }
 
+    @NotNull
     public Style chapterTitleStyle() {
         return new Style().setFont(fontBold).setFontSize(10).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
+    @NotNull
     public Style tableTitleStyle() {
         return new Style().setFont(fontBold).setFontSize(8).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
+    @NotNull
     public Style tableHeaderStyle() {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
+    @NotNull
     public Style tableContentStyle() {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
     }
 
+    @NotNull
     public Style keyStyle() {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
+    @NotNull
     public Style valueStyle() {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
+    @NotNull
     public Style subTextStyle() {
         return new Style().setFont(fontRegular).setFontSize(6).setFontColor(ReportResources.PALETTE_BLACK);
     }
 
+    @NotNull
     public Style pageNumberStyle() {
         return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
+    @NotNull
     public Style sidePanelLabelStyle() {
         return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_WHITE);
     }
 
+    @NotNull
     public Style sidePanelValueStyle() {
         return new Style().setFont(fontBold).setFontSize(10).setFontColor(ReportResources.PALETTE_WHITE);
     }
 
+    @NotNull
     public Style urlStyle() {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_BLUE);
     }

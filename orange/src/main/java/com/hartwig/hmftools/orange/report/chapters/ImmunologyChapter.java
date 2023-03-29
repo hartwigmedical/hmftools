@@ -44,7 +44,7 @@ public class ImmunologyChapter implements ReportChapter {
         addHLAData(document);
     }
 
-    private void addHLAData(final Document document) {
+    private void addHLAData(@NotNull Document document) {
         Cells cells = new Cells(reportResources);
         Table qc = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         qc.addCell(cells.createKey("QC Status:"));
