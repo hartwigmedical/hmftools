@@ -47,8 +47,8 @@ public class GermlineGainLossFactoryTest {
         assertEquals(reportablePartialHom, map.get(gainLoss));
         assertEquals(CopyNumberInterpretation.PARTIAL_LOSS, gainLoss.interpretation());
         assertEquals(TEST_GENE, gainLoss.gene());
-        assertEquals(0, gainLoss.minCopies());
-        assertEquals(4, gainLoss.maxCopies());
+        assertEquals(0, gainLoss.minCopies(), 0.001);
+        assertEquals(4, gainLoss.maxCopies(), 0.001);
     }
 
     @Test
@@ -67,8 +67,8 @@ public class GermlineGainLossFactoryTest {
         assertEquals(reportableFullHom, map.get(gainLoss));
         assertEquals(CopyNumberInterpretation.FULL_LOSS, gainLoss.interpretation());
         assertEquals(TEST_GENE, gainLoss.gene());
-        assertEquals(0, gainLoss.minCopies());
-        assertEquals(0, gainLoss.maxCopies());
+        assertEquals(0, gainLoss.minCopies(), 0.001);
+        assertEquals(0, gainLoss.maxCopies(), 0.001);
     }
 
     @NotNull

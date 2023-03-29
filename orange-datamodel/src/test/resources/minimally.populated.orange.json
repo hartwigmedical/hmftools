@@ -286,8 +286,8 @@
         "gene": "SMAD4",
         "transcript": "ENST00000591126",
         "isCanonical": false,
-        "minCopies": 0,
-        "maxCopies": 1
+        "minCopies": 0.1,
+        "maxCopies": 1.2
       }
     ],
     "reportableSomaticGainsLosses": [
@@ -298,8 +298,8 @@
         "gene": "SMAD4",
         "transcript": "ENST00000591126",
         "isCanonical": false,
-        "minCopies": 0,
-        "maxCopies": 1
+        "minCopies": 0.1,
+        "maxCopies": 1.2
       }
     ],
     "suspectGeneCopyNumbersWithLOH": [

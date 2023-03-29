@@ -32,16 +32,12 @@ public final class LossOfHeterozygosityTable {
         for (PurpleGeneCopyNumber lohGene : sort(lohGenes)) {
             table.addCell(Cells.createContent(lohGene.chromosome() + lohGene.chromosomeBand()));
             table.addCell(Cells.createContent(lohGene.geneName()));
-            table.addCell(Cells.createContent(String.valueOf(round(lohGene.minMinorAlleleCopyNumber()))));
-            table.addCell(Cells.createContent(String.valueOf(round(lohGene.minCopyNumber()))));
+            table.addCell(Cells.createContent(String.format("%.1f", Math.abs(lohGene.minMinorAlleleCopyNumber()))));
+            table.addCell(Cells.createContent(String.format("%.1f", Math.abs(lohGene.minCopyNumber()))));
             table.addCell(Cells.createContent(Strings.EMPTY));
         }
 
         return Tables.createWrapping(table, title);
-    }
-
-    private static long round(double copyNumber) {
-        return Math.round(Math.max(0, copyNumber));
     }
 
     @NotNull

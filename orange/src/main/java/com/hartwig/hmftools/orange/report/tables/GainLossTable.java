@@ -42,7 +42,7 @@ public final class GainLossTable {
             table.addCell(Cells.createContent(gainLoss.chromosome() + gainLoss.chromosomeBand()));
             table.addCell(Cells.createContent(displayGene(gainLoss)));
             table.addCell(Cells.createContent(display(gainLoss.interpretation())));
-            table.addCell(Cells.createContent(String.valueOf(gainLoss.minCopies())));
+            table.addCell(Cells.createContent(String.format("%.1f", gainLoss.minCopies())));
 
             GeneExpression expression = findExpressionForGene(isofox, gainLoss.gene());
             if (expression != null) {

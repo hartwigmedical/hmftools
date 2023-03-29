@@ -217,8 +217,8 @@ public class OrangeJsonTest
         assertEquals("ENST00000591126", gainLoss.transcript());
         assertFalse(gainLoss.isCanonical());
         assertEquals(CopyNumberInterpretation.FULL_LOSS, gainLoss.interpretation());
-        assertEquals(0, gainLoss.minCopies());
-        assertEquals(1, gainLoss.maxCopies());
+        assertEquals(0.1, gainLoss.minCopies(), 0.001);
+        assertEquals(1.2, gainLoss.maxCopies(), 0.001);
 
         assertEquals(1, purple.reportableSomaticGainsLosses().size());
         assertEquals(gainLoss, purple.reportableSomaticGainsLosses().iterator().next());
