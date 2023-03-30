@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import java.text.DecimalFormat;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
-import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
@@ -20,9 +21,6 @@ import org.jetbrains.annotations.NotNull;
 public final class SignatureAllocationTable {
 
     private static final Logger LOGGER = LogManager.getLogger(SignatureAllocationTable.class);
-
-    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
-    private static final DecimalFormat PERCENTAGE = ReportResources.decimalFormat("#'%'");
 
     static final String MISALLOC_SIGNATURE = "MISALLOC";
 
@@ -42,8 +40,8 @@ public final class SignatureAllocationTable {
 
         for (SignatureAllocation signatureAllocation : sort(signatureAllocations)) {
             table.addCell(Cells.createContent(signatureAllocation.signature()));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(signatureAllocation.allocation())));
-            table.addCell(Cells.createContent(PERCENTAGE.format(signatureAllocation.percent() * 100)));
+            table.addCell(Cells.createContent(formatSingleDigitDecimal(signatureAllocation.allocation())));
+            table.addCell(Cells.createContent(formatPercentage(signatureAllocation.percent())));
             table.addCell(Cells.createContent(Strings.EMPTY));
         }
 

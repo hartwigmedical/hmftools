@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import java.text.DecimalFormat;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitDecimal;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -51,10 +54,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class FrontPageChapter implements ReportChapter {
 
-    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
-    private static final DecimalFormat TWO_DIGITS = ReportResources.decimalFormat("#.##");
-    private static final DecimalFormat PERCENTAGE = ReportResources.decimalFormat("#'%'");
-
     private static final String NONE = "None";
 
     @NotNull
@@ -104,7 +103,7 @@ public class FrontPageChapter implements ReportChapter {
         }
 
         CuppaPrediction best = CuppaInterpretation.best(cuppa);
-        return best.cancerType() + " (" + PERCENTAGE.format(best.likelihood() * 100) + ")";
+        return best.cancerType() + " (" + formatPercentage(best.likelihood()) + ")";
     }
 
     @NotNull
@@ -155,7 +154,7 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(Cells.createKey("Microsatellite indels per Mb:"));
         summary.addCell(Cells.createValue(msiString()));
         summary.addCell(Cells.createKey("Tumor mutations per Mb:"));
-        summary.addCell(Cells.createValue(SINGLE_DIGIT.format(report.purple().characteristics().tumorMutationalBurdenPerMb())));
+        summary.addCell(Cells.createValue(formatSingleDigitDecimal(report.purple().characteristics().tumorMutationalBurdenPerMb())));
         summary.addCell(Cells.createKey("Tumor mutational load:"));
         summary.addCell(Cells.createValue(tmlString()));
         summary.addCell(Cells.createKey("HR deficiency score:"));
@@ -192,17 +191,17 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String purityString() {
         return String.format("%s (%s-%s)",
-                PERCENTAGE.format(report.purple().fit().purity() * 100),
-                PERCENTAGE.format(report.purple().fit().minPurity() * 100),
-                PERCENTAGE.format(report.purple().fit().maxPurity() * 100));
+                formatPercentage(report.purple().fit().purity()),
+                formatPercentage(report.purple().fit().minPurity()),
+                formatPercentage(report.purple().fit().maxPurity()));
     }
 
     @NotNull
     private String ploidyString() {
         return String.format("%s (%s-%s)",
-                TWO_DIGITS.format(report.purple().fit().ploidy()),
-                TWO_DIGITS.format(report.purple().fit().minPloidy()),
-                TWO_DIGITS.format(report.purple().fit().maxPloidy()));
+                formatTwoDigitDecimal(report.purple().fit().ploidy()),
+                formatTwoDigitDecimal(report.purple().fit().minPloidy()),
+                formatTwoDigitDecimal(report.purple().fit().maxPloidy()));
     }
 
     @NotNull
@@ -332,7 +331,7 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String msiString() {
         PurpleCharacteristics characteristics = report.purple().characteristics();
-        return SINGLE_DIGIT.format(characteristics.microsatelliteIndelsPerMb()) + " (" + display(characteristics.microsatelliteStatus()) + ")";
+        return formatSingleDigitDecimal(characteristics.microsatelliteIndelsPerMb()) + " (" + display(characteristics.microsatelliteStatus()) + ")";
     }
 
     @NotNull
@@ -380,16 +379,16 @@ public class FrontPageChapter implements ReportChapter {
         String addon = Strings.EMPTY;
         if (chord.hrStatus() == ChordStatus.HR_DEFICIENT && !chord.hrdType().isEmpty()) {
             if (chord.hrdType().contains("BRCA1")) {
-                addon = " - BRCA1 (" + TWO_DIGITS.format(chord.brca1Value()) + ")";
+                addon = " - BRCA1 (" + formatTwoDigitDecimal(chord.brca1Value()) + ")";
             } else if (chord.hrdType().contains("BRCA2")) {
-                addon = " - BRCA2 (" + TWO_DIGITS.format(chord.brca2Value()) + ")";
+                addon = " - BRCA2 (" + formatTwoDigitDecimal(chord.brca2Value()) + ")";
             } else if (chord.hrdType().equals("cannot_be_determined")) {
                 addon = " - Undetermined";
             } else {
                 addon = " - " + chord.hrdType();
             }
         }
-        return SINGLE_DIGIT.format(chord.hrdValue()) + " (" + displayChordStatus(chord.hrStatus()) + addon + ")";
+        return formatSingleDigitDecimal(chord.hrdValue()) + " (" + displayChordStatus(chord.hrStatus()) + addon + ")";
     }
 
     private static String displayChordStatus(ChordStatus chordStatus) {
@@ -424,13 +423,13 @@ public class FrontPageChapter implements ReportChapter {
         Evaluation evaluation = report.cohortEvaluations().get(PercentileType.SV_TMB);
         String addon = Strings.EMPTY;
         if (evaluation != null) {
-            String panCancerPercentile = PERCENTAGE.format(evaluation.panCancerPercentile() * 100);
+            String panCancerPercentile = formatPercentage(evaluation.panCancerPercentile());
             addon = " (Pan " + panCancerPercentile;
             String cancerType = evaluation.cancerType();
             if (cancerType != null && !cancerType.equals(CohortConstants.COHORT_OTHER)
                     && !cancerType.equals(CohortConstants.COHORT_UNKNOWN)) {
                 Double percentile = evaluation.cancerTypePercentile();
-                String cancerTypePercentile = percentile != null ? PERCENTAGE.format(percentile * 100) : "NA";
+                String cancerTypePercentile = percentile != null ? formatPercentage(percentile) : "NA";
                 addon = addon + " | " + evaluation.cancerType() + " " + cancerTypePercentile;
             }
             addon = addon + ")";

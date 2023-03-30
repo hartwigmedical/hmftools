@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import java.text.DecimalFormat;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+
 import java.util.List;
 
-import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 import com.hartwig.hmftools.orange.report.interpretation.Variants;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -14,8 +14,6 @@ import com.itextpdf.layout.element.Table;
 import org.jetbrains.annotations.NotNull;
 
 public final class SomaticVariantTable {
-
-    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#0.0");
 
     private SomaticVariantTable() {
     }
@@ -34,9 +32,9 @@ public final class SomaticVariantTable {
 
         for (VariantEntry variant : Variants.sort(variants)) {
             table.addCell(Cells.createContent(Variants.variantField(variant)));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.variantCopyNumber())));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.totalCopyNumber())));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(variant.minorAlleleCopyNumber())));
+            table.addCell(Cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
+            table.addCell(Cells.createContent(formatSingleDigitDecimal(variant.totalCopyNumber())));
+            table.addCell(Cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
             table.addCell(Cells.createContent(variant.biallelic() ? "Yes" : "No"));
             table.addCell(Cells.createContent(Variants.hotspotField(variant)));
             table.addCell(Cells.createContent(Variants.driverLikelihoodField(variant)));
