@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import java.text.DecimalFormat;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,8 +17,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class BreakendTable {
-
-    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#0.0");
 
     private BreakendTable() {
     }
@@ -41,8 +40,8 @@ public final class BreakendTable {
             table.addCell(cells.createContent(breakend.range()));
             table.addCell(cells.createContent(breakend.type().toString()));
             table.addCell(cells.createContent(String.valueOf(breakend.clusterId())));
-            table.addCell(cells.createContent(SINGLE_DIGIT.format(breakend.junctionCopyNumber())));
-            table.addCell(cells.createContent(SINGLE_DIGIT.format(breakend.undisruptedCopyNumber())));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(breakend.junctionCopyNumber())));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(breakend.undisruptedCopyNumber())));
         }
 
         return new Tables(reportResources).createWrapping(table, title);

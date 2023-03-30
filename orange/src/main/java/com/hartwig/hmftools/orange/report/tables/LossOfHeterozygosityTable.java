@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,16 +37,12 @@ public final class LossOfHeterozygosityTable {
         for (PurpleGeneCopyNumber lohGene : sort(lohGenes)) {
             table.addCell(cells.createContent(lohGene.chromosome() + lohGene.chromosomeBand()));
             table.addCell(cells.createContent(lohGene.geneName()));
-            table.addCell(cells.createContent(String.valueOf(round(lohGene.minMinorAlleleCopyNumber()))));
-            table.addCell(cells.createContent(String.valueOf(round(lohGene.minCopyNumber()))));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(Math.max(0, lohGene.minMinorAlleleCopyNumber()))));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(Math.max(0, lohGene.minCopyNumber()))));
             table.addCell(cells.createContent(Strings.EMPTY));
         }
 
         return new Tables(reportResources).createWrapping(table, title);
-    }
-
-    private static long round(double copyNumber) {
-        return Math.round(Math.max(0, copyNumber));
     }
 
     @NotNull

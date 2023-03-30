@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import java.text.DecimalFormat;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentageOneDecimal;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -41,8 +42,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GermlineFindingsChapter implements ReportChapter {
-
-    private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#.0'%'");
 
     @NotNull
     private final OrangeRecord report;
@@ -150,7 +149,7 @@ public class GermlineFindingsChapter implements ReportChapter {
                 if (mvlh > 0.01) {
                     count++;
                     table.addCell(cells.createContent(gene));
-                    table.addCell(cells.createContent(PERCENTAGE_FORMAT.format(mvlh * 100)));
+                    table.addCell(cells.createContent(formatPercentageOneDecimal(mvlh)));
                     table.addCell(cells.createContent(Strings.EMPTY));
                 }
             }

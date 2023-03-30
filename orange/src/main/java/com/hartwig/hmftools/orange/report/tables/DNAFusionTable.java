@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import java.text.DecimalFormat;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,8 +31,6 @@ import org.jetbrains.annotations.Nullable;
 
 public final class DNAFusionTable {
 
-    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#0.0");
-
     private DNAFusionTable() {
     }
 
@@ -54,7 +52,7 @@ public final class DNAFusionTable {
             Table details = new Table(UnitValue.createPercentArray(new float[] { 1, 3 }));
             Stream.of(Maps.immutableEntry("5' End", cells.createValue(fiveEndString(fusion))),
                             Maps.immutableEntry("3' Start", cells.createValue(threeStartString(fusion))),
-                            Maps.immutableEntry("Junction CN", cells.createValue(SINGLE_DIGIT.format(fusion.junctionCopyNumber()))),
+                            Maps.immutableEntry("Junction CN", cells.createValue(formatSingleDigitDecimal(fusion.junctionCopyNumber()))),
                             Maps.immutableEntry("RNA support",
                                     cells.createValue(rnaFragmentSupportTable(isofox, fusion, cells)).setKeepTogether(true)),
                             Maps.immutableEntry("Phasing", cells.createValue(display(fusion.phased()))),

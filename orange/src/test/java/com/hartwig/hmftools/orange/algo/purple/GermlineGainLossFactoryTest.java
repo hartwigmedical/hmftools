@@ -22,6 +22,7 @@ import org.junit.Test;
 public class GermlineGainLossFactoryTest {
 
     private static final String TEST_GENE = "gene";
+    private static final double EPSILON = 1.0E-2;
 
     @Test
     public void canFilterHetDeletion() {
@@ -47,8 +48,8 @@ public class GermlineGainLossFactoryTest {
         assertEquals(reportablePartialHom, map.get(gainLoss));
         assertEquals(CopyNumberInterpretation.PARTIAL_LOSS, gainLoss.interpretation());
         assertEquals(TEST_GENE, gainLoss.gene());
-        assertEquals(0, gainLoss.minCopies());
-        assertEquals(4, gainLoss.maxCopies());
+        assertEquals(0, gainLoss.minCopies(), EPSILON);
+        assertEquals(4, gainLoss.maxCopies(), EPSILON);
     }
 
     @Test
@@ -67,8 +68,8 @@ public class GermlineGainLossFactoryTest {
         assertEquals(reportableFullHom, map.get(gainLoss));
         assertEquals(CopyNumberInterpretation.FULL_LOSS, gainLoss.interpretation());
         assertEquals(TEST_GENE, gainLoss.gene());
-        assertEquals(0, gainLoss.minCopies());
-        assertEquals(0, gainLoss.maxCopies());
+        assertEquals(0, gainLoss.minCopies(), EPSILON);
+        assertEquals(0, gainLoss.maxCopies(), EPSILON);
     }
 
     @NotNull

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import java.text.DecimalFormat;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+
 import java.util.List;
 
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
@@ -15,8 +16,6 @@ import com.itextpdf.layout.element.Table;
 import org.jetbrains.annotations.NotNull;
 
 public final class GermlineVariantTable {
-
-    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#0.0");
 
     private GermlineVariantTable() {
     }
@@ -36,9 +35,9 @@ public final class GermlineVariantTable {
 
         for (VariantEntry variant : Variants.sort(variants)) {
             table.addCell(cells.createContent(Variants.variantField(variant)));
-            table.addCell(cells.createContent(SINGLE_DIGIT.format(variant.variantCopyNumber())));
-            table.addCell(cells.createContent(SINGLE_DIGIT.format(variant.totalCopyNumber())));
-            table.addCell(cells.createContent(SINGLE_DIGIT.format(variant.minorAlleleCopyNumber())));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(variant.totalCopyNumber())));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
             table.addCell(cells.createContent(Variants.rnaDepthField(variant)));
             table.addCell(cells.createContent(variant.biallelic() ? "Yes" : "No"));
             table.addCell(cells.createContent(Variants.hotspotField(variant)));

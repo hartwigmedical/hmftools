@@ -22,6 +22,7 @@ import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -46,7 +47,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
-import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
@@ -56,8 +56,7 @@ import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class OrangeJsonTest
-{
+public class OrangeJsonTest {
 
     private static final String MINIMALLY_EMPTY_ORANGE_JSON =
             Thread.currentThread().getContextClassLoader().getResource("minimally.empty.orange.json").getPath();
@@ -217,8 +216,8 @@ public class OrangeJsonTest
         assertEquals("ENST00000591126", gainLoss.transcript());
         assertFalse(gainLoss.isCanonical());
         assertEquals(CopyNumberInterpretation.FULL_LOSS, gainLoss.interpretation());
-        assertEquals(0, gainLoss.minCopies());
-        assertEquals(1, gainLoss.maxCopies());
+        assertEquals(0.1, gainLoss.minCopies(), EPSILON);
+        assertEquals(1.2, gainLoss.maxCopies(), EPSILON);
 
         assertEquals(1, purple.reportableSomaticGainsLosses().size());
         assertEquals(gainLoss, purple.reportableSomaticGainsLosses().iterator().next());
