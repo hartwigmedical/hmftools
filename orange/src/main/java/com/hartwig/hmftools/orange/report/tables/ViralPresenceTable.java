@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import java.text.DecimalFormat;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+
 import java.util.List;
 
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
-import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
@@ -15,9 +16,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ViralPresenceTable {
-
-    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
-    private static final DecimalFormat PERCENTAGE = ReportResources.decimalFormat("#'%'");
 
     private ViralPresenceTable() {
     }
@@ -39,8 +37,8 @@ public final class ViralPresenceTable {
             table.addCell(Cells.createContent(virus.qcStatus().toString()));
             table.addCell(Cells.createContent(virus.interpretation() != null ? virus.interpretation().name() : Strings.EMPTY));
             table.addCell(Cells.createContent(String.valueOf(virus.integrations())));
-            table.addCell(Cells.createContent(PERCENTAGE.format(virus.percentageCovered())));
-            table.addCell(Cells.createContent(SINGLE_DIGIT.format(virus.meanCoverage())));
+            table.addCell(Cells.createContent(formatPercentage(virus.percentageCovered(), false)));
+            table.addCell(Cells.createContent(formatSingleDigitDecimal(virus.meanCoverage())));
             table.addCell(Cells.createContent(expectedClonalCoverageField(virus)));
             table.addCell(Cells.createContent(display(virus.virusDriverLikelihoodType())));
         }
@@ -63,6 +61,6 @@ public final class ViralPresenceTable {
     @NotNull
     private static String expectedClonalCoverageField(@NotNull AnnotatedVirus virus) {
         Double expectedClonalCoverage = virus.expectedClonalCoverage();
-        return expectedClonalCoverage != null ? SINGLE_DIGIT.format(expectedClonalCoverage) : Strings.EMPTY;
+        return expectedClonalCoverage != null ? formatSingleDigitDecimal(expectedClonalCoverage) : Strings.EMPTY;
     }
 }

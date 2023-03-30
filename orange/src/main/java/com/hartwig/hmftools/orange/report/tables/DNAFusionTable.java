@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import java.text.DecimalFormat;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,8 +29,6 @@ import org.jetbrains.annotations.Nullable;
 
 public final class DNAFusionTable {
 
-    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#0.0");
-
     private DNAFusionTable() {
     }
 
@@ -53,7 +52,7 @@ public final class DNAFusionTable {
             details.addCell(Cells.createKey("3' Start"));
             details.addCell(Cells.createValue(threeStartString(fusion)));
             details.addCell(Cells.createKey("Junction CN"));
-            details.addCell(Cells.createValue(SINGLE_DIGIT.format(fusion.junctionCopyNumber())));
+            details.addCell(Cells.createValue(formatSingleDigitDecimal(fusion.junctionCopyNumber())));
             details.addCell(Cells.createKey("RNA support"));
             details.addCell(Cells.createValue(rnaFragmentSupportTable(isofox, fusion)).setKeepTogether(true));
             details.addCell(Cells.createKey("Phasing"));

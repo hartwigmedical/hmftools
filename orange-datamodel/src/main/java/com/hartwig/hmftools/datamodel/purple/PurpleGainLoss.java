@@ -27,7 +27,7 @@ public interface PurpleGainLoss {
 
     boolean isCanonical();
 
-    long minCopies();
+    double minCopies();
 
-    long maxCopies();
+    double maxCopies();
 }
