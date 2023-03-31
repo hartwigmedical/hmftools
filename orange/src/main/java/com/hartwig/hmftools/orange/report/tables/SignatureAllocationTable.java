@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
+import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
@@ -28,24 +29,26 @@ public final class SignatureAllocationTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<SignatureAllocation> signatureAllocations) {
+    public static Table build(@NotNull String title, float width, @NotNull List<SignatureAllocation> signatureAllocations,
+            @NotNull ReportResources reportResources) {
         if (signatureAllocations.isEmpty()) {
-            return Tables.createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 3 },
-                new Cell[] { Cells.createHeader("Signature"), Cells.createHeader("Allocation"), Cells.createHeader("Percent"),
-                        Cells.createHeader(Strings.EMPTY) });
+                new Cell[] { cells.createHeader("Signature"), cells.createHeader("Allocation"), cells.createHeader("Percent"),
+                        cells.createHeader(Strings.EMPTY) });
 
         for (SignatureAllocation signatureAllocation : sort(signatureAllocations)) {
-            table.addCell(Cells.createContent(signatureAllocation.signature()));
-            table.addCell(Cells.createContent(formatSingleDigitDecimal(signatureAllocation.allocation())));
-            table.addCell(Cells.createContent(formatPercentage(signatureAllocation.percent())));
-            table.addCell(Cells.createContent(Strings.EMPTY));
+            table.addCell(cells.createContent(signatureAllocation.signature()));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(signatureAllocation.allocation())));
+            table.addCell(cells.createContent(formatPercentage(signatureAllocation.percent())));
+            table.addCell(cells.createContent(Strings.EMPTY));
         }
 
-        return Tables.createWrapping(table, title);
+        return new Tables(reportResources).createWrapping(table, title);
     }
 
     @NotNull

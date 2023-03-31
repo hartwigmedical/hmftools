@@ -4,7 +4,9 @@ import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDig
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
@@ -33,51 +35,53 @@ public final class DNAFusionTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<LinxFusion> fusions,
-            @Nullable IsofoxRecord isofox) {
+    public static Table build(@NotNull String title, float width, @NotNull List<LinxFusion> fusions, @Nullable IsofoxRecord isofox,
+            @NotNull ReportResources reportResources) {
         if (fusions.isEmpty()) {
-            return Tables.createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
                 new float[] { 1, 5 },
-                new Cell[] { Cells.createHeader("Fusion"), Cells.createHeader("Details") });
+                new Cell[] { cells.createHeader("Fusion"), cells.createHeader("Details") });
 
         for (LinxFusion fusion : sortLinxFusions(fusions)) {
-            table.addCell(Cells.createContent(fusion.name()));
+            table.addCell(cells.createContent(fusion.name()));
 
             Table details = new Table(UnitValue.createPercentArray(new float[] { 1, 3 }));
-            details.addCell(Cells.createKey("5' End"));
-            details.addCell(Cells.createValue(fiveEndString(fusion)));
-            details.addCell(Cells.createKey("3' Start"));
-            details.addCell(Cells.createValue(threeStartString(fusion)));
-            details.addCell(Cells.createKey("Junction CN"));
-            details.addCell(Cells.createValue(formatSingleDigitDecimal(fusion.junctionCopyNumber())));
-            details.addCell(Cells.createKey("RNA support"));
-            details.addCell(Cells.createValue(rnaFragmentSupportTable(isofox, fusion)).setKeepTogether(true));
-            details.addCell(Cells.createKey("Phasing"));
-            details.addCell(Cells.createValue(display(fusion.phased())));
-            details.addCell(Cells.createKey("Reported type (DL)"));
-            details.addCell(Cells.createValue(fusion.reportedType() + " (" + display(fusion.likelihood()) + ")"));
-            details.addCell(Cells.createKey("Chain links (terminated?)"));
-            details.addCell(Cells.createValue(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)")));
-            details.addCell(Cells.createKey("Domains kept"));
-            details.addCell(Cells.createValue(!fusion.domainsKept().isEmpty() ? fusion.domainsKept() : "-"));
-            details.addCell(Cells.createKey("Domains lost"));
-            details.addCell(Cells.createValue(!fusion.domainsLost().isEmpty() ? fusion.domainsLost() : "-"));
+            Stream.of(Maps.immutableEntry("5' End", cells.createValue(fiveEndString(fusion))),
+                            Maps.immutableEntry("3' Start", cells.createValue(threeStartString(fusion))),
+                            Maps.immutableEntry("Junction CN", cells.createValue(formatSingleDigitDecimal(fusion.junctionCopyNumber()))),
+                            Maps.immutableEntry("RNA support",
+                                    cells.createValue(rnaFragmentSupportTable(isofox, fusion, cells)).setKeepTogether(true)),
+                            Maps.immutableEntry("Phasing", cells.createValue(display(fusion.phased()))),
+                            Maps.immutableEntry("Reported type (DL)",
+                                    cells.createValue(fusion.reportedType() + " (" + display(fusion.likelihood()) + ")")),
+                            Maps.immutableEntry("Chain links (terminated?)",
+                                    cells.createValue(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)"))),
+                            Maps.immutableEntry("Domains kept", cells.createValue(!fusion.domainsKept().isEmpty() ? fusion.domainsKept() : "-")),
+                            Maps.immutableEntry("Domains lost", cells.createValue(!fusion.domainsLost().isEmpty() ? fusion.domainsLost() : "-")))
+                    .forEach(entry -> {
+                        details.addCell(cells.createKey(entry.getKey()));
+                        details.addCell(entry.getValue());
+                    });
             // Need to keep this details table to avoid page-wrapping that cuts through the middle of a single fusion
-            table.addCell(Cells.createContent(details).setKeepTogether(true));
+            table.addCell(cells.createContent(details).setKeepTogether(true));
         }
 
-        return Tables.createWrapping(table, title);
+        return new Tables(reportResources).createWrapping(table, title);
     }
 
     @NotNull
     private static String display(FusionPhasedType fusionPhasedType) {
         switch (fusionPhasedType) {
-            case INFRAME: return "Inframe";
-            case SKIPPED_EXONS: return "Skipped exons";
-            case OUT_OF_FRAME: return "Out of frame";
+            case INFRAME:
+                return "Inframe";
+            case SKIPPED_EXONS:
+                return "Skipped exons";
+            case OUT_OF_FRAME:
+                return "Out of frame";
         }
         throw new IllegalStateException();
     }
@@ -85,9 +89,12 @@ public final class DNAFusionTable {
     @NotNull
     private static String display(FusionLikelihoodType fusionLikelihoodType) {
         switch (fusionLikelihoodType) {
-            case HIGH: return "High";
-            case LOW: return "Low";
-            case NA: return "NA";
+            case HIGH:
+                return "High";
+            case LOW:
+                return "Low";
+            case NA:
+                return "NA";
         }
         throw new IllegalStateException();
     }
@@ -103,7 +110,7 @@ public final class DNAFusionTable {
     }
 
     @NotNull
-    private static IBlockElement rnaFragmentSupportTable(@Nullable IsofoxRecord isofox, @NotNull LinxFusion fusion) {
+    private static IBlockElement rnaFragmentSupportTable(@Nullable IsofoxRecord isofox, @NotNull LinxFusion fusion, @NotNull Cells cells) {
         if (isofox == null) {
             return new Paragraph(ReportResources.NOT_AVAILABLE);
         }
@@ -111,9 +118,9 @@ public final class DNAFusionTable {
         if (fusion.reportedType().equals(LinxFusionType.IG_KNOWN_PAIR) || fusion.reportedType().equals(LinxFusionType.IG_PROMISCUOUS)) {
             return supportFromExpressionOfGeneEnd(isofox, fusion);
         } else if (fusion.geneStart().equals(fusion.geneEnd())) {
-            return supportFromSpliceJunctions(isofox, fusion);
+            return supportFromSpliceJunctions(isofox, fusion, cells);
         } else {
-            return supportFromRnaFusions(isofox, fusion);
+            return supportFromRnaFusions(isofox, fusion, cells);
         }
     }
 
@@ -135,7 +142,8 @@ public final class DNAFusionTable {
     }
 
     @NotNull
-    private static IBlockElement supportFromSpliceJunctions(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion) {
+    private static IBlockElement supportFromSpliceJunctions(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion,
+            @NotNull Cells cells) {
         List<NovelSpliceJunction> matches = Lists.newArrayList();
         for (NovelSpliceJunction junction : isofox.allNovelSpliceJunctions()) {
             if (junction.geneName().equals(fusion.geneStart()) && junction.geneName().equals(fusion.geneEnd())) {
@@ -152,7 +160,7 @@ public final class DNAFusionTable {
             String position = junction.chromosome() + ":" + junction.junctionStart() + "-" + junction.junctionEnd();
             String fragments = junction.fragmentCount() + " fragments";
             String depth = junction.depthStart() + " / " + junction.depthEnd() + " depth";
-            fragmentSupportTable.addCell(Cells.createValue(position + ", " + junction.type() + " (" + fragments + ", " + depth + ")"));
+            fragmentSupportTable.addCell(cells.createValue(position + ", " + junction.type() + " (" + fragments + ", " + depth + ")"));
         }
 
         return fragmentSupportTable;
@@ -166,7 +174,7 @@ public final class DNAFusionTable {
     }
 
     @NotNull
-    private static IBlockElement supportFromRnaFusions(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion) {
+    private static IBlockElement supportFromRnaFusions(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion, @NotNull Cells cells) {
         List<RnaFusion> matches = Lists.newArrayList();
         for (RnaFusion rnaFusion : isofox.allFusions()) {
             if (rnaFusion.name().equals(fusion.name())) {
@@ -190,7 +198,7 @@ public final class DNAFusionTable {
             String fragments = split + " / " + realigned + " / " + discord + " fragments";
 
             String depth = rnaFusion.depthUp() + " / " + rnaFusion.depthDown() + " depth";
-            fragmentSupportTable.addCell(Cells.createValue(position + ", " + fragments + ", " + depth));
+            fragmentSupportTable.addCell(cells.createValue(position + ", " + fragments + ", " + depth));
         }
 
         return fragmentSupportTable;

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
+import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -18,29 +19,31 @@ public final class RNAFusionTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<RnaFusion> fusions) {
+    public static Table build(@NotNull String title, float width, @NotNull List<RnaFusion> fusions,
+            @NotNull ReportResources reportResources) {
         if (fusions.isEmpty()) {
-            return Tables.createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
                 new float[] { 2, 2, 2, 1, 2, 1, 2, 1 },
-                new Cell[] { Cells.createHeader("Name"), Cells.createHeader("Pos (Up)"), Cells.createHeader("Pos (Down)"),
-                        Cells.createHeader("SV Type"), Cells.createHeader("Junction U/D"), Cells.createHeader("Depth U/D"),
-                        Cells.createHeader("Frags (spl./re./disc.)"), Cells.createHeader("Cohort freq") });
+                new Cell[] { cells.createHeader("Name"), cells.createHeader("Pos (Up)"), cells.createHeader("Pos (Down)"),
+                        cells.createHeader("SV Type"), cells.createHeader("Junction U/D"), cells.createHeader("Depth U/D"),
+                        cells.createHeader("Frags (spl./re./disc.)"), cells.createHeader("Cohort freq") });
 
         for (RnaFusion fusion : sort(fusions)) {
-            table.addCell(Cells.createContent(fusion.name()));
-            table.addCell(Cells.createContent(fusion.chromosomeUp() + ":" + fusion.positionUp()));
-            table.addCell(Cells.createContent(fusion.chromosomeDown() + ":" + fusion.positionDown()));
-            table.addCell(Cells.createContent(fusion.svType().toString()));
-            table.addCell(Cells.createContent(fusion.junctionTypeUp() + "/" + fusion.junctionTypeDown()));
-            table.addCell(Cells.createContent(fusion.depthUp() + "/" + fusion.depthDown()));
-            table.addCell(Cells.createContent(fusion.splitFragments() + "/" + fusion.realignedFrags() + "/" + fusion.discordantFrags()));
-            table.addCell(Cells.createContent(String.valueOf(fusion.cohortFrequency())));
+            table.addCell(cells.createContent(fusion.name()));
+            table.addCell(cells.createContent(fusion.chromosomeUp() + ":" + fusion.positionUp()));
+            table.addCell(cells.createContent(fusion.chromosomeDown() + ":" + fusion.positionDown()));
+            table.addCell(cells.createContent(fusion.svType().toString()));
+            table.addCell(cells.createContent(fusion.junctionTypeUp() + "/" + fusion.junctionTypeDown()));
+            table.addCell(cells.createContent(fusion.depthUp() + "/" + fusion.depthDown()));
+            table.addCell(cells.createContent(fusion.splitFragments() + "/" + fusion.realignedFrags() + "/" + fusion.discordantFrags()));
+            table.addCell(cells.createContent(String.valueOf(fusion.cohortFrequency())));
         }
 
-        return Tables.createWrapping(table, title);
+        return new Tables(reportResources).createWrapping(table, title);
     }
 
     @NotNull
