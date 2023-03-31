@@ -24,10 +24,13 @@ public class SidePanel {
     private final String sampleId;
     @NotNull
     private final String platinumVersion;
+    @NotNull
+    private final ReportResources reportResources;
 
-    public SidePanel(@NotNull final String sampleId, @NotNull final String platinumVersion) {
+    public SidePanel(@NotNull final String sampleId, @NotNull final String platinumVersion, @NotNull ReportResources reportResources) {
         this.sampleId = sampleId;
         this.platinumVersion = platinumVersion;
+        this.reportResources = reportResources;
     }
 
     public void renderSidePanel(@NotNull PdfPage page) {
@@ -47,19 +50,19 @@ public class SidePanel {
     }
 
     @NotNull
-    private static Div createSidePanelDiv(@NotNull Rectangle pageSize, int index, @NotNull String label, @NotNull String value) {
+    private Div createSidePanelDiv(@NotNull Rectangle pageSize, int index, @NotNull String label, @NotNull String value) {
         Div div = new Div();
         div.setKeepTogether(true);
 
         float yPos = (pageSize.getHeight() + 15) - index * ROW_SPACING;
         float xPos = pageSize.getWidth() - RECTANGLE_WIDTH + 15;
 
-        div.add(new Paragraph(label.toUpperCase()).addStyle(ReportResources.sidePanelLabelStyle())
+        div.add(new Paragraph(label.toUpperCase()).addStyle(reportResources.sidePanelLabelStyle())
                 .setFixedPosition(xPos, yPos, MAX_WIDTH));
 
-        float valueFontSize = maxPointSizeForWidth(ReportResources.fontBold(), 11, 6, value, MAX_WIDTH);
+        float valueFontSize = maxPointSizeForWidth(reportResources.fontBold(), 11, 6, value, MAX_WIDTH);
         yPos -= VALUE_TEXT_Y_OFFSET;
-        div.add(new Paragraph(value).addStyle(ReportResources.sidePanelValueStyle().setFontSize(valueFontSize))
+        div.add(new Paragraph(value).addStyle(reportResources.sidePanelValueStyle().setFontSize(valueFontSize))
                 .setHeight(15)
                 .setFixedPosition(xPos, yPos, MAX_WIDTH)
                 .setFixedLeading(valueFontSize));

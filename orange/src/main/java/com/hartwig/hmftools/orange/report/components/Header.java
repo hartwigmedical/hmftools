@@ -17,9 +17,11 @@ public class Header {
 
     @NotNull
     private final PdfImageXObject orangeCircosObject;
+    private final ReportResources reportResources;
 
-    public Header(@NotNull URL orangeCircosPath) {
+    public Header(@NotNull URL orangeCircosPath, @NotNull ReportResources reportResources) {
         this.orangeCircosObject = new PdfImageXObject(ImageDataFactory.create(orangeCircosPath));
+        this.reportResources = reportResources;
     }
 
     public void renderHeader(@NotNull PdfPage page) {
@@ -28,15 +30,15 @@ public class Header {
 
         pdfCanvas.addXObject(orangeCircosObject, 50, page.getPageSize().getHeight() - 70, 60, false);
 
-        cv.add(new Paragraph().add(new Text("O").setFont(ReportResources.fontBold())
+        cv.add(new Paragraph().add(new Text("O").setFont(reportResources.fontBold())
                         .setFontSize(11)
                         .setFontColor(ReportResources.PALETTE_ORANGE_1))
-                .add(new Text("R").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_2))
-                .add(new Text("A").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_3))
-                .add(new Text("N").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_4))
-                .add(new Text("G").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_5))
-                .add(new Text("E").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_6))
-                .add(new Text(" Report").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLACK))
+                .add(new Text("R").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_2))
+                .add(new Text("A").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_3))
+                .add(new Text("N").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_4))
+                .add(new Text("G").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_5))
+                .add(new Text("E").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_6))
+                .add(new Text(" Report").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLACK))
                 .setFixedPosition(175, page.getPageSize().getHeight() - 40, 300));
 
         pdfCanvas.release();

@@ -29,9 +29,12 @@ public class RNAFindingsChapter implements ReportChapter {
 
     @NotNull
     private final OrangeRecord report;
+    @NotNull
+    private final ReportResources reportResources;
 
-    public RNAFindingsChapter(@NotNull final OrangeRecord report) {
+    public RNAFindingsChapter(@NotNull final OrangeRecord report, @NotNull final ReportResources reportResources) {
         this.report = report;
+        this.reportResources = reportResources;
     }
 
     @NotNull
@@ -48,7 +51,7 @@ public class RNAFindingsChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull final Document document) {
-        document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
+        document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
         addKeyQC(document);
         addExpressionTables(document);
@@ -57,25 +60,26 @@ public class RNAFindingsChapter implements ReportChapter {
     }
 
     private void addKeyQC(@NotNull Document document) {
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(contentWidth(),
                 new float[] { 1, 1, 1, 1 },
-                new Cell[] { Cells.createHeader("QC"), Cells.createHeader("Total Fragments"), Cells.createHeader("Non-Duplicate Fragments"),
-                        Cells.createHeader("Duplicate rate") });
+                new Cell[] { cells.createHeader("QC"), cells.createHeader("Total Fragments"), cells.createHeader("Non-Duplicate Fragments"),
+                        cells.createHeader("Duplicate rate") });
 
         if (report.isofox() != null) {
-            table.addCell(Cells.createContent(report.isofox().summary().qcStatus()));
-            table.addCell(Cells.createContent(String.valueOf(report.isofox().summary().totalFragments())));
+            table.addCell(cells.createContent(report.isofox().summary().qcStatus()));
+            table.addCell(cells.createContent(String.valueOf(report.isofox().summary().totalFragments())));
 
             long nonDuplicates = report.isofox().summary().totalFragments() - report.isofox().summary().duplicateFragments();
-            table.addCell(Cells.createContent(String.valueOf(nonDuplicates)));
+            table.addCell(cells.createContent(String.valueOf(nonDuplicates)));
 
             double duplicateRate = report.isofox().summary().duplicateFragments() / (double) report.isofox().summary().totalFragments();
-            table.addCell(Cells.createContent(formatPercentage(duplicateRate)));
+            table.addCell(cells.createContent(formatPercentage(duplicateRate)));
         } else {
-            table.addCell(Cells.createSpanningEntry(table, ReportResources.NOT_AVAILABLE));
+            table.addCell(cells.createSpanningEntry(table, ReportResources.NOT_AVAILABLE));
         }
 
-        document.add(Tables.createWrapping(table));
+        document.add(new Tables(reportResources).createWrapping(table));
     }
 
     private void addExpressionTables(@NotNull Document document) {
@@ -84,11 +88,13 @@ public class RNAFindingsChapter implements ReportChapter {
 
         List<GeneExpression> reportableHighExpression = isofox != null ? isofox.reportableHighExpression() : Lists.newArrayList();
         String titleHighExpression = "Genes with high expression (" + reportableHighExpression.size() + ")";
-        document.add(ExpressionTable.build(titleHighExpression, contentWidth(), reportableHighExpression, false, somaticGeneCopyNumbers));
+        document.add(ExpressionTable.build(titleHighExpression, contentWidth(), reportableHighExpression, false, somaticGeneCopyNumbers,
+                reportResources));
 
         List<GeneExpression> reportableLowExpression = isofox != null ? isofox.reportableLowExpression() : Lists.newArrayList();
         String titleLowExpression = "Genes with low expression (" + reportableLowExpression.size() + ")";
-        document.add(ExpressionTable.build(titleLowExpression, contentWidth(), reportableLowExpression, true, somaticGeneCopyNumbers));
+        document.add(ExpressionTable.build(titleLowExpression, contentWidth(), reportableLowExpression, true, somaticGeneCopyNumbers,
+                reportResources));
     }
 
     private void addRNAFusionTables(@NotNull Document document) {
@@ -96,11 +102,11 @@ public class RNAFindingsChapter implements ReportChapter {
 
         List<RnaFusion> reportableNovelKnownFusions = isofox != null ? isofox.reportableNovelKnownFusions() : Lists.newArrayList();
         String titleKnownFusions = "Known fusions detected in RNA and not in DNA (" + reportableNovelKnownFusions.size() + ")";
-        document.add(RNAFusionTable.build(titleKnownFusions, contentWidth(), reportableNovelKnownFusions));
+        document.add(RNAFusionTable.build(titleKnownFusions, contentWidth(), reportableNovelKnownFusions, reportResources));
 
         List<RnaFusion> reportableNovelPromiscuous = isofox != null ? isofox.reportableNovelPromiscuousFusions() : Lists.newArrayList();
         String titlePromiscuousFusions = "Promiscuous fusions detected in RNA and not in DNA (" + reportableNovelPromiscuous.size() + ")";
-        document.add(RNAFusionTable.build(titlePromiscuousFusions, contentWidth(), reportableNovelPromiscuous));
+        document.add(RNAFusionTable.build(titlePromiscuousFusions, contentWidth(), reportableNovelPromiscuous, reportResources));
     }
 
     private void addNovelSpliceJunctionTables(@NotNull Document document) {
@@ -109,12 +115,13 @@ public class RNAFindingsChapter implements ReportChapter {
         List<NovelSpliceJunction> reportableSkippedExons = isofox != null ? isofox.reportableSkippedExons() : Lists.newArrayList();
         String titleSkippedExonJunctions =
                 "Potentially interesting novel splice junctions - Skipped exons (" + reportableSkippedExons.size() + ")";
-        document.add(NovelSpliceJunctionTable.build(titleSkippedExonJunctions, contentWidth(), reportableSkippedExons));
+        document.add(NovelSpliceJunctionTable.build(titleSkippedExonJunctions, contentWidth(), reportableSkippedExons, reportResources));
 
         List<NovelSpliceJunction> reportableNovelExonsIntrons =
                 isofox != null ? isofox.reportableNovelExonsIntrons() : Lists.newArrayList();
         String titleNovelExonIntronJunctions =
                 "Potentially interesting novel splice junctions - Novel exon/intron (" + reportableNovelExonsIntrons.size() + ")";
-        document.add(NovelSpliceJunctionTable.build(titleNovelExonIntronJunctions, contentWidth(), reportableNovelExonsIntrons));
+        document.add(NovelSpliceJunctionTable.build(titleNovelExonIntronJunctions, contentWidth(), reportableNovelExonsIntrons,
+                reportResources));
     }
 }

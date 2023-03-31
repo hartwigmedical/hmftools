@@ -28,40 +28,41 @@ public final class GainLossTable {
 
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<PurpleGainLoss> gainsLosses,
-            @Nullable IsofoxRecord isofox) {
+            @Nullable IsofoxRecord isofox, @NotNull ReportResources reportResources) {
         if (gainsLosses.isEmpty()) {
-            return Tables.createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-                new Cell[] { Cells.createHeader("Location"), Cells.createHeader("Gene"),
-                        Cells.createHeader("Type"), Cells.createHeader("CN"), Cells.createHeader("TPM"), Cells.createHeader("Perc (Type)"),
-                        Cells.createHeader("FC (Type)"), Cells.createHeader("Perc (DB)"), Cells.createHeader("FC (DB)") });
+                new Cell[] { cells.createHeader("Location"), cells.createHeader("Gene"),
+                        cells.createHeader("Type"), cells.createHeader("CN"), cells.createHeader("TPM"), cells.createHeader("Perc (Type)"),
+                        cells.createHeader("FC (Type)"), cells.createHeader("Perc (DB)"), cells.createHeader("FC (DB)") });
 
         for (PurpleGainLoss gainLoss : sort(gainsLosses)) {
-            table.addCell(Cells.createContent(gainLoss.chromosome() + gainLoss.chromosomeBand()));
-            table.addCell(Cells.createContent(displayGene(gainLoss)));
-            table.addCell(Cells.createContent(display(gainLoss.interpretation())));
-            table.addCell(Cells.createContent(formatSingleDigitDecimal(gainLoss.minCopies())));
+            table.addCell(cells.createContent(gainLoss.chromosome() + gainLoss.chromosomeBand()));
+            table.addCell(cells.createContent(displayGene(gainLoss)));
+            table.addCell(cells.createContent(display(gainLoss.interpretation())));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(gainLoss.minCopies())));
 
             GeneExpression expression = findExpressionForGene(isofox, gainLoss.gene());
             if (expression != null) {
-                table.addCell(Cells.createContent(Expressions.tpm(expression)));
-                table.addCell(Cells.createContent(Expressions.percentileType(expression)));
-                table.addCell(Cells.createContent(Expressions.foldChangeType(expression)));
-                table.addCell(Cells.createContent(Expressions.percentileDatabase(expression)));
-                table.addCell(Cells.createContent(Expressions.foldChangeDatabase(expression)));
+                table.addCell(cells.createContent(Expressions.tpm(expression)));
+                table.addCell(cells.createContent(Expressions.percentileType(expression)));
+                table.addCell(cells.createContent(Expressions.foldChangeType(expression)));
+                table.addCell(cells.createContent(Expressions.percentileDatabase(expression)));
+                table.addCell(cells.createContent(Expressions.foldChangeDatabase(expression)));
             } else {
-                table.addCell(Cells.createContent(ReportResources.NOT_AVAILABLE));
-                table.addCell(Cells.createContent(ReportResources.NOT_AVAILABLE));
-                table.addCell(Cells.createContent(ReportResources.NOT_AVAILABLE));
-                table.addCell(Cells.createContent(ReportResources.NOT_AVAILABLE));
-                table.addCell(Cells.createContent(ReportResources.NOT_AVAILABLE));
+                table.addCell(cells.createContent(ReportResources.NOT_AVAILABLE));
+                table.addCell(cells.createContent(ReportResources.NOT_AVAILABLE));
+                table.addCell(cells.createContent(ReportResources.NOT_AVAILABLE));
+                table.addCell(cells.createContent(ReportResources.NOT_AVAILABLE));
+                table.addCell(cells.createContent(ReportResources.NOT_AVAILABLE));
             }
         }
 
-        return Tables.createWrapping(table, title);
+        return new Tables(reportResources).createWrapping(table, title);
     }
 
     @Nullable

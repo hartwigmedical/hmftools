@@ -16,7 +16,7 @@ import com.itextpdf.layout.Style;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ReportResources {
+public class ReportResources {
 
     static final String METADATA_TITLE = "HMF ORANGE Report v" + OrangeApplication.VERSION;
     static final String METADATA_AUTHOR = "Hartwig Platinum Pipeline";
@@ -45,6 +45,22 @@ public final class ReportResources {
 
     private static final String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
     private static final String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";
+
+    @NotNull
+    private final PdfFont fontRegular;
+    @NotNull
+    private final PdfFont fontBold;
+
+    private ReportResources(@NotNull PdfFont fontRegular, @NotNull PdfFont fontBold) {
+        this.fontRegular = fontRegular;
+        this.fontBold = fontBold;
+    }
+
+    @NotNull
+    public static ReportResources create() {
+        return new ReportResources(createFontFromProgram(loadFontProgram(FONT_REGULAR_PATH)),
+                createFontFromProgram(loadFontProgram(FONT_BOLD_PATH)));
+    }
 
     @NotNull
     public static String formatSingleDigitDecimal(double num) {
@@ -78,59 +94,63 @@ public final class ReportResources {
     }
 
     @NotNull
-    public static PdfFont fontRegular() {
-        // Cannot be created statically as every PDF needs their own private font objects.
-        return createFontFromProgram(loadFontProgram(FONT_REGULAR_PATH));
+    public PdfFont fontBold() {
+        return fontBold;
     }
 
     @NotNull
-    public static PdfFont fontBold() {
-        // Cannot be created statically as every PDF needs their own private font objects.
-        return createFontFromProgram(loadFontProgram(FONT_BOLD_PATH));
+    public Style chapterTitleStyle() {
+        return new Style().setFont(fontBold).setFontSize(10).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
-    public static Style chapterTitleStyle() {
-        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_ORANGE);
+    @NotNull
+    public Style tableTitleStyle() {
+        return new Style().setFont(fontBold).setFontSize(8).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
-    public static Style tableTitleStyle() {
-        return new Style().setFont(fontBold()).setFontSize(8).setFontColor(ReportResources.PALETTE_ORANGE);
+    @NotNull
+    public Style tableHeaderStyle() {
+        return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
-    public static Style tableHeaderStyle() {
-        return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
+    @NotNull
+    public Style tableContentStyle() {
+        return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
     }
 
-    public static Style tableContentStyle() {
-        return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
+    @NotNull
+    public Style keyStyle() {
+        return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
-    public static Style keyStyle() {
-        return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
+    @NotNull
+    public Style valueStyle() {
+        return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
-    public static Style valueStyle() {
-        return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
+    @NotNull
+    public Style subTextStyle() {
+        return new Style().setFont(fontRegular).setFontSize(6).setFontColor(ReportResources.PALETTE_BLACK);
     }
 
-    public static Style subTextStyle() {
-        return new Style().setFont(fontRegular()).setFontSize(6).setFontColor(ReportResources.PALETTE_BLACK);
+    @NotNull
+    public Style pageNumberStyle() {
+        return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
-    public static Style pageNumberStyle() {
-        return new Style().setFont(fontBold()).setFontSize(7).setFontColor(ReportResources.PALETTE_ORANGE);
+    @NotNull
+    public Style sidePanelLabelStyle() {
+        return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_WHITE);
     }
 
-    public static Style sidePanelLabelStyle() {
-        return new Style().setFont(fontBold()).setFontSize(7).setFontColor(ReportResources.PALETTE_WHITE);
+    @NotNull
+    public Style sidePanelValueStyle() {
+        return new Style().setFont(fontBold).setFontSize(10).setFontColor(ReportResources.PALETTE_WHITE);
     }
 
-    public static Style sidePanelValueStyle() {
-        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_WHITE);
-    }
-
-    public static Style urlStyle() {
-        return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_BLUE);
+    @NotNull
+    public Style urlStyle() {
+        return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_BLUE);
     }
 
     @NotNull

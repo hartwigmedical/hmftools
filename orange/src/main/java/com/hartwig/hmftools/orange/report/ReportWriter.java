@@ -16,8 +16,10 @@ import com.hartwig.hmftools.orange.report.chapters.ReportChapter;
 import com.hartwig.hmftools.orange.report.chapters.SomaticFindingsChapter;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.pdf.CompressionConstants;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.WriterProperties;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.property.AreaBreakType;
@@ -49,13 +51,15 @@ public class ReportWriter {
     }
 
     private void writePdf(@NotNull OrangeRecord report) throws IOException {
-        ReportChapter[] chapters =
-                new ReportChapter[] { new FrontPageChapter(report, plotPathResolver), new SomaticFindingsChapter(report, plotPathResolver),
-                        new GermlineFindingsChapter(report), new ImmunologyChapter(report), new RNAFindingsChapter(report),
-                        new CohortComparisonChapter(report, plotPathResolver), new QualityControlChapter(report, plotPathResolver) };
+        ReportResources reportResources = ReportResources.create();
+        ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, plotPathResolver, reportResources),
+                new SomaticFindingsChapter(report, plotPathResolver, reportResources), new GermlineFindingsChapter(report, reportResources),
+                new ImmunologyChapter(report, reportResources), new RNAFindingsChapter(report, reportResources),
+                new CohortComparisonChapter(report, plotPathResolver, reportResources),
+                new QualityControlChapter(report, plotPathResolver, reportResources) };
 
         String platinumVersion = report.platinumVersion() != null ? report.platinumVersion() : ReportResources.NOT_AVAILABLE;
-        writePdfChapters(report.sampleId(), platinumVersion, chapters);
+        writePdfChapters(report.sampleId(), platinumVersion, chapters, reportResources);
     }
 
     private void writeJson(@NotNull OrangeRecord report) throws IOException {
@@ -69,12 +73,12 @@ public class ReportWriter {
         }
     }
 
-    private void writePdfChapters(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull ReportChapter[] chapters)
-            throws IOException {
+    private void writePdfChapters(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull ReportChapter[] chapters,
+            @NotNull ReportResources reportResources) throws IOException {
         Document doc = initializeReport(sampleId);
         PdfDocument pdfDocument = doc.getPdfDocument();
 
-        PageEventHandler pageEventHandler = PageEventHandler.create(sampleId, platinumVersion);
+        PageEventHandler pageEventHandler = PageEventHandler.create(sampleId, platinumVersion, reportResources);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
         for (int i = 0; i < chapters.length; i++) {
@@ -98,13 +102,17 @@ public class ReportWriter {
     @NotNull
     private Document initializeReport(@NotNull String sampleId) throws IOException {
         PdfWriter writer;
+        WriterProperties properties = new WriterProperties()
+                .setFullCompressionMode(true)
+                .setCompressionLevel(CompressionConstants.BEST_COMPRESSION)
+                .useSmartMode();
         if (writeToDisk) {
             String outputFilePath = outputDir + File.separator + sampleId + ".orange.pdf";
             LOGGER.info("Writing PDF report to {}", outputFilePath);
-            writer = new PdfWriter(outputFilePath);
+            writer = new PdfWriter(outputFilePath, properties);
         } else {
             LOGGER.info("Generating in-memory PDF report");
-            writer = new PdfWriter(new ByteArrayOutputStream());
+            writer = new PdfWriter(new ByteArrayOutputStream(), properties);
         }
 
         PdfDocument pdf = new PdfDocument(writer);

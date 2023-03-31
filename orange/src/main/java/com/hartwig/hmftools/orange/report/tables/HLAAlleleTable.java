@@ -2,7 +2,6 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
 
-import java.text.DecimalFormat;
 import java.util.Comparator;
 import java.util.List;
 import java.util.StringJoiner;
@@ -24,26 +23,27 @@ public final class HLAAlleleTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<LilacAllele> alleles) {
+    public static Table build(@NotNull String title, float width, @NotNull List<LilacAllele> alleles, @NotNull ReportResources reportResources) {
         if (alleles.isEmpty()) {
-            return Tables.createEmpty(title, width);
+            return new Tables(reportResources).createEmpty(title, width);
         }
 
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,
                 new float[] { 1, 1, 1, 1, 1, 3 },
-                new Cell[] { Cells.createHeader("Allele"), Cells.createHeader("Ref Frags"), Cells.createHeader("Tumor Frags"),
-                        Cells.createHeader("RNA Frags"), Cells.createHeader("Tumor CN"), Cells.createHeader("Somatic #mutations") });
+                new Cell[] { cells.createHeader("Allele"), cells.createHeader("Ref Frags"), cells.createHeader("Tumor Frags"),
+                        cells.createHeader("RNA Frags"), cells.createHeader("Tumor CN"), cells.createHeader("Somatic #mutations") });
 
         for (LilacAllele allele : sort(alleles)) {
-            table.addCell(Cells.createContent(allele.allele()));
-            table.addCell(Cells.createContent(String.valueOf(allele.refFragments())));
-            table.addCell(Cells.createContent(String.valueOf(allele.tumorFragments())));
-            table.addCell(Cells.createContent(String.valueOf(allele.rnaFragments())));
-            table.addCell(Cells.createContent(formatSingleDigitDecimal(allele.tumorCopyNumber())));
-            table.addCell(Cells.createContent(mutationString(allele)));
+            table.addCell(cells.createContent(allele.allele()));
+            table.addCell(cells.createContent(String.valueOf(allele.refFragments())));
+            table.addCell(cells.createContent(String.valueOf(allele.tumorFragments())));
+            table.addCell(cells.createContent(String.valueOf(allele.rnaFragments())));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(allele.tumorCopyNumber())));
+            table.addCell(cells.createContent(mutationString(allele)));
         }
 
-        return Tables.createWrapping(table, title);
+        return new Tables(reportResources).createWrapping(table, title);
     }
 
     @NotNull
