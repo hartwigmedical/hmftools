@@ -369,13 +369,15 @@ public class FrontPageChapter implements ReportChapter {
         }
 
         String addon = Strings.EMPTY;
-        if (chord.hrStatus() == ChordStatus.HR_DEFICIENT) {
+        if (chord.hrStatus() == ChordStatus.HR_DEFICIENT && !chord.hrdType().isEmpty()) {
             if (chord.hrdType().contains("BRCA1")) {
                 addon = " - BRCA1 (" + formatTwoDigitDecimal(chord.brca1Value()) + ")";
             } else if (chord.hrdType().contains("BRCA2")) {
                 addon = " - BRCA2 (" + formatTwoDigitDecimal(chord.brca2Value()) + ")";
+            } else if (chord.hrdType().equals("cannot_be_determined")) {
+                addon = " - Undetermined";
             } else {
-                addon = chord.hrdType();
+                addon = " - " + chord.hrdType();
             }
         }
         return formatSingleDigitDecimal(chord.hrdValue()) + " (" + displayChordStatus(chord.hrStatus()) + addon + ")";
