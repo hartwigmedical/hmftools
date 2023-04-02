@@ -1,11 +1,16 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import java.text.DecimalFormat;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitDecimal;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Stream;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
@@ -51,20 +56,20 @@ import org.jetbrains.annotations.Nullable;
 
 public class FrontPageChapter implements ReportChapter {
 
-    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
-    private static final DecimalFormat TWO_DIGITS = ReportResources.decimalFormat("#.##");
-    private static final DecimalFormat PERCENTAGE = ReportResources.decimalFormat("#'%'");
-
     private static final String NONE = "None";
 
     @NotNull
     private final OrangeRecord report;
     @NotNull
     private final PlotPathResolver plotPathResolver;
+    @NotNull
+    private final ReportResources reportResources;
 
-    public FrontPageChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver) {
+    public FrontPageChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver,
+            @NotNull final ReportResources reportResources) {
         this.report = report;
         this.plotPathResolver = plotPathResolver;
+        this.reportResources = reportResources;
     }
 
     @NotNull
@@ -86,15 +91,16 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     private void addSummaryTable(@NotNull Document document) {
+        Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(contentWidth(),
                 new float[] { 3, 2, 1 },
-                new Cell[] { Cells.createHeader("Configured Primary Tumor"), Cells.createHeader("Cuppa Cancer Type"),
-                        Cells.createHeader("QC") });
+                new Cell[] { cells.createHeader("Configured Primary Tumor"), cells.createHeader("Cuppa Cancer Type"),
+                        cells.createHeader("QC") });
 
-        table.addCell(Cells.createContent(configuredPrimaryTumor(report.configuredPrimaryTumor())));
-        table.addCell(Cells.createContent(cuppaCancerType(report.cuppa())));
-        table.addCell(Cells.createContent(purpleQCString()));
-        document.add(Tables.createWrapping(table));
+        table.addCell(cells.createContent(configuredPrimaryTumor(report.configuredPrimaryTumor())));
+        table.addCell(cells.createContent(cuppaCancerType(report.cuppa())));
+        table.addCell(cells.createContent(purpleQCString()));
+        document.add(new Tables(reportResources).createWrapping(table));
     }
 
     @NotNull
@@ -104,7 +110,7 @@ public class FrontPageChapter implements ReportChapter {
         }
 
         CuppaPrediction best = CuppaInterpretation.best(cuppa);
-        return best.cancerType() + " (" + PERCENTAGE.format(best.likelihood() * 100) + ")";
+        return best.cancerType() + " (" + formatPercentage(best.likelihood()) + ")";
     }
 
     @NotNull
@@ -130,46 +136,31 @@ public class FrontPageChapter implements ReportChapter {
         Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(contentWidth() - 5);
 
         Table summary = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-        summary.addCell(Cells.createKey("Purity:"));
-        summary.addCell(Cells.createValue(purityString()));
-        summary.addCell(Cells.createKey("Ploidy:"));
-        summary.addCell(Cells.createValue(ploidyString()));
-        summary.addCell(Cells.createKey("Somatic variant drivers:"));
-        summary.addCell(Cells.createValue(somaticVariantDriverString()));
-        summary.addCell(Cells.createKey("Germline variant drivers:"));
-        summary.addCell(Cells.createValue(germlineVariantDriverString()));
-        summary.addCell(Cells.createKey("Somatic copy number drivers:"));
-        summary.addCell(Cells.createValue(somaticCopyNumberDriverString()));
-        summary.addCell(Cells.createKey("Germline copy number drivers:"));
-        summary.addCell(Cells.createValue(germlineCopyNumberDriverString()));
-        summary.addCell(Cells.createKey("Somatic disruption drivers:"));
-        summary.addCell(Cells.createValue(somaticDisruptionDriverString()));
-        summary.addCell(Cells.createKey("Germline disruption drivers:"));
-        summary.addCell(Cells.createValue(germlineDisruptionDriverString()));
-        summary.addCell(Cells.createKey("Fusion drivers:"));
-        summary.addCell(Cells.createValue(fusionDriverString()));
-        summary.addCell(Cells.createKey("Viral presence:"));
-        summary.addCell(Cells.createValue(virusString()));
-        summary.addCell(Cells.createKey("Whole genome duplicated:"));
-        summary.addCell(Cells.createValue(report.purple().characteristics().wholeGenomeDuplication() ? "Yes" : "No"));
-        summary.addCell(Cells.createKey("Microsatellite indels per Mb:"));
-        summary.addCell(Cells.createValue(msiString()));
-        summary.addCell(Cells.createKey("Tumor mutations per Mb:"));
-        summary.addCell(Cells.createValue(SINGLE_DIGIT.format(report.purple().characteristics().tumorMutationalBurdenPerMb())));
-        summary.addCell(Cells.createKey("Tumor mutational load:"));
-        summary.addCell(Cells.createValue(tmlString()));
-        summary.addCell(Cells.createKey("HR deficiency score:"));
-        summary.addCell(Cells.createValue(hrDeficiencyString()));
-        summary.addCell(Cells.createKey("DPYD status:"));
-        summary.addCell(Cells.createValue(dpydStatus()));
-        summary.addCell(Cells.createKey("Number of SVs:"));
-        summary.addCell(Cells.createValue(svTmbString()));
-        summary.addCell(Cells.createKey("Max complex cluster size:"));
-        summary.addCell(Cells.createValue(maxComplexSizeString()));
-        summary.addCell(Cells.createKey("Telomeric SGLs:"));
-        summary.addCell(Cells.createValue(telomericSGLString()));
-        summary.addCell(Cells.createKey("Number of LINE insertions:"));
-        summary.addCell(Cells.createValue(lineCountString()));
+        Cells cells = new Cells(reportResources);
+        Stream.of(Maps.immutableEntry("Purity:", purityString()),
+                Maps.immutableEntry("Ploidy:", ploidyString()),
+                Maps.immutableEntry("Somatic variant drivers:", somaticVariantDriverString()),
+                Maps.immutableEntry("Germline variant drivers:", germlineVariantDriverString()),
+                Maps.immutableEntry("Somatic copy number drivers:", somaticCopyNumberDriverString()),
+                Maps.immutableEntry("Germline copy number drivers:", germlineCopyNumberDriverString()),
+                Maps.immutableEntry("Somatic disruption drivers:", somaticDisruptionDriverString()),
+                Maps.immutableEntry("Germline disruption drivers:", germlineDisruptionDriverString()),
+                Maps.immutableEntry("Fusion drivers:", fusionDriverString()),
+                Maps.immutableEntry("Viral presence:", virusString()),
+                Maps.immutableEntry("Whole genome duplicated:", report.purple().characteristics().wholeGenomeDuplication() ? "Yes" : "No"),
+                Maps.immutableEntry("Microsatellite indels per Mb:", msiString()),
+                Maps.immutableEntry("Tumor mutations per Mb:",
+                        formatSingleDigitDecimal(report.purple().characteristics().tumorMutationalBurdenPerMb())),
+                Maps.immutableEntry("Tumor mutational load:", tmlString()),
+                Maps.immutableEntry("HR deficiency score:", hrDeficiencyString()),
+                Maps.immutableEntry("DPYD status:", dpydStatus()),
+                Maps.immutableEntry("Number of SVs:", svTmbString()),
+                Maps.immutableEntry("Max complex cluster size:", maxComplexSizeString()),
+                Maps.immutableEntry("Telomeric SGLs:", telomericSGLString()),
+                Maps.immutableEntry("Number of LINE insertions:", lineCountString())).forEach(entry -> {
+            summary.addCell(cells.createKey(entry.getKey()));
+            summary.addCell(cells.createValue(entry.getValue()));
+        });
 
         Image circosImage = Images.build(plotPathResolver.resolve(report.plots().purpleFinalCircosPlot()));
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -192,17 +183,17 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String purityString() {
         return String.format("%s (%s-%s)",
-                PERCENTAGE.format(report.purple().fit().purity() * 100),
-                PERCENTAGE.format(report.purple().fit().minPurity() * 100),
-                PERCENTAGE.format(report.purple().fit().maxPurity() * 100));
+                formatPercentage(report.purple().fit().purity()),
+                formatPercentage(report.purple().fit().minPurity()),
+                formatPercentage(report.purple().fit().maxPurity()));
     }
 
     @NotNull
     private String ploidyString() {
         return String.format("%s (%s-%s)",
-                TWO_DIGITS.format(report.purple().fit().ploidy()),
-                TWO_DIGITS.format(report.purple().fit().minPloidy()),
-                TWO_DIGITS.format(report.purple().fit().maxPloidy()));
+                formatTwoDigitDecimal(report.purple().fit().ploidy()),
+                formatTwoDigitDecimal(report.purple().fit().minPloidy()),
+                formatTwoDigitDecimal(report.purple().fit().maxPloidy()));
     }
 
     @NotNull
@@ -332,7 +323,7 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String msiString() {
         PurpleCharacteristics characteristics = report.purple().characteristics();
-        return SINGLE_DIGIT.format(characteristics.microsatelliteIndelsPerMb()) + " (" + display(characteristics.microsatelliteStatus()) + ")";
+        return formatSingleDigitDecimal(characteristics.microsatelliteIndelsPerMb()) + " (" + display(characteristics.microsatelliteStatus()) + ")";
     }
 
     @NotNull
@@ -378,16 +369,18 @@ public class FrontPageChapter implements ReportChapter {
         }
 
         String addon = Strings.EMPTY;
-        if (chord.hrStatus() == ChordStatus.HR_DEFICIENT) {
+        if (chord.hrStatus() == ChordStatus.HR_DEFICIENT && !chord.hrdType().isEmpty()) {
             if (chord.hrdType().contains("BRCA1")) {
-                addon = " - BRCA1 (" + TWO_DIGITS.format(chord.brca1Value()) + ")";
+                addon = " - BRCA1 (" + formatTwoDigitDecimal(chord.brca1Value()) + ")";
             } else if (chord.hrdType().contains("BRCA2")) {
-                addon = " - BRCA2 (" + TWO_DIGITS.format(chord.brca2Value()) + ")";
+                addon = " - BRCA2 (" + formatTwoDigitDecimal(chord.brca2Value()) + ")";
+            } else if (chord.hrdType().equals("cannot_be_determined")) {
+                addon = " - Undetermined";
             } else {
-                addon = chord.hrdType();
+                addon = " - " + chord.hrdType();
             }
         }
-        return SINGLE_DIGIT.format(chord.hrdValue()) + " (" + displayChordStatus(chord.hrStatus()) + addon + ")";
+        return formatSingleDigitDecimal(chord.hrdValue()) + " (" + displayChordStatus(chord.hrStatus()) + addon + ")";
     }
 
     private static String displayChordStatus(ChordStatus chordStatus) {
@@ -422,13 +415,13 @@ public class FrontPageChapter implements ReportChapter {
         Evaluation evaluation = report.cohortEvaluations().get(PercentileType.SV_TMB);
         String addon = Strings.EMPTY;
         if (evaluation != null) {
-            String panCancerPercentile = PERCENTAGE.format(evaluation.panCancerPercentile() * 100);
+            String panCancerPercentile = formatPercentage(evaluation.panCancerPercentile());
             addon = " (Pan " + panCancerPercentile;
             String cancerType = evaluation.cancerType();
             if (cancerType != null && !cancerType.equals(CohortConstants.COHORT_OTHER)
                     && !cancerType.equals(CohortConstants.COHORT_UNKNOWN)) {
                 Double percentile = evaluation.cancerTypePercentile();
-                String cancerTypePercentile = percentile != null ? PERCENTAGE.format(percentile * 100) : "NA";
+                String cancerTypePercentile = percentile != null ? formatPercentage(percentile) : "NA";
                 addon = addon + " | " + evaluation.cancerType() + " " + cancerTypePercentile;
             }
             addon = addon + ")";

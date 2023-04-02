@@ -11,21 +11,25 @@ import com.itextpdf.layout.property.UnitValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class Tables {
+public class Tables {
 
     private static final float TABLE_BOTTOM_MARGIN = 20;
 
-    private Tables() {
+    @NotNull
+    private final ReportResources reportResources;
+
+    public Tables(@NotNull ReportResources reportResources) {
+        this.reportResources = reportResources;
     }
 
     @NotNull
-    public static Table createEmpty(@NotNull String title, float width) {
-        Cell headerCell = new Cell().setBorder(Border.NO_BORDER).add(new Paragraph(title).addStyle(ReportResources.tableTitleStyle()));
+    public Table createEmpty(@NotNull String title, float width) {
+        Cell headerCell = new Cell().setBorder(Border.NO_BORDER).add(new Paragraph(title).addStyle(reportResources.tableTitleStyle()));
 
         Table table = Tables.createContent(width, new float[] { 1 }, new Cell[] { headerCell });
         table.setKeepTogether(true);
         table.setMarginBottom(TABLE_BOTTOM_MARGIN);
-        table.addCell(Cells.createContent(new Paragraph(DataUtil.NONE_STRING)));
+        table.addCell(new Cells(reportResources).createContent(new Paragraph(DataUtil.NONE_STRING)));
 
         return table;
     }
@@ -43,21 +47,21 @@ public final class Tables {
     }
 
     @NotNull
-    public static Table createWrapping(@NotNull Table contentTable) {
+    public Table createWrapping(@NotNull Table contentTable) {
         return createWrapping(contentTable, null);
     }
 
     @NotNull
-    public static Table createWrapping(@NotNull Table contentTable, @Nullable String title) {
+    public Table createWrapping(@NotNull Table contentTable, @Nullable String title) {
         contentTable.addFooterCell(new Cell(1, contentTable.getNumberOfColumns()).setBorder(Border.NO_BORDER)
                 .setPaddingTop(5)
                 .setPaddingBottom(5)
-                .add(new Paragraph("The table continues on the next page".toUpperCase()).addStyle(ReportResources.subTextStyle())))
+                .add(new Paragraph("The table continues on the next page".toUpperCase()).addStyle(reportResources.subTextStyle())))
                 .setSkipLastFooter(true);
 
         Table continuedWrapTable = new Table(1).setMinWidth(contentTable.getWidth())
                 .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
-                        .add(new Paragraph("Continued from the previous page".toUpperCase()).addStyle(ReportResources.subTextStyle())))
+                        .add(new Paragraph("Continued from the previous page".toUpperCase()).addStyle(reportResources.subTextStyle())))
                 .setSkipFirstHeader(true)
                 .addCell(new Cell().add(contentTable).setPadding(0).setBorder(Border.NO_BORDER));
 
@@ -65,7 +69,7 @@ public final class Tables {
         if (title != null) {
             table.addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
                     .setPadding(0)
-                    .add(new Paragraph(title).addStyle(ReportResources.tableTitleStyle())));
+                    .add(new Paragraph(title).addStyle(reportResources.tableTitleStyle())));
         }
 
         table.addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));

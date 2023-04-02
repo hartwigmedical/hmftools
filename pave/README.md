@@ -11,10 +11,10 @@ GeneName | HGNC gene name
 Transcript | Ensembl transcript ID
 Effects | list of effects separated by '&'
 SpliceRegion | true/false - if variant overlaps with the 8 intronic bases or 3 exonic bases around a splice junction 
+HgvsCodingImpact | HGVS coding impact
+HgvsProteinImpact | HGVS protein impact 
 
-For any gene with 1 or more impacts, the following summary data is written:
-
-For each impacted transcript it will add the following fields:
+For any variant with one or more impacted transcripts, the following summary data is written:
 
 Field | Description
 ---|---
@@ -116,7 +116,7 @@ Notes:
    - SYNONYMOUS
    - NONE
 3. Inframe INDELs may occasionally be annotated as notionally partially or completely outside the coding region due to left alignment and microhomology. Any INDEL with a length that is a multiplier of 3, that can be right aligned to be fully inside the coding regions should be marked as effect=inframe_insertion/inframe_deletion (notable examples include known pathogenic variants in KIT (4:55593579 CAGAAACCCATGTATGAAGTACAGTGGA > C) and EGFR (7:55248980 C > CTCCAGGAAGCCT)). 
-4. Where there are 2 or more frameshift variants with the same LPS (local phase set), if the combined impact causes an inframe indel, then mark both as effect = phased_inframe_deletion / phased_inframe_insertion.   If a phased inframe indel and snv affect the same codon, then mark both as phased_inframe_deletion / phased_inframe_insertion and calculate the combined coding effect (eg.  EGFR p.Glu746_Ser752delinsVal).   
+4. Where there are 2 or more frameshift variants with the same LPS (local phase set), if the combined impact causes an inframe indel, then mark both as effect = phased_inframe_deletion / phased_inframe_insertion.   If a phased inframe indel and snv or mnv affect the same codon, then mark both as phased_inframe_deletion / phased_inframe_insertion and calculate the combined coding effect (eg.  EGFR p.Glu746_Ser752delinsVal).
 5. Where an INDEL also leads to a stop_lost or start_lost, the lost effects are prioritised
 6. A SPLICE MNV needs to be marked as splice if any base overlaps a splice site.
 7. Any INDEL which overlaps a canonical splice region (ie.[D-1:D+5] OR [A+3:A+1]) should be marked as splice_donor/splice_acceptor if and only if the canonical sites are changed according to the SPLICE rules listed above. Where an INDEL has microhomology extends over a splice donor or splice acceptor region, the variant is tested at both the leftmost and rightmost alignment, with intronic only effects prioritised highest, then exonic effects and finally splice effects.   A notable recurrent example where D+5 is not affected by an indel with microhomology in GRCH37 are indels at the homopolymer at MSH2 2:47641559.  Both splice and frameshift/inframe effects may be reported together if a deletion unambiguously both overlaps coding bases and changes canonical splice sites.
@@ -149,7 +149,7 @@ _ | Intronic (pre) | c.726-5537_726-5536delTT
 _ | 5’UTR Intronic | c.-147-1093delA
 Duplications | Coding | c.128dupA | Use duplications in case of INS with full homology match.
 _ | Intronic (post) | c.830+11459_830+11461dupGGA
-_ | Start codon overlap | c.-1_1delAA
+_ | Start codon overlap | c.-1_1dupAA
 Insertions | Coding | c.1033_1034insA
 _ | Intronic (post) | c.15+1619_15+1620insTTTGTT
 _ | Intronic (5’UTR) | c.-23-304_-23-303insA
@@ -172,12 +172,12 @@ Type | Context | Examples | Notes
 ---|---|---|---
 SYNONYMOUS | Synonymous | p.Leu54= | Snpeff uses p.Leu54Leu but the recommendation has changed (https://www.hgvs.org/mutnomen/disc.html#silent)
 _ | Synonymous (MNV multiple codon) | p.Leu54_Arg55=
-_ | Synonymous( Stop retained) | p.Ter26= | Not supported
+_ | Synonymous (Stop retained) | p.Ter26= |
 MISSENSE | Missense | p.Trp26Cys
 _ | Missense (MNV multiple codon) | p.Ala100_Val101delinsArgTrp  | SnpEff uses format: p.AlaVal100ArgTrp
 NONSENSE OR FRAMESHIFT  | Stop Gained | p.Trp26*
-_ | Stop Gained (MNV multiple codon - 2nd codon stop)  | p.Cys495_Val496delinsArg*
-_ | Stop Gained(MNV multiple codon - 1st codon stop) | p.Cys495_Val496delins*
+_ | Stop Gained (MNV multiple codon - 2nd codon stop) | p.Cys495_Val496delinsArg*
+_ | Stop Gained (MNV multiple codon - 1st codon stop) | p.Cys495_Val496delins*
 _ | Frameshift | p.Arg97fs | Always use simply fs even if also stop gained
 _ | Stop Lost | p.Ter407Trpext*? | Ie. a STOP at AA407 changes to a W and extends the protein
 _ | Start Lost | p.Met1? | Any variant that disrupts initiator codon
@@ -238,7 +238,7 @@ Version | Samples | HOTSPOT | PANEL | OTHER
 
 ## Known Issues
 - Frameshifts may not always be fully aligned to 3'UTR for HGNC protein annotation
-- Where multiple ALTs are included on a single line only the 1st ALT allele will be annotated.   A workaround is to split multiallelic lines into multiple recorrds first (eg.  the -m none option in bcftools).
+- Where multiple ALTs are included on a single line only the 1st ALT allele will be annotated.   A workaround is to split multiallelic lines into multiple records first (eg.  the -m none option in bcftools).
 
 # Version History and Download Links
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.4.2)

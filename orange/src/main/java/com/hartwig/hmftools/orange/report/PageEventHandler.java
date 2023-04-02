@@ -28,10 +28,10 @@ public class PageEventHandler implements IEventHandler {
     private PdfOutline outline = null;
 
     @NotNull
-    static PageEventHandler create(@NotNull String sampleId, @NotNull String platinumVersion) {
-        return new PageEventHandler(new Header(Resources.getResource("orange_circos.png")),
-                new Footer(),
-                new SidePanel(sampleId, platinumVersion));
+    static PageEventHandler create(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull ReportResources reportResources) {
+        return new PageEventHandler(new Header(Resources.getResource("orange_circos.png"), reportResources),
+                new Footer(reportResources),
+                new SidePanel(sampleId, platinumVersion, reportResources));
     }
 
     private PageEventHandler(@NotNull final Header header, @NotNull final Footer footer, @NotNull final SidePanel sidePanel) {

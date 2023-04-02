@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.orange.report.interpretation;
 
-import java.text.DecimalFormat;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitDecimal;
+
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -15,9 +17,6 @@ import org.jetbrains.annotations.Nullable;
 public final class Expressions {
 
     private static final Logger LOGGER = LogManager.getLogger(Expressions.class);
-
-    private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
-    private static final DecimalFormat TWO_DIGIT = ReportResources.decimalFormat("#.##");
 
     private Expressions() {
     }
@@ -36,12 +35,12 @@ public final class Expressions {
 
     @NotNull
     public static String tpm(@NotNull GeneExpression expression) {
-        return SINGLE_DIGIT.format(expression.tpm());
+        return formatSingleDigitDecimal(expression.tpm());
     }
 
     @NotNull
     public static String percentileType(@NotNull GeneExpression expression) {
-        return TWO_DIGIT.format(expression.percentileCancer());
+        return formatTwoDigitDecimal(expression.percentileCancer());
     }
 
     @NotNull
@@ -51,7 +50,7 @@ public final class Expressions {
 
     @NotNull
     public static String percentileDatabase(@NotNull GeneExpression expression) {
-        return TWO_DIGIT.format(expression.percentileCohort());
+        return formatTwoDigitDecimal(expression.percentileCohort());
     }
 
     @NotNull
@@ -66,6 +65,6 @@ public final class Expressions {
         }
 
         double foldChange = expression / median;
-        return foldChange > 1000 ? ">1000" : SINGLE_DIGIT.format(foldChange);
+        return foldChange > 1000 ? ">1000" : formatSingleDigitDecimal(foldChange);
     }
 }

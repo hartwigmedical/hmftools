@@ -218,8 +218,11 @@ investigate potential causes for QC failure.
 - Upcoming
   - The ORANGE datamodel used in the json output has been separated from the ORANGE logic and available as an artifact for 
     other projects to depend on (see also [ORANGE-datamodel](../orange-datamodel)) 
+  - All copy numbers are rounded to single digit instead of no digits
   - Combination of urethra cancer and renal cell cancer is mapped to OTHER by ORANGE cohort mapper
   - The ORANGE cohort mapping application queries clinical view rather than datarequest
+  - PDF documents now share a single instance of each font to reduce file size
+  - Formatting for undetermined HRD type is improved
 - [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.3)
     - Full support for reporting germline structural variants
       - This includes extended linx & purple datamodels with various germline findings

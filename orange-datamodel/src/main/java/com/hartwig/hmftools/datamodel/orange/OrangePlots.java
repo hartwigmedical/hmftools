@@ -36,6 +36,7 @@ public interface OrangePlots {
     @NotNull
     String purplePurityRangePlot();
 
+    // TODO (ACTIN-52): Make @NotNull
     @Nullable
     String purpleKataegisPlot();
 

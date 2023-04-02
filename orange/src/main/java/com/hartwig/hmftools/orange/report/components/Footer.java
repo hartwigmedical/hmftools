@@ -10,6 +10,7 @@ import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import com.itextpdf.layout.Canvas;
+import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.property.TextAlignment;
 
@@ -18,6 +19,11 @@ import org.jetbrains.annotations.NotNull;
 public class Footer {
 
     private final List<PageNumberTemplate> pageNumberTemplates = Lists.newArrayList();
+    private final ReportResources reportResources;
+
+    public Footer(ReportResources reportResources) {
+        this.reportResources = reportResources;
+    }
 
     public void renderFooter(@NotNull PdfPage page) {
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
@@ -33,7 +39,7 @@ public class Footer {
     public void writeTotalPageCount(@NotNull PdfDocument document) {
         int totalPageCount = document.getNumberOfPages();
         for (PageNumberTemplate tpl : pageNumberTemplates) {
-            tpl.renderPageNumber(totalPageCount, document);
+            tpl.renderPageNumber(totalPageCount, document, reportResources.pageNumberStyle());
         }
     }
 
@@ -48,11 +54,11 @@ public class Footer {
             this.template = template;
         }
 
-        void renderPageNumber(int totalPageCount, @NotNull PdfDocument document) {
+        void renderPageNumber(int totalPageCount, @NotNull PdfDocument document, Style style) {
             String displayString = pageNumber + "/" + totalPageCount;
 
             Canvas canvas = new Canvas(template, document);
-            Paragraph pageNumberParagraph = new Paragraph().add(displayString).addStyle(ReportResources.pageNumberStyle());
+            Paragraph pageNumberParagraph = new Paragraph().add(displayString).addStyle(style);
             canvas.showTextAligned(pageNumberParagraph, 0, 0, TextAlignment.LEFT);
         }
     }

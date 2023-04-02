@@ -17,9 +17,12 @@ public class ImmunologyChapter implements ReportChapter {
 
     @NotNull
     private final OrangeRecord report;
+    @NotNull
+    private final ReportResources reportResources;
 
-    public ImmunologyChapter(@NotNull final OrangeRecord report) {
+    public ImmunologyChapter(@NotNull final OrangeRecord report, @NotNull final ReportResources reportResources) {
         this.report = report;
+        this.reportResources = reportResources;
     }
 
     @NotNull
@@ -36,19 +39,20 @@ public class ImmunologyChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull final Document document) {
-        document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
+        document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
         addHLAData(document);
     }
 
-    private void addHLAData(final Document document) {
+    private void addHLAData(@NotNull Document document) {
+        Cells cells = new Cells(reportResources);
         Table qc = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-        qc.addCell(Cells.createKey("QC Status:"));
-        qc.addCell(Cells.createValue(report.lilac().qc()));
+        qc.addCell(cells.createKey("QC Status:"));
+        qc.addCell(cells.createValue(report.lilac().qc()));
 
-        document.add(Tables.createWrapping(qc, "HLA QC"));
+        document.add(new Tables(reportResources).createWrapping(qc, "HLA QC"));
 
         String title = "HLA Alleles (" + report.lilac().alleles().size() + ")";
-        document.add(HLAAlleleTable.build(title, contentWidth(), report.lilac().alleles()));
+        document.add(HLAAlleleTable.build(title, contentWidth(), report.lilac().alleles(), reportResources));
     }
 }
