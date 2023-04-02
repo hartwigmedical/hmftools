@@ -92,6 +92,7 @@ public class FusionWriter implements CohortFileInterface
                     .name(geneFusion.name())
                     .reported(geneFusion.reportable())
                     .reportedType(geneFusion.knownTypeStr())
+                    .reportableReasons(geneFusion.reportableReasonsStr())
                     .phased(geneFusion.phaseType())
                     .likelihood(geneFusion.likelihoodType())
                     .chainLength(geneFusion.getChainLength())
@@ -207,7 +208,7 @@ public class FusionWriter implements CohortFileInterface
         StringBuilder sb = new StringBuilder();
 
         sb.append(String.format("%s,%s,%s,%s",
-                sampleId, fusion.reportable(), fusion.reportableReason(), fusion.knownTypeStr()));
+                sampleId, fusion.reportable(), fusion.reportableReasonsStr(), fusion.knownTypeStr()));
 
         sb.append(String.format(",%s,%s,%d,%d,%s",
                 fusion.phaseType(), fusion.knownExons(),

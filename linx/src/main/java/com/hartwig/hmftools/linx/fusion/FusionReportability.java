@@ -18,16 +18,17 @@ import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_IG_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.PROTEINS_REQUIRED_KEPT;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.PROTEINS_REQUIRED_LOST;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.SHORT_UNPHASED_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.CHAIN_LINKS;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.CHAIN_TERMINATED;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.EXON_SKIPPING;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.INVALID_TRAVERSAL;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.KNOWN_TYPE;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.NOT_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.NEG_SPLICE_ACC_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.NMD;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.NON_DISRUPTIVE_CHAIN;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.SGL_NOT_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.UNPHASED_5P_UTR;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.UNPHASED_NOT_KNOWN;
@@ -36,21 +37,24 @@ import static com.hartwig.hmftools.linx.fusion.ReportableReason.PRE_GENE_DISTANC
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
 
-import org.apache.commons.compress.utils.Lists;
-
 public class FusionReportability
 {
-    private static final List<String> mProteinsRequiredKept = Lists.newArrayList();
-    private static final List<String> mProteinsRequiredLost = Lists.newArrayList();
+    public static boolean isReportable(final GeneFusion fusion)
+    {
+        return determineReportability(fusion).isEmpty();
+    }
 
-    public static ReportableReason determineReportability(final GeneFusion fusion)
+    public static List<ReportableReason> determineReportability(final GeneFusion fusion)
     {
         // first check whether a fusion is known or not - a key requirement of it being potentially reportable
         if(fusion.knownType() == NONE || fusion.knownType() == IG_PROMISCUOUS)
-            return KNOWN_TYPE;
+            return Lists.newArrayList(NOT_KNOWN);
+
+        List<ReportableReason> nonReportableReasons = Lists.newArrayList();
 
         final BreakendTransData upTrans = fusion.upstreamTrans();
         final BreakendTransData downTrans = fusion.downstreamTrans();
@@ -64,50 +68,50 @@ public class FusionReportability
             else
             {
                 if(fusion.knownType() != KNOWN_PAIR)
-                    return UNPHASED_NOT_KNOWN;
+                    nonReportableReasons.add(UNPHASED_NOT_KNOWN);
 
                 if(!upTrans.nonCoding() && !upTrans.preCoding())
-                    return UNPHASED_5P_UTR;
+                    nonReportableReasons.add(UNPHASED_5P_UTR);
 
                 if(fusion.sameChromosome() && fusion.distance() <= SHORT_UNPHASED_DISTANCE_KNOWN)
-                    return UNPHASED_SHORT;
+                    nonReportableReasons.add(UNPHASED_SHORT);
             }
         }
 
         if(upTrans.gene().type() == SGL || downTrans.gene().type() == SGL)
         {
             if(fusion.knownType() != KNOWN_PAIR && fusion.knownType() != IG_KNOWN_PAIR)
-                return SGL_NOT_KNOWN;
+                nonReportableReasons.add(SGL_NOT_KNOWN);
         }
 
         // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
         int maxUpstreamDistance = getMaxUpstreamDistance(fusion);
 
         if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
-            return PRE_GENE_DISTANCE;
+            nonReportableReasons.add(PRE_GENE_DISTANCE);
 
         if(downTrans.bioType().equals(BIOTYPE_NONSENSE_MED_DECAY))
-            return NMD;
+            nonReportableReasons.add(NMD);
 
         if(!fusion.isIG() && downTrans.hasNegativePrevSpliceAcceptorDistance())
-            return NEG_SPLICE_ACC_DISTANCE;
+            nonReportableReasons.add(NEG_SPLICE_ACC_DISTANCE);
 
         if(!permittedExonSkipping(fusion))
-            return EXON_SKIPPING;
+            nonReportableReasons.add(EXON_SKIPPING);
 
         if(fusion.isTerminated() && !allowSuspectChains(fusion.knownType()))
-            return CHAIN_TERMINATED;
+            nonReportableReasons.add(CHAIN_TERMINATED);
 
         if(fusion.nonDisruptiveChain())
-            return NON_DISRUPTIVE_CHAIN;
+            nonReportableReasons.add(NON_DISRUPTIVE_CHAIN);
 
         if(!fusion.validChainTraversal() && !allowSuspectChains(fusion.knownType()))
-            return INVALID_TRAVERSAL;
+            nonReportableReasons.add(INVALID_TRAVERSAL);
 
         if(fusion.getChainLinks() > FUSION_MAX_CHAIN_LINKS)
-            return CHAIN_LINKS;
+            nonReportableReasons.add(CHAIN_LINKS);
 
-        return OK;
+        return nonReportableReasons;
     }
 
     private static int getMaxUpstreamDistance(final GeneFusion fusion)
@@ -254,9 +258,9 @@ public class FusionReportability
         final BreakendTransData downTrans = fusion.downstreamTrans();
 
         long requiredKeptButLost =
-                mProteinsRequiredKept.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
+                PROTEINS_REQUIRED_KEPT.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
         long requiredLostButKept =
-                mProteinsRequiredLost.stream().filter(f -> downTrans.getProteinFeaturesKept().contains(f)).count();
+                PROTEINS_REQUIRED_LOST.stream().filter(f -> downTrans.getProteinFeaturesKept().contains(f)).count();
 
         return requiredKeptButLost == 0 && requiredLostButKept == 0;
     }
@@ -272,18 +276,4 @@ public class FusionReportability
         // otherwise not allowed
         return fusion.getExonsSkipped(true) == 0 && fusion.getExonsSkipped(false) == 0;
     }
-
-    public static void populateRequiredProteins()
-    {
-        mProteinsRequiredLost.add("Raf-like Ras-binding");
-
-        mProteinsRequiredKept.add("Ets domain");
-        mProteinsRequiredKept.add("Protein kinase domain");
-        mProteinsRequiredKept.add("Epidermal growth factor-like domain");
-        mProteinsRequiredKept.add("Ankyrin repeat-containing domain");
-        mProteinsRequiredKept.add("Basic-leucine zipper domain");
-        mProteinsRequiredKept.add("High mobility group box domain");
-        mProteinsRequiredKept.add("Bromodomain");
-    }
-
 }

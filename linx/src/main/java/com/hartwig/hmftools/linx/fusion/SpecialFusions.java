@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.ENHANCER_PROMISCUOUS_MIN_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_IG_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.isReportable;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
 
 import java.util.List;
@@ -325,7 +326,7 @@ public class SpecialFusions
 
                 if(mFusionConfig.LogReportableOnly)
                 {
-                    fusions = fusions.stream().filter(x -> determineReportability(x) == OK).collect(Collectors.toList());
+                    fusions = fusions.stream().filter(x -> isReportable(x)).collect(Collectors.toList());
                 }
 
                 final SvCluster cluster = sgl1.getCluster();

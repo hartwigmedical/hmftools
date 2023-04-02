@@ -2,9 +2,8 @@ package com.hartwig.hmftools.linx.fusion;
 
 public enum ReportableReason
 {
-    UNSET,
     OK,
-    KNOWN_TYPE,
+    NOT_KNOWN,
     UNPHASED_NOT_KNOWN,
     UNPHASED_5P_UTR,
     UNPHASED_SHORT,

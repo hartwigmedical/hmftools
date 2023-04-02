@@ -23,6 +23,7 @@ public abstract class LinxFusion
     public abstract String name();
     public abstract boolean reported();
     public abstract String reportedType();
+    public abstract String reportableReasons();
     public abstract FusionPhasedType phased();
     public abstract FusionLikelihoodType likelihood();
     public abstract int chainLength();
@@ -82,12 +83,16 @@ public abstract class LinxFusion
         {
             String[] values = lines.get(i).split(DELIMITER);
 
+            String reportableReasons = fieldsIndexMap.containsKey("reportableReasons") ?
+                    values[fieldsIndexMap.get("reportableReasons")] : "";
+
             fusions.add(ImmutableLinxFusion.builder()
                     .fivePrimeBreakendId(Integer.parseInt(values[fieldsIndexMap.get("fivePrimeBreakendId")]))
                     .threePrimeBreakendId(Integer.parseInt(values[fieldsIndexMap.get("threePrimeBreakendId")]))
                     .name(values[fieldsIndexMap.get("name")])
                     .reported(Boolean.parseBoolean(values[fieldsIndexMap.get("reported")]))
                     .reportedType(values[fieldsIndexMap.get("reportedType")])
+                    .reportableReasons(reportableReasons)
                     .phased(FusionPhasedType.valueOf(values[fieldsIndexMap.get("phased")]))
                     .likelihood(FusionLikelihoodType.valueOf(values[fieldsIndexMap.get("likelihood")]))
                     .chainLength(Integer.parseInt(values[fieldsIndexMap.get("chainLength")]))
@@ -121,6 +126,7 @@ public abstract class LinxFusion
                 .add("name")
                 .add("reported")
                 .add("reportedType")
+                .add("reportableReasons")
                 .add("phased")
                 .add("likelihood")
                 .add("chainLength")
@@ -150,6 +156,7 @@ public abstract class LinxFusion
                 .add(String.valueOf(fusion.name()))
                 .add(String.valueOf(fusion.reported()))
                 .add(String.valueOf(fusion.reportedType()))
+                .add(String.valueOf(fusion.reportableReasons()))
                 .add(String.valueOf(fusion.phased()))
                 .add(String.valueOf(fusion.likelihood()))
                 .add(String.valueOf(fusion.chainLength()))

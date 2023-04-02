@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscrip
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.allowSuspectChains;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.isReportable;
 import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndFusions;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FILE_SOURCE;
@@ -358,7 +359,7 @@ public class FusionDisruptionAnalyser
 
             if(mFusionConfig.LogReportableOnly)
             {
-                fusions = fusions.stream().filter(x -> determineReportability(x) == OK).collect(Collectors.toList());
+                fusions = fusions.stream().filter(x -> isReportable(x)).collect(Collectors.toList());
             }
 
             final SvCluster cluster = var.getCluster();
@@ -570,7 +571,7 @@ public class FusionDisruptionAnalyser
 
                 if(mFusionConfig.LogReportableOnly)
                 {
-                    fusions = fusions.stream().filter(x -> determineReportability(x) == OK).collect(Collectors.toList());
+                    fusions = fusions.stream().filter(x -> isReportable(x)).collect(Collectors.toList());
 
                     if(fusions.isEmpty())
                         continue;
