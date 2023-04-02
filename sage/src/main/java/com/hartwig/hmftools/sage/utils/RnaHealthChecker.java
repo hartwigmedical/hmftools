@@ -23,13 +23,13 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 
@@ -69,7 +69,7 @@ public class RnaHealthChecker
     private static final String RNA_SAMPLE_SUFFIX = "rna_sample_suffix";
 
     private static final int DEFAULT_MIN_DEPTH_FRAGS = 10;
-    private static final int DEFAULT_MIN_SUPPORT_FRAGS = 10;
+    private static final int DEFAULT_MIN_SUPPORT_FRAGS = 1;
     private static final String DEFAULT_RNA_SAMPLE_SUFFIX = "_RNA";
 
     public RnaHealthChecker(final CommandLine cmd)
@@ -220,6 +220,9 @@ public class RnaHealthChecker
                     if(variantContext.isFiltered())
                         continue;
 
+                    if(VariantType.type(variantContext) != VariantType.SNP)
+                        continue;
+
                     ++summaryData.VariantCount;
 
                     VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(variantContext);
@@ -272,27 +275,17 @@ public class RnaHealthChecker
             VariantFragments = Lists.newArrayList();
         }
 
-        public int depthAboveThreshold(int threshold)
-        {
-            return (int)VariantFragments.stream().filter(x -> x.Depth >= threshold).count();
-        }
-
-        public int supportAboveThreshold(int threshold)
-        {
-            return (int)VariantFragments.stream().filter(x -> x.AlleleFragments >= threshold).count();
-        }
-
         public double medianDepth()
         {
             List<Integer> depth = Lists.newArrayList();
-            VariantFragments.forEach(x -> depth.add(x.Depth));
+            VariantFragments.stream().filter(x -> x.Depth > 0).forEach(x -> depth.add(x.Depth));
             return median(depth);
         }
 
         public double medianSupport()
         {
             List<Integer> support = Lists.newArrayList();
-            VariantFragments.forEach(x -> support.add(x.AlleleFragments));
+            VariantFragments.stream().filter(x -> x.Depth > 0).forEach(x -> support.add(x.AlleleFragments));
             return median(support);
         }
     }
@@ -334,10 +327,22 @@ public class RnaHealthChecker
             if(mSampleIds.size() > 1)
                 mWriter.write(format("%s,", sampleId));
 
+            int depthAboveThreshold = 0;
+            int supportAboveThresholds = 0;
+            for(VariantSupport support : summaryData.VariantFragments)
+            {
+                if(support.Depth >= mDepthThreshold)
+                {
+                    ++depthAboveThreshold;
+
+                    if(support.AlleleFragments >= mSupportThreshold)
+                        ++supportAboveThresholds;
+                }
+            }
+
             mWriter.write(format("%d,%d,%d,%.1f,%d,%.1f",
                     summaryData.VariantCount, summaryData.GeneVariantCount,
-                    summaryData.depthAboveThreshold(mDepthThreshold), summaryData.medianDepth(),
-                    summaryData.supportAboveThreshold(mSupportThreshold), summaryData.medianSupport()));
+                    depthAboveThreshold, summaryData.medianDepth(), supportAboveThresholds, summaryData.medianSupport()));
 
             mWriter.newLine();
         }

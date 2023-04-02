@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svtools.sequence;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
@@ -39,6 +41,9 @@ public class RefSequenceGenerator
     private final String mBedFile;
 
     private static final Logger LOGGER = LogManager.getLogger(RefSequenceGenerator.class);
+
+    private static final boolean mWriteFastaFormat = true;
+    private static final int FASTA_LINE_LIMIT = 60;
 
     public RefSequenceGenerator(final CommandLine cmd)
     {
@@ -83,13 +88,23 @@ public class RefSequenceGenerator
         {
             BufferedWriter writer;
 
-            final String outputFileName = mOutputDir + "REF_GENOME_SEQUENCES.csv";
+            String outputFileName = mOutputDir;
+
+            if(mWriteFastaFormat)
+                outputFileName += "REF_GENOME_SEQUENCES.fastq";
+            else
+                outputFileName += "REF_GENOME_SEQUENCES.csv";
 
             writer = createBufferedWriter(outputFileName, false);
-            writer.write("SequenceName,Chromosome,PosStart,PosEnd,Sequence");
-            writer.newLine();
+
+            if(!mWriteFastaFormat)
+            {
+                writer.write("SequenceName,Chromosome,PosStart,PosEnd,Sequence");
+                writer.newLine();
+            }
 
             final List<String> bedFileData = Files.readAllLines(new File(mBedFile).toPath());
+            String currentChromosome = "";
 
             for(String line : bedFileData)
             {
@@ -108,12 +123,35 @@ public class RefSequenceGenerator
 
                 LOGGER.debug("writing ref-genome sequence for {}: for chr({}) pos({} -> {})", seqName, chromosome, posStart, posEnd);
 
-                final String reqSequence = mRefGenome.getBaseString(chromosome, posStart, posEnd);;
+                final String reqSequence = mRefGenome.getBaseString(chromosome, posStart, posEnd);
 
-                writer.write(String.format("%s,%s,%d,%d,%s",
-                        seqName, chromosome, posStart, posEnd, reqSequence));
-                writer.newLine();
+                if(mWriteFastaFormat)
+                {
+                    if(!currentChromosome.equals(chromosome))
+                    {
+                        currentChromosome = chromosome;
+                        writer.write(String.format(">%s", chromosome));
+                        writer.newLine();
+                    }
 
+                    int sequenceLength = reqSequence.length();
+
+                    int index = 0;
+                    while(index < sequenceLength)
+                    {
+                        int endIndex = min(index + FASTA_LINE_LIMIT, sequenceLength);
+                        writer.write(reqSequence.substring(index, endIndex));
+                        writer.newLine();
+                        index += FASTA_LINE_LIMIT;
+                    }
+                }
+                else
+                {
+
+                    writer.write(String.format("%s,%s,%d,%d,%s",
+                            seqName, chromosome, posStart, posEnd, reqSequence));
+                    writer.newLine();
+                }
             }
 
             closeBufferedWriter(writer);
