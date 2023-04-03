@@ -70,6 +70,7 @@ import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.GenotypesContext;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.filter.CompoundFilter;
 
 public class GripssTestUtils
 {
@@ -79,6 +80,11 @@ public class GripssTestUtils
     public static final String LINE_INSERT_SEQ_T = "TTTTTTTTTTTTTTTTTTTT";
 
     public static final double DEFAULT_QUAL = 1000;
+
+    public static StructuralVariantFactory defaultSvFactory()
+    {
+        return new StructuralVariantFactory(new CompoundFilter(false));
+    }
 
     public static SvData createSv(
             final String eventId, final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
@@ -98,7 +104,7 @@ public class GripssTestUtils
         VariantContext[] contexts = createSvBreakends(
                 eventId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, ref, insSeq, commonOverrides, refOverrides, tumorOverrides);
 
-        StructuralVariant sv = StructuralVariantFactory.create(contexts[SE_START], contexts[SE_END]);
+        StructuralVariant sv = defaultSvFactory().createSV(contexts[SE_START], contexts[SE_END]);
         return new SvData(sv, genotypeIds);
     }
 
@@ -111,7 +117,7 @@ public class GripssTestUtils
         VariantContext[] contexts = createSvBreakends(
                 eventId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, ref, insSeq, attributesStart, attributesEnd);
 
-        StructuralVariant sv = StructuralVariantFactory.create(contexts[SE_START], contexts[SE_END]);
+        StructuralVariant sv = defaultSvFactory().createSV(contexts[SE_START], contexts[SE_END]);
         return new SvData(sv, genotypeIds);
     }
 
@@ -131,7 +137,7 @@ public class GripssTestUtils
         VariantContext context = createSglBreakend(
                 eventId, chromosome, position, orientation, ref, insSeq, commonOverrides, refOverrides, tumorOverrides);
 
-        StructuralVariant sv = StructuralVariantFactory.createSingleBreakend(context);
+        StructuralVariant sv = defaultSvFactory().createSingleBreakend(context);
         return new SvData(sv, genotypeIds);
     }
 

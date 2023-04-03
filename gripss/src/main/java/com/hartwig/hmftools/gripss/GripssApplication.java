@@ -136,6 +136,7 @@ public class GripssApplication
 
         GR_LOGGER.info("sample({}) processing VCF({})", mConfig.SampleId, vcfFile);
 
+        /*
         boolean expectReferenceFirst = !mConfig.GermlineMode;
 
         if(!GenotypeIds.hasValidSampleIds(vcfHeader, mConfig.ReferenceId, mConfig.SampleId, expectReferenceFirst, true))
@@ -144,6 +145,7 @@ public class GripssApplication
                     mConfig.ReferenceId, mConfig.SampleId, vcfHeader.getGenotypeSamples());
             System.exit(1);
         }
+        */
 
         GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.SampleId);
 
@@ -152,6 +154,8 @@ public class GripssApplication
             GripssConfig.GR_LOGGER.error("missing sample names in VCF: {}", vcfHeader.getGenotypeSamples());
             System.exit(1);
         }
+
+        mVariantBuilder.setGenotypeOrdinals(genotypeIds);
 
         mRealigner = new BreakendRealigner(mRefGenome);
 

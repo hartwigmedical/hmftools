@@ -93,6 +93,8 @@ public class StructuralVariantFactory
     private final List<StructuralVariant> mCompleteVariants;
 
     private final CompoundFilter mFilter;
+
+    private boolean mOrdinalsSet;
     private int mReferenceGenotypeOrdinal;
     private int mTumorGenotypeOrdinal;
 
@@ -115,10 +117,12 @@ public class StructuralVariantFactory
         mCompleteVariants = Lists.newArrayList();
         mReferenceGenotypeOrdinal = GENOTYPE_ORDINAL_NONE;
         mTumorGenotypeOrdinal = GENOTYPE_ORDINAL_NONE;
+        mOrdinalsSet = false;
     }
 
     public void setGenotypeOrdinals(int referenceOrdinal, int tumorOrdinal)
     {
+        mOrdinalsSet = true;
         mReferenceGenotypeOrdinal = referenceOrdinal;
         mTumorGenotypeOrdinal = tumorOrdinal;
     }
@@ -151,7 +155,7 @@ public class StructuralVariantFactory
                     String mate = mateId(context);
                     if(mUnmatchedVariants.containsKey(mate))
                     {
-                        mCompleteVariants.add(create(mUnmatchedVariants.remove(mate), context));
+                        mCompleteVariants.add(createSV(mUnmatchedVariants.remove(mate), context));
                     }
                     else
                     {
@@ -184,7 +188,7 @@ public class StructuralVariantFactory
     public void removeUnmatchedVariant(final String id) { mUnmatchedVariants.remove(id); }
     public boolean hasUnmatchedVariant(final String id) { return mUnmatchedVariants.containsKey(id); }
 
-    public static StructuralVariant create(final VariantContext first, final VariantContext second)
+    public StructuralVariant createSV(final VariantContext first, final VariantContext second)
     {
         Preconditions.checkArgument(BND.equals(type(first)));
         Preconditions.checkArgument(BND.equals(type(second)));
@@ -264,7 +268,7 @@ public class StructuralVariantFactory
                 .build();
     }
 
-    public static StructuralVariant createSingleBreakend(final VariantContext context)
+    public StructuralVariant createSingleBreakend(final VariantContext context)
     {
         final List<Double> af = context.hasAttribute(TAF) ? context.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
 
@@ -291,7 +295,7 @@ public class StructuralVariantFactory
                 .build();
     }
 
-    private static ImmutableStructuralVariantImpl.Builder setCommon(final VariantContext context)
+    private ImmutableStructuralVariantImpl.Builder setCommon(final VariantContext context)
     {
         ImmutableStructuralVariantImpl.Builder builder = ImmutableStructuralVariantImpl.builder();
 
@@ -336,8 +340,7 @@ public class StructuralVariantFactory
         return builder;
     }
 
-    private static ImmutableStructuralVariantLegImpl.Builder setLegCommon(
-            final VariantContext context, boolean ignoreRefpair, byte orientation)
+    private ImmutableStructuralVariantLegImpl.Builder setLegCommon(final VariantContext context, boolean ignoreRefpair, byte orientation)
     {
         ImmutableStructuralVariantLegImpl.Builder builder = ImmutableStructuralVariantLegImpl.builder();
         builder.chromosome(context.getContig());
@@ -403,12 +406,23 @@ public class StructuralVariantFactory
             }
         }
 
-        int normalOrdinal = context.getGenotypes().size() == 1 ? -1 : 0;
-        int tumorOrdinal = context.getGenotypes().size() == 1 ? 0 : 1;
+        int referenceOrdinal;
+        int tumorOrdinal;
 
-        if(normalOrdinal >= 0 && context.getGenotype(normalOrdinal) != null)
+        if(mOrdinalsSet)
         {
-            Genotype geno = context.getGenotype(normalOrdinal);
+            referenceOrdinal = mReferenceGenotypeOrdinal;
+            tumorOrdinal = mTumorGenotypeOrdinal;
+        }
+        else
+        {
+            referenceOrdinal = context.getGenotypes().size() == 1 ? GENOTYPE_ORDINAL_NONE : 0;
+            tumorOrdinal = context.getGenotypes().size() == 1 ? 0 : 1;
+        }
+
+        if(referenceOrdinal >= 0 && context.getGenotype(referenceOrdinal) != null)
+        {
+            Genotype geno = context.getGenotype(referenceOrdinal);
             if(geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(
                     VARIANT_FRAGMENT_BREAKEND_COVERAGE))
             {

@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.gripss;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.createSingleBreakend;
-
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -39,6 +37,11 @@ public class VariantBuilder
         mHardFilteredVcfIds = Sets.newHashSet();
         mHotspotCandidateVcfIds = Sets.newHashSet();
         mHardFilteredCount = 0;
+    }
+
+    public void setGenotypeOrdinals(final GenotypeIds genotypeIds)
+    {
+        mSvFactory.setGenotypeOrdinals(genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
     }
 
     public int hardFilteredCount() { return mHardFilteredCount; }
@@ -79,7 +82,7 @@ public class VariantBuilder
                 return null;
             }
 
-            StructuralVariant sv = createSingleBreakend(variant);
+            StructuralVariant sv = mSvFactory.createSingleBreakend(variant);
             return new SvData(sv, genotypeIds);
         }
 

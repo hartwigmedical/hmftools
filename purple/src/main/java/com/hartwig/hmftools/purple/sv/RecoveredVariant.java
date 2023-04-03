@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.recovery;
+package com.hartwig.hmftools.purple.sv;
 
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.sv.StructuralVariant;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.recovery;
+package com.hartwig.hmftools.purple.sv;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.RECOVERED;
@@ -43,7 +43,6 @@ import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.Allele;

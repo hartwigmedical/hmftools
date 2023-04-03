@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.purple.recovery;
+package com.hartwig.hmftools.purple.sv;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.purple.sv.RecoveredVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;

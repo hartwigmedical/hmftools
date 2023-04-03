@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.recovery;
+package com.hartwig.hmftools.purple.sv;
 
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT;
 
@@ -17,6 +17,8 @@ import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.purple.sv.RecoverStructuralVariants;
+import com.hartwig.hmftools.purple.sv.RecoveredVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;

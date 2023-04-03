@@ -1,7 +1,5 @@
-package com.hartwig.hmftools.purple.recovery;
+package com.hartwig.hmftools.purple.sv;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.create;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.createSingleBreakend;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.mateId;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_LENGTH;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_MATE_UNCERTAINTY;
@@ -22,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.gripss.GripssFilters;
+import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
@@ -36,6 +35,7 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.vcf.VCFCodec;
 
 public class RecoveredVariantFactory implements AutoCloseable
@@ -44,15 +44,16 @@ public class RecoveredVariantFactory implements AutoCloseable
             Sets.newHashSet("af", "qual", GripssFilters.DEDUP, GripssFilters.MIN_TUMOR_AF);
 
     private final AbstractFeatureReader<VariantContext, LineIterator> mReader;
+    private final StructuralVariantFactory mSvFactory;
     private final StructuralVariantLegPloidyFactory<PurpleCopyNumber> mPloidyFactory;
     private final int mMinMateQual;
     private final int mMinSglQual;
 
     public RecoveredVariantFactory(
-            final PurityAdjuster purityAdjuster, final String recoveryVCF,
-            final int minMateQual, final int minSglQual)
+            final PurityAdjuster purityAdjuster, final String recoveryVCF, final int minMateQual, final int minSglQual)
     {
         mReader = getFeatureReader(recoveryVCF, new VCFCodec(), true);
+        mSvFactory = new StructuralVariantFactory(new CompoundFilter(false));
         mPloidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
         mMinMateQual = minMateQual;
         mMinSglQual = minSglQual;
@@ -127,7 +128,9 @@ public class RecoveredVariantFactory implements AutoCloseable
             if(mate != null && !isAppropriatelyFiltered(mate))
                 continue;
 
-            final StructuralVariant sv = mate != null ? create(potentialVariant, mate) : createSingleBreakend(potentialVariant);
+            final StructuralVariant sv = mate != null ?
+                    mSvFactory.createSV(potentialVariant, mate) : mSvFactory.createSingleBreakend(potentialVariant);
+
             final Optional<StructuralVariantLegPloidy> structuralVariantLegPloidy =
                     mPloidyFactory.singleLegPloidy(sv.start(), prev.averageTumorCopyNumber(), current.averageTumorCopyNumber());
 
