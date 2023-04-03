@@ -175,7 +175,7 @@ public class PurpleApplication
             }
             else
             {
-                final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, mConfig.TumorId, mConfig.ReferenceId);
+                final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, mConfig.TumorId);
 
                 if(!sampleDataFiles.hasValidSampleNames(mConfig))
                     System.exit(1);

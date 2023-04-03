@@ -80,5 +80,7 @@ public class PurpleConstants
     public static final double PEAK_BIN_CLONAL_PLOIDY = 0.85;
     public static final double MAX_UNEXPLAINED_WEIGHT_PERCENT = 0.01;
 
+    // drivers
+    public static final int MAX_INDEL_DRIVER_REPEAT_COUNT = 7;
 
 }

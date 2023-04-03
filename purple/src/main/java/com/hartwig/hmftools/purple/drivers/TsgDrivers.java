@@ -30,28 +30,11 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.Nullable;
 
-public class TsgDrivers
+public class TsgDrivers extends SomaticVariantDriverFinder
 {
-    private final ReportablePredicate mReportablePredicate;
-    private final Map<String, DndsDriverGeneLikelihood> mLikelihoodsByGene;
-    private final List<SomaticVariant> mReportableVariants;
-
     public TsgDrivers(final DriverGenePanel genePanel)
     {
-        mLikelihoodsByGene = genePanel.tsgLikelihood();
-        mReportablePredicate = new ReportablePredicate(DriverCategory.TSG, genePanel.driverGenes());
-        mReportableVariants = Lists.newArrayList();
-    }
-
-    public boolean checkVariant(final SomaticVariant variant)
-    {
-        if(isReportable(mReportablePredicate, variant))
-        {
-            mReportableVariants.add(variant);
-            return true;
-        }
-
-        return false;
+        super(genePanel, DriverCategory.TSG);
     }
 
     public List<DriverCatalog> findDrivers(

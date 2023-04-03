@@ -18,7 +18,7 @@ public final class StructuralVariantFileLoader {
 
     public static List<StructuralVariant> fromFile(final String vcfFileLocation, final VariantContextFilter filter) throws IOException
     {
-        final StructuralVariantFactory factory = new StructuralVariantFactory(filter);
+        final StructuralVariantFactory factory = StructuralVariantFactory.build(filter);
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
                 new VCFCodec(), false))

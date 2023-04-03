@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.drivers;
 
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_INDEL_DRIVER_REPEAT_COUNT;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.getWorstReportableCodingEffect;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.groupByImpact;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.hasTranscriptCodingEffect;
@@ -31,42 +32,16 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.Nullable;
 
-public class OncoDrivers
+public class OncoDrivers extends SomaticVariantDriverFinder
 {
-    public static final int MAX_REPEAT_COUNT = 7;
-
-    private final ReportablePredicate mReportablePredicate;
-    private final Map<String, DndsDriverGeneLikelihood> mLikelihoodsByGene;
-    private final List<SomaticVariant> mReportableVariants;
-
-    public static final DndsDriverGeneLikelihood NO_GENE_DNDS_LIKELIHOOD = ImmutableDndsDriverGeneLikelihood.builder()
-        .gene("")
-        .indel(ImmutableDndsDriverImpactLikelihood.builder().driversPerSample(0).passengersPerMutation(0).build())
-        .missense(ImmutableDndsDriverImpactLikelihood.builder().driversPerSample(0).passengersPerMutation(0).build())
-        .splice(ImmutableDndsDriverImpactLikelihood.builder().driversPerSample(0).passengersPerMutation(0).build())
-        .nonsense(ImmutableDndsDriverImpactLikelihood.builder().driversPerSample(0).passengersPerMutation(0).build())
-        .build();
-
     public OncoDrivers(final DriverGenePanel genePanel)
     {
-        mLikelihoodsByGene = genePanel.oncoLikelihood();
-        mReportablePredicate = new ReportablePredicate(DriverCategory.ONCO, genePanel.driverGenes());
-        mReportableVariants = Lists.newArrayList();
+        super(genePanel, DriverCategory.ONCO);
     }
     
-    public boolean checkVariant(final SomaticVariant variant)
-    {
-        if(isReportable(mReportablePredicate, variant))
-        {
-            mReportableVariants.add(variant);
-            return true;
-        }
-        
-        return false;
-    }
-
     public List<DriverCatalog> findDrivers(
-            final Map<String,List<GeneCopyNumber>> geneCopyNumberMap, final Map<VariantType,Integer> variantTypeCounts)
+            final Map<String,List<GeneCopyNumber>> geneCopyNumberMap, final Map<VariantType,Integer> variantTypeCounts,
+            final Map<VariantType,Integer> variantTypeCountsBiallelic)
     {
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
@@ -172,6 +147,6 @@ public class OncoDrivers
     private static boolean isKnownInframeIndel(final SomaticVariant variant)
     {
         return variant.type() == VariantType.INDEL && variant.variantImpact().CanonicalCodingEffect == CodingEffect.MISSENSE
-                && variant.decorator().repeatCount() <= MAX_REPEAT_COUNT;
+                && variant.decorator().repeatCount() <= MAX_INDEL_DRIVER_REPEAT_COUNT;
     }
 }

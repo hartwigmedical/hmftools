@@ -89,22 +89,38 @@ public class StructuralVariantFactory
     public static final Pattern SINGLE_BREAKEND_REGEX = Pattern.compile("^(([.].*)|(.*[.]))$");
     private static final byte SINGLE_BREAKEND_BYTE = 46;
 
-    private final Map<String,VariantContext> mUnmatchedVariants = Maps.newHashMap();
-    private final List<StructuralVariant> mCompleteVariants = Lists.newArrayList();
+    private final Map<String,VariantContext> mUnmatchedVariants;
+    private final List<StructuralVariant> mCompleteVariants;
 
     private final CompoundFilter mFilter;
+    private int mReferenceGenotypeOrdinal;
+    private int mTumorGenotypeOrdinal;
 
-    public StructuralVariantFactory(final VariantContextFilter filter)
+    private static final int GENOTYPE_ORDINAL_NONE = -1;
+
+    public static StructuralVariantFactory build(final VariantContextFilter filter)
     {
-        mFilter = new CompoundFilter(true);
-        mFilter.add(new HumanChromosomeFilter());
-        mFilter.add(new ExcludeCNVFilter());
-        mFilter.add(filter);
+        CompoundFilter compoundfilter = new CompoundFilter(true);
+        compoundfilter.add(new HumanChromosomeFilter());
+        compoundfilter.add(new ExcludeCNVFilter());
+        compoundfilter.add(filter);
+        return new StructuralVariantFactory(compoundfilter);
     }
 
     public StructuralVariantFactory(final CompoundFilter filter)
     {
         mFilter = filter;
+
+        mUnmatchedVariants = Maps.newHashMap();
+        mCompleteVariants = Lists.newArrayList();
+        mReferenceGenotypeOrdinal = GENOTYPE_ORDINAL_NONE;
+        mTumorGenotypeOrdinal = GENOTYPE_ORDINAL_NONE;
+    }
+
+    public void setGenotypeOrdinals(int referenceOrdinal, int tumorOrdinal)
+    {
+        mReferenceGenotypeOrdinal = referenceOrdinal;
+        mTumorGenotypeOrdinal = tumorOrdinal;
     }
 
     public void clear()

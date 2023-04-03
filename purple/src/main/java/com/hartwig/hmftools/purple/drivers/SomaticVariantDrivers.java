@@ -64,6 +64,16 @@ public class SomaticVariantDrivers
         return false;
     }
 
+    public void addPhasedReportableVariant(final SomaticVariant variant, final SomaticVariant phasedReportedVariant)
+    {
+        // add the phased unreported variant to the same driver cache as its reported variant
+        if(mOncoDrivers.hasVariant(phasedReportedVariant))
+            mOncoDrivers.addVariant(variant);
+
+        if(mTsgDrivers.hasVariant(phasedReportedVariant))
+            mTsgDrivers.addVariant(variant);
+    }
+
     protected static boolean isReportable(final ReportablePredicate predicate, final SomaticVariant variant)
     {
         return predicate.isReportable(variant.variantImpact(), variant.type(), variant.decorator().repeatCount(), variant.isHotspot());
@@ -113,7 +123,7 @@ public class SomaticVariantDrivers
     {
         final List<DriverCatalog> result = Lists.newArrayList();
 
-        result.addAll(mOncoDrivers.findDrivers(geneCopyNumberMap, mVariantTypeCounts));
+        result.addAll(mOncoDrivers.findDrivers(geneCopyNumberMap, mVariantTypeCounts, mVariantTypeCountsBiallelic));
         result.addAll(mTsgDrivers.findDrivers(geneCopyNumberMap, mVariantTypeCounts, mVariantTypeCountsBiallelic));
 
         return result;

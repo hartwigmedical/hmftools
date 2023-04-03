@@ -60,7 +60,7 @@ public class SampleDataFiles
         options.addOption(SOMATIC_VARIANTS, true, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
     }
 
-    public SampleDataFiles(final CommandLine cmd, final String sampleId, final String referenceId) throws ParseException
+    public SampleDataFiles(final CommandLine cmd, final String sampleId) throws ParseException
     {
         SampleDataDir = cmd.hasOption(SAMPLE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DIR)) : null;
 
@@ -74,7 +74,7 @@ public class SampleDataFiles
         if(cmd.hasOption(COBALT))
             CobaltDirectory = cmd.getOptionValue(COBALT);
         else if(SampleDataDir != null)
-            CobaltDirectory = SampleDataDir + COBALT_DIR + "/";
+            CobaltDirectory = SampleDataDir + COBALT_DIR + File.separator;
         else
             throw new ParseException("missing cobalt or sample_data_dir config");
 
@@ -142,7 +142,12 @@ public class SampleDataFiles
         if(SampleDataDir == null)
             return "";
 
-        final String filename = SampleDataDir + toolDir + File.separator + sampleId + fileSuffix;
+        String filename = SampleDataDir + toolDir + File.separator + sampleId + fileSuffix;
+
+        if(Files.exists(Paths.get(filename)))
+            return filename;
+
+        filename = SampleDataDir + sampleId + fileSuffix;
 
         return Files.exists(Paths.get(filename)) ? filename : "";
     }

@@ -22,7 +22,7 @@ public class VariantBuilder
     private final HardFilters mHardFilters;
     private final HotspotCache mHotspotCache;
     private final TargetRegions mTargetRegions;
-    private StructuralVariantFactory mSvFactory;
+    private final StructuralVariantFactory mSvFactory;
     private final Set<String> mHotspotCandidateVcfIds;
     private final Set<String> mHardFilteredVcfIds;
 

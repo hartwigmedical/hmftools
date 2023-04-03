@@ -3,6 +3,7 @@ package com.hartwig.hmftools.purple.somatic;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.ASSUMED_BIALLELIC_FRACTION;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
@@ -194,7 +195,7 @@ public class SomaticStream
 
             enricher.flush(); // finalise any enrichment routines with queued variants
 
-            // write enriched variants to VCF
+            // various processing for charting, TMB/L calcs, drivers
             for(SomaticVariant variant : mSomaticVariants.variants())
             {
                 boolean isValidChromosome = HumanChromosome.contains(variant.chromosome());
@@ -208,8 +209,13 @@ public class SomaticStream
                     mRChartData.processVariant(variant);
                     checkChartDownsampling(variant);
                 }
+            }
 
-                // expect only pass or PON to be loaded into Purple - in tumor-only mode, the PON variants should be dropped
+            checkPhasedReportableVariants();
+
+            // write enriched variants to VCF
+            for(SomaticVariant variant : mSomaticVariants.variants())
+            {
                 if(!tumorOnly || variant.isPass())
                     mVcfWriter.add(variant.context());
             }
@@ -255,6 +261,62 @@ public class SomaticStream
         {
             variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
             mReportedGenes.add(variant.decorator().gene());
+        }
+    }
+
+    private void checkPhasedReportableVariants()
+    {
+        // any non-reportable variant that is phased with a reportable variant is marked as reportable too
+        for(int i = 0; i < mSomaticVariants.variants().size(); ++i)
+        {
+            SomaticVariant variant = mSomaticVariants.variants().get(i);
+
+            if(!variant.context().hasAttribute(REPORTED_FLAG))
+                continue;
+
+            List<Integer> localPhaseSets = variant.context().getAttributeAsIntList(LOCAL_PHASE_SET, 0);
+
+            if(localPhaseSets.isEmpty())
+                continue;
+
+            // look forwards and backwards for unreported passing variants in the same phase set
+            for(int direction = 0; direction <= 1; ++direction)
+            {
+                boolean searchBack = direction == 0;
+
+                int j = i;
+                while(true)
+                {
+                    if(searchBack)
+                        --j;
+                    else
+                        ++j;
+
+                    if(j < 0 || j >= mSomaticVariants.variants().size())
+                        break;
+
+                    SomaticVariant nextVariant = mSomaticVariants.variants().get(j);
+
+                    if(!nextVariant.isPass() || nextVariant.context().hasAttribute(REPORTED_FLAG))
+                        continue;
+
+                    List<Integer> nextLocalPhaseSets = nextVariant.context().getAttributeAsIntList(LOCAL_PHASE_SET, 0);
+
+                    // stop looking when phase set changes or is empty, so assumes that there aren't unphased variants in between
+                    if(nextLocalPhaseSets.isEmpty())
+                        break;
+
+                    if(nextLocalPhaseSets.stream().noneMatch(x -> localPhaseSets.contains(x)))
+                        break;
+
+                    nextVariant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
+
+                    // PPL_LOGGER.debug("var({}) setting reported due to phasing with other({})", nextVariant, variant);
+
+                    // add to appropriate driver caches for DNDS calcs
+                    mDrivers.addPhasedReportableVariant(nextVariant, variant);
+                }
+            }
         }
     }
 

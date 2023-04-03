@@ -75,7 +75,7 @@ public class VariantContextCollection
         {
             // converts variant contexts into structural variants
             mModified = false;
-            final StructuralVariantFactory factory = new StructuralVariantFactory(new SegmentationVariantsFilter());
+            final StructuralVariantFactory factory = StructuralVariantFactory.build(new SegmentationVariantsFilter());
             mVariantContexts.forEach(factory::addVariantContext);
 
             mVariants.clear();

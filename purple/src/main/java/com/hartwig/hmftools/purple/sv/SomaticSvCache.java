@@ -186,7 +186,7 @@ public class SomaticSvCache
 
     private VariantContextCollection getEnrichedCollection(final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers)
     {
-        final StructuralVariantFactory svFactory = new StructuralVariantFactory(x -> true);
+        final StructuralVariantFactory svFactory = StructuralVariantFactory.build(x -> true);
 
         Iterator<VariantContext> variantIter = mVariantCollection.iterator();
 
