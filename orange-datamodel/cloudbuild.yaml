@@ -12,7 +12,22 @@ steps:
         name: 'm2_cache'
 
   - name: 'maven:3-jdk-11'
-    id: 'Deploying to Maven'
+    id: 'Setting version for Maven'
+    entrypoint: mvn
+    args: [ 'versions:set', '-DnewVersion=${TAG_NAME}' ]
+
+  - name: 'maven:3-jdk-11'
+    id: 'Deploying parent pom to Maven'
+    entrypoint: mvn
+    args: [ 'deploy', '-B', '-N' ]
+    volumes:
+      - path: '/cache/.m2'
+        name: 'm2_cache'
+    env:
+      - MAVEN_OPTS=-Dmaven.repo.local=/cache/.m2
+
+  - name: 'maven:3-jdk-11'
+    id: 'Deploying orange-datamodel to Maven'
     entrypoint: mvn
     args: ['deploy', '-B']
     dir: 'orange-datamodel'
