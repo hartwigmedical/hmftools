@@ -38,11 +38,13 @@ public class ReportWriter {
     private final String outputDir;
     @NotNull
     private final PlotPathResolver plotPathResolver;
+    private final boolean addDisclaimer;
 
-    ReportWriter(final boolean writeToDisk, @Nullable final String outputDir, @NotNull final PlotPathResolver plotPathResolver) {
+    ReportWriter(boolean writeToDisk, @Nullable String outputDir, @NotNull PlotPathResolver plotPathResolver, boolean addDisclaimer) {
         this.writeToDisk = writeToDisk;
         this.outputDir = outputDir;
         this.plotPathResolver = plotPathResolver;
+        this.addDisclaimer = addDisclaimer;
     }
 
     public void write(@NotNull OrangeRecord report) throws IOException {
@@ -78,7 +80,7 @@ public class ReportWriter {
         Document doc = initializeReport(sampleId);
         PdfDocument pdfDocument = doc.getPdfDocument();
 
-        PageEventHandler pageEventHandler = PageEventHandler.create(sampleId, platinumVersion, reportResources);
+        PageEventHandler pageEventHandler = PageEventHandler.create(sampleId, platinumVersion, reportResources, addDisclaimer);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
         for (int i = 0; i < chapters.length; i++) {

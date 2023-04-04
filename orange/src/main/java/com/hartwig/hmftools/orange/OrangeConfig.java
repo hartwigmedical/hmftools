@@ -76,6 +76,7 @@ public interface OrangeConfig {
     // Some additional optional params and flags
     String CONVERT_GERMLINE_TO_SOMATIC = "convert_germline_to_somatic";
     String LIMIT_JSON_OUTPUT = "limit_json_output";
+    String ADD_DISCLAIMER = "add_disclaimer";
     String LOG_DEBUG = "log_debug";
 
     @NotNull
@@ -120,8 +121,9 @@ public interface OrangeConfig {
         options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
         options.addOption(SIGS_ALLOCATION_TSV, true, "Path towards the signatures allocation TSV.");
 
-        options.addOption(CONVERT_GERMLINE_TO_SOMATIC, false, "If set, germline events are converted to somatic events");
+        options.addOption(CONVERT_GERMLINE_TO_SOMATIC, false, "If set, germline events are converted to somatic events.");
         options.addOption(LIMIT_JSON_OUTPUT, false, "If set, limits every list in the json output to 1 entry.");
+        options.addOption(ADD_DISCLAIMER, false, "If set, prints a disclaimer on each page.");
         options.addOption(LOG_DEBUG, false, "If set, set the log level to debug rather than default.");
 
         for (Option rnaOption : OrangeRNAConfig.createOptions().getOptions()) {
@@ -243,11 +245,18 @@ public interface OrangeConfig {
 
     boolean limitJsonOutput();
 
+    boolean addDisclaimer();
+
     @NotNull
     static OrangeConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
             LOGGER.debug("Switched root level logging to DEBUG");
+        }
+
+        boolean addDisclaimer = cmd.hasOption(ADD_DISCLAIMER);
+        if (addDisclaimer) {
+            LOGGER.info("Disclaimer will be included in footer.");
         }
 
         boolean limitJsonOutput = cmd.hasOption(LIMIT_JSON_OUTPUT);
@@ -272,7 +281,7 @@ public interface OrangeConfig {
             experimentDate = LocalDate.now();
         }
 
-        OrangeConfig config = ImmutableOrangeConfig.builder()
+        return ImmutableOrangeConfig.builder()
                 .tumorSampleId(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .referenceSampleId(refSampleId)
                 .rnaConfig(OrangeRNAConfig.createConfig(cmd))
@@ -311,9 +320,8 @@ public interface OrangeConfig {
                 .sigsAllocationTsv(Config.optionalFile(cmd, SIGS_ALLOCATION_TSV))
                 .convertGermlineToSomatic(convertGermlineToSomatic)
                 .limitJsonOutput(limitJsonOutput)
+                .addDisclaimer(addDisclaimer)
                 .build();
-
-        return config;
     }
 
     @NotNull

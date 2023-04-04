@@ -82,6 +82,7 @@ public final class TestOrangeConfigFactory {
                 .lilacQcCsv(LILAC_QC_CSV)
                 .convertGermlineToSomatic(false)
                 .limitJsonOutput(false)
+                .addDisclaimer(false)
                 .build();
     }
 
