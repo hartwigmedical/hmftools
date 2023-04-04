@@ -86,7 +86,7 @@
                     </archive>
 
                     <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                        <descriptorRef>jar-with-dependencies-svc-fix</descriptorRef>
                     </descriptorRefs>
                 </configuration>
             </plugin>
