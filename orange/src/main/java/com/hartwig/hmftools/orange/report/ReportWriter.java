@@ -95,7 +95,7 @@ public class ReportWriter {
             chapter.render(doc);
         }
 
-        pageEventHandler.writeTotalPageCount(doc.getPdfDocument());
+        pageEventHandler.writeFooters(doc.getPdfDocument());
 
         doc.close();
         pdfDocument.close();

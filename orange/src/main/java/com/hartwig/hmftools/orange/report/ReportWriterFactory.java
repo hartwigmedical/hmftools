@@ -17,6 +17,6 @@ public final class ReportWriterFactory {
 
     @NotNull
     public static ReportWriter createInMemoryWriter() {
-        return new ReportWriter(false, null, new PlotPathResolver(null), false);
+        return new ReportWriter(false, null, new PlotPathResolver(null), true);
     }
 }

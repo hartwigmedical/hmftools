@@ -67,8 +67,8 @@ public class PageEventHandler implements IEventHandler {
         firstPageOfChapter = true;
     }
 
-    void writeTotalPageCount(@NotNull PdfDocument document) {
-        footer.writePageCounts(document);
+    void writeFooters(@NotNull PdfDocument document) {
+        footer.writeFooters(document);
     }
 
     private void createChapterBookmark(@NotNull PdfDocument pdf, @NotNull String title) {

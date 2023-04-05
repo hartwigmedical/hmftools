@@ -37,7 +37,7 @@ public class Footer {
         canvas.release();
     }
 
-    public void writePageCounts(@NotNull PdfDocument document) {
+    public void writeFooters(@NotNull PdfDocument document) {
         int totalPageCount = document.getNumberOfPages();
         for (FooterTemplate tpl : footerTemplates) {
             tpl.renderFooter(totalPageCount, document, reportResources);
