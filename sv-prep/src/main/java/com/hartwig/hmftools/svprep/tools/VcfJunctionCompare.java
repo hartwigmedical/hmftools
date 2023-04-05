@@ -6,7 +6,6 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IHOMPOS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.createSingleBreakend;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
@@ -113,7 +112,7 @@ public class VcfJunctionCompare
         final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
                 mVcfFilename, new VCFCodec(), false);
 
-        // VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
+        StructuralVariantFactory svFactory = new StructuralVariantFactory(new CompoundFilter(false));
 
         try
         {
@@ -125,7 +124,7 @@ public class VcfJunctionCompare
 
                 if(isSgl)
                 {
-                    sv = createSingleBreakend(variantContext);
+                    sv = svFactory.createSingleBreakend(variantContext);
                 }
                 else
                 {
