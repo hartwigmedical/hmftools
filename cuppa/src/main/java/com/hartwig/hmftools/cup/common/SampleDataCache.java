@@ -130,8 +130,11 @@ public class SampleDataCache
         if(RefSampleCancerTypeMap.containsKey(sample.Id))
         {
             // override if known
-            sample.setRefSample();
-            sample.setCancerType(RefSampleCancerTypeMap.get(sample.Id));
+            SampleData refSample = findRefSampleData(sample.Id);
+            refSample.setRefSample();
+            SampleDataList.add(refSample);
+            SampleIds.add(sample.Id);
+            return refSample;
         }
 
         SampleDataList.add(sample);
