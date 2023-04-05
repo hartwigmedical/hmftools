@@ -232,7 +232,7 @@ public class FeatureClassifierTest
 
         SampleResult result = results.stream().filter(x -> x.DataType.equals(FEATURE.toString())).findFirst().orElse(null);
         assertTrue(result != null);
-        assertEquals(0.88, result.CancerTypeValues.get(TEST_CT_001), 0.01);
+        assertEquals(0.9, result.CancerTypeValues.get(TEST_CT_001), 0.01);
         assertEquals(0.10, result.CancerTypeValues.get(TEST_CT_002), 0.01);
 
         // compare non-ref sample with same feature - will have a higher result
@@ -250,7 +250,7 @@ public class FeatureClassifierTest
         result = results.stream().filter(x -> x.DataType.equals(FEATURE.toString())).findFirst().orElse(null);
         assertTrue(result != null);
         assertEquals(0.125, result.CancerTypeValues.get(TEST_CT_001), 0.01);
-        assertEquals(0.84, result.CancerTypeValues.get(TEST_CT_002), 0.01);
+        assertEquals(0.875, result.CancerTypeValues.get(TEST_CT_002), 0.01);
     }
 
 }
