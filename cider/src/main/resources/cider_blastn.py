@@ -114,32 +114,6 @@ class Gene:
 def get_ensembl(ensembl_gene_data, only_vdj):
     ensembl_df = pd.read_csv(ensembl_gene_data)
 
-    kde_kint = []
-
-    # manually add in the KDE section
-    # v37: IGKKDE	01	2	89131735	89132285    -
-    # v38: IGKKDE	01	chr2	88832222	88832772	-
-    kde_kint.append(
-        {'GeneId': None, 'GeneName': 'KDE', "Chromosome": "2", "Strand": -1, "GeneStart": 89131735,
-         "GeneEnd": 89132285})
-
-    kde_kint.append(
-        {'GeneId': None, 'GeneName': 'KDE', "Chromosome": "2", "Strand": -1, "GeneStart": 88832222,
-         "GeneEnd": 88832772})
-
-    # KINT, obtained by BLAT of CACCGCGCTCTTGGGGCAGCCGCCTTGCCGCTAGTGGCCGTGGCCACCCTGTGTCTGCCCGATT
-    # v37
-    kde_kint.append(
-        {'GeneId': None, 'GeneName': 'KINT', "Chromosome": "2", "Strand": -1, "GeneStart": 89159145,
-         "GeneEnd": 89159209})
-
-    # v38
-    kde_kint.append(
-        {'GeneId': None, 'GeneName': 'KINT', "Chromosome": "2", "Strand": -1, "GeneStart": 88859633,
-         "GeneEnd": 88859697})
-
-    ensembl_df = pd.concat([ensembl_df, pd.DataFrame(kde_kint)], ignore_index=True)
-
     genes = []
     for idx, row in ensembl_df.iterrows():
         gene_name = row["GeneName"]
@@ -168,6 +142,24 @@ def get_ensembl(ensembl_gene_data, only_vdj):
 
         if not only_vdj or vdj_type:
             genes.append(Gene(row["GeneName"], row["Chromosome"], row["Strand"], row["GeneStart"], row["GeneEnd"], vdj_type))
+
+    # manually add in the KDE section
+    # v37: IGKKDE	01	2	89131735	89132285    -
+    # v38: IGKKDE	01	chr2	88832222	88832772	-
+    # def __init__(self, gene_name, chromosome: str, strand: int, gene_start, gene_end, vdj_type):
+    genes.append(Gene(gene_name='IGK-KDE', chromosome="2", strand=-1,
+                      gene_start=89131735, gene_end=89132285, vdj_type="J"))
+    genes.append(Gene(gene_name='IGK-KDE', chromosome="2", strand=-1,
+                      gene_start=88832222, gene_end=88832772, vdj_type="J"))
+
+    # KINT, obtained by BLAT of CACCGCGCTCTTGGGGCAGCCGCCTTGCCGCTAGTGGCCGTGGCCACCCTGTGTCTGCCCGATT
+    # v37
+    genes.append(Gene(gene_name='KDE-KINT', chromosome="2", strand=-1,
+                      gene_start=89159145, gene_end=89159209, vdj_type="V"))
+
+    # v38
+    genes.append(Gene(gene_name='KDE-KINT', chromosome="2", strand=-1,
+                      gene_start=88859633, gene_end=88859697, vdj_type="V"))
 
     return genes
 
@@ -466,8 +458,9 @@ def choose_alignments(df):
                 if row["gene_type"] and not r["gene_type"]:
                     # existing one is not a VDJ gene, replace
                     rows_to_keep[i] = (idx, row)
-                elif (row["gene_type"] is None) == (r["gene_type"] is None) and row["length"] > r["length"]:
-                    # choose longer one
+                elif ((row["gene_type"] is None) == (r["gene_type"] is None) and
+                      row["bitscore"] > r["bitscore"]):
+                    # choose higher scoring one if they both have same V J type
                     rows_to_keep[i] = (idx, row)
                 break
             i += 1
