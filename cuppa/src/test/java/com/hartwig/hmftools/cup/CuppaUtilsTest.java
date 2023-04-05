@@ -57,9 +57,7 @@ public class CuppaUtilsTest
         if(dataCache.findSampleData(sampleId) != null)
             return null;
 
-        dataCache.addTestSample(sample);
-
-        return sample;
+        return dataCache.addTestSample(sample);
     }
 
     @Test

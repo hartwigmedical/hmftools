@@ -87,7 +87,7 @@ public class SomaticClassifierTest
         results.clear();
         classifier.processSample(refSample1, results, similarities);
 
-        // cannot match it's own cancer type
+        // cannot match its own cancer type
         result = results.stream().filter(x -> x.DataType.equals(SNV_96_PAIRWISE.toString())).findFirst().orElse(null);
         assertTrue(result != null);
         assertEquals(1.0, result.CancerTypeValues.get(TEST_CT_002), 0.01);

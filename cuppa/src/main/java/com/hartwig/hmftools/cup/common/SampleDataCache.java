@@ -127,19 +127,18 @@ public class SampleDataCache
             return null;
         }
 
+        SampleData testSample = sample;
+
         if(RefSampleCancerTypeMap.containsKey(sample.Id))
         {
             // override if known
-            SampleData refSample = findRefSampleData(sample.Id);
-            refSample.setRefSample();
-            SampleDataList.add(refSample);
-            SampleIds.add(sample.Id);
-            return refSample;
+            testSample = findRefSampleData(sample.Id);
+            testSample.setRefSample();
         }
 
-        SampleDataList.add(sample);
-        SampleIds.add(sample.Id);
-        return sample;
+        SampleDataList.add(testSample);
+        SampleIds.add(testSample.Id);
+        return testSample;
     }
 
     public void loadSampleData(final String specificSampleData, final String sampleDataFile)
