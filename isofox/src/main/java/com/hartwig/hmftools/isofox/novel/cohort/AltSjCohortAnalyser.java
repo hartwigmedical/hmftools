@@ -26,7 +26,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-import com.hartwig.hmftools.isofox.cohort.SampleDataCache;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -155,12 +154,6 @@ public class AltSjCohortAnalyser
 
             ISF_LOGGER.info("loaded {} alt-SJ records", totalProcessed);
 
-            if(mProbabilityThreshold < 1)
-            {
-                // write a report for any re-occurring alt SJ
-                mWriter.writeReoccurringAltSpliceJunctions(mAltSpliceJunctions, mMinSampleThreshold, mProbabilityThreshold);
-            }
-
             // write a cohort file
             mWriter.writeCohortFrequencies(mAltSpliceJunctions, mMinSampleThreshold);
         }
@@ -255,15 +248,7 @@ public class AltSjCohortAnalyser
             geneList.add(asjCohortData);
         }
 
-        if(!mConfig.SampleData.SampleCohort.isEmpty())
-        {
-            boolean isCohortA = mConfig.SampleData.sampleInCohort(sampleId, SampleDataCache.COHORT_A);
-            asjCohortData.addSampleCount(sampleId, altSJ.FragmentCount, isCohortA);
-        }
-        else
-        {
-            asjCohortData.addSampleCount(sampleId, altSJ.FragmentCount, cancerType);
-        }
+        asjCohortData.addSampleCount(sampleId, altSJ.FragmentCount, cancerType);
 
         asjCohortData.addPositionCount(SE_START, altSJ.DepthCounts[SE_START]);
         asjCohortData.addPositionCount(SE_END, altSJ.DepthCounts[SE_END]);
