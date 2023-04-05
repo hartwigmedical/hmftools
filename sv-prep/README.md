@@ -83,7 +83,7 @@ Output a bam file which is subsequently name sorted  and used as input to Comput
 
 ### Post GRIDSS Depth Annotation
 
-Sv Prep also has an additional feature to replace the depth annotation of GRIDSS (ie the annotation of REF and REFPAIR) with a faster implmenetation.  This can be run with the following command: 
+Sv Prep also has an additional feature to replace the depth annotation of GRIDSS (ie the annotation of REF and REFPAIR) with a faster implementation.  This can be run with the following command: 
 
 ```
 java -cp ${sv_prep_jar} com.hartwig.hmftools.svprep.depth.DepthAnnotator \
@@ -106,11 +106,11 @@ The blacklist is the combination of the existing encode blacklisted regions and 
 
 - **PolyG** - Currently we filter reads with PolyG.   Better would be to trim
 - **Quality trimming** - Currently we filter reads with max(5,15% of SC) low qual soft clipped bases.   Better would be to trim
-Short INDEL Artefacts - Short INDELS (10-40 bases) may be called as SGL and not filtered (normally with poor qual or shortish assemblies).  This could be addressed by identifying these better in GRIPSS
+- **Short INDEL Artefacts** - Short INDELS (10-40 bases) may be called as SGL and not filtered (normally with poor qual or shortish assemblies).  This could be addressed by identifying these better in GRIPSS
 - **Microsatellites** - Related, other artefacts may still be called immediately adjacent to microsatellites.   Additional filtering may help
-MT chromosome - currently dropped
-Variants near blacklisted regions - GRIDSS will ignore any read that overlaps a blacklisted region.   Hence we cannot call any breakpoint which is within ~30-70 bases of a blacklisted region.
-- **Max softclip overlap** - Currently must be 30 bases of soft clip overlap.  This may cuause us occassionally to miss 1 or 2 reads support at one end of a break junction if it is only identified at one end.
+- **MT chromosome** - currently dropped
+- **Variants near blacklisted regions** - GRIDSS will ignore any read that overlaps a blacklisted region.   Hence, we cannot call any breakpoint which is within ~30-70 bases of a blacklisted region.
+- **Max softclip overlap** - Currently must be 30 bases of soft clip overlap.  This may cause us occasionally to miss 1 or 2 reads support at one end of a break junction if it is only identified at one end.
 - **Performance** - ComputeSamTags could be done in extraction step
 
 # Version History and Download Links
