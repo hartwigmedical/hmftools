@@ -23,6 +23,7 @@ public enum Category
     public static final String ALL_CATEGORIES = "ALL";
     public static final String LINX_CATEGORIES = "LINX";
     public static final String PURPLE_CATEGORIES = "PURPLE";
+    public static final String PANEL_CATEGORIES = "PANEL";
 
     public static List<Category> purpleCategories()
     {
@@ -30,4 +31,6 @@ public enum Category
     }
 
     public static List<Category> linxCategories() { return Lists.newArrayList(DRIVER, FUSION, DISRUPTION, GERMLINE_SV); }
+
+    public static List<Category> panelCategories() { return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION); }
 }

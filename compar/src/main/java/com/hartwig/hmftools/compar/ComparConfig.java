@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.compar.Category.ALL_CATEGORIES;
 import static com.hartwig.hmftools.compar.Category.LINX_CATEGORIES;
+import static com.hartwig.hmftools.compar.Category.PANEL_CATEGORIES;
 import static com.hartwig.hmftools.compar.Category.PURPLE_CATEGORIES;
 import static com.hartwig.hmftools.compar.Category.purpleCategories;
 import static com.hartwig.hmftools.compar.Category.linxCategories;
@@ -112,7 +113,10 @@ public class ComparConfig
                 purpleCategories().forEach(x -> Categories.put(x, matchLevel));
 
             if(categoriesStr.contains(LINX_CATEGORIES))
-                linxCategories(). forEach(x -> Categories.put(x, matchLevel));
+                linxCategories().forEach(x -> Categories.put(x, matchLevel));
+
+            if(categoriesStr.contains(PANEL_CATEGORIES))
+                Category.panelCategories().forEach(x -> Categories.put(x, matchLevel));
         }
         else
         {
