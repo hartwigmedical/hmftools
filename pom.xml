@@ -143,6 +143,7 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>${maven.assembly.plugin.version}</version>
+                    <!--
                     <dependencies>
                         <dependency>
                             <groupId>com.hartwig</groupId>
@@ -150,6 +151,7 @@
                             <version>${orange-datamodel.version}</version>
                         </dependency>
                     </dependencies>
+                    -->
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
