@@ -415,7 +415,7 @@ public class AltSjClassifier implements CuppaClassifier
                 double actualRefCount = refCounts[b] * cancerSampleCount;
                 adjustedCounts[b] = max(actualRefCount - sampleCounts[b], 0) / (cancerSampleCount - 1);
             }
-            else if(refCounts[b] == 0 || sampleCounts[b] == 0)
+            else if(refCounts[b] == 0)
             {
                 adjustedCounts[b] = refCounts[b];
             }
