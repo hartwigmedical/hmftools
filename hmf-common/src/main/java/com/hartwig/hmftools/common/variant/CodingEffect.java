@@ -2,8 +2,6 @@ package com.hartwig.hmftools.common.variant;
 
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
-import org.jetbrains.annotations.NotNull;
-
 public enum CodingEffect
 {
     NONSENSE_OR_FRAMESHIFT,
@@ -13,8 +11,7 @@ public enum CodingEffect
     NONE,
     UNDEFINED;
 
-    @NotNull
-    public static CodingEffect effect(@NotNull final VariantEffect variantEffect)
+    public static CodingEffect effect(final VariantEffect variantEffect)
     {
         switch(variantEffect)
         {
@@ -42,8 +39,7 @@ public enum CodingEffect
         return NONE;
     }
 
-    @NotNull
-    public static CodingEffect effect(@NotNull final VariantConsequence consequence)
+    public static CodingEffect effect(final VariantConsequence consequence)
     {
         switch(consequence)
         {
@@ -67,5 +63,10 @@ public enum CodingEffect
         }
 
         return NONE;
+    }
+
+    public static boolean hasProteinImpact(final CodingEffect codingEffect)
+    {
+        return codingEffect == NONSENSE_OR_FRAMESHIFT || codingEffect == SPLICE || codingEffect == MISSENSE;
     }
 }

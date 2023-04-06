@@ -27,7 +27,7 @@ public abstract class DndsDriverGeneLikelihood
     public abstract DndsDriverImpactLikelihood indel();
 
     @NotNull
-    public DndsDriverImpactLikelihood select(@NotNull DriverImpact impact)
+    public DndsDriverImpactLikelihood select(final DriverImpact impact)
     {
         switch(impact)
         {

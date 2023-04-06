@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.hasProteinImpact;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
@@ -300,6 +301,10 @@ public class SomaticStream
                     if(!nextVariant.isPass() || nextVariant.context().hasAttribute(REPORTED_FLAG))
                         continue;
 
+                    // must have a coding impact
+                    if(nextVariant.variantImpact() == null || !hasProteinImpact(nextVariant.variantImpact().CanonicalCodingEffect))
+                        continue;
+
                     List<Integer> nextLocalPhaseSets = nextVariant.context().getAttributeAsIntList(LOCAL_PHASE_SET, 0);
 
                     // stop looking when phase set changes or is empty, so assumes that there aren't unphased variants in between
@@ -311,7 +316,7 @@ public class SomaticStream
 
                     nextVariant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
 
-                    // PPL_LOGGER.debug("var({}) setting reported due to phasing with other({})", nextVariant, variant);
+                    PPL_LOGGER.debug("var({}) setting reported due to phasing with other({})", nextVariant, variant);
 
                     // add to appropriate driver caches for DNDS calcs
                     mDrivers.addPhasedReportableVariant(nextVariant, variant);

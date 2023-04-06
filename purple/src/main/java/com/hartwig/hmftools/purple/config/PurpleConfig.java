@@ -28,6 +28,7 @@ public class PurpleConfig
 
     public final boolean RunDrivers;
     public final boolean DriversOnly;
+    public final boolean FilterSomaticsOnGene;
 
     public final FittingConfig Fitting;
     public final SomaticFitConfig SomaticFitting;
@@ -45,6 +46,7 @@ public class PurpleConfig
     private static final String COBALT = "cobalt";
 
     public static String DRIVERS_ONLY = "drivers_only";
+    public static String FILTER_SOMATICS_ON_GENE = "filter_somatics_on_gene";
     public static final String TIER_FILTERS = "tier_filters";
 
     public PurpleConfig(final String version, final CommandLine cmd)
@@ -101,6 +103,7 @@ public class PurpleConfig
 
         RunDrivers = DriverGenePanelConfig.isConfigured(cmd);
         DriversOnly = cmd.hasOption(DRIVERS_ONLY);
+        FilterSomaticsOnGene = cmd.hasOption(FILTER_SOMATICS_ON_GENE);
 
         PPL_LOGGER.info("reference({}) tumor({}) {}",
                 ReferenceId != null ? ReferenceId : "NONE", TumorId != null ? TumorId : "NONE",
@@ -164,6 +167,7 @@ public class PurpleConfig
                 "Path to Amber output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
 
         options.addOption(DRIVERS_ONLY, false, "Only run the driver routine");
+        options.addOption(FILTER_SOMATICS_ON_GENE, false, "Only load and enrich somatic variants with a gene impact");
         options.addOption(TIER_FILTERS, true, "Variant qual filters by tier, format: TIER_A=QUAL;TIER_A=QUAL etc");
 
         FittingConfig.addOptions(options);

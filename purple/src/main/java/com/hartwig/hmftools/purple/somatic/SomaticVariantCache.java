@@ -74,6 +74,12 @@ public class SomaticVariantCache
                     continue;
             }
 
+            if(mConfig.FilterSomaticsOnGene)
+            {
+                if(variant.variantImpact() == null || variant.variantImpact().CanonicalGeneName.isEmpty())
+                    continue;
+            }
+
             mVariants.add(variant);
 
             // hotspot status is used in fitting as well as during and for enrichment

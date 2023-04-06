@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.purple.drivers;
 
-import static com.hartwig.hmftools.purple.drivers.OncoDrivers.NO_GENE_DNDS_LIKELIHOOD;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.getWorstReportableCodingEffect;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.groupByImpact;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.hasTranscriptCodingEffect;
-import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.isReportable;
 
 import java.util.List;
 import java.util.Map;
@@ -21,14 +19,10 @@ import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
-
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.Nullable;
 
 public class TsgDrivers extends SomaticVariantDriverFinder
 {
