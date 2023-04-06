@@ -67,6 +67,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.hartwig</groupId>
+                        <artifactId>orange-datamodel</artifactId>
+                        <version>${orange-datamodel.version}</version>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
                         <phase>package</phase>
