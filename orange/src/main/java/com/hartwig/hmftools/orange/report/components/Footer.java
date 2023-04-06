@@ -18,10 +18,11 @@ import org.jetbrains.annotations.NotNull;
 public class Footer {
 
     private final List<FooterTemplate> footerTemplates = Lists.newArrayList();
+    @NotNull
     private final ReportResources reportResources;
     private final boolean addDisclaimer;
 
-    public Footer(ReportResources reportResources, boolean addDisclaimer) {
+    public Footer(@NotNull ReportResources reportResources, boolean addDisclaimer) {
         this.reportResources = reportResources;
         this.addDisclaimer = addDisclaimer;
     }
@@ -57,7 +58,7 @@ public class Footer {
             this.addDisclaimer = addDisclaimer;
         }
 
-        void renderFooter(int totalPageCount, @NotNull PdfDocument document, ReportResources reportResources) {
+        void renderFooter(int totalPageCount, @NotNull PdfDocument document, @NotNull ReportResources reportResources) {
             String displayString = pageNumber + "/" + totalPageCount;
 
             Canvas canvas = new Canvas(template, document);
