@@ -221,6 +221,7 @@ investigate potential causes for QC failure.
   - All copy numbers are rounded to single digit instead of no digits
   - Combination of urethra cancer and renal cell cancer is mapped to OTHER by ORANGE cohort mapper
   - The ORANGE cohort mapping application queries clinical view rather than datarequest
+  - Added `-add_disclaimer` parameter that will print a "research use only" disclaimer in the footer when set
   - PDF documents now share a single instance of each font to reduce file size
   - Formatting for undetermined HRD type is improved
 - [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.3)

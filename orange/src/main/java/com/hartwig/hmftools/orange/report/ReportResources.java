@@ -139,6 +139,11 @@ public class ReportResources {
     }
 
     @NotNull
+    public Style deemphasizedStyle() {
+        return new Style().setFont(fontRegular).setFontSize(5).setFontColor(ReportResources.PALETTE_MID_GREY);
+    }
+
+    @NotNull
     public Style sidePanelLabelStyle() {
         return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_WHITE);
     }
