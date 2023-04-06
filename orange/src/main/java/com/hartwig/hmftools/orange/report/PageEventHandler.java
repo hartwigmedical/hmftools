@@ -28,9 +28,10 @@ public class PageEventHandler implements IEventHandler {
     private PdfOutline outline = null;
 
     @NotNull
-    static PageEventHandler create(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull ReportResources reportResources) {
+    static PageEventHandler create(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull ReportResources reportResources,
+            boolean addDisclaimer) {
         return new PageEventHandler(new Header(Resources.getResource("orange_circos.png"), reportResources),
-                new Footer(reportResources),
+                new Footer(reportResources, addDisclaimer),
                 new SidePanel(sampleId, platinumVersion, reportResources));
     }
 
@@ -66,8 +67,8 @@ public class PageEventHandler implements IEventHandler {
         firstPageOfChapter = true;
     }
 
-    void writeTotalPageCount(@NotNull PdfDocument document) {
-        footer.writeTotalPageCount(document);
+    void writeFooters(@NotNull PdfDocument document) {
+        footer.writeFooters(document);
     }
 
     private void createChapterBookmark(@NotNull PdfDocument pdf, @NotNull String title) {
