@@ -16,6 +16,9 @@ public class RnaCommon
     public static final String FLD_CHROMOSOME = "Chromosome";
     public static final String FLD_TRANS_ID = "TransId";
     public static final String FLD_TRANS_NAME = "TransName";
+    public static final String FLD_FRAG_COUNT = "FragCount";
+    public static final String FLD_DEPTH_START = "DepthStart";
+    public static final String FLD_DEPTH_END = "DepthEnd";
 
     protected static final Logger RNA_LOGGER = LogManager.getLogger(RnaCommon.class);
 }

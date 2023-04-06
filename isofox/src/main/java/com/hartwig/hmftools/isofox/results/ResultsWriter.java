@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.results;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.rna.CanonicalSpliceJunctionFile.CANONICAL_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -40,6 +41,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.rna.CanonicalSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.isofox.FragmentAllocator;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
@@ -386,10 +388,10 @@ public class ResultsWriter
         {
             if(mSpliceJunctionWriter == null)
             {
-                final String outputFileName = mConfig.formOutputFile("canonical_splice_junc.csv");
+                final String outputFileName = mConfig.formOutputFile(CANONICAL_SJ_FILE_ID);
 
                 mSpliceJunctionWriter = createBufferedWriter(outputFileName, false);
-                mSpliceJunctionWriter.write("GeneId,GeneName,Chromosome,SjStart,SjEnd,FragCount,DepthStart,DepthEnd,TranscriptNames");
+                mSpliceJunctionWriter.write(CanonicalSpliceJunctionFile.csvHeader());
                 mSpliceJunctionWriter.newLine();
             }
 

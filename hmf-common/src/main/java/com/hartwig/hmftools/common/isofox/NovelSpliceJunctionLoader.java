@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.common.isofox;
 
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_TYPE;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_END;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_START;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
@@ -47,9 +49,9 @@ public final class NovelSpliceJunctionLoader
             int posStart = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
             int posEnd = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
             int type = fieldsIndexMap.get(FLD_ALT_SJ_TYPE);
-            int fragCount = fieldsIndexMap.get(FLD_ALT_SJ_FRAG_COUNT);
-            int depthStart = fieldsIndexMap.get("DepthStart");
-            int depthEnd = fieldsIndexMap.get("DepthEnd");
+            int fragCount = fieldsIndexMap.get(FLD_FRAG_COUNT);
+            int depthStart = fieldsIndexMap.get(FLD_DEPTH_START);
+            int depthEnd = fieldsIndexMap.get(FLD_DEPTH_END);
             int regionStart =
                     fieldsIndexMap.containsKey("RegionStart") ? fieldsIndexMap.get("RegionStart") : fieldsIndexMap.get("ContextStart");
             int regionEnd = fieldsIndexMap.containsKey("RegionEnd") ? fieldsIndexMap.get("RegionEnd") : fieldsIndexMap.get("ContextEnd");

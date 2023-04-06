@@ -6,11 +6,11 @@ import static java.lang.Math.max;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.formKey;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
@@ -550,7 +550,7 @@ public class AltSjClassifier implements CuppaClassifier
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posStartIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
             int posEndIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
-            int fragCountIndex = fieldsIndexMap.get(FLD_ALT_SJ_FRAG_COUNT);
+            int fragCountIndex = fieldsIndexMap.get(FLD_FRAG_COUNT);
 
             int matchedRefAltSJs = 0;
 

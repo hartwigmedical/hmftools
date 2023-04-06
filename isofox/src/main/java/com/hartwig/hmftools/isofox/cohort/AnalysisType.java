@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.cohort;
 
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.ALT_SJ_FILE_ID;
+import static com.hartwig.hmftools.common.rna.CanonicalSpliceJunctionFile.CANONICAL_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.fusion.FusionWriter.RAW_FUSION_FILE_ID;
@@ -15,6 +16,7 @@ public enum AnalysisType
 
     // novel junctions:
     ALT_SPLICE_JUNCTION, // combine and analyse alternate splice junctions for a cohort
+    CANONICAL_SPLICE_JUNCTION, // combine and analyse canonical splice junctions for a cohort
     ALT_SPLICE_JUNCTION_MATRIX, // generates a for a cohort's alt-SJs
     SPLICE_VARIANT_MATCHING, // match alternate splice junctions with (candidate-splicing) somatic variants
     RECURRENT_SPLICE_VARIANTS, // find recurrent splice variants, input is a somatic table file
@@ -47,6 +49,9 @@ public enum AnalysisType
             case SPLICE_VARIANT_MATCHING:
             case ALT_SPLICE_JUNCTION_MATRIX:
                 return ALT_SJ_FILE_ID;
+
+            case CANONICAL_SPLICE_JUNCTION:
+                return CANONICAL_SJ_FILE_ID;
 
             case UNMAPPED_READS:
                 return UNMAPPED_READS_FILE_ID;
