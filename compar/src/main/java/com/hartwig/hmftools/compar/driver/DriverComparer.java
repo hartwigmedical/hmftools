@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar.driver;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_PURPLE_SOMATIC;
 import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKELIHOOD;
@@ -9,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -81,8 +84,23 @@ public class DriverComparer implements ItemComparer
             String linxDriverFile = LinxDriver.generateCatalogFilename(fileSources.Linx, sampleId, true);
             String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(fileSources.Purple, sampleId);
 
-            List<DriverCatalog> drivers = Files.exists(Paths.get(linxDriverFile)) ?
-                    DriverCatalogFile.read(linxDriverFile) : DriverCatalogFile.read(purpleDriverFile);
+            List<DriverCatalog> drivers = Lists.newArrayList();
+
+            if(Files.exists(Paths.get(linxDriverFile)))
+            {
+                drivers.addAll(DriverCatalogFile.read(linxDriverFile)
+                        .stream()
+                        .filter(x -> DRIVERS_LINX_SOMATIC.contains(x.driver()))
+                        .collect(Collectors.toList()));
+            }
+
+            if(Files.exists(Paths.get(purpleDriverFile)))
+            {
+                drivers.addAll(DriverCatalogFile.read(purpleDriverFile)
+                        .stream()
+                        .filter(x -> DRIVERS_PURPLE_SOMATIC.contains(x.driver()))
+                        .collect(Collectors.toList()));
+            }
 
             // add germline as well if present
             String purpleGermlineDriverFile = DriverCatalogFile.generateGermlineFilename(fileSources.Purple, sampleId);
