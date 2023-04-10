@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.fitting;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_UNEXPLAINED_WEIGHT_PERCENT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.PEAK_BIN_CLONAL_PLOIDY;
@@ -22,9 +24,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class PeakModelFactory
 {
-    private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
-
     private static final int MAX_ITERATIONS = 10;
+    private static final double MAX_HISTOGRAM_PLOIDY = 0.85;
 
     private final double mMaxPloidy;
     private final double mModelWidth;
@@ -42,13 +43,13 @@ public class PeakModelFactory
     public List<PeakModel> model(final List<ModifiableWeightedPloidy> weightedPloidies)
     {
         boolean hasValidSubclonalPeaks = false;
-        final WeightedPloidyHistogram residualHistogram = new WeightedPloidyHistogram(0.85, mModelWidth);
+        final WeightedPloidyHistogram residualHistogram = new WeightedPloidyHistogram(MAX_HISTOGRAM_PLOIDY, mModelWidth);
         double[] residualHistogramActual = residualHistogram.histogram(weightedPloidies);
 
         final List<ModifiablePeakModel> peakModel = Lists.newArrayList();
         double initialWeight = positiveWeight(weightedPloidies);
 
-        for (int i = 0; i < MAX_ITERATIONS; i++)
+        for(int i = 0; i < MAX_ITERATIONS; i++)
         {
             // Calculate peak
             double peak = mPreciseHistogramFactory.peakPloidy(PEAK_BIN_COUNT, weightedPloidies);
@@ -60,7 +61,7 @@ public class PeakModelFactory
 
             // Subtract modelled weight
             double[] currentHistogram = peakHistogramFactory.histogram(weightedPloidies);
-            for (final ModifiableWeightedPloidy ploidy : weightedPloidies)
+            for(final ModifiableWeightedPloidy ploidy : weightedPloidies)
             {
                 int bucket = peakHistogramFactory.bucket(ploidy.ploidy());
                 double currentWeight = ploidy.weight();
@@ -74,7 +75,7 @@ public class PeakModelFactory
             boolean isValidPeak = Doubles.greaterOrEqual(peakAverageWeight, PEAK_BIN_MIN_AVERAGE_WEIGHT) && Doubles.greaterThan(peak, 0);
             boolean isSubclonal = Doubles.lessThan(peak, PEAK_BIN_CLONAL_PLOIDY);
             hasValidSubclonalPeaks |= (isSubclonal && isValidPeak);
-            for (int bucket = 0; bucket < peakHistogram.length; bucket++)
+            for(int bucket = 0; bucket < peakHistogram.length; bucket++)
             {
                 final ModifiablePeakModel model = ModifiablePeakModel.create()
                         .setBucket(bucket * mModelWidth)
@@ -90,22 +91,26 @@ public class PeakModelFactory
             double remainingWeight = positiveWeight(weightedPloidies);
             double unexplainedWeight = remainingWeight / initialWeight;
 
-            PPL_LOGGER.trace("Peak: {}, Offset: {}, PeakAvgWeight: {}, Unexplained: {}",
-                    new Object[] { FORMAT.format(peak), FORMAT.format(offset), FORMAT.format(peakAverageWeight),
-                            FORMAT.format(unexplainedWeight) });
+            PPL_LOGGER.trace(format("peak(%.2f) offset(%.2f) peakAvgWeight(%.2f) unexplained(%.2f)",
+                    peak, offset, peakAverageWeight, unexplainedWeight));
 
-            if (Doubles.lessThan(unexplainedWeight, MAX_UNEXPLAINED_WEIGHT_PERCENT))
+            if(Doubles.lessThan(unexplainedWeight, MAX_UNEXPLAINED_WEIGHT_PERCENT))
+            {
                 break;
+            }
         }
 
         // Scale results
         double totalModelWeight = peakModel.stream().filter(PeakModel::isValid).mapToDouble(PeakModel::bucketWeight).sum();
         double weightScalingFactor = initialWeight / totalModelWeight;
-        PPL_LOGGER.trace("weight scaling factor {}", String.format("%.4f", weightScalingFactor));
+
+        PPL_LOGGER.trace(format("weight scaling factor %.4f", weightScalingFactor));
 
         final List<PeakModel> all = peakModel.stream().map(x -> x.setBucketWeight(x.bucketWeight() * 1)).collect(Collectors.toList());
         if(hasValidSubclonalPeaks)
+        {
             return all;
+        }
 
         // Find residual
         final List<PeakModel> validOnly = all.stream().filter(PeakModel::isValid).collect(Collectors.toList());
@@ -115,22 +120,27 @@ public class PeakModelFactory
         return all;
     }
 
-    @NotNull
-    private List<PeakModel> residuals(double[] residualHistogramActual, double[] residualHistogramModel) {
+    private List<PeakModel> residuals(double[] residualHistogramActual, double[] residualHistogramModel)
+    {
         List<PeakModel> result = Lists.newArrayList();
 
-        for (int i = 0; i < residualHistogramActual.length; i++) {
+        for(int i = 0; i < residualHistogramActual.length; i++)
+        {
             double actualWeight = residualHistogramActual[i];
             double modelWeight = residualHistogramModel[i];
 
             final double residualPercent;
-            if (Doubles.isZero(actualWeight)) {
+            if(Doubles.isZero(actualWeight))
+            {
                 residualPercent = 1;
-            } else {
+            }
+            else
+            {
                 residualPercent = (actualWeight - modelWeight) / actualWeight;
             }
 
-            if (Doubles.greaterThan(residualPercent, 0)) {
+            if(Doubles.greaterThan(residualPercent, 0))
+            {
                 result.add(ModifiablePeakModel.create()
                         .setBucket(i * mModelWidth)
                         .setPeak(0)
@@ -144,23 +154,27 @@ public class PeakModelFactory
         return result;
     }
 
-    private double positiveWeight(@NotNull final List<? extends WeightedPloidy> weightedPloidies) {
+    private double positiveWeight(final List<? extends WeightedPloidy> weightedPloidies)
+    {
         return weightedPloidies.stream().mapToDouble(x -> Math.max(0, x.weight())).sum();
     }
 
-    double offset(double peak) {
+    double offset(double peak)
+    {
         return peak - Math.round(peak / mModelWidth) * mModelWidth;
     }
 
-    @NotNull
-    private List<WeightedPloidy> peakPloidies(double peak, @NotNull final List<? extends WeightedPloidy> allPloidies) {
+    private List<WeightedPloidy> peakPloidies(double peak, final List<? extends WeightedPloidy> allPloidies)
+    {
         return allPloidies.stream()
-                .filter(x -> Doubles.greaterThan(x.ploidy(), peak - mModelWidth / 2) && Doubles.lessThan(x.ploidy(), peak + mModelWidth / 2))
+                .filter(x -> Doubles.greaterThan(x.ploidy(), peak - mModelWidth / 2) && Doubles.lessThan(x.ploidy(),
+                        peak + mModelWidth / 2))
                 .collect(Collectors.toList());
     }
 
     @VisibleForTesting
-    double[] modelPeakHistogram(double peak, @NotNull final List<WeightedPloidy> peakPloidies) {
+    double[] modelPeakHistogram(double peak, final List<WeightedPloidy> peakPloidies)
+    {
         double offset = offset(peak);
 
         int maxBucket = bucket(mMaxPloidy);
@@ -170,21 +184,25 @@ public class PeakModelFactory
         int startBucket = bucket(peak - offset);
 
         // Forwards until unlikely...
-        for (int i = startBucket; i <= maxBucket; i++) {
+        for(int i = startBucket; i <= maxBucket; i++)
+        {
             double ploidy = i * mModelWidth + offset;
             double likelihood = likelihood(ploidy, weight, peakPloidies);
             result[i] = likelihood;
-            if (Doubles.isZero(likelihood)) {
+            if(Doubles.isZero(likelihood))
+            {
                 break;
             }
         }
 
         // Backwards until unlikely...
-        for (int i = startBucket - 1; i >= 0; i--) {
+        for(int i = startBucket - 1; i >= 0; i--)
+        {
             double ploidy = i * mModelWidth + offset;
             double likelihood = likelihood(ploidy, weight, peakPloidies);
             result[i] = likelihood;
-            if (Doubles.isZero(likelihood)) {
+            if(Doubles.isZero(likelihood))
+            {
                 break;
             }
         }
@@ -192,25 +210,30 @@ public class PeakModelFactory
         return result;
     }
 
-    private double likelihood(double ploidy, double[] scalingFactor, @NotNull List<WeightedPloidy> ploidies) {
+    private double likelihood(double ploidy, double[] scalingFactor, List<WeightedPloidy> ploidies)
+    {
         double result = 0;
-        for (int i = 0; i < scalingFactor.length; i++) {
+        for(int i = 0; i < scalingFactor.length; i++)
+        {
             result += scalingFactor[i] * ploidyLikelihood(ploidy, ploidies.get(i));
         }
 
         return result;
     }
 
-    private double[] scalingFactor(double ploidy, @NotNull List<WeightedPloidy> ploidies) {
+    private double[] scalingFactor(double ploidy, List<WeightedPloidy> ploidies)
+    {
         double[] result = new double[ploidies.size()];
-        for (int i = 0; i < ploidies.size(); i++) {
+        for(int i = 0; i < ploidies.size(); i++)
+        {
             result[i] = ploidies.get(i).weight() / ploidyLikelihood(ploidy, ploidies.get(i));
         }
 
         return result;
     }
 
-    double ploidyLikelihood(double ploidy, @NotNull final WeightedPloidy weighted) {
+    double ploidyLikelihood(double ploidy, final WeightedPloidy weighted)
+    {
         final String binomialKey = weighted.alleleReadCount() + ":" + weighted.totalReadCount();
         final BinomialDistribution binomialDistribution = mBinomialDistributionMap.computeIfAbsent(binomialKey,
                 s -> new BinomialDistribution(weighted.totalReadCount(), weighted.alleleFrequency()));
@@ -232,15 +255,16 @@ public class PeakModelFactory
         return Math.round(rawResult * 100) / 100d;
     }
 
-    private int bucket(double ploidy) {
+    private int bucket(double ploidy)
+    {
         return (int) Math.round(ploidy / mModelWidth);
     }
 
-    private static double averageWeight(@NotNull final List<WeightedPloidy> ploidies) {
+    private static double averageWeight(final List<WeightedPloidy> ploidies)
+    {
         int count = ploidies.size();
-        if (count == 0) {
+        if(count == 0)
             return 0;
-        }
 
         return ploidies.stream().mapToDouble(WeightedPloidy::weight).sum() / count;
     }

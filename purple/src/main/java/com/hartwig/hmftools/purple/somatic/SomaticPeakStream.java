@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static java.lang.String.format;
+
 import static com.google.common.collect.Lists.newArrayList;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.CLONALITY_BIN_WIDTH;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.CLONALITY_MAX_PLOIDY;
 
@@ -53,6 +56,19 @@ public class SomaticPeakStream
             }
         }
 
-        return new PeakModelFactory(CLONALITY_MAX_PLOIDY, CLONALITY_BIN_WIDTH).model(weightedPloidies);
+        PPL_LOGGER.debug("somatic peak uses {} variants", weightedPloidies.size());
+
+        PeakModelFactory modelFactory = new PeakModelFactory(CLONALITY_MAX_PLOIDY, CLONALITY_BIN_WIDTH);
+
+        List<PeakModel> peakModels = modelFactory.model(weightedPloidies);
+
+        for(PeakModel peakModel : peakModels)
+        {
+            PPL_LOGGER.trace(format("somatic peak(%.4f wgt=%.4f) bucket(%.4f wgt=%.4f) valid(%s) subclonal(%s)",
+                    peakModel.peak(), peakModel.peakAvgWeight(), peakModel.bucket(), peakModel.bucketWeight(),
+                    peakModel.isValid(), peakModel.isSubclonal()));
+        }
+
+        return peakModels;
     }
 }
