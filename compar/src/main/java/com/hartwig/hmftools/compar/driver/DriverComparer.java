@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.driver;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_GERMLINE;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_PURPLE_SOMATIC;
 import static com.hartwig.hmftools.compar.Category.DRIVER;
@@ -96,17 +97,25 @@ public class DriverComparer implements ItemComparer
 
             if(Files.exists(Paths.get(purpleDriverFile)))
             {
-                drivers.addAll(DriverCatalogFile.read(purpleDriverFile)
-                        .stream()
-                        .filter(x -> DRIVERS_PURPLE_SOMATIC.contains(x.driver()))
-                        .collect(Collectors.toList()));
+                drivers.addAll(DriverCatalogFile.read(purpleDriverFile));
             }
 
             // add germline as well if present
             String purpleGermlineDriverFile = DriverCatalogFile.generateGermlineFilename(fileSources.Purple, sampleId);
+            String linxGermlineDriverFile = LinxDriver.generateCatalogFilename(fileSources.Linx, sampleId, false);
 
             if(Files.exists(Paths.get(purpleGermlineDriverFile)))
+            {
                 drivers.addAll(DriverCatalogFile.read(purpleGermlineDriverFile));
+            }
+
+            if(Files.exists(Paths.get(linxGermlineDriverFile)))
+            {
+                drivers.addAll(DriverCatalogFile.read(linxGermlineDriverFile)
+                        .stream()
+                        .filter(x -> DRIVERS_LINX_GERMLINE.contains(x.driver()))
+                        .collect(Collectors.toList()));
+            }
 
             for(DriverCatalog driver : drivers)
             {

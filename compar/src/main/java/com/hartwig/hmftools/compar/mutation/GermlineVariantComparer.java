@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.compar.somatic;
+package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;

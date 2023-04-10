@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.compar.somatic;
+package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
@@ -7,8 +7,6 @@ import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.compar.DiffThresholds;
 
 public final class VariantCommon
 {

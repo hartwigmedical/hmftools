@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.compar.somatic;
+package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
@@ -6,15 +6,15 @@ import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkFilterDiffs;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
-import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_BIALLELIC;
-import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_CANON_EFFECT;
-import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_CODING_EFFECT;
-import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_GENE;
-import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_HGVS_CODING;
-import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_HGVS_PROTEIN;
-import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_HOTSPOT;
-import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_OTHER_REPORTED;
-import static com.hartwig.hmftools.compar.somatic.VariantCommon.FLD_TIER;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_BIALLELIC;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_GENE;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_CODING;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_PROTEIN;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HOTSPOT;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_OTHER_REPORTED;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TIER;
 
 import java.util.Arrays;
 import java.util.List;

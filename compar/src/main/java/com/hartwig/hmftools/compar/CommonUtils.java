@@ -19,8 +19,8 @@ import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GermlineDeletionComparer;
 import com.hartwig.hmftools.compar.purple.PurityComparer;
-import com.hartwig.hmftools.compar.somatic.GermlineVariantComparer;
-import com.hartwig.hmftools.compar.somatic.SomaticVariantComparer;
+import com.hartwig.hmftools.compar.mutation.GermlineVariantComparer;
+import com.hartwig.hmftools.compar.mutation.SomaticVariantComparer;
 
 public class CommonUtils
 {
