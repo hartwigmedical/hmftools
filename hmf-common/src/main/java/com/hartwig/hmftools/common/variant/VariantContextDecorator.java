@@ -208,14 +208,14 @@ public class VariantContextDecorator implements GenomePosition
     }
 
     @NotNull
-    public AllelicDepth allelicDepth(@NotNull final String sample)
+    public AllelicDepth allelicDepth(final String sample)
     {
         final Genotype genotype = mContext.getGenotype(sample);
         return genotype != null ? AllelicDepth.fromGenotype(genotype) : NO_DEPTH;
     }
 
     @NotNull
-    public GenotypeStatus genotypeStatus(@NotNull final String sample)
+    public GenotypeStatus genotypeStatus(final String sample)
     {
         final Genotype genotype = mContext.getGenotype(sample);
         return genotype != null ? GenotypeStatus.fromGenotype(genotype) : GenotypeStatus.UNKNOWN;

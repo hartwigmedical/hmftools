@@ -39,7 +39,7 @@ public class MismatchWriter
 
         try
         {
-            String outputFile = filePrefix + "combined.csv";
+            String outputFile = filePrefix + "csv";
 
             CMP_LOGGER.info("writing output results: {}", outputFile);
 

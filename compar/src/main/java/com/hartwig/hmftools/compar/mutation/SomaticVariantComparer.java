@@ -22,6 +22,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -257,28 +258,26 @@ public class SomaticVariantComparer implements ItemComparer
             vcfFile = PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId);
         }
 
-        try
+        VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
+
+        if(!vcfFileReader.fileValid())
         {
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
-
-            for(VariantContext variantContext : reader.iterator())
-            {
-                if(!filter.test(variantContext))
-                    continue;
-
-                SomaticVariantData variant = SomaticVariantData.fromContext(variantContext);
-
-                if(!variant.Gene.isEmpty())
-                    variants.add(variant);
-            }
-
-            CMP_LOGGER.debug("sample({}) loaded {} somatic variants", sampleId, variants.size());
-        }
-        catch(IOException e)
-        {
-            CMP_LOGGER.warn("failed to read somatic VCF file({}): {}", vcfFile, e.toString());
+            CMP_LOGGER.error("failed to read somatic VCF file({})", vcfFile);
             return null;
         }
+
+        for(VariantContext variantContext : vcfFileReader.iterator())
+        {
+            if(!filter.test(variantContext))
+                continue;
+
+            SomaticVariantData variant = SomaticVariantData.fromContext(variantContext);
+
+            if(!variant.Gene.isEmpty())
+                variants.add(variant);
+        }
+
+        CMP_LOGGER.debug("sample({}) loaded {} somatic variants", sampleId, variants.size());
 
         return variants;
     }
