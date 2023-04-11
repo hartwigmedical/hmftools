@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
@@ -29,7 +30,6 @@ import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.config.ReferenceData;
-import com.hartwig.hmftools.purple.fitting.PeakModel;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
@@ -52,7 +52,7 @@ public class SomaticStream
     private final SomaticVariantCache mSomaticVariants;
     private final RChartData mRChartData;
     private final DriverGenePanel mGenePanel;
-    private final List<PeakModel> mPeakModel;
+    private final List<PeakModelData> mPeakModel;
     private final Set<String> mReportedGenes;
 
     private final List<VariantContextDecorator> mDownsampledVariants; // cached for charting
@@ -72,7 +72,7 @@ public class SomaticStream
 
     public SomaticStream(
             final PurpleConfig config, final ReferenceData referenceData, final SomaticVariantCache somaticVariants,
-            final List<PeakModel> peakModel)
+            final List<PeakModelData> peakModel)
     {
         mReferenceData = referenceData;
         mConfig = config;

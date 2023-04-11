@@ -47,6 +47,7 @@ import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.FileWriterUtils;
+import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.fitting.SomaticPurityFitter;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
@@ -79,7 +80,6 @@ import com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.purple.germline.GermlineDeletions;
 import com.hartwig.hmftools.purple.germline.GermlineDrivers;
 import com.hartwig.hmftools.purple.fitting.BestFitFactory;
-import com.hartwig.hmftools.purple.fitting.PeakModel;
 import com.hartwig.hmftools.purple.fitting.PeakModelFile;
 import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
@@ -339,17 +339,17 @@ public class PurpleApplication
 
             PPL_LOGGER.debug("post-fit memory({}mb)", calcMemoryUsage());
 
-            final List<PeakModel> somaticPeaks = Lists.newArrayList();
+            final List<PeakModelData> somaticPeaks = Lists.newArrayList();
 
             PPL_LOGGER.info("modelling somatic peaks");
-            final SomaticPeakStream somaticPeakStream = new SomaticPeakStream(mConfig);
+            final SomaticPeakStream somaticPeakStream = new SomaticPeakStream();
 
             final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(
                     mConfig.Version, purityAdjuster, copyNumbers, fittedRegions);
 
             sampleData.SomaticCache.purityEnrich(somaticPurityEnrichment);
 
-            List<PeakModel> peakModelValues = somaticPeakStream.somaticPeakModel(somaticCache);
+            List<PeakModelData> peakModelValues = somaticPeakStream.somaticPeakModel(somaticCache);
             somaticPeaks.addAll(peakModelValues);
 
             // at the moment the enriching of somatic variants is also contributing to the purity context, so it cannot be done afterwards

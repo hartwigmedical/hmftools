@@ -5,11 +5,11 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.CLONALITY_BIN_W
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.SageVcfTags;
+import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.config.ReferenceData;
-import com.hartwig.hmftools.purple.fitting.PeakModel;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 
 import htsjdk.variant.vcf.VCFHeader;
@@ -25,7 +25,7 @@ public class SomaticVariantEnrichment
     public SomaticVariantEnrichment(
             final String purpleVersion, final String referenceId, final String tumorSample, final ReferenceData refData,
             final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions,
-            final List<PeakModel> peakModel)
+            final List<PeakModelData> peakModel)
     {
         mGenotypeEnrichment = new SomaticGenotypeEnrichment(referenceId, tumorSample);
 

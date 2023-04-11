@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.PEAK_BIN_COUNT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.PEAK_BIN_MIN_AVERAGE_WEIGHT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.PEAK_BIN_WIDTH;
 
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,7 +19,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
-import org.jetbrains.annotations.NotNull;
 
 public class PeakModelFactory
 {
@@ -40,13 +38,13 @@ public class PeakModelFactory
         mBinomialDistributionMap = Maps.newHashMap();
     }
 
-    public List<PeakModel> model(final List<ModifiableWeightedPloidy> weightedPloidies)
+    public List<PeakModelData> model(final List<ModifiableWeightedPloidy> weightedPloidies)
     {
         boolean hasValidSubclonalPeaks = false;
         final WeightedPloidyHistogram residualHistogram = new WeightedPloidyHistogram(MAX_HISTOGRAM_PLOIDY, mModelWidth);
         double[] residualHistogramActual = residualHistogram.histogram(weightedPloidies);
 
-        final List<ModifiablePeakModel> peakModel = Lists.newArrayList();
+        final List<PeakModelData> peakModel = Lists.newArrayList();
         double initialWeight = positiveWeight(weightedPloidies);
 
         for(int i = 0; i < MAX_ITERATIONS; i++)
@@ -77,14 +75,8 @@ public class PeakModelFactory
             hasValidSubclonalPeaks |= (isSubclonal && isValidPeak);
             for(int bucket = 0; bucket < peakHistogram.length; bucket++)
             {
-                final ModifiablePeakModel model = ModifiablePeakModel.create()
-                        .setBucket(bucket * mModelWidth)
-                        .setPeak(peak)
-                        .setBucketWeight(peakHistogram[bucket])
-                        .setPeakAvgWeight(peakAverageWeight)
-                        .setIsSubclonal(isSubclonal)
-                        .setIsValid(isValidPeak);
-                peakModel.add(model);
+                peakModel.add(new PeakModelData(
+                        peak, peakAverageWeight, bucket * mModelWidth, peakHistogram[bucket], isValidPeak, isSubclonal));
             }
 
             // Decide if we should do another round
@@ -101,28 +93,25 @@ public class PeakModelFactory
         }
 
         // Scale results
-        double totalModelWeight = peakModel.stream().filter(PeakModel::isValid).mapToDouble(PeakModel::bucketWeight).sum();
+        double totalModelWeight = peakModel.stream().filter(x -> x.IsValid).mapToDouble(x -> x.BucketWeight).sum();
         double weightScalingFactor = initialWeight / totalModelWeight;
 
         PPL_LOGGER.trace(format("weight scaling factor %.4f", weightScalingFactor));
 
-        final List<PeakModel> all = peakModel.stream().map(x -> x.setBucketWeight(x.bucketWeight() * 1)).collect(Collectors.toList());
         if(hasValidSubclonalPeaks)
-        {
-            return all;
-        }
+            return peakModel;
 
-        // Find residual
-        final List<PeakModel> validOnly = all.stream().filter(PeakModel::isValid).collect(Collectors.toList());
+        // find residuals
+        List<PeakModelData> all = peakModel.stream().collect(Collectors.toList());
+        List<PeakModelData> validOnly = all.stream().filter(x -> x.IsValid).collect(Collectors.toList());
         final double[] residualHistogramModel = residualHistogram.modelHistogram(validOnly);
         all.addAll(residuals(residualHistogramActual, residualHistogramModel));
-
         return all;
     }
 
-    private List<PeakModel> residuals(double[] residualHistogramActual, double[] residualHistogramModel)
+    private List<PeakModelData> residuals(double[] residualHistogramActual, double[] residualHistogramModel)
     {
-        List<PeakModel> result = Lists.newArrayList();
+        List<PeakModelData> result = Lists.newArrayList();
 
         for(int i = 0; i < residualHistogramActual.length; i++)
         {
@@ -141,13 +130,8 @@ public class PeakModelFactory
 
             if(Doubles.greaterThan(residualPercent, 0))
             {
-                result.add(ModifiablePeakModel.create()
-                        .setBucket(i * mModelWidth)
-                        .setPeak(0)
-                        .setBucketWeight(residualPercent)
-                        .setPeakAvgWeight(1)
-                        .setIsSubclonal(true)
-                        .setIsValid(true));
+                result.add(new PeakModelData(
+                        0, 1, i * mModelWidth, residualPercent, true, true));
             }
         }
 
