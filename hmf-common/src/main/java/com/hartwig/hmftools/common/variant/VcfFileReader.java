@@ -46,7 +46,6 @@ public class VcfFileReader
             mReader = getFeatureReader(filename, new VCFCodec(), false);
             mFileValid = true;
 
-
             List<String> vcfSampleNames = ((VCFHeader)mReader.getHeader()).getGenotypeSamples();
             for(int i = 0; i < vcfSampleNames.size(); ++i)
             {

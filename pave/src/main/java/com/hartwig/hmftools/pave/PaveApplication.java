@@ -27,8 +27,10 @@ import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 import org.apache.commons.cli.CommandLine;
@@ -154,34 +156,32 @@ public class PaveApplication
 
         int variantCount = 0;
 
-        try
+        VcfFileReader vcfFileReader = new VcfFileReader(mConfig.VcfFile);
+
+        if(!vcfFileReader.fileValid())
         {
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
-                    mConfig.VcfFile, new VCFCodec(), false);
+            PV_LOGGER.error("invalid somatic VCF file({})", mConfig.VcfFile);
+            System.exit(1);
+        }
 
-            for(VariantContext variantContext : reader.iterator())
+        for(VariantContext variantContext : vcfFileReader.iterator())
+        {
+            if(!mConfig.SpecificRegions.isEmpty())
             {
-                if(!mConfig.SpecificRegions.isEmpty())
-                {
-                    if(mConfig.SpecificRegions.stream().noneMatch(x -> x.containsPosition(variantContext.getContig(), variantContext.getStart())))
-                        continue;
-                }
-
-                processVariant(variantContext);
-                ++variantCount;
-
-                if(variantCount > 0 && (variantCount % 100000) == 0)
-                {
-                    PV_LOGGER.info("processed {} variants", variantCount);
-                }
+                if(mConfig.SpecificRegions.stream().noneMatch(x -> x.containsPosition(variantContext.getContig(), variantContext.getStart())))
+                    continue;
             }
 
-            processPhasedVariants(NO_LOCAL_PHASE_SET);
+            processVariant(variantContext);
+            ++variantCount;
+
+            if(variantCount > 0 && (variantCount % 100000) == 0)
+            {
+                PV_LOGGER.info("processed {} variants", variantCount);
+            }
         }
-        catch(IOException e)
-        {
-            PV_LOGGER.error("failed to read somatic VCF file({}): {}", mConfig.VcfFile, e.toString());
-        }
+
+        processPhasedVariants(NO_LOCAL_PHASE_SET);
 
         PV_LOGGER.info("sample({}) processed {} variants", sampleId, variantCount);
 
@@ -190,6 +190,9 @@ public class PaveApplication
 
     private void processVariant(final VariantContext variantContext)
     {
+        if(!HumanChromosome.contains(variantContext.getContig()))
+            return;
+
         VariantData variant = VariantData.fromContext(variantContext);
 
         if(mConfig.ReadPassOnly)
