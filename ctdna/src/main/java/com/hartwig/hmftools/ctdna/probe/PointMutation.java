@@ -20,10 +20,9 @@ import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_SUBCLONAL_LIKELI
 import static com.hartwig.hmftools.ctdna.probe.PvConfig.MAX_INDEL_LENGTH;
 import static com.hartwig.hmftools.ctdna.probe.PvConfig.MAX_INSERT_BASES;
 
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
-
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
@@ -31,16 +30,10 @@ import com.hartwig.hmftools.common.utils.Strings;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 
-import org.apache.commons.compress.utils.Lists;
-
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.filter.CompoundFilter;
-import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-import htsjdk.variant.vcf.VCFCodec;
 
 public class PointMutation extends Variant
 {
@@ -229,14 +222,18 @@ public class PointMutation extends Variant
 
         List<Variant> variants = Lists.newArrayList();
 
-        final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
+        VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
-        CompoundFilter filter = new CompoundFilter(true);
-        filter.add(new PassingVariantFilter());
-
-        for(VariantContext variantContext : reader.iterator())
+        if(!vcfFileReader.fileValid())
         {
-            if(!filter.test(variantContext))
+            String error = "failed to read somatic vcf: " + vcfFile;
+            CT_LOGGER.error(error);
+            throw new Exception(error);
+        }
+
+        for(VariantContext variantContext : vcfFileReader.iterator())
+        {
+            if(variantContext.isFiltered())
                 continue;
 
             String alt = VariantContextDecorator.getAlt(variantContext);

@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.ctdna.purity;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.DELIMETER;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION;
@@ -22,6 +24,7 @@ public class PurityConfig
     public final String TumorId;
     public final List<String> CtDnaSamples;
     public final List<String> SomaticVcfs;
+    public final String SampleDataDir;
     public final String PurpleDir;
     public final String CobaltDir;
     public final String OutputDir;
@@ -34,6 +37,7 @@ public class PurityConfig
     private static final String TUMOR_ID = "tumor_id";
     private static final String CTDNA_SAMPLES = "ctdna_samples";
     private static final String SOMATIC_VCFS = "somatic_vcfs";
+    private static final String SAMPLE_DATA_DIR = "sample_data_dir";
     private static final String PURPLE_DIR = "purple_dir";
     private static final String COBALT_DIR = "cobalt_dir";
     private static final String WRITE_VARIANTS = "write_variants";
@@ -58,16 +62,26 @@ public class PurityConfig
             CtDnaSamples.add(ctDnaSample);
         }
 
+        SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
+
         SomaticVcfs = Lists.newArrayList();
-        for(String vcf : cmd.getOptionValue(SOMATIC_VCFS).split(",", -1))
+
+        if(cmd.hasOption(SOMATIC_VCFS))
         {
-            CT_LOGGER.info("added somatic VCF({})", vcf);
-            SomaticVcfs.add(vcf);
+            for(String vcf : cmd.getOptionValue(SOMATIC_VCFS).split(",", -1))
+            {
+                CT_LOGGER.info("added somatic VCF({})", vcf);
+                SomaticVcfs.add(vcf);
+            }
+        }
+        else
+        {
+            SomaticVcfs.add(format("%s/%s.purple.somatic.ctdna.vcf.gz", SampleDataDir, TumorId));
         }
 
-        PurpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR));
-        CobaltDir = checkAddDirSeparator(cmd.getOptionValue(COBALT_DIR));
-        OutputDir = parseOutputDir(cmd);
+        PurpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR, SampleDataDir));
+        CobaltDir = checkAddDirSeparator(cmd.getOptionValue(COBALT_DIR, SampleDataDir));
+        OutputDir = checkAddDirSeparator(cmd.getOptionValue(OUTPUT_DIR, SampleDataDir));
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
         NoiseReadsPerMillion = Integer.parseInt(cmd.getOptionValue(NOISE_READS_PER_MILLION, String.valueOf(DEFAULT_NOISE_READS_PER_MILLION)));
@@ -82,6 +96,7 @@ public class PurityConfig
         options.addOption(TUMOR_ID, true, "Original tumor sample ID");
         options.addOption(CTDNA_SAMPLES, true, "List of ctDNA sample IDs separated by ','");
         options.addOption(SOMATIC_VCFS, true, "Somatic VCF files, separated by ','");
+        options.addOption(SAMPLE_DATA_DIR, true, "Sample data directory for all files");
         options.addOption(PURPLE_DIR, true, "Sample Purple directory");
         options.addOption(COBALT_DIR, true, "Sample Cobalt directory");
         options.addOption(WRITE_VARIANTS, false, "Write variants");

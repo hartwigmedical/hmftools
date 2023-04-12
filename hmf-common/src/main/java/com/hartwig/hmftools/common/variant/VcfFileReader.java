@@ -78,6 +78,9 @@ public class VcfFileReader
     public boolean fileValid() { return mFileValid; }
 
     @Nullable
+    public VCFHeader vcfHeader() { return (VCFHeader)mReader.getHeader(); }
+
+    @Nullable
     public AbstractFeatureReader<VariantContext, LineIterator> reader() { return mReader; }
 
     public CloseableTribbleIterator<VariantContext> iterator()

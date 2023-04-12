@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MIN_QUAL_PER_AD;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MAX_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.ctdna.purity.SomaticVariantResult.INVALID_RESULT;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -23,14 +22,12 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariants
@@ -65,10 +62,15 @@ public class SomaticVariants
 
         List<String> targetSampleIds = Lists.newArrayList();
 
-        AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                somaticVcf, new VCFCodec(), false);
+        VcfFileReader vcfFileReader = new VcfFileReader(somaticVcf);
 
-        VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
+        if(!vcfFileReader.fileValid())
+        {
+            CT_LOGGER.error("failed to read somatic vcf({})", vcfFileReader);
+            return false;
+        }
+
+        VCFHeader vcfHeader = vcfFileReader.vcfHeader();
 
         for(String sampleName : vcfHeader.getGenotypeSamples())
         {
@@ -76,41 +78,36 @@ public class SomaticVariants
                 targetSampleIds.add(sampleName);
         }
 
-        try
+        int allVariantCount = 0;
+        int variantCount = 0;
+
+        for(VariantContext variantContext : vcfFileReader.iterator())
         {
-            int variantCount = 0;
+            ++allVariantCount;
 
-            for(VariantContext variantContext : reader.iterator())
+            if(variantContext.isFiltered())
+                continue;
+
+            ++variantCount;
+
+            try
             {
-                ++variantCount;
-
-                if(variantContext.isFiltered())
-                    continue;
-
-                try
-                {
-                    processVariant(targetSampleIds, variantContext);
-                }
-                catch(Exception e)
-                {
-                    e.printStackTrace();
-                    CT_LOGGER.error("error processing VCF({}): {}", somaticVcf, e.toString());
-                    return false;
-                }
-
-                if(variantCount > 0 && (variantCount % 100000) == 0)
-                {
-                    CT_LOGGER.info("processed {} variants", variantCount);
-                }
+                processVariant(targetSampleIds, variantContext);
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                CT_LOGGER.error("error processing VCF({}): {}", somaticVcf, e.toString());
+                return false;
             }
 
-            CT_LOGGER.info("process {} somatic variants from VCF({})", variantCount, somaticVcf);
+            if(variantCount > 0 && (variantCount % 100000) == 0)
+            {
+                CT_LOGGER.info("processed {} variants", variantCount);
+            }
         }
-        catch(IOException e)
-        {
-            CT_LOGGER.error("error reading vcf files: {}", e.toString());
-            return false;
-        }
+
+        CT_LOGGER.info("processed ({} all={}) somatic variants from VCF({})", variantCount, allVariantCount, somaticVcf);
 
         return true;
     }
