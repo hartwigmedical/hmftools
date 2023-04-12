@@ -8,23 +8,24 @@ Check out [_what's new_](https://github.com/hartwigmedical/hmftools/wiki/What's-
 
 ![HMF_Pipeline](./pipeline/hmf_tools_pipeline.png)
 
-The table below has links for the full functional detail and configuration for each component. The versions match those used in the current HMF GCP pipeline which can be run using [Platinum](https://github.com/hartwigmedical/platinum).
+The table below has links for the full functional detail and configuration for each component. The versions match those used in the current HMF GCP pipeline (v5.32) which can be run using [Platinum](https://github.com/hartwigmedical/platinum).
 
 #### Current versions
 | Component                     | Description                                                            | Current Version                                                               |
 |-------------------------------|------------------------------------------------------------------------|-------------------------------------------------------------------------------|
 | [Amber](./amber/README.md)    | Generate a tumor BAF file for Purple's copy number fit                 | [3.9](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.9)     |
 | [Cobalt](./cobalt/README.md)  | Determines the read depth ratios for Purple's copy number fit          | [1.13](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.13)  |
-| [Cuppa](./cuppa/README.md)    | Tissue of origin prediction from WGS/WTS                               | [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.7)     |
-| [Gripss](./gripss/README.md)  | SV filtering                                                           | [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.3.2)  |
+| [Cuppa](./cuppa/README.md)    | Tissue of origin prediction from WGS/WTS                               | [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.8)     |
+| [Gripss](./gripss/README.md)  | SV filtering                                                           | [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.3.5)  |
 | [Lilac](./lilac/README.md)    | HLA typing                                                             | [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.4.1)   |
-| [Linx](./linx/README.md)      | SV annotation, clustering & chaining, fusion and disruption calling    | [1.22](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.22)    |
-| [Pave](./pave/README.md)      | Point mutation annotation and gene impact                              | [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.4)      |
-| [Purple](./purple/README.md)  | Estimates copy number, purity and ploidy, and identifies driver events | [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.7.2)  |
-| [Sage](./sage/README.md)      | Point mutation variant calling and filtering                           | [3.2.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.2.2)  |
+| [Linx](./linx/README.md)      | SV annotation, clustering & chaining, fusion and disruption calling    | [1.23](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.23.2)    |
+| [Pave](./pave/README.md)      | Point mutation annotation and gene impact                              | [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.4.3)      |
+| [Purple](./purple/README.md)  | Estimates copy number, purity and ploidy, and identifies driver events | [3.8](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.8.2)  |
+| [Sage](./sage/README.md)      | Point mutation variant calling and filtering                           | [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.2.5)  |
 | [Teal](./teal/README.md)      | Measures telomere content and estimates telomeric length               | [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.0.1)  |
-| [SvPrep](./sv-prep/README.md) | Pre-GRIDSS BAM filtering                                               | [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.0.1) |
+| [SvPrep](./sv-prep/README.md) | Pre-GRIDSS BAM filtering                                               | [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.1) |
 | [Cider](./cider/README.md)    | TCR/BCR V(D)J recombination sequence detection                         | [0.5](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.5)     |
+| [BamTools](./bam-tools/README.md)    | BAM metrics and slicing                         | [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/bam-tools-v1.0)     |
 
 The following external tools are used in the pipeline:
 
@@ -55,5 +56,5 @@ Resource files for each component (GRCh37 and GRCh38) are available to download 
 
 | Component                    | Description                                                | Current Version                                                            |
 |------------------------------|------------------------------------------------------------|----------------------------------------------------------------------------|
-| [Isofox](./isofox/README.md) | WTS Transcript Abundance, Fusions & Novel Splice Junctions | [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.5) |
+| [Isofox](./isofox/README.md) | WTS Transcript Abundance, Fusions & Novel Splice Junctions | [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.6.1) |
 
