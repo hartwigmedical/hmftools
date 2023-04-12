@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ctdna.purity;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.DELIMETER;
+import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.formatPurityValue;
 
 import java.util.StringJoiner;
 
@@ -72,15 +73,15 @@ public class SomaticVariantResult
     public String toCsv()
     {
         StringJoiner sj = new StringJoiner(DELIMETER);
-        sj.add(format("%4.3e", SomaticPurity));
-        sj.add(format("%4.3e", Probability));
+        sj.add(formatPurityValue(SomaticPurity));
+        sj.add(formatPurityValue(Probability));
         sj.add(format("%d", VariantCount));
         sj.add(format("%.1f", DepthMedian));
         sj.add(format("%d", AlleleFragmentTotal));
         sj.add(format("%.1f", QualPerAdTotal));
-        sj.add(format("%4.3e", TumorVaf));
-        sj.add(format("%4.3e", AdjustedTumorVaf));
-        sj.add(format("%4.3e", SampleVaf));
+        sj.add(formatPurityValue(TumorVaf));
+        sj.add(formatPurityValue(AdjustedTumorVaf));
+        sj.add(formatPurityValue(SampleVaf));
 
         return sj.toString();
     }

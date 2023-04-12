@@ -57,7 +57,7 @@ public class PurityEstimator
 
             SomaticVariantResult somaticVariantResult = somaticVariants.processSample(ctDnaSample, purityContext);
 
-            mResultsWriter.writeSampleSummary(ctDnaSample, cnPurityResult, somaticVariantResult);
+            mResultsWriter.writeSampleSummary(ctDnaSample, purityContext, cnPurityResult, somaticVariantResult);
         }
 
         mResultsWriter.close();

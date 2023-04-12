@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.ctdna.purity;
 
+import static java.lang.String.format;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -87,5 +89,15 @@ public class CopyNumberGcData
         mMean = total / sortedList.size();
 
         mComputed = true;
+    }
+
+    public String toString()
+    {
+        String coreData = format("loc(%s:%d-%d) cn(%.2f) ratios(%d)", Chromosome, SegmentStart, SegmentEnd, CopyNumber, mTumorGcRatios.size());
+
+        if(!mComputed)
+            return coreData;
+
+        return format("%s mean(%.4f) median(%.4f)", coreData, mMean, mMedian);
     }
 }

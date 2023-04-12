@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ctdna.purity;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.DELIMETER;
+import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.formatPurityValue;
 
 import java.util.StringJoiner;
 
@@ -41,7 +42,7 @@ public class CnPurityResult
         sj.add("CopyNumberPurity");
         sj.add("CnFitCoeff");
         sj.add("CnFitIntercept");
-        sj.add("CnFitResiduals");
+        sj.add("CnFitResidualsPerc");
         sj.add("CnSegments");
         sj.add("GcRatioSegments");
         sj.add("GcRatioMedianPerSegment");
@@ -51,10 +52,10 @@ public class CnPurityResult
     public String toCsv()
     {
         StringJoiner sj = new StringJoiner(DELIMETER);
-        sj.add(format("%4.3e", EstimatedPurity));
+        sj.add(formatPurityValue(EstimatedPurity));
         sj.add(format("%.4f", FitCoefficient));
         sj.add(format("%.4f", FitIntercept));
-        sj.add(format("%.2f", Residuals));
+        sj.add(format("%.4f", Residuals));
         sj.add(format("%d", CopyNumberSegments));
         sj.add(format("%d", GcRatioSegments));
         sj.add(format("%.1f", MedianGcRatiosPerSegments));

@@ -78,15 +78,16 @@ public class SomaticVariants
                 targetSampleIds.add(sampleName);
         }
 
-        int allVariantCount = 0;
+        int filteredCount = 0;
         int variantCount = 0;
 
         for(VariantContext variantContext : vcfFileReader.iterator())
         {
-            ++allVariantCount;
-
             if(variantContext.isFiltered())
+            {
+                ++filteredCount;
                 continue;
+            }
 
             ++variantCount;
 
@@ -107,7 +108,7 @@ public class SomaticVariants
             }
         }
 
-        CT_LOGGER.info("processed ({} all={}) somatic variants from VCF({})", variantCount, allVariantCount, somaticVcf);
+        CT_LOGGER.info("processed {} filtered({}) somatic variants from VCF({})", variantCount, filteredCount, somaticVcf);
 
         return true;
     }

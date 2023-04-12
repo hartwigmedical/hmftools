@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
+import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -27,23 +28,20 @@ public class ResultsWriter
         mSampleWriter = initialiseWriter();
         mVariantWriter = config.WriteVariants ? initialiseVariantWriter() : null;
         mCnRatioWriter = config.WriteCnRatios ? initialiseCnRatioWriter() : null;
-        mGcRatioWriter = config.WriteCnRatios ? initialiseGcRatioWriter() : null;
+
+        mGcRatioWriter = null;
+        // mGcRatioWriter = config.WriteCnRatios ? initialiseGcRatioWriter() : null;
     }
 
     private BufferedWriter initialiseWriter()
     {
         try
         {
-            String fileName = mConfig.OutputDir + mConfig.PatientId + ".sample_summary";
-
-            if(mConfig.OutputId != null)
-                fileName += "." + mConfig.OutputId;
-
-            fileName += ".csv";
+            String fileName = mConfig.formFilename("summary");
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("SampleId");
+            writer.write("SampleId,TumorPurity,TumorPloidy");
             writer.write(format(",%s", CnPurityResult.header()));
             writer.write(format(",%s", SomaticVariantResult.header()));
             writer.newLine();
@@ -58,11 +56,12 @@ public class ResultsWriter
     }
 
     public synchronized void writeSampleSummary(
-            final String sampleId, final CnPurityResult cnPurityResult, final SomaticVariantResult somaticVariantResult)
+            final String sampleId, final PurityContext purityContext, final CnPurityResult cnPurityResult,
+            final SomaticVariantResult somaticVariantResult)
     {
         try
         {
-            mSampleWriter.write(format("%s",sampleId));
+            mSampleWriter.write(format("%s,%.2f,%.2f", sampleId, purityContext.bestFit().purity(), purityContext.bestFit().ploidy()));
             mSampleWriter.write(format(",%s", cnPurityResult.toCsv()));
             mSampleWriter.write(format(",%s", somaticVariantResult.toCsv()));
             mSampleWriter.newLine();
@@ -77,12 +76,7 @@ public class ResultsWriter
     {
         try
         {
-            String fileName = mConfig.OutputDir + mConfig.PatientId + ".somatic_variants";
-
-            if(mConfig.OutputId != null)
-                fileName += "." + mConfig.OutputId;
-
-            fileName += ".csv";
+            String fileName = mConfig.formFilename("somatic_variants");
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
@@ -128,12 +122,7 @@ public class ResultsWriter
     {
         try
         {
-            String fileName = mConfig.OutputDir + mConfig.PatientId + ".cn_segment_data";
-
-            if(mConfig.OutputId != null)
-                fileName += "." + mConfig.OutputId;
-
-            fileName += ".csv";
+            String fileName = mConfig.formFilename("cn_segment_data");
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
@@ -172,12 +161,7 @@ public class ResultsWriter
     {
         try
         {
-            String fileName = mConfig.OutputDir + mConfig.PatientId + ".gc_ratio_data";
-
-            if(mConfig.OutputId != null)
-                fileName += "." + mConfig.OutputId;
-
-            fileName += ".csv";
+            String fileName = mConfig.formFilename("gc_ratio_data");
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
@@ -221,4 +205,11 @@ public class ResultsWriter
         closeBufferedWriter(mGcRatioWriter);
     }
 
+    public static String formatPurityValue(double purity)
+    {
+        if(purity >= 0.01)
+            return format("%.4f", purity);
+        else
+            return format("%4.3e", purity);
+    }
 }

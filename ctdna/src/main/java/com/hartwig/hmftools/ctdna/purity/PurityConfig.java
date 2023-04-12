@@ -90,6 +90,18 @@ public class PurityConfig
         WriteCnRatios = cmd.hasOption(WRITE_CN_RATIOS);
     }
 
+    public String formFilename(final String fileType)
+    {
+        String fileName = OutputDir + PatientId + ".ctdna." + fileType;
+
+        if(OutputId != null)
+            fileName += "." + OutputId;
+
+        fileName += ".csv";
+
+        return fileName;
+    }
+
     public static void addCommandLineOptions(final Options options)
     {
         options.addOption(PATIENT_ID, true, "Patient ID");

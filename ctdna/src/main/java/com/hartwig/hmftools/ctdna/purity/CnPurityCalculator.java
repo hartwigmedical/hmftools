@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ctdna.purity;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
@@ -52,7 +53,6 @@ public class CnPurityCalculator
 
         double[][] adjustedCopyNumber = new double[segmentCount][1];
         double[] adjustedGcRatioMedians = new double[segmentCount];
-        double mediansTotal = 0;
 
         for(int i = 0; i < segmentCount; ++i)
         {
@@ -62,7 +62,6 @@ public class CnPurityCalculator
             adjustedCopyNumber[i][0] = (cnSegment.CopyNumber - copyNumberOffset) * sqrtCount;
 
             double adjustMedian = (cnSegment.median() - medianOffset) * sqrtCount;
-            mediansTotal += adjustMedian;
             adjustedGcRatioMedians[i] = adjustMedian;
         }
 
@@ -72,20 +71,23 @@ public class CnPurityCalculator
         lsqFit.solve();
 
         mFitCoefficient = lsqFit.getContribs()[0];
-
         mFitIntercept = medianOffset - copyNumberOffset * mFitCoefficient;
 
-        // final double[] fittedCounts = calculateFittedCounts(adjustedCopyNumber, lsqFit.getContribs());
+        double fittedDiffTotal = 0;
+        double fittedDiffTotalAbs = 0;
+        double gcRatioTotal = 0;
 
-        double[] fitValues = new double[segmentCount];
-
-        for(int i = 0; i < fitValues.length; ++i)
+        for(int i = 0; i < segmentCount; ++i)
         {
-            fitValues[i] += mFitCoefficient * adjustedCopyNumber[i][0];
+            CopyNumberGcData cnSegment = copyNumberSegments.get(i);
+            double fittedGcRatio = mFitIntercept + cnSegment.CopyNumber * mFitCoefficient;
+            gcRatioTotal += cnSegment.median();
+            double gcRatioFitDiff = cnSegment.median() - fittedGcRatio;
+            fittedDiffTotal += gcRatioFitDiff; // sum of LSQ fit
+            fittedDiffTotalAbs += abs(gcRatioFitDiff);
         }
 
-        SigResiduals residuals = calcResiduals(adjustedGcRatioMedians, fitValues, mediansTotal);
-        mResiduals = residuals.Percent;
+        mResiduals = gcRatioTotal > 0 ? fittedDiffTotalAbs / gcRatioTotal : 0;
 
         mEstimatedPurity = 2 * mFitCoefficient / (1 + (2 - samplePloidy) * mFitCoefficient);
 
