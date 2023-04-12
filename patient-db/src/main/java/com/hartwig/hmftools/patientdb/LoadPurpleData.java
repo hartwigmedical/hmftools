@@ -64,6 +64,8 @@ public class LoadPurpleData
 
     public static void main(@NotNull String[] args)
     {
+        LOGGER.info("Patient-DB version: 3.72 for pipeline v5.31");
+
         Options options = createOptions();
 
         try

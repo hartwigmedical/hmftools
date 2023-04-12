@@ -44,6 +44,8 @@ public class LoadLinxData {
 
     public static void main(@NotNull String[] args) throws ParseException, IOException
     {
+        LOGGER.info("Patient-DB version: 3.72 for pipeline v5.31");
+
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
         DatabaseAccess dbAccess = createDatabaseAccess(cmd);
