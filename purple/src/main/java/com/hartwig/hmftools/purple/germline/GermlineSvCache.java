@@ -60,7 +60,6 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class GermlineSvCache
 {
-    private final String mOutputVcfFilename;
     private final Optional<VCFHeader> mVcfHeader;
     private final VariantContextCollection mVariantCollection;
     private final IndexedFastaSequenceFile mRefGenomeFile;
@@ -72,7 +71,6 @@ public class GermlineSvCache
     public GermlineSvCache()
     {
         mVcfHeader = Optional.empty();
-        mOutputVcfFilename = Strings.EMPTY;
         mVariantCollection = new VariantContextCollection(null);
         mRefGenomeFile = null;
         mPurityContext = null;
@@ -81,7 +79,7 @@ public class GermlineSvCache
     }
 
     public GermlineSvCache(
-            final PurpleConfig config, final String version, final String inputVcf, final String outputVcf, final ReferenceData referenceData,
+            final String version, final String inputVcf, final ReferenceData referenceData,
             final List<ObservedRegion> fittedRegions, final List<PurpleCopyNumber> copyNumbers, final PurityContext purityContext)
     {
         mPurityContext = purityContext;
@@ -89,7 +87,6 @@ public class GermlineSvCache
         mCopyNumbers = copyNumbers;
 
         final VCFFileReader vcfReader = new VCFFileReader(new File(inputVcf), false);
-        mOutputVcfFilename = outputVcf;
         mVcfHeader = Optional.of(generateOutputHeader(version, vcfReader.getFileHeader()));
 
         mVariantCollection = new VariantContextCollection(mVcfHeader.get());
@@ -107,15 +104,15 @@ public class GermlineSvCache
 
     public List<StructuralVariant> variants() { return mVariantCollection.variants(); }
 
-    public void write()
+    public void write(final String outputVcf)
     {
-        if(!mVcfHeader.isPresent() || mOutputVcfFilename.isEmpty())
+        if(!mVcfHeader.isPresent() || outputVcf.isEmpty())
             return;
 
         try
         {
             final VariantContextWriter writer = new VariantContextWriterBuilder()
-                    .setOutputFile(mOutputVcfFilename)
+                    .setOutputFile(outputVcf)
                     .setReferenceDictionary(mVcfHeader.get().getSequenceDictionary())
                     .setIndexCreator(new TabixIndexCreator(mVcfHeader.get().getSequenceDictionary(), new TabixFormat()))
                     .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
@@ -151,7 +148,7 @@ public class GermlineSvCache
         }
         catch(Exception e)
         {
-            PPL_LOGGER.error("failed to write germline SV VCF({}): {}", mOutputVcfFilename, e.toString());
+            PPL_LOGGER.error("failed to write germline SV VCF({}): {}", outputVcf, e.toString());
             e.printStackTrace();
             System.exit(1);
         }

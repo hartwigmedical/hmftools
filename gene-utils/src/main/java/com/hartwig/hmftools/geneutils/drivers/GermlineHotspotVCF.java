@@ -63,7 +63,7 @@ public final class GermlineHotspotVCF
             // Intersection of variant and approved genes
             variantGenes.retainAll(genes);
 
-            Pathogenicity pathogenicity = PathogenicSummaryFactory.fromContext(context).pathogenicity();
+            Pathogenicity pathogenicity = PathogenicSummaryFactory.fromContext(context).Status;
             if(!variantGenes.isEmpty() && isPathogenicOrLikelyPathogenic(pathogenicity) && context.getAlleles().size() == 2)
             {
                 final String clinSigConf = PathogenicSummaryFactory.clnSigConf(context);

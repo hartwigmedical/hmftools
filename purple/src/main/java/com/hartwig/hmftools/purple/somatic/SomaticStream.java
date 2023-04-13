@@ -265,6 +265,19 @@ public class SomaticStream
         }
     }
 
+    public void registerReportedVariants()
+    {
+        for(SomaticVariant variant : mSomaticVariants.variants())
+        {
+            boolean isValidChromosome = HumanChromosome.contains(variant.chromosome());
+
+            if(isValidChromosome && variant.isPass())
+            {
+                checkDrivers(variant, false);
+            }
+        }
+    }
+
     private void checkPhasedReportableVariants()
     {
         // any non-reportable variant that is phased with a reportable variant is marked as reportable too

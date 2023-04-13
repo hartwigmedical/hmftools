@@ -171,7 +171,7 @@ public class PurpleApplication
         {
             if(mConfig.DriversOnly)
             {
-                findDrivers(mConfig.TumorId);
+                runDriversRoutine(mConfig.TumorId);
             }
             else
             {
@@ -400,13 +400,10 @@ public class PurpleApplication
 
             if(!sampleDataFiles.GermlineSvVcfFile.isEmpty())
             {
-                final String outputVcf = purpleGermlineSvFile(mConfig.OutputDir, tumorId);
-
                 germlineSvCache = new GermlineSvCache(
-                        mConfig, mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, outputVcf, mReferenceData,
-                        fittedRegions, copyNumbers, purityContext);
+                        mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, mReferenceData, fittedRegions, copyNumbers, purityContext);
 
-                germlineSvCache.write();
+                germlineSvCache.write(purpleGermlineSvFile(mConfig.OutputDir, tumorId));
             }
             else
             {
@@ -537,7 +534,7 @@ public class PurpleApplication
         }
     }
 
-    private void findDrivers(final String tumorId) throws Exception
+    private void runDriversRoutine(final String tumorId) throws Exception
     {
         final String purpleDataPath = mConfig.OutputDir;
         SomaticStream somaticStream = null;
@@ -563,6 +560,7 @@ public class PurpleApplication
 
             // the counts passed in here are only for down-sampling for charting, which is not relevant for drivers
             somaticStream = new SomaticStream(mConfig, mReferenceData, somaticVariantCache, null);
+            somaticStream.registerReportedVariants();
         }
 
         if(mConfig.runGermline())
@@ -584,16 +582,10 @@ public class PurpleApplication
 
             if(Files.exists(Paths.get(germlineSvVcf)))
             {
-                // TEMP logic for testing germline SV annotation
-                String germlineSvAnnotatedVcf = PurpleCommon.PURPLE_SV_GERMLINE_VCF_SUFFIX.replaceAll("germline", "germline_annotated");
-                String germlineSvOutputVcf = FileWriterUtils.checkAddDirSeparator(purpleDataPath) + tumorId + germlineSvAnnotatedVcf;
-                // String germlineSvOutputVcf = "";
-
                 GermlineSvCache germlineSvCache = new GermlineSvCache(
-                        mConfig, mPurpleVersion.version(), germlineSvVcf, germlineSvOutputVcf, mReferenceData, fittedRegions, copyNumbers, purityContext);
+                        mPurpleVersion.version(), germlineSvVcf, mReferenceData, fittedRegions, copyNumbers, purityContext);
 
                 germlineSVs.addAll(germlineSvCache.variants());
-                germlineSvCache.write();
             }
 
             germlineDeletions.findDeletions(copyNumbers, fittedRegions, germlineSVs);

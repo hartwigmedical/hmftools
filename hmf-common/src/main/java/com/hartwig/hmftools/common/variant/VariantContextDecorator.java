@@ -273,17 +273,17 @@ public class VariantContextDecorator implements GenomePosition
 
     public boolean isPathogenic()
     {
-        if(clinvarPathogenicSummary().pathogenicity() == Pathogenicity.BENIGN_BLACKLIST)
+        if(clinvarPathogenicSummary().Status == Pathogenicity.BENIGN_BLACKLIST)
         {
             return false;
         }
 
-        if(isHotspot() || clinvarPathogenicSummary().pathogenicity().isPathogenic())
+        if(isHotspot() || clinvarPathogenicSummary().Status.isPathogenic())
         {
             return true;
         }
 
-        return clinvarPathogenicSummary().pathogenicity() == Pathogenicity.UNKNOWN
+        return clinvarPathogenicSummary().Status == Pathogenicity.UNKNOWN
                 && PATHOGENIC_EFFECT.contains(variantImpact().CanonicalCodingEffect);
     }
 
