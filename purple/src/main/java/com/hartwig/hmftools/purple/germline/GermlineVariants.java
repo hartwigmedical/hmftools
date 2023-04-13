@@ -3,6 +3,7 @@ package com.hartwig.hmftools.purple.germline;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -59,14 +60,22 @@ public class GermlineVariants
 
         VCFFileReader vcfReader = new VCFFileReader(new File(germlineVcf), false);
 
+        GermlineReportedEnrichment germlineReportedEnrichment = checkReported ?
+                new GermlineReportedEnrichment(mReferenceData.DriverGenes.driverGenes(), Collections.emptySet()) : null;
+
         for(VariantContext context : vcfReader)
         {
-            boolean isReported = context.getAttributeAsBoolean(CommonVcfTags.REPORTED_FLAG, false);
-
-            if(checkReported && !isReported)
-                continue;
-
             GermlineVariant variant = new GermlineVariant(context);
+
+            if(checkReported)
+            {
+                // re-check status in driver-only mode
+                boolean isReported = context.getAttributeAsBoolean(CommonVcfTags.REPORTED_FLAG, false)
+                        || germlineReportedEnrichment.report(variant.decorator(), Collections.emptySet());
+
+                if(!isReported)
+                    continue;
+            }
 
             if(checkReported)
                 mReportableVariants.add(variant);

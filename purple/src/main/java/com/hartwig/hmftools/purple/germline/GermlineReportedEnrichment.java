@@ -63,7 +63,7 @@ public class GermlineReportedEnrichment
 
             DriverGene driverGene = mDriverGeneMap.get(variant.gene());
 
-            if(report(
+            if(isReportable(
                     variant.decorator(), downgradeWildType(driverGene.reportGermlineHotspot()),
                     downgradeWildType(driverGene.reportGermlineVariant()), Collections.emptySet()))
             {
@@ -99,7 +99,7 @@ public class GermlineReportedEnrichment
         return reporting == WILDTYPE_LOST ? VARIANT_NOT_LOST : reporting;
     }
 
-    private boolean report(final VariantContextDecorator variant, final Set<String> genesWithMultipleUnphasedHits)
+    public boolean report(final VariantContextDecorator variant, final Set<String> genesWithMultipleUnphasedHits)
     {
         if(variant.gene().isEmpty())
             return false;
@@ -109,10 +109,10 @@ public class GermlineReportedEnrichment
 
         final DriverGene driverGene = mDriverGeneMap.get(variant.gene());
 
-        return report(variant, driverGene.reportGermlineHotspot(), driverGene.reportGermlineVariant(), genesWithMultipleUnphasedHits);
+        return isReportable(variant, driverGene.reportGermlineHotspot(), driverGene.reportGermlineVariant(), genesWithMultipleUnphasedHits);
     }
 
-    private boolean report(
+    public static boolean isReportable(
             final VariantContextDecorator variant, final DriverGeneGermlineReporting hotspotReporting,
             final DriverGeneGermlineReporting variantReporting, final Set<String> genesWithMultipleUnphasedHits)
     {
