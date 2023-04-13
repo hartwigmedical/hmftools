@@ -40,6 +40,7 @@ public class CnPurityCalculator
         double gcRatioMedianCountTotal = 0;
         double copyNumberCountTotal = 0;
 
+        // compute average GC ratio median and average copy number
         for(CopyNumberGcData cnSegment : copyNumberSegments)
         {
             gcRatioCountTotal += cnSegment.count();
@@ -47,21 +48,22 @@ public class CnPurityCalculator
             gcRatioMedianCountTotal += cnSegment.count() * cnSegment.median();
         }
 
-        double medianOffset = gcRatioMedianCountTotal / gcRatioCountTotal;
-        double copyNumberOffset = copyNumberCountTotal / gcRatioCountTotal;
+        double avgGcRatio = gcRatioMedianCountTotal / gcRatioCountTotal;
+        double avgCopyNumber = copyNumberCountTotal / gcRatioCountTotal;
         int segmentCount = copyNumberSegments.size();
 
         double[][] adjustedCopyNumber = new double[segmentCount][1];
         double[] adjustedGcRatioMedians = new double[segmentCount];
 
+        // weight the data by the number of GC ratio points in each Cn segment
         for(int i = 0; i < segmentCount; ++i)
         {
             CopyNumberGcData cnSegment = copyNumberSegments.get(i);
 
             double sqrtCount = sqrt(cnSegment.count());
-            adjustedCopyNumber[i][0] = (cnSegment.CopyNumber - copyNumberOffset) * sqrtCount;
+            adjustedCopyNumber[i][0] = (cnSegment.CopyNumber - avgCopyNumber) * sqrtCount;
 
-            double adjustMedian = (cnSegment.median() - medianOffset) * sqrtCount;
+            double adjustMedian = (cnSegment.median() - avgGcRatio) * sqrtCount;
             adjustedGcRatioMedians[i] = adjustMedian;
         }
 
@@ -71,23 +73,25 @@ public class CnPurityCalculator
         lsqFit.solve();
 
         mFitCoefficient = lsqFit.getContribs()[0];
-        mFitIntercept = medianOffset - copyNumberOffset * mFitCoefficient;
+        mFitIntercept = avgGcRatio - avgCopyNumber * mFitCoefficient;
 
-        double fittedDiffTotal = 0;
-        double fittedDiffTotalAbs = 0;
-        double gcRatioTotal = 0;
+        double fittedDiffWeightedTotalAbs = 0;
+        double gcRatioWeightedTotal = 0;
 
         for(int i = 0; i < segmentCount; ++i)
         {
             CopyNumberGcData cnSegment = copyNumberSegments.get(i);
             double fittedGcRatio = mFitIntercept + cnSegment.CopyNumber * mFitCoefficient;
-            gcRatioTotal += cnSegment.median();
             double gcRatioFitDiff = cnSegment.median() - fittedGcRatio;
-            fittedDiffTotal += gcRatioFitDiff; // sum of LSQ fit
-            fittedDiffTotalAbs += abs(gcRatioFitDiff);
+
+            double sqrtCount = sqrt(cnSegment.count());
+
+            gcRatioWeightedTotal += cnSegment.median() * sqrtCount;
+            fittedDiffWeightedTotalAbs += abs(gcRatioFitDiff) * sqrtCount;
         }
 
-        mResiduals = gcRatioTotal > 0 ? fittedDiffTotalAbs / gcRatioTotal : 0;
+        double weightedResiduals = gcRatioWeightedTotal > 0 ? fittedDiffWeightedTotalAbs / gcRatioWeightedTotal : 0;
+        mResiduals = weightedResiduals;
 
         mEstimatedPurity = 2 * mFitCoefficient / (1 + (2 - samplePloidy) * mFitCoefficient);
 

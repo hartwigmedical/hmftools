@@ -122,7 +122,7 @@ public class ResultsWriter
     {
         try
         {
-            String fileName = mConfig.formFilename("cn_segment_data");
+            String fileName = mConfig.formFilename("cn_segments");
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
