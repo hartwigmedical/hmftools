@@ -78,7 +78,7 @@
         <orange.version>2.3</orange.version>
         <orange-datamodel.version>1.0.1</orange-datamodel.version>
         <paddle.version>1.0</paddle.version>
-        <patient-db.version>5.31.0</patient-db.version>
+        <patient-db.version>5.32.0</patient-db.version>
         <pave.version>1.4.3</pave.version>
         <purple.version>3.8.2</purple.version>
         <sage.version>3.2.6</sage.version>
