@@ -215,7 +215,7 @@ investigate potential causes for QC failure.
 - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
-- Upcoming
+- [2.4.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.4.0)
   - The ORANGE datamodel used in the json output has been separated from the ORANGE logic and available as an artifact for 
     other projects to depend on (see also [ORANGE-datamodel](../orange-datamodel)) 
   - All copy numbers are rounded to single digit instead of no digits
