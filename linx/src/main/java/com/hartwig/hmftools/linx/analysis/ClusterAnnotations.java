@@ -36,6 +36,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.ArmCluster;
+import com.hartwig.hmftools.linx.types.ArmClusterType;
 import com.hartwig.hmftools.linx.types.ArmGroup;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -585,7 +586,7 @@ public class ClusterAnnotations
 
         for(final ArmCluster armCluster : cluster.getArmClusters())
         {
-            if(armCluster.getType() == ArmCluster.ARM_CL_TI_ONLY)
+            if(armCluster.getType() == ArmClusterType.TI_ONLY)
                 continue;
 
             Integer count = armClusterCounts.get(armCluster.getChrArm());

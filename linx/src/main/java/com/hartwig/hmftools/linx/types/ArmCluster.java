@@ -5,6 +5,16 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
+import static com.hartwig.hmftools.linx.types.ArmClusterType.COMPLEX_FOLDBACK;
+import static com.hartwig.hmftools.linx.types.ArmClusterType.COMPLEX_LINE;
+import static com.hartwig.hmftools.linx.types.ArmClusterType.COMPLEX_OTHER;
+import static com.hartwig.hmftools.linx.types.ArmClusterType.DSB;
+import static com.hartwig.hmftools.linx.types.ArmClusterType.FOLDBACK;
+import static com.hartwig.hmftools.linx.types.ArmClusterType.FOLDBACK_DSB;
+import static com.hartwig.hmftools.linx.types.ArmClusterType.ISOLATED_BE;
+import static com.hartwig.hmftools.linx.types.ArmClusterType.SAME_ORIENT;
+import static com.hartwig.hmftools.linx.types.ArmClusterType.SIMPLE_DUP;
+import static com.hartwig.hmftools.linx.types.ArmClusterType.TI_ONLY;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
 
 import java.util.List;
@@ -26,7 +36,7 @@ public class ArmCluster
     private int mStartPos;
     private int mEndPos;
 
-    private int mType;
+    private ArmClusterType mType;
     private int mTICount;
 
     public ArmCluster(int id, final SvCluster cluster, final String chr, final ChromosomeArm arm)
@@ -38,7 +48,7 @@ public class ArmCluster
         mStartPos = 0;
         mEndPos = 0;
         mBreakends = Lists.newArrayList();
-        mType = -1;
+        mType = ArmClusterType.UNKNOWN;
         mTICount = 0;
     }
 
@@ -48,8 +58,7 @@ public class ArmCluster
 
     public final String toString()
     {
-        return String.format("%d: %s %s_%s %d:%d",
-                mId, typeToString(mType), mChromosome, mArm, mStartPos, mEndPos);
+        return String.format("%d: %s %s_%s %d:%d", mId, mType, mChromosome, mArm, mStartPos, mEndPos);
     }
 
     public final String chromosome() { return mChromosome; }
@@ -78,39 +87,8 @@ public class ArmCluster
         mEndPos = mBreakends.get(mBreakends.size()-1).position();
     }
 
-    public static final int ARM_CL_ISOLATED_BE = 0;
-    public static final int ARM_CL_TI_ONLY = 1;
-    public static final int ARM_CL_DSB = 2; // includes simple DELs within the arm-cluster window
-    public static final int ARM_CL_FOLDBACK = 3;
-    public static final int ARM_CL_FOLDBACK_DSB = 4;
-    public static final int ARM_CL_COMPLEX_FOLDBACK = 5;
-    public static final int ARM_CL_COMPLEX_LINE = 6;
-    public static final int ARM_CL_COMPLEX_OTHER = 7;
-    public static final int ARM_CL_SIMPLE_DUP = 8;
-    public static final int ARM_CL_SAME_ORIENT = 9;
-    public static final int ARM_CL_MAX = ARM_CL_SAME_ORIENT;
-
-    public static String typeToString(int type)
-    {
-        switch(type)
-        {
-            case ARM_CL_ISOLATED_BE: return "ISOLATED_BE";
-            case ARM_CL_TI_ONLY: return "TI_ONLY";
-            case ARM_CL_DSB : return "DSB";
-            case ARM_CL_FOLDBACK : return "FOLDBACK";
-            case ARM_CL_FOLDBACK_DSB : return "FOLDBACK_DSB";
-            case ARM_CL_COMPLEX_FOLDBACK : return "COMPLEX_FOLDBACK";
-            case ARM_CL_COMPLEX_LINE: return "COMPLEX_LINE";
-            case ARM_CL_COMPLEX_OTHER : return "COMPLEX_OTHER";
-            case ARM_CL_SIMPLE_DUP: return "SIMPLE_DUP";
-            case ARM_CL_SAME_ORIENT: return "SAME_ORIENT";
-        }
-
-        return "UNKNOWN";
-    }
-
-    public int getType() { return mType; }
-    public String getTypeStr() { return typeToString(mType); }
+    public ArmClusterType getType() { return mType; }
+    public String getTypeStr() { return mType.toString(); }
     public int getTICount() { return mTICount; }
 
     public static ArmCluster findArmCluster(final SvCluster cluster, final SvBreakend breakend)
@@ -201,7 +179,7 @@ public class ArmCluster
 
         if(mBreakends.size() == 1)
         {
-            mType = ARM_CL_ISOLATED_BE;
+            mType = ISOLATED_BE;
             return;
         }
 
@@ -216,19 +194,19 @@ public class ArmCluster
             {
                 if(var1.type() == DEL)
                 {
-                    mType = ARM_CL_DSB;
+                    mType = DSB;
                     return;
                 }
                 else if(var1.type() == DUP)
                 {
-                    mType = ARM_CL_SIMPLE_DUP;
+                    mType = SIMPLE_DUP;
                     return;
                 }
             }
 
             if(var1.getFoldbackId(be1.usesStart()) == var2.id())
             {
-                mType = ARM_CL_FOLDBACK;
+                mType = FOLDBACK;
                 return;
             }
 
@@ -236,7 +214,7 @@ public class ArmCluster
 
             if(tiPair != null && tiPair.hasBreakend(be2))
             {
-                mType = ARM_CL_TI_ONLY;
+                mType = TI_ONLY;
                 mTICount = 1;
                 return;
             }
@@ -245,7 +223,7 @@ public class ArmCluster
 
             if(dbPair != null && dbPair == be2.getSV().getDBLink(be2.usesStart()))
             {
-                mType = ARM_CL_DSB;
+                mType = DSB;
                 return;
             }
         }
@@ -296,18 +274,18 @@ public class ArmCluster
 
         if(tiBreakends.size() == mBreakends.size())
         {
-            mType = ARM_CL_TI_ONLY;
+            mType = TI_ONLY;
             return;
         }
 
         if(suspectLine > 0)
         {
-            mType = ARM_CL_COMPLEX_LINE;
+            mType = COMPLEX_LINE;
             return;
         }
         else if(foldbackCount > 1)
         {
-            mType = ARM_CL_COMPLEX_FOLDBACK;
+            mType = COMPLEX_FOLDBACK;
             return;
         }
 
@@ -317,7 +295,7 @@ public class ArmCluster
         if(foldbackCount == 0 && nonTiBreakendCount > 2)
         {
             // cannot just be a DSB with TIs, so early exit for further analysis
-            mType = ARM_CL_COMPLEX_OTHER;
+            mType = COMPLEX_OTHER;
             return;
         }
         */
@@ -344,37 +322,37 @@ public class ArmCluster
         if(nonTiBreakendCount == 1)
         {
             // if after removing all TIs, all that is left is a single breakend then classify it as such
-            mType = ARM_CL_ISOLATED_BE;
+            mType = ISOLATED_BE;
         }
         else if(foldbackCount == 1 && dsbCount == 0)
         {
-            mType = ARM_CL_FOLDBACK;
+            mType = FOLDBACK;
         }
         else if(nonTiBreakendCount == 3 && foldbackCount == 1 && dsbCount == 1)
         {
-            mType = ARM_CL_FOLDBACK_DSB;
+            mType = FOLDBACK_DSB;
         }
         else if(foldbackCount == 0 && dsbCount == 1 && nonTiBreakendCount == 2)
         {
-            mType = ARM_CL_DSB;
+            mType = DSB;
         }
         else if(unlinkedBreakends.size() == 2 && unlinkedBreakends.get(0).orientation() == unlinkedBreakends.get(1).orientation())
         {
-            mType = ARM_CL_SAME_ORIENT;
+            mType = SAME_ORIENT;
         }
         else
         {
-            mType = ARM_CL_COMPLEX_OTHER;
+            mType = COMPLEX_OTHER;
         }
     }
 
     public static int[] getArmClusterData(final SvCluster cluster)
     {
-        int[] results = new int[ARM_CL_MAX+1];
+        int[] results = new int[ArmClusterType.values().length];
 
         for(final ArmCluster armCluster : cluster.getArmClusters())
         {
-            ++results[armCluster.getType()];
+            ++results[armCluster.getType().ordinal()];
         }
 
         return results;
@@ -385,7 +363,7 @@ public class ArmCluster
         for(final ArmCluster armCluster : cluster.getArmClusters())
         {
             LNX_LOGGER.debug("cluster({}) armCluster({}) breakends({}) type({})",
-                    cluster.id(), armCluster.toString(), armCluster.getBreakends().size(), typeToString(armCluster.getType()));
+                    cluster.id(), armCluster.toString(), armCluster.getBreakends().size(), armCluster.getType());
         }
     }
 }

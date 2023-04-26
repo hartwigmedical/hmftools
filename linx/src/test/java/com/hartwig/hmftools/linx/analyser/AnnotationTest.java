@@ -4,12 +4,6 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_DSB;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_FOLDBACK_DSB;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_ISOLATED_BE;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_TI_ONLY;
 import static com.hartwig.hmftools.linx.types.ArmCluster.getArmClusterData;
 
 import static org.junit.Assert.assertEquals;
@@ -17,6 +11,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
 import com.hartwig.hmftools.linx.types.ArmCluster;
+import com.hartwig.hmftools.linx.types.ArmClusterType;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -70,12 +65,12 @@ public class AnnotationTest
         final int[] armClusterData = getArmClusterData(cluster);
 
         assertEquals(6, cluster.getArmClusters().size());
-        assertEquals(1, armClusterData[ARM_CL_ISOLATED_BE]);
-        assertEquals(1, armClusterData[ARM_CL_TI_ONLY]);
-        assertEquals(1, armClusterData[ARM_CL_DSB]);
-        assertEquals(1, armClusterData[ARM_CL_FOLDBACK]);
-        assertEquals(1, armClusterData[ARM_CL_FOLDBACK_DSB]);
-        assertEquals(1, armClusterData[ARM_CL_COMPLEX_FOLDBACK]);
+        assertEquals(1, armClusterData[ArmClusterType.ISOLATED_BE.ordinal()]);
+        assertEquals(1, armClusterData[ArmClusterType.TI_ONLY.ordinal()]);
+        assertEquals(1, armClusterData[ArmClusterType.DSB.ordinal()]);
+        assertEquals(1, armClusterData[ArmClusterType.FOLDBACK.ordinal()]);
+        assertEquals(1, armClusterData[ArmClusterType.FOLDBACK_DSB.ordinal()]);
+        assertEquals(1, armClusterData[ArmClusterType.COMPLEX_FOLDBACK.ordinal()]);
     }
 
     @Test
@@ -102,8 +97,8 @@ public class AnnotationTest
         final int[] armClusterData = getArmClusterData(cluster);
 
         assertEquals(2, cluster.getArmClusters().size());
-        assertEquals(1, armClusterData[ARM_CL_TI_ONLY]);
-        assertEquals(1, armClusterData[ARM_CL_DSB]);
+        assertEquals(1, armClusterData[ArmClusterType.TI_ONLY.ordinal()]);
+        assertEquals(1, armClusterData[ArmClusterType.DSB.ordinal()]);
 
         long armClusterTIs = cluster.getArmClusters().stream().mapToInt(x -> x.getTICount()).sum();
         assertEquals(3, armClusterTIs);
@@ -112,7 +107,7 @@ public class AnnotationTest
 
         for(ArmCluster armCluster : cluster.getArmClusters())
         {
-            if(armCluster.getTICount() == 2 && armCluster.getType() == ARM_CL_TI_ONLY)
+            if(armCluster.getTICount() == 2 && armCluster.getType() == ArmClusterType.TI_ONLY)
                 hasDoubleTI = true;
         }
 

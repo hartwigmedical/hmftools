@@ -2,10 +2,10 @@ package com.hartwig.hmftools.linx.analyser;
 
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticLength;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticTiLength;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_OTHER;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_DSB;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_TI_ONLY;
+import static com.hartwig.hmftools.linx.types.ArmClusterType.COMPLEX_FOLDBACK;
+import static com.hartwig.hmftools.linx.types.ArmClusterType.COMPLEX_OTHER;
+import static com.hartwig.hmftools.linx.types.ArmClusterType.DSB;
+import static com.hartwig.hmftools.linx.types.ArmClusterType.TI_ONLY;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
@@ -64,7 +64,7 @@ public class SyntheticTest
         assertTrue(cluster.getResolvedType() == DEL); // since TI is short
 
         assertEquals(1, cluster.getArmClusters().size());
-        assertEquals(ARM_CL_DSB, cluster.getArmClusters().get(0).getType());
+        assertEquals(DSB, cluster.getArmClusters().get(0).getType());
         assertEquals(1, cluster.getArmClusters().get(0).getTICount());
 
         // test 2 DSBs but with an overlapping end less than permitted TI length
@@ -96,8 +96,8 @@ public class SyntheticTest
         assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(false));
 
         assertEquals(2, cluster.getArmClusters().size());
-        assertEquals(ARM_CL_DSB, cluster.getArmClusters().get(0).getType());
-        assertEquals(ARM_CL_TI_ONLY, cluster.getArmClusters().get(1).getType());
+        assertEquals(DSB, cluster.getArmClusters().get(0).getType());
+        assertEquals(TI_ONLY, cluster.getArmClusters().get(1).getType());
 
         // test 2 overlapping breakends but where a pair of breakend form an overlapping DB
         var1 = createInv(tester.nextVarId(), "1", 500, 4000, 1);
@@ -126,8 +126,8 @@ public class SyntheticTest
         assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(false));
 
         assertEquals(2, cluster.getArmClusters().size());
-        assertEquals(ARM_CL_COMPLEX_OTHER, cluster.getArmClusters().get(0).getType());
-        assertEquals(ARM_CL_TI_ONLY, cluster.getArmClusters().get(1).getType());
+        assertEquals(COMPLEX_OTHER, cluster.getArmClusters().get(0).getType());
+        assertEquals(TI_ONLY, cluster.getArmClusters().get(1).getType());
 
         // 4 overlapping breakends - also forming 2 facing foldbacks
         var1 = createInv(tester.nextVarId(), "1", 2300, 2400, 1);
@@ -142,7 +142,7 @@ public class SyntheticTest
         assertTrue(cluster.getResolvedType() == FB_INV_PAIR);
 
         assertEquals(1, cluster.getArmClusters().size());
-        assertEquals(ARM_CL_COMPLEX_FOLDBACK, cluster.getArmClusters().get(0).getType());
+        assertEquals(COMPLEX_FOLDBACK, cluster.getArmClusters().get(0).getType());
     }
 
     @Test
