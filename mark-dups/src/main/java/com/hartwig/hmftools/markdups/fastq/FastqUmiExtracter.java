@@ -128,8 +128,6 @@ public class FastqUmiExtracter
             BufferedReader r1Reader = createBufferedReader(r1File);
             BufferedReader r2Reader = createBufferedReader(r2File);
 
-            String r1Line = null;
-            String r2Line = null;
             int lineCount = 0;
 
             int readLineCount = 0;
@@ -138,14 +136,12 @@ public class FastqUmiExtracter
 
             while(true)
             {
-                r1Line = r1Reader.readLine();
-                r2Line = r2Reader.readLine();
+                r1ReadBuffer[readLineCount] = r1Reader.readLine();
+                r2ReadBuffer[readLineCount] = r2Reader.readLine();
 
-                if(r1Line == null || r2Line == null)
+                if(r1ReadBuffer[readLineCount] == null || r2ReadBuffer[readLineCount] == null)
                     break;
 
-                r1ReadBuffer[readLineCount] = r1Line;
-                r2ReadBuffer[readLineCount] = r2Line;
                 ++readLineCount;
 
                 if(readLineCount == 4)
