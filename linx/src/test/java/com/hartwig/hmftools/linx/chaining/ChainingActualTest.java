@@ -2,12 +2,6 @@ package com.hartwig.hmftools.linx.chaining;
 
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.FOLDBACKS;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.identicalChain;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_DSB;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_FOLDBACK_DSB;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_ISOLATED_BE;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_TI_ONLY;
 import static com.hartwig.hmftools.linx.types.ArmCluster.getArmClusterData;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 
@@ -16,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.hartwig.hmftools.linx.types.ArmClusterType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
@@ -88,12 +83,12 @@ public class ChainingActualTest
         final int[] armClusterData = getArmClusterData(cluster);
 
         assertEquals(8, cluster.getArmClusters().size());
-        assertEquals(3, armClusterData[ARM_CL_ISOLATED_BE]);
-        assertEquals(2, armClusterData[ARM_CL_TI_ONLY]);
-        assertEquals(0, armClusterData[ARM_CL_DSB]);
-        assertEquals(3, armClusterData[ARM_CL_FOLDBACK]);
-        assertEquals(0, armClusterData[ARM_CL_FOLDBACK_DSB]);
-        assertEquals(0, armClusterData[ARM_CL_COMPLEX_FOLDBACK]);
+        assertEquals(3, armClusterData[ArmClusterType.ISOLATED_BE.ordinal()]);
+        assertEquals(2, armClusterData[ArmClusterType.TI_ONLY.ordinal()]);
+        assertEquals(0, armClusterData[ArmClusterType.DSB.ordinal()]);
+        assertEquals(3, armClusterData[ArmClusterType.FOLDBACK.ordinal()]);
+        assertEquals(0, armClusterData[ArmClusterType.FOLDBACK_DSB.ordinal()]);
+        assertEquals(0, armClusterData[ArmClusterType.COMPLEX_FOLDBACK.ordinal()]);
 
         // check chains
         assertEquals(1, cluster.getChains().size());

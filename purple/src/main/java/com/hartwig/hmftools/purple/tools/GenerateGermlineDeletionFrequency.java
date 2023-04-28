@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.BufferedReader;
@@ -176,7 +176,7 @@ public class GenerateGermlineDeletionFrequency
         }
         catch(IOException e)
         {
-            PPL_LOGGER.error("failed to write cohort germlime deletion frequency file: {}", e.toString());
+            PPL_LOGGER.error("failed to write cohort germline deletion frequency file: {}", e.toString());
         }
     }
 

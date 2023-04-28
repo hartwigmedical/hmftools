@@ -101,7 +101,9 @@ NO_MATE | N/A | N/A
 MINIMUM_TUMOR_QUAL | hard_min_tumor_qual | 100  
 MAX_NORMAL_SUPPORT | hard_max_normal_absolute_support | 3
 MAX_NORMAL_SUPPORT | hard_max_normal_relative_support | 0.08
-MAX_NORMAL_SUPPORT | soft_max_normal_relative_support | 0.03
+MAX_NORMAL_SUPPORT | soft_max_normal_relative_support* | 0.03
+
+<nowiki>*</nowiki> This filter is also used as a soft filter
 
 ## 2. Realignment
 
@@ -114,7 +116,7 @@ For the purposes of backwards compatibility we also perform 3 other fixes to cor
 
 ## 3. Soft filters
  
-The following filters are applied to all variants
+The following filters are applied to all variants that aren't hotspots:
 
 Filter | Config | Default | Description / purpose
 ---|---|---|---
@@ -125,6 +127,9 @@ imprecise | N/A | FALSE | Imprecise variants may be artefacts linking low mappab
 PON | PON files | FALSE | Breakpoint must be found < 3 times in our cohort in pon_sv_file (or pon_sgl_file in the case of breakends). The Hartwig PON files are generated from ~3800 germline samples. The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  Inexact homology is allowed in overlap and an additional 3p margin of error is allowed for. 
 maxPolyAHomLength | N/A | 6 | Variants with long poly-A homology are frequent artefacts at low VAF
 maxPolyGLength | N/A | 16 | Long stretches of poly-G/poly-C are extremely rare in the ref genome but are known sequencer artefacts.  Single breakends with insert sequences containing long polyG homopolymers are filtered.   This filter is also applied to break junctions where 1 end maps in any of the following POLY-G regions (v38: {chr2:32,916,190-32,916,630; chr4:41,216,410-41,216,450; chr17:44,569,050-44,569,090}; v37: {2:33,141,260-33,141,700; 4:41,218,427-41,218,467; 17:42646418-42646458}).
+maxNormalRelativeSupport | soft_max_normal_relative_support* | 0.03 | Too many support reads from the normal sample relative to the tumor. Indicates the variant is likely germline or artefact.
+
+<nowiki>*</nowiki> This argument is also used for one of the hard filters
 
 We also have 9 special filters applying to specific variant categories:
 

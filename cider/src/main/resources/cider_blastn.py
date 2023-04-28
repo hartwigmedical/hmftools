@@ -134,31 +134,17 @@ def get_ensembl(ensembl_gene_data, only_vdj):
             if len(gene_name) > 3 and (gene_name[3] in "VDJC"):
                 vdj_type = gene_name[3]
 
-        if gene_name == "KDE":
-            vdj_type = "J"
-
-        if gene_name == "KINT":
-            vdj_type = "V"
-
         if not only_vdj or vdj_type:
             genes.append(Gene(row["GeneName"], row["Chromosome"], row["Strand"], row["GeneStart"], row["GeneEnd"], vdj_type))
 
     # manually add in the KDE section
-    # v37: IGKKDE	01	2	89131735	89132285    -
     # v38: IGKKDE	01	chr2	88832222	88832772	-
-    # def __init__(self, gene_name, chromosome: str, strand: int, gene_start, gene_end, vdj_type):
-    genes.append(Gene(gene_name='IGK-KDE', chromosome="2", strand=-1,
-                      gene_start=89131735, gene_end=89132285, vdj_type="J"))
-    genes.append(Gene(gene_name='IGK-KDE', chromosome="2", strand=-1,
+    genes.append(Gene(gene_name='IGKDEL', chromosome="2", strand=-1,
                       gene_start=88832222, gene_end=88832772, vdj_type="J"))
-
+    
     # KINT, obtained by BLAT of CACCGCGCTCTTGGGGCAGCCGCCTTGCCGCTAGTGGCCGTGGCCACCCTGTGTCTGCCCGATT
-    # v37
-    genes.append(Gene(gene_name='KDE-KINT', chromosome="2", strand=-1,
-                      gene_start=89159145, gene_end=89159209, vdj_type="V"))
-
     # v38
-    genes.append(Gene(gene_name='KDE-KINT', chromosome="2", strand=-1,
+    genes.append(Gene(gene_name='IGKINT', chromosome="2", strand=-1,
                       gene_start=88859633, gene_end=88859697, vdj_type="V"))
 
     return genes

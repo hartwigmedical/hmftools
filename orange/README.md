@@ -109,8 +109,9 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
 |-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | pipeline_version_file       | Path to the file containing the (platinum) pipeline version used.                                                                                                                                                                                                                     |
 | cuppa_feature_plot          | In case the cuppa summary does not fit onto one page, an additional cuppa feature plot is generated that has to be passed separately                                                                                                                                                  |
-| convert_germline_to_somatic | If set, converts all germline driver variants to somatic driver variants, thereby obfuscating the germline driver part of the analysis without actually loosing this data. Note that the data in other germline tables, except the pharmacogenetics table, is removed from this page. |
 | experiment_date             | Sets the experiment date to the specified date if set. Expected format is YYMMDD. If omitted, current date is used as experiment date.                                                                                                                                                |
+| convert_germline_to_somatic | If set, converts all germline driver variants to somatic driver variants, thereby obfuscating the germline driver part of the analysis without actually loosing this data. Note that the data in other germline tables, except the pharmacogenetics table, is removed from this page. |
+| add_disclaimer              | If set, adds a "research use only" disclaimer to the footer of every page.                                                                                                                                                                                                            |  
 | limit_json_output           | If set, limits all lists in the JSON output to a single entry to facilitate manual inspection of the JSON output.                                                                                                                                                                     |
 | log_debug                   | If set, additional DEBUG logging is generated.                                                                                                                                                                                                                                        |
 
@@ -168,7 +169,7 @@ In addition to all germline SNV/Indel tumor drivers determined by [PURPLE](../pu
   present.
 - (Large-scale) germline CN aberrations.
     - Germline CN aberrations are determined by [PURPLE](../purple) and include aberrations such as klinefelter or trisomy X.
-- Pharmacogenetics (DPYD status)
+- Pharmacogenetics (DPYD & UGT1A1 status)
 
 ### Immunology
 
@@ -215,22 +216,23 @@ investigate potential causes for QC failure.
 - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
-- Upcoming
-  - The ORANGE datamodel used in the json output has been separated from the ORANGE logic and available as an artifact for 
-    other projects to depend on (see also [ORANGE-datamodel](../orange-datamodel)) 
-  - All copy numbers are rounded to single digit instead of no digits
-  - Combination of urethra cancer and renal cell cancer is mapped to OTHER by ORANGE cohort mapper
-  - The ORANGE cohort mapping application queries clinical view rather than datarequest
-  - Added `-add_disclaimer` parameter that will print a "research use only" disclaimer in the footer when set
-  - PDF documents now share a single instance of each font to reduce file size
-  - Formatting for undetermined HRD type is improved
+
+- [2.4.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.4.0)
+    - The ORANGE datamodel used in the json output has been separated from the ORANGE logic and available as an artifact for
+      other projects to depend on (see also [ORANGE-datamodel](../orange-datamodel))
+    - All copy numbers are rounded to single digit instead of no digits
+    - Combination of urethra cancer and renal cell cancer is mapped to OTHER by ORANGE cohort mapper
+    - The ORANGE cohort mapping application queries clinical view rather than datarequest
+    - Added `-add_disclaimer` parameter that will print a "research use only" disclaimer in the footer when set
+    - PDF documents now share a single instance of each font to reduce file size
+    - Formatting for undetermined HRD type is improved
 - [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.3)
     - Full support for reporting germline structural variants
-      - This includes extended linx & purple datamodels with various germline findings
-      - All somatic fields now have explicit "somatic" in their property name. 
+        - This includes extended linx & purple datamodels with various germline findings
+        - All somatic fields now have explicit "somatic" in their property name.
     - Added `-cuppa_chart_plot` parameter to hold the output of cuppa-chart
     - Cuppa, VirusInterpreter, Sigs and Chord are made optional to support pipeline running in panel-mode
-    - Add `experimentType` to ORANGE output which is either `TARGETED` or `FULL_GENOME` based on purple's targeted property. 
+    - Add `experimentType` to ORANGE output which is either `TARGETED` or `FULL_GENOME` based on purple's targeted property.
     - Removed warning in case a variant potentially falls in the splice region of 2 neighbouring exons
 - [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.2)
     - (COSMIC) signatures are added to the somatic findings (new parameter: `-sigs_allocation_tsv`)

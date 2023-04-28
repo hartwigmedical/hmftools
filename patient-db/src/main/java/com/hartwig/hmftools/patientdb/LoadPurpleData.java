@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFile;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
@@ -19,16 +19,16 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
-import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
-import com.hartwig.hmftools.common.purple.FittedPurity;
-import com.hartwig.hmftools.common.purple.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
@@ -220,7 +220,7 @@ public class LoadPurpleData
 
         List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(germlineDriverFile);
 
-        LOGGER.info("loading germlime drivers({}) deletions({})", germlineDriverCatalog.size(), germlineDeletions.size());
+        LOGGER.info("loading germline drivers({}) deletions({})", germlineDriverCatalog.size(), germlineDeletions.size());
 
         dbAccess.writeGermlineDeletions(sampleId, germlineDeletions);
         dbAccess.writePurpleDriverCatalog(sampleId, null, germlineDriverCatalog);
@@ -240,7 +240,7 @@ public class LoadPurpleData
             }
         }
 
-        LOGGER.info("loaded {} germlime variants", variantCount);
+        LOGGER.info("loaded {} germline variants", variantCount);
     }
 
     public static boolean hasMissingFiles(final List<String> requiredFiles, final String sourceType)

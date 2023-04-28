@@ -17,16 +17,6 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_LINE;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_OTHER;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_DSB;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_FOLDBACK_DSB;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_ISOLATED_BE;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_SAME_ORIENT;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_SIMPLE_DUP;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_TI_ONLY;
 import static com.hartwig.hmftools.linx.types.ArmCluster.getArmClusterData;
 import static com.hartwig.hmftools.linx.types.LinxConstants.NO_DB_MARKER;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
@@ -44,6 +34,7 @@ import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
+import com.hartwig.hmftools.linx.types.ArmClusterType;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.ArmCluster;
@@ -459,10 +450,12 @@ public class CohortDataWriter
                 long armClusterTIs = cluster.getArmClusters().stream().mapToInt(x -> x.getTICount()).sum();
 
                 writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-                        cluster.getArmClusters().size(), armClusterTIs, armClusterData[ARM_CL_ISOLATED_BE],
-                        armClusterData[ARM_CL_TI_ONLY], armClusterData[ARM_CL_DSB], armClusterData[ARM_CL_SIMPLE_DUP],
-                        armClusterData[ARM_CL_FOLDBACK], armClusterData[ARM_CL_FOLDBACK_DSB], armClusterData[ARM_CL_COMPLEX_FOLDBACK],
-                        armClusterData[ARM_CL_COMPLEX_LINE], armClusterData[ARM_CL_SAME_ORIENT], armClusterData[ARM_CL_COMPLEX_OTHER]));
+                        cluster.getArmClusters().size(), armClusterTIs, armClusterData[ArmClusterType.ISOLATED_BE.ordinal()],
+                        armClusterData[ArmClusterType.TI_ONLY.ordinal()], armClusterData[ArmClusterType.DSB.ordinal()],
+                        armClusterData[ArmClusterType.SIMPLE_DUP.ordinal()], armClusterData[ArmClusterType.FOLDBACK.ordinal()],
+                        armClusterData[ArmClusterType.FOLDBACK_DSB.ordinal()], armClusterData[ArmClusterType.COMPLEX_FOLDBACK.ordinal()],
+                        armClusterData[ArmClusterType.COMPLEX_LINE.ordinal()], armClusterData[ArmClusterType.SAME_ORIENT.ordinal()],
+                        armClusterData[ArmClusterType.COMPLEX_OTHER.ordinal()]));
 
                 if(mConfig.IndelAnnotation)
                 {

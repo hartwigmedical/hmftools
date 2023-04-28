@@ -89,6 +89,7 @@ threads | 1 | Number of threads to use for complex evaluation
 java -jar lilac.jar \
    -sample COLO829T 
    -ref_genome /path_to_ref_genome_fasta_file/ \
+   -ref_genome_version V37 \
    -resource_dir /path_to_lilac_resource_files/ \ 
    -reference_bam /sample_data_path/COLO829R.bam \
    -output_dir /output_dir/ \
@@ -101,6 +102,7 @@ java -jar lilac.jar \
    -sample COLO829T 
    -ref_genome /path_to_ref_genome_fasta_file/ \
    -resource_dir /path_to_lilac_resource_files/ \ 
+   -ref_genome_version V37 \
    -reference_bam /sample_data_path/COLO829R.bam \
    -tumor_bam /sample_data_path/COLO829T.bam \
    -somatic_vcf /sample_data_path/COLO829T.purple.somatic.vcf.gz \
