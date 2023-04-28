@@ -208,7 +208,6 @@ public class IndelConsensusReadsTest
     @Test
     public void testMismatchedReads2()
     {
-        // one of the As at the end got deleted
         SAMRecord read1 = createSamRecord(nextReadId(), 10, "CTTCGATAAT", "7M1D3M", true);
         SAMRecord read2 = createSamRecord(nextReadId(), 11, "TTCGATAAAT", "10M", true);
 
@@ -221,18 +220,18 @@ public class IndelConsensusReadsTest
         assertEquals("CTTCGATAAAT", readInfo.ConsensusRead.getReadString());
         assertEquals(10, readInfo.ConsensusRead.getAlignmentStart());
 
+        // a second supporting read results in the extra base being dropped
         SAMRecord read3 = createSamRecord(nextReadId(), 11, "TTCGATAAAT", "10M", true);
         readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2, read3), UMI_ID_1);
 
-        assertEquals("11M", readInfo.ConsensusRead.getCigarString());
-        assertEquals("CTTCGATAAAT", readInfo.ConsensusRead.getReadString());
-        assertEquals(10, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals("10M", readInfo.ConsensusRead.getCigarString());
+        assertEquals("TTCGATAAAT", readInfo.ConsensusRead.getReadString());
+        assertEquals(11, readInfo.ConsensusRead.getAlignmentStart());
     }
 
     @Test
     public void testMismatchedReadsInsert()
     {
-        // one of the As at the end got deleted
         SAMRecord read1 = createSamRecord(nextReadId(), 10, "CTTCGATAAAAT", "7M1I4M", true);
         SAMRecord read2 = createSamRecord(nextReadId(), 11, "TTCGATAAAT", "10M", true);
 
@@ -250,9 +249,9 @@ public class IndelConsensusReadsTest
 
         readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2, read3), UMI_ID_1);
 
-        assertEquals("11M", readInfo.ConsensusRead.getCigarString());
-        assertEquals("CTTCGATAAAT", readInfo.ConsensusRead.getReadString());
-        assertEquals(10, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals("10M", readInfo.ConsensusRead.getCigarString());
+        assertEquals("TTCGATAAAT", readInfo.ConsensusRead.getReadString());
+        assertEquals(11, readInfo.ConsensusRead.getAlignmentStart());
     }
 
     @Test

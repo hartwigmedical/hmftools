@@ -51,12 +51,11 @@ public class IndelConsensusReads
         List<ReadParseState> readStates = reads.stream().map(x -> new ReadParseState(x, consensusState.IsForward)).collect(Collectors.toList());
 
         int readCount = reads.size();
+        int minRequiredReads = (readCount % 2) == 0 ? readCount / 2 : readCount / 2 + 1;
 
         int baseIndex = 0;
 
-        int exhaustedCount = 0;
-
-        while(exhaustedCount < readCount)
+        while(!readStates.isEmpty())
         {
             // work out current element type
             ElementTypeCount selectedElement = findNextElement(readStates);
@@ -75,10 +74,15 @@ public class IndelConsensusReads
             if(consensusState.outcome() == INDEL_FAIL)
                 return;
 
-            for(ReadParseState read : readStates)
+            int activeReadCount = (int)readStates.stream().filter(x -> !x.exhausted()).count();
+
+            // exit if there are now less than half the reads still active
+            if(activeReadCount < minRequiredReads)
             {
-                if(read.exhausted())
-                    ++exhaustedCount;
+                if(activeReadCount > 0)
+                    resetBoundaries(consensusState, readStates);
+
+                break;
             }
 
             if(!deleteOrSplit(selectedElement.Operator))
@@ -89,6 +93,18 @@ public class IndelConsensusReads
         }
 
         consensusState.setOutcome(INDEL_MISMATCH);
+    }
+
+    private void resetBoundaries(final ConsensusState consensusState, final List<ReadParseState> readStates)
+    {
+        consensusState.resetBoundaries();
+
+        // ignore active reads that extend further than the consensus
+        for(ReadParseState read : readStates)
+        {
+            if(read.exhausted())
+                consensusState.setBoundaries(read.Read);
+        }
     }
 
     private void addElementBases(
