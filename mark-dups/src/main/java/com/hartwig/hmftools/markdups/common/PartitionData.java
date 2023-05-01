@@ -433,7 +433,7 @@ public class PartitionData
             return remainingFragments;
 
         // not under lock since called only when all partitions are complete
-        MD_LOGGER.debug("partition({}) final state: {}", mChrPartition, cacheCountsStr());
+        // MD_LOGGER.debug("partition({}) final state: {}", mChrPartition, cacheCountsStr());
 
         if(logCachedReads && MD_LOGGER.isDebugEnabled())
         {

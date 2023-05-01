@@ -42,7 +42,10 @@ public class ConsensusState
         BaseQualities = null;
         CigarElements = Lists.newArrayList();
 
-        resetBoundaries();
+        MinUnclippedPosStart = 0;
+        MaxUnclippedPosEnd = 0;
+        MinAlignedPosStart = 0;
+        MaxAlignedPosEnd = 0;
         MapQuality = 0;
 
         mOutcome = UNSET;
@@ -84,14 +87,6 @@ public class ConsensusState
             Bases = bases;
             BaseQualities = baseQuals;
         }
-    }
-
-    void resetBoundaries()
-    {
-        MinUnclippedPosStart = 0;
-        MaxUnclippedPosEnd = 0;
-        MinAlignedPosStart = 0;
-        MaxAlignedPosEnd = 0;
     }
 
     void setBoundaries(final SAMRecord read)

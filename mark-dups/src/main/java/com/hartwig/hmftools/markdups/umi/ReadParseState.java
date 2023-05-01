@@ -3,10 +3,10 @@ package com.hartwig.hmftools.markdups.umi;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.markdups.umi.BaseBuilder.NO_BASE;
+import static com.hartwig.hmftools.markdups.umi.IndelConsensusReads.alignedOrSoftClip;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.N;
 
 import htsjdk.samtools.CigarOperator;
@@ -15,8 +15,9 @@ import htsjdk.samtools.SAMRecord;
 public class ReadParseState
 {
     public final SAMRecord Read;
+    private final boolean mIsForward;
+    private final int mElementCount;
 
-    private boolean mIsForward;
     private int mReadIndex;
     private int mCigarIndex; // index of the current element amongst the CIGAR
     private int mElementIndex; // index within the current CIGAR element
@@ -30,6 +31,7 @@ public class ReadParseState
     {
         Read = read;
         mIsForward = isForward;
+        mElementCount = read.getCigar().getCigarElements().size();
 
         if(mIsForward)
         {
@@ -39,7 +41,7 @@ public class ReadParseState
         else
         {
             mReadIndex = read.getReadBases().length - 1;
-            mCigarIndex = read.getCigar().getCigarElements().size() - 1;
+            mCigarIndex = mElementCount - 1;
         }
 
         mElementLength = read.getCigar().getCigarElement(mCigarIndex).getLength();
@@ -57,6 +59,7 @@ public class ReadParseState
     public int elementIndex() { return mElementIndex; }
 
     public boolean exhausted() { return mExhausted; }
+    public void markExhausted() { mExhausted = true; }
     public int remainingElementLength() { return mElementLength - mElementIndex; }
     public boolean elementChanged() { return mElementChanged; }
 
@@ -108,6 +111,17 @@ public class ReadParseState
         {
             moveNext();
         }
+    }
+
+    public boolean isLastAlignOrSplit()
+    {
+        if(!alignedOrSoftClip(mElementType))
+            return false;
+
+        if(mIsForward)
+            return mCigarIndex >= mElementCount - 2;
+        else
+            return mCigarIndex <= 1;
     }
 
     public String toString()

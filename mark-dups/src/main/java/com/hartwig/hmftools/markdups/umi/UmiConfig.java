@@ -19,6 +19,7 @@ public class UmiConfig
 {
     public final boolean Enabled;
     public final boolean Debug;
+    public final boolean HighlightConsensus; // purely for viewing in IGV
 
     private int mUmiLength; // set and accessed in a thread-safe way
 
@@ -28,16 +29,18 @@ public class UmiConfig
     private static final String UMI_ENABLED = "umi_enabled";
     private static final String UMI_DEFINED_IDS = "umi_defined_ids";
     private static final String UMI_DEBUG = "umi_debug";
+    private static final String UMI_HIGHLIGHT = "umi_highlight";
 
     public static final char READ_ID_DELIM = ':';
     public static final String READ_ID_DELIM_STR = String.valueOf(READ_ID_DELIM);
 
-    public UmiConfig(boolean enabled) { this(enabled, false); }
+    public UmiConfig(boolean enabled) { this(enabled, false, false); }
 
-    public UmiConfig(boolean enabled, boolean debug)
+    public UmiConfig(boolean enabled, boolean debug, boolean highlight)
     {
         Enabled = enabled;
         Debug = debug;
+        HighlightConsensus = highlight;
         mUmiLength = 0;
         mDefinedUmis = Sets.newHashSet();
     }
@@ -47,7 +50,7 @@ public class UmiConfig
 
     public static UmiConfig from(final CommandLine cmd)
     {
-        UmiConfig umiConfig = new UmiConfig(cmd.hasOption(UMI_ENABLED), cmd.hasOption(UMI_DEBUG));
+        UmiConfig umiConfig = new UmiConfig(cmd.hasOption(UMI_ENABLED), cmd.hasOption(UMI_DEBUG), cmd.hasOption(UMI_HIGHLIGHT));
 
         String definedUmiIdsFilename = cmd.getOptionValue(UMI_DEFINED_IDS);
 
@@ -114,5 +117,6 @@ public class UmiConfig
         options.addOption(UMI_ENABLED, false, "Use UMIs for duplicates");
         options.addOption(UMI_DEBUG, false, "Debug options for UMIs");
         options.addOption(UMI_DEFINED_IDS, true, "Optional set of defined UMI IDs in file");
+        options.addOption(UMI_HIGHLIGHT, false, "Set consensus read to map-qual 0 to highlight in IGV");
     }
 }

@@ -144,6 +144,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         onPartitionComplete(false);
 
         MD_LOGGER.info("chromosome({}) complete, reads({})", mRegion.Chromosome, mStats.TotalReads);
+
+        mConsensusReads.logStats(mRegion.Chromosome);
     }
 
     private void onPartitionComplete(boolean setupNext)
