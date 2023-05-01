@@ -107,6 +107,11 @@ public class ComparConfig
         {
             Arrays.stream(Category.values()).forEach(x -> Categories.put(x, matchLevel));
         }
+        else if(categoriesStr.contains(PANEL_CATEGORIES))
+        {
+            if(categoriesStr.contains(PANEL_CATEGORIES))
+                Category.panelCategories().forEach(x -> Categories.put(x, matchLevel));
+        }
         else if(categoriesStr.contains(PURPLE_CATEGORIES) || categoriesStr.contains(LINX_CATEGORIES))
         {
             if(categoriesStr.contains(PURPLE_CATEGORIES))
@@ -114,9 +119,6 @@ public class ComparConfig
 
             if(categoriesStr.contains(LINX_CATEGORIES))
                 linxCategories().forEach(x -> Categories.put(x, matchLevel));
-
-            if(categoriesStr.contains(PANEL_CATEGORIES))
-                Category.panelCategories().forEach(x -> Categories.put(x, matchLevel));
         }
         else
         {
