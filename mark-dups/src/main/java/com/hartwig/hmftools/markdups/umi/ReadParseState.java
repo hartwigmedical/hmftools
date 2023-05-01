@@ -3,7 +3,6 @@ package com.hartwig.hmftools.markdups.umi;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.markdups.umi.BaseBuilder.NO_BASE;
-import static com.hartwig.hmftools.markdups.umi.IndelConsensusReads.alignedOrSoftClip;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -59,9 +58,6 @@ public class ReadParseState
     public int elementIndex() { return mElementIndex; }
 
     public boolean exhausted() { return mExhausted; }
-    public void markExhausted() { mExhausted = true; }
-    public int remainingElementLength() { return mElementLength - mElementIndex; }
-    public boolean elementChanged() { return mElementChanged; }
 
     public void moveNext()
     {
@@ -111,17 +107,6 @@ public class ReadParseState
         {
             moveNext();
         }
-    }
-
-    public boolean isLastAlignOrSplit()
-    {
-        if(!alignedOrSoftClip(mElementType))
-            return false;
-
-        if(mIsForward)
-            return mCigarIndex >= mElementCount - 2;
-        else
-            return mCigarIndex <= 1;
     }
 
     public String toString()
