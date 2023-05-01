@@ -16,6 +16,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import com.hartwig.hmftools.common.genome.refgenome.CoordMapping;
+import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.cup.somatics.SomaticVariant;
@@ -31,7 +33,7 @@ public class VcfPositionConverter implements Callable
     private final String mSampleId;
     private final String mVcfFile;
     private final String mOutputFile;
-    private final CoordMappingCache mMappingCache;
+    private final GenomeLiftoverCache mMappingCache;
     private final boolean mMappingEnabled;
 
     private BufferedWriter mWriter;
@@ -44,7 +46,7 @@ public class VcfPositionConverter implements Callable
     private static final int UNMAPPED_POSITION = -1;
 
     public VcfPositionConverter(
-            final String sampleId, final String vcfFile, final CoordMappingCache mappingCache, final LiftoverConfig config)
+            final String sampleId, final String vcfFile, final GenomeLiftoverCache mappingCache, final LiftoverConfig config)
     {
         mSampleId = sampleId;
         mConfig = config;

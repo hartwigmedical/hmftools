@@ -8,9 +8,10 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 
+import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.checkerframework.checker.units.qual.K;
 
 public class LiftoverConfig
 {
@@ -22,7 +23,6 @@ public class LiftoverConfig
 
     public static final String SAMPLE = "sample";
     public static final String SAMPLE_VCF_DIR = "sample_vcf_dir";
-    public static final String MAPPING_FILE = "mapping_file";
     public static final String APPLY_FILTERS = "apply_filters";
     public static final String KEEP_EXISTING = "keep_existing";
 
@@ -41,10 +41,10 @@ public class LiftoverConfig
         addOutputOptions(options);
         addThreadOptions(options);
         addLoggingOptions(options);
+        GenomeLiftoverCache.addConfig(options);
 
         options.addOption(SAMPLE, true, "Sample ID");
         options.addOption(SAMPLE_VCF_DIR, true, "Path to sample VCF(s)");
-        options.addOption(MAPPING_FILE, true, "Coordinate mapping file");
         options.addOption(APPLY_FILTERS, false, "Only convert and write variants used by Cuppa's somatic classifier");
         options.addOption(KEEP_EXISTING, false, "Do not overwrite existing output sample files");
     }

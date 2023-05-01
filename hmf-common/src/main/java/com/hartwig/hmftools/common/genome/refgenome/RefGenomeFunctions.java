@@ -1,17 +1,20 @@
 package com.hartwig.hmftools.common.genome.refgenome;
 
-import org.jetbrains.annotations.NotNull;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import htsjdk.samtools.SamReader;
 
-public final class RefGenomeFunctions {
-
+public final class RefGenomeFunctions
+{
     private static final String CHR_PREFIX = "chr";
 
-    private RefGenomeFunctions() {
-    }
+    public static final Logger LOGGER = LogManager.getLogger(RefGenomeFunctions.class);
 
-    public static boolean samReaderUsesChrInContigs(@NotNull SamReader samReader) {
+    private RefGenomeFunctions() {}
+
+    public static boolean samReaderUsesChrInContigs(final SamReader samReader)
+    {
         return samReader.getFileHeader()
                 .getSequenceDictionary()
                 .getSequences()
@@ -19,18 +22,20 @@ public final class RefGenomeFunctions {
                 .anyMatch(x -> x.getSequenceName().contains(CHR_PREFIX));
     }
 
-    @NotNull
-    public static String stripChrPrefix(@NotNull final String chromosome) {
-        if (chromosome.startsWith(CHR_PREFIX)) {
+    public static String stripChrPrefix(final String chromosome)
+    {
+        if(chromosome.startsWith(CHR_PREFIX))
+        {
             return chromosome.substring(CHR_PREFIX.length());
         }
 
         return chromosome;
     }
 
-    @NotNull
-    public static String enforceChrPrefix(@NotNull final String chromosome) {
-        if (!chromosome.startsWith(CHR_PREFIX)) {
+    public static String enforceChrPrefix(final String chromosome)
+    {
+        if(!chromosome.startsWith(CHR_PREFIX))
+        {
             return CHR_PREFIX + chromosome;
         }
 

@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.cup.liftover;
 
+import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.LIFTOVER_MAPPING_FILE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
-import static com.hartwig.hmftools.cup.liftover.LiftoverConfig.MAPPING_FILE;
 import static com.hartwig.hmftools.cup.liftover.LiftoverConfig.SAMPLE;
 
 import java.util.List;
@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 
 import org.apache.commons.cli.CommandLine;
@@ -26,7 +27,7 @@ public class SnvLiftover
 {
     private final LiftoverConfig mConfig;
     private final List<String> mSampleIds;
-    private final CoordMappingCache mMappingCache;
+    private final GenomeLiftoverCache mMappingCache;
     private final int mThreads;
 
     @Deprecated
@@ -46,11 +47,11 @@ public class SnvLiftover
         }
         mThreads = parseThreads(cmd);
 
-        mMappingCache = new CoordMappingCache();
+        mMappingCache = new GenomeLiftoverCache();
 
-        if(cmd.hasOption(MAPPING_FILE))
+        if(cmd.hasOption(LIFTOVER_MAPPING_FILE))
         {
-            if(!mMappingCache.loadFile(cmd.getOptionValue(MAPPING_FILE)))
+            if(!mMappingCache.loadFile(cmd.getOptionValue(LIFTOVER_MAPPING_FILE)))
                 System.exit(1);
         }
     }

@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.cup.liftover;
+package com.hartwig.hmftools.common.genome.refgenome;
 
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.LOGGER;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -10,14 +10,19 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-public class CoordMappingCache
+import org.apache.commons.cli.Options;
+
+public class GenomeLiftoverCache
 {
     private final Map<String,List<CoordMapping>> mMappings;
+
+    public static final String LIFTOVER_MAPPING_FILE = "liftover_mapping";
+    public static final String LIFTOVER_MAPPING_FILE_DESC = "Liftover mapping file";
 
     private static final String DELIM = "\t";
     private static final String NEG_ORIENT = "-";
 
-    public CoordMappingCache()
+    public GenomeLiftoverCache()
     {
         mMappings = Maps.newHashMap();
     }
@@ -25,6 +30,11 @@ public class CoordMappingCache
     public boolean hasMappings() { return !mMappings.isEmpty(); }
 
     public List<CoordMapping> getChromosomeMappings(final String chromosome) { return mMappings.get(chromosome); }
+
+    public static void addConfig(final Options options)
+    {
+        options.addOption(LIFTOVER_MAPPING_FILE, true, LIFTOVER_MAPPING_FILE_DESC);
+    }
 
     /*
     public void addMapping(final String chromosome, int sourceStart, int sourceEnd, int destStart, int destEnd, boolean reverse)
@@ -49,7 +59,7 @@ public class CoordMappingCache
 
                 if(values.length < 8)
                 {
-                    CUP_LOGGER.error("invalid mapping line: {}", line);
+                    LOGGER.error("invalid mapping line: {}", line);
                     return false;
                 }
 
@@ -68,14 +78,13 @@ public class CoordMappingCache
                         Integer.parseInt(values[5]) + 1, Integer.parseInt(values[6]), values[7].equals(NEG_ORIENT)));
             }
 
-            CUP_LOGGER.info("loaded {} coordinate mapping entries from file: {}", mMappings.size(), filename);
+            LOGGER.info("loaded {} coordinate mapping entries from file: {}", mMappings.size(), filename);
             return true;
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("failed to load coordinate mapping entries from file: {}", filename, e.toString());
+            LOGGER.error("failed to load coordinate mapping entries from file: {}", filename, e.toString());
             return false;
         }
     }
-
 }

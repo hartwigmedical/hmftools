@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.cup.liftover;
+package com.hartwig.hmftools.common.genome.refgenome;
 
 import static java.lang.String.format;
 
-class CoordMapping
+public class CoordMapping
 {
     public final String Chromosome;
     public final int SourceStart;
