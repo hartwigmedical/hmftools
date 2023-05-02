@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup.liftover;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
@@ -42,8 +43,6 @@ public class VcfPositionConverter implements Callable
     private int mCurentMappingIndex;
     private String mCurrentMappingChromosome;
     private List<CoordMapping> mChromosomeMappings;
-
-    private static final int UNMAPPED_POSITION = -1;
 
     public VcfPositionConverter(
             final String sampleId, final String vcfFile, final GenomeLiftoverCache mappingCache, final LiftoverConfig config)

@@ -19,6 +19,8 @@ public class GenomeLiftoverCache
     public static final String LIFTOVER_MAPPING_FILE = "liftover_mapping";
     public static final String LIFTOVER_MAPPING_FILE_DESC = "Liftover mapping file";
 
+    public static final int UNMAPPED_POSITION = -1;
+
     private static final String DELIM = "\t";
     private static final String NEG_ORIENT = "-";
 
@@ -30,6 +32,28 @@ public class GenomeLiftoverCache
     public boolean hasMappings() { return !mMappings.isEmpty(); }
 
     public List<CoordMapping> getChromosomeMappings(final String chromosome) { return mMappings.get(chromosome); }
+
+    public int convertPosition(final String chromosome, final int position)
+    {
+        List<CoordMapping> mappings = mMappings.get(chromosome);
+
+        if(mappings == null || mappings.isEmpty())
+            return position;
+
+
+        for(CoordMapping mapping : mappings)
+        {
+            if(mapping.SourceEnd < position)
+                continue;
+
+            if(mapping.SourceStart > position)
+                return UNMAPPED_POSITION;
+
+            return mapping.convertPosition(position);
+        }
+
+        return UNMAPPED_POSITION;
+    }
 
     public static void addConfig(final Options options)
     {
@@ -78,12 +102,12 @@ public class GenomeLiftoverCache
                         Integer.parseInt(values[5]) + 1, Integer.parseInt(values[6]), values[7].equals(NEG_ORIENT)));
             }
 
-            LOGGER.info("loaded {} coordinate mapping entries from file: {}", mMappings.size(), filename);
+            LOGGER.info("loaded {} genome liftover mapping entries from file: {}", mMappings.size(), filename);
             return true;
         }
         catch(Exception e)
         {
-            LOGGER.error("failed to load coordinate mapping entries from file: {}", filename, e.toString());
+            LOGGER.error("failed to load genome liftover entries from file: {}", filename, e.toString());
             return false;
         }
     }

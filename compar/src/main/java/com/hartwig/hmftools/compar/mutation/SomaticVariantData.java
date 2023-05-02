@@ -67,6 +67,9 @@ public class SomaticVariantData implements ComparableItem
     public final double SubclonalLikelihood;
     public final Set<String> Filters;
 
+    private String mComparisonChromosome;
+    private int mComparisonPosition;
+
     protected static final String FLD_SUBCLONAL_LIKELIHOOD = "SubclonalLikelihood";
     protected static final String FLD_LPS = "HasLPS";
 
@@ -96,6 +99,9 @@ public class SomaticVariantData implements ComparableItem
         Qual = qual;
         SubclonalLikelihood = subclonalLikelihood;
         Filters = filters;
+
+        mComparisonChromosome = chromosome;
+        mComparisonPosition = position;
     }
 
     @Override
@@ -137,7 +143,7 @@ public class SomaticVariantData implements ComparableItem
     {
         final SomaticVariantData otherVar = (SomaticVariantData) other;
 
-        if(!Chromosome.equals(otherVar.Chromosome) || Position != otherVar.Position)
+        if(!mComparisonChromosome.equals(otherVar.comparisonChromosome()) || mComparisonPosition != otherVar.comparisonPosition())
             return false;
 
         if(!Ref.equals(otherVar.Ref) || !Alt.equals(otherVar.Alt))
@@ -147,6 +153,15 @@ public class SomaticVariantData implements ComparableItem
             return false;
 
         return true;
+    }
+
+    public String comparisonChromosome() { return mComparisonChromosome; }
+    public int comparisonPosition() { return mComparisonPosition; }
+
+    public void setComparisonCoordinates(final String chromosome, final int position)
+    {
+        mComparisonChromosome = chromosome;
+        mComparisonPosition = position;
     }
 
     @Override

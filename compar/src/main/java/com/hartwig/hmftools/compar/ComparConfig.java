@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.LIFTOVER_MAPPING_FILE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
@@ -40,6 +41,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -68,6 +70,8 @@ public class ComparConfig
 
     public final boolean WriteDetailed;
     public final int Threads;
+
+    public final GenomeLiftoverCache LiftoverCache;
 
     private final Map<String,SampleIdMapping> mSampleIdMappings; // if required, mapping from original to new sampleId
     private boolean mIsValid;
@@ -196,6 +200,13 @@ public class ComparConfig
             {
                 CMP_LOGGER.error("failed to load driver gene panel file: {}", e.toString());
             }
+        }
+
+        LiftoverCache = new GenomeLiftoverCache();
+        if(cmd.hasOption(LIFTOVER_MAPPING_FILE))
+        {
+            if(!LiftoverCache.loadFile(cmd.getOptionValue(LIFTOVER_MAPPING_FILE)))
+                System.exit(1);
         }
     }
 
@@ -376,6 +387,7 @@ public class ComparConfig
         options.addOption(formConfigSourceStr(FILE_SOURCE, NEW_SOURCE), true, "File locations for new data");
         options.addOption(WRITE_DETAILED_FILES, false, "Write per-type details files");
         addThreadOptions(options);
+        GenomeLiftoverCache.addConfig(options);
 
         addDatabaseCmdLineArgs(options);
         addOutputOptions(options);
@@ -401,5 +413,6 @@ public class ComparConfig
         DriverGenes = Sets.newHashSet();
         AlternateTranscriptDriverGenes = Sets.newHashSet();
         mSampleIdMappings = Maps.newHashMap();
+        LiftoverCache = new GenomeLiftoverCache();
     }
 }

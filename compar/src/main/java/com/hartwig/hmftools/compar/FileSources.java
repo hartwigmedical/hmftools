@@ -16,6 +16,7 @@ public class FileSources
     public final String Cuppa;
     public final String Lilac;
     public final String Chord;
+    public final boolean RequiresLiftover;
 
     public static final String SAMPLE_DIR = "sample_dir";
     public static final String LINX_DIR = "linx_dir";
@@ -25,9 +26,10 @@ public class FileSources
     public static final String CUPPA_DIR = "cuppa_dir";
     public static final String LILAC_DIR = "lilac_dir";
     public static final String CHORD_DIR = "chord_dir";
+    public static final String REQUIRES_LIFTOVER = "liftover";
 
     public FileSources(final String source, final String linx, final String purple, final String linxGermline, final String cuppa,
-            final String lilac, final String chord, final String somaticVcf)
+            final String lilac, final String chord, final String somaticVcf, boolean requiresLiftover)
     {
         Source = source;
         Linx = linx;
@@ -37,6 +39,7 @@ public class FileSources
         Lilac = lilac;
         Chord = chord;
         SomaticVcf = somaticVcf;
+        RequiresLiftover = requiresLiftover;
     }
 
     public static FileSources sampleInstance(final FileSources fileSources, final String sampleId)
@@ -49,7 +52,8 @@ public class FileSources
                 fileSources.Cuppa.replaceAll("\\*", sampleId),
                 fileSources.Lilac.replaceAll("\\*", sampleId),
                 fileSources.Chord.replaceAll("\\*", sampleId),
-                fileSources.SomaticVcf.replaceAll("\\*", sampleId));
+                fileSources.SomaticVcf.replaceAll("\\*", sampleId),
+                fileSources.RequiresLiftover);
     }
 
     public static FileSources fromConfig(final String sourceName, final String fileSourceStr)
@@ -75,8 +79,16 @@ public class FileSources
         String chordDir = getDirectory(sampleDir, PipelineToolDirectories.CHORD_DIR);
         String somaticVcf = "";
 
+        boolean requiresLiftover = false;
+
         for(int i = itemIndex; i < values.length; ++i)
         {
+            if(values[i].equals(REQUIRES_LIFTOVER))
+            {
+                requiresLiftover = true;
+                continue;
+            }
+
             String[] itemStr = values[i].split(SUB_ITEM_DELIM);
 
             if(itemStr.length != 2)
@@ -115,7 +127,7 @@ public class FileSources
             }
         }
 
-        return new FileSources(sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, somaticVcf);
+        return new FileSources(sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, somaticVcf, requiresLiftover);
     }
 
     private static String getDirectory(final String sampleDir, final String typeDir)

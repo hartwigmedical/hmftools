@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.mutation;
 
+import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
@@ -80,7 +81,7 @@ public class SomaticVariantComparer implements ItemComparer
             else
             {
                 FileSources fileSources = mConfig.FileSources.get(sourceName);
-                List<SomaticVariantData> fileVariants = loadVariants(sourceSampleId, FileSources.sampleInstance(fileSources, sampleId));
+                List<SomaticVariantData> fileVariants = loadVariants(sourceSampleId, FileSources.sampleInstance(fileSources, sourceSampleId));
 
                 if(fileVariants == null)
                     return false;
@@ -272,6 +273,14 @@ public class SomaticVariantComparer implements ItemComparer
                 continue;
 
             SomaticVariantData variant = SomaticVariantData.fromContext(variantContext);
+
+            if(fileSources.RequiresLiftover && mConfig.LiftoverCache.hasMappings())
+            {
+                int newPosition = mConfig.LiftoverCache.convertPosition(variant.Chromosome, variant.Position);
+
+                if(newPosition != UNMAPPED_POSITION)
+                    variant.setComparisonCoordinates(RefGenomeFunctions.enforceChrPrefix(variant.Chromosome), newPosition);
+            }
 
             if(!variant.Gene.isEmpty())
                 variants.add(variant);
