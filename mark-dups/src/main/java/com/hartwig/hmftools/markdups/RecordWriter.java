@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
+import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 import static com.hartwig.hmftools.markdups.ReadOutput.DUPLICATES;
@@ -144,6 +145,16 @@ public class RecordWriter
 
                 if(mCacheReads)
                     mReadsWritten.add(read);
+
+                if(mReadWriter != null)
+                {
+                    // fill in and write consensus read
+                    Fragment fragment = new Fragment(read);
+                    fragment.setUmi(umiGroup.id());
+                    fragment.setStatus(PRIMARY);
+                    fragment.setCoordinates(umiGroup.fragmentCoordinates());
+                    writeReadData(read, PRIMARY, fragment);
+                }
 
                 continue;
             }

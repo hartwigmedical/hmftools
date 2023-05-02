@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarBaseLength;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
@@ -21,12 +22,15 @@ import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class ConsensusReads
@@ -35,6 +39,8 @@ public class ConsensusReads
     private final IndelConsensusReads mIndelConsensusReads;
 
     private final int[] mOutcomeCounts;
+
+    private static final String CONSENSUS_PREFIX = "CNS_";
 
     public ConsensusReads(final UmiConfig config, final RefGenomeInterface refGenome)
     {
@@ -52,7 +58,7 @@ public class ConsensusReads
         }
 
         boolean isForward = !reads.get(0).getReadNegativeStrandFlag();
-        int maxBaseLength = 0;
+        // int maxBaseLength = 0;
         boolean hasIndels = false;
         boolean unmapped = false;
 
@@ -61,14 +67,14 @@ public class ConsensusReads
 
         for(SAMRecord read : reads)
         {
-            maxBaseLength = max(maxBaseLength, read.getReadBases().length);
+            // maxBaseLength = max(maxBaseLength, read.getReadBases().length);
 
             if(!read.getReadUnmappedFlag())
                 hasIndels |= read.getCigar().getCigarElements().stream().anyMatch(x -> x.getOperator() == I || x.getOperator() == D);
             else
                 unmapped = true;
 
-            consensusState.setBoundaries(read);
+            // consensusState.setBoundaries(read);
             consensusState.MapQuality = max(consensusState.MapQuality, read.getMappingQuality());
         }
 
@@ -90,12 +96,17 @@ public class ConsensusReads
         }
         else
         {
-            consensusState.setBaseLength(maxBaseLength);
+            Map<String,CigarFrequency> cigarFrequencies = CigarFrequency.buildFrequencies(reads);
+
+            SAMRecord selectedConsensusRead = cigarFrequencies.size() > 1 ? selectConsensusRead(cigarFrequencies) : reads.get(0);
+            consensusState.setBaseLength(selectedConsensusRead.getBaseQualities().length);
+            consensusState.setBoundaries(selectedConsensusRead);
             mBaseBuilder.buildReadBases(reads, consensusState);
             consensusState.setOutcome(ALIGNMENT_ONLY);
 
             if(!unmapped)
-                buildNonIndelCigar(consensusState);
+                consensusState.CigarElements.addAll(selectedConsensusRead.getCigar().getCigarElements());
+                //buildNonIndelCigar(consensusState);
         }
 
         ++mOutcomeCounts[consensusState.outcome().ordinal()];
@@ -116,6 +127,34 @@ public class ConsensusReads
         }
 
         return new ConsensusReadInfo(consensusRead, consensusState.outcome());
+    }
+
+    protected static SAMRecord selectConsensusRead(final Map<String,CigarFrequency> cigarFrequencies)
+    {
+            int maxCigarFreq = cigarFrequencies.values().stream().mapToInt(x -> x.Frequency).max().orElse(0);
+        List<CigarFrequency> maxCigarFrequencies = cigarFrequencies.values().stream().filter(x -> x.Frequency == maxCigarFreq).collect(Collectors.toList());
+
+        // find the most common read by CIGAR, and where there are equal counts choose the one with the least soft-clips
+        SAMRecord selectedRead = null;
+        int minScBases = 0;
+
+        for(CigarFrequency cigarFrequency : maxCigarFrequencies)
+        {
+            int scBases = cigarElementLength(cigarFrequency.SampleRead, S);
+
+            if(selectedRead == null || scBases < minScBases)
+            {
+                selectedRead = cigarFrequency.SampleRead;
+                minScBases = scBases;
+            }
+        }
+
+        return selectedRead;
+    }
+
+    private static int cigarElementLength(final SAMRecord read, final CigarOperator operator)
+    {
+        return read.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == operator).mapToInt(x -> x.getLength()).sum();
     }
 
     private enum ValidationReason
@@ -198,8 +237,8 @@ public class ConsensusReads
     protected static String formReadId(final String templateReadId, final String groupIdentifier)
     {
         int lastDelim = templateReadId.lastIndexOf(READ_ID_DELIM);
-        return lastDelim > 0 ? templateReadId.substring(0, lastDelim) + READ_ID_DELIM + "CNS_" + groupIdentifier
-                : templateReadId + READ_ID_DELIM + "CNS_" + groupIdentifier;
+        return lastDelim > 0 ? templateReadId.substring(0, lastDelim) + READ_ID_DELIM + CONSENSUS_PREFIX + groupIdentifier
+                : templateReadId + READ_ID_DELIM + CONSENSUS_PREFIX + groupIdentifier;
     }
 
     public static SAMRecord createConsensusRead(final ConsensusState state, final List<SAMRecord> reads, final String groupIdentifier)
@@ -236,15 +275,10 @@ public class ConsensusReads
 
         record.setFlags(initialRead.getFlags());
         record.setDuplicateReadFlag(false); // being the new primary
+        record.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
         record.setAttribute(UMI_CONSENSUS_ATTRIBUTE, reads.size());
 
-        if(initialRead.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
-        {
-            record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, initialRead.getAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        }
-
         record.setInferredInsertSize(initialRead.getInferredInsertSize());
-
         return record;
     }
 

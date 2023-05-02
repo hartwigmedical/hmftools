@@ -90,6 +90,7 @@ public class Fragment
     public boolean hasLocalMate() { return mHasLocalMate; }
 
     public FragmentCoordinates coordinates() { return mCoordinates; }
+    public void setCoordinates(final FragmentCoordinates coordinates) { mCoordinates = coordinates; }
     public int initialPosition() { return mCoordinates.InitialPosition; }
 
     public void intialiseCoordinates(boolean useMateCigar) { mCoordinates = getFragmentCoordinates(mReads, useMateCigar); }

@@ -113,48 +113,42 @@ public class ConsensusReadsTest
         assertEquals("AAAAACCCCC", readInfo.ConsensusRead.getReadString());
 
         // soft-clips at both ends
-        reads.clear();
         posStart = 11;
         read1 = createSamRecord(nextReadId(), posStart + 3, REF_BASES_A, "3S6M1S", false);
-        reads.add(read1);
+        read2 = createSamRecord(nextReadId(), posStart + 3, REF_BASES_A, "3S6M1S", false);
 
-        read2 = createSamRecord(nextReadId(), posStart + 2, REF_BASES_A, "2S5M3S", false);
-        reads.add(read2);
+        read3 = createSamRecord(nextReadId(), posStart + 2, REF_BASES_A, "2S5M3S", false);
 
-        readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2, read3), UMI_ID_1);
 
-        assertEquals(posStart + 2, readInfo.ConsensusRead.getAlignmentStart());
-        assertEquals("2S7M1S", readInfo.ConsensusRead.getCigarString());
+        assertEquals(posStart + 3, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals("3S6M1S", readInfo.ConsensusRead.getCigarString());
         assertEquals(REF_BASES_A, readInfo.ConsensusRead.getReadString());
 
         // longer reads at the non-fragment start end
-        reads.clear();
         posStart = 11;
         read1 = createSamRecord(nextReadId(), posStart, REF_BASES_A, "8M2S", false);
-        reads.add(read1);
 
         read2 = createSamRecord(nextReadId(), posStart, REF_BASES_A + "CCC", "7M6S", false);
-        reads.add(read2);
+        read3 = createSamRecord(nextReadId(), posStart, REF_BASES_A + "CCC", "7M6S", false);
 
-        readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2, read3), UMI_ID_1);
 
         assertEquals(posStart, readInfo.ConsensusRead.getAlignmentStart());
-        assertEquals("8M5S", readInfo.ConsensusRead.getCigarString());
+        assertEquals("7M6S", readInfo.ConsensusRead.getCigarString());
         assertEquals(REF_BASES_A + "CCC", readInfo.ConsensusRead.getReadString());
 
         // same again on the reverse strand
-        reads.clear();
         posStart = 11;
         read1 = createSamRecord(nextReadId(), posStart + 2, REF_BASES_A, "2S6M2S", true);
-        reads.add(read1);
 
         read2 = createSamRecord(nextReadId(), posStart, "CCCC" + REF_BASES_A, "4S7M3S", true);
-        reads.add(read2);
+        read3 = createSamRecord(nextReadId(), posStart, "CCCC" + REF_BASES_A, "4S7M3S", true);
 
-        readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2, read3), UMI_ID_1);
 
         assertEquals(posStart, readInfo.ConsensusRead.getAlignmentStart());
-        assertEquals("4S8M2S", readInfo.ConsensusRead.getCigarString());
+        assertEquals("4S7M3S", readInfo.ConsensusRead.getCigarString());
         assertEquals("CCCC" + REF_BASES_A, readInfo.ConsensusRead.getReadString());
     }
 
@@ -212,14 +206,11 @@ public class ConsensusReadsTest
         String cigar5 = "99S1M";
         reads.add(createSamRecord(nextReadId(), posStart + 99, consensusBases, cigar5, true));
 
-        // 67S84M, 94S57M ++, 99S52M, 89S62M, 31S120M
-
         ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
         assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
         assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
-        assertEquals(cigar1, readInfo.ConsensusRead.getCigarString());
-        assertEquals(posStart, readInfo.ConsensusRead.getAlignmentStart());
-
+        assertEquals(cigar4, readInfo.ConsensusRead.getCigarString());
+        assertEquals(posStart + 94, readInfo.ConsensusRead.getAlignmentStart());
     }
 
     @Test

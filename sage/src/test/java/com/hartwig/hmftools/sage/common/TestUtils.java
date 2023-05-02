@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.common;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_FULL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
@@ -147,7 +148,7 @@ public class TestUtils
         record.setReferenceIndex(chromosome.ordinal()); // need to override since no header is present
 
         // to be correct this should match the cigar element count
-        record.setAttribute("NM", 1);
+        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, 1);
         record.setFirstOfPairFlag(true);
 
         record.setReadPairedFlag(true);

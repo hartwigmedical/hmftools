@@ -1,11 +1,16 @@
 package com.hartwig.hmftools.markdups.umi;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.Constants.MAX_UMI_BASE_DIFF;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.getUnclippedPosition;
+import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -17,6 +22,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.markdups.common.Fragment;
+import com.hartwig.hmftools.markdups.common.FragmentCoordinates;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -26,20 +32,28 @@ public class UmiGroup
     private final List<Fragment> mFragments;
     private int mFragmentCount;
 
+    // reads from each fragment are organised into their like-types from which consensus reads can be formed
     private final List<SAMRecord>[] mReadGroups;
     private final boolean[] mReadGroupComplete;
+    private final ReadTypeId[] mReadTypeIndex; // list of distinct read types
+    private final FragmentCoordinates mFragmentCoordinates;
+
+    private static final int MAX_READ_TYPES = 4;
 
     public UmiGroup(final String id, final Fragment fragment)
     {
         mId = id;
         mFragments = Lists.newArrayList(fragment);
-        mReadGroups = new List[ReadLegType.values().length];
-        mReadGroupComplete = new boolean[ReadLegType.values().length];
+        mReadGroups = new List[MAX_READ_TYPES];
+        mReadGroupComplete = new boolean[MAX_READ_TYPES];
+        mReadTypeIndex = new ReadTypeId[MAX_READ_TYPES];
         mFragmentCount = 0;
+        mFragmentCoordinates = fragment.coordinates();
     }
 
     public List<Fragment> fragments() { return mFragments; }
     public int fragmentCount() { return mFragmentCount > 0 ? mFragmentCount : mFragments.size(); }
+    public FragmentCoordinates fragmentCoordinates() { return mFragmentCoordinates; }
 
     public String id() { return mId; }
 
@@ -50,7 +64,7 @@ public class UmiGroup
         // initialise lists
         Fragment firstFragment = mFragments.get(0);
 
-        mReadGroups[ReadLegType.PRIMARY.ordinal()] = Lists.newArrayList();
+        mReadGroups[ReadLegType.PRIMARY.ordinal()] = Lists.newArrayListWithExpectedSize(mFragmentCount);
 
         for(int i = 0; i < firstFragment.reads().size(); ++i)
         {
@@ -59,14 +73,14 @@ public class UmiGroup
             if(i == 0)
             {
                 if(read.getReadPairedFlag())
-                    mReadGroups[ReadLegType.MATE.ordinal()] = Lists.newArrayList();
+                    mReadGroups[ReadLegType.MATE.ordinal()] = Lists.newArrayListWithExpectedSize(mFragmentCount);
 
                 if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
-                    mReadGroups[ReadLegType.PRIMARY_SUPPLEMENTARY.ordinal()] = Lists.newArrayList();
+                    mReadGroups[ReadLegType.PRIMARY_SUPPLEMENTARY.ordinal()] = Lists.newArrayListWithExpectedSize(mFragmentCount);
             }
             else if(!read.getSupplementaryAlignmentFlag() && read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
             {
-                mReadGroups[ReadLegType.MATE_SUPPLEMENTARY.ordinal()] = Lists.newArrayList();
+                mReadGroups[ReadLegType.MATE_SUPPLEMENTARY.ordinal()] = Lists.newArrayListWithExpectedSize(mFragmentCount);
             }
         }
 
@@ -80,17 +94,108 @@ public class UmiGroup
 
     public void addRead(final SAMRecord read)
     {
-        ReadLegType legType = getLegType(read);
-        int legIndex = legType.ordinal();
+        int readTypeIndex = getReadTypeIndex(read);
 
-        if(mReadGroups[legIndex] == null)
+        if(mReadGroups[readTypeIndex] == null)
         {
-            mReadGroups[legIndex] = Lists.newArrayList(read);
+            mReadGroups[readTypeIndex] = Lists.newArrayListWithExpectedSize(mFragmentCount);
         }
-        else
+
+        mReadGroups[readTypeIndex].add(read);
+    }
+
+    private class ReadTypeId
+    {
+        public final String Chromosome;
+        public final int Position; // unclipped pos if not supplementary
+        public final byte Orientation;
+        public final boolean FirstInPair;
+        public final boolean Supplementary;
+
+        public ReadTypeId(
+                final String chromosome, final int position, final byte orientation, final boolean supplementary, final boolean firstInPair)
         {
-            mReadGroups[legIndex].add(read);
+            Chromosome = chromosome;
+            Position = position;
+            Orientation = orientation;
+            Supplementary = supplementary;
+            FirstInPair = firstInPair;
         }
+
+        public boolean matches(final SAMRecord read)
+        {
+            if(!read.getReferenceName().equals(Chromosome))
+                return false;
+
+            if(orientation(read) != Orientation)
+                return false;
+
+            if(read.getSupplementaryAlignmentFlag() != Supplementary)
+                return false;
+
+            int unclippedPosition = getUnclippedPosition(read);
+
+            if(Supplementary)
+            {
+                return abs(unclippedPosition - Position) < read.getBaseQualities().length;
+            }
+            else
+            {
+                return unclippedPosition == Position;
+            }
+        }
+
+        public String toString()
+        {
+            return format("%s:%d%s%s %s",
+                Chromosome, Position, Orientation == POS_ORIENT ? " " : "_R ",
+                    FirstInPair ? "R1" : "R2", Supplementary ? "supp" : "");
+        }
+    }
+
+    private int getReadTypeIndex(final SAMRecord read)
+    {
+        int nextIndex = 0;
+        for(int i = 0; i < mReadTypeIndex.length; ++i)
+        {
+            if(mReadTypeIndex[i] == null)
+            {
+                nextIndex = i;
+                break;
+            }
+
+            if(mReadTypeIndex[i].matches(read))
+            {
+                if(mReadTypeIndex[i].FirstInPair != read.getFirstOfPairFlag())
+                {
+                    MD_LOGGER.warn("umiGroup({}) read({}) readTypeIndex({}) mismatch",
+                            mId, readToString(read), mReadTypeIndex[i]);
+                }
+
+                return i;
+            }
+        }
+
+        if(mReadTypeIndex[MAX_READ_TYPES-1] != null)
+        {
+            // shouldn't happen but revert to matching purely on flag attributes
+            for(int i = 0; i < mReadTypeIndex.length; ++i)
+            {
+                if(mReadTypeIndex[i].FirstInPair == read.getFirstOfPairFlag()
+                && mReadTypeIndex[i].Supplementary == read.getSupplementaryAlignmentFlag())
+                {
+                    return i;
+                }
+            }
+
+            return 0;
+        }
+
+        mReadTypeIndex[nextIndex] = new ReadTypeId(
+                read.getReferenceName(), getUnclippedPosition(read), orientation(read),
+                read.getSupplementaryAlignmentFlag(), read.getFirstOfPairFlag());
+
+        return nextIndex;
     }
 
     public boolean allReadsReceived()
