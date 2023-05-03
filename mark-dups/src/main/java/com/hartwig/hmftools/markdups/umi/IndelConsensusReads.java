@@ -50,7 +50,6 @@ public class IndelConsensusReads
             mBaseBuilder.buildReadBases(reads, consensusState);
             consensusState.setOutcome(INDEL_MATCH);
             consensusState.CigarElements.addAll(selectedConsensusRead.getCigar().getCigarElements());
-            // setBoundaries(consensusState);
             return;
         }
 

@@ -68,7 +68,6 @@ public class ConsensusReads
         {
             hasIndels |= read.getCigar().getCigarElements().stream().anyMatch(x -> x.getOperator() == I || x.getOperator() == D);
             consensusState.MapQuality = max(consensusState.MapQuality, read.getMappingQuality());
-            consensusState.setBoundaries(read);
         }
 
         if(hasIndels)
