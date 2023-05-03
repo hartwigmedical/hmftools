@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.markdups.common.DuplicateGroups.calcBaseQualAverage;
 import static com.hartwig.hmftools.markdups.umi.BaseBuilder.NO_BASE;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MATCH;
@@ -92,37 +93,7 @@ public class IndelConsensusReads
                 --cigarIndex;
         }
 
-        // setBoundaries(consensusState);
-
         consensusState.setOutcome(INDEL_MISMATCH);
-    }
-
-    private void setBoundaries(final ConsensusState consensusState)
-    {
-        int positionLength = consensusState.CigarElements.stream()
-                .filter(x -> x.getOperator().consumesReferenceBases()).mapToInt(x -> x.getLength()).sum();
-
-        if(consensusState.IsForward)
-        {
-            consensusState.MaxAlignedPosEnd = consensusState.MinAlignedPosStart + positionLength - 1;
-            CigarElement lastElement = consensusState.CigarElements.get(consensusState.CigarElements.size() - 1);
-
-            if(lastElement.getOperator() == S)
-                consensusState.MaxUnclippedPosEnd = consensusState.MaxAlignedPosEnd + lastElement.getLength();
-            else
-                consensusState.MaxUnclippedPosEnd = consensusState.MaxAlignedPosEnd;
-        }
-        else
-        {
-            consensusState.MinAlignedPosStart = consensusState.MaxAlignedPosEnd - positionLength + 1;
-
-            CigarElement firstElement = consensusState.CigarElements.get(0);
-
-            if(firstElement.getOperator() == S)
-                consensusState.MinUnclippedPosStart = consensusState.MinAlignedPosStart - firstElement.getLength();
-            else
-                consensusState.MinUnclippedPosStart = consensusState.MinAlignedPosStart;
-        }
     }
 
     private void addElementBases(
@@ -270,4 +241,38 @@ public class IndelConsensusReads
     {
         return operator == M || operator == S;
     }
+
+    public static SAMRecord selectPrimaryRead(final List<SAMRecord> reads)
+    {
+        // choose the read with the longest aligned bases
+        int maxAlignedBases = 0;
+        double maxBaseQual = 0;
+        SAMRecord maxRead = null;
+
+        for(SAMRecord read : reads)
+        {
+            int alignedBases = read.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
+
+            if(alignedBases > maxAlignedBases)
+            {
+                maxRead = read;
+                maxAlignedBases = alignedBases;
+                maxBaseQual = calcBaseQualAverage(read);
+            }
+            else if(alignedBases == maxAlignedBases)
+            {
+                double avgBaseQual = calcBaseQualAverage(read);
+
+                if(avgBaseQual > maxBaseQual)
+                {
+                    maxRead = read;
+                    maxAlignedBases = alignedBases;
+                    maxBaseQual = avgBaseQual;
+                }
+            }
+        }
+
+        return maxRead;
+    }
+
 }

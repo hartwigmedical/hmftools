@@ -255,7 +255,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
             if(partitionResults != null)
             {
-                if(partitionResults.umiGroups() != null || partitionResults.umiGroups() != null)
+                if(partitionResults.umiGroups() != null || partitionResults.resolvedFragments() != null)
                 {
                     if(partitionResults.umiGroups() != null)
                         partitionResults.umiGroups().forEach(x -> processUmiGroup(x));

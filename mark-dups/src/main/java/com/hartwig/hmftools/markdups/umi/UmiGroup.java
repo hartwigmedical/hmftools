@@ -30,6 +30,7 @@ public class UmiGroup
 {
     private final String mId;
     private final List<Fragment> mFragments;
+    private List<String> mReadIds;
     private int mFragmentCount;
 
     // reads from each fragment are organised into their like-types from which consensus reads can be formed
@@ -44,6 +45,7 @@ public class UmiGroup
     {
         mId = id;
         mFragments = Lists.newArrayList(fragment);
+        mReadIds = null;
         mReadGroups = new List[MAX_READ_TYPES];
         mReadGroupComplete = new boolean[MAX_READ_TYPES];
         mReadTypeIndex = new ReadTypeId[MAX_READ_TYPES];
@@ -59,7 +61,11 @@ public class UmiGroup
 
     public void categoriseReads()
     {
+        if(mFragmentCount > 0)
+            return;
+
         mFragmentCount = mFragments.size();
+        mReadIds = Lists.newArrayListWithExpectedSize(mFragmentCount);
 
         // initialise lists
         Fragment firstFragment = mFragments.get(0);
@@ -86,10 +92,13 @@ public class UmiGroup
 
         for(Fragment fragment : mFragments)
         {
+            mReadIds.add(fragment.id());
             fragment.setUmi(mId);
             fragment.reads().forEach(x -> addRead(x));
             fragment.reads().forEach(x -> x.setAttribute(UMI_ATTRIBUTE, id()));
         }
+
+        mFragments.clear();
     }
 
     public void addRead(final SAMRecord read)
@@ -111,19 +120,25 @@ public class UmiGroup
         public final byte Orientation;
         public final boolean FirstInPair;
         public final boolean Supplementary;
+        public final boolean Unmapped;
 
         public ReadTypeId(
-                final String chromosome, final int position, final byte orientation, final boolean supplementary, final boolean firstInPair)
+                final String chromosome, final int position, final byte orientation, final boolean supplementary,
+                final boolean firstInPair, final boolean unmapped)
         {
             Chromosome = chromosome;
             Position = position;
             Orientation = orientation;
             Supplementary = supplementary;
             FirstInPair = firstInPair;
+            Unmapped = unmapped;
         }
 
         public boolean matches(final SAMRecord read)
         {
+            if(Unmapped || read.getReadUnmappedFlag())
+                return Unmapped == read.getReadUnmappedFlag();
+
             if(!read.getReferenceName().equals(Chromosome))
                 return false;
 
@@ -192,8 +207,10 @@ public class UmiGroup
         }
 
         mReadTypeIndex[nextIndex] = new ReadTypeId(
-                read.getReferenceName(), getUnclippedPosition(read), orientation(read),
-                read.getSupplementaryAlignmentFlag(), read.getFirstOfPairFlag());
+                read.getReferenceName(),
+                read.getReadUnmappedFlag() ? 0 : getUnclippedPosition(read),
+                read.getReadUnmappedFlag() ? 0 : orientation(read),
+                read.getSupplementaryAlignmentFlag(), read.getFirstOfPairFlag(), read.getReadUnmappedFlag());
 
         return nextIndex;
     }
@@ -233,8 +250,9 @@ public class UmiGroup
             if(readGroup == null || readGroup.size() < mFragmentCount)
                 continue;
 
-            if(mFragments.isEmpty()) // to avoid writing cached fragment reads twice
-                reads.addAll(readGroup);
+            // if(mFragments.isEmpty()) // to avoid writing cached fragment reads twice
+
+            reads.addAll(readGroup);
 
             ConsensusReadInfo consensusReadInfo;
             if(i == ReadLegType.PRIMARY_SUPPLEMENTARY.ordinal() || i == ReadLegType.MATE_SUPPLEMENTARY.ordinal())
@@ -252,10 +270,45 @@ public class UmiGroup
             mReadGroupComplete[i] = true;
         }
 
-        if(!mFragments.isEmpty())
-            mFragments.clear();
+        // if(!mFragments.isEmpty())
+        //    mFragments.clear();
 
         return reads;
+    }
+
+    public List<Fragment> extractIncompleteFragments()
+    {
+        List<Fragment> fragments = Lists.newArrayList();
+
+
+        for(String readId : mReadIds)
+        {
+            List<SAMRecord> reads = Lists.newArrayList();
+
+            for(int i = 0; i < mReadGroups.length; ++i)
+            {
+                if(mReadGroupComplete[i] || mReadGroups[i] == null)
+                    continue;
+
+                List<SAMRecord> readGroup = mReadGroups[i];
+
+                readGroup.stream().filter(x -> x.getReadName().equals(readId)).forEach(x -> reads.add(x));
+            }
+
+            if(!reads.isEmpty())
+            {
+                Fragment fragment = new Fragment(reads.get(0));
+                fragment.setCoordinates(mFragmentCoordinates);
+                fragment.setUmi(mId);
+
+                for(int i = 0; i < reads.size(); ++i)
+                {
+                    fragment.addRead(reads.get(i));
+                }
+            }
+        }
+
+        return fragments;
     }
 
     private List<SAMRecord> findConsistentSupplementaries(final List<SAMRecord> readGroup)
@@ -290,16 +343,8 @@ public class UmiGroup
     {
         if(!mFragments.isEmpty())
             return mFragments.stream().map(x -> x.id()).collect(Collectors.toList());
-
-        for(List<SAMRecord> readGroup : mReadGroups)
-        {
-            if(readGroup != null && readGroup.size() == mFragmentCount)
-            {
-                return readGroup.stream().map(x -> x.getReadName()).collect(Collectors.toList());
-            }
-        }
-
-        return null;
+        else
+            return mReadIds;
     }
 
     private enum ReadLegType
@@ -308,18 +353,6 @@ public class UmiGroup
         MATE,
         PRIMARY_SUPPLEMENTARY,
         MATE_SUPPLEMENTARY;
-    }
-
-    private static ReadLegType getLegType(final SAMRecord read)
-    {
-        if(read.getReadPairedFlag() && !read.getFirstOfPairFlag())
-        {
-            return read.getSupplementaryAlignmentFlag() ? ReadLegType.MATE_SUPPLEMENTARY : ReadLegType.MATE;
-        }
-        else
-        {
-            return read.getSupplementaryAlignmentFlag() ? ReadLegType.PRIMARY_SUPPLEMENTARY : ReadLegType.PRIMARY;
-        }
     }
 
     public int cachedReadCount()

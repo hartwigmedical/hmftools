@@ -86,7 +86,8 @@ public class PartitionData
         {
             acquireLock();
 
-            resolvedFragments.forEach(x -> processResolvedFragment(x));
+            // UMIs are filtered here since the fragments themselves don't need to collect incomplete reads nor set resolved status
+            resolvedFragments.stream().filter(x -> x.umi() == null).forEach(x -> processResolvedFragment(x));
 
             if(umiGroups != null)
             {
@@ -116,8 +117,8 @@ public class PartitionData
 
         boolean addedRead = false;
 
-        // for(Fragment fragment : umiGroup.fragments())
         List<String> readIds = umiGroup.getReadIds();
+
         for(String readId : readIds)
         {
             Fragment existingFragment = mIncompleteFragments.get(readId);
@@ -127,7 +128,6 @@ public class PartitionData
                 existingFragment.reads().forEach(x -> umiGroup.addRead(x));
 
                 mIncompleteFragments.remove(readId);
-
                 addedRead = true;
             }
         }
@@ -428,6 +428,21 @@ public class PartitionData
     public List<Fragment> extractRemainingFragments(boolean logCachedReads)
     {
         List<Fragment> remainingFragments = mIncompleteFragments.values().stream().collect(Collectors.toList());
+
+        for(UmiGroup umiGroup : mUmiGroups.values())
+        {
+            List<Fragment> umiFragments = umiGroup.extractIncompleteFragments();
+
+            for(Fragment fragment : umiFragments)
+            {
+                Fragment existingFragment = remainingFragments.stream().filter(x -> x.id().equals(fragment.id())).findFirst().orElse(null);
+
+                if(existingFragment != null)
+                    fragment.reads().forEach(x -> existingFragment.addRead(x));
+                else
+                    remainingFragments.add(fragment);
+            }
+        }
 
         if(remainingFragments.isEmpty() && mUmiGroups.isEmpty() && mFragmentStatus.isEmpty())
             return remainingFragments;

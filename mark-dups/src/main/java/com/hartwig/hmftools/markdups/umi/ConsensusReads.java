@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.SUPPLEMENTARY;
 import static com.hartwig.hmftools.markdups.umi.IndelConsensusReads.alignedOrSoftClip;
+import static com.hartwig.hmftools.markdups.umi.IndelConsensusReads.selectPrimaryRead;
 import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -51,31 +52,23 @@ public class ConsensusReads
 
     public ConsensusReadInfo createConsensusRead(final List<SAMRecord> reads, final String groupIdentifier)
     {
-        if(reads.size() <= 1)
+        if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())
         {
             SAMRecord consensusRead = copyPrimaryRead(reads.get(0), groupIdentifier);
             return new ConsensusReadInfo(consensusRead, SUPPLEMENTARY);
         }
 
         boolean isForward = !reads.get(0).getReadNegativeStrandFlag();
-        // int maxBaseLength = 0;
         boolean hasIndels = false;
-        boolean unmapped = false;
 
         // work out the outermost boundaries - soft-clipped and aligned - from amongst all reads
         ConsensusState consensusState = new ConsensusState(isForward, reads.get(0).getContig());
 
         for(SAMRecord read : reads)
         {
-            // maxBaseLength = max(maxBaseLength, read.getReadBases().length);
-
-            if(!read.getReadUnmappedFlag())
-                hasIndels |= read.getCigar().getCigarElements().stream().anyMatch(x -> x.getOperator() == I || x.getOperator() == D);
-            else
-                unmapped = true;
-
-            // consensusState.setBoundaries(read);
+            hasIndels |= read.getCigar().getCigarElements().stream().anyMatch(x -> x.getOperator() == I || x.getOperator() == D);
             consensusState.MapQuality = max(consensusState.MapQuality, read.getMappingQuality());
+            consensusState.setBoundaries(read);
         }
 
         if(hasIndels)
@@ -88,6 +81,7 @@ public class ConsensusReads
 
                 logInvalidConsensusRead(reads, null, groupIdentifier, consensusState, INDEL_FAIL.toString());
 
+                // fall-back to selecting the read with the longest aligned bases, highest average qual
                 SAMRecord primaryRead = selectPrimaryRead(reads);
                 SAMRecord consensusRead = copyPrimaryRead(primaryRead, groupIdentifier);
 
@@ -104,9 +98,7 @@ public class ConsensusReads
             mBaseBuilder.buildReadBases(reads, consensusState);
             consensusState.setOutcome(ALIGNMENT_ONLY);
 
-            if(!unmapped)
-                consensusState.CigarElements.addAll(selectedConsensusRead.getCigar().getCigarElements());
-                //buildNonIndelCigar(consensusState);
+            consensusState.CigarElements.addAll(selectedConsensusRead.getCigar().getCigarElements());
         }
 
         ++mOutcomeCounts[consensusState.outcome().ordinal()];
@@ -131,7 +123,7 @@ public class ConsensusReads
 
     protected static SAMRecord selectConsensusRead(final Map<String,CigarFrequency> cigarFrequencies)
     {
-            int maxCigarFreq = cigarFrequencies.values().stream().mapToInt(x -> x.Frequency).max().orElse(0);
+        int maxCigarFreq = cigarFrequencies.values().stream().mapToInt(x -> x.Frequency).max().orElse(0);
         List<CigarFrequency> maxCigarFrequencies = cigarFrequencies.values().stream().filter(x -> x.Frequency == maxCigarFreq).collect(Collectors.toList());
 
         // find the most common read by CIGAR, and where there are equal counts choose the one with the least soft-clips
@@ -282,39 +274,6 @@ public class ConsensusReads
         return record;
     }
 
-    private SAMRecord selectPrimaryRead(final List<SAMRecord> reads)
-    {
-        // choose the read with the longest aligned bases
-        int maxAlignedBases = 0;
-        double maxBaseQual = 0;
-        SAMRecord maxRead = null;
-
-        for(SAMRecord read : reads)
-        {
-            int alignedBases = read.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
-
-            if(alignedBases > maxAlignedBases)
-            {
-                maxRead = read;
-                maxAlignedBases = alignedBases;
-                maxBaseQual = calcBaseQualAverage(read);
-            }
-            else if(alignedBases == maxAlignedBases)
-            {
-                double avgBaseQual = calcBaseQualAverage(read);
-
-                if(avgBaseQual > maxBaseQual)
-                {
-                    maxRead = read;
-                    maxAlignedBases = alignedBases;
-                    maxBaseQual = avgBaseQual;
-                }
-            }
-        }
-
-        return maxRead;
-    }
-
 
     public SAMRecord copyPrimaryRead(final SAMRecord read, final String groupIdentifier)
     {
@@ -340,21 +299,4 @@ public class ConsensusReads
 
         return record;
     }
-
-    private static void buildNonIndelCigar(final ConsensusState consensusState)
-    {
-        // build CIGAR from matched and any soft-clipped elements
-        int leftSoftClipBases = consensusState.MinAlignedPosStart - consensusState.MinUnclippedPosStart;
-        int rightSoftClipBases = consensusState.MaxUnclippedPosEnd - consensusState.MaxAlignedPosEnd;
-        int alignedBases = consensusState.MaxAlignedPosEnd - consensusState.MinAlignedPosStart + 1;
-
-        if(leftSoftClipBases > 0)
-            consensusState.CigarElements.add(new CigarElement(leftSoftClipBases, S));
-
-        consensusState.CigarElements.add(new CigarElement(alignedBases, M));
-
-        if(rightSoftClipBases > 0)
-            consensusState.CigarElements.add(new CigarElement(rightSoftClipBases, S));
-    }
-
 }
