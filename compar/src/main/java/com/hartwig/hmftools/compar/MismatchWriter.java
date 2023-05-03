@@ -39,18 +39,6 @@ public class MismatchWriter
 
         try
         {
-            String outputFile = filePrefix + "csv";
-
-            CMP_LOGGER.info("writing output results: {}", outputFile);
-
-            mCombinedWriter = createBufferedWriter(outputFile, false);
-
-            if(mConfig.multiSample())
-                mCombinedWriter.write("SampleId,");
-
-            mCombinedWriter.write(Mismatch.header());
-            mCombinedWriter.newLine();
-
             if(mConfig.WriteDetailed)
             {
                 List<ItemComparer> comparers = buildComparers(mConfig);
@@ -78,6 +66,20 @@ public class MismatchWriter
                     writer.newLine();
                     mCategoryWriters.put(comparer.category(), writer);
                 }
+            }
+            else
+            {
+                String outputFile = filePrefix + "csv";
+
+                CMP_LOGGER.info("writing output results: {}", outputFile);
+
+                mCombinedWriter = createBufferedWriter(outputFile, false);
+
+                if(mConfig.multiSample())
+                    mCombinedWriter.write("SampleId,");
+
+                mCombinedWriter.write(Mismatch.header());
+                mCombinedWriter.newLine();
             }
         }
         catch(IOException e)
