@@ -2,10 +2,13 @@ package com.hartwig.hmftools.common.variant;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 
@@ -36,6 +39,11 @@ public class VcfFileReader
 
     public VcfFileReader(final String filename)
     {
+        this(filename, false);
+    }
+
+    public VcfFileReader(final String filename, final boolean requireIndex)
+    {
         mFilename = filename;
         mGenotypeOrdinals = Maps.newHashMap();
         mReferenceOrdinal = NO_GENOTYPE_INDEX;
@@ -43,7 +51,7 @@ public class VcfFileReader
 
         if(Files.exists(Paths.get(filename)))
         {
-            mReader = getFeatureReader(filename, new VCFCodec(), false);
+            mReader = getFeatureReader(filename, new VCFCodec(), requireIndex);
             mFileValid = true;
 
             List<String> vcfSampleNames = ((VCFHeader)mReader.getHeader()).getGenotypeSamples();
@@ -98,4 +106,18 @@ public class VcfFileReader
 
     @Nullable
     public VariantContext nextVariant() { return iterator().next(); }
+
+    public List<VariantContext> findVariants(final String chromosome, final int lowerBound, final int upperBound)
+    {
+        try
+        {
+            return mReader.query(chromosome, lowerBound, upperBound).stream().collect(Collectors.toList());
+        }
+        catch(Exception e)
+        {
+            LOGGER.error("failed to read variant from file({}): {}", mFilename, e.toString());
+            return Collections.emptyList();
+        }
+    }
+
 }

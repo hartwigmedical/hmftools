@@ -20,6 +20,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
@@ -129,23 +130,11 @@ public class GripssApplication
 
     private void processVcf(final String vcfFile)
     {
-        final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                vcfFile, new VCFCodec(), false);
+        VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
-        VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
+        VCFHeader vcfHeader = vcfFileReader.vcfHeader();
 
         GR_LOGGER.info("sample({}) processing VCF({})", mConfig.SampleId, vcfFile);
-
-        /*
-        boolean expectReferenceFirst = !mConfig.GermlineMode;
-
-        if(!GenotypeIds.hasValidSampleIds(vcfHeader, mConfig.ReferenceId, mConfig.SampleId, expectReferenceFirst, true))
-        {
-            GripssConfig.GR_LOGGER.error("missing sample names(ref={} tumor={}) in VCF: {}",
-                    mConfig.ReferenceId, mConfig.SampleId, vcfHeader.getGenotypeSamples());
-            System.exit(1);
-        }
-        */
 
         GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.SampleId);
 
@@ -174,14 +163,7 @@ public class GripssApplication
                     genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId, genotypeIds.TumorOrdinal, genotypeIds.TumorId);
         }
 
-        try
-        {
-            reader.iterator().forEach(x -> processVariant(x, genotypeIds));
-        }
-        catch(IOException e)
-        {
-            GR_LOGGER.error("error reading vcf({}): {}", vcfFile, e.toString());
-        }
+        vcfFileReader.iterator().forEach(x -> processVariant(x, genotypeIds));
 
         GR_LOGGER.info("read VCF: breakends({}) unmatched({}) complete({}) hardFiltered({})",
                 mProcessedVariants, mVariantBuilder.incompleteSVs(), mSvDataCache.getSvList().size(), mVariantBuilder.hardFilteredCount());
