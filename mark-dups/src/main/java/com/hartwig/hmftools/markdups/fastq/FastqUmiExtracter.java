@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -103,8 +104,9 @@ public class FastqUmiExtracter
 
     private BufferedWriter createOutputWriter(final String inputFile)
     {
-        int extensionIndex = inputFile.contains("fastq") ? inputFile.lastIndexOf(".fastq") : inputFile.lastIndexOf(".fq");
-        String outputFile = inputFile.substring(0, extensionIndex) + '.' + mOutputId + inputFile.substring(extensionIndex);
+        String fastqFile = inputFile.substring(inputFile.lastIndexOf(File.separator) + 1);
+        int extensionIndex = fastqFile.contains("fastq") ? fastqFile.lastIndexOf(".fastq") : fastqFile.lastIndexOf(".fq");
+        String outputFile = mOutputDir + fastqFile.substring(0, extensionIndex) + '.' + mOutputId + fastqFile.substring(extensionIndex);
 
         try
         {
