@@ -52,14 +52,14 @@ public class CommonUtils
 
             comparer.registerThresholds(config.Thresholds);
             comparers.add(comparer);
+        }
 
-            if(config.runCopyNumberGeneComparer())
-            {
-                // use the gene copy number comparer to assist with CN-event drivers
-                ItemComparer gcnComparer = createComparer(GENE_COPY_NUMBER, config);
-                gcnComparer.registerThresholds(config.Thresholds);
-                comparers.add(gcnComparer);
-            }
+        if(config.runCopyNumberGeneComparer())
+        {
+            // use the gene copy number comparer to assist with CN-event drivers
+            ItemComparer comparer = createComparer(GENE_COPY_NUMBER, config);
+            comparer.registerThresholds(config.Thresholds);
+            comparers.add(comparer);
         }
 
         return comparers;
@@ -130,8 +130,8 @@ public class CommonUtils
             }
             else
             {
-                FileSources fileSources = config.FileSources.get(sourceName);
-                List<ComparableItem> items = comparer.loadFromFile(sourceSampleId, FileSources.sampleInstance(fileSources, sourceSampleId));
+                FileSources fileSources = FileSources.sampleInstance(config.FileSources.get(sourceName), sourceSampleId);
+                List<ComparableItem> items = comparer.loadFromFile(sourceSampleId, fileSources);
 
                 if(items == null)
                     return false;
