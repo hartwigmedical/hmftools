@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 public final class DiffFunctions
 {
+    public static final String FILTER_DIFF = "filter";
+
     public static boolean checkDiff(final List<String> diffs, final String name, int value1, int value2, final DiffThresholds thresholds)
     {
         if(thresholds.hasDifference(name, value1, value2))
@@ -62,12 +64,12 @@ public final class DiffFunctions
 
     public static void checkFilterDiffs(Set<String> refFilters, final Set<String> otherFilters, final List<String> diffs)
     {
-        Set<String> origFilterDiffs = refFilters.stream().filter(x -> !otherFilters.contains(x)).collect(Collectors.toSet());
+        Set<String> refFilterDiffs = refFilters.stream().filter(x -> !otherFilters.contains(x)).collect(Collectors.toSet());
         Set<String> newFilterDiffs = otherFilters.stream().filter(x -> !refFilters.contains(x)).collect(Collectors.toSet());
 
-        if(!newFilterDiffs.isEmpty() || !origFilterDiffs.isEmpty())
+        if(!newFilterDiffs.isEmpty() || !refFilterDiffs.isEmpty())
         {
-            diffs.add(String.format("%s(%s/%s)", "filter", filtersStr(origFilterDiffs), filtersStr(newFilterDiffs)));
+            diffs.add(String.format("%s(%s/%s)", FILTER_DIFF, filtersStr(refFilterDiffs), filtersStr(newFilterDiffs)));
         }
     }
 

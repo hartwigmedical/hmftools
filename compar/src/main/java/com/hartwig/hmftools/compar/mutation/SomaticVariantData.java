@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.mutation;
 
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
@@ -7,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.DiffFunctions.FILTER_DIFF;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkFilterDiffs;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
@@ -167,36 +169,44 @@ public class SomaticVariantData implements ComparableItem
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
     {
-        return findMismatch(other, matchLevel, thresholds, false);
+        return findDiffs(other, thresholds, false);
     }
 
-    protected Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, boolean limited)
+    protected Mismatch findDiffs(final ComparableItem other, final DiffThresholds thresholds, boolean isUnfiltered)
     {
         final SomaticVariantData otherVar = (SomaticVariantData) other;
 
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(diffs, FLD_QUAL, Qual, otherVar.Qual, thresholds);
-
-        if(limited)
-            return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
-
         checkDiff(diffs, FLD_REPORTED, Reported, otherVar.Reported);
         checkDiff(diffs, FLD_HOTSPOT, HotspotStatus.toString(), otherVar.HotspotStatus.toString());
         checkDiff(diffs, FLD_TIER, Tier.toString(), otherVar.Tier.toString());
-        checkDiff(diffs, FLD_BIALLELIC, Biallelic, otherVar.Biallelic);
-        checkDiff(diffs, FLD_GENE, Gene, otherVar.Gene);
-        checkDiff(diffs, FLD_CANON_EFFECT, CanonicalEffect, otherVar.CanonicalEffect);
-        checkDiff(diffs, FLD_CODING_EFFECT, CanonicalCodingEffect, otherVar.CanonicalCodingEffect);
-        checkDiff(diffs, FLD_HGVS_CODING, CanonicalHgvsCodingImpact, otherVar.CanonicalHgvsCodingImpact);
-        checkDiff(diffs, FLD_HGVS_PROTEIN, CanonicalHgvsProteinImpact, otherVar.CanonicalHgvsProteinImpact);
-        checkDiff(diffs, FLD_OTHER_REPORTED, OtherReportedEffects, otherVar.OtherReportedEffects);
+
+        if(!isUnfiltered)
+        {
+            checkDiff(diffs, FLD_BIALLELIC, Biallelic, otherVar.Biallelic);
+            checkDiff(diffs, FLD_GENE, Gene, otherVar.Gene);
+            checkDiff(diffs, FLD_CANON_EFFECT, CanonicalEffect, otherVar.CanonicalEffect);
+            checkDiff(diffs, FLD_CODING_EFFECT, CanonicalCodingEffect, otherVar.CanonicalCodingEffect);
+            checkDiff(diffs, FLD_HGVS_CODING, CanonicalHgvsCodingImpact, otherVar.CanonicalHgvsCodingImpact);
+            checkDiff(diffs, FLD_HGVS_PROTEIN, CanonicalHgvsProteinImpact, otherVar.CanonicalHgvsProteinImpact);
+            checkDiff(diffs, FLD_OTHER_REPORTED, OtherReportedEffects, otherVar.OtherReportedEffects);
+
+            checkDiff(diffs, FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, otherVar.SubclonalLikelihood, thresholds);
+        }
 
         checkDiff(diffs, FLD_LPS, HasLPS, otherVar.HasLPS);
-        checkDiff(diffs, FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, otherVar.SubclonalLikelihood, thresholds);
 
         // compare filters
         checkFilterDiffs(Filters, otherVar.Filters, diffs);
+
+        if(isUnfiltered && !diffs.contains(FILTER_DIFF))
+        {
+            // suggest was filtered downstream of Sage , eg Pave or Purple so indicate this
+            if(Filters.isEmpty() && otherVar.Filters.isEmpty())
+                diffs.add(String.format("%s(%s/%s)", FILTER_DIFF, PASS, "FILTERED"));
+        }
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }

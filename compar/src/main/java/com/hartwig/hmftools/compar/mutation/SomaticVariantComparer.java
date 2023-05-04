@@ -1,10 +1,16 @@
 package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
+import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
@@ -14,7 +20,6 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somatic
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +28,12 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -37,22 +47,19 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import org.jooq.Record;
 import org.jooq.Result;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-import htsjdk.variant.vcf.VCFCodec;
 
 public class SomaticVariantComparer implements ItemComparer
 {
     private final ComparConfig mConfig;
-    private boolean mLimitedComparison;
+    private final Map<String,VcfFileReader> mUnfilteredVcfReaders;
 
     public SomaticVariantComparer(final ComparConfig config)
     {
         mConfig = config;
-        mLimitedComparison = false;
+        mUnfilteredVcfReaders = Maps.newHashMap();
     }
 
     @Override
@@ -122,7 +129,8 @@ public class SomaticVariantComparer implements ItemComparer
             {
                 final SomaticVariantData refVariant = refVariants.get(index1);
 
-                boolean matched = false;
+                SomaticVariantData matchedVariant = null;
+                boolean isUnfiltered = false;
 
                 int index2 = 0;
                 while(index2 < newVariants.size())
@@ -131,41 +139,98 @@ public class SomaticVariantComparer implements ItemComparer
 
                     if(refVariant.matches(newVariant))
                     {
-                        refVariants.remove(index1);
+                        matchedVariant = newVariant;
                         newVariants.remove(index2);
-                        matched = true;
+                        break;
+                    }
+                    else if(newVariant.Position > refVariant.Position)
+                    {
+                        final SomaticVariantData unfilteredVariant = findUnfilteredVariant(refVariant, NEW_SOURCE);
 
-                        // skip checking for diffs if the items are not reportable
-                        boolean eitherReportable = refVariant.reportable() || newVariant.reportable();
-
-                        if(matchLevel != REPORTABLE || eitherReportable)
+                        if(unfilteredVariant != null)
                         {
-                            Mismatch mismatch = refVariant.findMismatch(newVariant, matchLevel, mConfig.Thresholds, mLimitedComparison);
-
-                            if(mismatch != null)
-                                mismatches.add(mismatch);
+                            isUnfiltered = true;
+                            matchedVariant = unfilteredVariant;
                         }
 
                         break;
                     }
-                    else
-                    {
-                        ++index2;
-                    }
+
+                    ++index2;
                 }
 
-                if(!matched)
+                if(matchedVariant != null)
+                {
+                    refVariants.remove(index1);
+
+                    // skip checking for diffs if the items are not reportable
+                    boolean eitherReportable = refVariant.reportable() || matchedVariant.reportable();
+
+                    if(matchLevel != REPORTABLE || eitherReportable)
+                    {
+                        Mismatch mismatch = refVariant.findDiffs(matchedVariant, mConfig.Thresholds, isUnfiltered);
+
+                        if(mismatch != null)
+                            mismatches.add(mismatch);
+                    }
+                }
+                else
+                {
                     ++index1;
+                }
             }
 
             refVariants.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
                     .forEach(x -> mismatches.add(new Mismatch(x, null, REF_ONLY, emptyDiffs)));
 
-            newVariants.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
-                    .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
+            for(SomaticVariantData newVariant : newVariants)
+            {
+                if(matchLevel == REPORTABLE && !newVariant.reportable())
+                    continue;
+
+                SomaticVariantData unfilteredVariant = findUnfilteredVariant(newVariant, REF_SOURCE);
+
+                if(unfilteredVariant != null)
+                {
+                    mismatches.add(newVariant.findDiffs(unfilteredVariant, mConfig.Thresholds, true));
+                }
+                else
+                {
+                    mismatches.add(new Mismatch(null, newVariant, NEW_ONLY, emptyDiffs));
+                }
+            }
         }
 
         return true;
+    }
+
+    protected SomaticVariantData findUnfilteredVariant(final SomaticVariantData testVariant, final String otherSource)
+    {
+        VcfFileReader unfilteredVcfReader = mUnfilteredVcfReaders.get(otherSource);
+
+        if(unfilteredVcfReader == null)
+            return null;
+
+        List<VariantContext> candidates = unfilteredVcfReader.findVariants(
+                testVariant.comparisonChromosome(), testVariant.comparisonPosition(), testVariant.comparisonPosition());
+
+        for(VariantContext context : candidates)
+        {
+            String ref = context.getReference().getBaseString();
+            String alt = !context.getAlternateAlleles().isEmpty() ? context.getAlternateAlleles().get(0).toString() : ref;
+
+            if(!testVariant.Ref.equals(ref) && testVariant.Alt.equals(alt))
+                continue;
+
+            return new SomaticVariantData(
+                    testVariant.Chromosome, testVariant.Position, ref, alt, VariantType.type(context),
+                    "", false, Hotspot.fromVariant(context), VariantTier.fromContext(context),
+                    false, "", "", "", "",
+                    "", context.hasAttribute(LOCAL_PHASE_SET), (int)context.getPhredScaledQual(),
+                    0, context.getFilters());
+        }
+
+        return null;
     }
 
     private Map<String,List<SomaticVariantData>> buildVariantMap(final List<SomaticVariantData> variants)
@@ -248,16 +313,7 @@ public class SomaticVariantComparer implements ItemComparer
         filter.add(new PassingVariantFilter());
 
         // use the Purple suffix if not specified
-        String vcfFile;
-        if(!fileSources.SomaticVcf.isEmpty())
-        {
-            vcfFile = fileSources.SomaticVcf;
-            mLimitedComparison = true;
-        }
-        else
-        {
-            vcfFile = PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId);
-        }
+        String vcfFile = PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId);
 
         VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
@@ -287,6 +343,20 @@ public class SomaticVariantComparer implements ItemComparer
         }
 
         CMP_LOGGER.debug("sample({}) loaded {} somatic variants", sampleId, variants.size());
+
+        // prepare the unfiltered file source if configured
+        if(!fileSources.SomaticUnfilteredVcf.isEmpty())
+        {
+            VcfFileReader unfilteredVcfReader = new VcfFileReader(fileSources.SomaticUnfilteredVcf);
+
+            if(!unfilteredVcfReader.fileValid())
+            {
+                CMP_LOGGER.error("failed to read somatic unfiltered VCF file({})", fileSources.SomaticUnfilteredVcf);
+                return null;
+            }
+
+            mUnfilteredVcfReaders.put(fileSources.Source, unfilteredVcfReader);
+        }
 
         return variants;
     }
