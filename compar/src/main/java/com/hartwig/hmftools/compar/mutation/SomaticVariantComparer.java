@@ -219,7 +219,7 @@ public class SomaticVariantComparer implements ItemComparer
             String ref = context.getReference().getBaseString();
             String alt = !context.getAlternateAlleles().isEmpty() ? context.getAlternateAlleles().get(0).toString() : ref;
 
-            if(!testVariant.Ref.equals(ref) && testVariant.Alt.equals(alt))
+            if(!testVariant.Ref.equals(ref) || !testVariant.Alt.equals(alt))
                 continue;
 
             return new SomaticVariantData(
