@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
@@ -13,8 +14,6 @@ import com.google.common.collect.Maps;
 public class DiffThresholds
 {
     private final Map<String,ThresholdData> mFieldThresholds;
-
-    // private static final String DEFAULT_FIELD = "DEFAULT";
 
     private static final String THRESHOLD_ITEM_DELIM = ":";
 
@@ -35,6 +34,9 @@ public class DiffThresholds
 
     public void addFieldThreshold(final String field, double absoluteDiff, double percentDiff)
     {
+        if(mFieldThresholds.containsKey(field)) // keep any config overrides
+            return;
+
         ThresholdType type = absoluteDiff > 0 && percentDiff > 0 ? ThresholdType.ABSOLUTE_AND_PERCENT :
                 (absoluteDiff > 0 ? ThresholdType.ABSOLUTE : ThresholdType.PERCENT);
 
@@ -99,5 +101,7 @@ public class DiffThresholds
 
             return hasRelDiff;
         }
+
+        public String toString() { return format("type(%s) abs(%f) perc(%.3f)", Type, AbsoluteDiff, PercentDiff); }
     }
 }

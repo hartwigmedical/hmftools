@@ -7,12 +7,16 @@ import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_MAJOR_ALLELE
 import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_METHOD;
 import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MAX_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MIN_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MIN_REGION_END;
+import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MIN_REGION_START;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.compar.Category;
@@ -28,13 +32,15 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 public class GeneCopyNumberComparer implements ItemComparer
 {
     private final ComparConfig mConfig;
-    private final List<String> mDriverGeneNames;
+    private final Set<String> mDriverGenes;
 
     public GeneCopyNumberComparer(final ComparConfig config)
     {
         mConfig = config;
-        mDriverGeneNames = mConfig.DriverGenes.stream().collect(Collectors.toList());
+        mDriverGenes = Sets.newHashSet();
     }
+
+    public void addDriverGenes(final Set<String> driverGenes) { mDriverGenes.addAll(driverGenes); }
 
     @Override
     public Category category() { return GENE_COPY_NUMBER; }
@@ -58,7 +64,7 @@ public class GeneCopyNumberComparer implements ItemComparer
     @Override
     public List<String> comparedFieldNames()
     {
-        return Lists.newArrayList(FLD_COPY_NUMBER, FLD_MAJOR_ALLELE_CN, FLD_METHOD);
+        return Lists.newArrayList(FLD_MIN_COPY_NUMBER, FLD_MAX_COPY_NUMBER, FLD_MIN_REGION_START, FLD_MIN_REGION_END);
     }
 
     @Override
@@ -66,10 +72,14 @@ public class GeneCopyNumberComparer implements ItemComparer
     {
         List<ComparableItem> items = Lists.newArrayList();
 
-        if(mDriverGeneNames.isEmpty())
+        final Set<String> driverGenes = !mDriverGenes.isEmpty() ? mDriverGenes : mConfig.DriverGenes;
+
+        if(driverGenes.isEmpty())
             return items;
 
-        final List<GeneCopyNumber> copyNumbers = dbAccess.readGeneCopynumbers(sampleId, mDriverGeneNames);
+        final List<GeneCopyNumber> copyNumbers = dbAccess.readGeneCopynumbers(
+                sampleId, driverGenes.stream().collect(Collectors.toList()));
+
         copyNumbers.forEach(x -> items.add(new GeneCopyNumberData(x)));
         return items;
     }
@@ -79,7 +89,11 @@ public class GeneCopyNumberComparer implements ItemComparer
     {
         final List<ComparableItem> items = Lists.newArrayList();
 
-        if(mDriverGeneNames.isEmpty())
+        // load only the genes in the driver catalog if the driver category is being run
+
+        final Set<String> driverGenes = !mDriverGenes.isEmpty() ? mDriverGenes : mConfig.DriverGenes;
+
+        if(driverGenes.isEmpty())
             return items;
 
         try
@@ -87,7 +101,7 @@ public class GeneCopyNumberComparer implements ItemComparer
             List<GeneCopyNumber> copyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(
                     fileSources.Purple, sampleId));
 
-            copyNumbers.stream().filter(x -> mConfig.DriverGenes.contains(x.geneName())).forEach(x -> items.add(new GeneCopyNumberData(x)));
+            copyNumbers.stream().filter(x -> driverGenes.contains(x.geneName())).forEach(x -> items.add(new GeneCopyNumberData(x)));
         }
         catch(IOException e)
         {

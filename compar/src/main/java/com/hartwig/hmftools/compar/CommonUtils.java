@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar;
 
+import static com.hartwig.hmftools.compar.Category.DRIVER;
+import static com.hartwig.hmftools.compar.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
@@ -35,10 +37,13 @@ public class CommonUtils
     {
         List<ItemComparer> comparers = Lists.newArrayList();
 
-        for(Map.Entry<Category,MatchLevel> entry : config.Categories.entrySet())
+        // load in a predictable order irrespective of config
+        for(Category category : Category.values())
         {
-            Category category = entry.getKey();
-            MatchLevel matchLevel = entry.getValue();
+            if(!config.Categories.containsKey(category))
+                continue;
+
+            MatchLevel matchLevel = config.Categories.get(category);
 
             ItemComparer comparer = createComparer(category, config);
 
@@ -47,6 +52,14 @@ public class CommonUtils
 
             comparer.registerThresholds(config.Thresholds);
             comparers.add(comparer);
+
+            if(config.runCopyNumberGeneComparer())
+            {
+                // use the gene copy number comparer to assist with CN-event drivers
+                ItemComparer gcnComparer = createComparer(GENE_COPY_NUMBER, config);
+                gcnComparer.registerThresholds(config.Thresholds);
+                comparers.add(gcnComparer);
+            }
         }
 
         return comparers;

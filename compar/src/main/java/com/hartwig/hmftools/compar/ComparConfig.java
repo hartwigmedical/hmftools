@@ -15,6 +15,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.compar.Category.ALL_CATEGORIES;
+import static com.hartwig.hmftools.compar.Category.DRIVER;
+import static com.hartwig.hmftools.compar.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.Category.LINX_CATEGORIES;
 import static com.hartwig.hmftools.compar.Category.PANEL_CATEGORIES;
 import static com.hartwig.hmftools.compar.Category.PURPLE_CATEGORIES;
@@ -209,6 +211,8 @@ public class ComparConfig
                 System.exit(1);
         }
     }
+
+    public boolean runCopyNumberGeneComparer() { return Categories.containsKey(DRIVER) && !Categories.containsKey(GENE_COPY_NUMBER); }
 
     public String sourceSampleId(final String source, final String sampleId)
     {

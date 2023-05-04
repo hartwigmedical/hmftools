@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.purple;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.Category.COPY_NUMBER;
+import static com.hartwig.hmftools.compar.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
 
@@ -22,6 +23,8 @@ public class GeneCopyNumberData implements ComparableItem
 
     protected static final String FLD_MIN_COPY_NUMBER = "MinCopyNumber";
     protected static final String FLD_MAX_COPY_NUMBER = "MaxCopyNumber";
+    protected static final String FLD_MIN_REGION_START = "MinRegionStart";
+    protected static final String FLD_MIN_REGION_END = "MinRegionEnd";
 
     public GeneCopyNumberData(final GeneCopyNumber copyNumber)
     {
@@ -29,7 +32,7 @@ public class GeneCopyNumberData implements ComparableItem
     }
 
     public Category category() {
-        return COPY_NUMBER;
+        return GENE_COPY_NUMBER;
     }
 
     @Override
@@ -44,6 +47,8 @@ public class GeneCopyNumberData implements ComparableItem
         List<String> values = Lists.newArrayList();
         values.add(format("%.2f", CopyNumber.minCopyNumber()));
         values.add(format("%.2f", CopyNumber.maxCopyNumber()));
+        values.add(format("%d", CopyNumber.minRegionStart()));
+        values.add(format("%d", CopyNumber.minRegionEnd()));
         return values;
     }
 

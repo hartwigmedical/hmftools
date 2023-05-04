@@ -2,20 +2,34 @@ package com.hartwig.hmftools.compar;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.AMP;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DEL;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.PARTIAL_AMP;
+import static com.hartwig.hmftools.compar.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.CommonUtils.buildComparers;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
 
 public class ComparTask implements Callable
 {
     private final int mTaskId;
     private final ComparConfig mConfig;
     private final List<String> mSampleIds;
-    private final List<ItemComparer> mComparators;
+    private final List<ItemComparer> mComparers;
 
     private final MismatchWriter mWriter;
 
@@ -26,7 +40,7 @@ public class ComparTask implements Callable
         mWriter = writer;
 
         mSampleIds = Lists.newArrayList();
-        mComparators = buildComparers(config);
+        mComparers = buildComparers(config);
     }
 
     public List<String> getSampleIds() { return mSampleIds; }
@@ -64,12 +78,17 @@ public class ComparTask implements Callable
     {
         int totalMismatches = 0;
         int failedTypes = 0;
-        for(ItemComparer comparer : mComparators)
+        for(ItemComparer comparer : mComparers)
         {
             List<Mismatch> mismatches = Lists.newArrayList();
 
             try
             {
+                if(mConfig.runCopyNumberGeneComparer() && comparer.category() == GENE_COPY_NUMBER)
+                {
+                    ((GeneCopyNumberComparer)comparer).addDriverGenes(loadCombinedCopyNumberDriverGenes(sampleId));
+                }
+
                 boolean status = comparer.processSample(sampleId, mismatches);
 
                 if(!status)
@@ -88,5 +107,35 @@ public class ComparTask implements Callable
 
         CMP_LOGGER.debug("sample({}) wrote {} mismatches {}",
                 sampleId, totalMismatches, failedTypes > 0 ? format("failed types %d", failedTypes) : "");
+    }
+
+
+    private Set<String> loadCombinedCopyNumberDriverGenes(final String sampleId)
+    {
+        Set<String> combinedGenes = Sets.newHashSet();
+
+        for(String sourceName : mConfig.SourceNames)
+        {
+            String sourceSampleId = mConfig.sourceSampleId(sourceName, sampleId);
+
+            FileSources fileSources = mConfig.FileSources.get(sourceName);
+
+            try
+            {
+                String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(fileSources.Purple, sourceSampleId);
+
+                DriverCatalogFile.read(purpleDriverFile).stream()
+                        .filter(x -> x.driver() == AMP || x.driver() == PARTIAL_AMP || x.driver() == DEL)
+                        .forEach(x -> combinedGenes.add(x.gene()));
+
+            }
+            catch(IOException e)
+            {
+                CMP_LOGGER.warn("sample({}) failed to load driver data: {}", sampleId, e.toString());
+                return null;
+            }
+        }
+
+        return combinedGenes;
     }
 }
