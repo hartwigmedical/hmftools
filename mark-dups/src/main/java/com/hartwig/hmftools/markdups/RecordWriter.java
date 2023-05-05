@@ -48,8 +48,11 @@ public class RecordWriter
     private final BufferedWriter mReadWriter;
 
     private boolean mCacheReads;
-    private final Set<SAMRecord> mReadsWritten; // debug only
-    private int mNonConsensusReads;
+    private final Set<String> mExpectedReads;
+    private int mNonConsensusReadCount;
+    private int mConsensusReadCount;
+
+    private int mExpectedReadsSize;
 
     private class BamWriter
     {
@@ -86,7 +89,9 @@ public class RecordWriter
     {
         mConfig = config;
         mCacheReads = config.runReadChecks();
-        mNonConsensusReads = 0;
+        mNonConsensusReadCount = 0;
+        mConsensusReadCount = 0;
+        mExpectedReadsSize = 0;
 
         if(mConfig.WriteBam)
         {
@@ -100,7 +105,7 @@ public class RecordWriter
         }
 
         mReadWriter = initialiseReadWriter();
-        mReadsWritten = Sets.newHashSet();
+        mExpectedReads = Sets.newHashSet();
     }
 
     private SAMFileWriter initialiseBam(final String filename)
@@ -124,11 +129,15 @@ public class RecordWriter
         return filename;
     }
 
-    public int recordWriteCount() { return mNonConsensusReads; } // mBamWriter.writeCount()
+    public int recordWriteCount() { return mNonConsensusReadCount; }
+    public int recordWriteCountConsensus() { return mConsensusReadCount; }
 
-    public synchronized void writeFragments(final List<Fragment> fragments) { fragments.forEach(x -> doWriteFragment(x)); }
+    public synchronized void writeFragments(final List<Fragment> fragments, boolean excludeUmis)
+    {
+        fragments.forEach(x -> doWriteFragment(x, excludeUmis));
+    }
 
-    public synchronized void writeFragment(final Fragment fragment) { doWriteFragment(fragment); }
+    public synchronized void writeFragment(final Fragment fragment) { doWriteFragment(fragment, true); }
 
     public synchronized void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus)
     {
@@ -142,9 +151,7 @@ public class RecordWriter
             if(read.hasAttribute(UMI_CONSENSUS_ATTRIBUTE))
             {
                 mBamWriter.writeRecord(read);
-
-                if(mCacheReads)
-                    mReadsWritten.add(read);
+                ++mConsensusReadCount;
 
                 if(mReadWriter != null)
                 {
@@ -160,9 +167,9 @@ public class RecordWriter
         }
     }
 
-    private void doWriteFragment(final Fragment fragment)
+    private void doWriteFragment(final Fragment fragment, boolean excludeUmis)
     {
-        if(fragment.umi() != null) // reads in UMI groups are only written as a complete group
+        if(excludeUmis && fragment.umi() != null) // reads in UMI groups are only written as a complete group
             return;
 
         if(fragment.readsWritten())
@@ -188,25 +195,16 @@ public class RecordWriter
             final SAMRecord read, final FragmentStatus fragmentStatus, final String fragmentCoordinates,
             final double avgBaseQual, final String umiId)
     {
-        if(mCacheReads)
-        {
-            if(mReadsWritten.contains(read))
-            {
-                MD_LOGGER.error("read({}) already written", readToString(read));
-            }
-            else
-            {
-                mReadsWritten.add(read);
-            }
-        }
-
-        ++mNonConsensusReads;
+        ++mNonConsensusReadCount;
 
         writeReadData(read, fragmentStatus, fragmentCoordinates, avgBaseQual, umiId);
 
         read.setDuplicateReadFlag(fragmentStatus == DUPLICATE); // overwrite any existing status
 
         mBamWriter.writeRecord(read);
+
+        if(mCacheReads)
+            removeWrittenRead(read);
     }
 
     private BufferedWriter initialiseReadWriter()
@@ -299,7 +297,62 @@ public class RecordWriter
         closeBufferedWriter(mReadWriter);
     }
 
-    public Set<SAMRecord> readsWritten() { return mReadsWritten; }
+    public synchronized void registerRead(final SAMRecord read)
+    {
+        if(!mCacheReads)
+            return;
+
+        mExpectedReads.add(formCachedReadString(read));
+    }
+
+    private void removeWrittenRead(final SAMRecord read)
+    {
+        if(!mCacheReads)
+            return;
+
+        String readStr = formCachedReadString(read);
+
+        if(!mExpectedReads.contains(readStr))
+        {
+            MD_LOGGER.warn("writing uncached read({}): {}", readStr, readToString(read));
+        }
+        else
+        {
+            mExpectedReads.remove(readStr);
+        }
+
+        if(abs(mExpectedReads.size() - mExpectedReadsSize) >= 100000)
+        {
+            mExpectedReadsSize = mExpectedReads.size();
+            MD_LOGGER.info("expected reads count({})", mExpectedReadsSize);
+        }
+    }
+
+    public void logUnwrittenReads()
+    {
+        if(!mCacheReads || mExpectedReads.isEmpty())
+            return;
+
+        MD_LOGGER.warn("unwritten read count({})", mExpectedReads.size());
+
+        for(String readStr : mExpectedReads)
+        {
+            MD_LOGGER.warn("unwritten read({})", readStr);
+        }
+    }
+
+    private static String formCachedReadString(final SAMRecord read)
+    {
+        boolean unmapped = read.getReadUnmappedFlag();
+
+        return format("%s_%s_%d_%s_%s_%s",
+                read.getReadName(),
+                unmapped ? "unmapped" : read.getReferenceName(),
+                unmapped ? 0 : read.getAlignmentStart(),
+                read.getReadNegativeStrandFlag() ? "fwd" : "rev",
+                read.getFirstOfPairFlag() ? "R1" : "R2",
+                read.getSupplementaryAlignmentFlag() ? "supp" : "prim");
+    }
 
     @VisibleForTesting
     public void setCacheReads() { mCacheReads = true;}

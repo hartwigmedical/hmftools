@@ -62,8 +62,6 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private final Statistics mStats;
     private final PerformanceCounter mPerfCounter;
 
-    private final Set<SAMRecord> mReadsProcessed; // for debug only when running checks
-
     public ChromosomeReader(
             final ChrBaseRegion region, final MarkDupsConfig config, final RecordWriter recordWriter,
             final PartitionDataStore partitionDataStore)
@@ -105,11 +103,9 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mStats = mDuplicateGroups.statistics();
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
-        mReadsProcessed = Sets.newHashSet();
         mPerfCounter = new PerformanceCounter("Slice");
     }
 
-    public Set<SAMRecord> readsProcessed() { return mReadsProcessed; }
     public PerformanceCounter perfCounter() { return mPerfCounter; }
     public Statistics statistics() { return mStats; }
 
@@ -194,8 +190,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         ++mStats.TotalReads;
         ++mPartitionRecordCount;
 
-        if(mConfig.runReadChecks())
-            mReadsProcessed.add(read);
+        if(mConfig.RunChecks)
+            mRecordWriter.registerRead(read);
 
         int readStart = read.getAlignmentStart();
 
@@ -261,7 +257,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
                         partitionResults.umiGroups().forEach(x -> processUmiGroup(x));
 
                     if(partitionResults.resolvedFragments() != null)
-                        mRecordWriter.writeFragments(partitionResults.resolvedFragments());
+                        mRecordWriter.writeFragments(partitionResults.resolvedFragments(), true);
                 }
                 else if(partitionResults.fragmentStatus() != null && partitionResults.fragmentStatus().isResolved())
                 {
@@ -310,7 +306,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
                 partitionResults.umiGroups().forEach(x -> processUmiGroup(x));
 
             if(partitionResults.resolvedFragments() != null)
-                mRecordWriter.writeFragments(partitionResults.resolvedFragments());
+                mRecordWriter.writeFragments(partitionResults.resolvedFragments(), true);
         }
 
         mPendingIncompleteReads.clear();
@@ -319,7 +315,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private void processUmiGroup(final UmiGroup umiGroup)
     {
         // form consensus reads for any complete read leg groups and write reads
-        List<SAMRecord> completeReads = umiGroup.popCompletedReads(mConsensusReads);
+        List<SAMRecord> completeReads = umiGroup.popCompletedReads(mConsensusReads, false);
         mRecordWriter.writeUmiReads(umiGroup, completeReads);
     }
 
@@ -381,7 +377,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         if(!resolvedFragments.isEmpty())
         {
-            mRecordWriter.writeFragments(resolvedFragments);
+            mRecordWriter.writeFragments(resolvedFragments, true);
 
             mStats.LocalComplete += (int)resolvedFragments.stream().filter(x -> x.allReadsPresent()).count();
         }

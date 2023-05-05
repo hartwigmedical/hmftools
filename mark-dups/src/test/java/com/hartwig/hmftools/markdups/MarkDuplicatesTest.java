@@ -68,7 +68,7 @@ public class MarkDuplicatesTest
         PartitionData partitionData = mChromosomeReader.partitionDataStore().getOrCreatePartitionData("1_0");
 
         assertEquals(1, partitionData.resolvedFragmentStateMap().size());
-        assertEquals(1, mWriter.readsWritten().size());
+        assertEquals(1, mWriter.recordWriteCount());
 
         SAMRecord mate1 = createSamRecord(
                 read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
@@ -78,7 +78,7 @@ public class MarkDuplicatesTest
 
         mChromosomeReader.processRead(mate1);
         assertEquals(1, partitionData.resolvedFragmentStateMap().size());
-        assertEquals(2, mWriter.readsWritten().size());
+        assertEquals(2, mWriter.recordWriteCount());
 
         SAMRecord supp1 = createSamRecord(
                 read1.getReadName(), CHR_1, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, false,
@@ -86,7 +86,7 @@ public class MarkDuplicatesTest
 
         mChromosomeReader.processRead(supp1);
         mChromosomeReader.onChromosomeComplete();
-        assertEquals(3, mWriter.readsWritten().size());
+        assertEquals(3, mWriter.recordWriteCount());
         assertTrue(partitionData.resolvedFragmentStateMap().isEmpty());
     }
 
@@ -126,7 +126,7 @@ public class MarkDuplicatesTest
         PartitionData partitionData = mChromosomeReader.partitionDataStore().getOrCreatePartitionData("1_1");
 
         assertEquals(2, partitionData.incompleteFragmentMap().size());
-        assertEquals(0, mWriter.readsWritten().size());
+        assertEquals(0, mWriter.recordWriteCount());
 
         // now the primaries, as candidates
         mChromosomeReader.processRead(read1);
@@ -135,7 +135,7 @@ public class MarkDuplicatesTest
 
         assertEquals(1, partitionData.candidateDuplicatesMap().size());
         assertEquals(2, partitionData.incompleteFragmentMap().size());
-        assertEquals(0, mWriter.readsWritten().size());
+        assertEquals(0, mWriter.recordWriteCount());
 
         SAMRecord mate1 = createSamRecord(
                 read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
@@ -150,11 +150,11 @@ public class MarkDuplicatesTest
         mate2.setSecondOfPairFlag(true);
 
         mChromosomeReader.processRead(mate1);
-        assertEquals(0, mWriter.readsWritten().size());
+        assertEquals(0, mWriter.recordWriteCount());
 
         mChromosomeReader.processRead(mate2);
         mChromosomeReader.flushPendingIncompletes();
-        assertEquals(6, mWriter.readsWritten().size());
+        assertEquals(6, mWriter.recordWriteCount());
 
         assertTrue(partitionData.candidateDuplicatesMap().isEmpty());
         assertTrue(partitionData.incompleteFragmentMap().isEmpty());
@@ -191,7 +191,8 @@ public class MarkDuplicatesTest
         PartitionData partitionData = mChrReaderUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
 
         assertEquals(2, partitionData.umiGroupMap().size());
-        assertEquals(3, mWriter.readsWritten().size());
+        assertEquals(2, mWriter.recordWriteCount());
+        assertEquals(1, mWriter.recordWriteCountConsensus());
 
         SAMRecord mate1 = createSamRecord(
                 read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
@@ -206,10 +207,12 @@ public class MarkDuplicatesTest
         mate2.setSecondOfPairFlag(true);
 
         mChrReaderUMIs.processRead(mate1);
-        assertEquals(3, mWriter.readsWritten().size());
+        assertEquals(2, mWriter.recordWriteCount());
+        assertEquals(1, mWriter.recordWriteCountConsensus());
 
         mChrReaderUMIs.processRead(mate2);
-        assertEquals(6, mWriter.readsWritten().size());
+        assertEquals(4, mWriter.recordWriteCount());
+        assertEquals(2, mWriter.recordWriteCountConsensus());
 
         SAMRecord supp1 = createSamRecord(
                 read1.getReadName(), CHR_1, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, false,
@@ -220,11 +223,13 @@ public class MarkDuplicatesTest
                 true, new SupplementaryReadData(CHR_1, readPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
 
         mChrReaderUMIs.processRead(supp1);
-        assertEquals(6, mWriter.readsWritten().size());
+        assertEquals(4, mWriter.recordWriteCount());
+        assertEquals(2, mWriter.recordWriteCountConsensus());
 
         mChrReaderUMIs.processRead(supp2);
         mChrReaderUMIs.onChromosomeComplete();
-        assertEquals(9, mWriter.readsWritten().size());
+        assertEquals(6, mWriter.recordWriteCount());
+        assertEquals(3, mWriter.recordWriteCountConsensus());
         assertTrue(partitionData.umiGroupMap().isEmpty());
     }
 

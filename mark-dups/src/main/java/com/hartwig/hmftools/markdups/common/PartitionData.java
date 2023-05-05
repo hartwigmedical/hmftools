@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -23,6 +24,8 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.markdups.RecordWriter;
+import com.hartwig.hmftools.markdups.umi.ConsensusReads;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
 import com.hartwig.hmftools.markdups.umi.UmiGroup;
 
@@ -425,67 +428,75 @@ public class PartitionData
 
     private boolean umiEnabled() { return mDuplicateGroups.umiConfig().Enabled; }
 
-    public List<Fragment> extractRemainingFragments(boolean logCachedReads)
+    public int writeRemainingReads(final RecordWriter recordWriter, final ConsensusReads consensusReads, boolean logCachedReads)
     {
-        List<Fragment> remainingFragments = mIncompleteFragments.values().stream().collect(Collectors.toList());
+        if(logCachedReads && MD_LOGGER.isDebugEnabled())
+        {
+            // not under lock since called only when all partitions are complete
+            MD_LOGGER.debug("partition({}) final state: {}", mChrPartition, cacheCountsStr());
+        }
+
+        // a clean-up routine for cached fragments
+        Set<UmiGroup> processedUmiGroups = Sets.newHashSet();
+
+        int cachedReadCount = 0;
 
         for(UmiGroup umiGroup : mUmiGroups.values())
         {
-            List<Fragment> umiFragments = umiGroup.extractIncompleteFragments();
+            if(processedUmiGroups.contains(umiGroup))
+                continue;
 
-            for(Fragment fragment : umiFragments)
+            processedUmiGroups.add(umiGroup);
+
+            for(String readId : umiGroup.getReadIds())
             {
-                Fragment existingFragment = remainingFragments.stream().filter(x -> x.id().equals(fragment.id())).findFirst().orElse(null);
+                Fragment incompleteFragment = mIncompleteFragments.get(readId);
 
-                if(existingFragment != null)
-                    fragment.reads().forEach(x -> existingFragment.addRead(x));
-                else
-                    remainingFragments.add(fragment);
+                if(incompleteFragment != null)
+                {
+                    mIncompleteFragments.remove(readId);
+                    incompleteFragment.reads().forEach(x -> umiGroup.addRead(x));
+                }
+            }
+
+            int cachedUmiReads = umiGroup.cachedReadCount();
+
+            if(cachedUmiReads == 0)
+                continue;
+
+            cachedReadCount += cachedUmiReads;
+
+            List<SAMRecord> completeReads = umiGroup.popCompletedReads(consensusReads, true);
+            recordWriter.writeUmiReads(umiGroup, completeReads);
+
+            if(logCachedReads)
+            {
+                StringJoiner readIds = new StringJoiner(",");
+                umiGroup.getReadIds().forEach(x -> readIds.add(x));
+                MD_LOGGER.debug("writing cached reads for umi group({}) coords({}) reads({})",
+                        umiGroup.toString(), umiGroup.fragmentCoordinates(), readIds);
             }
         }
 
-        if(remainingFragments.isEmpty() && mUmiGroups.isEmpty() && mFragmentStatus.isEmpty())
-            return remainingFragments;
-
-        // not under lock since called only when all partitions are complete
-        // MD_LOGGER.debug("partition({}) final state: {}", mChrPartition, cacheCountsStr());
-
-        if(logCachedReads && MD_LOGGER.isDebugEnabled())
+        for(Fragment fragment : mIncompleteFragments.values())
         {
-            // log some remaining cached fragments to help with debug
-            int logCount = 0;
-            int maxLog = 3;
+            recordWriter.writeFragment(fragment);
+            cachedReadCount += fragment.readCount();
+
+            if(logCachedReads)
+            {
+                for(SAMRecord read : fragment.reads())
+                {
+                    MD_LOGGER.debug("writing incomplete read: {} status({})", readToString(read), fragment.status());
+                }
+            }
+        }
+
+        if(logCachedReads && !mFragmentStatus.isEmpty())
+        {
             for(Map.Entry<String,ResolvedFragmentState> entry : mFragmentStatus.entrySet())
             {
                 MD_LOGGER.debug("cached resolved status: {} : {}", entry.getKey(), entry.getValue());
-
-                ++logCount;
-
-                if(logCount >= maxLog)
-                    break;
-            }
-
-            logCount = 0;
-            for(Fragment fragment : remainingFragments)
-            {
-                SAMRecord read = fragment.reads().get(0);
-                MD_LOGGER.debug("cached incomplete read: {} status({})", readToString(read), fragment.status());
-
-                ++logCount;
-
-                if(logCount >= maxLog)
-                    break;
-            }
-
-            logCount = 0;
-            for(UmiGroup umiGroup : mUmiGroups.values())
-            {
-                MD_LOGGER.debug("cached umi group: {}", umiGroup.toString());
-
-                ++logCount;
-
-                if(logCount >= maxLog)
-                    break;
             }
         }
 
@@ -494,7 +505,7 @@ public class PartitionData
         mCandidateDuplicatesMap.clear();
         mUmiGroups.clear();
 
-        return remainingFragments;
+        return cachedReadCount;
     }
 
     private void checkCachedCounts()

@@ -236,7 +236,7 @@ public class UmiGroup
         return Arrays.stream(mReadGroups).anyMatch(x -> x != null && !x.isEmpty() && x.size() == mFragmentCount);
     }
 
-    public List<SAMRecord> popCompletedReads(final ConsensusReads consensusReads)
+    public List<SAMRecord> popCompletedReads(final ConsensusReads consensusReads, boolean processIncompletes)
     {
         List<SAMRecord> reads = Lists.newArrayList();
 
@@ -247,10 +247,11 @@ public class UmiGroup
 
             List<SAMRecord> readGroup = mReadGroups[i];
 
-            if(readGroup == null || readGroup.size() < mFragmentCount)
+            if(readGroup == null || readGroup.isEmpty())
                 continue;
 
-            // if(mFragments.isEmpty()) // to avoid writing cached fragment reads twice
+            if(readGroup.size() < mFragmentCount && !processIncompletes)
+                continue;
 
             reads.addAll(readGroup);
 
@@ -270,45 +271,7 @@ public class UmiGroup
             mReadGroupComplete[i] = true;
         }
 
-        // if(!mFragments.isEmpty())
-        //    mFragments.clear();
-
         return reads;
-    }
-
-    public List<Fragment> extractIncompleteFragments()
-    {
-        List<Fragment> fragments = Lists.newArrayList();
-
-
-        for(String readId : mReadIds)
-        {
-            List<SAMRecord> reads = Lists.newArrayList();
-
-            for(int i = 0; i < mReadGroups.length; ++i)
-            {
-                if(mReadGroupComplete[i] || mReadGroups[i] == null)
-                    continue;
-
-                List<SAMRecord> readGroup = mReadGroups[i];
-
-                readGroup.stream().filter(x -> x.getReadName().equals(readId)).forEach(x -> reads.add(x));
-            }
-
-            if(!reads.isEmpty())
-            {
-                Fragment fragment = new Fragment(reads.get(0));
-                fragment.setCoordinates(mFragmentCoordinates);
-                fragment.setUmi(mId);
-
-                for(int i = 0; i < reads.size(); ++i)
-                {
-                    fragment.addRead(reads.get(i));
-                }
-            }
-        }
-
-        return fragments;
     }
 
     private List<SAMRecord> findConsistentSupplementaries(final List<SAMRecord> readGroup)

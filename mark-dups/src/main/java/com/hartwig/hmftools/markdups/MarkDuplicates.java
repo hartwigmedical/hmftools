@@ -3,18 +3,14 @@ package com.hartwig.hmftools.markdups;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -24,6 +20,7 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.Statistics;
+import com.hartwig.hmftools.markdups.umi.ConsensusReads;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -32,8 +29,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
-
-import htsjdk.samtools.SAMRecord;
 
 public class MarkDuplicates
 {
@@ -79,11 +74,18 @@ public class MarkDuplicates
             System.exit(1);
 
         int maxLogFragments = (mConfig.RunChecks || mConfig.PerfDebug) ? 100 : 0;
+        int totalUnwrittenFragments = 0;
+        ConsensusReads consensusReads = new ConsensusReads(mConfig.UMIs, mConfig.RefGenome);
         for(PartitionData partitionData : partitionDataStore.partitions())
         {
-            List<Fragment> fragments = partitionData.extractRemainingFragments(maxLogFragments > 0);
-            maxLogFragments = max(0, maxLogFragments - fragments.size());
-            recordWriter.writeFragments(fragments);
+            int cachedReadCount = partitionData.writeRemainingReads(recordWriter, consensusReads, maxLogFragments > 0);
+            totalUnwrittenFragments += cachedReadCount;
+            maxLogFragments = max(0, maxLogFragments - cachedReadCount);
+        }
+
+        if(totalUnwrittenFragments > 0)
+        {
+            MD_LOGGER.info("wrote {} cached fragments", totalUnwrittenFragments);
         }
 
         recordWriter.close();
@@ -99,7 +101,7 @@ public class MarkDuplicates
         if(combinedStats.TotalReads != recordWriter.recordWriteCount())
         {
             MD_LOGGER.warn("reads processed({}) vs written({}) mismatch", combinedStats.TotalReads, recordWriter.recordWriteCount());
-            checkMissingReads(chromosomeReaders, recordWriter);
+            recordWriter.logUnwrittenReads();
         }
 
         PerformanceCounter combinedPerfCounter = chromosomeReaders.get(0).perfCounter();
@@ -138,48 +140,6 @@ public class MarkDuplicates
         double timeTakeMins = timeTakenMs / 60000.0;
 
         MD_LOGGER.info("Mark duplicates complete, mins({})", format("%.3f", timeTakeMins));
-    }
-
-    private void checkMissingReads(final List<ChromosomeReader> chromosomeReaders, final RecordWriter recordWriter)
-    {
-        if(!mConfig.runReadChecks())
-            return;
-
-        Set<SAMRecord> recordsProcessed = Sets.newHashSet();
-        chromosomeReaders.forEach(x -> recordsProcessed.addAll(x.readsProcessed()));
-
-        List<SAMRecord> recordsWritten = recordWriter.readsWritten().stream().collect(Collectors.toList());
-
-        for(SAMRecord readProcessed : recordsProcessed)
-        {
-            boolean found = false;
-            for(int i = 0; i < recordsWritten.size(); ++i)
-            {
-                SAMRecord read = recordsWritten.get(i);
-
-                if(read == readProcessed)
-                {
-                    recordsWritten.remove(i);
-                    found = true;
-                    break;
-                }
-            }
-
-            if(!found)
-            {
-                MD_LOGGER.error("read processed but not written: {}", readToString(readProcessed));
-            }
-        }
-
-        if(!recordsWritten.isEmpty())
-        {
-            for(int i = 0; i < recordsWritten.size(); ++i)
-            {
-                SAMRecord read = recordsWritten.get(i);
-
-                MD_LOGGER.error("read extra written: {}", readToString(read));
-            }
-        }
     }
 
     public static void main(@NotNull final String[] args)

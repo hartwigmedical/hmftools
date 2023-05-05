@@ -241,7 +241,7 @@ public class MarkDupsConfig
         LogReadIds = Lists.newArrayList();
         Threads = 0;
         PerfDebug = false;
-        RunChecks = false;
+        RunChecks = true;
         UseInterimFiles = false;
     }
 }
