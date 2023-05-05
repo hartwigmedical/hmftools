@@ -219,7 +219,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         try
         {
-            if(read.getSupplementaryAlignmentFlag() || !mReadPositions.processRead(read))
+            if(!mReadPositions.processRead(read))
             {
                 ++mStats.Incomplete;
 

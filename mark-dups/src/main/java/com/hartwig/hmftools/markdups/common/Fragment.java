@@ -126,14 +126,33 @@ public class Fragment
     {
         if(read.getSupplementaryAlignmentFlag())
         {
+            // get the lower of their mate or their supplementary read's location
             SupplementaryReadData suppData = SupplementaryReadData.from(read);
-            if(suppData != null)
-            {
-                if(!HumanChromosome.contains(suppData.Chromosome))
-                    return null;
 
-                return formChromosomePartition(suppData.Chromosome, suppData.Position, partitionSize);
+            boolean hasSuppData = suppData != null && HumanChromosome.contains(suppData.Chromosome);
+
+            boolean hasMate = read.getReadPairedFlag() && !read.getMateUnmappedFlag();
+
+            if(!hasSuppData && !hasMate)
+                return null;
+
+            boolean useMate;
+
+            if(hasSuppData && hasMate)
+            {
+                if(suppData.Chromosome.equals(read.getMateReferenceName()))
+                    useMate = read.getMateAlignmentStart() <= suppData.Position;
+                else
+                    useMate = HumanChromosome.lowerChromosome(read.getMateReferenceName(), suppData.Chromosome);
             }
+            else
+            {
+                useMate = hasMate;
+            }
+
+            return useMate ?
+                    formChromosomePartition(read.getMateReferenceName(), read.getMateAlignmentStart(), partitionSize)
+                    : formChromosomePartition(suppData.Chromosome, suppData.Position, partitionSize);
         }
 
         if(!read.getReadPairedFlag())

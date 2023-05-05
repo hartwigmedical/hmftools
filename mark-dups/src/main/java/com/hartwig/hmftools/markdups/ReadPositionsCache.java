@@ -72,20 +72,35 @@ public class ReadPositionsCache
 
     public boolean processRead(final SAMRecord read)
     {
-        // supplementaries aren't processed
+        // supplementaries just check for a fragment match otherwise no further processing
+        if(read.getSupplementaryAlignmentFlag())
+        {
+            Fragment fragment = mFragments.get(read.getReadName());
+
+            if(fragment != null) // add to fragment if in a current group
+            {
+                fragment.addRead(read);
+                return true;
+            }
+
+            return false;
+        }
+
         // check for an existing mate if on the same chromosome
         // store in a group of fragments with a matching first fragment coordinate
         // if the mate has a lower position or is on a lower chromosome, don't add it to a position group
         boolean mateUnmapped = read.getMateUnmappedFlag();
         boolean readUnmapped = read.getReadUnmappedFlag();
 
+        boolean sameChromosome = !mateUnmapped && read.getMateReferenceName().equals(mChromosome);
+
         // skip if mate is on a lower chromosome
-        if(!mateUnmapped && !read.getMateReferenceName().equals(mChromosome) && read.getReferenceIndex() > read.getMateReferenceIndex())
+        if(!sameChromosome && read.getReferenceIndex() > read.getMateReferenceIndex())
             return false;
 
         Fragment fragment = mFragments.get(read.getReadName());
 
-        if(fragment != null) // add to fragment is in a current group
+        if(fragment != null) // add to fragment if in a current group
         {
             fragment.addRead(read);
             return true;
@@ -94,7 +109,7 @@ public class ReadPositionsCache
         if(readUnmapped)
             return false;
 
-        if(!mateUnmapped && read.getAlignmentStart() > read.getMateAlignmentStart()) // mate already processed and evicted
+        if(sameChromosome && read.getAlignmentStart() > read.getMateAlignmentStart()) // mate already processed and evicted
             return false;
 
         storeInitialRead(read);

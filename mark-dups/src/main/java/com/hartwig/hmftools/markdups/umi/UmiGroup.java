@@ -181,11 +181,13 @@ public class UmiGroup
 
             if(mReadTypeIndex[i].matches(read))
             {
+                /*
                 if(mReadTypeIndex[i].FirstInPair != read.getFirstOfPairFlag())
                 {
-                    MD_LOGGER.warn("umiGroup({}) read({}) readTypeIndex({}) mismatch",
-                            mId, readToString(read), mReadTypeIndex[i]);
+                    MD_LOGGER.trace("umiGroup({}) read({} {}) readTypeIndex({}) mismatch",
+                            mId, readToString(read), read.getFirstOfPairFlag() ? "R1" : "R2", mReadTypeIndex[i]);
                 }
+                */
 
                 return i;
             }
@@ -340,6 +342,22 @@ public class UmiGroup
         }
 
         return format("id(%s) fragments(%d) readCounts(%s)", mId, mFragmentCount, sj);
+    }
+
+    public void logReads()
+    {
+        for(int i = 0; i < mReadGroups.length; ++i)
+        {
+            List<SAMRecord> readGroup = mReadGroups[i];
+
+            if(readGroup == null || readGroup.isEmpty())
+                continue;
+
+            for(SAMRecord read : readGroup)
+            {
+                MD_LOGGER.debug("umi({}) coords({}) read: {}", mId, mFragmentCoordinates.Key, readToString(read));
+            }
+        }
     }
 
     public static List<UmiGroup> buildUmiGroups(final List<Fragment> fragments, final UmiConfig config)

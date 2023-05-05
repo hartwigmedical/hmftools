@@ -193,7 +193,7 @@ public class ConsensusReads
 
                 if(i == 0 || i == cigarCount - 1)
                 {
-                    if(!alignedOrSoftClip(element.getOperator()))
+                    if(!alignedOrSoftClip(element.getOperator()) && element.getOperator() != I)
                         return ValidationReason.CIGAR_ELEMENTS;
                 }
                 else if(element.getOperator() == S)

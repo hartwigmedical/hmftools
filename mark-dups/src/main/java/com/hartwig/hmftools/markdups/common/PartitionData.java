@@ -430,6 +430,9 @@ public class PartitionData
 
     public int writeRemainingReads(final RecordWriter recordWriter, final ConsensusReads consensusReads, boolean logCachedReads)
     {
+        if(mUmiGroups.isEmpty() && mIncompleteFragments.isEmpty() && mFragmentStatus.isEmpty())
+            return 0;
+
         if(logCachedReads && MD_LOGGER.isDebugEnabled())
         {
             // not under lock since called only when all partitions are complete
@@ -466,8 +469,16 @@ public class PartitionData
 
             cachedReadCount += cachedUmiReads;
 
-            List<SAMRecord> completeReads = umiGroup.popCompletedReads(consensusReads, true);
-            recordWriter.writeUmiReads(umiGroup, completeReads);
+            try
+            {
+                List<SAMRecord> completeReads = umiGroup.popCompletedReads(consensusReads, true);
+                recordWriter.writeUmiReads(umiGroup, completeReads);
+            }
+            catch(Exception e)
+            {
+                umiGroup.logReads();
+                e.printStackTrace();
+            }
 
             if(logCachedReads)
             {

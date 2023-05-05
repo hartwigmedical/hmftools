@@ -151,8 +151,16 @@ public class FastqUmiExtracter
                     if(!processReadBases(r1ReadBuffer, r2ReadBuffer))
                     {
                         MD_LOGGER.error("invalid entries at line({})", lineCount);
+
+                        for(int i = 0; i < r1ReadBuffer.length; ++i)
+                        {
+                            MD_LOGGER.error("R1 item {}: {}", i, r1ReadBuffer[i]);
+                            MD_LOGGER.error("R2 item {}: {}", i, r2ReadBuffer[i]);
+                        }
+
                         System.exit(1);
                     }
+
                     readLineCount = 0;
                 }
 

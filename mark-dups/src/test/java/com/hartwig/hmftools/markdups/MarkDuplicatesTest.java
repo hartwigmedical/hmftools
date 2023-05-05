@@ -91,6 +91,48 @@ public class MarkDuplicatesTest
     }
 
     @Test
+    public void testSupplementaryFragments()
+    {
+        // first a supplementary linked to a distant mate but in the same partition as the primary
+        int readPos = 100;
+        int matePos = 2000;
+        int suppPos = 200;
+
+        SAMRecord read1 = createSamRecord(
+                mReadIdGen.nextId(), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
+                false, null);
+
+        read1.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+
+        mChromosomeReader.processRead(read1);
+
+        SAMRecord supp1 = createSamRecord(
+                read1.getReadName(), CHR_1, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, false,
+                true, new SupplementaryReadData(CHR_1, matePos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+
+        mChromosomeReader.processRead(supp1);
+
+        PartitionData partitionData = mChromosomeReader.partitionDataStore().getOrCreatePartitionData("1_0");
+        partitionData.incompleteFragmentMap().containsKey(supp1.getReadName());
+
+        mChromosomeReader.flushReadPositions();
+
+        partitionData.incompleteFragmentMap().isEmpty();
+
+        SAMRecord mate1 = createSamRecord(
+                read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
+                false, new SupplementaryReadData(CHR_1, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+        mate1.setFirstOfPairFlag(false);
+        mate1.setSecondOfPairFlag(true);
+
+        mChromosomeReader.processRead(mate1);
+        mChromosomeReader.onChromosomeComplete();
+
+        assertEquals(3, mWriter.recordWriteCount());
+        assertTrue(partitionData.resolvedFragmentStateMap().isEmpty());
+    }
+
+        @Test
     public void testCandidateDuplicates()
     {
         // no use of mate CIGAR so rely on putting reads together to determine duplicate status

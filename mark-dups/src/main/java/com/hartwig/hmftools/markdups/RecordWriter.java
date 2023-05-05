@@ -321,7 +321,7 @@ public class RecordWriter
             mExpectedReads.remove(readStr);
         }
 
-        if(abs(mExpectedReads.size() - mExpectedReadsSize) >= 100000)
+        if(abs(mExpectedReads.size() - mExpectedReadsSize) >= 10000)
         {
             mExpectedReadsSize = mExpectedReads.size();
             MD_LOGGER.info("expected reads count({})", mExpectedReadsSize);

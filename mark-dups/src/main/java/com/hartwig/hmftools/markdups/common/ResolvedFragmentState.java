@@ -11,14 +11,18 @@ import htsjdk.samtools.SAMRecord;
 public class ResolvedFragmentState
 {
     public final FragmentStatus Status;
+    public final String Coordinates;
 
     public boolean MateReceived;
     public int ExpectedSupplementaries;
     public int ProcessedSupplementaries;
 
-    public ResolvedFragmentState(final FragmentStatus status, final int expectedSupplementaries, final int processedSupplementaries, final boolean mateReceived)
+    public ResolvedFragmentState(
+            final FragmentStatus status, final String coordinates,
+            final int expectedSupplementaries, final int processedSupplementaries, final boolean mateReceived)
     {
         Status = status;
+        Coordinates = coordinates;
         MateReceived = mateReceived;
         ExpectedSupplementaries = expectedSupplementaries;
         ProcessedSupplementaries = processedSupplementaries;
@@ -53,7 +57,8 @@ public class ResolvedFragmentState
         }
 
         return new ResolvedFragmentState(
-                fragment.status(), expectedSuppCount, processedSuppCount, nonSuppCount > 1 || fragment.unpaired());
+                fragment.status(), fragment.coordinates().Key,
+                expectedSuppCount, processedSuppCount, nonSuppCount > 1 || fragment.unpaired());
     }
 
     public void update(final SAMRecord read)
@@ -80,6 +85,6 @@ public class ResolvedFragmentState
         // return ProcessedSupplementaries <= ExpectedSupplementaries && ExpectedSupplementaries <= 2;
     }
 
-    public String toString() { return format("status(%s) mate(%s) supps(%d/%d)",
-            Status, MateReceived ? "received" : "pending", ProcessedSupplementaries, ExpectedSupplementaries); }
+    public String toString() { return format("status(%s) coords(%s) mate(%s) supps(%d/%d)",
+            Status, Coordinates, MateReceived ? "received" : "pending", ProcessedSupplementaries, ExpectedSupplementaries); }
 }
