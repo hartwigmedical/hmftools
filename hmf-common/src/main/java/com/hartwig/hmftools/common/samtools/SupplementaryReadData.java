@@ -82,4 +82,5 @@ public class SupplementaryReadData
     }
 
     public String asCsv() { return String.format("%s;%d;%c;%s;%d;0", Chromosome, Position, Strand, Cigar, MapQuality); }
+    public String asSamTag() { return String.format("%s,%d,%c,%s,%d,0", Chromosome, Position, Strand, Cigar, MapQuality); }
 }

@@ -77,7 +77,7 @@ public final class SamRecordTestUtils
         record.setSupplementaryAlignmentFlag(isSupplementary);
 
         if(suppAlignment != null)
-            record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, suppAlignment.asCsv());
+            record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, suppAlignment.asSamTag());
 
         if(chrStr.equals(mateChr))
             record.setInferredInsertSize(abs(readStart - mateStart));
