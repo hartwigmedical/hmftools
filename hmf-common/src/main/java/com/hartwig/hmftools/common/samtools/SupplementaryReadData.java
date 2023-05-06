@@ -21,10 +21,8 @@ public class SupplementaryReadData
 
     public static SupplementaryReadData from(final SAMRecord record)
     {
-        if(!record.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
-            return null;
-
-        return from(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+        String alignmentStr = record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE);
+        return alignmentStr != null ? from(alignmentStr) : null;
     }
 
     public static SupplementaryReadData from(final String suppData)
@@ -34,11 +32,12 @@ public class SupplementaryReadData
 
         // example data: 2,33141317,+,94S57M,5,0;
         // but also be multiple: 7,152184341,-,23S32M1I41M54S,0,6;11,66229611,+,115S32M4S,0,0;
+        // chr6,6068632,-,35M108S,0,0;chr3,5435688,-,23S39M81S,0,1;chr3,136963678,-,101S31M11S,0,0;
 
-        String alignmentStr = null;
         String[] items = null;
         if(suppData.contains(SUPP_DELIM))
         {
+            // return the first alignment
             final String[] alignments = suppData.split(ALIGNMENTS_DELIM);
             items = alignments[0].split(SUPP_DELIM);
         }
@@ -52,6 +51,19 @@ public class SupplementaryReadData
             return null;
 
         return new SupplementaryReadData(items[0], Integer.parseInt(items[1]), items[2].charAt(0), items[3], Integer.parseInt(items[4]));
+    }
+
+    public static int alignmentCount(final SAMRecord record)
+    {
+        if(!record.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
+            return 0;
+
+        return alignmentCount(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+    }
+
+    public static int alignmentCount(final String suppData)
+    {
+        return suppData != null ? (suppData.contains(SUPP_DELIM) ? suppData.split(ALIGNMENTS_DELIM).length : 1) : 0;
     }
 
     public SupplementaryReadData(final String chromosome, final int position, final char strand, final String cigar, final int mapQuality)

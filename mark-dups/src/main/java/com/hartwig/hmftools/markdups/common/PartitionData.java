@@ -166,12 +166,6 @@ public class PartitionData
             return;
 
         ResolvedFragmentState resolvedState = fragmentState(fragment);
-
-        if(!resolvedState.isValid())
-        {
-            MD_LOGGER.error("fragment({}) invalid state({})", fragment, resolvedState);
-        }
-
         mFragmentStatus.put(fragment.id(), resolvedState);
     }
 
@@ -384,12 +378,6 @@ public class PartitionData
                 continue;
 
             ResolvedFragmentState resolvedState = fragmentState(fragment);
-
-            if(!resolvedState.isValid())
-            {
-                MD_LOGGER.error("fragment({}) invalid state({})", fragment, resolvedState);
-            }
-
             mFragmentStatus.put(fragment.id(), resolvedState);
         }
 
@@ -468,16 +456,8 @@ public class PartitionData
 
             cachedReadCount += cachedUmiReads;
 
-            try
-            {
-                List<SAMRecord> completeReads = umiGroup.popCompletedReads(consensusReads, true);
-                recordWriter.writeUmiReads(umiGroup, completeReads);
-            }
-            catch(Exception e)
-            {
-                umiGroup.logReads();
-                e.printStackTrace();
-            }
+            List<SAMRecord> completeReads = umiGroup.popCompletedReads(consensusReads, true);
+            recordWriter.writeUmiReads(umiGroup, completeReads);
 
             if(logCachedReads)
             {

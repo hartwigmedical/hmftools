@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+
 import htsjdk.samtools.SAMRecord;
 
 public class ResolvedFragmentState
@@ -49,10 +51,7 @@ public class ResolvedFragmentState
             {
                 ++nonSuppCount;
 
-                if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
-                {
-                    ++expectedSuppCount;
-                }
+                expectedSuppCount += SupplementaryReadData.alignmentCount(read);
             }
         }
 
@@ -70,19 +69,8 @@ public class ResolvedFragmentState
         else
         {
             MateReceived = true;
-
-            if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
-            {
-                ++ExpectedSupplementaries;
-            }
+            ExpectedSupplementaries += SupplementaryReadData.alignmentCount(read);
         }
-    }
-
-    public boolean isValid()
-    {
-        // can receive a supplementary for a mate before the mate is received
-        return ProcessedSupplementaries <= 2 && ExpectedSupplementaries <= 2;
-        // return ProcessedSupplementaries <= ExpectedSupplementaries && ExpectedSupplementaries <= 2;
     }
 
     public String toString() { return format("status(%s) coords(%s) mate(%s) supps(%d/%d)",

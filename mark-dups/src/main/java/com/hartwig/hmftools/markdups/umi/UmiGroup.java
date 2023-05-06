@@ -270,9 +270,20 @@ public class UmiGroup
 
             reads.addAll(readGroup);
 
-            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(readGroup, mId);
+            try
+            {
+                ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(readGroup, mId);
+                reads.add(consensusReadInfo.ConsensusRead);
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
 
-            reads.add(consensusReadInfo.ConsensusRead);
+                for(SAMRecord read : readGroup)
+                {
+                    MD_LOGGER.debug("umi({}) coords({}) read: {}", mId, mCoordinatesKey, readToString(read));
+                }
+            }
 
             readGroup.clear();
             mReadGroupComplete[i] = true;
@@ -311,22 +322,6 @@ public class UmiGroup
         }
 
         return format("id(%s) fragments(%d) readCounts(%s)", mId, mFragmentCount, sj);
-    }
-
-    public void logReads()
-    {
-        for(int i = 0; i < mReadGroups.length; ++i)
-        {
-            List<SAMRecord> readGroup = mReadGroups[i];
-
-            if(readGroup == null || readGroup.isEmpty())
-                continue;
-
-            for(SAMRecord read : readGroup)
-            {
-                MD_LOGGER.debug("umi({}) coords({}) read: {}", mId, mCoordinatesKey, readToString(read));
-            }
-        }
     }
 
     public static List<UmiGroup> buildUmiGroups(final List<Fragment> fragments, final UmiConfig config)
