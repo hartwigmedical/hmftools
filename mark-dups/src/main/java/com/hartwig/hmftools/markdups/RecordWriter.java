@@ -155,7 +155,7 @@ public class RecordWriter
 
                 if(mReadWriter != null)
                 {
-                    writeReadData(read, PRIMARY, umiGroup.fragmentCoordinates().Key, 0, umiGroup.id());
+                    writeReadData(read, PRIMARY, umiGroup.coordinatesKey(), 0, umiGroup.id());
                 }
 
                 continue;
@@ -163,7 +163,7 @@ public class RecordWriter
 
             read.setAttribute(UMI_ATTRIBUTE, umiGroup.id());
 
-            writeRead(read, DUPLICATE, umiGroup.fragmentCoordinates().Key, 0, umiGroup.id());
+            writeRead(read, DUPLICATE, umiGroup.coordinatesKey(), 0, umiGroup.id());
         }
     }
 
@@ -324,7 +324,7 @@ public class RecordWriter
         if(abs(mExpectedReads.size() - mExpectedReadsSize) >= 10000)
         {
             mExpectedReadsSize = mExpectedReads.size();
-            MD_LOGGER.info("expected reads count({})", mExpectedReadsSize);
+            MD_LOGGER.info("record-writer cached expected reads count({})", mExpectedReadsSize);
         }
     }
 

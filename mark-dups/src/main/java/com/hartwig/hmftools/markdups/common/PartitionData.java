@@ -19,7 +19,6 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
@@ -485,7 +484,7 @@ public class PartitionData
                 StringJoiner readIds = new StringJoiner(",");
                 umiGroup.getReadIds().forEach(x -> readIds.add(x));
                 MD_LOGGER.debug("writing cached reads for umi group({}) coords({}) reads({})",
-                        umiGroup.toString(), umiGroup.fragmentCoordinates(), readIds);
+                        umiGroup.toString(), umiGroup.coordinatesKey(), readIds);
             }
         }
 
