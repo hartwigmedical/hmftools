@@ -211,12 +211,6 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
             MD_LOGGER.debug("specific read: {}", readToString(read));
         }
 
-        if(!mConfig.NoMateCigar && read.getReadPairedFlag() && !read.getMateUnmappedFlag() && !read.getSupplementaryAlignmentFlag()
-        && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
-        {
-            ++mStats.MissingMateCigar;
-        }
-
         try
         {
             if(!mReadPositions.processRead(read))
@@ -240,6 +234,12 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
             MD_LOGGER.error("read({}) exception: {}", readToString(read), e.toString());
             e.printStackTrace();
             System.exit(1);
+        }
+
+        if(!mConfig.NoMateCigar && read.getReadPairedFlag() && !read.getMateUnmappedFlag() && !read.getSupplementaryAlignmentFlag()
+                && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
+        {
+            ++mStats.MissingMateCigar;
         }
     }
 

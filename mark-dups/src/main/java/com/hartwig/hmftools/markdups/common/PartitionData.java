@@ -3,6 +3,7 @@ package com.hartwig.hmftools.markdups.common;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_SECOND;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
@@ -461,22 +462,31 @@ public class PartitionData
 
             if(logCachedReads)
             {
-                StringJoiner readIds = new StringJoiner(",");
-                umiGroup.getReadIds().forEach(x -> readIds.add(x));
-                MD_LOGGER.debug("writing cached reads for umi group({}) coords({}) reads({})",
-                        umiGroup.toString(), umiGroup.coordinatesKey(), readIds);
+                MD_LOGGER.debug("writing {} cached reads for umi group({}) coords({})",
+                        cachedUmiReads, umiGroup.toString(), umiGroup.coordinatesKey());
+
+                for(SAMRecord read : completeReads)
+                {
+                    if(read.getSupplementaryAlignmentFlag() || read.hasAttribute(UMI_CONSENSUS_ATTRIBUTE))
+                        continue;
+
+                    MD_LOGGER.debug("writing umi read: {}", readToString(read));
+                }
             }
         }
 
         for(Fragment fragment : mIncompleteFragments.values())
         {
             recordWriter.writeFragment(fragment);
-            cachedReadCount += fragment.readCount();
 
             if(logCachedReads)
             {
                 for(SAMRecord read : fragment.reads())
                 {
+                    if(read.getSupplementaryAlignmentFlag())
+                        continue;
+
+                    ++cachedReadCount;
                     MD_LOGGER.debug("writing incomplete read: {} status({})", readToString(read), fragment.status());
                 }
             }

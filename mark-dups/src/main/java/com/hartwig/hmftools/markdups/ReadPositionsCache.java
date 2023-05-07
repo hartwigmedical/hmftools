@@ -134,7 +134,7 @@ public class ReadPositionsCache
         }
 
         // only store the read if its mate is local and expected to be added
-        if(fragment.hasLocalMate())
+        if(fragment.hasLocalMate() || read.getMateUnmappedFlag()) // unmapped reads come through the same slice
         {
             mFragments.put(read.getReadName(), fragment);
             ++mFragmemtCacheCount;

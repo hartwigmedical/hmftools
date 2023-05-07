@@ -131,7 +131,7 @@ public class Fragment
 
             boolean hasSuppData = suppData != null && HumanChromosome.contains(suppData.Chromosome);
 
-            boolean hasMate = read.getReadPairedFlag() && !read.getMateUnmappedFlag();
+            boolean hasMate = read.getReadPairedFlag() && !read.getMateUnmappedFlag() && HumanChromosome.contains(read.getMateReferenceName());
 
             if(!hasSuppData && !hasMate)
                 return null;

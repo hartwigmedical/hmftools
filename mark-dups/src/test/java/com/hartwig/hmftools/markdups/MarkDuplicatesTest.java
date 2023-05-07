@@ -362,9 +362,12 @@ public class MarkDuplicatesTest
 
         assertEquals(7, mWriter.recordWriteCount());
         assertEquals(3, mWriter.recordWriteCountConsensus());
+        assertTrue(partitionData.umiGroupMap().isEmpty());
+        assertEquals(1, partitionData.incompleteFragmentMap().size());
 
         partitionData.writeRemainingReads(mWriter, mChrReaderUMIs.consensusReads(), false);
         assertEquals(8, mWriter.recordWriteCount());
+        assertTrue(partitionData.incompleteFragmentMap().isEmpty());
     }
 
     private String nextReadId(final String umiId)

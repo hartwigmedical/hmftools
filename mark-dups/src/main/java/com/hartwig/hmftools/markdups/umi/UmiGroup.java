@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.markdups.common.Fragment;
 
@@ -71,6 +72,32 @@ public class UmiGroup
 
         mFragmentCount = mFragments.size();
         mReadIds = Lists.newArrayListWithExpectedSize(mFragmentCount);
+
+        // establish expected lists by read type
+        Fragment firstFragment = mFragments.get(0);
+
+        mReadGroups[ReadType.PRIMARY.ordinal()] = Lists.newArrayListWithExpectedSize(mFragmentCount);
+
+        for(int i = 0; i < firstFragment.reads().size(); ++i)
+        {
+            SAMRecord read = firstFragment.reads().get(i);
+
+            SupplementaryReadData suppData = SupplementaryReadData.from(read);
+            boolean hasValidSupp = suppData != null && HumanChromosome.contains(suppData.Chromosome);
+
+            if(i == 0)
+            {
+                if(read.getReadPairedFlag() && HumanChromosome.contains(read.getMateReferenceName()))
+                    mReadGroups[ReadType.MATE.ordinal()] = Lists.newArrayListWithExpectedSize(mFragmentCount);
+
+                if(hasValidSupp)
+                    mReadGroups[ReadType.PRIMARY_SUPPLEMENTARY.ordinal()] = Lists.newArrayListWithExpectedSize(mFragmentCount);
+            }
+            else if(!read.getSupplementaryAlignmentFlag() && hasValidSupp)
+            {
+                mReadGroups[ReadType.MATE_SUPPLEMENTARY.ordinal()] = Lists.newArrayListWithExpectedSize(mFragmentCount);
+            }
+        }
 
         for(Fragment fragment : mFragments)
         {
@@ -366,14 +393,15 @@ public class UmiGroup
             return format("id(%s) fragments(%d) coords(%s)", mId, mFragments.size(), mCoordinatesKey);
 
         StringJoiner sj = new StringJoiner(", ");
-        for(ReadType legType : ReadType.values())
+        for(ReadType readType : ReadType.values())
         {
-            List<SAMRecord> readGroup = mReadGroups[legType.ordinal()];
+            int readTypeIndex = readType.ordinal();
+            List<SAMRecord> readGroup = mReadGroups[readTypeIndex];
 
             if(readGroup == null)
                 continue;
 
-            sj.add(format("%s=%d", legType, mReadGroupComplete[legType.ordinal()] ? mFragmentCount : readGroup.size()));
+            sj.add(format("%s=%d %s", readType, readGroup.size(), mReadGroupComplete[readTypeIndex] ? "complete" : "pending"));
         }
 
         return format("id(%s) fragments(%d) coords(%s) readCounts(%s)", mId, mFragmentCount, mCoordinatesKey, sj);
