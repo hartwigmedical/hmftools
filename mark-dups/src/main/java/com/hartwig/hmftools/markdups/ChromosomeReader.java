@@ -405,4 +405,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
     @VisibleForTesting
     public PartitionDataStore partitionDataStore() { return mPartitionDataStore; }
+
+    @VisibleForTesting
+    public ConsensusReads consensusReads() { return mConsensusReads; }
 }

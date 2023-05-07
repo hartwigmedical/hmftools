@@ -272,17 +272,30 @@ public class UmiGroup
 
             try
             {
-                ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(readGroup, mId);
+                ConsensusReadInfo consensusReadInfo;
+
+                if(i == ReadType.PRIMARY_SUPPLEMENTARY.ordinal() || i == ReadType.MATE_SUPPLEMENTARY.ordinal())
+                {
+                    // supplementaries can go to difference places and some reads have more than one, so go with the most frequent
+                    consensusReadInfo = consensusReads.createConsensusRead(findConsistentSupplementaries(readGroup), mId);
+                }
+                else
+                {
+                    consensusReadInfo = consensusReads.createConsensusRead(readGroup, mId);
+                }
+
                 reads.add(consensusReadInfo.ConsensusRead);
             }
             catch(Exception e)
             {
-                e.printStackTrace();
+                MD_LOGGER.error("error forming consensus: umi({}) coords({})", toString());
 
                 for(SAMRecord read : readGroup)
                 {
-                    MD_LOGGER.debug("umi({}) coords({}) read: {}", mId, mCoordinatesKey, readToString(read));
+                    MD_LOGGER.error("read: {}", readToString(read));
                 }
+
+                e.printStackTrace();
             }
 
             readGroup.clear();
@@ -290,6 +303,48 @@ public class UmiGroup
         }
 
         return reads;
+    }
+
+    private List<SAMRecord> findConsistentSupplementaries(final List<SAMRecord> readGroup)
+    {
+        Map<String,Integer> posCounts = Maps.newHashMap();
+
+        String[] readChrPositions = new String[readGroup.size()];
+
+        for(int i = 0; i < readGroup.size(); ++i)
+        {
+            SAMRecord read = readGroup.get(i);
+            String chrPosStr = format("%s_%d", read.getReferenceName(), getUnclippedPosition(read));
+            readChrPositions[i] = chrPosStr;
+            Integer count = posCounts.get(chrPosStr);
+            posCounts.put(chrPosStr, count != null ? count + 1 : 1);
+        }
+
+        if(posCounts.size() == 1)
+            return readGroup;
+
+        if(posCounts.size() == 2)
+            return Lists.newArrayList(readGroup.get(0));
+
+        String maxChrPos = "";
+        int maxCount = 0;
+        for(Map.Entry<String,Integer> entry : posCounts.entrySet())
+        {
+            if(entry.getValue() > maxCount)
+            {
+                maxChrPos = entry.getKey();
+                maxCount = entry.getValue();
+            }
+        }
+
+        List<SAMRecord> selectedReads = Lists.newArrayListWithExpectedSize(maxCount);
+        for(int i = 0; i < readGroup.size(); ++i)
+        {
+            if(readChrPositions[i].equals(maxChrPos))
+                selectedReads.add(readGroup.get(i));
+        }
+
+        return selectedReads;
     }
 
     public List<String> getReadIds()
@@ -308,7 +363,7 @@ public class UmiGroup
     public String toString()
     {
         if(mFragmentCount == 0)
-            return format("id(%s) fragments(%d)", mId, mFragments.size());
+            return format("id(%s) fragments(%d) coords(%s)", mId, mFragments.size(), mCoordinatesKey);
 
         StringJoiner sj = new StringJoiner(", ");
         for(ReadType legType : ReadType.values())
@@ -321,7 +376,7 @@ public class UmiGroup
             sj.add(format("%s=%d", legType, mReadGroupComplete[legType.ordinal()] ? mFragmentCount : readGroup.size()));
         }
 
-        return format("id(%s) fragments(%d) readCounts(%s)", mId, mFragmentCount, sj);
+        return format("id(%s) fragments(%d) coords(%s) readCounts(%s)", mId, mFragmentCount, mCoordinatesKey, sj);
     }
 
     public static List<UmiGroup> buildUmiGroups(final List<Fragment> fragments, final UmiConfig config)

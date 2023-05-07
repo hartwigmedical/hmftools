@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_PARTITION_SIZE;
@@ -130,6 +132,8 @@ public class MarkDupsConfig
         }
         catch(ParseException e)
         {
+            MD_LOGGER.error("invalid specific regions({}) chromosomes({}) config",
+                    cmd.getOptionValue(SPECIFIC_REGIONS, ""), cmd.getOptionValue(SPECIFIC_CHROMOSOMES, ""));
             mIsValid = false;
         }
 

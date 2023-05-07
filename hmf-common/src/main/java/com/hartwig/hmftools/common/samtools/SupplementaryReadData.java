@@ -2,6 +2,9 @@ package com.hartwig.hmftools.common.samtools;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
+import java.util.List;
+import java.util.StringJoiner;
+
 import htsjdk.samtools.SAMRecord;
 
 public class SupplementaryReadData
@@ -83,4 +86,11 @@ public class SupplementaryReadData
 
     public String asCsv() { return String.format("%s;%d;%c;%s;%d;0", Chromosome, Position, Strand, Cigar, MapQuality); }
     public String asSamTag() { return String.format("%s,%d,%c,%s,%d,0", Chromosome, Position, Strand, Cigar, MapQuality); }
+
+    public static String alignmentsToSamTag(final List<SupplementaryReadData> alignments)
+    {
+        StringJoiner sj = new StringJoiner(ALIGNMENTS_DELIM);
+        alignments.forEach(x -> sj.add(x.asSamTag()));
+        return sj.toString();
+    }
 }
