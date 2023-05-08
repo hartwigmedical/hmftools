@@ -7,4 +7,5 @@ public final class CommonUtils
 {
     public static final Logger CT_LOGGER = LogManager.getLogger(CommonUtils.class);
     public static final String DELIMETER = ",";
+    public static final String ITEM_DELIM = ";";
 }

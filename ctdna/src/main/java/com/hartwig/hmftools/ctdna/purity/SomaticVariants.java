@@ -35,13 +35,15 @@ public class SomaticVariants
     private final PurityConfig mConfig;
     private final ResultsWriter mResultsWriter;
 
+    private final SampleData mSample;
     private final List<String> mProcessSamples;
     private final List<SomaticVariant> mVariants;
 
-    public SomaticVariants(final PurityConfig config, final ResultsWriter resultsWriter)
+    public SomaticVariants(final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample)
     {
         mConfig = config;
         mResultsWriter = resultsWriter;
+        mSample = sample;
 
         mProcessSamples = Lists.newArrayList();
         mVariants = Lists.newArrayList();
@@ -50,15 +52,15 @@ public class SomaticVariants
     public boolean processVcf(final String somaticVcf)
     {
         List<String> requiredSampleIds = Lists.newArrayList();
-        if(!mProcessSamples.contains(mConfig.TumorId))
-            requiredSampleIds.add(mConfig.TumorId);
+        if(!mProcessSamples.contains(mSample.TumorId))
+            requiredSampleIds.add(mSample.TumorId);
 
-        mConfig.CtDnaSamples.stream().filter(x -> !mProcessSamples.contains(x)).forEach(x -> requiredSampleIds.add(x));
+        mSample.CtDnaSamples.stream().filter(x -> !mProcessSamples.contains(x)).forEach(x -> requiredSampleIds.add(x));
 
         if(requiredSampleIds.isEmpty())
             return true;
 
-        CT_LOGGER.info("process somatic variant VCF: {}", somaticVcf);
+        CT_LOGGER.debug("loading somatic variant VCF: {}", somaticVcf);
 
         List<String> targetSampleIds = Lists.newArrayList();
 
@@ -66,7 +68,7 @@ public class SomaticVariants
 
         if(!vcfFileReader.fileValid())
         {
-            CT_LOGGER.error("failed to read somatic vcf({})", vcfFileReader);
+            CT_LOGGER.error("failed to read somatic vcf({})", somaticVcf);
             return false;
         }
 
@@ -177,7 +179,7 @@ public class SomaticVariants
             if(!(sampleData.qualPerAlleleFragment() >= MIN_QUAL_PER_AD || sampleData.AlleleCount == 0))
                 continue;
 
-            GenotypeData tumorData = variant.findGenotypeData(mConfig.TumorId);
+            GenotypeData tumorData = variant.findGenotypeData(mSample.TumorId);
 
             if(tumorData == null)
                 continue;
@@ -193,7 +195,7 @@ public class SomaticVariants
             tumorCounts.AlleleFragmentTotal += tumorData.AlleleCount;
 
             mResultsWriter.writeVariant(
-                    sampleId, variant.Chromosome, variant.Position, variant.Ref, variant.Alt, variant.Tier, variant.Type,
+                    mSample.PatientId, sampleId, variant.Chromosome, variant.Position, variant.Ref, variant.Alt, variant.Tier, variant.Type,
                     variant.RepeatCount, variant.Mappability, variant.SubclonalPerc,
                     sampleData.AlleleCount, sampleData.Depth, sampleData.qualPerAlleleFragment());
         }

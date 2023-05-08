@@ -18,7 +18,6 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -31,43 +30,41 @@ public class CopyNumberProfile
     private final PurityConfig mConfig;
     private final ResultsWriter mResultsWriter;
 
-    private PurityContext mPurityContext;
+    private final SampleData mSample;
     private final List<PurpleCopyNumber> mCopyNumbers;
 
     private final List<CopyNumberGcData> mCopyNumberGcRatios;
     private final CnPurityCalculator mPurityCalculator;
 
-    public CopyNumberProfile(final PurityConfig config, final ResultsWriter resultsWriter)
+    public CopyNumberProfile(final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample)
     {
         mConfig = config;
         mResultsWriter = resultsWriter;
+        mSample = sample;
 
         mCopyNumbers = Lists.newArrayList();
-        mPurityContext = null;
 
         mCopyNumberGcRatios = Lists.newArrayList();
         mPurityCalculator = new CnPurityCalculator();
 
         try
         {
-            mPurityContext = PurityContextFile.read(mConfig.PurpleDir, mConfig.TumorId);
-
             mCopyNumbers.addAll(PurpleCopyNumberFile.read(
-                    PurpleCopyNumberFile.generateFilenameForReading(mConfig.PurpleDir, mConfig.TumorId)));
+                    PurpleCopyNumberFile.generateFilenameForReading(mConfig.PurpleDir, mSample.TumorId)));
         }
         catch(Exception e)
         {
-            CT_LOGGER.error("sample({}) failed to load Purple data: {}", mConfig.TumorId, e.toString());
+            CT_LOGGER.error("sample({}) failed to load Purple data: {}", mSample.TumorId, e.toString());
         }
     }
 
     public List<CopyNumberGcData> copyNumberGcRatios() { return mCopyNumberGcRatios; }
 
-    public CnPurityResult processSample(final String sampleId)
+    public CnPurityResult processSample(final String sampleId, final PurityContext purityContext)
     {
         mCopyNumberGcRatios.clear();
 
-        if(mPurityContext == null || mCopyNumbers.isEmpty())
+        if(purityContext == null || mCopyNumbers.isEmpty())
             return INVALID_RESULT;
 
         try
@@ -86,9 +83,9 @@ public class CopyNumberProfile
             buildCopyNumberGcRatios(cobaltRatios);
 
             if(mResultsWriter != null)
-                mCopyNumberGcRatios.forEach(x -> mResultsWriter.writeCnSegmentData(sampleId, x));
+                mCopyNumberGcRatios.forEach(x -> mResultsWriter.writeCnSegmentData(mSample.PatientId, sampleId, x));
 
-            double samplePloidy = mPurityContext.bestFit().ploidy();
+            double samplePloidy = purityContext.bestFit().ploidy();
 
             mPurityCalculator.calculatePurity(mCopyNumberGcRatios, samplePloidy);
 

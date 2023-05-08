@@ -41,6 +41,9 @@ public class ResultsWriter
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
+            if(mConfig.multipleSamples())
+                writer.write("PatientId,");
+
             writer.write("SampleId,TumorPurity,TumorPloidy");
             writer.write(format(",%s", CnPurityResult.header()));
             writer.write(format(",%s", SomaticVariantResult.header()));
@@ -56,11 +59,14 @@ public class ResultsWriter
     }
 
     public synchronized void writeSampleSummary(
-            final String sampleId, final PurityContext purityContext, final CnPurityResult cnPurityResult,
+            final String patientId, final String sampleId, final PurityContext purityContext, final CnPurityResult cnPurityResult,
             final SomaticVariantResult somaticVariantResult)
     {
         try
         {
+            if(mConfig.multipleSamples())
+                mSampleWriter.write(format("%s,", patientId));
+
             mSampleWriter.write(format("%s,%.2f,%.2f", sampleId, purityContext.bestFit().purity(), purityContext.bestFit().ploidy()));
             mSampleWriter.write(format(",%s", cnPurityResult.toCsv()));
             mSampleWriter.write(format(",%s", somaticVariantResult.toCsv()));
@@ -80,6 +86,9 @@ public class ResultsWriter
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
+            if(mConfig.multipleSamples())
+                writer.write("PatientId,");
+
             writer.write("SampleId,Chromosome,Position,Ref,Alt,Tier,Type,RepeatCount,Mappability,SubclonalPerc,AD,DP,QualPerAD");
             writer.newLine();
 
@@ -93,15 +102,18 @@ public class ResultsWriter
     }
 
     public synchronized void writeVariant(
-            final String sampleId, final String chromosome, final int position, final String ref, final String alt, final VariantTier tier,
-            final VariantType type, final int repeatCount, final double mappability, final double subclonalLikelihood,
-            int alleleCount, int depth, double qualPerAlleleCount)
+            final String patientId, final String sampleId, final String chromosome, final int position, final String ref, final String alt,
+            final VariantTier tier, final VariantType type, final int repeatCount, final double mappability,
+            final double subclonalLikelihood, int alleleCount, int depth, double qualPerAlleleCount)
     {
         if(mVariantWriter == null)
             return;
 
         try
         {
+            if(mConfig.multipleSamples())
+                mVariantWriter.write(format("%s,", patientId));
+
             mVariantWriter.write(format("%s,%s,%d,%s,%s",
                     sampleId, chromosome, position, ref, alt));
 
@@ -126,6 +138,9 @@ public class ResultsWriter
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
+            if(mConfig.multipleSamples())
+                writer.write("PatientId,");
+
             writer.write("SampleId,Chromosome,SegmentStart,SegmentEnd,CopyNumber,GcRatioCount,GcRatioMedian,GcRatioMean");
             writer.newLine();
             return writer;
@@ -137,7 +152,7 @@ public class ResultsWriter
         }
     }
 
-    public synchronized void writeCnSegmentData(final String sampleId, final CopyNumberGcData cnSegment)
+    public synchronized void writeCnSegmentData(final String patientId, final String sampleId, final CopyNumberGcData cnSegment)
     {
         if(mCnRatioWriter == null)
             return;
@@ -146,6 +161,9 @@ public class ResultsWriter
 
         try
         {
+            if(mConfig.multipleSamples())
+                mCnRatioWriter.write(format("%s,", patientId));
+
             mCnRatioWriter.write(format("%s,%s,%d,%d,%.2f,%d,%.4f,%.4f",
                     sampleId, cnSegment.Chromosome, cnSegment.SegmentStart, cnSegment.SegmentEnd, cnSegment.CopyNumber,
                     cnSegment.count(), cnSegment.median(), cnSegment.mean()));

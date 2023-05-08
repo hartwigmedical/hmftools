@@ -10,9 +10,11 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ctdna.purity.CopyNumberGcData;
 import com.hartwig.hmftools.ctdna.purity.CopyNumberProfile;
 import com.hartwig.hmftools.ctdna.purity.PurityConfig;
+import com.hartwig.hmftools.ctdna.purity.SampleData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -41,8 +43,10 @@ public class CopyNumberProfiler
         String sampleId = cmd.getOptionValue(SAMPLE);
         String cobaltSampleId = cmd.getOptionValue(COBALT_SAMPLE, sampleId);
 
-        CopyNumberProfile cnProfile = new CopyNumberProfile(purityConfig, null);
-        cnProfile.processSample(cobaltSampleId);
+        SampleData sample = new SampleData(sampleId, sampleId, Lists.newArrayList(cobaltSampleId));
+
+        CopyNumberProfile cnProfile = new CopyNumberProfile(purityConfig, null, sample);
+        cnProfile.processSample(cobaltSampleId, null);
 
         try
         {
