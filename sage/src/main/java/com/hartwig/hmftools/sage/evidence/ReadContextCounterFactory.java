@@ -42,7 +42,7 @@ public class ReadContextCounterFactory
         return readCounters;
     }
 
-    private int maxCoverage(@NotNull final Candidate candidate)
+    private int maxCoverage(final Candidate candidate)
     {
         return HIGH_COVERAGE.contains(candidate.tier()) ? mConfig.MaxReadDepthPanel : mConfig.MaxReadDepth;
     }
