@@ -103,7 +103,10 @@ public class UmiGroup
         {
             mReadIds.add(fragment.id());
             fragment.setUmi(mId);
-            fragment.reads().forEach(x -> addRead(x));
+
+            // add non-supps first to establish the correct primary read type info
+            fragment.reads().stream().filter(x -> !x.getSupplementaryAlignmentFlag()).forEach(x -> addRead(x));
+            fragment.reads().stream().filter(x -> x.getSupplementaryAlignmentFlag()).forEach(x -> addRead(x));
             fragment.reads().forEach(x -> x.setAttribute(UMI_ATTRIBUTE, id()));
         }
 
@@ -233,7 +236,8 @@ public class UmiGroup
                 int suppReadTypeIndex = index == ReadType.PRIMARY.ordinal() ?
                         ReadType.PRIMARY_SUPPLEMENTARY.ordinal() : ReadType.MATE_SUPPLEMENTARY.ordinal();
 
-                mReadGroups[suppReadTypeIndex] = Lists.newArrayListWithExpectedSize(mFragmentCount);
+                if(mReadGroups[suppReadTypeIndex] == null)
+                    mReadGroups[suppReadTypeIndex] = Lists.newArrayListWithExpectedSize(mFragmentCount);
             }
 
             return index;

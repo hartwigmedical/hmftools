@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,7 +62,6 @@ public class MarkDupsConfig
     public final String OutputId;
     public final boolean WriteBam;
     public final boolean NoMateCigar;
-    public final boolean UseInterimFiles;
     public final int Threads;
 
     // debug
@@ -89,7 +89,6 @@ public class MarkDupsConfig
     private static final String LOG_READ_IDS = "log_read_ids";
     private static final String PERF_DEBUG = "perf_debug";
     private static final String RUN_CHECKS = "run_checks";
-    private static final String USE_INTERIM_FILES = "use_interim_files";
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
 
     private static final String ITEM_DELIM = ";";
@@ -129,6 +128,7 @@ public class MarkDupsConfig
         try
         {
             loadSpecificChromsomesOrRegions(cmd, SpecificChromosomes, SpecificRegions, MD_LOGGER);
+            Collections.sort(SpecificRegions);
         }
         catch(ParseException e)
         {
@@ -151,7 +151,12 @@ public class MarkDupsConfig
 
         PerfDebug = cmd.hasOption(PERF_DEBUG);
         RunChecks = cmd.hasOption(RUN_CHECKS);
-        UseInterimFiles = cmd.hasOption(USE_INTERIM_FILES);
+
+        if(RunChecks || UMIs.Debug || UMIs.HighlightConsensus)
+        {
+            MD_LOGGER.info("running debug options: read-checks({}) umi-validation({}) consensus-highlight({})",
+                    RunChecks, UMIs.Debug, UMIs.HighlightConsensus);
+        }
     }
 
     public boolean isValid()
@@ -212,7 +217,6 @@ public class MarkDupsConfig
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
         options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
         options.addOption(RUN_CHECKS, false, "Run duplicate mismatch checks");
-        options.addOption(USE_INTERIM_FILES, false, "Write candidate duplicate reads to file");
         options.addOption(SPECIFIC_REGION_FILTER_TYPE, true, "Used with specific regions, to filter mates or supps");
 
         return options;
@@ -246,6 +250,5 @@ public class MarkDupsConfig
         Threads = 0;
         PerfDebug = false;
         RunChecks = true;
-        UseInterimFiles = false;
     }
 }

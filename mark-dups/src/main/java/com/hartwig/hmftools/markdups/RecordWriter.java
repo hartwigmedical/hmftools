@@ -305,6 +305,8 @@ public class RecordWriter
         mExpectedReads.add(formCachedReadString(read));
     }
 
+    private static final int LOG_CACHE_COUNT = 100000;
+
     private void removeWrittenRead(final SAMRecord read)
     {
         if(!mCacheReads)
@@ -321,7 +323,7 @@ public class RecordWriter
             mExpectedReads.remove(readStr);
         }
 
-        if(abs(mExpectedReads.size() - mExpectedReadsSize) >= 10000)
+        if(abs(mExpectedReads.size() - mExpectedReadsSize) >= LOG_CACHE_COUNT)
         {
             mExpectedReadsSize = mExpectedReads.size();
             MD_LOGGER.info("record-writer cached expected reads count({})", mExpectedReadsSize);
