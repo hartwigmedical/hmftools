@@ -106,9 +106,11 @@ public class UmiGroup
 
             // add non-supps first to establish the correct primary read type info
             fragment.reads().stream().filter(x -> !x.getSupplementaryAlignmentFlag()).forEach(x -> addRead(x));
-            fragment.reads().stream().filter(x -> x.getSupplementaryAlignmentFlag()).forEach(x -> addRead(x));
             fragment.reads().forEach(x -> x.setAttribute(UMI_ATTRIBUTE, id()));
         }
+
+        // add supplementaries once all primaries have been added and their expected supps & types registered
+        mFragments.forEach(x -> x.reads().stream().filter(y -> y.getSupplementaryAlignmentFlag()).forEach(y -> addRead(y)));
 
         mFragments.clear();
     }
@@ -140,7 +142,7 @@ public class UmiGroup
         public final int[] PositionRange;
         public final byte Orientation;
         public final boolean FirstInPair;
-        public final boolean HasSupplementary;
+        public boolean HasSupplementary;
         public final boolean Unmapped;
 
         public ReadTypeId(
@@ -200,6 +202,9 @@ public class UmiGroup
     {
         if(!read.getSupplementaryAlignmentFlag())
         {
+            SupplementaryReadData suppData = SupplementaryReadData.from(read);
+            boolean hasValidSupp = suppData != null && HumanChromosome.contains(suppData.Chromosome);
+
             int index = 0;
             for(; index < mPrimaryReadTypeIndex.length; ++index)
             {
@@ -209,6 +214,7 @@ public class UmiGroup
                 if(mPrimaryReadTypeIndex[index].primaryMatches(read))
                 {
                     mPrimaryReadTypeIndex[index].updatePosition(read.getAlignmentStart());
+                    mPrimaryReadTypeIndex[index].HasSupplementary |= hasValidSupp;
 
                     /* rare and unimportant
                     if(mReadTypeIndex[i].FirstInPair != read.getFirstOfPairFlag())
@@ -222,16 +228,14 @@ public class UmiGroup
                 }
             }
 
-            boolean hasSupplementary = read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE);
-
             mPrimaryReadTypeIndex[index] = new ReadTypeId(
                     read.getReferenceName(),
                     read.getReadUnmappedFlag() ? 0 : getUnclippedPosition(read), read.getAlignmentStart(),
                     read.getReadUnmappedFlag() ? 0 : orientation(read),
-                    hasSupplementary, read.getFirstOfPairFlag(), read.getReadUnmappedFlag());
+                    hasValidSupp, read.getFirstOfPairFlag(), read.getReadUnmappedFlag());
 
             // register the expected supplementary read group
-            if(hasSupplementary)
+            if(hasValidSupp)
             {
                 int suppReadTypeIndex = index == ReadType.PRIMARY.ordinal() ?
                         ReadType.PRIMARY_SUPPLEMENTARY.ordinal() : ReadType.MATE_SUPPLEMENTARY.ordinal();
