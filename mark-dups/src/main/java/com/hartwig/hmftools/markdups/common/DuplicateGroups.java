@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.calcFragmentStatus;
-import static com.hartwig.hmftools.markdups.umi.UmiGroup.buildUmiGroups;
+import static com.hartwig.hmftools.markdups.umi.UmiUtils.buildUmiGroups;
 
 import java.util.Collections;
 import java.util.List;
@@ -275,6 +275,9 @@ public class DuplicateGroups
                 ++mStats.UmiGroups;
                 mStats.addDuplicateGroup(umiGroup.fragmentCount());
             }
+
+            if(mUmiConfig.Debug)
+                mStats.addUmiGroups(mUmiConfig, umiGroups.stream().filter(x -> x.fragmentCount() > 1).collect(Collectors.toList()));
         }
 
         return allUmiGroups;

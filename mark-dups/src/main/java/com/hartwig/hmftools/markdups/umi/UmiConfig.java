@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.markdups.umi;
 
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
-import static com.hartwig.hmftools.markdups.umi.UmiGroup.exceedsUmiIdDiff;
+import static com.hartwig.hmftools.markdups.umi.UmiUtils.exceedsUmiIdDiff;
 
 import java.io.IOException;
 import java.nio.file.Files;

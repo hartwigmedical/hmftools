@@ -1,15 +1,23 @@
 package com.hartwig.hmftools.markdups.common;
 
 import static java.lang.Math.round;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.umi.UmiUtils.calcUmiIdDiff;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.markdups.MarkDupsConfig;
+import com.hartwig.hmftools.markdups.umi.UmiConfig;
 import com.hartwig.hmftools.markdups.umi.UmiGroup;
 
 public class Statistics
@@ -25,7 +33,8 @@ public class Statistics
     public long InterPartition;
     public long MissingMateCigar;
 
-    public Map<Integer,Integer> DuplicateFrequencies;
+    public final Map<Integer,Integer> DuplicateFrequencies;
+    public final List<UmiGroupCounts> UmiGroupFrequencies;
 
     public Statistics()
     {
@@ -38,6 +47,7 @@ public class Statistics
         Incomplete = 0;
         MissingMateCigar = 0;
         DuplicateFrequencies = Maps.newHashMap();
+        UmiGroupFrequencies = Lists.newArrayList();
     }
 
     public void merge(final Statistics other)
@@ -55,6 +65,28 @@ public class Statistics
         {
             Integer count = DuplicateFrequencies.get(entry.getKey());
             DuplicateFrequencies.put(entry.getKey(), count == null ? entry.getValue() : count + entry.getValue());
+        }
+
+        for(UmiGroupCounts otherUgCounts : other.UmiGroupFrequencies)
+        {
+            UmiGroupCounts matchedUgCounts = UmiGroupFrequencies.stream()
+                    .filter(x -> x.DuplicateGroupCount == otherUgCounts.DuplicateGroupCount
+                    && x.ReadCount == otherUgCounts.ReadCount)
+                    .findFirst().orElse(null);
+
+            if(matchedUgCounts != null)
+            {
+                matchedUgCounts.GroupCount += otherUgCounts.GroupCount;
+
+                for(int i = 0; i < otherUgCounts.EditDistanceFrequency.length; ++i)
+                {
+                    matchedUgCounts.EditDistanceFrequency[i] += otherUgCounts.EditDistanceFrequency[i];
+                }
+            }
+            else
+            {
+                UmiGroupFrequencies.add(otherUgCounts);
+            }
         }
     }
 
@@ -75,11 +107,85 @@ public class Statistics
         DuplicateFrequencies.put(rounded, count == null ? 1 : count + 1);
     }
 
-    public void addUmiGroups(final List<Fragment> fragments, final List<UmiGroup> umiGroups)
+    private static final int MAX_EDIT_DISTANCE = 10;
+
+    private class UmiGroupCounts
     {
+        public final int DuplicateGroupCount;
+        public final int ReadCount;
+        public int GroupCount;
+
+        public final int[] EditDistanceFrequency;
+
+        public UmiGroupCounts(final int duplicateGroupCount, final int readCount)
+        {
+            DuplicateGroupCount = duplicateGroupCount;
+            ReadCount = readCount;
+            GroupCount = 0;
+            EditDistanceFrequency = new int[MAX_EDIT_DISTANCE+1];
+        }
     }
 
-    public void addDuplicateGroup(final List<Fragment> fragments) { addDuplicateGroup(fragments.size());}
+    public void addUmiGroups(final UmiConfig umiConfig, final List<UmiGroup> umiGroups)
+    {
+        if(umiGroups.size() == 1)
+        {
+            recordUmiGroupStats(umiConfig, umiGroups.get(0));
+        }
+        else if(umiGroups.size() == 2)
+        {
+            recordUmiGroupStats(umiConfig, umiGroups.get(0), umiGroups.get(1));
+        }
+    }
+
+    private void recordUmiGroupStats(final UmiConfig umiConfig, final UmiGroup umiGroup)
+    {
+        UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(1, umiGroup.fragmentCount());
+        ++umiGroupStats.GroupCount;
+
+        for(String readId : umiGroup.getReadIds())
+        {
+            int diff = calcUmiIdDiff(umiConfig.extractUmiId(readId), umiGroup.id());
+
+            if(diff <= MAX_EDIT_DISTANCE)
+                ++umiGroupStats.EditDistanceFrequency[diff];
+        }
+    }
+
+    private void recordUmiGroupStats(final UmiConfig umiConfig, final UmiGroup group1, final UmiGroup group2)
+    {
+        UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(2, group1.fragmentCount() + group2.fragmentCount());
+        ++umiGroupStats.GroupCount;
+
+        for(int groupIndex = 0; groupIndex <= 1; ++groupIndex)
+        {
+            UmiGroup testGroup = groupIndex == 0 ? group1 : group2;
+            UmiGroup readsGroup = groupIndex == 0 ? group2 : group1;
+
+            for(String readId : readsGroup.getReadIds())
+            {
+                int diff = calcUmiIdDiff(umiConfig.extractUmiId(readId), testGroup.id());
+
+                if(diff <= MAX_EDIT_DISTANCE)
+                    ++umiGroupStats.EditDistanceFrequency[diff];
+            }
+        }
+    }
+
+    private UmiGroupCounts getOrCreateUmiGroupCounts(int groupCount, int readCount)
+    {
+        UmiGroupCounts matchedStats = UmiGroupFrequencies.stream()
+                .filter(x -> x.DuplicateGroupCount == groupCount && x.ReadCount == readCount)
+                .findFirst().orElse(null);
+
+        if(matchedStats == null)
+        {
+            matchedStats = new UmiGroupCounts(groupCount, readCount);
+            UmiGroupFrequencies.add(matchedStats);
+        }
+
+        return matchedStats;
+    }
 
     public void addDuplicateGroup(final int fragmentCount)
     {
@@ -105,6 +211,41 @@ public class Statistics
                 MD_LOGGER.debug("duplicate frequency({}={})", frequency, DuplicateFrequencies.get(frequency));
             }
         }
+    }
 
+    public void writeUmiStats(final MarkDupsConfig config)
+    {
+        try
+        {
+            String filename = config.formFilename("umi_stats");
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write("DuplicateGroupCount,ReadCount,GroupCount");
+
+            for(int i = 0; i <= MAX_EDIT_DISTANCE; ++i)
+            {
+                writer.write(format(",ED_%d", i));
+            }
+
+            writer.newLine();
+
+            for(UmiGroupCounts umiGroupCounts : UmiGroupFrequencies)
+            {
+                writer.write(format("%d,%d,%d", umiGroupCounts.DuplicateGroupCount, umiGroupCounts.ReadCount, umiGroupCounts.GroupCount));
+
+                for(int i = 0; i <= MAX_EDIT_DISTANCE; ++i)
+                {
+                    writer.write(format(",%d", umiGroupCounts.EditDistanceFrequency[i]));
+                }
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            MD_LOGGER.error(" failed to write UMI stats: {}", e.toString());
+        }
     }
 }

@@ -104,6 +104,11 @@ public class MarkDuplicates
             recordWriter.logUnwrittenReads();
         }
 
+        if(mConfig.UMIs.Debug)
+        {
+            combinedStats.writeUmiStats(mConfig);
+        }
+
         PerformanceCounter combinedPerfCounter = chromosomeReaders.get(0).perfCounter();
 
         for(int i = 1; i < chromosomeReaders.size(); ++i)
