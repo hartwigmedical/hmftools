@@ -90,19 +90,21 @@ public class Statistics
         }
     }
 
+    private static int roundFrequency(int frequency)
+    {
+        if(frequency <= 10)
+            return frequency;
+        else if(frequency <= 100)
+            return round(frequency/10) * 10;
+        else if(frequency <= 1000)
+            return round(frequency/100) * 100;
+        else
+            return round(frequency/1000) * 1000;
+    }
+
     public void addFrequency(int frequency)
     {
-        int rounded;
-
-        if(frequency <= 10)
-            rounded = frequency;
-        else if(frequency <= 100)
-            rounded = round(frequency/10) * 10;
-        else if(frequency <= 1000)
-            rounded = round(frequency/100) * 100;
-        else
-            rounded = round(frequency/1000) * 1000;
-
+        int rounded = roundFrequency(frequency);
         Integer count = DuplicateFrequencies.get(rounded);
         DuplicateFrequencies.put(rounded, count == null ? 1 : count + 1);
     }
@@ -128,6 +130,7 @@ public class Statistics
 
     public void addUmiGroups(final UmiConfig umiConfig, final List<UmiGroup> umiGroups)
     {
+        // evaluate 1 or 2 UMI groups, including those with a single fragment which may have been under-clustered
         if(umiGroups.size() == 1)
         {
             recordUmiGroupStats(umiConfig, umiGroups.get(0));
@@ -174,13 +177,15 @@ public class Statistics
 
     private UmiGroupCounts getOrCreateUmiGroupCounts(int groupCount, int readCount)
     {
+        int roundedReadCount = roundFrequency(readCount);
+
         UmiGroupCounts matchedStats = UmiGroupFrequencies.stream()
-                .filter(x -> x.DuplicateGroupCount == groupCount && x.ReadCount == readCount)
+                .filter(x -> x.DuplicateGroupCount == groupCount && x.ReadCount == roundedReadCount)
                 .findFirst().orElse(null);
 
         if(matchedStats == null)
         {
-            matchedStats = new UmiGroupCounts(groupCount, readCount);
+            matchedStats = new UmiGroupCounts(groupCount, roundedReadCount);
             UmiGroupFrequencies.add(matchedStats);
         }
 
@@ -210,6 +215,33 @@ public class Statistics
             {
                 MD_LOGGER.debug("duplicate frequency({}={})", frequency, DuplicateFrequencies.get(frequency));
             }
+        }
+    }
+
+    public void writeDuplicateStats(final MarkDupsConfig config)
+    {
+        try
+        {
+            String filename = config.formFilename("duplicate_stats");
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write("DuplicateReadCount,Frequency");
+            writer.newLine();
+
+            List<Integer> frequencies = DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
+            Collections.sort(frequencies);
+
+            for(Integer frequency : frequencies)
+            {
+                writer.write(format("%d,%d", frequency, DuplicateFrequencies.get(frequency)));
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            MD_LOGGER.error(" failed to write UMI stats: {}", e.toString());
         }
     }
 

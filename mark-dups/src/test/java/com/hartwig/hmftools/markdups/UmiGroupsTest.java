@@ -2,9 +2,9 @@ package com.hartwig.hmftools.markdups;
 
 import static com.hartwig.hmftools.markdups.TestUtils.createFragment;
 import static com.hartwig.hmftools.markdups.umi.UmiConfig.extractUmiIdFromReadId;
-import static com.hartwig.hmftools.markdups.umi.UmiGroup.buildUmiGroups;
-import static com.hartwig.hmftools.markdups.umi.UmiGroup.exceedsUmiIdDiff;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.markdups.umi.UmiUtils.buildUmiGroups;
+import static com.hartwig.hmftools.markdups.umi.UmiUtils.exceedsUmiIdDiff;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

@@ -72,6 +72,7 @@ public class MarkDupsConfig
     public final ReadOutput LogReadType;
     public final boolean PerfDebug;
     public final boolean RunChecks;
+    public final boolean WriteStats;
 
     private boolean mIsValid;
 
@@ -89,6 +90,7 @@ public class MarkDupsConfig
     private static final String LOG_READ_IDS = "log_read_ids";
     private static final String PERF_DEBUG = "perf_debug";
     private static final String RUN_CHECKS = "run_checks";
+    private static final String WRITE_STATS = "write_stats";
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
 
     private static final String ITEM_DELIM = ";";
@@ -149,6 +151,7 @@ public class MarkDupsConfig
 
         Threads = parseThreads(cmd);
 
+        WriteStats = cmd.hasOption(WRITE_STATS);
         PerfDebug = cmd.hasOption(PERF_DEBUG);
         RunChecks = cmd.hasOption(RUN_CHECKS);
 
@@ -217,6 +220,7 @@ public class MarkDupsConfig
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
         options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
         options.addOption(RUN_CHECKS, false, "Run duplicate mismatch checks");
+        options.addOption(WRITE_STATS, false, "Write duplicate and UMI-group stats");
         options.addOption(SPECIFIC_REGION_FILTER_TYPE, true, "Used with specific regions, to filter mates or supps");
 
         return options;
@@ -250,5 +254,6 @@ public class MarkDupsConfig
         Threads = 0;
         PerfDebug = false;
         RunChecks = true;
+        WriteStats = false;
     }
 }

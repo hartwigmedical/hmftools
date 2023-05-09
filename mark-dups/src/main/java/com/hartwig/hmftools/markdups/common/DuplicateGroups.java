@@ -257,6 +257,10 @@ public class DuplicateGroups
 
             List<UmiGroup> umiGroups = buildUmiGroups(fragments, mUmiConfig);
 
+            // collect stats including single groups
+            if(mUmiConfig.Debug)
+                mStats.addUmiGroups(mUmiConfig, umiGroups);
+
             for(UmiGroup umiGroup : umiGroups)
             {
                 if(umiGroup.fragmentCount() == 1)
@@ -275,9 +279,6 @@ public class DuplicateGroups
                 ++mStats.UmiGroups;
                 mStats.addDuplicateGroup(umiGroup.fragmentCount());
             }
-
-            if(mUmiConfig.Debug)
-                mStats.addUmiGroups(mUmiConfig, umiGroups.stream().filter(x -> x.fragmentCount() > 1).collect(Collectors.toList()));
         }
 
         return allUmiGroups;
