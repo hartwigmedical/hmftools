@@ -85,7 +85,7 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
     -reference_sample_id reference_sample \
     -ref_sample_wgs_metrics_file /path/to/reference_sample_wgs_metrics \
     -ref_sample_flagstat_file /path/to/reference_sample_flagstats \
-    -safe_germline_gene_coverage_tsv /path/to/sage_germline_gene_coverage.tsv \
+    -sage_germline_gene_coverage_tsv /path/to/sage_germline_gene_coverage.tsv \
     -sage_somatic_ref_sample_bqr_plot /path/to/sage_ref_sample_bqr_plot \
     -linx_germline_data_directory /path/to/linx_germline_data \
     -peach_genotype_tsv /path/to/peach_genotypes.tsv 
