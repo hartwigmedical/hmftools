@@ -15,7 +15,7 @@ public enum FilterReadsType
     MATE_AND_SUPP; // as above but also check supplementaries
 
 
-    public boolean filterMates() { return this != NONE; }
+    public boolean filterMates() { return this == MATE || this == MATE_AND_SUPP; }
     public boolean filterSupplementaries() { return this == MATE_AND_SUPP; }
 
     public static boolean readOutsideSpecifiedRegions(
