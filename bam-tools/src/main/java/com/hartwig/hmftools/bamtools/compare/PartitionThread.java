@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.metrics;
+package com.hartwig.hmftools.bamtools.compare;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,7 +8,6 @@ import java.util.Queue;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 
 import com.hartwig.hmftools.bamtools.common.PartitionTask;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -16,27 +15,27 @@ import htsjdk.samtools.ValidationStringency;
 
 public class PartitionThread extends Thread
 {
-    private final MetricsConfig mConfig;
-    private final CombinedStats mCombinedStats;
+    private final CompareConfig mConfig;
 
-    private final SamReader mSamReader;
-    private final BamSlicer mBamSlicer;
+    private final SamReader mRefSamReader;
+    private final SamReader mNewSamReader;
+    private final ReadWriter mReadWriter;
     private final Queue<PartitionTask> mPartitions;
 
     public PartitionThread(
-            final MetricsConfig config, final Queue<PartitionTask> partitions, final CombinedStats combinedStats)
+            final CompareConfig config, final Queue<PartitionTask> partitions, final ReadWriter readWriter)
     {
         mConfig = config;
-        mCombinedStats = combinedStats;
+        mReadWriter = readWriter;
         mPartitions = partitions;
 
-        mSamReader = mConfig.BamFile != null ?
-                SamReaderFactory.makeDefault()
-                        .validationStringency(ValidationStringency.SILENT)
-                        .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
+        mRefSamReader = SamReaderFactory.makeDefault()
+                .validationStringency(ValidationStringency.SILENT)
+                .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.RefBamFile));
 
-        mBamSlicer = new BamSlicer(0, true, true, false);
-        mBamSlicer.setKeepUnmapped();
+        mNewSamReader = SamReaderFactory.makeDefault()
+                .validationStringency(ValidationStringency.SILENT)
+                .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.NewBamFile));
 
         start();
     }
@@ -49,7 +48,7 @@ public class PartitionThread extends Thread
             {
                 PartitionTask partition = mPartitions.remove();
 
-                BamReader slicer = new BamReader(partition.Region, mConfig, mSamReader, mBamSlicer, mCombinedStats);
+                PartitionReader reader = new PartitionReader(partition.Region, mConfig, mRefSamReader, mNewSamReader, mReadWriter);
 
                 boolean logAndGc = partition.TaskId > 0 && (partition.TaskId % 10) == 0;
 
@@ -58,7 +57,7 @@ public class PartitionThread extends Thread
                     BT_LOGGER.info("processing partition({}), remaining({})", partition.TaskId, mPartitions.size());
                 }
 
-                slicer.run();
+                reader.run();
 
                 if(logAndGc)
                     System.gc();
@@ -77,7 +76,8 @@ public class PartitionThread extends Thread
 
         try
         {
-            mSamReader.close();
+            mRefSamReader.close();
+            mNewSamReader.close();
         }
         catch(IOException e)
         {

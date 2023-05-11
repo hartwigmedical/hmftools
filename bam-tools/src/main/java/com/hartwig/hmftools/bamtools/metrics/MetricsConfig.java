@@ -3,6 +3,8 @@ package com.hartwig.hmftools.bamtools.metrics;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.ITEM_DELIM;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.LOG_READ_IDS;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.SAMPLE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.addCommonCommandOptions;
@@ -73,10 +75,7 @@ public class MetricsConfig
     private static final String EXCLUDE_ZERO_COVERAGE = "exclude_zero_coverage";
     private static final String WRITE_OLD_STYLE = "write_old_style";
 
-    public static final String LOG_READ_IDS = "log_read_ids";
     public static final String PERF_DEBUG = "perf_debug";
-
-    public static final String ITEM_DELIM = ";";
 
     private static final int DEFAULT_MAP_QUAL_THRESHOLD = 20;
     private static final int DEFAULT_BASE_QUAL_THRESHOLD = 10;

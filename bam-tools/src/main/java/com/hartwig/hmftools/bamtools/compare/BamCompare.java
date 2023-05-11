@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.metrics;
+package com.hartwig.hmftools.bamtools.compare;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -26,21 +26,18 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class BamMetrics
+public class BamCompare
 {
-    private final MetricsConfig mConfig;
+    private final CompareConfig mConfig;
 
-    public BamMetrics(final CommandLine cmd)
+    public BamCompare(final CommandLine cmd)
     {
-        mConfig = new MetricsConfig(cmd);
+        mConfig = new CompareConfig(cmd);
     }
 
     public void run()
     {
-        if(!mConfig.isValid())
-            System.exit(1);
-
-        BT_LOGGER.info("sample({}) starting bam metrics", mConfig.SampleId);
+        BT_LOGGER.info("starting bam comparison", mConfig.OutputFile);
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -56,6 +53,11 @@ public class BamMetrics
             allRegions.addAll(partitionChromosome(chromosomeStr, mConfig.RefGenVersion, mConfig.SpecificRegions, mConfig.PartitionSize));
         }
 
+        ReadWriter readWriter = new ReadWriter(mConfig);
+
+        if(!readWriter.initialised())
+            System.exit(1);
+
         BT_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
 
         Queue<PartitionTask> partitions = new ConcurrentLinkedQueue<>();
@@ -66,13 +68,11 @@ public class BamMetrics
             partitions.add(new PartitionTask(allRegions.get(i), taskId++));
         }
 
-        CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
-
         List<Thread> workers = new ArrayList<>();
 
         for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
         {
-            workers.add(new PartitionThread(mConfig, partitions, combinedStats));
+            workers.add(new PartitionThread(mConfig, partitions, readWriter));
         }
 
         for(Thread worker : workers)
@@ -88,24 +88,12 @@ public class BamMetrics
             }
         }
 
-        BT_LOGGER.info("all regions complete, totalReads({})", combinedStats.totalReads());
-
-        combinedStats.metrics().finalise(mConfig.ExcludeZeroCoverage);
-        MetricsWriter.writeResults(combinedStats.metrics(), mConfig);
-        BT_LOGGER.info("final stats: {}", combinedStats.metrics());
-
-        BT_LOGGER.info("all regions complete, totalReads({}) stats: {}", combinedStats.totalReads(), combinedStats.metrics());
-
-        if(mConfig.PerfDebug)
-        {
-            combinedStats.perfCounter().logIntervalStats(10);
-            combinedStats.perfCounter().logStats();
-        }
+        readWriter.close();
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         double timeTakeMins = timeTakenMs / 60000.0;
 
-        BT_LOGGER.info("BamMetrics complete, mins({})", format("%.3f", timeTakeMins));
+        BT_LOGGER.info("BamMompare complete, mins({})", format("%.3f", timeTakeMins));
     }
 
     public static void main(@NotNull final String[] args)
@@ -113,7 +101,7 @@ public class BamMetrics
         final VersionInfo version = new VersionInfo("bam-tools.version");
         BT_LOGGER.info("BamTools version: {}", version.version());
 
-        final Options options = MetricsConfig.createCmdLineOptions();
+        final Options options = CompareConfig.createCmdLineOptions();
 
         try
         {
@@ -121,14 +109,14 @@ public class BamMetrics
 
             setLogLevel(cmd);
 
-            BamMetrics bamMetrtics = new BamMetrics(cmd);
-            bamMetrtics.run();
+            BamCompare bamCompare = new BamCompare(cmd);
+            bamCompare.run();
         }
         catch(ParseException e)
         {
             BT_LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("BamMetrics", options);
+            formatter.printHelp("BamCompare", options);
             System.exit(1);
         }
     }

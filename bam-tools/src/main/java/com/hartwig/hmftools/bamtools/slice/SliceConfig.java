@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.bamtools.slice;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.LOG_READ_IDS;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.SAMPLE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.addCommonCommandOptions;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.checkFileExists;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.loadSpecificRegionsConfig;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.bamtools.metrics.MetricsConfig.LOG_READ_IDS;
 import static com.hartwig.hmftools.bamtools.metrics.MetricsConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;

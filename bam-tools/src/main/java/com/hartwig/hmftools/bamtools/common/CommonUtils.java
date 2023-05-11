@@ -30,8 +30,11 @@ public final class CommonUtils
     public static final String BAM_FILE = "bam_file";
     public static final String PARTITION_SIZE = "partition_size";
     public static final String REGIONS_BED_FILE = "regions_bed_file";
+    public static final String LOG_READ_IDS = "log_read_ids";
 
     public static final String BAM_FILE_TYPE = "bam";
+
+    public static final String ITEM_DELIM = ";";
 
     public static final Logger BT_LOGGER = LogManager.getLogger(MetricsConfig.class);
 
