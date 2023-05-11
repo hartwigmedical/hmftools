@@ -89,7 +89,7 @@ public class ResultsWriter
             if(mConfig.multipleSamples())
                 writer.write("PatientId,");
 
-            writer.write("SampleId,Chromosome,Position,Ref,Alt,Tier,Type,RepeatCount,Mappability,SubclonalPerc,AD,DP,QualPerAD");
+            writer.write("SampleId,Chromosome,Position,Ref,Alt,Filter,Tier,Type,RepeatCount,Mappability,SubclonalPerc,AD,DP,QualPerAD");
             writer.newLine();
 
             return writer;
@@ -102,9 +102,8 @@ public class ResultsWriter
     }
 
     public synchronized void writeVariant(
-            final String patientId, final String sampleId, final String chromosome, final int position, final String ref, final String alt,
-            final VariantTier tier, final VariantType type, final int repeatCount, final double mappability,
-            final double subclonalLikelihood, int alleleCount, int depth, double qualPerAlleleCount)
+            final String patientId, final String sampleId, final SomaticVariant variant, final GenotypeFragments sampleData,
+            final String filter)
     {
         if(mVariantWriter == null)
             return;
@@ -114,13 +113,13 @@ public class ResultsWriter
             if(mConfig.multipleSamples())
                 mVariantWriter.write(format("%s,", patientId));
 
-            mVariantWriter.write(format("%s,%s,%d,%s,%s",
-                    sampleId, chromosome, position, ref, alt));
+            mVariantWriter.write(format("%s,%s,%d,%s,%s,%s",
+                    sampleId, variant.Chromosome, variant.Position, variant.Ref, variant.Alt, filter));
 
             mVariantWriter.write(format(",%s,%s,%d,%.3f,%.3f",
-                    tier, type, repeatCount, mappability, subclonalLikelihood));
+                    variant.Tier, variant.Type, variant.RepeatCount, variant.Mappability, variant.SubclonalPerc));
 
-            mVariantWriter.write(format(",%d,%d,%.1f", alleleCount, depth, qualPerAlleleCount));
+            mVariantWriter.write(format(",%d,%d,%.1f", sampleData.AlleleCount, sampleData.Depth, sampleData.qualPerAlleleFragment()));
 
             mVariantWriter.newLine();
         }

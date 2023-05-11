@@ -121,8 +121,7 @@ public class SomaticVariants
 
         double subclonalLikelihood = variant.context().getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0);
 
-        if(filterVariant(variant, subclonalLikelihood))
-            return;
+        boolean isFiltered = filterVariant(variant, subclonalLikelihood);
 
         SomaticVariant somaticVariant = null;
 
@@ -135,7 +134,7 @@ public class SomaticVariants
             {
                 somaticVariant = new SomaticVariant(
                         variant.chromosome(), variant.position(), variant.ref(), variant.alt(), variant.tier(),
-                        variant.type(), variant.repeatCount(), variant.mappability(), subclonalLikelihood);
+                        variant.type(), variant.repeatCount(), variant.mappability(), subclonalLikelihood, !isFiltered);
                 mVariants.add(somaticVariant);
             }
 
@@ -157,7 +156,7 @@ public class SomaticVariants
                 }
             }
 
-            somaticVariant.Samples.add(new GenotypeData(genotype.getSampleName(), alleleCount, depth, qualTotal));
+            somaticVariant.Samples.add(new GenotypeFragments(genotype.getSampleName(), alleleCount, depth, qualTotal));
         }
     }
 
@@ -167,40 +166,54 @@ public class SomaticVariants
         SomaticVariantCounts tumorCounts = new SomaticVariantCounts();
         SomaticVariantCounts sampleCounts = new SomaticVariantCounts();
 
-        int variantCount = 0;
+        int totalVariants = 0;
+        int calcVariants = 0;
 
         for(SomaticVariant variant : mVariants)
         {
-            GenotypeData sampleData = variant.findGenotypeData(sampleId);
+            GenotypeFragments sampleData = variant.findGenotypeData(sampleId);
+            GenotypeFragments tumorData = variant.findGenotypeData(mSample.TumorId);
 
-            if(sampleData == null)
+            if(sampleData == null || tumorData == null)
                 continue;
 
-            if(!(sampleData.qualPerAlleleFragment() >= MIN_QUAL_PER_AD || sampleData.AlleleCount == 0))
-                continue;
+            ++totalVariants;
 
-            GenotypeData tumorData = variant.findGenotypeData(mSample.TumorId);
+            // if(!(sampleData.qualPerAlleleFragment() >= MIN_QUAL_PER_AD || sampleData.AlleleCount == 0))
+            //    continue;
 
-            if(tumorData == null)
-                continue;
-
-            ++variantCount;
-
-            sampleCounts.AllelelQualTotal += sampleData.QualTotal;
             sampleCounts.VariantDepths.add(sampleData.Depth);
-            sampleCounts.AlleleFragmentTotal += sampleData.AlleleCount;
-
-            tumorCounts.AllelelQualTotal += tumorData.QualTotal;
             tumorCounts.VariantDepths.add(tumorData.Depth);
-            tumorCounts.AlleleFragmentTotal += tumorData.AlleleCount;
 
-            mResultsWriter.writeVariant(
-                    mSample.PatientId, sampleId, variant.Chromosome, variant.Position, variant.Ref, variant.Alt, variant.Tier, variant.Type,
-                    variant.RepeatCount, variant.Mappability, variant.SubclonalPerc,
-                    sampleData.AlleleCount, sampleData.Depth, sampleData.qualPerAlleleFragment());
+            boolean useForTotals = variant.PassFilters
+                    && (sampleData.qualPerAlleleFragment() >= MIN_QUAL_PER_AD || sampleData.AlleleCount == 0);
+
+            if(useForTotals)
+            {
+                ++calcVariants;
+
+                sampleCounts.AllelelQualTotal += sampleData.QualTotal;
+                sampleCounts.AlleleFragmentTotal += sampleData.AlleleCount;
+
+                if(sampleData.Depth > 0)
+                    sampleCounts.NonZeroVariantDepths.add(sampleData.Depth);
+
+                if(tumorData.Depth > 0)
+                    tumorCounts.NonZeroVariantDepths.add(tumorData.Depth);
+
+                tumorCounts.AllelelQualTotal += tumorData.QualTotal;
+                tumorCounts.AlleleFragmentTotal += tumorData.AlleleCount;
+            }
+
+            if(mConfig.IncludeFilteredVariants || useForTotals)
+            {
+                String filter = variant.PassFilters && useForTotals ? "PASS" : (!variant.PassFilters ? "FILTERED" : "NO_FRAGS");
+
+                mResultsWriter.writeVariant(mSample.PatientId, sampleId, variant, sampleData, filter);
+            }
         }
 
-        if(variantCount == 0)
+        if(totalVariants == 0)
             return INVALID_RESULT;
 
         double sampleDepthTotal = sampleCounts.depthTotal();
@@ -237,7 +250,8 @@ public class SomaticVariants
         }
 
         return new SomaticVariantResult(
-                true, variantCount, sampleCounts.AlleleFragmentTotal, qualPerAllele, sampleCounts.medianDepth(),
+                true, totalVariants, calcVariants, sampleCounts.AlleleFragmentTotal, qualPerAllele,
+                sampleCounts.medianDepth(false), sampleCounts.NonZeroVariantDepths.size(), sampleCounts.medianDepth(true),
                 tumorVaf, adjustedTumorVaf, sampleVaf, samplePurity, probability);
     }
 
@@ -247,10 +261,12 @@ public class SomaticVariants
         public double AllelelQualTotal;
 
         public final List<Integer> VariantDepths;
+        public final List<Integer> NonZeroVariantDepths;
 
         public SomaticVariantCounts()
         {
             VariantDepths = Lists.newArrayList();
+            NonZeroVariantDepths = Lists.newArrayList();
             AlleleFragmentTotal = 0;
             AllelelQualTotal = 0;
         }
@@ -260,14 +276,15 @@ public class SomaticVariants
             return VariantDepths.stream().mapToInt(x -> x).sum();
         }
 
-        public double medianDepth()
+        public double medianDepth(boolean useNonZero)
         {
-            return median(VariantDepths);
+            return useNonZero ? median(NonZeroVariantDepths) : median(VariantDepths);
         }
 
         public String toString()
         {
-            return format("AF(%d) avgQualTotal(%.1f) depthCounts(%d)", AlleleFragmentTotal, AllelelQualTotal, VariantDepths.size());
+            return format("AF(%d) avgQualTotal(%.1f) depthCounts(nonzero=%d all=%d)",
+                    AlleleFragmentTotal, AllelelQualTotal, NonZeroVariantDepths.size(), VariantDepths.size());
         }
     }
 
@@ -294,57 +311,4 @@ public class SomaticVariants
         return false;
     }
 
-    private class GenotypeData
-    {
-        public final String SampleName;
-        public final int AlleleCount;
-        public final int Depth;
-        public final double QualTotal;
-
-        public GenotypeData(final String sampleName, final int alleleCount, final int depth, final double qualTotal)
-        {
-            SampleName = sampleName;
-            AlleleCount = alleleCount;
-            Depth = depth;
-            QualTotal = qualTotal;
-        }
-
-        public double qualPerAlleleFragment() { return AlleleCount > 0 ? QualTotal / AlleleCount : 0; }
-    }
-
-    private class SomaticVariant
-    {
-        public final String Chromosome;
-        public final int Position;
-        public final String Ref;
-        public final String Alt;
-        public final VariantTier Tier;
-        public final VariantType Type;
-        public final int RepeatCount;
-        public final double Mappability;
-        public final double SubclonalPerc;
-
-        public final List<GenotypeData> Samples;
-
-        public SomaticVariant(
-                final String chromosome, final int position, final String ref, final String alt, final VariantTier tier,
-                final VariantType type, final int repeatCount, final double mappability, final double subclonalPerc)
-        {
-            Chromosome = chromosome;
-            Position = position;
-            Ref = ref;
-            Alt = alt;
-            Tier = tier;
-            Type = type;
-            RepeatCount = repeatCount;
-            Mappability = mappability;
-            SubclonalPerc = subclonalPerc;
-            Samples = Lists.newArrayList();
-        }
-
-        public GenotypeData findGenotypeData(final String sampleId)
-        {
-            return Samples.stream().filter(x -> x.SampleName.equals(sampleId)).findFirst().orElse(null);
-        }
-    }
 }

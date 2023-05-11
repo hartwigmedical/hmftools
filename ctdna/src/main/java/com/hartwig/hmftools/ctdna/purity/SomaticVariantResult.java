@@ -9,9 +9,12 @@ import java.util.StringJoiner;
 
 public class SomaticVariantResult
 {
-    public final int VariantCount;
+    public final int TotalVariants;
+    public final int CalcVariants;
     public final int AlleleFragmentTotal;
     public final double DepthMedian;
+    public final int NonZeroDepthCount;
+    public final double NonZeroDepthMedian;
     public final double QualPerAdTotal;
     public final double TumorVaf;
     public final double AdjustedTumorVaf;
@@ -24,13 +27,17 @@ public class SomaticVariantResult
     public static final SomaticVariantResult INVALID_RESULT = new SomaticVariantResult(false);
 
     public SomaticVariantResult(
-            final boolean valid, final int variantCount, final int alleleFragmentTotal, final double qualPerAdTotal, final double depthMedian,
-            final double tumorVaf, final double adjustedTumorVaf, final double sampleVaf, final double somaticPurity, double probability)
+            boolean valid, int totalVariants, int calcVariants, int alleleFragmentTotal, double qualPerAdTotal,
+            double depthMedian, int nonZeroDepthCount, double nonZeroDepthMedian,
+            double tumorVaf, double adjustedTumorVaf, double sampleVaf, double somaticPurity, double probability)
     {
-        VariantCount = variantCount;
+        TotalVariants = totalVariants;
+        CalcVariants = calcVariants;
         AlleleFragmentTotal = alleleFragmentTotal;
         QualPerAdTotal = qualPerAdTotal;
         DepthMedian = depthMedian;
+        NonZeroDepthCount = nonZeroDepthCount;
+        NonZeroDepthMedian = nonZeroDepthMedian;
         TumorVaf = tumorVaf;
         AdjustedTumorVaf = adjustedTumorVaf;
         SampleVaf = sampleVaf;
@@ -42,10 +49,13 @@ public class SomaticVariantResult
     public SomaticVariantResult(final boolean valid)
     {
         mValid = valid;
-        VariantCount = 0;
+        TotalVariants = 0;
+        CalcVariants = 0;
         AlleleFragmentTotal = 0;
         QualPerAdTotal = 0;
         DepthMedian = 0;
+        NonZeroDepthCount = 0;
+        NonZeroDepthMedian = 0;
         TumorVaf = 0;
         AdjustedTumorVaf = 0;
         SampleVaf = 0;
@@ -60,8 +70,11 @@ public class SomaticVariantResult
         StringJoiner sj = new StringJoiner(DELIMETER);
         sj.add("SomaticPurity");
         sj.add("SomaticProbability");
-        sj.add("VariantCount");
+        sj.add("TotalVariants");
+        sj.add("CalcVariants");
         sj.add("DepthMedian");
+        sj.add("NonZeroDepthCount");
+        sj.add("NonZeroDepthMedian");
         sj.add("AlleleFragmentTotal");
         sj.add("QualPerAdTotal");
         sj.add("TumorVaf");
@@ -75,8 +88,11 @@ public class SomaticVariantResult
         StringJoiner sj = new StringJoiner(DELIMETER);
         sj.add(formatPurityValue(SomaticPurity));
         sj.add(formatPurityValue(Probability));
-        sj.add(format("%d", VariantCount));
+        sj.add(format("%d", TotalVariants));
+        sj.add(format("%d", CalcVariants));
         sj.add(format("%.1f", DepthMedian));
+        sj.add(format("%d", NonZeroDepthCount));
+        sj.add(format("%.1f", NonZeroDepthMedian));
         sj.add(format("%d", AlleleFragmentTotal));
         sj.add(format("%.1f", QualPerAdTotal));
         sj.add(formatPurityValue(TumorVaf));

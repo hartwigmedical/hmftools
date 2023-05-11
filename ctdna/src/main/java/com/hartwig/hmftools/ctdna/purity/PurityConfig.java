@@ -43,6 +43,7 @@ public class PurityConfig
     public final String OutputId;
     public final boolean WriteVariants;
     public final boolean WriteCnRatios;
+    public final boolean IncludeFilteredVariants;
     public final int NoiseReadsPerMillion;
     public final int Threads;
 
@@ -55,6 +56,7 @@ public class PurityConfig
     private static final String PURPLE_DIR = "purple_dir";
     private static final String COBALT_DIR = "cobalt_dir";
     private static final String WRITE_VARIANTS = "write_variants";
+    private static final String INCLUDE_FILTERED_VARIANTS = "include_filtered";
     private static final String WRITE_CN_RATIOS = "write_cn_ratios";
     private static final String NOISE_READS_PER_MILLION = "noise_per_mill";
 
@@ -86,6 +88,7 @@ public class PurityConfig
 
         WriteVariants = cmd.hasOption(WRITE_VARIANTS);
         WriteCnRatios = cmd.hasOption(WRITE_CN_RATIOS);
+        IncludeFilteredVariants = cmd.hasOption(INCLUDE_FILTERED_VARIANTS);
         Threads = parseThreads(cmd);
     }
 
@@ -134,10 +137,12 @@ public class PurityConfig
 
         CT_LOGGER.info("loaded {} samples:", Samples.size());
 
+        /*
         for(SampleData sample : Samples)
         {
             CT_LOGGER.info("sample: {}", sample.toString());
         }
+        */
     }
 
     public boolean multipleSamples() { return Samples.size() > 1; }
@@ -182,6 +187,7 @@ public class PurityConfig
         options.addOption(COBALT_DIR, true, "Sample Cobalt directory");
         options.addOption(WRITE_VARIANTS, false, "Write variants");
         options.addOption(WRITE_CN_RATIOS, false, "Write copy number segment GC ratio summary");
+        options.addOption(INCLUDE_FILTERED_VARIANTS, false, "Include filtered somatic variants in output (not purity calcs)");
 
         options.addOption(
                 NOISE_READS_PER_MILLION, true,
