@@ -160,7 +160,7 @@ Each sample is loaded into AmberSample with the `LoadAmberData` application whic
 - 3: Homozygous alt
 - 0: Other (including insufficient depth (<10))
 
-The sample is compared to all other AmberSample entries and if there is a match (>=90% of sites match), an entry is added to the AmberMapping table. 
+The sample is compared to all other AmberSample entries and if there is a match (>=80% of sites match), an entry is added to the AmberMapping table. 
 The sample is assigned either a new patient id or an existing one (if it matches an existing sample) and the amberPatient table is updated.
 
 A sample can be loaded with the following command:
