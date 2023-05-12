@@ -370,6 +370,88 @@ public class MarkDuplicatesTest
         assertTrue(partitionData.incompleteFragmentMap().isEmpty());
     }
 
+    @Test
+    public void testUmiGroupInconsistentSupplementaries()
+    {
+        // supplementaries arriving out of order and mapped to different locations
+        String umidId = "TATTAT";
+
+        int supp2Pos1 = 1000;
+        int readPos = 2000;
+        int supp2Pos2 = 3000;
+        int matePos = 4000;
+        int supp1Pos1 = 5000;
+        int supp1Pos2 = 6000;
+
+        String readId1 = nextReadId(umidId);
+        String readId2 = nextReadId(umidId);
+
+        SAMRecord read2Supp1 = createSamRecord(
+                readId2, CHR_1, supp2Pos1, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
+                true, new SupplementaryReadData(CHR_1, readPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+
+        mChrReaderUMIs.processRead(read2Supp1);
+
+        SAMRecord read1 = createSamRecord(
+                readId1, CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false, false,
+                new SupplementaryReadData(CHR_1, supp1Pos2, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+
+        read1.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+
+        SAMRecord read2 = createSamRecord(
+                readId2, CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false, false,
+                new SupplementaryReadData(CHR_1, supp2Pos1, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+
+        read2.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+
+        mChrReaderUMIs.processRead(read1);
+        mChrReaderUMIs.processRead(read2);
+        mChrReaderUMIs.flushReadPositions();
+
+        SAMRecord read2Supp2 = createSamRecord(
+                readId2, CHR_1, supp2Pos2, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, false,
+                true, new SupplementaryReadData(CHR_1, matePos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+
+        mChrReaderUMIs.processRead(read2Supp2);
+
+        SAMRecord mate1 = createSamRecord(
+                readId1, CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
+                false, new SupplementaryReadData(CHR_1, supp1Pos1, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+        mate1.setFirstOfPairFlag(false);
+        mate1.setSecondOfPairFlag(true);
+
+        SAMRecord mate2 = createSamRecord(
+                readId2, CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
+                false, new SupplementaryReadData(CHR_1, supp2Pos2, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+        mate2.setFirstOfPairFlag(false);
+        mate2.setSecondOfPairFlag(true);
+
+        mChrReaderUMIs.processRead(mate1);
+        mChrReaderUMIs.processRead(mate2);
+
+        SAMRecord read1Supp1 = createSamRecord(
+                read1.getReadName(), CHR_1, supp1Pos2, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, false,
+                true, new SupplementaryReadData(CHR_1, matePos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+
+        SAMRecord read1Supp2 = createSamRecord(
+                read1.getReadName(), CHR_1, supp1Pos1, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false,
+                true, new SupplementaryReadData(CHR_1, readPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
+
+        mChrReaderUMIs.processRead(read1Supp1);
+        mChrReaderUMIs.processRead(read1Supp2);
+
+        mChrReaderUMIs.onChromosomeComplete();
+
+        assertEquals(8, mWriter.recordWriteCount());
+        assertEquals(4, mWriter.recordWriteCountConsensus());
+
+        for(PartitionData partitionData : mChrReaderUMIs.partitionDataStore().partitions())
+        {
+            assertTrue(partitionData.umiGroupMap().isEmpty());
+            assertTrue(partitionData.incompleteFragmentMap().isEmpty());
+        }
+    }
+
     private String nextReadId(final String umiId)
     {
         return format("%s:%s", mReadIdGen.nextId(), umiId);

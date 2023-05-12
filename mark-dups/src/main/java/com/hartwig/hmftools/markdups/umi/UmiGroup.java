@@ -210,17 +210,9 @@ public class UmiGroup
 
                 if(mPrimaryReadTypeIndex[index].primaryMatches(read))
                 {
+                    // update details for this primary index
                     mPrimaryReadTypeIndex[index].updatePosition(read.getAlignmentStart());
                     mPrimaryReadTypeIndex[index].HasSupplementary |= hasValidSupp;
-
-                    /* rare and unimportant
-                    if(mReadTypeIndex[i].FirstInPair != read.getFirstOfPairFlag())
-                    {
-                        MD_LOGGER.trace("umiGroup({}) read({} {}) readTypeIndex({}) mismatch",
-                                mId, readToString(read), read.getFirstOfPairFlag() ? "R1" : "R2", mReadTypeIndex[i]);
-                    }
-                    */
-
                     return index;
                 }
             }
@@ -244,8 +236,27 @@ public class UmiGroup
             return index;
         }
 
-        boolean checkSuppData = Arrays.stream(mPrimaryReadTypeIndex).filter(x -> x != null && x.HasSupplementary).count() == 2;
-        SupplementaryReadData suppData = checkSuppData ? SupplementaryReadData.from(read) : null;
+        // boolean checkSuppData = Arrays.stream(mPrimaryReadTypeIndex).filter(x -> x != null && x.HasSupplementary).count() == 2;
+        // SupplementaryReadData suppData = checkSuppData ? SupplementaryReadData.from(read) : null;
+        SupplementaryReadData suppData = SupplementaryReadData.from(read);
+
+        int matchedPrimaryIndex;
+
+        if(suppData == null)
+        {
+            // logical assert since all supp should have this attribute set
+            matchedPrimaryIndex = mPrimaryReadTypeIndex[0] != null && mPrimaryReadTypeIndex[0].HasSupplementary ? 0 : 1;
+        }
+        else
+        {
+            // match the supplementary details to that of the primary read
+            matchedPrimaryIndex = mPrimaryReadTypeIndex[0] != null && mPrimaryReadTypeIndex[0].supplementaryMatches(read, suppData) ? 0 : 1;
+        }
+
+        return matchedPrimaryIndex == 0 ? ReadType.PRIMARY_SUPPLEMENTARY.ordinal() : ReadType.MATE_SUPPLEMENTARY.ordinal();
+
+        /*
+        boolean checkSuppData = suppData != null;
 
         int index = 0;
         for(; index < mPrimaryReadTypeIndex.length; ++index)
@@ -260,6 +271,7 @@ public class UmiGroup
         }
 
         return index == ReadType.PRIMARY.ordinal() ? ReadType.PRIMARY_SUPPLEMENTARY.ordinal() : ReadType.MATE_SUPPLEMENTARY.ordinal();
+        */
     }
 
     public boolean allReadsReceived()
@@ -285,11 +297,13 @@ public class UmiGroup
 
     public List<SAMRecord> popCompletedReads(final ConsensusReads consensusReads, boolean processIncompletes)
     {
+        // take each read group type in turn and if complete, or in a final processing step, create a consensus read
+        // and collect all reads to be written and then cleared from this UMI group
         List<SAMRecord> reads = Lists.newArrayList();
 
         for(int i = 0; i < mReadGroups.length; ++i)
         {
-            if(mReadGroupComplete[i])
+            if(mReadGroupComplete[i] && !processIncompletes)
                 continue;
 
             List<SAMRecord> readGroup = mReadGroups[i];
@@ -406,7 +420,10 @@ public class UmiGroup
             if(readGroup == null)
                 continue;
 
-            sj.add(format("%s=%d %s", readType, readGroup.size(), mReadGroupComplete[readTypeIndex] ? "complete" : "pending"));
+            String state = mReadGroupComplete[readTypeIndex] ?
+                    (readGroup.isEmpty() ? "complete" : "extras") : (readGroup.size() == mFragmentCount ? "ready" : "pending");
+
+            sj.add(format("%s=%d %s", readType, readGroup.size(), state));
         }
 
         return format("id(%s) fragments(%d) coords(%s) readCounts(%s)", mId, mFragmentCount, mCoordinatesKey, sj);

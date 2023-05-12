@@ -585,6 +585,12 @@ public class PartitionData
         mLockAcquireTime += System.nanoTime() - startTime;
     }
 
+    public String toString()
+    {
+        return format("%s: status(%d) incomplete(%d) candidates(%d) umis(%d)",
+                mChrPartition, mFragmentStatus.size(), mIncompleteFragments.size(), mCandidateDuplicatesMap.size(), mUmiGroups.size());
+    }
+
     @VisibleForTesting
     public Map<String,ResolvedFragmentState> fragmentStatusMap() { return mFragmentStatus; }
 

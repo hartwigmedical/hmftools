@@ -266,7 +266,7 @@ public class ConsensusReads
 
         record.setFlags(initialRead.getFlags());
         record.setDuplicateReadFlag(false); // being the new primary
-        record.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
+        initialRead.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
         record.setAttribute(UMI_CONSENSUS_ATTRIBUTE, reads.size());
 
         record.setInferredInsertSize(initialRead.getInferredInsertSize());
