@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.orange.conversion;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
@@ -16,12 +14,14 @@ class TestCommonDatamodelFactory {
     }
 
     static VirusInterpreterData minimalVirusInterpreterData() {
-        AnnotatedVirus virus = minimalAnnotatedVirusBuilder().build();
-        return ImmutableVirusInterpreterData.builder().addReportableViruses(virus).addAllAllViruses(List.of(virus)).build();
+        return virusInterpreterDataWith(minimalAnnotatedVirusBuilder().build());
     }
 
     static VirusInterpreterData exhaustiveVirusInterpreterData() {
-        AnnotatedVirus virus = minimalAnnotatedVirusBuilder().interpretation("MCV").expectedClonalCoverage(1.0).build();
+        return virusInterpreterDataWith(minimalAnnotatedVirusBuilder().interpretation("MCV").expectedClonalCoverage(1.0).build());
+    }
+
+    private static ImmutableVirusInterpreterData virusInterpreterDataWith(AnnotatedVirus virus) {
         return ImmutableVirusInterpreterData.builder().addReportableViruses(virus).addAllViruses(virus).build();
     }
 
