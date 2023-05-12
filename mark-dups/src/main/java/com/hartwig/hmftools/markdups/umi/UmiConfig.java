@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.markdups.umi;
 
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_MAX_UMI_BASE_DIFF;
 import static com.hartwig.hmftools.markdups.umi.UmiUtils.exceedsUmiIdDiff;
 
 import java.io.IOException;
@@ -20,6 +21,7 @@ public class UmiConfig
     public final boolean Enabled;
     public final boolean Debug;
     public final boolean HighlightConsensus; // purely for viewing in IGV
+    public final int PermittedBaseDiff;
 
     private int mUmiLength; // set and accessed in a thread-safe way
 
@@ -41,6 +43,7 @@ public class UmiConfig
         Enabled = enabled;
         Debug = debug;
         HighlightConsensus = highlight;
+        PermittedBaseDiff = DEFAULT_MAX_UMI_BASE_DIFF;
         mUmiLength = 0;
         mDefinedUmis = Sets.newHashSet();
     }
@@ -84,7 +87,7 @@ public class UmiConfig
 
         for(String definedId : mDefinedUmis)
         {
-            if(!exceedsUmiIdDiff(umiId, definedId))
+            if(!exceedsUmiIdDiff(umiId, definedId, PermittedBaseDiff))
                 return definedId;
         }
 

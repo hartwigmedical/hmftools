@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.markdups.umi;
 
-import static com.hartwig.hmftools.markdups.common.Constants.MAX_UMI_BASE_DIFF;
+import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_MAX_UMI_BASE_DIFF;
 
 import java.util.Comparator;
 import java.util.List;
@@ -54,9 +54,10 @@ public final class UmiUtils
             return groups.values().stream().collect(Collectors.toList());
         }
 
+        // order groups by descending number of fragments
         List<UmiGroup> orderedGroups = groups.values().stream().sorted(new SizeComparator()).collect(Collectors.toList());
-        List<UmiGroup> finalGroups = Lists.newArrayList();
 
+        // then apply the directional model, where smaller groups are merged into larger ones
         int i = 0;
         while(i < orderedGroups.size() - 1)
         {
@@ -73,7 +74,7 @@ public final class UmiUtils
 
                 for(UmiGroup existing : cluster)
                 {
-                    if(existing.fragmentCount() >= second.fragmentCount() && !exceedsUmiIdDiff(existing.id(), second.id()))
+                    if(existing.fragmentCount() >= second.fragmentCount() && !exceedsUmiIdDiff(existing.id(), second.id(), config.PermittedBaseDiff))
                     {
                         merged = true;
                         break;
@@ -99,7 +100,31 @@ public final class UmiUtils
                 first.fragments().addAll(cluster.get(j).fragments());
             }
 
-            finalGroups.add(first);
+            ++i;
+        }
+
+        // run a final check allowing
+        i = 0;
+        while(i < orderedGroups.size())
+        {
+            UmiGroup first = orderedGroups.get(i);
+
+            int j = i + 1;
+            while(j < orderedGroups.size())
+            {
+                UmiGroup second = orderedGroups.get(j);
+
+                if(!exceedsUmiIdDiff(first.id(), second.id(), config.PermittedBaseDiff + 1))
+                {
+                    first.fragments().addAll(second.fragments());
+                    orderedGroups.remove(j);
+                }
+                else
+                {
+                    ++j;
+                }
+            }
+
             ++i;
         }
 
@@ -107,6 +132,11 @@ public final class UmiUtils
     }
 
     public static boolean exceedsUmiIdDiff(final String first, final String second)
+    {
+        return exceedsUmiIdDiff(first, second, DEFAULT_MAX_UMI_BASE_DIFF);
+    }
+
+    public static boolean exceedsUmiIdDiff(final String first, final String second, int permittedDiff)
     {
         if(first.length() != second.length())
             return true;
@@ -118,7 +148,7 @@ public final class UmiUtils
             {
                 ++diffs;
 
-                if(diffs > MAX_UMI_BASE_DIFF)
+                if(diffs > permittedDiff)
                     return true;
             }
         }

@@ -7,9 +7,6 @@ public class Constants
     public static final int DEFAULT_POS_BUFFER_SIZE = 500;
 
     // UMIs
-    public static final int MAX_UMI_BASE_DIFF = 1;
-
-    // consensus reads
-
+    public static final int DEFAULT_MAX_UMI_BASE_DIFF = 1;
 
 }

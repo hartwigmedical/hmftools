@@ -57,9 +57,9 @@ public class UmiGroupsTest
         Fragment frag1 = createFragment(FIXED_READ_ID + "TATCGC", CHR_1, 100);
         Fragment frag2 = createFragment(FIXED_READ_ID + "TATCGC", CHR_1, 100);
         Fragment frag3 = createFragment(FIXED_READ_ID + "TATCCC", CHR_1, 100);
-        Fragment frag4 = createFragment(FIXED_READ_ID + "TATGGG", CHR_1, 100);
+        Fragment frag4 = createFragment(FIXED_READ_ID + "AATGGG", CHR_1, 100);
         Fragment frag5 = createFragment(FIXED_READ_ID + "TATCGC", CHR_1, 100);
-        Fragment frag6 = createFragment(FIXED_READ_ID + "TATGGG", CHR_1, 100);
+        Fragment frag6 = createFragment(FIXED_READ_ID + "AATGGG", CHR_1, 100);
 
         List<Fragment> fragments = Lists.newArrayList(frag1, frag2, frag3, frag4, frag5, frag6);
         List<UmiGroup> groups = buildUmiGroups(fragments, UMI_CONFIG);
@@ -74,12 +74,11 @@ public class UmiGroupsTest
         assertTrue(group.fragments().contains(frag6));
 
         // check that larger groups aren't merged
-
         Fragment frag11 = createFragment(FIXED_READ_ID + "TTTCGT", CHR_1, 100);
         Fragment frag12 = createFragment(FIXED_READ_ID + "TTCCGT", CHR_1, 100);
         Fragment frag13 = createFragment(FIXED_READ_ID + "TTACGT", CHR_1, 100);
         Fragment frag14 = createFragment(FIXED_READ_ID + "TTACAT", CHR_1, 100);
-        Fragment frag15 = createFragment(FIXED_READ_ID + "TTAAAT", CHR_1, 100);
+        Fragment frag15 = createFragment(FIXED_READ_ID + "TAAAAT", CHR_1, 100);
         Fragment frag16 = createFragment(FIXED_READ_ID + "TTACAG", CHR_1, 100);
 
         // duplicate some to build bigger UMI groups
@@ -104,6 +103,22 @@ public class UmiGroupsTest
 
         group = groups.stream().filter(x -> x.fragments().contains(frag15)).findFirst().orElse(null);
         assertEquals(5, group.fragmentCount());
+    }
+
+    @Test
+    public void testUmiGroupAssignment2()
+    {
+        // test a final merge of groups with 2 bases difference
+        Fragment frag1 = createFragment(FIXED_READ_ID + "TTAAGG", CHR_1, 100);
+        Fragment frag2 = createFragment(FIXED_READ_ID + "TTAAGC", CHR_1, 100);
+        Fragment frag3 = createFragment(FIXED_READ_ID + "TTAATT", CHR_1, 100);
+        Fragment frag4 = createFragment(FIXED_READ_ID + "GGGATT", CHR_1, 100);
+        Fragment frag5 = createFragment(FIXED_READ_ID + "GGGAGG", CHR_1, 100);
+        Fragment frag6 = createFragment(FIXED_READ_ID + "CCGAGC", CHR_1, 100);
+
+        List<Fragment> fragments = Lists.newArrayList(frag1, frag2, frag3, frag4, frag5, frag6);
+        List<UmiGroup> groups = buildUmiGroups(fragments, UMI_CONFIG);
+        assertEquals(3, groups.size());
     }
 
     @Test
