@@ -12,35 +12,37 @@ import org.junit.Test;
 
 public class OrangeConversionTest {
 
+    private static final double EPSILON = 0.01;
+
     @Test
     public void shouldConvertAnnotatedVirus() {
         assertTrue(OrangeConversion.convert(TestCommonDatamodelFactory.emptyVirusInterpreterData()).allViruses().isEmpty());
-        assertEqualsValue(OrangeConversion.convert(TestCommonDatamodelFactory.minimalVirusInterpreterData()),
-                TestCommonDatamodelFactory.minimalVirusInterpreterData());
-        assertEqualsValue(OrangeConversion.convert(TestCommonDatamodelFactory.exhaustiveVirusInterpreterData()),
-                TestCommonDatamodelFactory.exhaustiveVirusInterpreterData());
+        assertEqualsValue(TestCommonDatamodelFactory.minimalVirusInterpreterData(),
+                OrangeConversion.convert(TestCommonDatamodelFactory.minimalVirusInterpreterData()));
+        assertEqualsValue(TestCommonDatamodelFactory.exhaustiveVirusInterpreterData(),
+                OrangeConversion.convert(TestCommonDatamodelFactory.exhaustiveVirusInterpreterData()));
     }
 
-    private static void assertEqualsValue(VirusInterpreterData converted, com.hartwig.hmftools.common.virus.VirusInterpreterData input) {
-        assertEqualsValue(converted.allViruses(), input.allViruses());
-        assertEqualsValue(converted.reportableViruses(), input.reportableViruses());
+    private static void assertEqualsValue(com.hartwig.hmftools.common.virus.VirusInterpreterData input, VirusInterpreterData converted) {
+        assertEqualsValue(input.allViruses(), converted.allViruses());
+        assertEqualsValue(input.reportableViruses(), converted.reportableViruses());
     }
 
-    private static void assertEqualsValue(List<AnnotatedVirus> converted, List<com.hartwig.hmftools.common.virus.AnnotatedVirus> input) {
+    private static void assertEqualsValue(List<com.hartwig.hmftools.common.virus.AnnotatedVirus> input, List<AnnotatedVirus> converted) {
         assertEquals(converted.size(), input.size());
         for (int i = 0; i < input.size(); i++) {
-            assertEqualsValue(converted.get(i), input.get(i));
+            assertEqualsValue(input.get(i), converted.get(i));
         }
     }
 
-    private static void assertEqualsValue(AnnotatedVirus converted, com.hartwig.hmftools.common.virus.AnnotatedVirus input) {
-        assertEquals(converted.name(), input.name());
-        assertEquals(converted.qcStatus().name(), input.qcStatus().name());
-        assertEquals(converted.integrations(), input.integrations());
-        assertEquals(converted.percentageCovered(), input.percentageCovered(), 0.01);
-        assertEquals(converted.meanCoverage(), input.meanCoverage(), 0.01);
-        assertEquals(converted.expectedClonalCoverage(), input.expectedClonalCoverage());
-        assertEquals(converted.reported(), input.reported());
-        assertEquals(converted.virusDriverLikelihoodType().name(), input.virusDriverLikelihoodType().name());
+    private static void assertEqualsValue(com.hartwig.hmftools.common.virus.AnnotatedVirus input, AnnotatedVirus converted) {
+        assertEquals(input.name(), converted.name());
+        assertEquals(input.qcStatus().name(), converted.qcStatus().name());
+        assertEquals(input.integrations(), converted.integrations());
+        assertEquals(input.percentageCovered(), converted.percentageCovered(), EPSILON);
+        assertEquals(input.meanCoverage(), converted.meanCoverage(), EPSILON);
+        assertEquals(input.expectedClonalCoverage(), converted.expectedClonalCoverage());
+        assertEquals(input.reported(), converted.reported());
+        assertEquals(input.virusDriverLikelihoodType().name(), converted.virusDriverLikelihoodType().name());
     }
 }

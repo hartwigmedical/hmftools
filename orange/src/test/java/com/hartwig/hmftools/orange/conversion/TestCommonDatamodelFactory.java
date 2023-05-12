@@ -22,7 +22,7 @@ class TestCommonDatamodelFactory {
 
     static VirusInterpreterData exhaustiveVirusInterpreterData() {
         AnnotatedVirus virus = minimalAnnotatedVirusBuilder().interpretation("MCV").expectedClonalCoverage(1.0).build();
-        return ImmutableVirusInterpreterData.builder().addReportableViruses(virus).addAllAllViruses(List.of(virus)).build();
+        return ImmutableVirusInterpreterData.builder().addReportableViruses(virus).addAllViruses(virus).build();
     }
 
     private static ImmutableAnnotatedVirus.Builder minimalAnnotatedVirusBuilder() {
