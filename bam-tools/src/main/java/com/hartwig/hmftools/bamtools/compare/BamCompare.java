@@ -93,7 +93,7 @@ public class BamCompare
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
         double timeTakeMins = timeTakenMs / 60000.0;
 
-        BT_LOGGER.info("BamMompare complete, mins({})", format("%.3f", timeTakeMins));
+        BT_LOGGER.info("BamCompare complete, mins({})", format("%.3f", timeTakeMins));
     }
 
     public static void main(@NotNull final String[] args)

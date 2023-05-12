@@ -39,8 +39,8 @@ public class CompareConfig
     public final List<ChrBaseRegion> SpecificRegions;
 
     private static final String OUTPUT_FILE = "output_file";
-    private static final String REF_BAM_FILE = "ref_bam";
-    private static final String NEW_BAM_FILE = "new_bam";
+    private static final String REF_BAM_FILE = "ref_bam_file";
+    private static final String NEW_BAM_FILE = "new_bam_file";
 
     private static final int DEFAULT_CHR_PARTITION_SIZE = 100000;
 

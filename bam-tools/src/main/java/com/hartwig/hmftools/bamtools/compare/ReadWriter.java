@@ -50,8 +50,8 @@ public class ReadWriter
             // write summary metrics
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("ReadId,Chromosome,PosStart,MismatchType,Diff");
-            writer.write(",Cigar,Flags,Paired,IsFirst,NegStrand,Duplicate,IsSupp,HasSupp");
+            writer.write("ReadId,Chromosome,PosStart,MismatchType,Diff,MateChr,MatePos");
+            writer.write(",Cigar,Flags,Paired,IsFirst,NegStrand,Duplicate,IsSupp,SuppData");
             writer.newLine();
             return writer;
         }
@@ -67,13 +67,14 @@ public class ReadWriter
     {
         try
         {
-            mWriter.write(format("%s,%s,%d,%s,%s",
-                    read.getReadName(), read.getReferenceName(), read.getAlignmentStart(), mismatchType, diffDetails));
+            mWriter.write(format("%s,%s,%d,%s,%s,%s,%d",
+                    read.getReadName(), read.getReferenceName(), read.getAlignmentStart(), mismatchType, diffDetails,
+                    read.getMateReferenceName(), read.getMateAlignmentStart()));
 
             mWriter.write(format(",%s,%d,%s,%s,%s,%s,%s,%s",
                     read.getCigarString(), read.getFlags(), read.getReadPairedFlag(), read.getFirstOfPairFlag(),
                     read.getReadNegativeStrandFlag(), read.getDuplicateReadFlag(), read.getSupplementaryAlignmentFlag(),
-                    read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE)));
+                    read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE) ? SupplementaryReadData.from(read).asCsv() : "N/A"));
 
             mWriter.newLine();
         }
