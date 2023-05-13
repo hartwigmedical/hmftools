@@ -57,9 +57,11 @@ public class Fragment
                 mAllPrimaryReadsPresent = false;
                 mAllReadsPresent = false;
 
-                mHasLocalMate = !read.getMateUnmappedFlag()
-                        && read.getMateReferenceName().equals(read.getReferenceName())
-                        && abs(read.getMateAlignmentStart() - read.getAlignmentStart()) < DEFAULT_POS_BUFFER_SIZE;
+                if(read.getMateUnmappedFlag()) // unmapped reads come through the same slice
+                    mHasLocalMate = true;
+                else
+                    mHasLocalMate = read.getMateReferenceName().equals(read.getReferenceName())
+                            && abs(read.getMateAlignmentStart() - read.getAlignmentStart()) < DEFAULT_POS_BUFFER_SIZE;
             }
         }
         else
