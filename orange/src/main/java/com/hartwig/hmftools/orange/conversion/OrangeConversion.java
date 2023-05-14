@@ -26,6 +26,7 @@ import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -64,10 +65,7 @@ public final class OrangeConversion {
 
     @NotNull
     public static OrangeDoidNode convert(@NotNull DoidNode doidNode) {
-        return ImmutableOrangeDoidNode.builder()
-                .doid(doidNode.doid())
-                .doidTerm(doidNode.doidTerm())
-                .build();
+        return ImmutableOrangeDoidNode.builder().doid(doidNode.doid()).doidTerm(doidNode.doidTerm()).build();
     }
 
     @NotNull
@@ -108,9 +106,13 @@ public final class OrangeConversion {
                 .name(annotatedVirus.name())
                 .qcStatus(VirusBreakendQCStatus.valueOf(annotatedVirus.qcStatus().name()))
                 .integrations(annotatedVirus.integrations())
-                .interpretation(VirusInterpretation.valueOf(annotatedVirus.interpretation()))
+                .interpretation(
+                        annotatedVirus.interpretation() != null ? VirusInterpretation.valueOf(annotatedVirus.interpretation()) : null)
                 .percentageCovered(annotatedVirus.percentageCovered())
                 .reported(annotatedVirus.reported())
+                .meanCoverage(annotatedVirus.meanCoverage())
+                .virusDriverLikelihoodType(VirusLikelihoodType.valueOf(annotatedVirus.virusDriverLikelihoodType().name()))
+                .expectedClonalCoverage(annotatedVirus.expectedClonalCoverage())
                 .build();
     }
 
