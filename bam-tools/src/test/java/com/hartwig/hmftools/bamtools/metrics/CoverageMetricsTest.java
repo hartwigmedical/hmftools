@@ -18,7 +18,7 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-public class MetricsTest
+public class CoverageMetricsTest
 {
     private final ReadIdGenerator mReadIdGen;
     private final MetricsConfig mConfig;
@@ -26,7 +26,7 @@ public class MetricsTest
     private static final String TEST_READ_BASES = MockRefGenome.generateRandomBases(10);
     private static final String TEST_CIGAR = "10M";
 
-    public MetricsTest()
+    public CoverageMetricsTest()
     {
         mReadIdGen = new ReadIdGenerator();
         mConfig = new MetricsConfig(10);
@@ -84,7 +84,7 @@ public class MetricsTest
 
         baseCoverage.processRead(read, null);
 
-        Metrics metrics = baseCoverage.createMetrics();
+        CoverageMetrics metrics = baseCoverage.createMetrics();
 
         assertEquals(readLength, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
         assertEquals(readLength, metrics.FilterTypeCounts[FilterType.LOW_MAP_QUAL.ordinal()]);
@@ -149,7 +149,7 @@ public class MetricsTest
         bamReader.processRead(mate1);
 
         BaseCoverage baseCoverage = bamReader.baseCoverage();
-        Metrics metrics = baseCoverage.createMetrics();
+        CoverageMetrics metrics = baseCoverage.createMetrics();
 
         assertEquals(15, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
 

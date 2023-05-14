@@ -2,7 +2,6 @@ package com.hartwig.hmftools.bamtools.metrics;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 
 import java.util.List;
@@ -32,6 +31,7 @@ public class BamReader
     private final BamSlicer mBamSlicer;
 
     private final BaseCoverage mBaseCoverage;
+    private final FragmentLengths mFragmentLengths;
     private final Map<String, ReadGroup> mReadGroupMap; // keyed by readId
     private final CombinedStats mCombinedStats;
 
@@ -56,6 +56,8 @@ public class BamReader
 
         mBaseCoverage = new BaseCoverage(mConfig, mRegion.start(), mRegion.end(), unmappableRegions);
 
+        mFragmentLengths = new FragmentLengths();
+
         mFilterRegion = null;
 
         mTotalReads = 0;
@@ -79,8 +81,8 @@ public class BamReader
             processReadGroup(readGroup);
         }
 
-        Metrics metrics = mBaseCoverage.createMetrics();
-        mCombinedStats.addStats(metrics, mTotalReads, mPerfCounter);
+        CoverageMetrics metrics = mBaseCoverage.createMetrics();
+        mCombinedStats.addStats(metrics, mFragmentLengths, mTotalReads, mPerfCounter);
     }
 
     private void processSamRecord(final SAMRecord read)
@@ -105,6 +107,8 @@ public class BamReader
                 BT_LOGGER.debug("specific readId({}) unmapped({})", read.getReadName(), read.getReadUnmappedFlag());
             }
         }
+
+        mFragmentLengths.processRead(read);
 
         // cache if the mate read overlaps
         ReadGroup readGroup = mReadGroupMap.get(read.getReadName());

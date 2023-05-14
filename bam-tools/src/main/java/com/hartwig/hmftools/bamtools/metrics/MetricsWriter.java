@@ -5,8 +5,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.DELIM;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.GENOME_TERRITORY_COLUMN;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.HET_SNP_Q_COLUMN;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.HET_SNP_SENSITIVITY_COLUMN;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.MAD_COVERAGE_COLUMN;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.MEAN_COVERAGE_COLUMN;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.MEDIAN_COVERAGE_COLUMN;
@@ -25,16 +23,17 @@ import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 
 public final class MetricsWriter
 {
-    public static void writeResults(final Metrics metrics, final MetricsConfig config)
+    public static void writeResults(final CombinedStats combinedStats, final MetricsConfig config)
     {
         if(config.WriteOldStyle)
         {
-            writeOldStyleFile(metrics, config);
+            writeOldStyleFile(combinedStats.coverageMetrics(), config);
         }
         else
         {
-            writeMetrics(metrics, config);
-            writeCoverageFrequency(metrics, config);
+            writeMetrics(combinedStats.coverageMetrics(), config);
+            writeCoverageFrequency(combinedStats.coverageMetrics(), config);
+            writeFragmentLengths(combinedStats.fragmentLengths(), config);
         }
     }
 
@@ -70,7 +69,7 @@ public final class MetricsWriter
         return header.toString();
     }
 
-    private static String metricsTsv(final Metrics metrics)
+    private static String metricsTsv(final CoverageMetrics metrics)
     {
         StringJoiner tsvData = new StringJoiner(DELIM);
 
@@ -109,7 +108,7 @@ public final class MetricsWriter
         return tsvData.toString();
     }
 
-    private static void writeMetrics(final Metrics metrics, final MetricsConfig config)
+    private static void writeMetrics(final CoverageMetrics metrics, final MetricsConfig config)
     {
         try
         {
@@ -130,7 +129,7 @@ public final class MetricsWriter
         }
     }
 
-    private static void writeCoverageFrequency(final Metrics metrics, final MetricsConfig config)
+    private static void writeCoverageFrequency(final CoverageMetrics metrics, final MetricsConfig config)
     {
         try
         {
@@ -155,7 +154,32 @@ public final class MetricsWriter
         }
     }
 
-    private static void writeOldStyleFile(final Metrics metrics, final MetricsConfig config)
+    private static void writeFragmentLengths(final FragmentLengths fragmentLengths, final MetricsConfig config)
+    {
+        try
+        {
+            // write summary metrics
+            String filename = config.formFilename("frag_lengths");
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write("FragmentLength,Count");
+            writer.newLine();
+
+            for(LengthFrequency lengthFrequency : fragmentLengths.lengthFrequencies())
+            {
+                writer.write(String.format("%d,%d", lengthFrequency.Length, lengthFrequency.Frequency));
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            BT_LOGGER.error("failed to write frag lengths file: {}", e.toString());
+        }
+    }
+
+    private static void writeOldStyleFile(final CoverageMetrics metrics, final MetricsConfig config)
     {
         try
         {

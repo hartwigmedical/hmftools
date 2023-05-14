@@ -143,9 +143,9 @@ public class BaseCoverage
         }
     }
 
-    public Metrics createMetrics()
+    public CoverageMetrics createMetrics()
     {
-        Metrics metrics = new Metrics(mConfig.MaxCoverage);
+        CoverageMetrics metrics = new CoverageMetrics(mConfig.MaxCoverage);
 
         long coverageBases = 0;
 

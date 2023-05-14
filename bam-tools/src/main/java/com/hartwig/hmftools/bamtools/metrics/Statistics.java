@@ -7,8 +7,7 @@ public class Statistics
     public final int MedianAbsoluteDeviation;
     public final double StandardDeviation;
 
-    public Statistics(
-            final double mean, final double median, final int mad, final double standardDeviation)
+    public Statistics(final double mean, final double median, final int mad, final double standardDeviation)
     {
         Mean = mean;
         Median = median;

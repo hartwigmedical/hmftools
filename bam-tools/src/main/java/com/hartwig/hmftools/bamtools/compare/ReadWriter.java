@@ -3,32 +3,14 @@ package com.hartwig.hmftools.bamtools.compare;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.DELIM;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.GENOME_TERRITORY_COLUMN;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.MAD_COVERAGE_COLUMN;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.MEAN_COVERAGE_COLUMN;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.MEDIAN_COVERAGE_COLUMN;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.PCT_EXC_ADAPTER_COLUMN;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.PCT_EXC_TOTAL_COLUMN;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.SD_COVERAGE_COLUMN;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.List;
-import java.util.StringJoiner;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.bamtools.metrics.FilterType;
-import com.hartwig.hmftools.bamtools.metrics.Metrics;
-import com.hartwig.hmftools.bamtools.metrics.MetricsConfig;
-import com.hartwig.hmftools.bamtools.metrics.Statistics;
-import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
-
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 

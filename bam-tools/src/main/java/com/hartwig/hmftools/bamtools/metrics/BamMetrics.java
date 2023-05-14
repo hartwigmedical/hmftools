@@ -90,11 +90,11 @@ public class BamMetrics
 
         BT_LOGGER.info("all regions complete, totalReads({})", combinedStats.totalReads());
 
-        combinedStats.metrics().finalise(mConfig.ExcludeZeroCoverage);
-        MetricsWriter.writeResults(combinedStats.metrics(), mConfig);
-        BT_LOGGER.info("final stats: {}", combinedStats.metrics());
+        combinedStats.coverageMetrics().finalise(mConfig.ExcludeZeroCoverage);
+        MetricsWriter.writeResults(combinedStats, mConfig);
+        BT_LOGGER.info("final stats: {}", combinedStats.coverageMetrics());
 
-        BT_LOGGER.info("all regions complete, totalReads({}) stats: {}", combinedStats.totalReads(), combinedStats.metrics());
+        BT_LOGGER.info("all regions complete, totalReads({}) stats: {}", combinedStats.totalReads(), combinedStats.coverageMetrics());
 
         if(mConfig.PerfDebug)
         {

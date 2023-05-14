@@ -13,7 +13,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
-public class Metrics
+public class CoverageMetrics
 {
     public final long[] FilterTypeCounts;
     public final long[] CoverageFrequency;
@@ -23,7 +23,7 @@ public class Metrics
     private long mTotalBases; // filtered and unfiltered
     private Statistics mStatistics;
 
-    public Metrics(int maxCoverage)
+    public CoverageMetrics(int maxCoverage)
     {
         FilterTypeCounts = new long[FilterType.values().length];
         CoverageFrequency = new long[maxCoverage + 1];
@@ -198,7 +198,7 @@ public class Metrics
         }
     }
 
-    public synchronized void merge(final Metrics other)
+    public synchronized void merge(final CoverageMetrics other)
     {
         for(FilterType type : FilterType.values())
         {

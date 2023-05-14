@@ -4,24 +4,30 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 public class CombinedStats
 {
-    private final Metrics mMetrics;
+    private final CoverageMetrics mCoverageMetrics;
+    private final FragmentLengths mFragmentLengths;
     private final PerformanceCounter mPerfCounter;
     private long mTotalReads;
 
     public CombinedStats(int maxCoverage)
     {
-        mMetrics = new Metrics(maxCoverage);
+        mCoverageMetrics = new CoverageMetrics(maxCoverage);
+        mFragmentLengths = new FragmentLengths();
         mPerfCounter = new PerformanceCounter("Coverage");
         mTotalReads = 0;
     }
 
-    public Metrics metrics() { return mMetrics; }
+    public CoverageMetrics coverageMetrics() { return mCoverageMetrics; }
+    public FragmentLengths fragmentLengths() { return mFragmentLengths; }
+
     public PerformanceCounter perfCounter() { return mPerfCounter; }
     public long totalReads() { return mTotalReads; }
 
-    public synchronized void addStats(final Metrics metrics, int totalReads, final PerformanceCounter perfCounter)
+    public synchronized void addStats(
+            final CoverageMetrics metrics, final FragmentLengths fragmentLengths, int totalReads, final PerformanceCounter perfCounter)
     {
-        mMetrics.merge(metrics);
+        mCoverageMetrics.merge(metrics);
+        mFragmentLengths.merge(fragmentLengths);
         mTotalReads += totalReads;
         mPerfCounter.merge(perfCounter);
     }
