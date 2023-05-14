@@ -284,14 +284,17 @@ public class DuplicateGroups
         return allUmiGroups;
     }
 
-    public void processDuplicateGroups(final List<List<Fragment>> duplicateGroups)
+    public void processDuplicateGroups(final List<List<Fragment>> duplicateGroups, boolean inExcludedRegion)
     {
         if(duplicateGroups == null)
             return;
 
         for(List<Fragment> fragments : duplicateGroups)
         {
-            setPrimaryRead(fragments);
+            if(inExcludedRegion)
+                fragments.get(0).setStatus(PRIMARY);
+            else
+                setPrimaryRead(fragments);
 
             ++mStats.DuplicateGroups;
             mStats.addDuplicateGroup(fragments.size());

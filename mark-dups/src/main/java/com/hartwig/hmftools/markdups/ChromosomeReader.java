@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroups.findDuplicateFragments;
 import static com.hartwig.hmftools.markdups.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.formChromosomePartition;
@@ -21,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.sv.ExcludedRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -28,6 +30,7 @@ import com.hartwig.hmftools.markdups.common.CandidateDuplicates;
 import com.hartwig.hmftools.markdups.common.DuplicateGroups;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
+import com.hartwig.hmftools.markdups.common.FragmentUtils;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.PartitionResults;
 import com.hartwig.hmftools.markdups.common.Statistics;
@@ -54,6 +57,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private BaseRegion mCurrentPartition;
     private String mCurrentStrPartition;
     private PartitionData mCurrentPartitionData;
+    private ChrBaseRegion mExcludedRegion;
 
     private final Map<String,List<SAMRecord>> mPendingIncompleteReads;
 
@@ -95,6 +99,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
         mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
+        setExcludedRegion();
 
         mPendingIncompleteReads = Maps.newHashMap();
 
@@ -175,6 +180,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
             mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
             mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
+            setExcludedRegion();
 
             perfCounterStart();
         }
@@ -334,17 +340,20 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         int position = positionFragments.get(0).initialPosition();
 
+        boolean inExcludedRegion = mExcludedRegion != null && positionFragments.stream()
+                .anyMatch(x -> x.reads().stream().anyMatch(y -> FragmentUtils.overlapsExcludedRegion(mExcludedRegion, y)));
+
         findDuplicateFragments(positionFragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
 
         List<UmiGroup> umiGroups = null;
 
-        if(mConfig.UMIs.Enabled)
+        if(mConfig.UMIs.Enabled && !inExcludedRegion)
         {
             umiGroups = mDuplicateGroups.processDuplicateUmiGroups(duplicateGroups);
         }
         else
         {
-            mDuplicateGroups.processDuplicateGroups(duplicateGroups);
+            mDuplicateGroups.processDuplicateGroups(duplicateGroups, inExcludedRegion);
         }
 
         if(logDetails)
@@ -381,6 +390,26 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
             mStats.LocalComplete += (int)resolvedFragments.stream().filter(x -> x.allReadsPresent()).count();
         }
+    }
+
+    private void setExcludedRegion()
+    {
+        ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion);
+
+        if(excludedRegion.overlaps(mRegion) && mCurrentPartition.overlaps(excludedRegion))
+        {
+            mExcludedRegion = excludedRegion;
+            mCurrentPartitionData.setExcludedRegion(excludedRegion);
+        }
+        else
+        {
+            mExcludedRegion = null;
+        }
+    }
+
+    private boolean overlapsExcludedRegion(final SAMRecord read)
+    {
+        return FragmentUtils.overlapsExcludedRegion(mExcludedRegion, read);
     }
 
     private void perfCounterStart()

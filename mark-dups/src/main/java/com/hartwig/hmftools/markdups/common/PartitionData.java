@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.SUPPLEMENTARY;
+import static com.hartwig.hmftools.markdups.common.FragmentUtils.overlapsExcludedRegion;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 import static com.hartwig.hmftools.markdups.common.ReadMatch.NO_READ_MATCH;
 import static com.hartwig.hmftools.markdups.common.ResolvedFragmentState.fragmentState;
@@ -24,6 +25,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.RecordWriter;
 import com.hartwig.hmftools.markdups.umi.ConsensusReads;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
@@ -56,6 +58,7 @@ public class PartitionData
 
     private Set<UmiGroup> mUpdatedUmiGroups;
     private Set<CandidateDuplicates> mUpdatedCandidateDuplicates;
+    private ChrBaseRegion mExcludedRegion;
 
     private static final int LOG_CACHE_COUNT = 10000;
 
@@ -69,6 +72,7 @@ public class PartitionData
         mDuplicateGroups = new DuplicateGroups(umiConfig);
         mUpdatedUmiGroups = Sets.newHashSet();
         mUpdatedCandidateDuplicates = Sets.newHashSet();
+        mExcludedRegion = null;
 
         mLock = new ReentrantLock();
         mLockAcquireTime = 0;
@@ -80,6 +84,8 @@ public class PartitionData
 
     public void togglePerfChecks() { mPerfChecks = true; }
     public double totalLockTime() { return mLockAcquireTime / NANOS_IN_SECOND; }
+
+    public synchronized void setExcludedRegion(final ChrBaseRegion excludedRegion) { mExcludedRegion = excludedRegion; }
 
     public void processPrimaryFragments(
             final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList, final List<UmiGroup> umiGroups)
@@ -350,7 +356,10 @@ public class PartitionData
 
         List<List<Fragment>> duplicateGroups = candidateDuplicates.finaliseFragmentStatus();
 
-        if(umiEnabled())
+        boolean inExcludedRegion = mExcludedRegion != null && duplicateGroups.stream()
+                .anyMatch(x -> x.stream().anyMatch(y -> y.reads().stream().anyMatch(z -> overlapsExcludedRegion(mExcludedRegion, z))));
+
+        if(umiEnabled() && !inExcludedRegion)
         {
             List<UmiGroup> umiGroups = mDuplicateGroups.processDuplicateUmiGroups(duplicateGroups);
 
@@ -364,7 +373,7 @@ public class PartitionData
         }
         else
         {
-            mDuplicateGroups.processDuplicateGroups(duplicateGroups);
+            mDuplicateGroups.processDuplicateGroups(duplicateGroups, inExcludedRegion);
         }
 
         for(Fragment fragment : candidateDuplicates.fragments())
