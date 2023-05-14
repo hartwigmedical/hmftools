@@ -223,4 +223,19 @@ public class CoverageMetrics
 
         return format("counts(%s)", sj);
     }
+
+    public static int getCoverageBucket(int coverage)
+    {
+        // round to nearest unit up to 1000, then 10s up to 3000 then 100s
+        if(coverage <= 100)
+            return coverage;
+
+        if(coverage <= 1000)
+            return 10 * (int)round(coverage/10.0);
+
+        if(coverage <= 10000)
+            return 100 * (int)round(coverage/100.0);
+
+        return 1000;
+    }
 }

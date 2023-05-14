@@ -137,13 +137,43 @@ public final class MetricsWriter
             String filename = config.formFilename("coverage");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Coverage,Frequency");
+            writer.write("Coverage,Count");
             writer.newLine();
 
-            for(int i = 0; i < metrics.CoverageFrequency.length; ++i)
+            // collapse for long distributions
+            if(metrics.CoverageFrequency.length > 3000)
             {
-                writer.write(format("%d,%d", i, metrics.CoverageFrequency[i]));
+                int currentCoverage = 0;
+                long coverageTotal = metrics.CoverageFrequency[0];
+
+                for(int i = 1; i < metrics.CoverageFrequency.length; ++i)
+                {
+                    int nextCoverage = CoverageMetrics.getCoverageBucket(i);
+
+                    if(nextCoverage > currentCoverage)
+                    {
+                        writer.write(format("%d,%d", currentCoverage, coverageTotal));
+                        writer.newLine();
+
+                        currentCoverage = nextCoverage;
+                        coverageTotal = 0;
+                    }
+
+                    coverageTotal += metrics.CoverageFrequency[i];
+                }
+
+                // write the last entry or bucket's data
+                writer.write(format("%d,%d", currentCoverage, coverageTotal));
                 writer.newLine();
+            }
+            else
+            {
+                for(int i = 0; i < metrics.CoverageFrequency.length; ++i)
+                {
+                    writer.write(format("%d,%d", i, metrics.CoverageFrequency[i]));
+                    writer.newLine();
+                }
+
             }
 
             writer.close();

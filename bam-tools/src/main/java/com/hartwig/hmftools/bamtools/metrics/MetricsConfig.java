@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.mergeChrBaseRegionOverlaps;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -126,6 +127,11 @@ public class MetricsConfig
         SpecificRegions = Lists.newArrayList();
 
         mIsValid &= loadSpecificRegionsConfig(cmd, SpecificChromosomes, SpecificRegions);
+
+        if(mIsValid && !SpecificRegions.isEmpty())
+        {
+            mergeChrBaseRegionOverlaps(SpecificRegions, true);
+        }
 
         LogReadIds = cmd.hasOption(LOG_READ_IDS) ?
                 Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
