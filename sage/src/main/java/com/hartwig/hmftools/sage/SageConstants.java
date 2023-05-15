@@ -33,6 +33,10 @@ public class SageConstants
     public static final int MIN_INSERT_ALIGNMENT_OVERLAP = 5;
     public static final int DEFAULT_READ_LENGTH = 151;
 
+    public static final int MIN_SOFT_CLIP_MIN_BASE_QUAL = 25;
+    public static final int MAX_SOFT_CLIP_LOW_QUAL_COUNT = 5;
+    public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.75;
+
     public static final int NORMAL_RAW_ALT_BQ_MAX = 25;
     public static final int LONG_GERMLINE_INSERT_LENGTH = 10;
 

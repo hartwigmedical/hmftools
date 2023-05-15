@@ -57,6 +57,14 @@ public class TestUtils
         return new SageVariant(candidate, normalCounters, tumorCounters);
     }
 
+    public static void setBaseQualities(final SAMRecord record, int baseQual)
+    {
+        for(int i = 0; i < record.getBaseQualities().length; ++i)
+        {
+            record.getBaseQualities()[i] = (byte)baseQual;
+        }
+    }
+
     public static void setTumorQuality(final SageVariant variant, int count, int quality)
     {
         variant.tumorReadCounters().get(0).counts()[RC_FULL] = count;

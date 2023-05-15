@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_SOFT_CLIP_HIGH_QUAL_PERC;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_SOFT_CLIP_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 
 import com.hartwig.hmftools.common.samtools.CigarHandler;
@@ -41,6 +44,9 @@ public class RawContextCigarHandler implements CigarHandler
         if(ignoreSoftClipAdapter(record))
             return;
 
+        if(exceedsSoftClipLowBaseQual(record.getBaseQualities(), 0, element.getLength()))
+            return;
+
         int readStartPos = record.getReadPositionAtReferencePosition(record.getAlignmentStart());
         int readIndex = readStartPos - 1 - record.getAlignmentStart()
                 + mVariant.position() - mVariant.alt().length() + mVariant.ref().length();
@@ -63,6 +69,11 @@ public class RawContextCigarHandler implements CigarHandler
 
          if(ignoreSoftClipAdapter(record))
              return;
+
+        int scStartIndex = record.getBaseQualities().length - element.getLength();
+
+        if(exceedsSoftClipLowBaseQual(record.getBaseQualities(), scStartIndex, element.getLength()))
+            return;
 
         if(mIsInsert)
         {
@@ -209,5 +220,21 @@ public class RawContextCigarHandler implements CigarHandler
 
         int baseLength = maxIndex - readIndex + 1;
         return qualityTotal > 0 ? (int)(qualityTotal / baseLength) : 0;
+    }
+
+    public static boolean exceedsSoftClipLowBaseQual(final byte[] baseQualities, int startIndex, int scLength)
+    {
+        int aboveQual = 0;
+        for(int i = startIndex; i < startIndex + scLength; ++i)
+        {
+            if(baseQualities[i] >= MIN_SOFT_CLIP_MIN_BASE_QUAL)
+                ++aboveQual;
+        }
+
+        if(aboveQual / (double)scLength >= MIN_SOFT_CLIP_HIGH_QUAL_PERC)
+            return false;
+
+        int lowQualCount = scLength - aboveQual;
+        return lowQualCount >= MAX_SOFT_CLIP_LOW_QUAL_COUNT;
     }
 }

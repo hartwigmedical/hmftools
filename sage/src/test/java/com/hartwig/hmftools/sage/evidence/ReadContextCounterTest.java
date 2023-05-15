@@ -133,7 +133,7 @@ public class ReadContextCounterTest
         final ReadContextCounter victim =
                 new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
 
-        final SAMRecord record = buildSamRecord(555, "5S3M", "GAAAAATC", "########");
+        final SAMRecord record = buildSamRecord(555, "5S3M", "GAAAAATC", "FFFFFFFF");
         processRead(victim, record);
 
         assertEquals(1, victim.depth());
@@ -180,7 +180,7 @@ public class ReadContextCounterTest
         final ReadContextCounter victim =
                 new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
 
-        final SAMRecord record = buildSamRecord(550, "2M6S", "GAAAAATC", "########");
+        final SAMRecord record = buildSamRecord(550, "2M6S", "GAAAAATC", "FFFFFFFF");
         processRead(victim, record);
 
         assertEquals(1, victim.depth());
