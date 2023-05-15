@@ -19,10 +19,13 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.bamtools.common.CommonUtils;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 
 public final class MetricsWriter
 {
+    private static final String OLD_STYLE_DELIM = DELIM;
+
     public static void writeResults(final CombinedStats combinedStats, final MetricsConfig config)
     {
         if(config.WriteOldStyle)
@@ -39,9 +42,9 @@ public final class MetricsWriter
 
     private static final List<Integer> COVERAGE_LEVELS = Lists.newArrayList(1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100);
 
-    private static String metricsHeader()
+    private static String metricsHeader(final String delim)
     {
-        StringJoiner header = new StringJoiner(DELIM);
+        StringJoiner header = new StringJoiner(delim);
 
         header.add(GENOME_TERRITORY_COLUMN);
         header.add(MEAN_COVERAGE_COLUMN);
@@ -69,9 +72,9 @@ public final class MetricsWriter
         return header.toString();
     }
 
-    private static String metricsTsv(final CoverageMetrics metrics)
+    private static String metricsData(final CoverageMetrics metrics, final String delim)
     {
-        StringJoiner tsvData = new StringJoiner(DELIM);
+        StringJoiner tsvData = new StringJoiner(delim);
 
         final Statistics statistics = metrics.statistics();
 
@@ -116,9 +119,9 @@ public final class MetricsWriter
             String filename = config.formFilename("metrics");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write(metricsHeader());
+            writer.write(metricsHeader(CommonUtils.DELIM));
             writer.newLine();
-            writer.write(metricsTsv(metrics));
+            writer.write(metricsData(metrics, CommonUtils.DELIM));
             writer.newLine();
 
             writer.close();
@@ -231,9 +234,9 @@ public final class MetricsWriter
             writer.write("## METRICS CLASS");
             writer.newLine();
 
-            writer.write(metricsHeader());
+            writer.write(metricsHeader(OLD_STYLE_DELIM));
             writer.newLine();
-            writer.write(metricsTsv(metrics));
+            writer.write(metricsData(metrics, OLD_STYLE_DELIM));
             writer.newLine();
             writer.newLine();
 
