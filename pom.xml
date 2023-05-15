@@ -67,7 +67,7 @@
         <cuppa.version>1.8</cuppa.version>
         <fastq-tools.version>1.0</fastq-tools.version>
         <gene-utils.version>1.1</gene-utils.version>
-        <gripss.version>2.3.5</gripss.version>
+        <gripss.version>2.4</gripss.version>
         <health-checker.version>3.3</health-checker.version>
         <hmf-id-generator.version>3.0</hmf-id-generator.version>
         <isofox.version>1.6.2</isofox.version>
@@ -79,9 +79,9 @@
         <orange-datamodel.version>1.0.1</orange-datamodel.version>
         <paddle.version>1.0</paddle.version>
         <patient-db.version>5.32</patient-db.version>
-        <pave.version>1.4.3</pave.version>
-        <purple.version>3.8.2</purple.version>
-        <sage.version>3.2.6</sage.version>
+        <pave.version>1.5</pave.version>
+        <purple.version>3.9</purple.version>
+        <sage.version>3.3</sage.version>
         <sigs.version>1.2</sigs.version>
         <sv-prep.version>1.1</sv-prep.version>
         <sv-tools.version>1.0</sv-tools.version>
