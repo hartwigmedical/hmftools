@@ -148,14 +148,14 @@ public class GripssApplication
 
         mRealigner = new BreakendRealigner(mRefGenome);
 
-        if(mConfig.tumorOnly())
-        {
-            GR_LOGGER.info("tumor genotype info({}: {})", genotypeIds.TumorOrdinal, genotypeIds.TumorId);
-        }
-        else if(mConfig.GermlineMode)
+        if(mConfig.GermlineMode)
         {
             GR_LOGGER.info("genotype info: germline mode ref({}: {}) tumor({}: {})",
                     genotypeIds.TumorOrdinal, genotypeIds.TumorId, genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId);
+        }
+        else if(mConfig.ReferenceId.isEmpty())
+        {
+            GR_LOGGER.info("tumor genotype info({}: {})", genotypeIds.TumorOrdinal, genotypeIds.TumorId);
         }
         else
         {

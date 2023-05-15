@@ -81,8 +81,6 @@ public class GripssConfig
         RestrictedChromosomes = Lists.newArrayList();
     }
 
-    public boolean tumorOnly() { return ReferenceId.isEmpty(); }
-
     public boolean isValid()
     {
         if(SampleId.isEmpty())
