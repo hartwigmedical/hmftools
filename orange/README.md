@@ -217,6 +217,8 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 
+- [2.4.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.4.1)
+    - Fixes java.lang.IllegalStateException occurring when sample has virus integration.
 - [2.4.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.4.0)
     - The ORANGE datamodel used in the json output has been separated from the ORANGE logic and available as an artifact for
       other projects to depend on (see also [ORANGE-datamodel](../orange-datamodel))
