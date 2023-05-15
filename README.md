@@ -14,7 +14,7 @@ The table below has links for the full functional detail and configuration for e
 | Component                     | Description                                                            | Current Version                                                               |
 |-------------------------------|------------------------------------------------------------------------|-------------------------------------------------------------------------------|
 | [Amber](./amber/README.md)    | Generate a tumor BAF file for Purple's copy number fit                 | [3.9](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.9)     |
-| [Cobalt](./cobalt/README.md)  | Determines the read depth ratios for Purple's copy number fit          | [1.13](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.13)  |
+| [Cobalt](./cobalt/README.md)  | Determines the read depth ratios for Purple's copy number fit          | [1.14](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.14)  |
 | [Cuppa](./cuppa/README.md)    | Tissue of origin prediction from WGS/WTS                               | [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.8)     |
 | [Gripss](./gripss/README.md)  | SV filtering                                                           | [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.3.5)  |
 | [Lilac](./lilac/README.md)    | HLA typing                                                             | [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.4.1)   |
