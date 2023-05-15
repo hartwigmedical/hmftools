@@ -12,7 +12,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.evidence.SyncFragmentType;
+import com.hartwig.hmftools.sage.evidence.FragmentSyncType;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
 public class RegionResults
@@ -31,7 +31,7 @@ public class RegionResults
         mTotaVariants = 0;
         mMaxMemoryUsage = 0;
         mPerfCounters = Lists.newArrayList();
-        mSyncCounts = new int[SyncFragmentType.values().length];
+        mSyncCounts = new int[FragmentSyncType.values().length];
     }
 
     public synchronized void addFinalVariants(final int taskId, final List<SageVariant> variants)
@@ -69,7 +69,7 @@ public class RegionResults
 
     public synchronized void addSynCounts(final int[] counts)
     {
-        Arrays.stream(SyncFragmentType.values()).forEach(x -> mSyncCounts[x.ordinal()] += counts[x.ordinal()]);
+        Arrays.stream(FragmentSyncType.values()).forEach(x -> mSyncCounts[x.ordinal()] += counts[x.ordinal()]);
     }
 
     public int totalReads() { return mTotalReads; }
@@ -84,7 +84,7 @@ public class RegionResults
     public void logSynCounts()
     {
         StringJoiner sj = new StringJoiner(", ");
-        Arrays.stream(SyncFragmentType.values()).forEach(x -> sj.add(format("%s=%d", x, mSyncCounts[x.ordinal()])));
+        Arrays.stream(FragmentSyncType.values()).forEach(x -> sj.add(format("%s=%d", x, mSyncCounts[x.ordinal()])));
         SG_LOGGER.info("fragment sync counts: {}", sj);
     }
 }

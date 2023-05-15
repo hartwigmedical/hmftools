@@ -20,7 +20,7 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
-public class CombinedRecordsTest
+public class FragmentSyncTest
 {
     private static final String REF_BASES = "X" + generateRandomBases(100);
 
@@ -168,8 +168,8 @@ public class CombinedRecordsTest
 
         SAMRecord second = createSamRecord(readId, chromosome, 5, REF_BASES.substring(5, 25), "20M");
 
-        SyncFragmentOutcome syncOutcome = ReadContextEvidence.formFragmentRead(first, second);
-        assertEquals(SyncFragmentType.CIGAR_MISMATCH, syncOutcome.SyncType);
+        FragmentSyncOutcome syncOutcome = FragmentSync.formFragmentRead(first, second);
+        assertEquals(FragmentSyncType.CIGAR_MISMATCH, syncOutcome.SyncType);
 
         // off by 1
         first = createSamRecord(
@@ -178,15 +178,15 @@ public class CombinedRecordsTest
         second = createSamRecord(
                 readId, chromosome, 2, REF_BASES.substring(1, 12) + "C" + REF_BASES.substring(12, 21), "10M1I10M");
 
-        syncOutcome = ReadContextEvidence.formFragmentRead(first, second);
-        assertEquals(SyncFragmentType.CIGAR_MISMATCH, syncOutcome.SyncType);
+        syncOutcome = FragmentSync.formFragmentRead(first, second);
+        assertEquals(FragmentSyncType.CIGAR_MISMATCH, syncOutcome.SyncType);
 
         // too many mismatches
         first = createSamRecord(readId, chromosome, 1, REF_BASES.substring(1, 21), "20M");
         second = createSamRecord(readId, chromosome, 1, REF_BASES.substring(2, 22), "20M");
 
-        syncOutcome = ReadContextEvidence.formFragmentRead(first, second);
-        assertEquals(SyncFragmentType.BASE_MISMATCH, syncOutcome.SyncType);
+        syncOutcome = FragmentSync.formFragmentRead(first, second);
+        assertEquals(FragmentSyncType.BASE_MISMATCH, syncOutcome.SyncType);
 
         // non-overlapping but different INDELs
         first = createSamRecord(
@@ -195,8 +195,8 @@ public class CombinedRecordsTest
         second = createSamRecord(
                 readId, chromosome, 30, REF_BASES.substring(30, 40) + REF_BASES.substring(45, 75), "10M5D30M");
 
-        syncOutcome = ReadContextEvidence.formFragmentRead(first, second);
-        assertEquals(SyncFragmentType.NO_OVERLAP_CIGAR_DIFF, syncOutcome.SyncType);
+        syncOutcome = FragmentSync.formFragmentRead(first, second);
+        assertEquals(FragmentSyncType.NO_OVERLAP_CIGAR_DIFF, syncOutcome.SyncType);
     }
 
         @Test
@@ -211,7 +211,7 @@ public class CombinedRecordsTest
         first.add(new CigarElement(40, M));
         first.add(new CigarElement(8, S));
 
-        assertTrue(ReadContextEvidence.compatibleCigars(first, first));
+        assertTrue(FragmentSync.compatibleCigars(first, first));
 
         // other diffs are not permitted
         Cigar second = new Cigar();
@@ -221,13 +221,13 @@ public class CombinedRecordsTest
         second.add(new CigarElement(5, D));
         second.add(new CigarElement(40, M));
 
-        assertFalse(ReadContextEvidence.compatibleCigars(first, second));
+        assertFalse(FragmentSync.compatibleCigars(first, second));
 
         second.add(new CigarElement(30, M));
         second.add(new CigarElement(13, D));
         second.add(new CigarElement(40, M));
 
-        assertFalse(ReadContextEvidence.compatibleCigars(first, second));
+        assertFalse(FragmentSync.compatibleCigars(first, second));
 
         // can differ in soft-clips and aligned lengths
         first = new Cigar();
@@ -240,12 +240,12 @@ public class CombinedRecordsTest
         second.add(new CigarElement(40, M));
         second.add(new CigarElement(2, S));
 
-        assertTrue(ReadContextEvidence.compatibleCigars(first, first));
+        assertTrue(FragmentSync.compatibleCigars(first, first));
 
         second = new Cigar();
         second.add(new CigarElement(40, M));
 
-        assertTrue(ReadContextEvidence.compatibleCigars(first, first));
+        assertTrue(FragmentSync.compatibleCigars(first, first));
 
         // can differ in soft-clips and aligned lengths
         first = new Cigar();
@@ -258,13 +258,13 @@ public class CombinedRecordsTest
         second.add(new CigarElement(120, N));
         second.add(new CigarElement(40, M));
 
-        assertTrue(ReadContextEvidence.compatibleCigars(first, first));
+        assertTrue(FragmentSync.compatibleCigars(first, first));
 
     }
 
     private static SAMRecord formFragmentRead(final SAMRecord first, final SAMRecord second)
     {
-        return ReadContextEvidence.formFragmentRead(first, second).CombinedRecord;
+        return FragmentSync.formFragmentRead(first, second).CombinedRecord;
     }
 
 }

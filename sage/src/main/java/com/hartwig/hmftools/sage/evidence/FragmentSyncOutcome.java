@@ -2,17 +2,17 @@ package com.hartwig.hmftools.sage.evidence;
 
 import htsjdk.samtools.SAMRecord;
 
-public class SyncFragmentOutcome
+public class FragmentSyncOutcome
 {
     public final SAMRecord CombinedRecord;
-    public final SyncFragmentType SyncType;
+    public final FragmentSyncType SyncType;
 
-    public SyncFragmentOutcome(final SyncFragmentType syncType)
+    public FragmentSyncOutcome(final FragmentSyncType syncType)
     {
         this(null, syncType);
     }
 
-    public SyncFragmentOutcome(final SAMRecord combinedRecord, final SyncFragmentType syncType)
+    public FragmentSyncOutcome(final SAMRecord combinedRecord, final FragmentSyncType syncType)
     {
         CombinedRecord = combinedRecord;
         SyncType = syncType;

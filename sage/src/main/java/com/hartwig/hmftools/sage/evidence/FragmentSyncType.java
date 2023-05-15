@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
-public enum SyncFragmentType
+public enum FragmentSyncType
 {
     COMBINED,
     NO_OVERLAP,
