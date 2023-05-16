@@ -18,7 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 import com.hartwig.hmftools.markdups.consensus.UmiConfig;
-import com.hartwig.hmftools.markdups.consensus.UmiGroup;
+import com.hartwig.hmftools.markdups.consensus.DuplicateGroup;
 
 public class Statistics
 {
@@ -128,7 +128,7 @@ public class Statistics
         }
     }
 
-    public void addUmiGroups(final UmiConfig umiConfig, final List<UmiGroup> umiGroups)
+    public void addUmiGroups(final UmiConfig umiConfig, final List<DuplicateGroup> umiGroups)
     {
         // evaluate 1 or 2 UMI groups, including those with a single fragment which may have been under-clustered
         if(umiGroups.size() == 1)
@@ -141,7 +141,7 @@ public class Statistics
         }
     }
 
-    private void recordUmiGroupStats(final UmiConfig umiConfig, final UmiGroup umiGroup)
+    private void recordUmiGroupStats(final UmiConfig umiConfig, final DuplicateGroup umiGroup)
     {
         UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(1, umiGroup.fragmentCount());
         ++umiGroupStats.GroupCount;
@@ -155,15 +155,15 @@ public class Statistics
         }
     }
 
-    private void recordUmiGroupStats(final UmiConfig umiConfig, final UmiGroup group1, final UmiGroup group2)
+    private void recordUmiGroupStats(final UmiConfig umiConfig, final DuplicateGroup group1, final DuplicateGroup group2)
     {
         UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(2, group1.fragmentCount() + group2.fragmentCount());
         ++umiGroupStats.GroupCount;
 
         for(int groupIndex = 0; groupIndex <= 1; ++groupIndex)
         {
-            UmiGroup testGroup = groupIndex == 0 ? group1 : group2;
-            UmiGroup readsGroup = groupIndex == 0 ? group2 : group1;
+            DuplicateGroup testGroup = groupIndex == 0 ? group1 : group2;
+            DuplicateGroup readsGroup = groupIndex == 0 ? group2 : group1;
 
             for(String readId : readsGroup.getReadIds())
             {

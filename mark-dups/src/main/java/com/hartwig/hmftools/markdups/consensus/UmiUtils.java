@@ -13,9 +13,9 @@ import com.hartwig.hmftools.markdups.common.Fragment;
 
 public final class UmiUtils
 {
-    public static List<UmiGroup> buildUmiGroups(final List<Fragment> fragments, final UmiConfig config)
+    public static List<DuplicateGroup> buildUmiGroups(final List<Fragment> fragments, final UmiConfig config)
     {
-        Map<String,UmiGroup> groups = Maps.newHashMap();
+        Map<String, DuplicateGroup> groups = Maps.newHashMap();
         boolean checkDefinedUmis = config.hasDefinedUmis();
         boolean useDefinedUmis = checkDefinedUmis;
 
@@ -37,11 +37,11 @@ public final class UmiUtils
                 }
             }
 
-            UmiGroup group = groups.get(umiId);
+            DuplicateGroup group = groups.get(umiId);
 
             if(group == null)
             {
-                groups.put(umiId, new UmiGroup(umiId, fragment));
+                groups.put(umiId, new DuplicateGroup(umiId, fragment));
             }
             else
             {
@@ -55,24 +55,24 @@ public final class UmiUtils
         }
 
         // order groups by descending number of fragments
-        List<UmiGroup> orderedGroups = groups.values().stream().sorted(new SizeComparator()).collect(Collectors.toList());
+        List<DuplicateGroup> orderedGroups = groups.values().stream().sorted(new SizeComparator()).collect(Collectors.toList());
 
         // then apply the directional model, where smaller groups are merged into larger ones
         int i = 0;
         while(i < orderedGroups.size() - 1)
         {
-            UmiGroup first = orderedGroups.get(i);
+            DuplicateGroup first = orderedGroups.get(i);
 
-            List<UmiGroup> cluster = Lists.newArrayList(first);
+            List<DuplicateGroup> cluster = Lists.newArrayList(first);
 
             int j = i + 1;
             while(j < orderedGroups.size())
             {
-                UmiGroup second = orderedGroups.get(j);
+                DuplicateGroup second = orderedGroups.get(j);
 
                 boolean merged = false;
 
-                for(UmiGroup existing : cluster)
+                for(DuplicateGroup existing : cluster)
                 {
                     if(existing.fragmentCount() >= second.fragmentCount() && !exceedsUmiIdDiff(existing.id(), second.id(), config.PermittedBaseDiff))
                     {
@@ -107,12 +107,12 @@ public final class UmiUtils
         i = 0;
         while(i < orderedGroups.size())
         {
-            UmiGroup first = orderedGroups.get(i);
+            DuplicateGroup first = orderedGroups.get(i);
 
             int j = i + 1;
             while(j < orderedGroups.size())
             {
-                UmiGroup second = orderedGroups.get(j);
+                DuplicateGroup second = orderedGroups.get(j);
 
                 if(!exceedsUmiIdDiff(first.id(), second.id(), config.PermittedBaseDiff + 1))
                 {
@@ -173,9 +173,9 @@ public final class UmiUtils
         return diffs;
     }
 
-    private static class SizeComparator implements Comparator<UmiGroup>
+    private static class SizeComparator implements Comparator<DuplicateGroup>
     {
-        public int compare(final UmiGroup first, final UmiGroup second)
+        public int compare(final DuplicateGroup first, final DuplicateGroup second)
         {
             if(first.fragments().size() < second.fragments().size())
                 return 1;

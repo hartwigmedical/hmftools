@@ -29,7 +29,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
-import com.hartwig.hmftools.markdups.consensus.UmiGroup;
+import com.hartwig.hmftools.markdups.consensus.DuplicateGroup;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -144,7 +144,7 @@ public class RecordWriter
         writeRead(read, fragmentStatus, null);
     }
 
-    public synchronized void writeUmiReads(final UmiGroup umiGroup, final List<SAMRecord> completeReads)
+    public synchronized void writeDuplicateGroup(final DuplicateGroup group, final List<SAMRecord> completeReads)
     {
         for(SAMRecord read : completeReads)
         {
@@ -155,15 +155,16 @@ public class RecordWriter
 
                 if(mReadWriter != null)
                 {
-                    writeReadData(read, PRIMARY, umiGroup.coordinatesKey(), 0, umiGroup.id());
+                    writeReadData(read, PRIMARY, group.coordinatesKey(), 0, group.id());
                 }
 
                 continue;
             }
 
-            read.setAttribute(UMI_ATTRIBUTE, umiGroup.id());
+            if(mConfig.UMIs.Enabled)
+                read.setAttribute(UMI_ATTRIBUTE, group.id());
 
-            writeRead(read, DUPLICATE, umiGroup.coordinatesKey(), 0, umiGroup.id());
+            writeRead(read, DUPLICATE, group.coordinatesKey(), 0, group.id());
         }
     }
 

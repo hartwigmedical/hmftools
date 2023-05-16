@@ -244,7 +244,7 @@ public class MarkDuplicatesTest
         assertEquals(2, mWriter.recordWriteCount());
         assertEquals(1, mWriter.recordWriteCountConsensus());
 
-        assertEquals(2, partitionData.umiGroupMap().size());
+        assertEquals(2, partitionData.duplicateGroupMap().size());
         assertTrue(partitionData.incompleteFragmentMap().isEmpty());
         // assertEquals(0, mWriter.recordWriteCount());
 
@@ -281,7 +281,7 @@ public class MarkDuplicatesTest
         chrReaderConsensus.processRead(supp2);
         chrReaderConsensus.flushPendingIncompletes();
 
-        assertTrue(partitionData.umiGroupMap().isEmpty());
+        assertTrue(partitionData.duplicateGroupMap().isEmpty());
         assertTrue(partitionData.incompleteFragmentMap().isEmpty());
         assertTrue(partitionData.resolvedFragmentStateMap().isEmpty());
         assertEquals(6, mWriter.recordWriteCount());
@@ -317,7 +317,7 @@ public class MarkDuplicatesTest
 
         PartitionData partitionData = mChrReaderUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
 
-        assertEquals(2, partitionData.umiGroupMap().size());
+        assertEquals(2, partitionData.duplicateGroupMap().size());
         assertEquals(2, mWriter.recordWriteCount());
         assertEquals(1, mWriter.recordWriteCountConsensus());
 
@@ -357,7 +357,7 @@ public class MarkDuplicatesTest
         mChrReaderUMIs.onChromosomeComplete();
         assertEquals(6, mWriter.recordWriteCount());
         assertEquals(3, mWriter.recordWriteCountConsensus());
-        assertTrue(partitionData.umiGroupMap().isEmpty());
+        assertTrue(partitionData.duplicateGroupMap().isEmpty());
     }
 
     @Test
@@ -394,7 +394,7 @@ public class MarkDuplicatesTest
 
         PartitionData partitionData = mChrReaderUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
 
-        assertEquals(2, partitionData.umiGroupMap().size());
+        assertEquals(2, partitionData.duplicateGroupMap().size());
 
         SAMRecord mate1 = createSamRecord(
                 read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
@@ -439,7 +439,7 @@ public class MarkDuplicatesTest
 
         assertEquals(7, mWriter.recordWriteCount());
         assertEquals(3, mWriter.recordWriteCountConsensus());
-        assertTrue(partitionData.umiGroupMap().isEmpty());
+        assertTrue(partitionData.duplicateGroupMap().isEmpty());
         assertEquals(1, partitionData.incompleteFragmentMap().size());
 
         partitionData.writeRemainingReads(mWriter, mChrReaderUMIs.consensusReads(), false);
@@ -524,7 +524,7 @@ public class MarkDuplicatesTest
 
         for(PartitionData partitionData : mChrReaderUMIs.partitionDataStore().partitions())
         {
-            assertTrue(partitionData.umiGroupMap().isEmpty());
+            assertTrue(partitionData.duplicateGroupMap().isEmpty());
             assertTrue(partitionData.incompleteFragmentMap().isEmpty());
         }
     }

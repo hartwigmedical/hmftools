@@ -28,7 +28,7 @@ import com.hartwig.hmftools.markdups.common.Fragment;
 
 import htsjdk.samtools.SAMRecord;
 
-public class UmiGroup
+public class DuplicateGroup
 {
     private final String mId;
     private final List<Fragment> mFragments;
@@ -44,7 +44,7 @@ public class UmiGroup
     private static final int MAX_READ_TYPES = ReadType.values().length;
     private static final int PRIMARY_READ_TYPES = ReadType.MATE.ordinal() + 1;
 
-    public UmiGroup(final String id, final Fragment fragment)
+    public DuplicateGroup(final String id, final Fragment fragment)
     {
         mId = id;
         mFragments = Lists.newArrayList(fragment);
@@ -103,7 +103,6 @@ public class UmiGroup
 
             // add non-supps first to establish the correct primary read type info
             fragment.reads().stream().filter(x -> !x.getSupplementaryAlignmentFlag()).forEach(x -> addRead(x));
-            fragment.reads().forEach(x -> x.setAttribute(UMI_ATTRIBUTE, id()));
         }
 
         // add supplementaries once all primaries have been added and their expected supps & types registered

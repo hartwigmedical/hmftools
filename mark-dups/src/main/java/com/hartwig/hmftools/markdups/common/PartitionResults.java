@@ -5,18 +5,18 @@ import static java.lang.String.format;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.markdups.consensus.UmiGroup;
+import com.hartwig.hmftools.markdups.consensus.DuplicateGroup;
 
 public class PartitionResults
 {
     private List<Fragment> mResolvedFragments;
-    private List<UmiGroup> mUmiGroups;
+    private List<DuplicateGroup> mDuplicateGroups;
     private FragmentStatus mFragmentStatus; // set for a single non-primary fragment
 
     public PartitionResults()
     {
         mResolvedFragments = null;
-        mUmiGroups = null;
+        mDuplicateGroups = null;
         mFragmentStatus = null;
     }
 
@@ -41,14 +41,14 @@ public class PartitionResults
             mResolvedFragments.add(fragment);
     }
 
-    public List<UmiGroup> umiGroups() { return mUmiGroups; }
+    public List<DuplicateGroup> umiGroups() { return mDuplicateGroups; }
 
-    public void addUmiGroup(final UmiGroup umiGroup)
+    public void addUmiGroup(final DuplicateGroup umiGroup)
     {
-        if(mUmiGroups == null)
-            mUmiGroups = Lists.newArrayList(umiGroup);
+        if(mDuplicateGroups == null)
+            mDuplicateGroups = Lists.newArrayList(umiGroup);
         else
-            mUmiGroups.add(umiGroup);
+            mDuplicateGroups.add(umiGroup);
     }
 
     public String toString()
@@ -56,7 +56,7 @@ public class PartitionResults
         return format("fragStatus(%s) resolved(%d) umiGroups(%d)",
                 mFragmentStatus != null ? mFragmentStatus : "unset",
                 mResolvedFragments != null ? mResolvedFragments.size() : "unset",
-                mUmiGroups != null ? mUmiGroups.size() : "unset");
+                mDuplicateGroups != null ? mDuplicateGroups.size() : "unset");
     }
 
 }

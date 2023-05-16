@@ -32,7 +32,7 @@ import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.PartitionResults;
 import com.hartwig.hmftools.markdups.common.Statistics;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
-import com.hartwig.hmftools.markdups.consensus.UmiGroup;
+import com.hartwig.hmftools.markdups.consensus.DuplicateGroup;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -258,7 +258,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
                 if(partitionResults.umiGroups() != null || partitionResults.resolvedFragments() != null)
                 {
                     if(partitionResults.umiGroups() != null)
-                        partitionResults.umiGroups().forEach(x -> processUmiGroup(x));
+                        partitionResults.umiGroups().forEach(x -> processDuplicateGroup(x));
 
                     if(partitionResults.resolvedFragments() != null)
                         mRecordWriter.writeFragments(partitionResults.resolvedFragments(), true);
@@ -307,7 +307,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
             PartitionResults partitionResults = partitionData.processIncompleteFragments(reads);
 
             if(partitionResults.umiGroups() != null)
-                partitionResults.umiGroups().forEach(x -> processUmiGroup(x));
+                partitionResults.umiGroups().forEach(x -> processDuplicateGroup(x));
 
             if(partitionResults.resolvedFragments() != null)
                 mRecordWriter.writeFragments(partitionResults.resolvedFragments(), true);
@@ -316,11 +316,11 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mPendingIncompleteReads.clear();
     }
 
-    private void processUmiGroup(final UmiGroup umiGroup)
+    private void processDuplicateGroup(final DuplicateGroup duplicateGroup)
     {
         // form consensus reads for any complete read leg groups and write reads
-        List<SAMRecord> completeReads = umiGroup.popCompletedReads(mConsensusReads, false);
-        mRecordWriter.writeUmiReads(umiGroup, completeReads);
+        List<SAMRecord> completeReads = duplicateGroup.popCompletedReads(mConsensusReads, false);
+        mRecordWriter.writeDuplicateGroup(duplicateGroup, completeReads);
     }
 
     public void accept(final List<Fragment> positionFragments)
@@ -330,7 +330,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         List<Fragment> resolvedFragments = Lists.newArrayList();
         List<CandidateDuplicates> candidateDuplicatesList = Lists.newArrayList();
-        List<List<Fragment>> duplicateGroups = Lists.newArrayList();
+        List<List<Fragment>> positionDuplicateGroups = Lists.newArrayList();
 
         int posFragmentCount = positionFragments.size();
         boolean logDetails = mConfig.PerfDebug && posFragmentCount > 10000;
@@ -341,21 +341,9 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         boolean inExcludedRegion = mExcludedRegion != null && positionFragments.stream()
                 .anyMatch(x -> x.reads().stream().anyMatch(y -> FragmentUtils.overlapsExcludedRegion(mExcludedRegion, y)));
 
-        findDuplicateFragments(positionFragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
+        findDuplicateFragments(positionFragments, resolvedFragments, positionDuplicateGroups, candidateDuplicatesList);
 
-        List<UmiGroup> umiGroups = mDuplicateGroups.processDuplicateGroups(duplicateGroups, inExcludedRegion);
-
-        /*
-        List<UmiGroup> umiGroups = null;
-        if(mConfig.UMIs.Enabled && !inExcludedRegion)
-        {
-            umiGroups = mDuplicateGroups.processDuplicateUmiGroups(duplicateGroups);
-        }
-        else
-        {
-            mDuplicateGroups.processDuplicateGroups(duplicateGroups, inExcludedRegion);
-        }
-        */
+        List<DuplicateGroup> duplicateGroups = mDuplicateGroups.processDuplicateGroups(positionDuplicateGroups, inExcludedRegion);
 
         if(logDetails)
         {
@@ -372,7 +360,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         startTimeMs = System.currentTimeMillis();
 
-        mCurrentPartitionData.processPrimaryFragments(resolvedFragments, candidateDuplicatesList, umiGroups);
+        mCurrentPartitionData.processPrimaryFragments(resolvedFragments, candidateDuplicatesList, duplicateGroups);
 
         double timeTakenSec = (System.currentTimeMillis() - startTimeMs) / 1000.0;
 
@@ -382,8 +370,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
                     mRegion.Chromosome, position, posFragmentCount, format("%.1fs", timeTakenSec));
         }
 
-        if(umiGroups != null)
-            umiGroups.forEach(x -> processUmiGroup(x));
+        if(duplicateGroups != null)
+            duplicateGroups.forEach(x -> processDuplicateGroup(x));
 
         if(!resolvedFragments.isEmpty())
         {

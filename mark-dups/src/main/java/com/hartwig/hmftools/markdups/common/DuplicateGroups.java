@@ -20,7 +20,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 import com.hartwig.hmftools.markdups.consensus.GroupIdGenerator;
 import com.hartwig.hmftools.markdups.consensus.UmiConfig;
-import com.hartwig.hmftools.markdups.consensus.UmiGroup;
+import com.hartwig.hmftools.markdups.consensus.DuplicateGroup;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -45,7 +45,7 @@ public class DuplicateGroups
 
     public static void findDuplicateFragments(
             final List<Fragment> fragments, final List<Fragment> resolvedFragments,
-            final List<List<Fragment>> duplicateGroups, final List<CandidateDuplicates> candidateDuplicatesList)
+            final List<List<Fragment>> positionDuplicateGroups, final List<CandidateDuplicates> candidateDuplicatesList)
     {
         // take all the fragments at this initial fragment position and classify them as duplicates, non-duplicates (NONE) or unclear
         // note: all fragments will be given a classification, and resolved fragments are removed from the input fragment list
@@ -178,7 +178,7 @@ public class DuplicateGroups
                 resolvedFragments.addAll(duplicateFragments);
                 fragments.remove(i);
 
-                duplicateGroups.add(duplicateFragments);
+                positionDuplicateGroups.add(duplicateFragments);
             }
             else if(isCandidateDup)
             {
@@ -250,36 +250,36 @@ public class DuplicateGroups
         return abs(abs(first.reads().get(0).getInferredInsertSize()) - abs(second.reads().get(0).getInferredInsertSize())) <= 10;
     }
 
-    public List<UmiGroup> processDuplicateGroups(final List<List<Fragment>> duplicateGroups, boolean inExcludedRegion)
+    public List<DuplicateGroup> processDuplicateGroups(final List<List<Fragment>> rawDuplicateGroups, boolean inExcludedRegion)
     {
-        if(duplicateGroups == null)
+        if(rawDuplicateGroups == null)
             return Collections.EMPTY_LIST;
 
         if(mUmiConfig.Enabled && !inExcludedRegion)
-            return processUmiGroups(duplicateGroups);
+            return processUmiGroups(rawDuplicateGroups);
 
         if(mFormConsensus && !inExcludedRegion)
-            return processConsensusGroups(duplicateGroups);
+            return processConsensusGroups(rawDuplicateGroups);
 
-        processNonUmiGroups(duplicateGroups, inExcludedRegion);
+        processNonUmiGroups(rawDuplicateGroups, inExcludedRegion);
         return null;
     }
 
-    private List<UmiGroup> processUmiGroups(final List<List<Fragment>> duplicateGroups)
+    private List<DuplicateGroup> processUmiGroups(final List<List<Fragment>> duplicateGroups)
     {
-        List<UmiGroup> allUmiGroups = Lists.newArrayList();
+        List<DuplicateGroup> allUmiGroups = Lists.newArrayList();
 
         for(List<Fragment> fragments : duplicateGroups)
         {
             ++mStats.DuplicateGroups;
 
-            List<UmiGroup> umiGroups = buildUmiGroups(fragments, mUmiConfig);
+            List<DuplicateGroup> umiGroups = buildUmiGroups(fragments, mUmiConfig);
 
             // collect stats including single groups
             if(mUmiConfig.Debug)
                 mStats.addUmiGroups(mUmiConfig, umiGroups);
 
-            for(UmiGroup umiGroup : umiGroups)
+            for(DuplicateGroup umiGroup : umiGroups)
             {
                 if(umiGroup.fragmentCount() == 1)
                 {
@@ -302,27 +302,27 @@ public class DuplicateGroups
         return allUmiGroups;
     }
 
-    private List<UmiGroup> processConsensusGroups(final List<List<Fragment>> duplicateGroups)
+    private List<DuplicateGroup> processConsensusGroups(final List<List<Fragment>> rawDuplicateGroups)
     {
-        List<UmiGroup> umiGroups = Lists.newArrayListWithCapacity(duplicateGroups.size());
+        List<DuplicateGroup> duplicateGroups = Lists.newArrayListWithCapacity(rawDuplicateGroups.size());
 
-        for(List<Fragment> fragments : duplicateGroups)
+        for(List<Fragment> fragments : rawDuplicateGroups)
         {
-            UmiGroup umiGroup = new UmiGroup(mIdGenerator.nextId(), fragments.get(0));
+            DuplicateGroup duplicateGroup = new DuplicateGroup(mIdGenerator.nextId(), fragments.get(0));
 
             for(int i = 1; i < fragments.size(); ++i)
             {
-                umiGroup.fragments().add(fragments.get(i));
+                duplicateGroup.fragments().add(fragments.get(i));
             }
 
-            umiGroup.categoriseReads();
-            umiGroups.add(umiGroup);
+            duplicateGroup.categoriseReads();
+            duplicateGroups.add(duplicateGroup);
 
             ++mStats.DuplicateGroups;
             mStats.addDuplicateGroup(fragments.size());
         }
 
-        return umiGroups;
+        return duplicateGroups;
     }
 
     private void processNonUmiGroups(final List<List<Fragment>> duplicateGroups, boolean inExcludedRegion)

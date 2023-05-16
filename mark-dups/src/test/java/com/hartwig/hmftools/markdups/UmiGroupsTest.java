@@ -16,7 +16,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.consensus.UmiConfig;
-import com.hartwig.hmftools.markdups.consensus.UmiGroup;
+import com.hartwig.hmftools.markdups.consensus.DuplicateGroup;
 
 import org.junit.Test;
 
@@ -62,10 +62,10 @@ public class UmiGroupsTest
         Fragment frag6 = createFragment(FIXED_READ_ID + "AATGGG", CHR_1, 100);
 
         List<Fragment> fragments = Lists.newArrayList(frag1, frag2, frag3, frag4, frag5, frag6);
-        List<UmiGroup> groups = buildUmiGroups(fragments, UMI_CONFIG);
+        List<DuplicateGroup> groups = buildUmiGroups(fragments, UMI_CONFIG);
         assertEquals(2, groups.size());
 
-        UmiGroup group = groups.stream().filter(x -> x.fragments().contains(frag1)).findFirst().orElse(null);
+        DuplicateGroup group = groups.stream().filter(x -> x.fragments().contains(frag1)).findFirst().orElse(null);
         assertTrue(group.fragments().contains(frag2));
         assertTrue(group.fragments().contains(frag3));
         assertTrue(group.fragments().contains(frag5));
@@ -117,7 +117,7 @@ public class UmiGroupsTest
         Fragment frag6 = createFragment(FIXED_READ_ID + "CCGAGC", CHR_1, 100);
 
         List<Fragment> fragments = Lists.newArrayList(frag1, frag2, frag3, frag4, frag5, frag6);
-        List<UmiGroup> groups = buildUmiGroups(fragments, UMI_CONFIG);
+        List<DuplicateGroup> groups = buildUmiGroups(fragments, UMI_CONFIG);
         assertEquals(3, groups.size());
     }
 
@@ -138,7 +138,7 @@ public class UmiGroupsTest
         Fragment frag6 = createFragment(FIXED_READ_ID + definedUmi3, CHR_1, 100);
 
         List<Fragment> fragments = Lists.newArrayList(frag1, frag2, frag3, frag4, frag5, frag6);
-        List<UmiGroup> groups = buildUmiGroups(fragments, umiConfig);
+        List<DuplicateGroup> groups = buildUmiGroups(fragments, umiConfig);
         assertEquals(3, groups.size());
     }
 
