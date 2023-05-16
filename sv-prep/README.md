@@ -104,8 +104,9 @@ The blacklist is the combination of the existing encode blacklisted regions and 
 
 ## Known issues and future improvements
 
-- **PolyG** - Currently we filter reads with PolyG.   Better would be to trim
+- **PolyG** - Currently we filter reads with PolyG.   Better would be to trim.
 - **Quality trimming** - Currently we filter reads with max(5,15% of SC) low qual soft clipped bases.   Better would be to trim
+- **Soft Clip end bias** - There are several artefacts that occurs solely on the 3' end of both R1 and R2.   We could potentially explicitly filter sites with a lot of 3' support but no 5' support.
 - **Short INDEL Artefacts** - Short INDELS (10-40 bases) may be called as SGL and not filtered (normally with poor qual or shortish assemblies).  This could be addressed by identifying these better in GRIPSS
 - **Microsatellites** - Related, other artefacts may still be called immediately adjacent to microsatellites.   Additional filtering may help
 - **MT chromosome** - currently dropped
