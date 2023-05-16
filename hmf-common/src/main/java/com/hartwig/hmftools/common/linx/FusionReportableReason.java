@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.linx.fusion;
+package com.hartwig.hmftools.common.linx;
 
-public enum ReportableReason
+public enum FusionReportableReason
 {
     OK,
     NOT_KNOWN,
@@ -16,5 +16,5 @@ public enum ReportableReason
     NON_DISRUPTIVE_CHAIN,
     INVALID_TRAVERSAL,
     CHAIN_LINKS,
-    PROTEIN_DOMAINS
+    PROTEIN_DOMAINS;
 }

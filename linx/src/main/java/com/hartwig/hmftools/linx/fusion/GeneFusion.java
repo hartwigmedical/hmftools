@@ -24,6 +24,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
+import com.hartwig.hmftools.common.linx.FusionReportableReason;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.linx.FusionPhasedType;
@@ -34,7 +35,7 @@ public class GeneFusion
     private final BreakendTransData[] mTranscripts;
 
     private boolean mIsReportable;
-    private List<ReportableReason> mReportableReasons;
+    private List<FusionReportableReason> mReportableReasons;
     private boolean mPhaseMatched;
     private int[] mExonsSkipped;
     private KnownFusionType mKnownFusionType;
@@ -98,13 +99,13 @@ public class GeneFusion
         mReportableReasons.clear();
     }
 
-    public void setReportableReasons(final List<ReportableReason> reasons) { mReportableReasons.addAll(reasons); }
-    public void addReportableReason(final ReportableReason reason) { mReportableReasons.add(reason); }
+    public void setReportableReasons(final List<FusionReportableReason> reasons) { mReportableReasons.addAll(reasons); }
+    public void addReportableReason(final FusionReportableReason reason) { mReportableReasons.add(reason); }
 
     public String reportableReasonsStr()
     {
         if(mReportableReasons.isEmpty())
-            return ReportableReason.OK.toString();
+            return FusionReportableReason.OK.toString();
 
         if(mKnownFusionType == KnownFusionType.NONE) // only log the first reason for non-known types
             return mReportableReasons.get(0).toString();

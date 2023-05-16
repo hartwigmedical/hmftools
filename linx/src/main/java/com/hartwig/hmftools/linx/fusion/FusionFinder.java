@@ -23,7 +23,7 @@ import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinD
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.validProteinDomains;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.PROTEIN_DOMAINS;
+import static com.hartwig.hmftools.common.linx.FusionReportableReason.PROTEIN_DOMAINS;
 
 import java.util.List;
 import java.util.Map;
@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.linx.FusionReportableReason;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
@@ -546,7 +547,7 @@ public class FusionFinder
 
         for(GeneFusion fusion : fusions)
         {
-            List<ReportableReason> reportabilityReasons = determineReportability(fusion);
+            List<FusionReportableReason> reportabilityReasons = determineReportability(fusion);
             fusion.setReportableReasons(reportabilityReasons);
 
             if(!reportabilityReasons.isEmpty())

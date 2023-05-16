@@ -21,24 +21,25 @@ import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DIST
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PROTEINS_REQUIRED_KEPT;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PROTEINS_REQUIRED_LOST;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.SHORT_UNPHASED_DISTANCE_KNOWN;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.CHAIN_LINKS;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.CHAIN_TERMINATED;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.EXON_SKIPPING;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.INVALID_TRAVERSAL;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.NOT_KNOWN;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.NEG_SPLICE_ACC_DISTANCE;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.NMD;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.NON_DISRUPTIVE_CHAIN;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.SGL_NOT_KNOWN;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.UNPHASED_5P_UTR;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.UNPHASED_NOT_KNOWN;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.UNPHASED_SHORT;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.PRE_GENE_DISTANCE;
+import static com.hartwig.hmftools.common.linx.FusionReportableReason.CHAIN_LINKS;
+import static com.hartwig.hmftools.common.linx.FusionReportableReason.CHAIN_TERMINATED;
+import static com.hartwig.hmftools.common.linx.FusionReportableReason.EXON_SKIPPING;
+import static com.hartwig.hmftools.common.linx.FusionReportableReason.INVALID_TRAVERSAL;
+import static com.hartwig.hmftools.common.linx.FusionReportableReason.NOT_KNOWN;
+import static com.hartwig.hmftools.common.linx.FusionReportableReason.NEG_SPLICE_ACC_DISTANCE;
+import static com.hartwig.hmftools.common.linx.FusionReportableReason.NMD;
+import static com.hartwig.hmftools.common.linx.FusionReportableReason.NON_DISRUPTIVE_CHAIN;
+import static com.hartwig.hmftools.common.linx.FusionReportableReason.SGL_NOT_KNOWN;
+import static com.hartwig.hmftools.common.linx.FusionReportableReason.UNPHASED_5P_UTR;
+import static com.hartwig.hmftools.common.linx.FusionReportableReason.UNPHASED_NOT_KNOWN;
+import static com.hartwig.hmftools.common.linx.FusionReportableReason.UNPHASED_SHORT;
+import static com.hartwig.hmftools.common.linx.FusionReportableReason.PRE_GENE_DISTANCE;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
+import com.hartwig.hmftools.common.linx.FusionReportableReason;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
 
 public class FusionReportability
@@ -48,13 +49,13 @@ public class FusionReportability
         return determineReportability(fusion).isEmpty();
     }
 
-    public static List<ReportableReason> determineReportability(final GeneFusion fusion)
+    public static List<FusionReportableReason> determineReportability(final GeneFusion fusion)
     {
         // first check whether a fusion is known or not - a key requirement of it being potentially reportable
         if(fusion.knownType() == NONE || fusion.knownType() == IG_PROMISCUOUS)
             return Lists.newArrayList(NOT_KNOWN);
 
-        List<ReportableReason> nonReportableReasons = Lists.newArrayList();
+        List<FusionReportableReason> nonReportableReasons = Lists.newArrayList();
 
         final BreakendTransData upTrans = fusion.upstreamTrans();
         final BreakendTransData downTrans = fusion.downstreamTrans();
