@@ -359,4 +359,11 @@ public class RecordWriter
 
     @VisibleForTesting
     public void setCacheReads() { mCacheReads = true;}
+
+    @VisibleForTesting
+    public void resetRecordWriteCounts()
+    {
+        mConsensusReadCount = 0;
+        mNonConsensusReadCount = 0;
+    }
 }

@@ -97,7 +97,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
         mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
-        setExcludedRegion();
+        setExcludedRegion(ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion));
 
         mPendingIncompleteReads = Maps.newHashMap();
 
@@ -178,7 +178,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
             mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
             mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
-            setExcludedRegion();
+            setExcludedRegion(ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion));
 
             perfCounterStart();
         }
@@ -381,10 +381,9 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         }
     }
 
-    private void setExcludedRegion()
+    @VisibleForTesting
+    public void setExcludedRegion(final ChrBaseRegion excludedRegion)
     {
-        ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion);
-
         if(excludedRegion.overlaps(mRegion) && mCurrentPartition.overlaps(excludedRegion))
         {
             mExcludedRegion = excludedRegion;
@@ -394,11 +393,6 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         {
             mExcludedRegion = null;
         }
-    }
-
-    private boolean overlapsExcludedRegion(final SAMRecord read)
-    {
-        return FragmentUtils.overlapsExcludedRegion(mExcludedRegion, read);
     }
 
     private void perfCounterStart()
