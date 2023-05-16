@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.markdups.umi;
+package com.hartwig.hmftools.markdups.consensus;
 
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_MAX_UMI_BASE_DIFF;
-import static com.hartwig.hmftools.markdups.umi.UmiUtils.exceedsUmiIdDiff;
+import static com.hartwig.hmftools.markdups.consensus.UmiUtils.exceedsUmiIdDiff;
 
 import java.io.IOException;
 import java.nio.file.Files;

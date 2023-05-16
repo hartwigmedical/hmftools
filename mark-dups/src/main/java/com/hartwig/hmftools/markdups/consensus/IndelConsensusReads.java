@@ -1,15 +1,15 @@
-package com.hartwig.hmftools.markdups.umi;
+package com.hartwig.hmftools.markdups.consensus;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.markdups.common.DuplicateGroups.calcBaseQualAverage;
-import static com.hartwig.hmftools.markdups.umi.BaseBuilder.NO_BASE;
-import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_FAIL;
-import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MATCH;
-import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MISMATCH;
-import static com.hartwig.hmftools.markdups.umi.ConsensusReads.selectConsensusRead;
+import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.NO_BASE;
+import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_FAIL;
+import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MATCH;
+import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MISMATCH;
+import static com.hartwig.hmftools.markdups.consensus.ConsensusReads.selectConsensusRead;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -20,8 +20,6 @@ import static htsjdk.samtools.CigarOperator.S;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import com.google.common.collect.Maps;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;

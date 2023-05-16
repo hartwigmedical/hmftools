@@ -5,7 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
-import static com.hartwig.hmftools.markdups.umi.UmiUtils.calcUmiIdDiff;
+import static com.hartwig.hmftools.markdups.consensus.UmiUtils.calcUmiIdDiff;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
-import com.hartwig.hmftools.markdups.umi.UmiConfig;
-import com.hartwig.hmftools.markdups.umi.UmiGroup;
+import com.hartwig.hmftools.markdups.consensus.UmiConfig;
+import com.hartwig.hmftools.markdups.consensus.UmiGroup;
 
 public class Statistics
 {

@@ -17,10 +17,9 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
-import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.Statistics;
-import com.hartwig.hmftools.markdups.umi.ConsensusReads;
+import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -75,7 +74,9 @@ public class MarkDuplicates
 
         int maxLogFragments = (mConfig.RunChecks || mConfig.PerfDebug) ? 100 : 0;
         int totalUnwrittenFragments = 0;
-        ConsensusReads consensusReads = new ConsensusReads(mConfig.UMIs, mConfig.RefGenome);
+        ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
+        consensusReads.setDebugOptions(mConfig.UMIs.HighlightConsensus, mConfig.RunChecks);
+
         for(PartitionData partitionData : partitionDataStore.partitions())
         {
             int cachedReadCount = partitionData.writeRemainingReads(recordWriter, consensusReads, maxLogFragments > 0);

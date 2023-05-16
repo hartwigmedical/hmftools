@@ -3,7 +3,7 @@ package com.hartwig.hmftools.bamtools.compare;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.REF_ONLY;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 
 import java.util.List;
 import java.util.Queue;
@@ -198,6 +198,6 @@ public class PartitionReader
 
     private static boolean excludeRead(final SAMRecord read)
     {
-        return read.isSecondaryAlignment() || read.hasAttribute(UMI_CONSENSUS_ATTRIBUTE);
+        return read.isSecondaryAlignment() || read.hasAttribute(CONSENSUS_READ_ATTRIBUTE);
     }
 }

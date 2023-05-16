@@ -3,7 +3,7 @@ package com.hartwig.hmftools.markdups.common;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_SECOND;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
@@ -18,7 +18,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -26,10 +25,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.markdups.MarkDupsConfig;
 import com.hartwig.hmftools.markdups.RecordWriter;
-import com.hartwig.hmftools.markdups.umi.ConsensusReads;
-import com.hartwig.hmftools.markdups.umi.UmiConfig;
-import com.hartwig.hmftools.markdups.umi.UmiGroup;
+import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
+import com.hartwig.hmftools.markdups.consensus.UmiGroup;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -62,14 +61,14 @@ public class PartitionData
 
     private static final int LOG_CACHE_COUNT = 10000;
 
-    public PartitionData(final String chrPartition, final UmiConfig umiConfig)
+    public PartitionData(final String chrPartition, final MarkDupsConfig config)
     {
         mChrPartition = chrPartition;
         mFragmentStatus = Maps.newHashMap();
         mIncompleteFragments = Maps.newHashMap();
         mCandidateDuplicatesMap = Maps.newHashMap();
         mUmiGroups = Maps.newHashMap();
-        mDuplicateGroups = new DuplicateGroups(umiConfig);
+        mDuplicateGroups = new DuplicateGroups(config);
         mUpdatedUmiGroups = Sets.newHashSet();
         mUpdatedCandidateDuplicates = Sets.newHashSet();
         mExcludedRegion = null;
@@ -359,6 +358,9 @@ public class PartitionData
         boolean inExcludedRegion = mExcludedRegion != null && duplicateGroups.stream()
                 .anyMatch(x -> x.stream().anyMatch(y -> y.reads().stream().anyMatch(z -> overlapsExcludedRegion(mExcludedRegion, z))));
 
+        List<UmiGroup> umiGroups = mDuplicateGroups.processDuplicateGroups(duplicateGroups, inExcludedRegion);
+
+        /*
         if(umiEnabled() && !inExcludedRegion)
         {
             List<UmiGroup> umiGroups = mDuplicateGroups.processDuplicateUmiGroups(duplicateGroups);
@@ -375,6 +377,7 @@ public class PartitionData
         {
             mDuplicateGroups.processDuplicateGroups(duplicateGroups, inExcludedRegion);
         }
+        */
 
         for(Fragment fragment : candidateDuplicates.fragments())
         {
@@ -476,7 +479,7 @@ public class PartitionData
 
                 for(SAMRecord read : completeReads)
                 {
-                    if(read.getSupplementaryAlignmentFlag() || read.hasAttribute(UMI_CONSENSUS_ATTRIBUTE))
+                    if(read.getSupplementaryAlignmentFlag() || read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
                         continue;
 
                     MD_LOGGER.debug("writing umi read: {}", readToString(read));

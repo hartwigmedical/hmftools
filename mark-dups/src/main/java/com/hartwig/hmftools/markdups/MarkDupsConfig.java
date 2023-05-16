@@ -3,7 +3,6 @@ package com.hartwig.hmftools.markdups;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
@@ -32,7 +31,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.common.FilterReadsType;
-import com.hartwig.hmftools.markdups.umi.UmiConfig;
+import com.hartwig.hmftools.markdups.consensus.GroupIdGenerator;
+import com.hartwig.hmftools.markdups.consensus.UmiConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -41,7 +41,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import htsjdk.samtools.ValidationStringency;
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class MarkDupsConfig
 {
@@ -57,6 +56,8 @@ public class MarkDupsConfig
 
     // UMI group config
     public final UmiConfig UMIs;
+    public final boolean FormConsensus;
+    public final GroupIdGenerator IdGenerator;
 
     public final String OutputDir;
     public final String OutputId;
@@ -85,6 +86,7 @@ public class MarkDupsConfig
     private static final String BUFFER_SIZE = "buffer_size";
     private static final String READ_OUTPUTS = "read_output";
     private static final String NO_MATE_CIGAR = "no_mate_cigar";
+    private static final String FORM_CONSENSUS = "form_consensus";
     private static final String WRITE_BAM = "write_bam";
 
     private static final String LOG_READ_IDS = "log_read_ids";
@@ -119,10 +121,15 @@ public class MarkDupsConfig
 
         PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_PARTITION_SIZE)));
         BufferSize = Integer.parseInt(cmd.getOptionValue(BUFFER_SIZE, String.valueOf(DEFAULT_POS_BUFFER_SIZE)));
-        NoMateCigar = cmd.hasOption(NO_MATE_CIGAR);
         BamStringency = BamUtils.validationStringency(cmd);
 
+        NoMateCigar = cmd.hasOption(NO_MATE_CIGAR);
         UMIs = UmiConfig.from(cmd);
+        FormConsensus = !UMIs.Enabled && !NoMateCigar && cmd.hasOption(FORM_CONSENSUS);
+        IdGenerator = new GroupIdGenerator();
+
+        String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
+        MD_LOGGER.info("duplicate logic: {}", duplicateLogic);
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
@@ -211,6 +218,7 @@ public class MarkDupsConfig
         options.addOption(BUFFER_SIZE, true, "Read buffer size, default: " + DEFAULT_POS_BUFFER_SIZE);
         options.addOption(READ_OUTPUTS, true, "Write reads: NONE (default), 'MISMATCHES', 'DUPLICATES', 'ALL'");
         options.addOption(WRITE_BAM, false, "Write BAM, default true if not write read output");
+        options.addOption(FORM_CONSENSUS, false, "Form consensus reads from duplicate groups without UMIs");
         options.addOption(NO_MATE_CIGAR, false, "Mate CIGAR not set by aligner, make no attempt to use it");
         addValidationStringencyOption(options);
         UmiConfig.addCommandLineOptions(options);
@@ -226,7 +234,7 @@ public class MarkDupsConfig
         return options;
     }
 
-    public MarkDupsConfig(int partitionSize, int bufferSize, final RefGenomeInterface refGenome, boolean umiEnabled)
+    public MarkDupsConfig(int partitionSize, int bufferSize, final RefGenomeInterface refGenome, boolean umiEnabled, boolean formConsensus)
     {
         mIsValid = true;
         SampleId = "";
@@ -239,9 +247,12 @@ public class MarkDupsConfig
 
         PartitionSize = partitionSize;
         BufferSize = bufferSize;
-        UMIs = new UmiConfig(umiEnabled);
-        NoMateCigar = false;
         BamStringency = ValidationStringency.STRICT;
+
+        UMIs = new UmiConfig(umiEnabled);
+        FormConsensus = formConsensus;
+        NoMateCigar = false;
+        IdGenerator = new GroupIdGenerator();
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();

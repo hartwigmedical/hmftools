@@ -1,21 +1,18 @@
-package com.hartwig.hmftools.markdups.umi;
+package com.hartwig.hmftools.markdups.consensus;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarBaseLength;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
-import static com.hartwig.hmftools.markdups.common.DuplicateGroups.calcBaseQualAverage;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
-import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
-import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_FAIL;
-import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.SUPPLEMENTARY;
-import static com.hartwig.hmftools.markdups.umi.IndelConsensusReads.alignedOrSoftClip;
-import static com.hartwig.hmftools.markdups.umi.IndelConsensusReads.selectPrimaryRead;
-import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
+import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
+import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_FAIL;
+import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.SUPPLEMENTARY;
+import static com.hartwig.hmftools.markdups.consensus.IndelConsensusReads.alignedOrSoftClip;
+import static com.hartwig.hmftools.markdups.consensus.IndelConsensusReads.selectPrimaryRead;
+import static com.hartwig.hmftools.markdups.consensus.UmiConfig.READ_ID_DELIM;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -41,13 +38,24 @@ public class ConsensusReads
 
     private final int[] mOutcomeCounts;
 
+    private boolean mHighlightConsensusReads;
+    private boolean mValidateConsensusReads;
+
     private static final String CONSENSUS_PREFIX = "CNS_";
 
-    public ConsensusReads(final UmiConfig config, final RefGenomeInterface refGenome)
+    public ConsensusReads(final RefGenomeInterface refGenome)
     {
-        mBaseBuilder = new BaseBuilder(config, refGenome);
+        mBaseBuilder = new BaseBuilder(refGenome);
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
         mOutcomeCounts = new int[ConsensusOutcome.values().length];
+        mHighlightConsensusReads = false;
+        mValidateConsensusReads = false;
+    }
+
+    public void setDebugOptions(boolean highlightConsensusReads, boolean validateConsensusReads)
+    {
+        mHighlightConsensusReads = highlightConsensusReads;
+        mValidateConsensusReads = validateConsensusReads;
     }
 
     public ConsensusReadInfo createConsensusRead(final List<SAMRecord> reads, final String groupIdentifier)
@@ -104,12 +112,11 @@ public class ConsensusReads
 
         SAMRecord consensusRead = createConsensusRead(consensusState, reads, groupIdentifier);
 
-        if(mBaseBuilder.config().Debug)
-        {
-            if(mBaseBuilder.config().HighlightConsensus)
-                consensusRead.setMappingQuality(0);
+        if(mHighlightConsensusReads)
+            consensusRead.setMappingQuality(0);
 
-            // sanity check the read
+        if(mValidateConsensusReads)
+        {
             ValidationReason validReason = isValidConsensusRead(consensusRead);
             if(validReason != ValidationReason.OK)
             {
@@ -160,10 +167,10 @@ public class ConsensusReads
             final List<SAMRecord> reads, final SAMRecord consensusRead, final String groupIdentifier, final ConsensusState consensusState,
             final String reason)
     {
-        if(!mBaseBuilder.config().Debug)
+        if(!mValidateConsensusReads)
             return;
 
-        MD_LOGGER.error("invalid consensus read({}): umi({}) readCount({}) {} read: {}",
+        MD_LOGGER.error("invalid consensus read({}): groupId({}) readCount({}) {} read: {}",
                 reason, groupIdentifier, reads.size(), consensusState.IsForward ? "forward" : "reverse",
                 consensusRead != null ? readToString(consensusRead) : "none");
 
@@ -212,7 +219,7 @@ public class ConsensusReads
 
     public void logStats(final String chromosome)
     {
-        if(!mBaseBuilder.config().Enabled || !MD_LOGGER.isDebugEnabled())
+        if(!mValidateConsensusReads || !MD_LOGGER.isDebugEnabled())
             return;
 
         StringJoiner sj = new StringJoiner(", ");
@@ -267,7 +274,7 @@ public class ConsensusReads
         record.setFlags(initialRead.getFlags());
         record.setDuplicateReadFlag(false); // being the new primary
         initialRead.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
-        record.setAttribute(UMI_CONSENSUS_ATTRIBUTE, reads.size());
+        record.setAttribute(CONSENSUS_READ_ATTRIBUTE, reads.size());
 
         record.setInferredInsertSize(initialRead.getInferredInsertSize());
         return record;
@@ -293,7 +300,7 @@ public class ConsensusReads
         record.setDuplicateReadFlag(false);
 
         read.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
-        record.setAttribute(UMI_CONSENSUS_ATTRIBUTE, 1);
+        record.setAttribute(CONSENSUS_READ_ATTRIBUTE, 1);
         record.setInferredInsertSize(read.getInferredInsertSize());
 
         return record;

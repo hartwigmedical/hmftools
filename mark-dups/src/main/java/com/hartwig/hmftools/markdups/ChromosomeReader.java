@@ -2,7 +2,6 @@ package com.hartwig.hmftools.markdups;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroups.findDuplicateFragments;
 import static com.hartwig.hmftools.markdups.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.formChromosomePartition;
@@ -13,14 +12,12 @@ import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.sv.ExcludedRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -34,8 +31,8 @@ import com.hartwig.hmftools.markdups.common.FragmentUtils;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.PartitionResults;
 import com.hartwig.hmftools.markdups.common.Statistics;
-import com.hartwig.hmftools.markdups.umi.ConsensusReads;
-import com.hartwig.hmftools.markdups.umi.UmiGroup;
+import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
+import com.hartwig.hmftools.markdups.consensus.UmiGroup;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -82,8 +79,9 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mBamSlicer.setKeepUnmapped();
 
         mReadPositions = new ReadPositionsCache(region.Chromosome, config.BufferSize, !config.NoMateCigar, this);
-        mDuplicateGroups = new DuplicateGroups(config.UMIs);
-        mConsensusReads = new ConsensusReads(config.UMIs, config.RefGenome);
+        mDuplicateGroups = new DuplicateGroups(config);
+        mConsensusReads = new ConsensusReads(config.RefGenome);
+        mConsensusReads.setDebugOptions(config.UMIs.HighlightConsensus, config.RunChecks);
 
         if(!mConfig.SpecificRegions.isEmpty())
         {
@@ -345,8 +343,10 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         findDuplicateFragments(positionFragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
 
-        List<UmiGroup> umiGroups = null;
+        List<UmiGroup> umiGroups = mDuplicateGroups.processDuplicateGroups(duplicateGroups, inExcludedRegion);
 
+        /*
+        List<UmiGroup> umiGroups = null;
         if(mConfig.UMIs.Enabled && !inExcludedRegion)
         {
             umiGroups = mDuplicateGroups.processDuplicateUmiGroups(duplicateGroups);
@@ -355,6 +355,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         {
             mDuplicateGroups.processDuplicateGroups(duplicateGroups, inExcludedRegion);
         }
+        */
 
         if(logDetails)
         {

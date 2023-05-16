@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.markdups.umi;
+package com.hartwig.hmftools.markdups.consensus;
 
 import static java.lang.String.format;
 
@@ -7,7 +7,6 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class CigarFrequency

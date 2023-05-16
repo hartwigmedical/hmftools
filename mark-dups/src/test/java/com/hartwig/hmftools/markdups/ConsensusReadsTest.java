@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_A;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_C;
 import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
-import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
-import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MATCH;
+import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
+import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MATCH;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -26,10 +26,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.markdups.umi.ConsensusReadInfo;
-import com.hartwig.hmftools.markdups.umi.ConsensusReads;
-import com.hartwig.hmftools.markdups.umi.ReadParseState;
-import com.hartwig.hmftools.markdups.umi.UmiConfig;
+import com.hartwig.hmftools.markdups.consensus.ConsensusReadInfo;
+import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
+import com.hartwig.hmftools.markdups.consensus.ReadParseState;
 
 import org.junit.Test;
 
@@ -38,7 +37,6 @@ import htsjdk.samtools.SAMRecord;
 public class ConsensusReadsTest
 {
     private final MockRefGenome mRefGenome;
-    private final UmiConfig mConfig;
     private final ConsensusReads mConsensusReads;
     private final ReadIdGenerator mReadIdGen;
 
@@ -46,10 +44,9 @@ public class ConsensusReadsTest
 
     public ConsensusReadsTest()
     {
-        mConfig = new UmiConfig(true);
         mRefGenome = new MockRefGenome();
         mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES);
-        mConsensusReads = new ConsensusReads(mConfig, mRefGenome);
+        mConsensusReads = new ConsensusReads(mRefGenome);
         mReadIdGen = new ReadIdGenerator();
     }
 

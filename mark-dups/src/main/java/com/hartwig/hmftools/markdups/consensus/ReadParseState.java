@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.markdups.umi;
+package com.hartwig.hmftools.markdups.consensus;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.markdups.umi.BaseBuilder.NO_BASE;
+import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.NO_BASE;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;

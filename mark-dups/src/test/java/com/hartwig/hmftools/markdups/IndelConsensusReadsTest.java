@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.markdups.ConsensusReadsTest.nextUmiReadId;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_A;
 import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
-import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.INDEL_MISMATCH;
+import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MISMATCH;
 
 import static org.junit.Assert.assertEquals;
 
@@ -16,9 +16,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.markdups.umi.ConsensusReadInfo;
-import com.hartwig.hmftools.markdups.umi.ConsensusReads;
-import com.hartwig.hmftools.markdups.umi.UmiConfig;
+import com.hartwig.hmftools.markdups.consensus.ConsensusReadInfo;
+import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 
 import org.junit.Test;
 
@@ -27,16 +26,14 @@ import htsjdk.samtools.SAMRecord;
 public class IndelConsensusReadsTest
 {
     private final MockRefGenome mRefGenome;
-    private final UmiConfig mConfig;
     private final ConsensusReads mConsensusReads;
     private final ReadIdGenerator mReadIdGen;
 
     public IndelConsensusReadsTest()
     {
-        mConfig = new UmiConfig(true, true, false);
         mRefGenome = new MockRefGenome();
         mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES);
-        mConsensusReads = new ConsensusReads(mConfig, mRefGenome);
+        mConsensusReads = new ConsensusReads(mRefGenome);
         mReadIdGen = new ReadIdGenerator();
     }
 

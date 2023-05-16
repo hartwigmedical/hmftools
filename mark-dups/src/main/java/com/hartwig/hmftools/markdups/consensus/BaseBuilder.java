@@ -1,9 +1,7 @@
-package com.hartwig.hmftools.markdups.umi;
+package com.hartwig.hmftools.markdups.consensus;
 
 import static java.lang.Math.max;
 import static java.lang.Math.round;
-
-import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.ALIGNMENT_ONLY;
 
 import java.util.List;
 
@@ -14,16 +12,12 @@ import htsjdk.samtools.SAMRecord;
 
 public class BaseBuilder
 {
-    private final UmiConfig mConfig;
     private final RefGenomeInterface mRefGenome;
 
-    public BaseBuilder(final UmiConfig config, final RefGenomeInterface refGenome)
+    public BaseBuilder(final RefGenomeInterface refGenome)
     {
-        mConfig = config;
         mRefGenome = refGenome;
     }
-
-    public UmiConfig config() { return mConfig; }
 
     public static final byte NO_BASE = 0;
 

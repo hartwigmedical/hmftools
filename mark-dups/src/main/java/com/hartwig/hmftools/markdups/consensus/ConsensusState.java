@@ -1,19 +1,15 @@
-package com.hartwig.hmftools.markdups.umi;
+package com.hartwig.hmftools.markdups.consensus;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
-import static com.hartwig.hmftools.markdups.umi.ConsensusOutcome.UNSET;
-import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
+import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.UNSET;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.compress.utils.Lists;
 
-import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;

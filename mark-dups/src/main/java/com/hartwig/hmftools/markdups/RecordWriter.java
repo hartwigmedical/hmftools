@@ -4,7 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_CONSENSUS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
@@ -29,7 +29,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
-import com.hartwig.hmftools.markdups.umi.UmiGroup;
+import com.hartwig.hmftools.markdups.consensus.UmiGroup;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -148,7 +148,7 @@ public class RecordWriter
     {
         for(SAMRecord read : completeReads)
         {
-            if(read.hasAttribute(UMI_CONSENSUS_ATTRIBUTE))
+            if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
             {
                 mBamWriter.writeRecord(read);
                 ++mConsensusReadCount;

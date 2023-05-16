@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.markdups.umi.UmiGroup;
+import com.hartwig.hmftools.markdups.consensus.UmiGroup;
 
 public class PartitionResults
 {

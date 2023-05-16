@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.markdups.umi;
+package com.hartwig.hmftools.markdups.consensus;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
