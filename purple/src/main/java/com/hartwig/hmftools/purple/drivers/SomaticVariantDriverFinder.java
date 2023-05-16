@@ -35,7 +35,7 @@ public abstract class SomaticVariantDriverFinder
     public SomaticVariantDriverFinder(final DriverGenePanel genePanel, final DriverCategory category)
     {
         mCategory = category;
-        mLikelihoodsByGene = genePanel.oncoLikelihood();
+        mLikelihoodsByGene = category == DriverCategory.ONCO ? genePanel.oncoLikelihood() : genePanel.tsgLikelihood();
         mReportablePredicate = new ReportablePredicate(category, genePanel.driverGenes());
         mReportableVariants = Lists.newArrayList();
     }
