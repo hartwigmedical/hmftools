@@ -118,10 +118,6 @@ def get_ensembl(ensembl_gene_data, only_vdj):
     for idx, row in ensembl_df.iterrows():
         gene_name = row["GeneName"]
 
-        # remove pseudo genes
-        if "OR" in gene_name:
-            continue
-
         vdj_type = None
         if (gene_name.startswith("IGH") or
             gene_name.startswith("IGK") or
@@ -134,18 +130,32 @@ def get_ensembl(ensembl_gene_data, only_vdj):
             if len(gene_name) > 3 and (gene_name[3] in "VDJC"):
                 vdj_type = gene_name[3]
 
+        if not vdj_type:
+            continue
+
+        # remove pseudo genes
+        if gene_name.endswith("P") or "OR" in gene_name:
+            continue
+
+        # also remove Roman numeral ones, like IGHVII, they are pseudo genes
+        if len(gene_name) > 4 and gene_name[4].isalpha():
+            continue
+
         if not only_vdj or vdj_type:
             genes.append(Gene(row["GeneName"], row["Chromosome"], row["Strand"], row["GeneStart"], row["GeneEnd"], vdj_type))
 
     # manually add in the KDE section
-    # v38: IGKKDE	01	chr2	88832222	88832772	-
+    # v38: IGKKDE	01	chr2	88832222	88833331	-
     genes.append(Gene(gene_name='IGKDEL', chromosome="2", strand=-1,
-                      gene_start=88832222, gene_end=88832772, vdj_type="J"))
+                      gene_start=88832222, gene_end=88833331, vdj_type="J"))
     
     # KINT, obtained by BLAT of CACCGCGCTCTTGGGGCAGCCGCCTTGCCGCTAGTGGCCGTGGCCACCCTGTGTCTGCCCGATT
     # v38
     genes.append(Gene(gene_name='IGKINT', chromosome="2", strand=-1,
                       gene_start=88859633, gene_end=88859697, vdj_type="V"))
+
+    #for g in genes:
+    #    print(f"Gene(gene_name='{g.gene_name}', chromosome='{g.chromosome}', strand={g.strand}, gene_start={g.gene_start}, gene_end={g.gene_end}, vdj_type='{g.vdj_type}')")
 
     return genes
 
@@ -228,14 +238,15 @@ def compatible_locus(gene_segment1, gene_segment2):
 # from the blastn dataframe, we get the V, D and J alignments
 def get_vdj_alignments(df):
 
-    def get_alignment_df(df, vdj):
+    def get_alignment_df(df, vdj_type):
         # vdj is either V, D or J
-        gene_type_alignment = df[df["gene_type"] == vdj].groupby("qseqid")[["gene", "pident", "qstart", "qend"]].first()
+        # we take the first one of each type
+        gene_type_alignment = df[df["gene_type"] == vdj_type].groupby("qseqid")[["gene", "pident", "qstart", "qend"]].first()
         # rename columns
-        gene_type_alignment.rename(columns={ "gene": vdj.lower() + "Gene",
-                                            "pident": vdj.lower() + "PIdent",
-                                            "qstart": vdj.lower() + "AlignStart",
-                                            "qend": vdj.lower() + "AlignEnd"}, inplace=True)
+        gene_type_alignment.rename(columns={"gene": vdj_type.lower() + "Gene",
+                                            "pident": vdj_type.lower() + "PIdent",
+                                            "qstart": vdj_type.lower() + "AlignStart",
+                                            "qend": vdj_type.lower() + "AlignEnd"}, inplace=True)
         return gene_type_alignment.reset_index()
 
     # now we have to combine the data and mark
@@ -243,60 +254,48 @@ def get_vdj_alignments(df):
     d_alignment = get_alignment_df(df, "D")
     j_alignment = get_alignment_df(df, "J")
 
-    if not j_alignment.empty:
-        # make sure V and J loci are consistent, since V is much longer gene we favour that
-        # must be in same chromosome
-        j_gene = j_alignment["jGene"][0]
-        v_gene = None
-        if not v_alignment.empty:
-            v_gene = v_alignment["vGene"][0]
-
-        if v_gene is not None and not compatible_locus(v_gene, j_gene):
-            # clear the J gene if loci not compatible with each other
-            logger.debug(f"v gene({v_gene}) not compatible with j gene({j_gene}), clearing j match")
-            j_alignment = j_alignment.head(0)
-
-    if not d_alignment.empty:
-        # since D gene is very short it can sometimes match with
-        # the wrong gene. We make sure they are in the same chromosome
-        d_gene = d_alignment["dGene"][0]
-        vj_gene = None
-        if not v_alignment.empty:
-            vj_gene = v_alignment["vGene"][0]
-        elif not j_alignment.empty:
-            vj_gene = j_alignment["jGene"][0]
-
-        if vj_gene is not None and not compatible_locus(vj_gene, d_gene):
-            # clear the D gene if chromosome does not match
-            logger.debug(f"d gene({d_gene}) not compatible with vj gene({vj_gene}), clearing d match")
-            d_alignment = d_alignment.head(0)
-
     return v_alignment, d_alignment, j_alignment
 
-def process_blastn_result(blastn_csv, gene_finder):
+# for each sequence we assign a locus (IGH, TRA etc), by choosing the highest scoring alignment to
+# any VDJ gene segment. The locus is then the locus of that alignment
+# We then filter out any alignment that are VDJ segments but not compatible to that locus
+def filter_by_locus(df: pd.DataFrame) -> pd.DataFrame:
 
-    df = pd.read_csv(blastn_csv,
-                     names=["qseqid", "qlen", "sseqid", "stitle_chr", "stitle_assembly", "pident", "qcovs", "length",
-                            "mismatch", "gapopen",
-                            "qstart", "qend", "sstart", "send", "qframe", "sframe", "evalue",
-                            "bitscore", "qseq", "sseq"])
+    # create a df of qseqid, locus
+    locus_df = df[df["gene_type"].notna()].sort_values("bitscore", ascending=False).groupby("qseqid")[["gene"]].first().reset_index()
+    locus_df["locus"] = locus_df["gene"].str.slice(stop=3)
+    locus_df.drop(columns="gene", inplace=True)
+
+    # now put the locus into every row
+    df = df.merge(locus_df, on="qseqid", how="left")
+
+    # remove any alignment that do not agree with the chosen locus (like IGKV when locus in TRG)
+    # we however keep any alignment that do not have ig/tcr gene, so that we can find if sequence aligns somewhere
+    # other than the ig/tcr regions
+    df = df[df.apply(
+        lambda x: pd.isna(x["gene"]) or pd.isna(x["locus"]) or compatible_locus(x["gene"], x["locus"]),
+        axis=1)].reset_index(drop=True)
+
+    return df
+
+def process_blastn_result(df: pd.DataFrame, gene_finder: GeneFinder) -> pd.DataFrame:
 
     add_gene_data(df, gene_finder)
+    df = filter_by_locus(df)
 
     aligns_to_keep = df.groupby("qseqid").apply(choose_alignments)
-    # convert from series of list into just a flat serie
+    # convert from series of list into just a flat series
     idx_to_keep = aligns_to_keep.explode()
-    filtered_df = df.filter(items=idx_to_keep, axis=0)
-    del df
+    df = df.filter(items=idx_to_keep, axis=0)
 
     # get the V, D, J alignments as dataframes
-    v_alignment, d_alignment, j_alignment = get_vdj_alignments(filtered_df)
+    v_alignment, d_alignment, j_alignment = get_vdj_alignments(df)
 
     # merge the V, D and J genes together
     seq_gene_df = v_alignment.merge(d_alignment, how="outer", on="qseqid").merge(j_alignment, how="outer", on="qseqid")
 
     # fine genes that matches ref
-    seq_match_ref = pd.DataFrame(filtered_df.groupby("qseqid").apply(lambda x: ((x["qlen"] - x["length"]) < 10).any()),
+    seq_match_ref = pd.DataFrame(df.groupby("qseqid").apply(lambda x: ((x["qlen"] - x["length"]) < 10).any()),
                                  columns=["blastnFullMatch"]).reset_index()
     seq_gene_df = seq_gene_df.merge(seq_match_ref, how="outer", on="qseqid")
 
@@ -375,7 +374,8 @@ def main():
     # read in all the VDJ sequences and blast them
     vdj_df = pd.read_csv(args.in_tsv, sep="\t")
 
-    file_prefix = os.path.basename(args.in_tsv).split('.', maxsplit=1)[0]
+    # strip out the tsv / csv / .gz
+    file_prefix = re.sub("(\.[tc]sv\.gz)|(\.[tc]sv)", "", os.path.basename(args.in_tsv))
 
     if args.temp_dir:
         fa_file = f"{args.temp_dir}/{file_prefix}.blastn.fa"
@@ -390,8 +390,16 @@ def main():
     # now run blastn on all of them
     run_blastn(args.blastn, fa_file, blastn_csv, args.threads)
 
+    # when reading, the stitle inside contains comma, and we want to split that into chr and assemply
+    columns_in = columns.copy()
+    stitle_index = columns_in.index("stitle")
+    del columns_in[stitle_index]
+    columns_in.insert(stitle_index, "stitle_chr")
+    columns_in.insert(stitle_index + 1, "stitle_assemply")
+    blastn_df = pd.read_csv(blastn_csv, names=columns_in)
+
     gene_finder = GeneFinder(get_ensembl(args.ensembl, True))
-    seq_gene_df = process_blastn_result(blastn_csv, gene_finder)
+    seq_gene_df = process_blastn_result(blastn_df, gene_finder)
 
     if not args.temp_dir:
         os.unlink(fa_file)
@@ -415,13 +423,17 @@ def main():
     sec = round(elapsed_sec % 60)
     logger.info(f"finished processing {args.in_tsv}, time taken: {minute}m {sec}s")
 
+# This function operates on a dataframe that is already grouped by qseqid
 # we want to choose alignments, based on following:
 # 1. if there is one alignment that can encompass the whole range we will take it
 #    as it indicates that this sequence matches ref genome
 # 2. then for each aligned section we choose the one that is aligned V, D, J or KDE
 #    genes. If there are more than one, we choose the highest score one
 # 3. next we just choose whatever is left, removing duplicates
-def choose_alignments(df):
+def choose_alignments(df: pd.DataFrame):
+    # make sure we already grouped by qseqid
+    assert(len(df["qseqid"].unique()) == 1)
+
     rows_to_keep = []
 
     for idx, row in df.iterrows():
@@ -458,27 +470,27 @@ class UnitTests(unittest.TestCase):
 
     def test_choose_alignment(self):
         # first test that if there is one range that encampass them all, we take that one
-        #         qlen, length, qstart, qend, gene_type
-        data = {1: [90,   30,      1,    30,     "V"],
-                2: [90,   60,      31,   90,     "J"],
-                3: [90,   88,      1,    88,     None]}
-        df = pd.DataFrame.from_dict(data, orient='index', columns=["qlen", "length", "qstart", "qend", "gene_type"])
+        #         qseqid, qlen, length, qstart, qend, gene_type, bitscore
+        data = {1: [7, 90,   30,      1,    30,     "V",  120],
+                2: [7, 90,   60,      31,   90,     "J",  150],
+                3: [7, 90,   88,      1,    88,     None, 250]}
+        df = pd.DataFrame.from_dict(data, orient='index', columns=["qseqid", "qlen", "length", "qstart", "qend", "gene_type", "bitscore"])
         self.assertEqual(len(choose_alignments(df)), 1)
         self.assertEqual(choose_alignments(df)[0], 3)
 
         # when there are multiple ones to choose from, we choose the one with V / J genes
-        #         qlen, length, qstart, qend, gene_type
-        data = {1: [90,   30,      1,    30,     None],
-                2: [90,   27,      3,    29,     "V"],
-                3: [90,   28,      3,    30,     "V"],
-                4: [90,   59,      31,   90,     "J"],
-                5: [90,   58,      31,   90,     "J"],
-                6: [90,   60,      31,   90,     None]}
-        df = pd.DataFrame.from_dict(data, orient='index', columns=["qlen", "length", "qstart", "qend", "gene_type"])
+        #         qseqid, qlen, length, qstart, qend, gene_type, bitscore
+        data = {1: [7, 90,   30,      1,    30,     None, 200],
+                2: [7, 90,   27,      3,    29,     "V",  150],
+                3: [7, 90,   28,      3,    30,     "V",  250],
+                4: [7, 90,   59,      31,   90,     "J",  100],
+                5: [7, 90,   58,      31,   90,     "J",  200],
+                6: [7, 90,   60,      31,   90,     None, 100]}
+        df = pd.DataFrame.from_dict(data, orient='index', columns=["qseqid", "qlen", "length", "qstart", "qend", "gene_type", "bitscore"])
         self.assertEqual(len(choose_alignments(df)), 2)
-        # we should keep row 2 and 4
+        # we should keep row 2 and 5 cause of higher bitscore
         self.assertEqual(choose_alignments(df)[0], 3)
-        self.assertEqual(choose_alignments(df)[1], 4)
+        self.assertEqual(choose_alignments(df)[1], 5)
 
     def test_gene_finder(self):
         genes = [
@@ -490,19 +502,87 @@ class UnitTests(unittest.TestCase):
 
         # test we can correctly annotate the genes
         # first test that if there is one range that encampass them all, we take that one
-        #         qlen, stitle, length, qstart, qend, sstart, send, sframe
-        data = {1: [90, "Homo sapiens chromosome 14", 30, 1, 31,   106184899,     106184910, -1],
-                2: [90, "Homo sapiens chromosome 14", 60, 31, 91,  105863814,     105863820, -1],
-                3: [90, "Homo sapiens chromosome 14", 88, 1, 89,   105881539,     105881541, -1],
-                4: [90, "Homo sapiens chromosome 14", 88, 1, 89,   102000000,     102000090, -1]}
+        #         qseqid, qlen, stitle, length, qstart, qend, sstart, send, sframe, bitscore
+        data = {1: [7, 90, "Homo sapiens chromosome 14", 30, 1, 31,   106184899,     106184910, -1, 100],
+                2: [7, 90, "Homo sapiens chromosome 14", 60, 31, 91,  105863814,     105863820, -1, 120],
+                3: [7, 90, "Homo sapiens chromosome 14", 88, 1, 89,   105881539,     105881541, -1, 130],
+                4: [7, 90, "Homo sapiens chromosome 14", 88, 1, 89,   102000000,     102000090, -1, 150]}
         df = pd.DataFrame.from_dict(data, orient='index',
-                                    columns=["qlen", "stitle_chr", "length", "qstart", "qend", "sstart", "send", "sframe"])
+                                    columns=["qseqid", "qlen", "stitle_chr", "length", "qstart", "qend", "sstart", "send", "sframe", "bitscore"])
+
         # now add gene data
         add_gene_data(df, gene_finder)
         self.assertEqual(df.iloc[0]["gene"], "IGHV1-18")
         self.assertEqual(df.iloc[1]["gene"], "IGHJ5")
         self.assertEqual(df.iloc[2]["gene"], "IGHD6-25")
         self.assertIsNone(df.iloc[3]["gene"])
+
+    def test_filter_by_locus(self):
+        genes = [
+            Gene(gene_name='IGHV1-18', chromosome="14", strand=-1, gene_start=106184899, gene_end=106185194, vdj_type='V'),
+            Gene(gene_name='IGHJ5', chromosome="14", strand=-1, gene_start=105863814, gene_end=105863864, vdj_type='J'),
+            Gene(gene_name='IGHD6-25', chromosome="14", strand=-1, gene_start=105881539, gene_end=105881556, vdj_type='D'),
+            Gene(gene_name='IGKJ2', chromosome='2', strand=-1, gene_start=88861525, gene_end=88861563, vdj_type='J'),
+            Gene(gene_name='IGKV1-22', chromosome='2', strand=-1, gene_start=89170775, gene_end=89171212, vdj_type='V'),
+            Gene(gene_name='TRBV3-1', chromosome='7', strand=1, gene_start=142308542, gene_end=142309048, vdj_type='V'),
+            Gene(gene_name='TRBD1', chromosome='7', strand=1, gene_start=142786213, gene_end=142786224, vdj_type='D')
+        ]
+        gene_finder = GeneFinder(genes)
+        #         qseqid, qlen, stitle, length, qstart, qend, sstart, send, sframe, bitscore, pident
+        data = {1: [7, 150, "Homo sapiens chromosome 14", 90, 1,  90,   106184899,     106184910, -1, 150, 100], # IGHV1
+                2: [7, 150, "Homo sapiens chromosome 7", 90, 1, 90, 142308542, 142309048, 1, 100, 100], # TRBV3
+                3: [7, 150, "Homo sapiens chromosome 14", 30, 91, 120,  105863814,     105863820, -1, 120, 100], # IGHJ5
+                4: [7, 150, "Homo sapiens chromosome 14", 30, 120, 150, 105881539,     105881541, -1, 130, 99.1], # IGHD6
+                5: [7, 150, "Homo sapiens chromosome 7",  30, 120, 150, 142786213,    142786224, 1, 100, 99.1], # TRBD1
+                6: [7, 150, "Homo sapiens chromosome 14", 88, 1, 89,   102000000,     102000090, -1, 150, 99]}
+        blastn_df = pd.DataFrame.from_dict(data, orient='index',
+                                    columns=["qseqid", "qlen", "stitle_chr", "length", "qstart", "qend",
+                                             "sstart", "send", "sframe", "bitscore", "pident"])
+
+        add_gene_data(blastn_df, gene_finder)
+        df = filter_by_locus(blastn_df)
+
+        # should have removed the TRBV3 and TRBD1 rows
+        self.assertEqual(len(df), 4)
+        self.assertEqual(len(df[df["gene"].str.slice(stop=3) == "TRB"]), 0)
+        self.assertEqual(len(df[df["gene"].str.slice(stop=3) == "IGH"]), 3)
+
+    def test_whole(self):
+        genes = [
+            Gene(gene_name='IGHV1-18', chromosome="14", strand=-1, gene_start=106184899, gene_end=106185194, vdj_type='V'),
+            Gene(gene_name='IGHJ5', chromosome="14", strand=-1, gene_start=105863814, gene_end=105863864, vdj_type='J'),
+            Gene(gene_name='IGHD6-25', chromosome="14", strand=-1, gene_start=105881539, gene_end=105881556, vdj_type='D'),
+            Gene(gene_name='IGKJ2', chromosome='2', strand=-1, gene_start=88861525, gene_end=88861563, vdj_type='J'),
+            Gene(gene_name='IGKV1-22', chromosome='2', strand=-1, gene_start=89170775, gene_end=89171212, vdj_type='V')
+        ]
+        gene_finder = GeneFinder(genes)
+
+        #         qseqid, qlen, stitle, length, qstart, qend, sstart, send, sframe, bitscore, pident
+        data = {
+                1: [7, 150, "Homo sapiens chromosome 14", 90, 1,  90,   106184899,     106184910, -1, 100, 100], # IGHV1
+                2: [7, 150, "Homo sapiens chromosome 14", 30, 91, 120,  105863814,     105863820, -1, 120, 100], # IGHJ5
+                3: [7, 150, "Homo sapiens chromosome 14", 30, 120, 150, 105881539,     105881541, -1, 130, 99.1], # IGHD6
+                4: [7, 150, "Homo sapiens chromosome 14", 88, 1, 89,   102000000,     102000090, -1, 150, 99],
+                }
+
+        # add a higher score one but for a different sequence mapped to IGKV1
+        data[5] = [2, 150, "Homo sapiens chromosome 2", 90, 1,  90,   89170800,     89171200, -1, 200, 100]
+
+        blastn_df = pd.DataFrame.from_dict(data, orient='index',
+                                    columns=["qseqid", "qlen", "stitle_chr", "length", "qstart", "qend",
+                                             "sstart", "send", "sframe", "bitscore", "pident"])
+        # now add gene data
+        df = process_blastn_result(blastn_df, gene_finder)
+        df_qseqid = df[df["qseqid"] == 7]
+        self.assertEqual(df_qseqid.iloc[0]["vGene"], "IGHV1-18")
+        self.assertEqual(df_qseqid.iloc[0]["jGene"], "IGHJ5")
+        self.assertEqual(df_qseqid.iloc[0]["dGene"], "IGHD6-25")
+
+        df_qseqid = df[df["qseqid"] == 2]
+        self.assertEqual(df_qseqid.iloc[0]["vGene"], "IGKV1-22")
+        self.assertTrue(pd.isna(df_qseqid.iloc[0]["jGene"]))
+        self.assertTrue(pd.isna(df_qseqid.iloc[0]["dGene"]))
+
 
 if __name__ == "__main__":
     if len(sys.argv) == 2 and sys.argv[1] == "unittest":
