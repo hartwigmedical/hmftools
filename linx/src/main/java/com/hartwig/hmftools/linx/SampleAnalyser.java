@@ -444,8 +444,8 @@ public class SampleAnalyser implements Callable
 
             // write out the Purple drivers again as would usually be done with SVs
             String purpleDriverFile = mConfig.IsGermline ?
-                    DriverCatalogFile.generateGermlineFilename(mConfig.PurpleDataPath, mCurrentSampleId)
-                    : DriverCatalogFile.generateSomaticFilename(mConfig.PurpleDataPath, mCurrentSampleId);
+                    DriverCatalogFile.generateGermlineFilename(mConfig.OutputDataPath, mCurrentSampleId)
+                    : DriverCatalogFile.generateSomaticFilename(mConfig.OutputDataPath, mCurrentSampleId);
 
             List<DriverCatalog> purpleDrivers = DriverCatalogFile.read(purpleDriverFile).stream().collect(Collectors.toList());
 
