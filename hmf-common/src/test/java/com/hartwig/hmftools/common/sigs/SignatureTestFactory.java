@@ -3,9 +3,9 @@ package com.hartwig.hmftools.common.sigs;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class TestSignatureFactory {
+public final class SignatureTestFactory {
 
-    private TestSignatureFactory() {
+    private SignatureTestFactory() {
     }
 
     @NotNull
