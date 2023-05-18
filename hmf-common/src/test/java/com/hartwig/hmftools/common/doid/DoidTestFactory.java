@@ -16,6 +16,11 @@ public final class DoidTestFactory {
     }
 
     @NotNull
+    public static DoidNode createTestDoidNode() {
+        return createDoidNode("doid", "term");
+    }
+
+    @NotNull
     public static DoidNode createDoidNode(@NotNull String doid, @NotNull String doidTerm) {
         return ImmutableDoidNode.builder().doid(doid).url(Strings.EMPTY).doidTerm(doidTerm).build();
     }

@@ -1,10 +1,19 @@
 package com.hartwig.hmftools.orange.conversion;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.chord.ChordTestFactory;
+import com.hartwig.hmftools.common.doid.DoidTestFactory;
+import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
+import com.hartwig.hmftools.common.lilac.LilacTestFactory;
+import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
+import com.hartwig.hmftools.common.peach.PeachTestFactory;
+import com.hartwig.hmftools.common.sigs.SignatureTestFactory;
+import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 
@@ -15,12 +24,24 @@ public class OrangeConversionTest {
     private static final double EPSILON = 0.01;
 
     @Test
+    public void shouldConvertTestVersionsOfAllDatamodels() {
+        assertNotNull(OrangeConversion.convert(FlagstatTestFactory.createMinimalTestFlagstat()));
+        assertNotNull(OrangeConversion.convert(WGSMetricsTestFactory.createMinimalTestWGSMetrics()));
+        assertNotNull(OrangeConversion.convert(DoidTestFactory.createTestDoidNode()));
+        assertNotNull(OrangeConversion.convert(LilacTestFactory.createEmptyData()));
+        assertNotNull(OrangeConversion.convert(LilacTestFactory.alleleBuilder().build()));
+        assertNotNull(OrangeConversion.convert(VirusTestFactory.createEmptyData()));
+        assertNotNull(OrangeConversion.convert(VirusTestFactory.annotatedVirusBuilder().build()));
+        assertNotNull(OrangeConversion.convert(ChordTestFactory.createMinimalTestChordAnalysis()));
+        assertNotNull(OrangeConversion.convert(PeachTestFactory.builder().build()));
+        assertNotNull(OrangeConversion.convert(SignatureTestFactory.builder().build()));
+    }
+
+    @Test
     public void shouldConvertAnnotatedVirus() {
-        assertTrue(OrangeConversion.convert(TestCommonDatamodelFactory.emptyVirusInterpreterData()).allViruses().isEmpty());
-        assertEqualsValue(TestCommonDatamodelFactory.minimalVirusInterpreterData(),
-                OrangeConversion.convert(TestCommonDatamodelFactory.minimalVirusInterpreterData()));
-        assertEqualsValue(TestCommonDatamodelFactory.exhaustiveVirusInterpreterData(),
-                OrangeConversion.convert(TestCommonDatamodelFactory.exhaustiveVirusInterpreterData()));
+        assertTrue(OrangeConversion.convert(VirusTestFactory.createEmptyData()).allViruses().isEmpty());
+        assertEqualsValue(VirusTestFactory.createMinimalData(), OrangeConversion.convert(VirusTestFactory.createMinimalData()));
+        assertEqualsValue(VirusTestFactory.createProperData(), OrangeConversion.convert(VirusTestFactory.createProperData()));
     }
 
     private static void assertEqualsValue(com.hartwig.hmftools.common.virus.VirusInterpreterData input, VirusInterpreterData converted) {
