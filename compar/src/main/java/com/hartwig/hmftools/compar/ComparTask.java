@@ -101,13 +101,13 @@ public class ComparTask implements Callable
             totalMismatches += mismatches.size();
         }
 
-        if(failedTypes > 0)
+        if(failedTypes == 0)
         {
-            CMP_LOGGER.debug("sample({}) wrote {} mismatches {}", sampleId, totalMismatches);
+            CMP_LOGGER.debug("sample({}) mismatches({})", sampleId, totalMismatches);
         }
         else
         {
-            CMP_LOGGER.warn("sample({}) wrote {} mismatches {}, failed types({})", failedTypes);
+            CMP_LOGGER.warn("sample({}) mismatches({}) failed types({})", sampleId, totalMismatches, failedTypes);
         }
     }
 

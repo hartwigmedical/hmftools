@@ -1,13 +1,21 @@
 package com.hartwig.hmftools.compar;
 
 import static com.hartwig.hmftools.compar.Category.GENE_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
+import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
+import static com.hartwig.hmftools.compar.MismatchType.INVALID_BOTH;
+import static com.hartwig.hmftools.compar.MismatchType.INVALID_NEW;
+import static com.hartwig.hmftools.compar.MismatchType.INVALID_REF;
 import static com.hartwig.hmftools.compar.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.chord.ChordComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
@@ -116,31 +124,46 @@ public class CommonUtils
     {
         final MatchLevel matchLevel = config.Categories.get(comparer.category());
 
-        final List<List<ComparableItem>> sourceItems = Lists.newArrayList();
+        Map<String,List<ComparableItem>> sourceItems = Maps.newHashMap();
 
         for(String sourceName : config.SourceNames)
         {
             String sourceSampleId = config.sourceSampleId(sourceName, sampleId);
+            List<ComparableItem> items = null;
 
             if(!config.DbConnections.isEmpty())
             {
-                sourceItems.add(comparer.loadFromDb(sourceSampleId, config.DbConnections.get(sourceName)));
+                items = comparer.loadFromDb(sourceSampleId, config.DbConnections.get(sourceName));
             }
             else
             {
                 FileSources fileSources = FileSources.sampleInstance(config.FileSources.get(sourceName), sourceSampleId);
-                List<ComparableItem> items = comparer.loadFromFile(sourceSampleId, fileSources);
+                items = comparer.loadFromFile(sourceSampleId, fileSources);
+            }
 
-                if(items == null)
-                    return false;
-
-                sourceItems.add(items);
+            if(items != null)
+            {
+                sourceItems.put(sourceName, items);
             }
         }
 
-        // previously support comparisons for N sources but now can only be 2 as controlled by config
-        CommonUtils.compareItems(mismatches, matchLevel, config.Thresholds, sourceItems.get(0), sourceItems.get(1));
-        return true;
+        if(sourceItems.containsKey(REF_SOURCE) && sourceItems.containsKey(NEW_SOURCE))
+        {
+            // previously support comparisons for N sources but now can only be 2 as controlled by config
+            CommonUtils.compareItems(mismatches, matchLevel, config.Thresholds, sourceItems.get(REF_SOURCE), sourceItems.get(NEW_SOURCE));
+            return true;
+        }
+
+        InvalidDataItem invalidDataItem = new InvalidDataItem(comparer.category());
+
+        if(!sourceItems.containsKey(REF_SOURCE) && !sourceItems.containsKey(NEW_SOURCE))
+            mismatches.add(new Mismatch(invalidDataItem, null, INVALID_BOTH, Collections.EMPTY_LIST));
+        else if(!sourceItems.containsKey(REF_SOURCE))
+            mismatches.add(new Mismatch(invalidDataItem, null, INVALID_REF, Collections.EMPTY_LIST));
+        else if(!sourceItems.containsKey(NEW_SOURCE))
+            mismatches.add(new Mismatch(invalidDataItem, null, INVALID_NEW, Collections.EMPTY_LIST));
+
+        return false;
     }
 
     public static void compareItems(
