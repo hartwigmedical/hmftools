@@ -101,10 +101,15 @@ public class ComparTask implements Callable
             totalMismatches += mismatches.size();
         }
 
-        CMP_LOGGER.debug("sample({}) wrote {} mismatches {}",
-                sampleId, totalMismatches, failedTypes > 0 ? format("failed types %d", failedTypes) : "");
+        if(failedTypes > 0)
+        {
+            CMP_LOGGER.debug("sample({}) wrote {} mismatches {}", sampleId, totalMismatches);
+        }
+        else
+        {
+            CMP_LOGGER.warn("sample({}) wrote {} mismatches {}, failed types({})", failedTypes);
+        }
     }
-
 
     private Set<String> loadCombinedCopyNumberDriverGenes(final String sampleId)
     {

@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -94,6 +95,9 @@ public class Compar
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
+        final VersionInfo version = new VersionInfo("compar.version");
+        CMP_LOGGER.info("Compar version: {}", version.version());
+
         Options options = new Options();
         ComparConfig.addCmdLineArgs(options);
 

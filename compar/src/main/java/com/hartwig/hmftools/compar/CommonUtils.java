@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.compar;
 
-import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.compar.chord.ChordComparer;
