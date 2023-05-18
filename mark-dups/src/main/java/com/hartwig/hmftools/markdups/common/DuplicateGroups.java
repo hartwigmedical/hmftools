@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.markdups.common;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
@@ -250,13 +251,23 @@ public class DuplicateGroups
         return abs(abs(first.reads().get(0).getInferredInsertSize()) - abs(second.reads().get(0).getInferredInsertSize())) <= 10;
     }
 
-    public List<DuplicateGroup> processDuplicateGroups(final List<List<Fragment>> rawDuplicateGroups, boolean inExcludedRegion)
+    public List<DuplicateGroup> processDuplicateGroups(
+            final List<List<Fragment>> rawDuplicateGroups, boolean captureStats, int nonDuplicateFragCount, boolean inExcludedRegion)
     {
         if(rawDuplicateGroups == null)
             return Collections.EMPTY_LIST;
 
         if(mUmiConfig.Enabled && !inExcludedRegion)
-            return processUmiGroups(rawDuplicateGroups);
+            return processUmiGroups(rawDuplicateGroups, captureStats, nonDuplicateFragCount);
+
+        if(captureStats)
+        {
+            for(List<Fragment> fragments : rawDuplicateGroups)
+            {
+                ++mStats.DuplicateGroups;
+                mStats.addDuplicateGroup(fragments.size());
+            }
+        }
 
         if(mFormConsensus && !inExcludedRegion)
             return processConsensusGroups(rawDuplicateGroups);
@@ -265,19 +276,33 @@ public class DuplicateGroups
         return null;
     }
 
-    private List<DuplicateGroup> processUmiGroups(final List<List<Fragment>> duplicateGroups)
+    private List<DuplicateGroup> processUmiGroups(final List<List<Fragment>> duplicateGroups, boolean captureStats, int nonDuplicateFragCount)
     {
         List<DuplicateGroup> allUmiGroups = Lists.newArrayList();
 
+        int posGroupCount = duplicateGroups.size() + nonDuplicateFragCount; // count of unique fragments sharing the same start pos
+        int uniqueFragmentCount = nonDuplicateFragCount; // count of fragments with matching coordinates (after UMI collapsing)
+        int maxDuplicatePosCount = 0;
+
+        int maxUmiFragmentCount = 0;
+        DuplicateGroup maxUmiGroup = null;
+
         for(List<Fragment> fragments : duplicateGroups)
         {
-            ++mStats.DuplicateGroups;
-
             List<DuplicateGroup> umiGroups = buildUmiGroups(fragments, mUmiConfig);
 
             // collect stats including single groups
-            if(mUmiConfig.Debug)
-                mStats.addUmiGroups(mUmiConfig, umiGroups);
+            if(captureStats)
+            {
+                ++mStats.DuplicateGroups;
+
+                if(mUmiConfig.BaseDiffStats)
+                    mStats.recordUmiBaseDiffs(mUmiConfig, umiGroups);
+
+                uniqueFragmentCount += umiGroups.size();
+
+                maxDuplicatePosCount = max(maxDuplicatePosCount, umiGroups.size());
+            }
 
             for(DuplicateGroup umiGroup : umiGroups)
             {
@@ -294,9 +319,23 @@ public class DuplicateGroups
 
                 allUmiGroups.add(umiGroup);
 
-                ++mStats.UmiGroups;
-                mStats.addDuplicateGroup(umiGroup.fragmentCount());
+                if(captureStats)
+                {
+                    ++mStats.UmiGroups;
+                    mStats.addDuplicateGroup(umiGroup.fragmentCount());
+                }
+
+                if(umiGroup.fragmentCount() > maxUmiFragmentCount)
+                {
+                    maxUmiGroup = umiGroup;
+                    maxUmiFragmentCount = umiGroup.fragmentCount();
+                }
             }
+        }
+
+        if(captureStats)
+        {
+            mStats.recordFragmentPositions(posGroupCount, uniqueFragmentCount, maxDuplicatePosCount, maxUmiGroup);
         }
 
         return allUmiGroups;
@@ -317,9 +356,6 @@ public class DuplicateGroups
 
             duplicateGroup.categoriseReads();
             duplicateGroups.add(duplicateGroup);
-
-            ++mStats.DuplicateGroups;
-            mStats.addDuplicateGroup(fragments.size());
         }
 
         return duplicateGroups;
@@ -336,9 +372,6 @@ public class DuplicateGroups
                 fragments.get(0).setStatus(PRIMARY);
             else
                 setPrimaryRead(fragments);
-
-            ++mStats.DuplicateGroups;
-            mStats.addDuplicateGroup(fragments.size());
         }
     }
 

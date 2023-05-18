@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.markdups.common;
 
+import static java.lang.Math.max;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -35,6 +36,7 @@ public class Statistics
 
     public final Map<Integer,Integer> DuplicateFrequencies;
     public final List<UmiGroupCounts> UmiGroupFrequencies;
+    public final List<PositionFragmentsData> PositionFragments;
 
     public Statistics()
     {
@@ -48,6 +50,7 @@ public class Statistics
         MissingMateCigar = 0;
         DuplicateFrequencies = Maps.newHashMap();
         UmiGroupFrequencies = Lists.newArrayList();
+        PositionFragments = Lists.newArrayList();
     }
 
     public void merge(final Statistics other)
@@ -88,6 +91,21 @@ public class Statistics
                 UmiGroupFrequencies.add(otherUgCounts);
             }
         }
+
+        for(PositionFragmentsData otherPosFragData : other.PositionFragments)
+        {
+            PositionFragmentsData posFragData = getOrCreatePositionFragmentData(otherPosFragData.PosGroupCount, otherPosFragData.UniqueFragmentCount);
+
+            if(posFragData.Frequency == 0)
+            {
+                posFragData.UmiGroupDetails = otherPosFragData.UmiGroupDetails;
+                posFragData.MaxPosUmiCount = otherPosFragData.MaxPosUmiCount;
+                posFragData.MaxUmiReadsCount = otherPosFragData.MaxUmiReadsCount;
+            }
+
+            posFragData.Frequency += otherPosFragData.Frequency;
+
+        }
     }
 
     private static int roundFrequency(int frequency)
@@ -109,6 +127,59 @@ public class Statistics
         DuplicateFrequencies.put(rounded, count == null ? 1 : count + 1);
     }
 
+    private class PositionFragmentsData
+    {
+        public final int PosGroupCount;
+        public final int UniqueFragmentCount;
+        public int Frequency;
+        public int MaxPosUmiCount;
+        public int MaxUmiReadsCount; // max reads collapsed into a UMI group
+        public String UmiGroupDetails;
+
+        public PositionFragmentsData(final int posGroupCount, final int uniqueFragmentCount)
+        {
+            PosGroupCount = posGroupCount;
+            UniqueFragmentCount = uniqueFragmentCount;
+            Frequency = 0;
+            MaxPosUmiCount = 0;
+            MaxUmiReadsCount = 0;
+            UmiGroupDetails = "";
+        }
+
+        public String toString()
+        {
+            return format("pos(%d) unique(%d) count(%d) max(umi=%d reads=%d)",
+                    PosGroupCount, UniqueFragmentCount, Frequency, MaxPosUmiCount, MaxUmiReadsCount);
+        }
+    }
+
+    private PositionFragmentsData getOrCreatePositionFragmentData(int posGroupCount, int duplicatePosCount)
+    {
+        PositionFragmentsData matchedPosFragments = PositionFragments.stream()
+                .filter(x -> x.PosGroupCount == posGroupCount && x.UniqueFragmentCount == duplicatePosCount).findFirst().orElse(null);
+
+        if(matchedPosFragments == null)
+        {
+            matchedPosFragments = new PositionFragmentsData(posGroupCount, duplicatePosCount);
+            PositionFragments.add(matchedPosFragments);
+        }
+
+        return matchedPosFragments;
+    }
+
+    public void recordFragmentPositions(int posGroupCount, int duplicatePosCount, int maxDuplicatePosCount, final DuplicateGroup duplicateGroup)
+    {
+        PositionFragmentsData posFragData = getOrCreatePositionFragmentData(posGroupCount, duplicatePosCount);
+        ++posFragData.Frequency;
+        posFragData.MaxPosUmiCount = max(posFragData.MaxPosUmiCount, maxDuplicatePosCount);
+
+        if(duplicateGroup != null && duplicateGroup.fragmentCount() > posFragData.MaxUmiReadsCount)
+        {
+            posFragData.MaxUmiReadsCount = duplicateGroup.fragmentCount();
+            posFragData.UmiGroupDetails = format("%s %s", duplicateGroup.coordinatesKey(), duplicateGroup.getReadIds().get(0));
+        }
+    }
+
     private static final int MAX_EDIT_DISTANCE = 10;
 
     private class UmiGroupCounts
@@ -128,7 +199,7 @@ public class Statistics
         }
     }
 
-    public void addUmiGroups(final UmiConfig umiConfig, final List<DuplicateGroup> umiGroups)
+    public void recordUmiBaseDiffs(final UmiConfig umiConfig, final List<DuplicateGroup> umiGroups)
     {
         // evaluate 1 or 2 UMI groups, including those with a single fragment which may have been under-clustered
         if(umiGroups.size() == 1)
@@ -278,6 +349,33 @@ public class Statistics
         catch(IOException e)
         {
             MD_LOGGER.error(" failed to write UMI stats: {}", e.toString());
+        }
+    }
+
+    public void writePositionFragmentsData(final MarkDupsConfig config)
+    {
+        try
+        {
+            String filename = config.formFilename("pos_frags_stats");
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write("UniqueFragCoords,UniqueFragments,Count,MaxUmis,MaxUmiDuplicates,MaxUmiDetails");
+            writer.newLine();
+
+            for(PositionFragmentsData posFragData : PositionFragments)
+            {
+                writer.write(format("%d,%d,%d,%d,%d,%s",
+                        posFragData.PosGroupCount, posFragData.UniqueFragmentCount, posFragData.Frequency,
+                        posFragData.MaxPosUmiCount, posFragData.MaxUmiReadsCount, posFragData.UmiGroupDetails));
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            MD_LOGGER.error(" failed to write position fragments stats: {}", e.toString());
         }
     }
 }

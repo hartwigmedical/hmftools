@@ -358,7 +358,7 @@ public class PartitionData
         boolean inExcludedRegion = mExcludedRegion != null && rawDuplicateGroups.stream()
                 .anyMatch(x -> x.stream().anyMatch(y -> y.reads().stream().anyMatch(z -> overlapsExcludedRegion(mExcludedRegion, z))));
 
-        List<DuplicateGroup> duplicateGroups = mDuplicateGroups.processDuplicateGroups(rawDuplicateGroups, inExcludedRegion);
+        List<DuplicateGroup> duplicateGroups = mDuplicateGroups.processDuplicateGroups(rawDuplicateGroups, false, 0, inExcludedRegion);
 
         if(duplicateGroups != null)
         {

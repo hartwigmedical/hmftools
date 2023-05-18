@@ -110,7 +110,12 @@ public class MarkDuplicates
             combinedStats.writeDuplicateStats(mConfig);
 
             if(mConfig.UMIs.Enabled)
-                combinedStats.writeUmiStats(mConfig);
+            {
+                combinedStats.writePositionFragmentsData(mConfig);
+
+                if(mConfig.UMIs.BaseDiffStats)
+                    combinedStats.writeUmiStats(mConfig);
+            }
         }
 
         PerformanceCounter combinedPerfCounter = chromosomeReaders.get(0).perfCounter();

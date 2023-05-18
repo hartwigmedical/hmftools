@@ -343,7 +343,10 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         findDuplicateFragments(positionFragments, resolvedFragments, positionDuplicateGroups, candidateDuplicatesList);
 
-        List<DuplicateGroup> duplicateGroups = mDuplicateGroups.processDuplicateGroups(positionDuplicateGroups, inExcludedRegion);
+        int nonDuplicateFragCount = (int)resolvedFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).count();
+
+        List<DuplicateGroup> duplicateGroups = mDuplicateGroups.processDuplicateGroups(
+                positionDuplicateGroups, true, nonDuplicateFragCount, inExcludedRegion);
 
         if(logDetails)
         {
@@ -358,16 +361,19 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
             }
         }
 
-        startTimeMs = System.currentTimeMillis();
+        startTimeMs = logDetails ? System.currentTimeMillis() : 0;
 
         mCurrentPartitionData.processPrimaryFragments(resolvedFragments, candidateDuplicatesList, duplicateGroups);
 
-        double timeTakenSec = (System.currentTimeMillis() - startTimeMs) / 1000.0;
-
-        if(timeTakenSec >= 1.0)
+        if(logDetails)
         {
-            MD_LOGGER.debug("position({}:{}) fragments({}) partition processing time({})",
-                    mRegion.Chromosome, position, posFragmentCount, format("%.1fs", timeTakenSec));
+            double timeTakenSec = (System.currentTimeMillis() - startTimeMs) / 1000.0;
+
+            if(timeTakenSec >= 1.0)
+            {
+                MD_LOGGER.debug("position({}:{}) fragments({}) partition processing time({})",
+                        mRegion.Chromosome, position, posFragmentCount, format("%.1fs", timeTakenSec));
+            }
         }
 
         if(duplicateGroups != null)
