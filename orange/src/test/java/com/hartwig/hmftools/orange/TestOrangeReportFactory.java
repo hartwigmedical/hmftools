@@ -182,18 +182,18 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static LilacRecord createTestLilacData()
-    {
+    private static LilacRecord createTestLilacData() {
         List<LilacAllele> alleles = Lists.newArrayList();
-        alleles.add(OrangeConversion.convert(LilacTestFactory.builder().allele("Allele 1").build()));
-        alleles.add(OrangeConversion.convert(LilacTestFactory.builder().allele("Allele 2").somaticInframeIndel(1D).build()));
+        alleles.add(OrangeConversion.convert(LilacTestFactory.alleleBuilder().allele("Allele 1").build()));
+        alleles.add(OrangeConversion.convert(LilacTestFactory.alleleBuilder().allele("Allele 2").somaticInframeIndel(1D).build()));
 
         return ImmutableLilacRecord.builder().qc("PASS").alleles(alleles).build();
     }
 
     @NotNull
     private static IsofoxRecord createTestIsofoxData() {
-        IsofoxRnaStatistics statistics = OrangeIsofoxTestFactory.rnaStatisticsBuilder().totalFragments(120000).duplicateFragments(60000).build();
+        IsofoxRnaStatistics statistics =
+                OrangeIsofoxTestFactory.rnaStatisticsBuilder().totalFragments(120000).duplicateFragments(60000).build();
 
         GeneExpression highExpression = OrangeIsofoxTestFactory.geneExpressionBuilder()
                 .geneName("MYC")

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.conversion;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
@@ -101,7 +102,8 @@ public final class OrangeConversion {
     }
 
     @NotNull
-    private static AnnotatedVirus convert(com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus) {
+    @VisibleForTesting
+    static AnnotatedVirus convert(com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus) {
         return ImmutableAnnotatedVirus.builder()
                 .name(annotatedVirus.name())
                 .qcStatus(VirusBreakendQCStatus.valueOf(annotatedVirus.qcStatus().name()))

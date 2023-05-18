@@ -9,6 +9,21 @@ public final class VirusTestFactory {
     }
 
     @NotNull
+    public static VirusInterpreterData createEmptyData() {
+        return ImmutableVirusInterpreterData.builder().build();
+    }
+
+    @NotNull
+    public static VirusInterpreterData createMinimalData() {
+        return createWithVirus(annotatedVirusBuilder().build());
+    }
+
+    @NotNull
+    public static VirusInterpreterData createProperData() {
+        return createWithVirus(annotatedVirusBuilder().interpretation("MCV").expectedClonalCoverage(1.0).build());
+    }
+
+    @NotNull
     public static ImmutableVirusBreakend.Builder virusBreakendBuilder() {
         return ImmutableVirusBreakend.builder()
                 .taxidGenus(0)
@@ -42,7 +57,7 @@ public final class VirusTestFactory {
         return ImmutableAnnotatedVirus.builder()
                 .taxid(0)
                 .name(Strings.EMPTY)
-                .interpretation(Strings.EMPTY)
+                .interpretation(null)
                 .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
                 .integrations(0)
                 .percentageCovered(1.0)
@@ -50,5 +65,10 @@ public final class VirusTestFactory {
                 .expectedClonalCoverage(1.0)
                 .reported(false)
                 .virusDriverLikelihoodType(VirusLikelihoodType.HIGH);
+    }
+
+    @NotNull
+    private static VirusInterpreterData createWithVirus(@NotNull AnnotatedVirus virus) {
+        return ImmutableVirusInterpreterData.builder().addReportableViruses(virus).addAllViruses(virus).build();
     }
 }
