@@ -77,7 +77,7 @@ Field | Description
 ---|---
 NeId | Unique Id for neoepitope 
 Variant type | One of: {MISSENSE, INFRAME, OUT_OF_FRAME_FUSION, INFRAME_FUSION, FRAMESHIFT} 
-VariantInfo | Unique identifier for variant.  For point mutations = <chr>:<Position>:<ref>:<alt> ; For SV =  <chrUp>:<posUp>:<orientUp>-<chrDown>:<posDown>:<orientDown> 
+VariantInfo | Unique identifier for variant.  For point mutations = <chr>:<Position>:<ref>:<alt> ; For SV =  [chrUp]:[posUp]:[orientUp]-[chrDown]:[posDown]:[orientDown]
 GeneName | Gene name or fusion name for fusions 
 UpAminoAcids | Section of the neoepitope that matches the upstream transcript  
 DownAminoAcids | Section of the neoepitope that matches the downstream transcript (if any) 
@@ -89,7 +89,7 @@ TranscriptsDown | All unique transcripts on the up gene that support the neoepit
 Note that the precise definition of the novel segment and upstream and downstream AA depend on the type of event. The exact rules are outlined in the table below: 
   
 
-Variant Type Novel Segment | Upstream flank | Downstream flank
+Variant Type | Novel Segment | Upstream flank | Downstream flank
 ---|---|---|---
 Missense SNV/MNV* | Ref->Alt AA(s) | Up to 16 AA limited by start codon | Up to 16 AA limited by stop codon 
 Inframe* | If conservative inframe, inserted AA only else also use flanking disrupted AA on each end | Up to 16 AA limited by start codon | Up to 16 AA limited by stop codon 
