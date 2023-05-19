@@ -121,9 +121,11 @@ public class FragmentUtils
             readLowerPos = firstRead.getReferenceIndex() < firstRead.getMateReferenceIndex();
         }
 
+        boolean lowerReadFirst = readLowerPos ? firstRead.getFirstOfPairFlag() : !firstRead.getFirstOfPairFlag();
+
         return readLowerPos ?
-                new FragmentCoordinates(formKey(readCoordStr, mateCoordStr, firstReadForward), readStrandPosition)
-                : new FragmentCoordinates(formKey(mateCoordStr, readCoordStr, firstReadForward), mateStrandPosition);
+                new FragmentCoordinates(formKey(readCoordStr, mateCoordStr, lowerReadFirst), readStrandPosition)
+                : new FragmentCoordinates(formKey(mateCoordStr, readCoordStr, lowerReadFirst), mateStrandPosition);
     }
 
     public static FragmentStatus calcFragmentStatus(final Fragment first, final Fragment second)

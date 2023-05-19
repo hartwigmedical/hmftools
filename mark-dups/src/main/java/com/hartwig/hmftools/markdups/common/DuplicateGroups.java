@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.calcFragmentStatus;
 import static com.hartwig.hmftools.markdups.consensus.UmiUtils.buildUmiGroups;
+import static com.hartwig.hmftools.markdups.consensus.UmiUtils.collapseOnDuplexMatches;
 
 import java.util.Collections;
 import java.util.List;
@@ -299,37 +300,49 @@ public class DuplicateGroups
                 if(mUmiConfig.BaseDiffStats)
                     mStats.recordUmiBaseDiffs(mUmiConfig, umiGroups);
 
-                uniqueFragmentCount += umiGroups.size();
-
                 maxDuplicatePosCount = max(maxDuplicatePosCount, umiGroups.size());
             }
 
-            for(DuplicateGroup umiGroup : umiGroups)
+            allUmiGroups.addAll(umiGroups);
+        }
+
+        if(mUmiConfig.Duplex)
+        {
+            collapseOnDuplexMatches(allUmiGroups, mUmiConfig);
+        }
+
+        if(captureStats)
+        {
+            uniqueFragmentCount += allUmiGroups.size();
+        }
+
+        List<DuplicateGroup> finalUmiGroups = Lists.newArrayList();
+
+        for(DuplicateGroup umiGroup : allUmiGroups)
+        {
+            if(umiGroup.fragmentCount() == 1)
             {
-                if(umiGroup.fragmentCount() == 1)
-                {
-                    // drop any single fragments
-                    Fragment fragment = umiGroup.fragments().get(0);
-                    fragment.setStatus(NONE);
-                    fragment.setUmi(null);
-                    continue;
-                }
+                // drop any single fragments
+                Fragment fragment = umiGroup.fragments().get(0);
+                fragment.setStatus(NONE);
+                fragment.setUmi(null);
+                continue;
+            }
 
-                umiGroup.categoriseReads();
+            umiGroup.categoriseReads();
 
-                allUmiGroups.add(umiGroup);
+            finalUmiGroups.add(umiGroup);
 
-                if(captureStats)
-                {
-                    ++mStats.UmiGroups;
-                    mStats.addDuplicateGroup(umiGroup.fragmentCount());
-                }
+            if(captureStats)
+            {
+                ++mStats.UmiGroups;
+                mStats.addDuplicateGroup(umiGroup.fragmentCount());
+            }
 
-                if(umiGroup.fragmentCount() > maxUmiFragmentCount)
-                {
-                    maxUmiGroup = umiGroup;
-                    maxUmiFragmentCount = umiGroup.fragmentCount();
-                }
+            if(umiGroup.fragmentCount() > maxUmiFragmentCount)
+            {
+                maxUmiGroup = umiGroup;
+                maxUmiFragmentCount = umiGroup.fragmentCount();
             }
         }
 
@@ -338,7 +351,7 @@ public class DuplicateGroups
             mStats.recordFragmentPositions(posGroupCount, uniqueFragmentCount, maxDuplicatePosCount, maxUmiGroup);
         }
 
-        return allUmiGroups;
+        return finalUmiGroups;
     }
 
     private List<DuplicateGroup> processConsensusGroups(final List<List<Fragment>> rawDuplicateGroups)

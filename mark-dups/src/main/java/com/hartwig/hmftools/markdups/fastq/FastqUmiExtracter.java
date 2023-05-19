@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -99,7 +100,6 @@ public class FastqUmiExtracter
     private static final int READ_ITEM_QUALS = 3;
     private static final char READ_ID_START = '@';
     private static final char READ_ID_BREAK = ' ';
-    private static final char DUPLEX_UMI_DELIM = '_';
     private static final char READ_ID_DELIM = ':';
 
     private BufferedWriter createOutputWriter(final String inputFile)
@@ -214,7 +214,7 @@ public class FastqUmiExtracter
         String umiBases2 = r2ReadBuffer[READ_ITEM_BASES].substring(0, mUmiLength);
 
         // append UMIs to read Id and remove from bases and quals
-        String duplexUmiId = umiBases1 + DUPLEX_UMI_DELIM + umiBases2;
+        String duplexUmiId = umiBases1 + DEFAULT_DUPLEX_UMI_DELIM + umiBases2;
         String newReadId = readId1 + READ_ID_DELIM + duplexUmiId;
         r1ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r1ReadBuffer[READ_ITEM_ID].substring(delimIndex);
         r2ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r2ReadBuffer[READ_ITEM_ID].substring(delimIndex);

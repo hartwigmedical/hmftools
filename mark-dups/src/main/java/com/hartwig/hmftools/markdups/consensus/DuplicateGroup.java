@@ -4,7 +4,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -24,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.markdups.common.Fragment;
 
 import htsjdk.samtools.SAMRecord;
@@ -40,6 +42,7 @@ public class DuplicateGroup
     private final boolean[] mReadGroupComplete;
     private final ReadTypeId[] mPrimaryReadTypeIndex; // details for primary and mate reads
     private final String mCoordinatesKey;
+    private boolean mDuplexDetected;
 
     private static final int MAX_READ_TYPES = ReadType.values().length;
     private static final int PRIMARY_READ_TYPES = ReadType.MATE.ordinal() + 1;
@@ -54,6 +57,7 @@ public class DuplicateGroup
         mPrimaryReadTypeIndex = new ReadTypeId[PRIMARY_READ_TYPES];
         mFragmentCount = 0;
         mCoordinatesKey = fragment.coordinates().Key;
+        mDuplexDetected = false;
     }
 
     public List<Fragment> fragments() { return mFragments; }
@@ -61,6 +65,9 @@ public class DuplicateGroup
     public String coordinatesKey() { return mCoordinatesKey; }
 
     public String id() { return mId; }
+
+    public void registerDuplex() { mDuplexDetected = true; }
+    public boolean duplexDetected() { return mDuplexDetected; }
 
     public void categoriseReads()
     {
@@ -253,24 +260,6 @@ public class DuplicateGroup
         }
 
         return matchedPrimaryIndex == 0 ? ReadType.PRIMARY_SUPPLEMENTARY.ordinal() : ReadType.MATE_SUPPLEMENTARY.ordinal();
-
-        /*
-        boolean checkSuppData = suppData != null;
-
-        int index = 0;
-        for(; index < mPrimaryReadTypeIndex.length; ++index)
-        {
-            if(mPrimaryReadTypeIndex[index] == null)
-                continue;
-
-            if(checkSuppData && mPrimaryReadTypeIndex[index].supplementaryMatches(read, suppData))
-                break;
-            else if(!checkSuppData && mPrimaryReadTypeIndex[index].HasSupplementary)
-                break;
-        }
-
-        return index == ReadType.PRIMARY.ordinal() ? ReadType.PRIMARY_SUPPLEMENTARY.ordinal() : ReadType.MATE_SUPPLEMENTARY.ordinal();
-        */
     }
 
     public boolean allReadsReceived()
@@ -328,6 +317,12 @@ public class DuplicateGroup
                 {
                     consensusReadInfo = consensusReads.createConsensusRead(readGroup, mId);
                 }
+
+                // set consensus read attributes
+                consensusReadInfo.ConsensusRead.setAttribute(CONSENSUS_READ_ATTRIBUTE, reads.size());
+
+                String umiReadType = mDuplexDetected ? UmiReadType.DUPLEX.toString() : UmiReadType.SINGLE.toString();
+                consensusReadInfo.ConsensusRead.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType);
 
                 reads.add(consensusReadInfo.ConsensusRead);
             }

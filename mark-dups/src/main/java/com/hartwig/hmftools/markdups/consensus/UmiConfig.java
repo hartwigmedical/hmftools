@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.markdups.common.Constants;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -19,7 +20,8 @@ import org.apache.commons.cli.Options;
 public class UmiConfig
 {
     public final boolean Enabled;
-    public final boolean Debug;
+    public final boolean Duplex; // collapse duplex UMI groups
+    public final String DuplexDelim;
     public final boolean BaseDiffStats;
     public final boolean HighlightConsensus; // purely for viewing in IGV
     public final int PermittedBaseDiff;
@@ -30,20 +32,20 @@ public class UmiConfig
 
     // config options
     private static final String UMI_ENABLED = "umi_enabled";
+    private static final String UMI_DUPLEX = "umi_duplex";
+    private static final String UMI_DUPLEX_DELIM = "umi_duplex_delim";
     private static final String UMI_DEFINED_IDS = "umi_defined_ids";
-    private static final String UMI_DEBUG = "umi_debug";
     private static final String UMI_HIGHLIGHT = "umi_highlight";
     private static final String UMI_BASE_DIFF_STATS = "umi_base_diff_stats";
 
     public static final char READ_ID_DELIM = ':';
     public static final String READ_ID_DELIM_STR = String.valueOf(READ_ID_DELIM);
 
-    public UmiConfig(boolean enabled) { this(enabled, false, false, false); }
-
-    public UmiConfig(boolean enabled, boolean debug, boolean highlight, boolean baseDiffStats)
+    public UmiConfig(boolean enabled, boolean duplex, final String duplexDelim, boolean highlight, boolean baseDiffStats)
     {
         Enabled = enabled;
-        Debug = debug;
+        Duplex = duplex;
+        DuplexDelim = duplexDelim;
         HighlightConsensus = highlight;
         BaseDiffStats = baseDiffStats;
         PermittedBaseDiff = DEFAULT_MAX_UMI_BASE_DIFF;
@@ -58,7 +60,8 @@ public class UmiConfig
     {
         UmiConfig umiConfig = new UmiConfig(
                 cmd.hasOption(UMI_ENABLED),
-                cmd.hasOption(UMI_DEBUG),
+                cmd.hasOption(UMI_DUPLEX),
+                cmd.getOptionValue(UMI_DUPLEX_DELIM, String.valueOf(Constants.DEFAULT_DUPLEX_UMI_DELIM)),
                 cmd.hasOption(UMI_HIGHLIGHT),
                 cmd.hasOption(UMI_BASE_DIFF_STATS));
 
@@ -125,7 +128,7 @@ public class UmiConfig
     public static void addCommandLineOptions(final Options options)
     {
         options.addOption(UMI_ENABLED, false, "Use UMIs for duplicates");
-        options.addOption(UMI_DEBUG, false, "Debug options for UMIs");
+        options.addOption(UMI_DUPLEX, false, "UMI duplex enabled");
         options.addOption(UMI_DEFINED_IDS, true, "Optional set of defined UMI IDs in file");
         options.addOption(UMI_HIGHLIGHT, false, "Set consensus read to map-qual 0 to highlight in IGV");
         options.addOption(UMI_BASE_DIFF_STATS, false, "Record base difference stats");

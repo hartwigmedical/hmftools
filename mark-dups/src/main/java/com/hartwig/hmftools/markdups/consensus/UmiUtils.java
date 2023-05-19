@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.markdups.consensus;
 
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_MAX_UMI_BASE_DIFF;
+import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.FRAGMENT_REVERSED_ID;
 
 import java.util.Comparator;
 import java.util.List;
@@ -103,29 +104,32 @@ public final class UmiUtils
             ++i;
         }
 
-        // run a final check allowing
-        i = 0;
-        while(i < orderedGroups.size())
+        // run a final check allowing collapsing of UMIs with 2-base differences
+        if(orderedGroups.size() > 1)
         {
-            DuplicateGroup first = orderedGroups.get(i);
-
-            int j = i + 1;
-            while(j < orderedGroups.size())
+            i = 0;
+            while(i < orderedGroups.size())
             {
-                DuplicateGroup second = orderedGroups.get(j);
+                DuplicateGroup first = orderedGroups.get(i);
 
-                if(!exceedsUmiIdDiff(first.id(), second.id(), config.PermittedBaseDiff + 1))
+                int j = i + 1;
+                while(j < orderedGroups.size())
                 {
-                    first.fragments().addAll(second.fragments());
-                    orderedGroups.remove(j);
+                    DuplicateGroup second = orderedGroups.get(j);
+
+                    if(!exceedsUmiIdDiff(first.id(), second.id(), config.PermittedBaseDiff + 1))
+                    {
+                        first.fragments().addAll(second.fragments());
+                        orderedGroups.remove(j);
+                    }
+                    else
+                    {
+                        ++j;
+                    }
                 }
-                else
-                {
-                    ++j;
-                }
+
+                ++i;
             }
-
-            ++i;
         }
 
         return orderedGroups;
@@ -171,6 +175,60 @@ public final class UmiUtils
         }
 
         return diffs;
+    }
+
+    public static void collapseOnDuplexMatches(final List<DuplicateGroup> duplicateGroups, final UmiConfig config)
+    {
+        int i = 0;
+        while(i < duplicateGroups.size())
+        {
+            DuplicateGroup first = duplicateGroups.get(i);
+
+            int j = i + 1;
+            while(j < duplicateGroups.size())
+            {
+                DuplicateGroup second = duplicateGroups.get(j);
+
+                if(hasReversedFragmentCoords(first.coordinatesKey(), second.coordinatesKey())
+                && hasDuplexUmiMatch(first.id(), second.id(), config.DuplexDelim, config.PermittedBaseDiff))
+                {
+                    first.fragments().addAll(second.fragments());
+                    first.registerDuplex();
+                    duplicateGroups.remove(j);
+                }
+                else
+                {
+                    ++j;
+                }
+            }
+
+            ++i;
+        }
+    }
+
+    public static boolean hasReversedFragmentCoords(final String coords1, final String coords2)
+    {
+        int coord1ReversedIndex = coords1.indexOf(FRAGMENT_REVERSED_ID);
+        int coord2ReversedIndex = coords2.indexOf(FRAGMENT_REVERSED_ID);
+
+        if(coord1ReversedIndex == coord2ReversedIndex)
+            return false;
+
+        if(coord1ReversedIndex > 0)
+            return coords1.substring(0, coord1ReversedIndex - 1).equals(coords2);
+        else
+            return coords2.substring(0, coord2ReversedIndex - 1).equals(coords1);
+    }
+
+    public static boolean hasDuplexUmiMatch(final String first, final String second, final String duplexDelim, int permittedDiff)
+    {
+        String[] umiParts1 = first.split(duplexDelim, 2);
+        String[] umiParts2 = second.split(duplexDelim, 2);
+
+        if(umiParts1.length != 2 || umiParts2.length != 2)
+            return false;
+
+        return !exceedsUmiIdDiff(umiParts1[0], umiParts2[1], permittedDiff) && !exceedsUmiIdDiff(umiParts1[1], umiParts2[0], permittedDiff);
     }
 
     private static class SizeComparator implements Comparator<DuplicateGroup>

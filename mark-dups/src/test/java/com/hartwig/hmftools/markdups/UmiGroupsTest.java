@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.markdups;
 
 import static com.hartwig.hmftools.markdups.TestUtils.createFragment;
+import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 import static com.hartwig.hmftools.markdups.consensus.UmiConfig.extractUmiIdFromReadId;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.markdups.consensus.UmiUtils.buildUmiGroups;
 import static com.hartwig.hmftools.markdups.consensus.UmiUtils.exceedsUmiIdDiff;
+import static com.hartwig.hmftools.markdups.consensus.UmiUtils.hasDuplexUmiMatch;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -24,7 +26,8 @@ public class UmiGroupsTest
 {
     public static final String FIXED_READ_ID = "123:ABC:1:4455:";
 
-    private static final UmiConfig UMI_CONFIG = new UmiConfig(true);
+    private static final UmiConfig UMI_CONFIG = new UmiConfig(
+            true, false, "", false, false);
 
     @Test
     public void testUmiUtils()
@@ -49,6 +52,25 @@ public class UmiGroupsTest
         assertTrue(exceedsUmiIdDiff(readId2, readId4));
         assertFalse(exceedsUmiIdDiff(readId4, readId5));
         assertTrue(exceedsUmiIdDiff(readId5, readId6));
+    }
+
+    @Test
+    public void testDuplexUmis()
+    {
+        UmiConfig umiConfig = new UmiConfig(
+                true, true, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), false, false);
+
+        String umiId1 = "TATCGC_AAGTCG";
+        assertFalse(hasDuplexUmiMatch(umiId1, umiId1, umiConfig.DuplexDelim, umiConfig.PermittedBaseDiff));
+
+        String umiId2 = "AAGTCC_TATCGG";
+
+        assertTrue(hasDuplexUmiMatch(umiId1, umiId2, umiConfig.DuplexDelim, umiConfig.PermittedBaseDiff));
+
+        // too manu different base
+        umiId2 = "AAGCCC_TATCGC";
+
+        assertFalse(hasDuplexUmiMatch(umiId1, umiId2, umiConfig.DuplexDelim, umiConfig.PermittedBaseDiff));
     }
 
     @Test
@@ -124,7 +146,7 @@ public class UmiGroupsTest
     @Test
     public void testDefinedUmis()
     {
-        UmiConfig umiConfig = new UmiConfig(true);
+        UmiConfig umiConfig = new UmiConfig(true, false, "", false, false);
         String definedUmi1 = "AAAGGG";
         String definedUmi2 = "TTTAAA";
         String definedUmi3 = "CCCAAA";

@@ -11,6 +11,8 @@ public class FragmentCoordinates
 
     public static final FragmentCoordinates NO_COORDS = new FragmentCoordinates("", 0, true);
 
+    public static final String FRAGMENT_REVERSED_ID = "N";
+
     public FragmentCoordinates(final String key, final int initialPosition) { this(key, initialPosition, false); }
 
     public FragmentCoordinates(final String key, final int initialPosition, boolean incomplete)
@@ -32,7 +34,7 @@ public class FragmentCoordinates
 
     public static String formKey(final String firstCoord, final String secondCoord, final boolean firstForward)
     {
-        return firstForward ? format("%s_%s", firstCoord, secondCoord) : format("%s_%s_N", firstCoord, secondCoord);
+        return firstForward ? format("%s_%s", firstCoord, secondCoord) : format("%s_%s_%s", firstCoord, secondCoord, FRAGMENT_REVERSED_ID);
     }
 
     public static String formKey(final String readCoord, final int insertSize)

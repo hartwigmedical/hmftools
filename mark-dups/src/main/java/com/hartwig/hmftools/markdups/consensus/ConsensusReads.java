@@ -274,7 +274,6 @@ public class ConsensusReads
         record.setFlags(initialRead.getFlags());
         record.setDuplicateReadFlag(false); // being the new primary
         initialRead.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
-        record.setAttribute(CONSENSUS_READ_ATTRIBUTE, reads.size());
 
         record.setInferredInsertSize(initialRead.getInferredInsertSize());
         return record;
@@ -300,7 +299,6 @@ public class ConsensusReads
         record.setDuplicateReadFlag(false);
 
         read.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
-        record.setAttribute(CONSENSUS_READ_ATTRIBUTE, 1);
         record.setInferredInsertSize(read.getInferredInsertSize());
 
         return record;

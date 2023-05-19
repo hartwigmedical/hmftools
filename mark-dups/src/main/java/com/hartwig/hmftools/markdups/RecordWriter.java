@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
@@ -27,6 +28,7 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
 import com.hartwig.hmftools.markdups.consensus.DuplicateGroup;
@@ -222,7 +224,7 @@ public class RecordWriter
             writer.write(",InsertSize,MateChr,MatePosStart,Duplicate,CalcDuplicate,MateCigar,Coords");
 
             if(mConfig.UMIs.Enabled)
-                writer.write(",Umi");
+                writer.write(",Umi,UmiType");
 
             writer.write(",AvgBaseQual,MapQual,SuppData,Flags,FirstInPair,ReadReversed,Unmapped,MateUnmapped,Supplementary,Secondary");
 
@@ -272,7 +274,8 @@ public class RecordWriter
 
             if(mConfig.UMIs.Enabled)
             {
-                mReadWriter.write(format(",%s", umiId != null ? umiId : ""));
+                String umiType = read.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+                mReadWriter.write(format(",%s,%s", umiId != null ? umiId : "", umiType != null ? umiType : UmiReadType.NONE));
             }
 
             mReadWriter.write(format(",%.2f,%d,%s,%d",

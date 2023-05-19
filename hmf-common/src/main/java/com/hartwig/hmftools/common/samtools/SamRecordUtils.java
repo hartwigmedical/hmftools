@@ -26,6 +26,7 @@ public final class SamRecordUtils
     public static final String MATE_CIGAR_ATTRIBUTE = "MC";
     public static final String NUM_MUTATONS_ATTRIBUTE = "NM";
     public static final String CONSENSUS_READ_ATTRIBUTE = "CR";
+    public static final String UMI_TYPE_ATTRIBUTE = "UT";
     public static final String UMI_ATTRIBUTE = "UI";
     public static final String SECONDARY_ATTRIBUTE = "HI";
     public static final String NO_MATE_CHROMOSOME = "*";
