@@ -11,8 +11,7 @@ TO DO
 TO DO
 
 Argument | Description 
----|---
- | 
+---|--- 
 
 ### Optional Arguments
 
@@ -20,9 +19,6 @@ TO DO
 
 Argument | Description 
 ---|---
- | 
- 
-
  
 ## Algorithm
 The neoepitope pipeline (Neo) works in 2 main steps to form a comprehensive set of neoepitope and neopeptide predictions from our DNA pipeline output: 
@@ -168,9 +164,9 @@ SkippedAcceptors | # of splice acceptors skipped to from fusion transcript (not 
 
 Using the neoepitope predictions, we determine all candidate pHLA ({peptide,allele}) combinations that may be presented by the cell. For each candidate neoepitope, we consider all peptides between 8 and 12 length which either overlap the novel amino acid sequence or overlap BOTH the upstream and downstream amino acid sequence.   
 
-For each pHLA we determine a presentation likelihood (see APPENDIX 1), a and a  number of immunogenic features.  
+For each pHLA we determine a presentation likelihood (see ADDENDUM 1), a and a  number of immunogenic features.  
 
-The presentation likelihood is also adjusted based on the observed or expected expression per neoepitope to make an expression likelihood (see APPENDIX 2).   
+The presentation likelihood is also adjusted based on the observed or expected expression per neoepitope to make an expression likelihood (see ADDENDUM 2).   
 
 The outputs are as follows:
 Field | Description 
@@ -195,7 +191,7 @@ ExpLikelihoodRank | Expression adjusted presentation percentile by allele
 RecogSim | TO DO
 OtherAlleleRecogSim | TO DO
 
-#### Appendix 1: pHLA presentation likelihood algorithm 
+#### ADDENDUM 1: pHLA presentation likelihood algorithm 
 General assumptions and conventions regarding positions, peptide lengths and HLA allele binding motifs 
 
 ##### Position Independence 
@@ -212,7 +208,6 @@ The flanking amino acids upstream and downstream are known to impact cleavage an
 ##### Binding Motifs  
 We utilize the same assumptions as netMHCPan (Nielsen et al, 2007) which is that only proximate (within 4 angstroms across a representative set of HLA-A/ HLA-B structures) polymorphic residues may affect binding, which yields 34 distinct positions with the following specificities. 
 
-
 Position | Proximate Polymorphic Amino Acid Residues 
 ---|---
 0 | 31,83,86,87,90,183,187,191,195 
@@ -225,201 +220,116 @@ Position | Proximate Polymorphic Amino Acid Residues
 7 | 97,100,101,171 
 8 | 98,101,104,105,108,119,121,140,142,167,171 
 
-n general we observe that positions with identical binding motifs observe highly similar amino acid weight distributions in mass spectrometry observations.  
+In general we observe that positions with identical binding motifs observe highly similar amino acid weight distributions in mass spectrometry observations.  
 
-Binding Motif similarity 
-
- 
-
+##### Binding Motif similarity 
 We assume that binding motifs with similarity tend to have similar bindings. We estimate binding motif similarity by summing the log likelihoods from the BLOSUM62 substitution matrix across all binding positions.  
 
-Training & Validation Data 
-
- 
-
-We have curated IEDB and the literature for high quality unbiased monoallelic mass spectrometry results including validating that the datasets were monoallelic and also assessing whether the study did not appear to contain an empirically high rate of likely false positive results (ie. many (full details here). Binding affinity results are not used in the training data due to their inherent experimental selection bias. Overall we identified 20 studies (all included in IEDB) with 413k MS (mass spectrometry) observations across 103 alleles to be used in our training set.   For 8 specific alleles which had no mono-allelic results, but where there was sufficient high quality multi-allelic data (specifically A*69:01, B*35:08, B*41:01, A*26:08, C*15:05, B*44:09,B*44:27 & B*44:28) we included the results from 4 additional studies.     The data is sourced from IEDB using the query in Appendix 4.  
-
- 
+##### Training & Validation Data 
+We have curated IEDB and the literature for high quality unbiased monoallelic mass spectrometry results including validating that the datasets were monoallelic and also assessing whether the study did not appear to contain an empirically high rate of likely false positive results (ie. many (full details here). Binding affinity results are not used in the training data due to their inherent experimental selection bias. Overall we identified 20 studies (all included in IEDB) with 413k MS (mass spectrometry) observations across 103 alleles to be used in our training set.   For 8 specific alleles which had no mono-allelic results, but where there was sufficient high quality multi-allelic data (specifically A*69:01, B*35:08, B*41:01, A*26:08, C*15:05, B*44:09,B*44:27 & B*44:28) we included the results from 4 additional studies.     The data is sourced from IEDB
 
 Finally, we also included monoallelic data from the recent Pyke et al (Sherpa) preprint (https://www.biorxiv.org/content/10.1101/2021.04.30.442203v2) which has results from 25 monoallelic cell lines including 6 additional cell lines not represented in the IEDB data.   To eliminate potential experimental artefacts, the Sherpa data was also filtered to include only peptides that were found to be bound to 2 or less distinct alleles.   
 
- 
-
 Any {peptide;allele} observations found in more than 1 dataset may be counted multiple times towards position matrices. We also have determined the 3 bases flanking both upstream and downstream for each peptide where possible by matching the peptides to the reference proteome.  10% of the full data is held back as a validation dataset.   
 
-Construction of Position Weight Matrix (PWM) 
-
- 
-
+##### Construction of Position Weight Matrix (PWM) 
 A position weight matrix is constructed per allele per peptide length. To deal with sparsity of data for specific alleles and peptide lengths, we use the following principles to learn from other peptide lengths and alleles: 
-
- 
-
-Peptide lengths may learn from other lengths when they lack sufficient allele and length specific data. The more similar the peptide length, the higher the weighting 
-
- 
-
-Alleles may learn from other alleles with identical or similar binding motifs for that position when they lack sufficient allele specific data. The more similar the binding motif, the higher the weighting 
-
- 
+- Peptide lengths may learn from other lengths when they lack sufficient allele and length specific data. The more similar the peptide length, the higher the weighting 
+- Alleles may learn from other alleles with identical or similar binding motifs for that position when they lack sufficient allele specific data. The more similar the binding motif, the higher the weighting 
 
 This is implemented in a 2 step process. First we consolidate all specific length counts into a single length weighted count (LWCount) for the tested peptide length for each allele using the following formula: 
-
- 
-
-LWCount(A,L,P,AA) = Count(A,L,P,AA) + LWF * SUM(l<>L) [Count(A,l,P,AA) /abs(L-l)] * maxLW / max( LWF * SUM(l<>L)[Count(A,I,P) /abs(L-l)],maxLW) 
-
+```
+ LWCount(A,L,P,AA) = Count(A,L,P,AA) + LWF * SUM(l<>L) [Count(A,l,P,AA) /abs(L-l)] * maxLW / max( LWF * SUM(l<>L)[Count(A,I,P) /abs(L-l)],maxLW) 
+```
 Then, using the motif m of the tested allele, we consolidate all matching and similar binding motif observations from other alleles to obtain a total weighted count (WCount) using the following formula: 
-
+```
 WCount(A,L,P,AA) = LWCount(A,L,P,AA) + MWF* SUM(a<>A) [ LWCount(a,L,P,AA) * (2^(LogSim(m,M)) / MAX(i=all motifs)[2^(LogSim(i,M))]] * maxMW / max(MWF * SUM(a<>A) [ LWCount(a,L,P) * (2^(LogSim(m,M)) / MAX(i=all motifs)[2^(LogSim(i,M))]],maxMW)  
-
- 
-
-where:  
-
+```
+ where:  
+```
 A=allele  
-
 L= length  
-
 P= Peptide position  
-
 AA = amino acid  
-
 M = binding motif of allele A at position P 
-
 LWF = length weight factor (<=1; default = 0.25) 
-
 MWF = motif weight factor (<=1; default = 0.25) 
-
 maxLW = max length weight (default = 200) 
-
 maxMW = motif weight factor (default = 200) 
-
 Obs(a,l) = observations of peptides of binding allele a and peptide length l 
-
 LogSim(a,b) = Blosum62 log similarity of motifs a and b summed over all motif positions 
-
+```
  
-
 The output of this is a final weighted position weight matrix for each allele and length.  
 
-Scoring and ranking per allele per peptide length 
-
+##### Scoring and ranking per allele per peptide length 
 Each peptide is scored based on the positional amino acid frequencies relative to the amino acid frequency in the proteome: 
-
- 
-
+```
 PeptideScore = Sum[Log2(max(P(x,i),0.005)/Q(x))]  
-
- 
-
+```
 where 
-
+```
 P(x,i) = % weight of amino acid = x at position = i (note for C we use 3*weight to correct for MS bias) 
-
 Q(x) = frequency of amino acid = x in the proteome 
-
- 
-
+```
 An additional flank score based on a pan allele flanking PWM is calculated as follows: 
-
- 
-
-FlankScore = Sum(i=U3-U1,D1-D3)[Log2(P(x,i)/Q(x))] 
-
- 
-
+```
+ FlankScore = Sum(i=U3-U1,D1-D3)[Log2(P(x,i)/Q(x))] 
+```
 As has been noted previously by other groups, we do observe enrichment when U1 = ‘M*’ i.e. the first base of a transcript or D1 = ‘X’ the stop codon of a transcript, but not for the other bases in the flanks. Hence for the U1 and D1 base we set the PWM score to be the observed enrichment for ‘M*’ (approximately 2x) and ‘X’ (approximately 4x) respectively. For the other 2 flanking bases on either side we observe no further enrichment in ‘M*’ or ‘X’ and hence set the PWM score simply to 0 (no enrichment or depletion) if they overlap the start or end of the transcript.  
 
- 
-
 The total score is then set to: 
-
- 
-
-TotalScore = PeptideScore + FlankScore 
-
- 
-
+```
+ TotalScore = PeptideScore + FlankScore 
+```
 The score is converted to a binding rank percentile (per allele per peptide length) by comparing to the percentile scores compared to scores for 100k peptides of the same length randomly from the proteome (note that random peptides are excluded if they are found to be binders already in the MS results). Where flanks are available the rank is given relative to the total score distribution and where not available relative to just the peptide score distribution. 
 
-Relative presentation likelihood and ranking per allele (pan peptide length) 
-
- 
-
+##### Relative presentation likelihood and ranking per allele (pan peptide length) 
 To assess the relative likelihood of presenting peptides of different lengths for a particular allele given the binding ranks, we determine the relative density of mass spectrometry observations in our training set per peptide length per binding rank percentile bucket. The relative likelihood is calculated as: 
-
- 
-
+```
 RelPresentationLikelihood = MSobs(A,Rb,L)/Size(Rb)/SUM(Rb,L)[MSobs(A,Rb,L)/ Size(Rb)] 
-
- 
-
+```
 Where 
-
+```
 A = Allele 
-
 L = Peptide Length 
-
 Rb = Rank Bucket. Exponential buckets in powers of 2 are used to reflect the relative importance of the very low binding ranks: {0.00005,0.0001,0.0002,0.0004,...,0.8192} 
-
- 
-
+```
 To deal with sparse MS data, particularly for non-9mers, the density of a given ranking bucket is set to be at least as high as any lower ranked bucket.   Furthermore, so that we can always rank the higher buckets regardless of the number of observations, any bucket with 0 observations is padded with observations of min(totalObservationsPerAllele/1000,0.25) for bucketed rank < 1%, or half the observations of the preceding ranked bucket where the bucketed rank > 1% 
-
  
-
 The output of this algorithm is a set of weights per bucket per peptide length reflecting the relative likelihood of an observation from that bucket being presented on the surface in that cell. For individual peptides we can predict an exact relative likelihood by interpolating the rank between the bucketed values 
-
- 
 
 An example of the output for A2902 is shown below indicating that a 9mer with 0.00005 rank is ~28x (ie 0.3007/0.0116) more likely to be presented than an 8mer with the same rank and ~6x (ie 0.3007/0.0520) more likely to be presented as a 9mer with a rank of 0.0004. 
 
   TO DO - INSERT IMAGE
   
-he relative presentation likelihood is calculated for each 4 digit and 2 digit allele with more than 200 MS observations in the training data as well globally for HLA-A, HLA-B and HLA-C. Any 4 digit allele which does not have sufficient MS observations is assigned the likelihoods of the 2 digit allele if available or if not the likelihoods for the HLA gene as a whole. 
-
- 
+The relative presentation likelihood is calculated for each 4 digit and 2 digit allele with more than 200 MS observations in the training data as well globally for HLA-A, HLA-B and HLA-C. Any 4 digit allele which does not have sufficient MS observations is assigned the likelihoods of the 2 digit allele if available or if not the likelihoods for the HLA gene as a whole. 
 
 A presentation percentile rank is calculated for each allele across all lengths by comparing the relative likelihood of the peptide compared to that of all negative decoy peptides (equal weighted across 8,9,10 and 11mers to give best compatibility to other tool rankings). 
 
- 
-
-Presentation performance Assessment & Optimisation 
-
- 
-
+##### Presentation performance Assessment & Optimisation 
 For performance assessment compared to mass spectrometry experiments, we assume that the 100k random peptides (after filtering any {peptide,allele} combinations included in the training data) are not binders. This is a conservative assumption as some of the highest ranked random peptides would certainly be expected to bind. Since only the top ~0.1% of peptides are expected to strongly bind, we need a performance metric which focuses on these binders rather than an AUC measurement which may be dominated by the relative performance of very weak predictions. Hence we choose a TPR metric based on a strict binding rank cutoff. To capture the shape of the curve we use a mean across 5 different thresholds: 
-
+```
+ meanTPR = mean(TPR0.025%,TPR0.05%,TPR0.1%,TPR0.2%,TPR0.4%) 
+```
  
+### ADDENDUM 2: Expression adjusted presentation likelihood algorithm 
 
-meanTPR = mean(TPR0.025%,TPR0.05%,TPR0.1%,TPR0.2%,TPR0.4%) 
- 
-Appendix 2: Expression adjusted presentation likelihood algorithm 
-
-Training and validation data 
-
- 
-
+##### Training and validation data 
 For training the impact of expression on presentation likelihood we use the subset of the mass spectrometry training dataset included with the HLAthena publication (pubmed: 31844290 & 28228285) together with the TPM estimates provided with this publication for the B.721.221 cell line.   For the purpose of the training the TPM of the gene is assumed to be the TPM of the transcript containing the epitope. 
 
-TPM adjusted likelihood rank 
-
+##### TPM adjusted likelihood rank 
 To determine the impact TPM expression has on presentation we compared the TPM of the MS identified peptides of strong predicted binders (LRank<0.1%) found to be presented in the HLAthena training data to all predicted strong binders from the proteome for the same alleles. For each log2 TPM bucket we calculate the proportion of pHLA combinations that are found to be presented.   We find this to be a very strong relationship, ranging from a <<1% chance of presentation where TPM < 1 up to higher than 20% chance where TPM > 1000:  
 
  TO DO: INSERT IMAGE
 
 Using this observed rate of TPM we can calculate: 
-
- 
-
-ExpAdjLikelihood = PresentationLikelihood * TPMLikelihood / [PresentationLikelihood * TPMLikelihood + (1-PresentationLikelihood) * (1-TPMLikelihood)] 
-
- 
-
+```
+ ExpAdjLikelihood = PresentationLikelihood * TPMLikelihood / [PresentationLikelihood * TPMLikelihood + (1-PresentationLikelihood) * (1-TPMLikelihood)] 
+```
 We then calculate a new overall rank globally across all pHLA using the expression adjusted likelihood compared to the same randomly selected peptides. 
 
   
-## Know issues & future improvements  
+## Known issues & future improvements  
   
 ## Version History and Download Links
