@@ -77,7 +77,7 @@ Field | Description
 ---|---
 NeId | Unique Id for neoepitope 
 Variant type | One of: {MISSENSE, INFRAME, OUT_OF_FRAME_FUSION, INFRAME_FUSION, FRAMESHIFT} 
-VariantInfo | Unique identifier for variant.  For point mutations = <chr>:<Position>:<ref>:<alt> ; For SV =  [chrUp]:[posUp]:[orientUp]-[chrDown]:[posDown]:[orientDown]
+VariantInfo | Unique identifier for variant.  For point mutations = [chr]:[position]:[ref]:[alt] ; For SV =  [chrUp]:[posUp]:[orientUp]-[chrDown]:[posDown]:[orientDown]
 GeneName | Gene name or fusion name for fusions 
 UpAminoAcids | Section of the neoepitope that matches the upstream transcript  
 DownAminoAcids | Section of the neoepitope that matches the downstream transcript (if any) 
