@@ -100,6 +100,6 @@ public class Mismatch
         return sj.toString();
     }
 
-    public String toString() { return format("type(%s) item(%) diffs(%d)",
+    public String toString() { return format("type(%s) item(%s) diffs(%d)",
             MismatchType, RefItem != null ? RefItem.key() : NewItem.key(), DiffValues.size()); }
 }

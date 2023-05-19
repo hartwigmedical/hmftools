@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.compar.mutation;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
 import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
@@ -29,6 +31,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -218,7 +221,12 @@ public class SomaticVariantData implements ComparableItem
         String ref = context.getReference().getBaseString();
         String alt = !context.getAlternateAlleles().isEmpty() ? context.getAlternateAlleles().get(0).toString() : ref;
 
-        VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(context);
+        VariantImpact variantImpact;
+
+        if(context.hasAttribute(VAR_IMPACT))
+            variantImpact = VariantImpactSerialiser.fromVariantContext(context);
+        else
+            variantImpact = fromSnpEffAttributes(context);
 
         return new SomaticVariantData(
                 chromosome, position, ref, alt, VariantType.type(context),
@@ -265,4 +273,52 @@ public class SomaticVariantData implements ComparableItem
                 filters);
     }
 
+    private static final String SNPEFF_WORST = "SEW";
+    private static final String SNPEFF_CANONICAL = "SEC";
+
+    private static final VariantImpact INVALID_IMPACT = new VariantImpact(
+            "", "", "", UNDEFINED, "", "",
+            false, "", UNDEFINED, 0);
+
+    private static VariantImpact fromSnpEffAttributes(final VariantContext context)
+    {
+        if(!context.hasAttribute(SNPEFF_WORST) || !context.hasAttribute(SNPEFF_CANONICAL))
+            return INVALID_IMPACT;
+
+        final List<String> worst = context.getAttributeAsStringList(SNPEFF_WORST, "");
+        final List<String> canonical = context.getAttributeAsStringList(SNPEFF_CANONICAL, "");
+
+        String canonicalGeneName = "";
+        String canonicalEffect = "";
+        String canonicalTranscript = "";
+        CodingEffect canonicalCodingEffect = UNDEFINED;
+        String canonicalHgvsCodingImpact = "";
+        String canonicalHgvsProteinImpact = "";
+        boolean canonicalSpliceRegion = false;
+        String otherReportableEffects = "";
+        CodingEffect worstCodingEffect = UNDEFINED;
+        int genesAffected = 0;
+
+        if(worst.size() == 5)
+        {
+            worstCodingEffect = CodingEffect.valueOf(worst.get(3));
+            genesAffected = Integer.parseInt(worst.get(4));
+        }
+
+        if(canonical.size() == 6)
+        {
+            canonicalGeneName = canonical.get(0);
+            canonicalTranscript = canonical.get(1);
+            canonicalEffect = canonical.get(2);
+            canonicalCodingEffect = CodingEffect.valueOf(canonical.get(3));
+            canonicalHgvsCodingImpact = canonical.get(4);
+            canonicalHgvsProteinImpact = canonical.get(5);
+
+            canonicalSpliceRegion = canonicalEffect.contains("splice");
+        }
+
+        return new VariantImpact(
+                canonicalGeneName, canonicalTranscript, canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact,
+                canonicalHgvsProteinImpact, canonicalSpliceRegion, otherReportableEffects, worstCodingEffect, genesAffected);
+    }
 }
