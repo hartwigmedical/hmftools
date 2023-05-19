@@ -394,8 +394,32 @@ For performance assessment compared to mass spectrometry experiments, we assume 
  
 
 meanTPR = mean(TPR0.025%,TPR0.05%,TPR0.1%,TPR0.2%,TPR0.4%) 
+ 
+Appendix 2: Expression adjusted presentation likelihood algorithm 
+
+Training and validation data 
+
+ 
+
+For training the impact of expression on presentation likelihood we use the subset of the mass spectrometry training dataset included with the HLAthena publication (pubmed: 31844290 & 28228285) together with the TPM estimates provided with this publication for the B.721.221 cell line.   For the purpose of the training the TPM of the gene is assumed to be the TPM of the transcript containing the epitope. 
+
+TPM adjusted likelihood rank 
+
+To determine the impact TPM expression has on presentation we compared the TPM of the MS identified peptides of strong predicted binders (LRank<0.1%) found to be presented in the HLAthena training data to all predicted strong binders from the proteome for the same alleles. For each log2 TPM bucket we calculate the proportion of pHLA combinations that are found to be presented.   We find this to be a very strong relationship, ranging from a <<1% chance of presentation where TPM < 1 up to higher than 20% chance where TPM > 1000:  
+
+ TO DO: INSERT IMAGE
+
+Using this observed rate of TPM we can calculate: 
+
+ 
+
+ExpAdjLikelihood = PresentationLikelihood * TPMLikelihood / [PresentationLikelihood * TPMLikelihood + (1-PresentationLikelihood) * (1-TPMLikelihood)] 
+
+ 
+
+We then calculate a new overall rank globally across all pHLA using the expression adjusted likelihood compared to the same randomly selected peptides. 
 
   
-  
+## Know issues & future improvements  
   
 ## Version History and Download Links
