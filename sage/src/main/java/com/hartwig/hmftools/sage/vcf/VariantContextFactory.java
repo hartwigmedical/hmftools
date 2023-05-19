@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.MIXED_SOMATIC_GERMLINE;
@@ -99,6 +100,9 @@ public final class VariantContextFactory
                 .attribute(AVG_BASE_QUAL, (int)counter.averageAltBaseQuality())
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
                 .alleles(NO_CALL);
+
+        if(counter.umiTypeCounts() != null)
+            builder.attribute(UMI_TYPE_COUNTS, counter.umiTypeCounts());
 
         return builder.make();
     }

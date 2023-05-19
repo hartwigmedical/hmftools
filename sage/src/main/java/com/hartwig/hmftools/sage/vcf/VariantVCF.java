@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.sage.vcf;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_MAX;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT_DESCRIPTION;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY_DESCRIPTION;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS_DESCRIPTION;
 
 import java.util.Collections;
 import java.util.List;
@@ -160,16 +163,19 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_DEPTH, 2, VCFHeaderLineType.Integer, "Raw allelic depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_BASE_QUALITY, 2, VCFHeaderLineType.Integer, "Raw allelic base quality"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 7, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, RC_MAX, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
-                READ_CONTEXT_QUALITY, 7, VCFHeaderLineType.Integer, READ_CONTEXT_QUALITY_DESCRIPTION));
+                READ_CONTEXT_QUALITY, RC_MAX, VCFHeaderLineType.Integer, READ_CONTEXT_QUALITY_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(STRAND_BIAS, 1, VCFHeaderLineType.Float, STRAND_BIAS_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                UMI_TYPE_COUNTS, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESCRIPTION));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_EVENTS, 1, VCFHeaderLineType.Integer, READ_CONTEXT_EVENTS_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "Read context core"));
@@ -206,7 +212,15 @@ public class VariantVCF implements AutoCloseable
     public static void appendHeader(final VCFHeader header)
     {
         if(!header.hasFormatLine(AVG_BASE_QUAL))
+        {
             header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
+        }
+
+        if(!header.hasFormatLine(UMI_TYPE_COUNTS))
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(
+                    UMI_TYPE_COUNTS, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESCRIPTION));
+        }
     }
 
     @Override

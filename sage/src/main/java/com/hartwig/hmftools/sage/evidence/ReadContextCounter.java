@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_ALT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_CORE;
@@ -42,6 +43,7 @@ import static htsjdk.samtools.CigarOperator.S;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -94,6 +96,7 @@ public class ReadContextCounter implements VariantHotspot
 
     private List<Integer> mLocalPhaseSets;
     private List<int[]> mLpsCounts;
+    private int[] mUmiTypeCounts;
 
     public ReadContextCounter(
             final int id, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
@@ -133,6 +136,7 @@ public class ReadContextCounter implements VariantHotspot
 
         mLocalPhaseSets = null;
         mLpsCounts = null;
+        mUmiTypeCounts = null;
     }
 
     public int id() { return mId; }
@@ -207,6 +211,7 @@ public class ReadContextCounter implements VariantHotspot
 
     public List<Integer> localPhaseSets() { return mLocalPhaseSets; }
     public List<int[]> lpsCounts() { return mLpsCounts; }
+    public int[] umiTypeCounts() { return mUmiTypeCounts; }
 
     public boolean exceedsMaxCoverage() { return mCounts[RC_TOTAL] >= MaxCoverage; }
 
@@ -334,6 +339,10 @@ public class ReadContextCounter implements VariantHotspot
                 }
 
                 countStrandedness(record);
+
+                if(sageConfig.TrackUMIs)
+                    countUmiType(record);
+
                 checkImproperCount(record);
                 return SUPPORT;
             }
@@ -360,6 +369,10 @@ public class ReadContextCounter implements VariantHotspot
             logReadEvidence(sampleId, record, "REALIGNED", readIndex);
             rawContext.updateSupport(false, rawContext.AltSupport);
             registerRawSupport(rawContext);
+
+            if(sageConfig.TrackUMIs)
+                countUmiType(record);
+
             return SUPPORT;
         }
         else if(realignment.Type == CORE_PARTIAL)
@@ -681,6 +694,23 @@ public class ReadContextCounter implements VariantHotspot
             mForwardStrand++;
         else
             mReverseStrand++;
+    }
+
+    private void countUmiType(final SAMRecord record)
+    {
+        if(mUmiTypeCounts == null)
+            mUmiTypeCounts = new int[UmiReadType.values().length];
+
+        String umiType = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+
+        if(umiType == null)
+        {
+            ++mUmiTypeCounts[UmiReadType.NONE.ordinal()];
+            return;
+        }
+
+        UmiReadType umiReadType = UmiReadType.valueOf(umiType);
+        ++mUmiTypeCounts[umiReadType.ordinal()];
     }
 
     private int getMaxRealignDistance(final SAMRecord record)

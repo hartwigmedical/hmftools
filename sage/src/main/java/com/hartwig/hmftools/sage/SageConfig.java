@@ -55,40 +55,42 @@ public class SageConfig
     public final String SampleDataDir;
     public final String ResourceDir;
 
-    public final boolean AppendMode;
-    public final boolean SyncFragments;
+    public final String RefGenomeFile;
+    public final RefGenomeVersion RefGenVersion;
+    public final String HighConfidenceBed;
+    public final String CoverageBed;
+    public final String OutputFile;
     public final String PanelBed;
     public final boolean PanelOnly;
     public final String Hotspots;
     public final FilterConfig Filter;
     public final QualityConfig Quality;
     public final QualityRecalibrationConfig QualityRecalibration;
-    public final List<String> SpecificChromosomes;
-    public final Set<Integer> SpecificPositions;
-    public final List<ChrBaseRegion> SpecificRegions;
     public final boolean IncludeMT;
+    public final boolean SyncFragments;
     public final int RegionSliceSize;
     public final int MinMapQuality;
     public final int MaxReadDepth;
     public final int MaxReadDepthPanel;
     public final int ReadContextFlankSize;
     public final int ExpectedReadLength;
-
-    public final String RefGenomeFile;
-    public final RefGenomeVersion RefGenVersion;
-    public final String HighConfidenceBed;
-    public final String CoverageBed;
-    public final String OutputFile;
-    public final boolean LogEvidenceReads;
     public final ValidationStringency BamStringency;
 
     public final String Version;
     public final int Threads;
+
+    public final boolean AppendMode;
+    public final boolean TrackUMIs;
+
+    // debug
+    public final List<String> SpecificChromosomes;
+    public final Set<Integer> SpecificPositions;
+    public final List<ChrBaseRegion> SpecificRegions;
+    public final boolean LogEvidenceReads;
     public final boolean LogLpsData;
     public final double PerfWarnTime;
 
     private boolean mIsValid;
-
 
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
     private static final String RESOURCE_DIR = "resource_dir";
@@ -112,6 +114,7 @@ public class SageConfig
     private static final String INCLUDE_MT = "include_mt";
     private static final String EXPECTED_READ_LENGTH = "read_length";
     private static final String SYNC_FRAGMENTS = "sync_fragments";
+    private static final String TRACK_UMIS = "track_umis";
 
     private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
@@ -201,6 +204,8 @@ public class SageConfig
         Filter = new FilterConfig(cmd);
         Quality = new QualityConfig(cmd);
         QualityRecalibration = new QualityRecalibrationConfig(cmd);
+
+        TrackUMIs = AppendMode && cmd.hasOption(TRACK_UMIS);
 
         PanelOnly = containsFlag(cmd, PANEL_ONLY);
         LogLpsData = cmd.hasOption(LOG_LPS_DATA);
@@ -356,6 +361,7 @@ public class SageConfig
         options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
         options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence in panel [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
         options.addOption(SYNC_FRAGMENTS, false, "Handle overlapping fragment reads in evidence phase");
+        options.addOption(TRACK_UMIS, false, "Record counts of UMI types");
         options.addOption(LOG_EVIDENCE_READS, false, "Write evidence read data");
         addValidationStringencyOption(options);
 
@@ -401,6 +407,7 @@ public class SageConfig
         RefGenVersion = V37;
         BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
         AppendMode = false;
+        TrackUMIs = false;
         SyncFragments = false;
         LogEvidenceReads = false;
     }
