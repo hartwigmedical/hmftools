@@ -319,7 +319,7 @@ public class DuplicateGroup
                 }
 
                 // set consensus read attributes
-                consensusReadInfo.ConsensusRead.setAttribute(CONSENSUS_READ_ATTRIBUTE, reads.size());
+                consensusReadInfo.ConsensusRead.setAttribute(CONSENSUS_READ_ATTRIBUTE, readGroup.size());
 
                 String umiReadType = mDuplexDetected ? UmiReadType.DUPLEX.toString() : UmiReadType.SINGLE.toString();
                 consensusReadInfo.ConsensusRead.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType);

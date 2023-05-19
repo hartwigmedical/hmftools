@@ -123,7 +123,7 @@ public class FragmentUtilsTest
         read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
 
         fragmentCoords = getFragmentCoordinates(read);
-        assertEquals("1_200_2_100", fragmentCoords.Key);
+        assertEquals("1_200_2_100_N", fragmentCoords.Key);
         assertEquals(200, fragmentCoords.InitialPosition);
 
         // mate in earlier position, and fragment reversed
@@ -135,7 +135,7 @@ public class FragmentUtilsTest
         read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
 
         fragmentCoords = getFragmentCoordinates(read);
-        assertEquals("1_199_R_1_200_N", fragmentCoords.Key);
+        assertEquals("1_199_R_1_200", fragmentCoords.Key);
         assertEquals(-199, fragmentCoords.InitialPosition);
 
         // unmapped mate

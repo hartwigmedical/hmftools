@@ -92,7 +92,6 @@ public class FragmentUtils
         }
 
         boolean mateForwardStrand = !firstRead.getMateNegativeStrandFlag();
-        boolean firstReadForward = firstRead.getFirstOfPairFlag() ? readForwardStrand : mateForwardStrand;
 
         int mateCoordinate;
 
