@@ -143,7 +143,7 @@ public class FragmentSync
 
         int secondPosStart = second.getAlignmentStart();
         int secondPosEnd = second.getAlignmentEnd();
-        int secondLength = first.getReadLength();
+        int secondLength = second.getReadLength();
 
         if(!positionsOverlap(firstPosStart, firstPosEnd, secondPosStart, secondPosEnd))
         {
@@ -242,13 +242,14 @@ public class FragmentSync
                     firstElement = null;
                 }
                 else if(firstReadIndex > firstCigarElementReadIndex + firstElement.getLength() - 1
-                        || (isDeleteOrSplit(firstElement.getOperator()) && combinedCigarElementLength == firstElement.getLength()))
+                || (isDeleteOrSplit(firstElement.getOperator()) && combinedCigarElementLength == firstElement.getLength()))
                 {
                     // move to next
                     if(!isDeleteOrSplit(firstElement.getOperator()))
                         firstCigarElementReadIndex += firstElement.getLength();
 
-                    firstElement = firstCigar.getCigarElement(++firstCigarIndex);
+                    firstElement = firstCigarIndex < firstCigar.getCigarElements().size() - 1 ?
+                            firstCigar.getCigarElement(++firstCigarIndex) : null;
                     firstCigarChange = true;
                 }
             }
@@ -269,12 +270,13 @@ public class FragmentSync
                     secondElement = null;
                 }
                 else if(secondReadIndex > secondCigarElementReadIndex + secondElement.getLength() - 1
-                        || (isDeleteOrSplit(secondElement.getOperator()) && combinedCigarElementLength == secondElement.getLength()))
+                || (isDeleteOrSplit(secondElement.getOperator()) && combinedCigarElementLength == secondElement.getLength()))
                 {
                     if(!isDeleteOrSplit(secondElement.getOperator()))
                         secondCigarElementReadIndex += secondElement.getLength();
 
-                    secondElement = secondCigar.getCigarElement(++secondCigarIndex);
+                    secondElement = secondCigarIndex < secondCigar.getCigarElements().size() - 1 ?
+                            secondCigar.getCigarElement(++secondCigarIndex) : null;
                     secondCigarChange = true;
                 }
             }
@@ -285,7 +287,7 @@ public class FragmentSync
                 if(firstElement != null && secondElement != null)
                 {
                     if(firstElement.getOperator() != secondElement.getOperator()
-                            && !ignoreCigarOperatorMismatch(firstElement.getOperator(), secondElement.getOperator()))
+                    && !ignoreCigarOperatorMismatch(firstElement.getOperator(), secondElement.getOperator()))
                     {
                         return new FragmentSyncOutcome(CIGAR_MISMATCH);
                     }

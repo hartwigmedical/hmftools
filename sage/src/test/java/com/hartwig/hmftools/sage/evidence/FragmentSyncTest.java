@@ -136,6 +136,27 @@ public class FragmentSyncTest
     }
 
     @Test
+    public void testSoftClips()
+    {
+        String readId = "READ_01";
+        String chromosome = "1";
+
+        SAMRecord first = createSamRecord(
+                readId, chromosome, 20, REF_BASES.substring(20, 35), "10M5S");
+
+        SAMRecord second = createSamRecord(
+                readId, chromosome, 20, REF_BASES.substring(17, 30), "3S10M");
+
+        SAMRecord combined = formFragmentRead(first, second);
+        assertNotNull(combined);
+        assertEquals(20, combined.getAlignmentStart());
+        assertEquals(29, combined.getAlignmentEnd());
+        assertEquals(REF_BASES.substring(17, 35), combined.getReadString());
+        assertEquals("3S10M5S", combined.getCigarString());
+    }
+
+
+    @Test
     public void testSplitReads()
     {
         String readId = "READ_01";
