@@ -19,7 +19,6 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,7 +32,8 @@ public class TsgImpactComparatorTest {
     private SomaticVariant inframe;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         nonsense = createVariant(VariantType.MNP, CodingEffect.NONSENSE_OR_FRAMESHIFT, 0, NON_HOTSPOT, 0.5);
         missense = createVariant(VariantType.SNP, CodingEffect.MISSENSE, 0, NON_HOTSPOT, 0.5);
         spliceIndel = createVariant(VariantType.INDEL, CodingEffect.SPLICE, 0, NON_HOTSPOT, 0.5);
@@ -43,7 +43,8 @@ public class TsgImpactComparatorTest {
     }
 
     @Test
-    public void testSetup() {
+    public void testSetup()
+    {
         assertTrue(isNonsense(nonsense.type(), nonsense.variantImpact().CanonicalCodingEffect));
         assertTrue(isMissense(missense.type(), missense.variantImpact().CanonicalCodingEffect));
         assertTrue(isSplice(spliceSNP.variantImpact().CanonicalCodingEffect));
@@ -53,7 +54,8 @@ public class TsgImpactComparatorTest {
     }
 
     @Test
-    public void testSorting() {
+    public void testSorting()
+    {
         List<SomaticVariant> list = Lists.newArrayList(missense, nonsense, spliceIndel, spliceSNP, inframe, frameshift);
         Collections.shuffle(list);
 
@@ -66,8 +68,8 @@ public class TsgImpactComparatorTest {
         assertTrue(isInframe(list.get(5).type(), list.get(5).variantImpact().CanonicalCodingEffect));
     }
 
-    @NotNull
-    private static com.hartwig.hmftools.common.variant.SomaticVariant create(@NotNull VariantType type, @NotNull CodingEffect codingEffect) {
+    private static com.hartwig.hmftools.common.variant.SomaticVariant create(final VariantType type, final CodingEffect codingEffect)
+    {
         return SomaticVariantTestFactory.builder().type(type).canonicalCodingEffect(codingEffect).build();
     }
 }

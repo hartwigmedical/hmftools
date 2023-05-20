@@ -70,7 +70,8 @@ public class SomaticVariant implements GenomePosition
 
     public String toString()
     {
-        return String.format("%s %s:%d %s>%s filter(%s) tier(%s)",
-                type(), chromosome(), position(), mDecorator.ref(), mDecorator.alt(), mDecorator.filter(), mDecorator.tier());
+        return String.format("%s %s:%d %s>%s filter(%s) tier(%s) codingEffect(%s)",
+                type(), chromosome(), position(), mDecorator.ref(), mDecorator.alt(), mDecorator.filter(), mDecorator.tier(),
+                mDecorator.variantImpact().CanonicalCodingEffect);
     }
 }

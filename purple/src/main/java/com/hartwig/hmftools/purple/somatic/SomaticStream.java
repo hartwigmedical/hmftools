@@ -212,7 +212,8 @@ public class SomaticStream
                 }
             }
 
-            checkPhasedReportableVariants();
+            // should not be required if coding effects have been set correctly for phased variants in Pave
+            // checkPhasedReportableVariants();
 
             // write enriched variants to VCF
             for(SomaticVariant variant : mSomaticVariants.variants())

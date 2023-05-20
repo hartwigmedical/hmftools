@@ -17,48 +17,34 @@ public class TsgImpactComparator implements Comparator<SomaticVariant>
         CodingEffect codingEffect1 = o1.variantImpact().CanonicalCodingEffect;
         CodingEffect codingEffect2 = o2.variantImpact().CanonicalCodingEffect;
 
-        if(codingEffect1 == codingEffect2 && o1.type() == o2.type())
+        DriverImpact impact1 = DriverImpact.select(o1.type(), codingEffect1);
+        DriverImpact impact2 = DriverImpact.select(o2.type(), codingEffect2);
+
+        int impactScore1 = driverImpactScore(impact1);
+        int impactScore2 = driverImpactScore(impact2);
+
+        if(impactScore1 < impactScore2)
+            return firstWins;
+        else if(impactScore1 > impactScore2)
+            return secondWins;
+
+        if(o1.position() == o2.position())
             return 0;
 
-        if(DriverImpact.isFrameshift(o1.type(), codingEffect1))
+        return o1.position() < o2.position() ? firstWins : secondWins;
+    }
+
+    public static int driverImpactScore(final DriverImpact impact)
+    {
+        switch(impact)
         {
-            return firstWins;
-        }
-        else if(DriverImpact.isFrameshift(o2.type(), codingEffect2))
-        {
-            return secondWins;
+            case FRAMESHIFT: return 0;
+            case NONSENSE: return 1;
+            case SPLICE: return 2;
+            case MISSENSE: return 3;
+            case INFRAME: return 4;
         }
 
-        if(DriverImpact.isNonsense(o1.type(), codingEffect1))
-        {
-            return firstWins;
-        }
-        else if(DriverImpact.isNonsense(o2.type(), codingEffect2))
-        {
-            return secondWins;
-        }
-
-        if(DriverImpact.isSplice(codingEffect1))
-        {
-            return firstWins;
-        }
-        else if(DriverImpact.isSplice(codingEffect2))
-        {
-            return secondWins;
-        }
-
-        if(DriverImpact.isMissense(o1.type(), codingEffect1))
-        {
-            return firstWins;
-        }
-        else if(DriverImpact.isMissense(o2.type(), codingEffect2))
-        {
-            return secondWins;
-        }
-
-        if(codingEffect1 == codingEffect2)
-            return 0;
-
-        throw new UnsupportedOperationException();
+        return 5;
     }
 }
