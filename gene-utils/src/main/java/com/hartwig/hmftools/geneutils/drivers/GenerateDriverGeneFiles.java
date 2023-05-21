@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -140,10 +141,35 @@ public class GenerateDriverGeneFiles
         ensemblDataCache.setRequiredData(true, false, false, true);
         ensemblDataCache.load(false);
 
+        Set<String> actionablePanel = driverGenes.stream()
+                .filter(x -> x.reportSomatic() || x.reportGermline() || x.reportPGX() || mPanelGeneOverrides.contains(x.gene()))
+                .map(x -> x.gene())
+                .collect(Collectors.toSet());
+
+        String codingWithUtr = formVersionFile(sageDir, "ActionableCodingPanel.bed.gz", refGenomeVersion);
+
+        GU_LOGGER.info("writing {} panel coding regions file({}) for {} genes",
+                refGenomeVersion, codingWithUtr, actionablePanel.size());
+
+        writeGenePanelRegions(refGenomeVersion, ensemblDataCache, actionablePanel, true, codingWithUtr);
+
+        Set<String> coveragePanel = driverGenes.stream().map(x -> x.gene()).collect(Collectors.toSet());
+
+        String coverageWithoutUtr = formVersionFile(sageDir, "CoverageCodingPanel.bed.gz", refGenomeVersion);
+
+        GU_LOGGER.info("writing {} panel coverage regions file({}) for {} genes",
+                refGenomeVersion, coverageWithoutUtr, coveragePanel.size());
+
+        writeGenePanelRegions(refGenomeVersion, ensemblDataCache, coveragePanel, false, coverageWithoutUtr);
+    }
+
+    private void writeGenePanelRegions(
+            final RefGenomeVersion refGenomeVersion, final EnsemblDataCache ensemblDataCache,
+            final Set<String> geneSet, boolean includeUTR, final String outputFile)
+    {
         final Map<String,List<GeneData>> chrGeneDataMap = ensemblDataCache.getChrGeneDataMap();
 
-        List<CodingRegion> panelRegionsWithUtr = Lists.newArrayList();
-        List<CodingRegion> panelRegionsWithoutUtr = Lists.newArrayList();
+        List<CodingRegion> panelRegions = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
@@ -152,89 +178,57 @@ public class GenerateDriverGeneFiles
 
             for(GeneData geneData : geneDataList)
             {
-                DriverGene driverGene = driverGenes.stream().filter(x -> x.gene().equals(geneData.GeneName)).findFirst().orElse(null);
-
-                if(driverGene == null)
-                    continue;
-
-                boolean includeGene = driverGene.reportSomatic() || driverGene.reportGermline() || driverGene.reportPGX()
-                        || mPanelGeneOverrides.contains(geneData.GeneName);
-
-                if(!includeGene)
+                if(!geneSet.contains(geneData.GeneName))
                     continue;
 
                 TranscriptData transData = ensemblDataCache.getTranscriptData(geneData.GeneId, "");
 
-                List<CodingRegion> regionsWithUtr = getTranscriptRegions(geneData, transData, true);
-                List<CodingRegion> regionsWithoutUtr = getTranscriptRegions(geneData, transData, false);
+                List<CodingRegion> transcriptRegions = getTranscriptRegions(geneData, transData, includeUTR);
 
                 // merge any overlap with the previous gene region
-                for(int i = 0; i <= 1; ++i)
+                CodingRegion lastRegion = !panelRegions.isEmpty() ? panelRegions.get(panelRegions.size() - 1) : null;
+
+                if(!transcriptRegions.isEmpty() && lastRegion != null && lastRegion.Chromosome.equals(chromosomeStr))
                 {
-                    List<CodingRegion> newRegions = i == 0 ? regionsWithUtr : regionsWithoutUtr;
-
-                    if(newRegions.isEmpty())
-                        continue;
-
-                    List<CodingRegion> allRegions = i == 0 ? panelRegionsWithUtr : panelRegionsWithoutUtr;
-
-                    if(allRegions.isEmpty())
-                        continue;
-
-                    CodingRegion lastRegion = allRegions.get(allRegions.size() - 1);
-                    if(!lastRegion.Chromosome.equals(chromosomeStr))
-                        continue;
-
                     int newLastRegionEnd = 0;
                     int regionsRemoved = 0;
-                    while(!newRegions.isEmpty())
+                    while(!transcriptRegions.isEmpty())
                     {
-                        CodingRegion newRegion = newRegions.get(0);
+                        CodingRegion newRegion = transcriptRegions.get(0);
                         if(newRegion.start() > lastRegion.end() + 1)
                             break;
 
                         // otherwise remove the new region and merge
                         newLastRegionEnd = max(newRegion.end(), lastRegion.end());
-                        newRegions.remove(0);
+                        transcriptRegions.remove(0);
                         ++regionsRemoved;
                     }
 
                     if(newLastRegionEnd > 0)
                     {
                         CodingRegion newLastRegion = new CodingRegion(
-                                lastRegion.Chromosome, lastRegion.start(), newLastRegionEnd,
-                                lastRegion.GeneName, lastRegion.ExonRank);
+                                lastRegion.Chromosome, lastRegion.start(), newLastRegionEnd, lastRegion.GeneName, lastRegion.ExonRank);
 
-                        // NamedBed newLastRegion = ImmutableNamedBed.builder().from(lastRegion).end(newLastRegionEnd).build();
-                        allRegions.set(allRegions.size() - 1, newLastRegion);
+                        panelRegions.set(panelRegions.size() - 1, newLastRegion);
 
                         GU_LOGGER.debug("gene({}) removed {} regions from overlap with previous region(gene={} range={}->{})",
                                 geneData.GeneName, regionsRemoved, lastRegion.GeneName, lastRegion.start(), lastRegion.end());
                     }
                 }
 
-                panelRegionsWithUtr.addAll(regionsWithUtr);
-                panelRegionsWithoutUtr.addAll(regionsWithoutUtr);
+                panelRegions.addAll(transcriptRegions);
             }
         }
 
-        String codingWithUtr = formVersionFile(sageDir, "ActionableCodingPanel.bed.gz", refGenomeVersion);
-        GU_LOGGER.info("writing {} panel coding regions file({})", refGenomeVersion, codingWithUtr);
-
-        String coverageWithoutUtr = formVersionFile(sageDir, "CoverageCodingPanel.bed.gz", refGenomeVersion);
-        GU_LOGGER.info("writing {} panel coverage regions file({})", refGenomeVersion, coverageWithoutUtr);
-
         try
         {
-            List<NamedBed> bedWithUtr = panelRegionsWithUtr.stream().map(x -> x.asBed()).collect(Collectors.toList());
-            List<NamedBed> bedWithoutUtr = panelRegionsWithoutUtr.stream().map(x -> x.asBed()).collect(Collectors.toList());
+            List<NamedBed> bedRegions = panelRegions.stream().map(x -> x.asBed()).collect(Collectors.toList());
 
-            NamedBedFile.writeBedFile(codingWithUtr, bedWithUtr);
-            NamedBedFile.writeBedFile(coverageWithoutUtr, bedWithoutUtr);
+            NamedBedFile.writeBedFile(outputFile, bedRegions);
         }
         catch(IOException e)
         {
-            GU_LOGGER.error("failed to write gene panel files: {}", e.toString());
+            GU_LOGGER.error("failed to write gene panel file: {}", e.toString());
         }
     }
 

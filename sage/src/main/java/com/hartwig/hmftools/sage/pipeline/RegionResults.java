@@ -85,7 +85,7 @@ public class RegionResults
     {
         if(!SG_LOGGER.isDebugEnabled())
             return;
-        
+
         StringJoiner sj = new StringJoiner(", ");
         Arrays.stream(FragmentSyncType.values()).forEach(x -> sj.add(format("%s=%d", x, mSyncCounts[x.ordinal()])));
         SG_LOGGER.debug("fragment sync counts: {}", sj);
