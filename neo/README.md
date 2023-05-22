@@ -26,8 +26,10 @@ The neoepitope pipeline (Neo) works in 2 main steps to form a comprehensive set 
 - Calculation of allele specific neopeptide binding and  presentation likelihood 
 
 Although we annotate with expression information from RNA (where available), the neoepitope predictions are currently based solely on mutations found in DNA. Hence we specifically ignore RNA events such as circular RNA, RNA editing, endogenous retroviruses and alternative splicing as we are unable to determine if these are tumor specific. High confidence fusions detected in RNA but not found in DNA are also currently ignored (see future improvements). We also miss protein level events including non-canonical reading frames, post translational amino acid modifications & proteasomal peptide splicing. 
-
-TO DO - ADD IMAGE
+<p align="center">
+  <img src="src/main/resources/NeoOverview.png" width="700">
+</p>
+  
 
 ### Inputs
 
@@ -200,8 +202,9 @@ Our model assumes that the peptides at each position each have an independent im
 
 ##### Peptide length mappings 
 We support 8-12 length kmers. Our model assumes that anchor (2nd and last peptide position) positions and their surrounding positions have high similarity across peptide length with central peptides variable and relatively less important for binding. We therefore convert all peptides to a 12mer, with the following padding conventions for shorter peptides. 
-
-TO DO - INSET IMAGE
+<p align="center">
+  <img src="src/main/resources/PeptideLengthMapping.png" width="400">
+</p>
   
 ##### Flanking sequences 
 The flanking amino acids upstream and downstream are known to impact cleavage and processing. To capture these impacts we include 3 upstream amino acids (U3,U2,U1) and 3 downstream amino acids (D1,D2,D3) in the model. The enrichment/depletion of amino acids at these positions globally (including ‘X’ where the flanking sequences are beyond the start or end of an allele) is included in the peptide score.  
@@ -301,8 +304,9 @@ To deal with sparse MS data, particularly for non-9mers, the density of a given 
 The output of this algorithm is a set of weights per bucket per peptide length reflecting the relative likelihood of an observation from that bucket being presented on the surface in that cell. For individual peptides we can predict an exact relative likelihood by interpolating the rank between the bucketed values 
 
 An example of the output for A2902 is shown below indicating that a 9mer with 0.00005 rank is ~28x (ie 0.3007/0.0116) more likely to be presented than an 8mer with the same rank and ~6x (ie 0.3007/0.0520) more likely to be presented as a 9mer with a rank of 0.0004. 
-
-  TO DO - INSERT IMAGE
+<p align="center">
+  <img src="src/main/resources/RelativeLikelihoodExample.png" width="600">
+</p>
   
 The relative presentation likelihood is calculated for each 4 digit and 2 digit allele with more than 200 MS observations in the training data as well globally for HLA-A, HLA-B and HLA-C. Any 4 digit allele which does not have sufficient MS observations is assigned the likelihoods of the 2 digit allele if available or if not the likelihoods for the HLA gene as a whole. 
 
@@ -323,7 +327,7 @@ For training the impact of expression on presentation likelihood we use the subs
 To determine the impact TPM expression has on presentation we compared the TPM of the MS identified peptides of strong predicted binders (LRank<0.1%) found to be presented in the HLAthena training data to all predicted strong binders from the proteome for the same alleles. For each log2 TPM bucket we calculate the proportion of pHLA combinations that are found to be presented.   We find this to be a very strong relationship, ranging from a <<1% chance of presentation where TPM < 1 up to higher than 20% chance where TPM > 1000:  
 
 <p align="center">
-  <img src="src/main/resources/PeptideLengthMapping.png" width="700">
+  <img src="src/main/resources/PresentationLikelihoodByTpm.png" width="700">
 </p>
 
 Using this observed rate of TPM we can calculate: 
