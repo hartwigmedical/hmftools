@@ -5,6 +5,8 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.variant.CodingEffect.hasProteinImpact;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.ASSUMED_BIALLELIC_FRACTION;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
@@ -213,7 +215,7 @@ public class SomaticStream
             }
 
             // should not be required if coding effects have been set correctly for phased variants in Pave
-            // checkPhasedReportableVariants();
+            checkPhasedReportableVariants();
 
             // write enriched variants to VCF
             for(SomaticVariant variant : mSomaticVariants.variants())
@@ -279,14 +281,21 @@ public class SomaticStream
         }
     }
 
+    private static boolean hasPhasedInframeEffect(final SomaticVariant variant)
+    {
+        return variant.variantImpact().CanonicalEffect.contains(PHASED_INFRAME_INSERTION.effect())
+            || variant.variantImpact().CanonicalEffect.contains(PHASED_INFRAME_DELETION.effect());
+    }
+
     private void checkPhasedReportableVariants()
     {
-        // any non-reportable variant that is phased with a reportable variant is marked as reportable too
+        // any non-reportable variant that forms a phased inframe INDEL with a reportable variant is marked as reportable too
         for(int i = 0; i < mSomaticVariants.variants().size(); ++i)
         {
             SomaticVariant variant = mSomaticVariants.variants().get(i);
 
-            if(!variant.context().hasAttribute(REPORTED_FLAG))
+            // first find any reportable phased inframe INDEL
+            if(!variant.context().hasAttribute(REPORTED_FLAG) || !hasPhasedInframeEffect(variant))
                 continue;
 
             List<Integer> localPhaseSets = variant.context().getAttributeAsIntList(LOCAL_PHASE_SET, 0);
@@ -312,7 +321,7 @@ public class SomaticStream
 
                     SomaticVariant nextVariant = mSomaticVariants.variants().get(j);
 
-                    if(!nextVariant.isPass() || nextVariant.context().hasAttribute(REPORTED_FLAG))
+                    if(!nextVariant.isPass() || nextVariant.context().hasAttribute(REPORTED_FLAG) || !hasPhasedInframeEffect(variant))
                         continue;
 
                     // must have a coding impact
@@ -330,7 +339,7 @@ public class SomaticStream
 
                     nextVariant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
 
-                    PPL_LOGGER.debug("var({}) setting reported due to phasing with other({})", nextVariant, variant);
+                    PPL_LOGGER.debug("var({}) setting reported due to inframe-phasing with other({})", nextVariant, variant);
 
                     // add to appropriate driver caches for DNDS calcs
                     mDrivers.addPhasedReportableVariant(nextVariant, variant);

@@ -82,4 +82,11 @@ public class CobaltData
         final List<MedianRatio> medianRatios = MedianRatioFactory.create(Ratios);
         CobaltChromosomes = new CobaltChromosomes(medianRatios, !tumorOnlyMode);
     }
+
+    public void clearCache()
+    {
+        Ratios.clear();
+        TumorSegments.clear();
+        ReferenceSegments.clear();
+    }
 }

@@ -85,8 +85,11 @@ public class SampleDataFiles
 
         RecoveredSvVcfFile = getFilename(cmd, SV_RECOVERY_VCF, GRIPSS_SOMATIC_DIR, sampleId, ".gripss.somatic.vcf.gz");
 
-        SomaticVcfFile = getFilename(cmd, SOMATIC_VARIANTS, PAVE_SOMATIC_DIR, sampleId, ".pave.filtered.somatic.vcf.gz");
-        GermlineVcfFile = getFilename(cmd, GERMLINE_VARIANTS, PAVE_GERMLINE_DIR, sampleId, ".pave.filtered.germline.vcf.gz");
+        SomaticVcfFile = getFilename(cmd, SOMATIC_VARIANTS, PAVE_SOMATIC_DIR, sampleId, ".sage.somatic.filtered.pave.vcf.gz");
+        GermlineVcfFile = getFilename(cmd, GERMLINE_VARIANTS, PAVE_GERMLINE_DIR, sampleId, ".sage.germline.filtered.pave.vcf.gz");
+
+        // SomaticVcfFile = getFilename(cmd, SOMATIC_VARIANTS, PAVE_SOMATIC_DIR, sampleId, ".pave.filtered.somatic.vcf.gz");
+        // GermlineVcfFile = getFilename(cmd, GERMLINE_VARIANTS, PAVE_GERMLINE_DIR, sampleId, ".pave.filtered.germline.vcf.gz");
     }
 
     public boolean hasValidSampleNames(final PurpleConfig config)

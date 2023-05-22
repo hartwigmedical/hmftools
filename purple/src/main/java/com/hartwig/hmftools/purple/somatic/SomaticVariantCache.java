@@ -80,6 +80,9 @@ public class SomaticVariantCache
                     continue;
             }
 
+            if(mConfig.excludeOnSpecificRegion(variant.chromosome(), variant.position()))
+                continue;
+
             mVariants.add(variant);
 
             // hotspot status is used in fitting as well as during and for enrichment

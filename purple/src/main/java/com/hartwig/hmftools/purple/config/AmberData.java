@@ -125,4 +125,9 @@ public class AmberData
         return inclusionPerc > MIN_BAF_PERC ? FEMALE : MALE;
     }
 
+    public void clearCache()
+    {
+        ChromosomeBafs.clear();
+        TumorSegments.clear();
+    }
 }

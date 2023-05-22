@@ -2,20 +2,29 @@ package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.ReferenceData.TARGET_REGION_BED;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.purple.RunMode;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VariantTier;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class PurpleConfig
@@ -28,13 +37,17 @@ public class PurpleConfig
 
     public final boolean RunDrivers;
     public final boolean DriversOnly;
-    public final boolean FilterSomaticsOnGene;
 
     public final FittingConfig Fitting;
     public final SomaticFitConfig SomaticFitting;
     public final ChartConfig Charting;
     public final boolean TargetRegionsMode;
     public final Map<VariantTier,Integer> TierQualFilters;
+
+    // debug only
+    public final boolean FilterSomaticsOnGene;
+    public final List<String> SpecificChromosomes;
+    public final List<ChrBaseRegion> SpecificRegions;
 
     private boolean mIsValid;
 
@@ -123,6 +136,22 @@ public class PurpleConfig
                 PPL_LOGGER.info("applying tier({}) qual({}) filter", tierItems[0], tierItems[1]);
             }
         }
+
+        SpecificChromosomes = Lists.newArrayList();
+        SpecificRegions = Lists.newArrayList();
+
+        try
+        {
+            loadSpecificChromsomesOrRegions(cmd, SpecificChromosomes, SpecificRegions, PPL_LOGGER);
+            Collections.sort(SpecificRegions);
+        }
+        catch(ParseException e)
+        {
+            PPL_LOGGER.error("invalid specific regions({}) chromosomes({}) config",
+                    cmd.getOptionValue(SPECIFIC_REGIONS, ""), cmd.getOptionValue(SPECIFIC_CHROMOSOMES, ""));
+            mIsValid = false;
+        }
+
     }
 
     public boolean isValid() { return mIsValid; }
@@ -175,6 +204,18 @@ public class PurpleConfig
         ReferenceData.addOptions(options);
         ChartConfig.addOptions(options);
         SampleDataFiles.addOptions(options);
+        addSpecificChromosomesRegionsConfig(options);
+    }
+
+    public boolean excludeOnSpecificRegion(final String chromosome, final int position)
+    {
+        if(!SpecificRegions.isEmpty())
+            return SpecificRegions.stream().noneMatch(x -> x.containsPosition(chromosome, position));
+
+        if(!SpecificChromosomes.isEmpty())
+            return !SpecificChromosomes.contains(chromosome);
+
+        return false;
     }
 
     private static String parameter(final CommandLine cmd, final String parameter, final StringJoiner missing)
