@@ -91,17 +91,17 @@ Note that the precise definition of the novel segment and upstream and downstrea
 
 Variant Type | Novel Segment | Upstream flank | Downstream flank
 ---|---|---|---
-Missense SNV/MNV* | Ref->Alt AA(s) | Up to 16 AA limited by start codon | Up to 16 AA limited by stop codon 
-Inframe* | If conservative inframe, inserted AA only else also use flanking disrupted AA on each end | Up to 16 AA limited by start codon | Up to 16 AA limited by stop codon 
-Stop_lost / frameshift* | All downstream AA until new stop codon reached | Up to 15 AA limited by start codon | NA 
-Inframe fusion*** (Phase=0) | NA**** | Up to 16 AA limited by start codon | Up to 16 AA limited by stop codon 
-Inframe fusion***  | (Phase = {1,2}) | Mixed transcript AA**** | Up to 16 AA limited by start codon | Up to 16 AA limited by stop codon 
-Out of frame coding to coding or coding to non-coding fusion | Possible mixed transcript AA + all downstream AA until new stop codon reached** | Up to 16 AA limited by start codon | NA** 
-
-* Where multiple somatic variants are phased within 17 AA, include entire intermediate section as novel AA  
-** For coding to 5’UTR fusions, if a start codon is reached prior to a novel stop codon and is ‘inframe’, the novel segment should be limited to the region up to the new stop codon with the downstream flank set as the first 17 AA of the 3’ partner. 
-*** For exon deletions, a neo-epitope should only be called if the deleted exon is not skipped in any transcript 
-**** For exonic-exonic fusions, include any inserted sequence.  If novel AA sequence matches next AA of 5’ end, AA should be moved to upstream flank. 
+Missense SNV/MNV (1) | Ref->Alt AA(s) | Up to 16 AA limited by start codon | Up to 16 AA limited by stop codon 
+Inframe (1) | If conservative inframe, inserted AA only else also use flanking disrupted AA on each end | Up to 16 AA limited by start codon | Up to 16 AA limited by stop codon 
+Stop_lost / frameshift (1) | All downstream AA until new stop codon reached | Up to 15 AA limited by start codon | NA 
+Inframe fusion (Phase=0) (3) | NA (4) | Up to 16 AA limited by start codon | Up to 16 AA limited by stop codon 
+Inframe fusion (3)  | (Phase = {1,2}) | Mixed transcript AA (4) | Up to 16 AA limited by start codon | Up to 16 AA limited by stop codon 
+Out of frame coding to coding or coding to non-coding fusion | Possible mixed transcript AA + all downstream AA until new stop codon reached (2) | Up to 16 AA limited by start codon | NA (2)
+Notes
+(1) Where multiple somatic variants are phased within 17 AA, include entire intermediate section as novel AA  
+(2) For coding to 5’UTR fusions, if a start codon is reached prior to a novel stop codon and is ‘inframe’, the novel segment should be limited to the region up to the new stop codon with the downstream flank set as the first 17 AA of the 3’ partner. 
+(3) For exon deletions, a neo-epitope should only be called if the deleted exon is not skipped in any transcript 
+(4) For exonic-exonic fusions, include any inserted sequence.  If novel AA sequence matches next AA of 5’ end, AA should be moved to upstream flank. 
 
 Neo further annotates each of the candidate neoepitopes with TPM and direct RNA fragment support for the novel amino acid sequence. TPM per transcript is sourced from Isofox if RNA is available or if not available is estimated as the median of the cancer type (or full cohort where cancer type is not known).  An ‘expectedTPM’ for each neoepitope is calculated from the TPMUp, and where neo-epitopes share transcripts, the TPMUp is allocated according to the relative proportion of TPMDown expression across all neo-epitopes.    The expectedTPM is also modified by the variant copy number giving: 
 ```
