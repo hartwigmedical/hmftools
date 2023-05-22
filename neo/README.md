@@ -1,5 +1,13 @@
 # NEO
 
+The neoepitope pipeline (Neo) works in 2 main steps to form a comprehensive set of neoepitope and neopeptide predictions from our DNA pipeline output: 
+- Identification of neoepitopes from all point mutations, small indels and gene fusions.  
+- Calculation of allele specific neopeptide binding and  presentation likelihood 
+<p align="center">
+  <img src="src/main/resources/NeoOverview.png" width="700">
+</p>
+Although Neo annotates with expression information from RNA (where available), the neoepitope predictions are currently based solely on mutations found in DNA. Hence we specifically ignore RNA events such as circular RNA, RNA editing, endogenous retroviruses and alternative splicing as we are unable to determine if these are tumor specific. High confidence fusions detected in RNA but not found in DNA are also currently ignored (see future improvements). Neo also miss protein level events including non-canonical reading frames, post translational amino acid modifications & proteasomal peptide splicing. 
+
 ## Usage
 
 ```
@@ -21,16 +29,6 @@ Argument | Description
 ---|---
  
 ## Algorithm
-The neoepitope pipeline (Neo) works in 2 main steps to form a comprehensive set of neoepitope and neopeptide predictions from our DNA pipeline output: 
-- Identification of neoepitopes from all point mutations, small indels and gene fusions.  
-- Calculation of allele specific neopeptide binding and  presentation likelihood 
-
-Although we annotate with expression information from RNA (where available), the neoepitope predictions are currently based solely on mutations found in DNA. Hence we specifically ignore RNA events such as circular RNA, RNA editing, endogenous retroviruses and alternative splicing as we are unable to determine if these are tumor specific. High confidence fusions detected in RNA but not found in DNA are also currently ignored (see future improvements). We also miss protein level events including non-canonical reading frames, post translational amino acid modifications & proteasomal peptide splicing. 
-<p align="center">
-  <img src="src/main/resources/NeoOverview.png" width="700">
-</p>
-  
-
 ### Inputs
 
 Neo use the following inputs from the Hartwig WGS pipeline 
