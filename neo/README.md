@@ -328,8 +328,23 @@ Using this observed rate of TPM we can calculate:
  ExpAdjLikelihood = PresentationLikelihood * TPMLikelihood / [PresentationLikelihood * TPMLikelihood + (1-PresentationLikelihood) * (1-TPMLikelihood)] 
 ```
 We then calculate a new overall rank globally across all pHLA using the expression adjusted likelihood compared to the same randomly selected peptides. 
-
   
 ## Known issues & future improvements  
-  
+
+Model improvements and functional extensions
+- **Fusion support count** - Counting of fragments currently ignores partially overlapping core (requires 10 bases up and down) 
+- **EffectiveTPM model for samples without RNA** - Frameshift:  F(NMD) ; Fusions: F(NMD model, skippedDonors/Acceptors, intronicLength) )
+- **Locally phased variants** - somatic and germline phasing is annotated by SAGE but not yet used in neoantigen predictions
+- **Gene characteristics** - Gene Length and # of exons are both meant to be positively correlated with presentation likelihood, and could imrve
+- **Gene propensity** - in the HLAthena data we see that some transcripts are strongly underrepresented (eg. TTN) and some are over-represented (eg FASN) in pHLA compared to expectation.  Other tools (eg. Sherpa) have found using a gene specific score to improve presentation predictions, however these observations are largely restricted to the observations of a single cell line, so unclear if this is over fitting
+- **Neoantigen burden score** - more investigation required to come up with a robust score
+- **Consolidated immunotherapy response likelihood score** - neoantigen burden would ideally be combined with immune infiltration measure + immune escape observations to produce an overall ICI response score
+- **Vacine vector design** - Design personalised vaccine vector based on prioritised neoepitopes
+- **Immunogenicity metrics** - Various metrics may help to predict recognition (eg. DistanceToProteome; DistanceToNearestBinder; DistanceToKnownImmunogenic; Agretopicity; AA weighting at non binding position), but there is little validation data currently available
+
+Additional neoepitope sources
+- **DNA** - IG rearrangements / hypermutation in B-Cell tumors;  integrated viral antigens (particularly HPV);  Bacterial antigens
+- **RNA** -  Alternate splicing (novel exon, intron retention,etc); circular RNA; endogenous retroviruses; RNA editing; Non canonical reading frames; high confidence RNA fusions or chimeric splicing not found in DNA 
+- **Protein** - Non-canonical reading frames; post translational AA modificatons; proteasomal peptide splicing
+
 ## Version History and Download Links
