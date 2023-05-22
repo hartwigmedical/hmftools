@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.hasProteinImpact;
@@ -10,17 +12,21 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_IN
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.ASSUMED_BIALLELIC_FRACTION;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
+import static com.hartwig.hmftools.purple.somatic.SomaticVariantEnrichment.populateHeader;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -162,10 +168,7 @@ public class SomaticStream
                     .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                     .build();
 
-            final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(
-                    mConfig.ReferenceId, mConfig.TumorId, mReferenceData, mPeakModel);
-
-            final VCFHeader header = enricher.populateHeader(readHeader, mConfig.Version);
+            final VCFHeader header = populateHeader(readHeader, mConfig.Version);
 
             if(mConfig.tumorOnlyMode() && mConfig.TargetRegionsMode)
                 TumorMutationalLoad.enrichHeader(header);
@@ -174,28 +177,41 @@ public class SomaticStream
 
             boolean tumorOnly = mConfig.tumorOnlyMode();
 
-            int flushCount = 100000;
-            int gcCount = 250000;
-            int varCount = 0;
-
-            for(SomaticVariant variant : mSomaticVariants.variants())
+            if(mConfig.Threads > 1)
             {
-                if(tumorOnly && variant.isFiltered())
-                    continue;
+                List<SomaticVariantEnrichment> enrichers = Lists.newArrayList();
 
-                enricher.enrich(variant);
-                ++varCount;
-
-                if(varCount > 0 && (varCount % flushCount) == 0)
+                for(int i = 0; i < mConfig.Threads; ++i)
                 {
-                    PPL_LOGGER.debug("enriched {} somatic variants", varCount);
-
-                    if((varCount % gcCount) == 0)
-                        System.gc();
+                    enrichers.add(new SomaticVariantEnrichment(i, mConfig, mReferenceData, mPeakModel));
                 }
-            }
 
-            enricher.flush(); // finalise any enrichment routines with queued variants
+                int taskIndex = 0;
+                String currentChr = !mSomaticVariants.variants().isEmpty() ? mSomaticVariants.variants().get(0).chromosome() : "";
+
+                for(SomaticVariant variant : mSomaticVariants.variants())
+                {
+                    if(!currentChr.equals(variant.chromosome()))
+                    {
+                        currentChr = variant.chromosome();
+                        ++taskIndex;
+
+                        if(taskIndex >= enrichers.size())
+                            taskIndex = 0;
+                    }
+
+                    enrichers.get(taskIndex).addVariant(variant);
+                }
+
+                final List<Callable> callableList = enrichers.stream().collect(Collectors.toList());
+                TaskExecutor.executeTasks(callableList, mConfig.Threads);
+            }
+            else
+            {
+                SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(0, mConfig, mReferenceData, mPeakModel);
+                mSomaticVariants.variants().forEach(x -> enricher.addVariant(x));
+                enricher.call();
+            }
 
             // various processing for charting, TMB/L calcs, drivers
             for(SomaticVariant variant : mSomaticVariants.variants())

@@ -64,7 +64,6 @@ public class FittingConfig
     public static final String CFG_MIN_MATE_QUAL_SCORE = "recovery_mate_min_qual";
     public static final String CFG_MIN_SGL_QUAL_SCORE = "recovery_sgl_min_qual";
 
-
     public FittingConfig(@NotNull final CommandLine cmd)
     {
         MinPurity = getConfigValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);

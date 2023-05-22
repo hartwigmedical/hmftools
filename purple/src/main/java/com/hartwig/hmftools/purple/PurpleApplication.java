@@ -113,7 +113,6 @@ public class PurpleApplication
     private final GermlineVariants mGermlineVariants;
     private final Segmentation mSegmentation;
 
-    private static final int THREADS_DEFAULT = 2;
     private static final String VERSION = "version";
 
     private PurpleApplication(final Options options, final String... args) throws ParseException, IOException
@@ -148,8 +147,7 @@ public class PurpleApplication
             System.exit(1);
         }
 
-        int threads = parseThreads(mCmdLineArgs, THREADS_DEFAULT);
-        mExecutorService = Executors.newFixedThreadPool(threads);
+        mExecutorService = Executors.newFixedThreadPool(mConfig.Threads);
 
         mGermlineVariants = new GermlineVariants(mConfig, mReferenceData, mPurpleVersion.version());
 
@@ -338,6 +336,7 @@ public class PurpleApplication
                     mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers));
 
             PPL_LOGGER.debug("post-fit memory({}mb)", calcMemoryUsage());
+            System.gc();
 
             final List<PeakModelData> somaticPeaks = Lists.newArrayList();
 
@@ -358,8 +357,8 @@ public class PurpleApplication
             somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache, somaticPeaks);
 
             somaticStream.processAndWrite(purityAdjuster);
-
             PPL_LOGGER.debug("post-enrichment memory({}mb)", calcMemoryUsage());
+            System.gc();
 
             sampleData.SvCache.write(purityAdjuster, copyNumbers, mConfig.tumorOnlyMode());
 
