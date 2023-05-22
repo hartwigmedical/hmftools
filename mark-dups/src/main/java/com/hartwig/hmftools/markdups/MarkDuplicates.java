@@ -113,8 +113,11 @@ public class MarkDuplicates
             {
                 combinedStats.writePositionFragmentsData(mConfig);
 
-                if(mConfig.UMIs.BaseDiffStats)
-                    combinedStats.writeUmiStats(mConfig);
+                if(mConfig.UMIs.BaseStats)
+                {
+                    combinedStats.writeUmiBaseDiffStats(mConfig);
+                    combinedStats.writeUmiBaseFrequencyStats(mConfig);
+                }
             }
         }
 

@@ -22,7 +22,7 @@ public class UmiConfig
     public final boolean Enabled;
     public final boolean Duplex; // collapse duplex UMI groups
     public final String DuplexDelim;
-    public final boolean BaseDiffStats;
+    public final boolean BaseStats;
     public final boolean HighlightConsensus; // purely for viewing in IGV
     public final int PermittedBaseDiff;
 
@@ -41,13 +41,13 @@ public class UmiConfig
     public static final char READ_ID_DELIM = ':';
     public static final String READ_ID_DELIM_STR = String.valueOf(READ_ID_DELIM);
 
-    public UmiConfig(boolean enabled, boolean duplex, final String duplexDelim, boolean highlight, boolean baseDiffStats)
+    public UmiConfig(boolean enabled, boolean duplex, final String duplexDelim, boolean highlight, boolean baseStats)
     {
         Enabled = enabled;
         Duplex = duplex;
         DuplexDelim = duplexDelim;
         HighlightConsensus = highlight;
-        BaseDiffStats = baseDiffStats;
+        BaseStats = baseStats;
         PermittedBaseDiff = DEFAULT_MAX_UMI_BASE_DIFF;
         mUmiLength = 0;
         mDefinedUmis = Sets.newHashSet();

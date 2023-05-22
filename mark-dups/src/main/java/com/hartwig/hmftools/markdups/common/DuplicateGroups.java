@@ -299,8 +299,8 @@ public class DuplicateGroups
             {
                 ++mStats.DuplicateGroups;
 
-                if(mUmiConfig.BaseDiffStats)
-                    mStats.recordUmiBaseDiffs(mUmiConfig, umiGroups);
+                if(mUmiConfig.BaseStats)
+                    mStats.recordUmiBaseStats(mUmiConfig, umiGroups);
 
                 maxDuplicatePosCount = max(maxDuplicatePosCount, umiGroups.size());
             }
