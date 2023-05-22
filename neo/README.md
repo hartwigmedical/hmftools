@@ -35,10 +35,8 @@ Although we annotate with expression information from RNA (where available), the
 
 Neo use the following inputs from the Hartwig WGS pipeline 
 - **Somatic variants**: We use the PURPLE somatic.vcf annotated with DP and AD from RNA if available (using SAGE append) 
-- **Structural variants**: LINX candidate fusion neoepitopes (produced by LINX if ???? Flag is configured). 
+- **Structural variants**: LINX candidate fusion neoepitopes (optionally produced by LINX). 
 - **HLA typing**: LILAC output.  
-
-**TO DO - Add linx flag details**
 
 Where Hartwig WTS pipeline output is available additional annotations are added, an effective TPM and TPM adjusted likelihood is estimated for each neo-epitope and neopeptide. The RNA inputs used are: 
 - **Sample WTS BAM**:  Used to assess direct fragment support per neo-epitope 
