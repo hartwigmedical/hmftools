@@ -5,6 +5,7 @@ import static java.util.Collections.singleton;
 import static com.hartwig.hmftools.purple.copynumber.StructuralVariantLegsFactoryTest.createLeg;
 import static com.hartwig.hmftools.purple.copynumber.StructuralVariantPloidyTest.CHROMOSOME;
 import static com.hartwig.hmftools.purple.copynumber.StructuralVariantPloidyTest.PURE;
+import static com.hartwig.hmftools.purple.TestUtils.buildPurityAdjuster;
 
 import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
@@ -177,14 +178,14 @@ public class StructuralVariantPloidyFactoryTest
                 PURE_PLOIDY_FACTORY.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
         assertPloidy(1d, purePloidy);
 
-        final PurityAdjuster diluted = new PurityAdjuster(Gender.FEMALE, 0.8, 1);
+        final PurityAdjuster diluted = buildPurityAdjuster(Gender.FEMALE, 0.8, 1);
         final StructuralVariantLegPloidyFactory<PurpleCopyNumber> dilutedFactory =
                 new StructuralVariantLegPloidyFactory<>(diluted, PurpleCopyNumber::averageTumorCopyNumber);
         Optional<ModifiableStructuralVariantLegPloidy> dilutedPloidy =
                 dilutedFactory.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
         assertPloidy(1.25d, dilutedPloidy);
 
-        final PurityAdjuster male = new PurityAdjuster(Gender.MALE, 0.8, 1);
+        final PurityAdjuster male = buildPurityAdjuster(Gender.MALE, 0.8, 1);
         final StructuralVariantLegPloidyFactory<PurpleCopyNumber> maleFactory =
                 new StructuralVariantLegPloidyFactory<>(male, PurpleCopyNumber::averageTumorCopyNumber);
         Optional<ModifiableStructuralVariantLegPloidy> malePloidy =

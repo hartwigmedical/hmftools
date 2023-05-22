@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.copynumber;
 
 import static com.hartwig.hmftools.purple.TestUtils.createDefaultFittedRegion;
+import static com.hartwig.hmftools.purple.TestUtils.buildPurityAdjuster;
 
 import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
@@ -32,7 +33,7 @@ public class StructuralVariantImpliedTest
     private static final String CONTIG = "1";
     private static final Chromosome CHROMOSOME = HumanChromosome.fromString(CONTIG);
     private static final int PLOIDY = 1;
-    private static final PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1, 1);
+    private static final PurityAdjuster PURE = buildPurityAdjuster(Gender.FEMALE, 1, 1);
 
     @Test
     public void testNonSymmetricMultiPass()

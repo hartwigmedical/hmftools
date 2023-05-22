@@ -14,6 +14,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -22,6 +24,7 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
@@ -150,4 +153,30 @@ public final class TestUtils
                 0, 2, 2, 0.5, 0, 0);
     }
 
+    public static PurityAdjuster buildPurityAdjuster(final Gender gender, final double purity, final double normFactor)
+    {
+        Map<String,Double> observedRatioMap = Maps.newHashMap();
+
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            if(chromosome.isAutosome())
+            {
+                observedRatioMap.put(chromosome.toString(), 1.0);
+            }
+            else if(chromosome.equals(HumanChromosome._X))
+            {
+                if(gender == Gender.MALE)
+                    observedRatioMap.put(chromosome.toString(), 0.5);
+                else
+                    observedRatioMap.put(chromosome.toString(), 1.0);
+            }
+            else if(chromosome.equals(HumanChromosome._Y))
+            {
+                if(gender == Gender.MALE)
+                    observedRatioMap.put(chromosome.toString(), 0.5);
+            }
+        }
+
+        return new PurityAdjuster(observedRatioMap, purity, normFactor);
+    }
 }

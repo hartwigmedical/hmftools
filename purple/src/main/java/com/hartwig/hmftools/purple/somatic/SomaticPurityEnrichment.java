@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_PROBA
 import java.util.List;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
@@ -42,6 +43,9 @@ public class SomaticPurityEnrichment
 
     public void processVariant(final SomaticVariant variant)
     {
+        if(!HumanChromosome.contains(variant.chromosome()))
+            return;
+
         Optional<ObservedRegion> observedRegion = mObservedRegionSelector.select(variant);
         GermlineStatus germlineStatus = GermlineStatus.UNKNOWN;
 

@@ -443,7 +443,8 @@ public class PurpleApplication
         }
     }
 
-    private BestFitFactory fitPurity(final SampleData sampleData, final List<ObservedRegion> observedRegions,
+    private BestFitFactory fitPurity(
+            final SampleData sampleData, final List<ObservedRegion> observedRegions,
             final FittedRegionFactory fittedRegionFactory, final List<StructuralVariant> structuralVariants)
             throws ExecutionException, InterruptedException
     {
@@ -517,8 +518,7 @@ public class PurpleApplication
 
             PPL_LOGGER.info("recalculating copy number");
             fittedRegions.clear();
-            fittedRegions.addAll(fittedRegionFactory.fitRegion(
-                    fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions));
+            fittedRegions.addAll(fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions));
 
             copyNumberFactory.buildCopyNumbers(fittedRegions, sampleData.SvCache.variants());
         }
