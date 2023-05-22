@@ -149,8 +149,7 @@ public class SomaticStream
 
     public List<VariantContextDecorator> downsampledVariants() { return mDownsampledVariants; }
 
-    public void processAndWrite(
-            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions)
+    public void processAndWrite(final PurityAdjuster purityAdjuster)
     {
         if(!mEnabled || mPeakModel == null)
             return;
@@ -164,9 +163,9 @@ public class SomaticStream
                     .build();
 
             final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(
-                    mConfig.Version, mConfig.ReferenceId, mConfig.TumorId, mReferenceData, purityAdjuster, copyNumbers, fittedRegions, mPeakModel);
+                    mConfig.ReferenceId, mConfig.TumorId, mReferenceData, mPeakModel);
 
-            final VCFHeader header = enricher.populateHeader(readHeader);
+            final VCFHeader header = enricher.populateHeader(readHeader, mConfig.Version);
 
             if(mConfig.tumorOnlyMode() && mConfig.TargetRegionsMode)
                 TumorMutationalLoad.enrichHeader(header);

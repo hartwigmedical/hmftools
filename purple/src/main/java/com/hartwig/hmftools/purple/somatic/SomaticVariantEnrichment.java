@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.CLONALITY_BIN_W
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.variant.PurpleVcfTags;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
@@ -16,22 +17,17 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariantEnrichment
 {
-    private final SomaticPurityEnrichment mPurityEnrichment;
     private final KataegisEnrichment mKataegisEnrichment;
     private final SomaticRefContextEnrichment mSomaticRefContextEnrichment;
     private final SubclonalLikelihoodEnrichment mSubclonalLikelihoodEnrichment;
     private final SomaticGenotypeEnrichment mGenotypeEnrichment;
 
     public SomaticVariantEnrichment(
-            final String purpleVersion, final String referenceId, final String tumorSample, final ReferenceData refData,
-            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions,
-            final List<PeakModelData> peakModel)
+            final String referenceId, final String tumorSample, final ReferenceData refData, final List<PeakModelData> peakModel)
     {
         mGenotypeEnrichment = new SomaticGenotypeEnrichment(referenceId, tumorSample);
 
         mSubclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(CLONALITY_BIN_WIDTH, peakModel);
-
-        mPurityEnrichment = new SomaticPurityEnrichment(purpleVersion, purityAdjuster, copyNumbers, fittedRegions);
 
         mKataegisEnrichment = new KataegisEnrichment();
 
@@ -54,13 +50,13 @@ public class SomaticVariantEnrichment
         mKataegisEnrichment.flush();
     }
 
-    public VCFHeader populateHeader(final VCFHeader template)
+    public VCFHeader populateHeader(final VCFHeader template, final String purpleVersion)
     {
         VCFHeader header = SageVcfTags.addRefContextHeader(template);
         header = KataegisEnrichment.enrichHeader(header);
         header = SubclonalLikelihoodEnrichment.enrichHeader(header);
         header = HotspotEnrichment.enrichHeader(header);
-        return mPurityEnrichment.enrichHeader(header);
+        header = PurpleVcfTags.addSomaticHeader(purpleVersion, header);
+        return header;
     }
-
 }

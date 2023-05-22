@@ -344,8 +344,7 @@ public class PurpleApplication
             PPL_LOGGER.info("modelling somatic peaks");
             final SomaticPeakStream somaticPeakStream = new SomaticPeakStream();
 
-            final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(
-                    mConfig.Version, purityAdjuster, copyNumbers, fittedRegions);
+            final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(purityAdjuster, copyNumbers, fittedRegions);
 
             sampleData.SomaticCache.purityEnrich(somaticPurityEnrichment);
 
@@ -358,7 +357,7 @@ public class PurpleApplication
 
             somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache, somaticPeaks);
 
-            somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedObservedRegions);
+            somaticStream.processAndWrite(purityAdjuster);
 
             PPL_LOGGER.debug("post-enrichment memory({}mb)", calcMemoryUsage());
 

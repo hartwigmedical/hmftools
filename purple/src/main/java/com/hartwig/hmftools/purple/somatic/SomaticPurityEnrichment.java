@@ -18,7 +18,6 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
-import com.hartwig.hmftools.common.variant.PurpleVcfTags;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
@@ -26,20 +25,16 @@ import com.hartwig.hmftools.purple.region.ObservedRegion;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticPurityEnrichment
 {
     private final PurityAdjuster mPurityAdjuster;
     private final GenomeRegionSelector<PurpleCopyNumber> mCopyNumberSelector;
     private final GenomeRegionSelector<ObservedRegion> mObservedRegionSelector;
-    private final String mPurpleVersion;
 
-    public SomaticPurityEnrichment(final String purpleVersion, final PurityAdjuster purityAdjuster,
-            final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions)
+    public SomaticPurityEnrichment(
+            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions)
     {
-        mPurpleVersion = purpleVersion;
-
         mPurityAdjuster = purityAdjuster;
         mCopyNumberSelector = GenomeRegionSelectorFactory.createImproved(Multimaps.fromRegions(copyNumbers));
         mObservedRegionSelector = GenomeRegionSelectorFactory.createImproved(Multimaps.fromRegions(fittedRegions));
@@ -110,10 +105,5 @@ public class SomaticPurityEnrichment
         double poissonProb = 1 - poissonDist.cumulativeProbability(alleleReadCount - 1);
 
         return poissonProb < BIALLELIC_PROBABILITY;
-    }
-
-    public VCFHeader enrichHeader(final VCFHeader template)
-    {
-        return PurpleVcfTags.addSomaticHeader(mPurpleVersion, template);
     }
 }
