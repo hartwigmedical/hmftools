@@ -10,10 +10,12 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATT
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -343,10 +345,11 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         findDuplicateFragments(positionFragments, resolvedFragments, positionDuplicateGroups, candidateDuplicatesList);
 
-        int nonDuplicateFragCount = (int)resolvedFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).count();
+        List<Fragment> singleFragments = mConfig.UMIs.Enabled && !inExcludedRegion ?
+                resolvedFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).collect(Collectors.toList()) : Collections.EMPTY_LIST;
 
         List<DuplicateGroup> duplicateGroups = mDuplicateGroups.processDuplicateGroups(
-                positionDuplicateGroups, true, nonDuplicateFragCount, inExcludedRegion);
+                positionDuplicateGroups, true, singleFragments, inExcludedRegion);
 
         if(logDetails)
         {

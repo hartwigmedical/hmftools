@@ -253,13 +253,13 @@ public class DuplicateGroups
     }
 
     public List<DuplicateGroup> processDuplicateGroups(
-            final List<List<Fragment>> rawDuplicateGroups, boolean captureStats, int nonDuplicateFragCount, boolean inExcludedRegion)
+            final List<List<Fragment>> rawDuplicateGroups, boolean captureStats, final List<Fragment> singleFragments, boolean inExcludedRegion)
     {
         if(rawDuplicateGroups == null)
             return Collections.EMPTY_LIST;
 
         if(mUmiConfig.Enabled && !inExcludedRegion)
-            return processUmiGroups(rawDuplicateGroups, captureStats, nonDuplicateFragCount);
+            return processUmiGroups(rawDuplicateGroups, captureStats, singleFragments);
 
         if(captureStats)
         {
@@ -277,10 +277,12 @@ public class DuplicateGroups
         return null;
     }
 
-    private List<DuplicateGroup> processUmiGroups(final List<List<Fragment>> duplicateGroups, boolean captureStats, int nonDuplicateFragCount)
+    private List<DuplicateGroup> processUmiGroups(
+            final List<List<Fragment>> duplicateGroups, boolean captureStats, final List<Fragment> singleFragments)
     {
         List<DuplicateGroup> allUmiGroups = Lists.newArrayList();
 
+        int nonDuplicateFragCount = singleFragments.size();
         int posGroupCount = duplicateGroups.size() + nonDuplicateFragCount; // count of unique fragments sharing the same start pos
         int uniqueFragmentCount = nonDuplicateFragCount; // count of fragments with matching coordinates (after UMI collapsing)
         int maxDuplicatePosCount = 0;
@@ -308,6 +310,12 @@ public class DuplicateGroups
 
         if(mUmiConfig.Duplex)
         {
+            // include single fragments which may be the reverse of each other or a group
+            for(Fragment fragment : singleFragments)
+            {
+                allUmiGroups.add(new DuplicateGroup(mUmiConfig.extractUmiId(fragment.id()), fragment));
+            }
+
             collapseOnDuplexMatches(allUmiGroups, mUmiConfig);
         }
 

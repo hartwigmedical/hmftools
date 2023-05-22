@@ -34,7 +34,7 @@ public final class TestUtils
 
     public static MarkDupsConfig createTestConfig()
     {
-        return new MarkDupsConfig(DEFAULT_PARTITION_SIZE, DEFAULT_POS_BUFFER_SIZE, new MockRefGenome(), false, false);
+        return new MarkDupsConfig(DEFAULT_PARTITION_SIZE, DEFAULT_POS_BUFFER_SIZE, new MockRefGenome(), false, false, false);
     }
 
     public static Fragment createFragment(final String readId, final String chrStr, int readStart)

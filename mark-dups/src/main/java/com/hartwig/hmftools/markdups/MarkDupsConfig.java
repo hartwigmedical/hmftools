@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMO
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
+import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_PARTITION_SIZE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 
@@ -233,7 +234,8 @@ public class MarkDupsConfig
         return options;
     }
 
-    public MarkDupsConfig(int partitionSize, int bufferSize, final RefGenomeInterface refGenome, boolean umiEnabled, boolean formConsensus)
+    public MarkDupsConfig(
+            int partitionSize, int bufferSize, final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus)
     {
         mIsValid = true;
         SampleId = "";
@@ -248,7 +250,7 @@ public class MarkDupsConfig
         BufferSize = bufferSize;
         BamStringency = ValidationStringency.STRICT;
 
-        UMIs = new UmiConfig(umiEnabled, false, "", false, false);
+        UMIs = new UmiConfig(umiEnabled, duplexUmi, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), false, false);
         FormConsensus = formConsensus;
         NoMateCigar = false;
         IdGenerator = new GroupIdGenerator();
