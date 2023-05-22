@@ -71,7 +71,7 @@ public class SageApplication implements AutoCloseable
     private void run() throws IOException
     {
         long startTime = System.currentTimeMillis();
-        final Coverage coverage = new Coverage(mConfig.TumorIds, mRefData.CoveragePanel.values());
+        final Coverage coverage = new Coverage(mConfig.TumorIds, mRefData.CoveragePanel.values(), mConfig);
 
         BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig, mRefData.RefGenome);
         baseQualityRecalibration.produceRecalibrationMap();

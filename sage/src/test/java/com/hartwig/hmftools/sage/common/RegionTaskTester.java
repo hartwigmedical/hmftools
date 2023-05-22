@@ -50,7 +50,7 @@ public class RegionTaskTester
         HighConfidenceRegions = Lists.newArrayList();
         QualityRecalibrationMap = Maps.newHashMap();
         PhaseSetCounter = new PhaseSetCounter();
-        Coverage = new Coverage(Lists.newArrayList(), Collections.EMPTY_LIST);
+        Coverage = new Coverage(Lists.newArrayList(), Collections.EMPTY_LIST, Config);
 
         SamSlicerFactory = new SamSlicerFactory();
 

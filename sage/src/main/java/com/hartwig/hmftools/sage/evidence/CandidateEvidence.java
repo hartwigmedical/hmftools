@@ -53,7 +53,7 @@ public class CandidateEvidence
 
             if(!geneCoverage.isEmpty())
             {
-                geneCoverage.forEach(x -> x.processRead(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd()));
+                geneCoverage.forEach(x -> x.processRead(record));
             }
         };
 
