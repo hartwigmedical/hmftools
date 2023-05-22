@@ -97,6 +97,7 @@ Stop_lost / frameshift (1) | All downstream AA until new stop codon reached | Up
 Inframe fusion (Phase=0) (3) | NA (4) | Up to 16 AA limited by start codon | Up to 16 AA limited by stop codon 
 Inframe fusion (3)  | (Phase = {1,2}) | Mixed transcript AA (4) | Up to 16 AA limited by start codon | Up to 16 AA limited by stop codon 
 Out of frame coding to coding or coding to non-coding fusion | Possible mixed transcript AA + all downstream AA until new stop codon reached (2) | Up to 16 AA limited by start codon | NA (2)
+
 Notes
 (1) Where multiple somatic variants are phased within 17 AA, include entire intermediate section as novel AA  
 (2) For coding to 5’UTR fusions, if a start codon is reached prior to a novel stop codon and is ‘inframe’, the novel segment should be limited to the region up to the new stop codon with the downstream flank set as the first 17 AA of the 3’ partner. 
@@ -107,7 +108,7 @@ Neo further annotates each of the candidate neoepitopes with TPM and direct RNA 
 ```
   ExpectedTpmNeoepitope = AllocatedTPMUp * VariantCopyNumber / CopyNumber* 
 ```
-* Note - If expression is inferred from cancer type or cohort, then sample ploidy should be used instead of copy number since samples specific copy number gains or losses will not already be included in the TPM estimates. 
+Note - If expression is inferred from cancer type or cohort, then sample ploidy should be used instead of copy number since samples specific copy number gains or losses will not already be included in the TPM estimates. 
   
 The direct fragment count support for each point mutation in the RNA bam is imported from the SAGE VCF. For SV, neo re-analyses the RNA BAM to count the RNA depth at the location of the variant that caused the neoepitope and determine the direct RNA fragment support for the neoepitope (defined as matching precisely the 1st novel AA and 5 bases either side).    
 ``` 
@@ -321,7 +322,9 @@ For training the impact of expression on presentation likelihood we use the subs
 ##### TPM adjusted likelihood rank 
 To determine the impact TPM expression has on presentation we compared the TPM of the MS identified peptides of strong predicted binders (LRank<0.1%) found to be presented in the HLAthena training data to all predicted strong binders from the proteome for the same alleles. For each log2 TPM bucket we calculate the proportion of pHLA combinations that are found to be presented.   We find this to be a very strong relationship, ranging from a <<1% chance of presentation where TPM < 1 up to higher than 20% chance where TPM > 1000:  
 
- TO DO: INSERT IMAGE
+<p align="center">
+  <img src="src/main/resources/readme/SAMPLE.variant.rainfall.png" width="700" alt="Somatic Rainfall">
+</p>
 
 Using this observed rate of TPM we can calculate: 
 ```
