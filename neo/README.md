@@ -323,7 +323,7 @@ For training the impact of expression on presentation likelihood we use the subs
 To determine the impact TPM expression has on presentation we compared the TPM of the MS identified peptides of strong predicted binders (LRank<0.1%) found to be presented in the HLAthena training data to all predicted strong binders from the proteome for the same alleles. For each log2 TPM bucket we calculate the proportion of pHLA combinations that are found to be presented.   We find this to be a very strong relationship, ranging from a <<1% chance of presentation where TPM < 1 up to higher than 20% chance where TPM > 1000:  
 
 <p align="center">
-  <img src="src/main/resources/readme/SAMPLE.variant.rainfall.png" width="700" alt="Somatic Rainfall">
+  <img src="src/main/resources/PeptideLengthMapping.png" width="700">
 </p>
 
 Using this observed rate of TPM we can calculate: 
