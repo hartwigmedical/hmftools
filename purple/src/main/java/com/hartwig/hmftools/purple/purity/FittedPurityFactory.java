@@ -172,7 +172,6 @@ public class FittedPurityFactory
             fittedPurities.add(fitPurity(purity, impliedNormFactor));
         }
 
-        // Collections.sort(fittedPurities);
         return fittedPurities;
     }
 

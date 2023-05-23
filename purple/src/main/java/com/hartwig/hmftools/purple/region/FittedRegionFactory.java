@@ -29,11 +29,12 @@ public class FittedRegionFactory
     {
         mCobaltChromosomes = cobaltChromosomes;
         mPloidyPenaltyFactor = ploidyPenaltyFactor;
-        mPloidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation,
-                ploidyPenaltyMinStandardDeviationPerPloidy,
-                majorAlleleSubOnePenaltyMultiplier,
-                majorAlleleSubOneAdditionalPenalty,
+
+        mPloidyDeviation = new PloidyDeviation(
+                ploidyPenaltyStandardDeviation, ploidyPenaltyMinStandardDeviationPerPloidy,
+                majorAlleleSubOnePenaltyMultiplier, majorAlleleSubOneAdditionalPenalty,
                 baselineDeviation);
+
         mAmbiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth);
     }
 
