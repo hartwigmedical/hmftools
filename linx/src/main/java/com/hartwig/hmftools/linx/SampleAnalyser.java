@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_PURPLE_SOMATIC;
 import static com.hartwig.hmftools.common.purple.Gender.MALE;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.SvFileLoader.createSvData;
@@ -14,6 +15,8 @@ import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -443,11 +446,13 @@ public class SampleAnalyser implements Callable
             LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
 
             // write out the Purple drivers again as would usually be done with SVs
-            String purpleDriverFile = mConfig.IsGermline ?
-                    DriverCatalogFile.generateGermlineFilename(mConfig.OutputDataPath, mCurrentSampleId)
-                    : DriverCatalogFile.generateSomaticFilename(mConfig.OutputDataPath, mCurrentSampleId);
+            List<DriverCatalog> purpleDrivers = Lists.newArrayList();
 
-            List<DriverCatalog> purpleDrivers = DriverCatalogFile.read(purpleDriverFile).stream().collect(Collectors.toList());
+            if(!mConfig.IsGermline) // germline doesn't re-write Purple drivers, and somatic may soon follow suit
+            {
+                String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(mConfig.PurpleDataPath, mCurrentSampleId);
+                purpleDrivers.addAll(DriverCatalogFile.read(purpleDriverFile));
+            }
 
             DriverCatalogFile.write(LinxDriver.generateCatalogFilename(mConfig.OutputDataPath, mCurrentSampleId, !mConfig.IsGermline), purpleDrivers);
 
@@ -471,6 +476,8 @@ public class SampleAnalyser implements Callable
         catch (IOException e)
         {
             LNX_LOGGER.error("failed to write sample SV data: {}", e.toString());
+            e.printStackTrace();
+            System.exit(1);
         }
     }
 
