@@ -2,6 +2,11 @@ package com.hartwig.hmftools.cobalt.count;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.common.utils.Doubles;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -79,9 +84,21 @@ public class ReadCountMedianTest {
     }
 
     @Test
+    public void testInterpolatedMedian1() {
+        var val = Doubles.interpolatedMedian(Arrays.stream((new double[] {  2, 3, 1, 4, 5 })).boxed().collect(Collectors.toList()));
+        assertEquals(3.0, val, 1e-10);
+    }
+
+    @Test
     public void testModMedian2() {
         addReads(new int[] { 1, 2, 3, 4 });
         assertModMedian(2.5);
+    }
+
+    @Test
+    public void testInterpolatedMedian2() {
+        var val = Doubles.interpolatedMedian(Arrays.stream((new double[] { 1.0, 2.0, 3.0, 4.0 })).boxed().collect(Collectors.toList()));
+        assertEquals(2.5, val, 1e-10);
     }
 
     @Test
@@ -91,8 +108,32 @@ public class ReadCountMedianTest {
     }
 
     @Test
+    public void testInterpolatedMedian3() {
+        var val = Doubles.interpolatedMedian(Arrays.stream((new double[] { 1.0, 2.0, 2.0, 3.0, 3.0 })).boxed().collect(Collectors.toList()));
+        assertEquals(2.25, val, 1e-10);
+    }
+
+    @Test
     public void testModMedian4() {
         addReads(new int[] { 1, 2, 2, 2, 3, 3 });
         assertModMedian(2.16666666667);
+    }
+
+    @Test
+    public void testInterpolatedMedian4() {
+        var val = Doubles.interpolatedMedian(Arrays.stream((new double[] { 1.0, 2.0, 2.0, 2.0, 3.0, 3.0 })).boxed().collect(Collectors.toList()));
+        assertEquals(2.16666666667, val, 1e-10);
+    }
+
+    @Test
+    public void testModMedian5() {
+        addReads(new int[] { 1, 2, 2, 2, 3, 3, 3, 4 });
+        assertModMedian(2.5);
+    }
+
+    @Test
+    public void testInterpolatedMedian5() {
+        var val = Doubles.interpolatedMedian(Arrays.stream((new double[] { 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 4.0 })).boxed().collect(Collectors.toList()));
+        assertEquals(2.5, val, 1e-10);
     }
 }

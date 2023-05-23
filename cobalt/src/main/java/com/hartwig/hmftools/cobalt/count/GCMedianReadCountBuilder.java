@@ -15,10 +15,13 @@ public class GCMedianReadCountBuilder {
     private static final int MIN_BUCKET = 20;
     private static final int MAX_BUCKET = 60;
 
+    private final boolean useInterpolatedMedian;
+
     private final ReadCountMedian medianSample;
     private final Map<GCBucket, ReadCountMedian> medianPerGCBucket;
 
-    public GCMedianReadCountBuilder() {
+    public GCMedianReadCountBuilder(boolean useInterpolatedMedian) {
+        this.useInterpolatedMedian = useInterpolatedMedian;
         medianSample = new ReadCountMedian();
         medianPerGCBucket = new HashMap<>();
     }
@@ -28,7 +31,7 @@ public class GCMedianReadCountBuilder {
         add(profile, readCount.readCount());
     }
 
-    public void add(@NotNull final GCProfile profile, int readCount) {
+    public void add(@NotNull final GCProfile profile, double readCount) {
         final GCBucket gcBucket = GCBucket.create(profile);
 
         if (gcBucket.bucket() >= MIN_BUCKET && gcBucket.bucket() <= MAX_BUCKET) {
@@ -41,10 +44,13 @@ public class GCMedianReadCountBuilder {
     public GCMedianReadCount build() {
         final Map<GCBucket, Double> gcBucketMeans = new HashMap<>();
         for (GCBucket gcBucket : medianPerGCBucket.keySet()) {
-            gcBucketMeans.put(gcBucket, medianPerGCBucket.get(gcBucket).interpolatedMedian());
+            ReadCountMedian medianCalc = medianPerGCBucket.get(gcBucket);
+            gcBucketMeans.put(gcBucket, useInterpolatedMedian ? medianCalc.interpolatedMedian() : medianCalc.median());
         }
 
-        return new GCMedianReadCount(medianSample.mean(), medianSample.interpolatedMedian(), gcBucketMeans);
+        return new GCMedianReadCount(medianSample.mean(),
+                useInterpolatedMedian ? medianSample.interpolatedMedian() : medianSample.median(),
+                gcBucketMeans);
     }
 }
 

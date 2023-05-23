@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt.ratio;
 
+import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -10,6 +12,7 @@ import com.hartwig.hmftools.cobalt.Chromosome;
 import com.hartwig.hmftools.common.cobalt.ImmutableReadRatio;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.gc.GCBucket;
 import com.hartwig.hmftools.common.genome.gc.GCMedianReadCount;
 import com.hartwig.hmftools.cobalt.count.GCMedianReadCountBuilder;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
@@ -23,19 +26,19 @@ public class GCRatioNormalization
     private final GCMedianReadCountBuilder mMedianReadCountBuilder;
     private final Multimap<Chromosome, ReadCountWithGCContent> mEntries;
 
-    public GCRatioNormalization()
+    public GCRatioNormalization(boolean useInterpolatedMedian)
     {
-        mMedianReadCountBuilder = new GCMedianReadCountBuilder();
+        mMedianReadCountBuilder = new GCMedianReadCountBuilder(useInterpolatedMedian);
         mEntries = ArrayListMultimap.create();
     }
 
-    void addPosition(@NotNull final Chromosome chromosome, @NotNull final GCProfile gcProfile, final int readCount)
+    void addPosition(@NotNull final Chromosome chromosome, @NotNull final GCProfile gcProfile, final double readCount)
     {
         final ReadCountWithGCContent readCountWithGCContent = new ReadCountWithGCContent(readCount, gcProfile);
         mEntries.put(chromosome, readCountWithGCContent);
 
         // TODO: TEST With/without isMappable
-        if(HumanChromosome.fromString(chromosome.contig).isAutosome() && readCountWithGCContent.isMappable() && readCount > 0)
+        if(HumanChromosome.fromString(chromosome.contig).isAutosome() && readCountWithGCContent.isMappable())
         {
             mMedianReadCountBuilder.add(gcProfile, readCount);
         }
@@ -69,13 +72,23 @@ public class GCRatioNormalization
 
         double medianNormalisation = medians.medianReadCount() / medians.meanReadCount();
 
+        // GCBucket gcBucket = GCBucket.create(readCount.gcProfile());
+
         if(gcMedianCount == -1 || !readCount.isMappable() || gcMedianCount == 0)
         {
+            /* CB_LOGGER.debug("{}:{}, read count: {}, gcprofile: {}, gcbucket: {}, gc median count: {}, no ratio",
+                    readCount.chromosome(), readCount.position(),
+                    readCount.readCount(), readCount.gcProfile(), gcBucket, gcMedianCount); */
+
             return null;
         }
         else
         {
             ratio = medianNormalisation * readCount.readCount() / gcMedianCount;
+
+            /* CB_LOGGER.debug("{}:{}, read count: {}, gcprofile: {}, gcbucket: {}, gc median count: {}, gc ratio: {}",
+                    readCount.chromosome(), readCount.position(),
+                    readCount.readCount(), readCount.gcProfile(), gcBucket, gcMedianCount, ratio); */
         }
 
         return ImmutableReadRatio.builder().from(readCount).ratio(ratio).build();
@@ -84,9 +97,9 @@ public class GCRatioNormalization
     private static class ReadCountWithGCContent implements GenomePosition
     {
         public final GCProfile GcProfile;
-        public final int ReadCount;
+        public final double ReadCount;
 
-        private ReadCountWithGCContent(final int readCount, @NotNull final GCProfile gcProfile)
+        private ReadCountWithGCContent(final double readCount, @NotNull final GCProfile gcProfile)
         {
             ReadCount = readCount;
             GcProfile = gcProfile;
@@ -105,7 +118,7 @@ public class GCRatioNormalization
             return GcProfile.start();
         }
 
-        private int readCount()
+        private double readCount()
         {
             return ReadCount;
         }

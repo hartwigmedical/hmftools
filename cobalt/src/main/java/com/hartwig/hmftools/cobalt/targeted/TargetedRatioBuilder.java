@@ -5,13 +5,14 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.cobalt.Chromosome;
 import com.hartwig.hmftools.cobalt.CobaltConstants;
@@ -44,7 +45,7 @@ public class TargetedRatioBuilder implements RatioBuilder
         populateOffTargetRatios(rawRatios, CobaltConstants.OFF_TARGET_WINDOW_SIZE, targetRegions);
         CB_LOGGER.info("{} on target GC ratios, {} off target GC ratios", mOnTargetRatios.size(), mOffTargetRatios.size());
 
-        populateCombinedRatios(mOnTargetRatios, mOffTargetRatios);
+        // populateCombinedRatios(mOnTargetRatios, mOffTargetRatios);
     }
 
     // we use on target ratios only for now
@@ -118,7 +119,7 @@ public class TargetedRatioBuilder implements RatioBuilder
         // we filter out all the regions with 0 gc normalised ratios, as they do not actually
         // correctly reflect the amount of enrichment, and also very rare
 
-        List<Double> targetRegionsGcRatios = Lists.newArrayList();
+        List<Double> targetRegionsGcRatios = new ArrayList<>();
 
         for(Map.Entry<Chromosome,ReadRatio> entry : rawRatios.entries())
         {
@@ -176,9 +177,9 @@ public class TargetedRatioBuilder implements RatioBuilder
 
         for(Chromosome chromosome : rawRatios.keySet())
         {
-            int currentWindowStart = -1;
+            int currentWindowStart = 1;
 
-            List<Double> windowGcRatios = Lists.newArrayList();
+            List<ReadRatio> windowGcRatios = new ArrayList<>();
 
             // we need this to make sure we get consistent chromosome name (1 vs chr1)
             String chromosomeStr = rawRatios.get(chromosome).get(0).chromosome();
@@ -207,7 +208,7 @@ public class TargetedRatioBuilder implements RatioBuilder
                 }
 
                 if(readRatio.ratio() >= 0)
-                    windowGcRatios.add(readRatio.ratio());
+                    windowGcRatios.add(readRatio);
             }
 
             ReadRatio unnormalizedRatio = unnormalizedOffTargetRatio(
@@ -218,7 +219,7 @@ public class TargetedRatioBuilder implements RatioBuilder
         }
 
         // now we want to normalise all of those off target gc ratios by the median
-        List<Double> values = Lists.newArrayList();
+        List<Double> values = new ArrayList<>();
         unnormalizedRatios.values().forEach(x -> values.add(x.ratio()));
         double median = Doubles.median(values);
 
@@ -238,7 +239,7 @@ public class TargetedRatioBuilder implements RatioBuilder
 
     @Nullable
     private static ReadRatio unnormalizedOffTargetRatio(
-            int offTargetWindowSize, final String chromosome, int windowStart, final List<Double> windowGcRatios,
+            int offTargetWindowSize, final String chromosome, int windowStart, final List<ReadRatio> windowGcRatios,
             final List<GenomePosition> targetRegions)
     {
         int minNumGcRatios = (int)round(offTargetWindowSize / CobaltConstants.WINDOW_SIZE * CobaltConstants.MIN_OFF_TARGET_WINDOW_RATIO);
@@ -248,27 +249,30 @@ public class TargetedRatioBuilder implements RatioBuilder
         // the window position is the middle
         int windowMid = windowStart + offTargetWindowSize / 2;
 
-        if(windowGcRatios.size() < minNumGcRatios)
-        {
-            // if we don't have enough sub windows with valid values then we skip this
-            CB_LOGGER.trace( "off target window: {}:{} ({} - {}), not enough sub window",
-                chromosome, windowMid, windowStart, windowEnd);
-            return null;
-        }
-
-        // check that this window does not contain any target regions
+        // check for targeted regions, we want to remove them
         for(GenomePosition targetRegion : targetRegions)
         {
             if(targetRegion.chromosome().equals(chromosome) && windowStart <= targetRegion.position() && windowEnd > targetRegion.position())
             {
                 // this window contains a target region
+                int removeStart = targetRegion.position() - 2 * CobaltConstants.WINDOW_SIZE;
+                int removeEnd = targetRegion.position() + 2 * CobaltConstants.WINDOW_SIZE;
                 CB_LOGGER.trace("off target window: {}:{} ({} - {}), contains target region",
                     chromosome, windowMid, windowStart, windowEnd);
-                return null;
+
+                windowGcRatios.removeIf(o -> o.position() >= removeStart && o.position() <= removeEnd);
             }
         }
 
-        double median = Doubles.median(windowGcRatios);
+        if(windowGcRatios.size() < minNumGcRatios)
+        {
+            // if we don't have enough sub windows with valid values then we skip this
+            CB_LOGGER.trace( "off target window: {}:{} ({} - {}), not enough sub window",
+                    chromosome, windowMid, windowStart, windowEnd);
+            return null;
+        }
+
+        double median = Doubles.median(windowGcRatios.stream().map(ReadRatio::ratio).collect(Collectors.toList()));
 
         CB_LOGGER.debug("off target window: {}:{} ({} - {}), num sub windows: {}, median: {}",
                 chromosome, windowMid, windowStart, windowEnd, windowGcRatios.size(), format("%.4f", median));

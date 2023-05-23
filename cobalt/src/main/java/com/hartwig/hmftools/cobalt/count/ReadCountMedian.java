@@ -12,15 +12,17 @@ import org.jetbrains.annotations.NotNull;
 
 class ReadCountMedian {
 
-    private long sum;
+    private double sum;
     private int count;
-    private final Map<Integer, InnerReadCount> readCount;
+    private final Map<Double, InnerReadCount> readCount;
 
     ReadCountMedian() {
         this.readCount = Maps.newHashMap();
     }
 
-    void addRead(int read) {
+    public int getCount() { return count; }
+
+    void addRead(double read) {
         readCount.computeIfAbsent(read, InnerReadCount::new).increment();
         count++;
         sum += read;
@@ -132,14 +134,14 @@ class ReadCountMedian {
     }
 
     private static class InnerReadCount implements Comparable<InnerReadCount> {
-        private final int read;
+        private final double read;
         private int count;
 
-        private InnerReadCount(final int read) {
+        private InnerReadCount(final double read) {
             this.read = read;
         }
 
-        int read() {
+        double read() {
             return read;
         }
 
@@ -153,7 +155,7 @@ class ReadCountMedian {
 
         @Override
         public int compareTo(@NotNull final InnerReadCount other) {
-            return Integer.compare(read, other.read);
+            return Double.compare(read, other.read);
         }
     }
 }

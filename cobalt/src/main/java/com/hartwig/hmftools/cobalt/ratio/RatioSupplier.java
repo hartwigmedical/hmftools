@@ -24,6 +24,7 @@ import com.hartwig.hmftools.cobalt.targeted.TargetRegionEnrichment;
 import com.hartwig.hmftools.cobalt.targeted.TargetedRatioBuilder;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
+import com.hartwig.hmftools.common.cobalt.ImmutableReadRatio;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.cobalt.MedianRatioFactory;
 import com.hartwig.hmftools.common.cobalt.MedianRatioFile;
@@ -59,11 +60,12 @@ public class RatioSupplier
     {
         // processing states
         protected final GcNormalizedRatioBuilder gcNormalizedRatioBuilder;
-        protected RatioBuilder ratioBuilder;
 
         @Nullable Multimap<Chromosome, LowCovBucket> consolidatedBuckets;
 
-        ArrayListMultimap<Chromosome, ReadRatio> getRatios() { return ratioBuilder.ratios(); }
+        ArrayListMultimap<Chromosome, ReadRatio> readRatios;
+
+        ArrayListMultimap<Chromosome, ReadRatio> getRatios() { return readRatios; }
 
         SampleRatios(
                 final String sampleId,
@@ -76,15 +78,39 @@ public class RatioSupplier
         {
             CB_LOGGER.info("calculating sample ratios for {}", sampleId);
 
-            gcNormalizedRatioBuilder = new GcNormalizedRatioBuilder(gcProfiles, readCounts);
+            // just convert read count to ratios
+            readRatios = ArrayListMultimap.create();
+            final ArrayListMultimap<Chromosome, ReadRatio> finalReadRatios = readRatios;
+            readCounts.entries()
+                    .forEach(o -> finalReadRatios.put(o.getKey(), ImmutableReadRatio.builder().from(o.getValue()).ratio(o.getValue().readCount()).build()));
 
-            ratioBuilder = gcNormalizedRatioBuilder;
+            CB_LOGGER.info(" {}", sampleId);
 
+            /*
+            gcNormalizedRatioBuilder = new GcNormalizedRatioBuilder(gcProfiles, readRatios);
+            readRatios = gcNormalizedRatioBuilder.ratios();
             if (targetRegionEnrichment != null)
             {
-                ratioBuilder = new TargetedRatioBuilder(
-                        targetRegionEnrichment.regions(), targetRegionEnrichment.regionEnrichment(), gcNormalizedRatioBuilder.ratios());
+                CB_LOGGER.info("using targeted ratio");
+                readRatios = new TargetedRatioBuilder(targetRegionEnrichment.regions(), targetRegionEnrichment.regionEnrichment(), readRatios).ratios();
             }
+             */
+
+            boolean useInterpolatedMedian = true;
+
+            // on target ratios
+            if (targetRegionEnrichment != null)
+            {
+                CB_LOGGER.info("using targeted ratio");
+                readRatios = new TargetedRatioBuilder(targetRegionEnrichment.regions(), targetRegionEnrichment.regionEnrichment(), readRatios).ratios();
+
+                // when we use targeted ratio, we normalise the read counts by a normalisation factor. Since the read counts
+                // are no longer integers, we cannot use interpolated median
+                useInterpolatedMedian = false;
+            }
+
+            gcNormalizedRatioBuilder = new GcNormalizedRatioBuilder(gcProfiles, readRatios, useInterpolatedMedian);
+            readRatios = gcNormalizedRatioBuilder.ratios();
 
             switch (sparseBucketPolicy)
             {
@@ -106,7 +132,8 @@ public class RatioSupplier
 
             if (this.consolidatedBuckets != null)
             {
-                ratioBuilder = new LowCoverageRatioBuilder(this.consolidatedBuckets, gcNormalizedRatioBuilder.ratios());
+                CB_LOGGER.info("using low coverage ratio");
+                readRatios = new LowCoverageRatioBuilder(this.consolidatedBuckets, readRatios).ratios();
             }
 
             CB_LOGGER.info("Persisting {} gc read count to {}", sampleId, outputDir);
