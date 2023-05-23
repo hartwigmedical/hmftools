@@ -290,6 +290,8 @@ public class DuplicateGroups
         int maxUmiFragmentCount = 0;
         DuplicateGroup maxUmiGroup = null;
 
+        Map<String,List<DuplicateGroup>> coordGroups = mUmiConfig.BaseStats ? Maps.newHashMap() : null;
+
         for(List<Fragment> fragments : duplicateGroups)
         {
             List<DuplicateGroup> umiGroups = buildUmiGroups(fragments, mUmiConfig);
@@ -300,12 +302,39 @@ public class DuplicateGroups
                 ++mStats.DuplicateGroups;
 
                 if(mUmiConfig.BaseStats)
-                    mStats.recordUmiBaseStats(mUmiConfig, umiGroups);
+                {
+                    coordGroups.put(fragments.get(0).coordinates().Key, umiGroups);
+                }
 
                 maxDuplicatePosCount = max(maxDuplicatePosCount, umiGroups.size());
             }
 
             allUmiGroups.addAll(umiGroups);
+        }
+
+        if(mUmiConfig.BaseStats)
+        {
+            // include single fragments for this analysis
+            for(Fragment fragment : singleFragments)
+            {
+                List<DuplicateGroup> coordGroup = coordGroups.get(fragment.coordinates().Key);
+
+                if(coordGroup == null)
+                {
+                    coordGroup = Lists.newArrayList();
+                    coordGroups.put(fragment.coordinates().Key, coordGroup);
+                }
+
+                coordGroup.add(new DuplicateGroup(mUmiConfig.extractUmiId(fragment.id()), fragment));
+            }
+
+            for(List<DuplicateGroup> coordGroup : coordGroups.values())
+            {
+                if(coordGroup.size() == 1 && coordGroup.get(0).fragmentCount() == 1)
+                    continue;
+
+                mStats.recordUmiBaseStats(mUmiConfig, coordGroup);
+            }
         }
 
         if(mUmiConfig.Duplex)
