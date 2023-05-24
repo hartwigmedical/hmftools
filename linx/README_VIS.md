@@ -161,8 +161,9 @@ ref_genome_version | Defaults to version 37, valid values are 37 or 38
 
 Argument |  Description 
 ---|---
-clusterId | Only generate image for specified comma-separated clusters
+clusterId | Only generate image for specified comma-separated cluster IDs
 chromosome | Only generate images for specified comma-separated chromosomes, or 'All' to show full genome
+chainId | Only generate image for specified comma-separated chain IDs (requires cluster IDs to also be specified)
 include_line_elements | Include line elements in chromosome visualisations (excluded by default) 
 gene | Add canonical transcriptions of supplied genes separated by ',' to image. Requires config 'ensembl_data_dir' to be set as well.
 plot_reportable | Plot any cluster with reported fusion, disruption, or driver
