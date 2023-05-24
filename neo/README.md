@@ -1,8 +1,8 @@
 # NEO
 
-The neoepitope pipeline (Neo) works in 2 main steps to form a comprehensive set of neoepitope and neopeptide predictions from our DNA pipeline output: 
+The neoepitope pipeline (Neo) works in 2 main steps to form a comprehensive set of neoepitope predictions from our DNA pipeline output: 
 - Identification of neoepitopes from all point mutations, small indels and gene fusions.  
-- Calculation of allele specific neopeptide binding and  presentation likelihood 
+- Calculation of allele specific neoepitope binding and  presentation likelihood 
 <p align="center">
   <img src="src/main/resources/NeoOverview.png" width="700">
 </p>
@@ -36,7 +36,7 @@ Neo use the following inputs from the Hartwig WGS pipeline
 - **Structural variants**: LINX candidate fusion neoepitopes (optionally produced by LINX). 
 - **HLA typing**: LILAC output.  
 
-Where Hartwig WTS pipeline output is available additional annotations are added, an effective TPM and TPM adjusted likelihood is estimated for each neo-epitope and neopeptide. The RNA inputs used are: 
+Where Hartwig WTS pipeline output is available additional annotations are added, an effective TPM and TPM adjusted likelihood is estimated for each neo-epitope. The RNA inputs used are: 
 - **Sample WTS BAM**:  Used to assess direct fragment support per neo-epitope 
 - **Sample transcript expression (TPM)**: From isofox output  
 - **Cohort median expression (TPM)**: Available from HMF resources 
@@ -57,8 +57,8 @@ neo_train_exp_likelihood_rand_dist.csv | Pre-calculated percentile ranks of expr
 
 ### Detailed Algorithm
 There are  2  key steps in the Neo pipeline 
-- Neo-epitope identification & TPM annotation
-- Neo-peptide presnetation & scoring
+- Neoepitope identification & TPM annotation
+- Neoepitope presentation & scoring
 
 #### Neo-epitope identification & TPM annotation
 We search for potential neoepitopes for point mutations and structural variants which meet the following criteria:
@@ -80,7 +80,7 @@ GeneName | Gene name or fusion name for fusions
 UpAminoAcids | Section of the neoepitope that matches the upstream transcript  
 DownAminoAcids | Section of the neoepitope that matches the downstream transcript (if any) 
 NovelAminoAcids | Novel section of the neoepitope (if any) 
-PeptideCount | # of neopeptides between 8 and 12 bases that form part of neoepitope 
+PeptideCount | # of novel peptides between 8 and 12 bases that form part of neoepitope 
 TranscriptsUp | List of transcripts in the up gene that support the neoepitope 
 TranscriptsDown | All unique transcripts on the up gene that support the neoepitope 
 
@@ -159,7 +159,7 @@ FusedIntronLength | Length of fused Intron (not presently used)
 SkippedDonors | # of splice donors skipped to from fusion transcript (not presently used) 
 SkippedAcceptors | # of splice acceptors skipped to from fusion transcript (not presently used) 
 
-#### Neo-peptide presentation & scoring
+#### Neoepitope presentation & scoring
 
 Using the neoepitope predictions, we determine all candidate pHLA ({peptide,allele}) combinations that may be presented by the cell. For each candidate neoepitope, we consider all peptides between 8 and 12 length which either overlap the novel amino acid sequence or overlap BOTH the upstream and downstream amino acid sequence.   
 
