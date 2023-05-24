@@ -85,6 +85,19 @@ public class VcfFileReader
 
     public boolean fileValid() { return mFileValid; }
 
+    public void close()
+    {
+        try
+        {
+            if(mReader != null)
+                mReader.close();
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to close VCF({}): {}", mFilename, e.toString());
+        }
+    }
+
     @Nullable
     public VCFHeader vcfHeader() { return (VCFHeader)mReader.getHeader(); }
 
