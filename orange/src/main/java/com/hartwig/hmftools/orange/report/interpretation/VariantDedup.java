@@ -67,8 +67,8 @@ public final class VariantDedup {
             }
         }
 
-        boolean matchesMinAlleleCopyNumber = Doubles.equal(variantToMatch.variantCopyNumber(), minVariantCopyNumber);
+        boolean matchesMinVariantCopyNumber = Doubles.equal(variantToMatch.variantCopyNumber(), minVariantCopyNumber);
         boolean matchesBestHgvsCodingImpact = variantImpactToMatch.hgvsCodingImpact().equals(uniqueHgvsCodingImpact);
-        return !(matchesMinAlleleCopyNumber && matchesBestHgvsCodingImpact);
+        return !(matchesMinVariantCopyNumber && matchesBestHgvsCodingImpact);
     }
 }
