@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.sv;
 
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT;
+import static com.hartwig.hmftools.purple.TestUtils.buildPurityAdjuster;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -30,7 +31,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class RecoverStructuralVariantsTest
 {
     private RecoveredVariantFactory recoveredVariantFactory;
-    private final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.FEMALE, 1, 0.68);
+    private final PurityAdjuster purityAdjuster = buildPurityAdjuster(Gender.FEMALE, 1, 0.68);
 
     @Before
     public void setup() {

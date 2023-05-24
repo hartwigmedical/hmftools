@@ -6,10 +6,12 @@ import static com.hartwig.hmftools.common.utils.Doubles.positiveOrZero;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -35,7 +37,7 @@ public class FittedPurityFactory
     private final double mMaxPurity;
     private final double mPurityIncrements;
     private final double mSomaticPenaltyWeight;
-    private final CobaltChromosomes mCobaltChromosomes;
+    private final Map<String,Double> mObservedRatioMap;
 
     private final int mTotalBAFCount;
     private final double mAverageFittingRatio;
@@ -65,7 +67,8 @@ public class FittedPurityFactory
         mPurityIncrements = purityIncrements;
         mSomaticPenaltyWeight = somaticPenaltyWeight;
         mFittedRegionFactory = fittedRegionFactory;
-        mCobaltChromosomes = cobaltChromosomes;
+        mObservedRatioMap = cobaltChromosomes.chromosomes().stream()
+                .collect(Collectors.toMap(CobaltChromosome::contig, CobaltChromosome::actualRatio));
         mPloidyRange = ploidyRange(minPloidy, maxPloidy);
 
         final List<SomaticVariant> filteredVariants = Lists.newArrayList();
@@ -155,13 +158,11 @@ public class FittedPurityFactory
         Collections.sort(mAll);
     }
 
-    @NotNull
     private Callable<List<FittedPurity>> callableFitPurity(final double purity)
     {
         return () -> fitPurity(purity);
     }
 
-    @NotNull
     private List<FittedPurity> fitPurity(final double purity)
     {
         final List<FittedPurity> fittedPurities = Lists.newArrayList();
@@ -171,7 +172,6 @@ public class FittedPurityFactory
             fittedPurities.add(fitPurity(purity, impliedNormFactor));
         }
 
-        Collections.sort(fittedPurities);
         return fittedPurities;
     }
 
@@ -203,7 +203,7 @@ public class FittedPurityFactory
             fittedRegions.add(fittedRegion);
         }
 
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(purity, normFactor, mCobaltChromosomes);
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(mObservedRatioMap, purity, normFactor);
 
         final double somaticPenalty = Doubles.greaterThan(mSomaticPenaltyWeight, 0) ?
                 mSomaticPenaltyWeight * SomaticPenaltyFactory.calcPenalty(purityAdjuster, fittedRegions, mVariants) : 0;

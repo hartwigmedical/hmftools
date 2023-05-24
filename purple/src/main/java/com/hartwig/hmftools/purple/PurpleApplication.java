@@ -113,7 +113,6 @@ public class PurpleApplication
     private final GermlineVariants mGermlineVariants;
     private final Segmentation mSegmentation;
 
-    private static final int THREADS_DEFAULT = 2;
     private static final String VERSION = "version";
 
     private PurpleApplication(final Options options, final String... args) throws ParseException, IOException
@@ -148,8 +147,7 @@ public class PurpleApplication
             System.exit(1);
         }
 
-        int threads = parseThreads(mCmdLineArgs, THREADS_DEFAULT);
-        mExecutorService = Executors.newFixedThreadPool(threads);
+        mExecutorService = Executors.newFixedThreadPool(mConfig.Threads);
 
         mGermlineVariants = new GermlineVariants(mConfig, mReferenceData, mPurpleVersion.version());
 
@@ -338,14 +336,14 @@ public class PurpleApplication
                     mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers));
 
             PPL_LOGGER.debug("post-fit memory({}mb)", calcMemoryUsage());
+            System.gc();
 
             final List<PeakModelData> somaticPeaks = Lists.newArrayList();
 
             PPL_LOGGER.info("modelling somatic peaks");
             final SomaticPeakStream somaticPeakStream = new SomaticPeakStream();
 
-            final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(
-                    mConfig.Version, purityAdjuster, copyNumbers, fittedRegions);
+            final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(purityAdjuster, copyNumbers, fittedRegions);
 
             sampleData.SomaticCache.purityEnrich(somaticPurityEnrichment);
 
@@ -358,9 +356,9 @@ public class PurpleApplication
 
             somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache, somaticPeaks);
 
-            somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedObservedRegions);
-
+            somaticStream.processAndWrite(purityAdjuster);
             PPL_LOGGER.debug("post-enrichment memory({}mb)", calcMemoryUsage());
+            System.gc();
 
             sampleData.SvCache.write(purityAdjuster, copyNumbers, mConfig.tumorOnlyMode());
 
@@ -445,7 +443,8 @@ public class PurpleApplication
         }
     }
 
-    private BestFitFactory fitPurity(final SampleData sampleData, final List<ObservedRegion> observedRegions,
+    private BestFitFactory fitPurity(
+            final SampleData sampleData, final List<ObservedRegion> observedRegions,
             final FittedRegionFactory fittedRegionFactory, final List<StructuralVariant> structuralVariants)
             throws ExecutionException, InterruptedException
     {
@@ -519,8 +518,7 @@ public class PurpleApplication
 
             PPL_LOGGER.info("recalculating copy number");
             fittedRegions.clear();
-            fittedRegions.addAll(fittedRegionFactory.fitRegion(
-                    fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions));
+            fittedRegions.addAll(fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions));
 
             copyNumberFactory.buildCopyNumbers(fittedRegions, sampleData.SvCache.variants());
         }

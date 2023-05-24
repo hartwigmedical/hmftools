@@ -22,6 +22,9 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
 import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
@@ -52,9 +55,11 @@ public class SageAppendApplication
     private final SageConfig mConfig;
     private final String mInputVcf;
     private final IndexedFastaSequenceFile mRefGenome;
+    private final boolean mFilterToGenes;
 
     private static final double MIN_PRIOR_VERSION = 2.8;
     private static final String INPUT_VCF = "input_vcf";
+    private static final String FILTER_TO_GENES = "require_gene";
 
     public SageAppendApplication(final Options options, final String... args) throws ParseException, IOException
     {
@@ -67,6 +72,7 @@ public class SageAppendApplication
 
         mConfig = new SageConfig(true, version.version(), cmd);
         mInputVcf = mConfig.SampleDataDir + cmd.getOptionValue(INPUT_VCF);
+        mFilterToGenes = cmd.hasOption(FILTER_TO_GENES);
 
         mRefGenome = new IndexedFastaSequenceFile(new File(mConfig.RefGenomeFile));
     }
@@ -96,30 +102,43 @@ public class SageAppendApplication
 
         long startTime = System.currentTimeMillis();
 
-        final List<VariantContext> existingVariants = Lists.newArrayList();
+        // mFilterToGenes
 
-        VCFHeader inputHeader = null;
+        VcfFileReader vcfFileReader = new VcfFileReader(mInputVcf);
 
-        try
+        if(!vcfFileReader.fileValid())
         {
-            AbstractFeatureReader<VariantContext, LineIterator> vcfReader = AbstractFeatureReader.getFeatureReader(
-                    mInputVcf, new VCFCodec(), false);
-
-            inputHeader = (VCFHeader)vcfReader.getHeader();
-            if(!validateInputHeader(inputHeader))
-            {
-                System.exit(1);
-            }
-
-            existingVariants.addAll(verifyAndReadExisting(vcfReader));
-            vcfReader.close();
-        }
-        catch(Exception e)
-        {
-            SG_LOGGER.error("failed to read input VCF({})", mInputVcf, e.toString());
-            e.printStackTrace();
+            SG_LOGGER.error("invalid input VCF({})", mInputVcf);
             System.exit(1);
         }
+
+        VCFHeader inputHeader = vcfFileReader.vcfHeader();
+
+        if(!validateInputHeader(inputHeader))
+        {
+            System.exit(1);
+        }
+
+        final List<VariantContext> existingVariants = Lists.newArrayList();
+
+        for(VariantContext variantContext : vcfFileReader.iterator())
+        {
+            VariantContext variant = variantContext.fullyDecode(inputHeader, false);
+
+            if(mFilterToGenes)
+            {
+                VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(variant);
+
+                if(variantImpact == null || variantImpact.CanonicalGeneName.isEmpty())
+                    continue;
+            }
+
+            existingVariants.add(variant);
+        }
+
+        vcfFileReader.close();
+
+        SG_LOGGER.info("loaded {} variants", existingVariants.size());
 
         SG_LOGGER.info("writing to file: {}", mConfig.OutputFile);
         final VariantVCF outputVCF = new VariantVCF(mRefGenome, mConfig, inputHeader);
@@ -127,11 +146,9 @@ public class SageAppendApplication
         if(existingVariants.isEmpty())
         {
             outputVCF.close();
-            SG_LOGGER.info("input VCF empty", existingVariants.size());
+            SG_LOGGER.info("writing empty output VCF", existingVariants.size());
             return;
         }
-
-        SG_LOGGER.info("loaded {} variants", existingVariants.size());
 
         final SAMSequenceDictionary dictionary = dictionary();
 
@@ -191,20 +208,6 @@ public class SageAppendApplication
 
         long timeTaken = System.currentTimeMillis() - startTime;
         SG_LOGGER.info("completed in {} seconds", String.format("%.1f",timeTaken / 1000.0));
-    }
-
-    private List<VariantContext> verifyAndReadExisting(final AbstractFeatureReader<VariantContext, LineIterator> vcfReader) throws IOException
-    {
-        List<VariantContext> result = Lists.newArrayList();
-
-        VCFHeader header = (VCFHeader) vcfReader.getHeader();
-
-        for(VariantContext variantContext : vcfReader.iterator())
-        {
-            result.add(variantContext.fullyDecode(header, false));
-        }
-
-        return result;
     }
 
     private boolean validateInputHeader(VCFHeader header)
@@ -280,6 +283,7 @@ public class SageAppendApplication
         final Options options = new Options();
         SageConfig.commonOptions().getOptions().forEach(options::addOption);
         options.addOption(INPUT_VCF, true, "Path to input vcf");
+        options.addOption(FILTER_TO_GENES, false, "Only process variants with gene annotations");
         return options;
     }
 

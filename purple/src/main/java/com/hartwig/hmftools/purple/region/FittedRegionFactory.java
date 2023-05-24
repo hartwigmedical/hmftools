@@ -29,22 +29,23 @@ public class FittedRegionFactory
     {
         mCobaltChromosomes = cobaltChromosomes;
         mPloidyPenaltyFactor = ploidyPenaltyFactor;
-        mPloidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation,
-                ploidyPenaltyMinStandardDeviationPerPloidy,
-                majorAlleleSubOnePenaltyMultiplier,
-                majorAlleleSubOneAdditionalPenalty,
+
+        mPloidyDeviation = new PloidyDeviation(
+                ploidyPenaltyStandardDeviation, ploidyPenaltyMinStandardDeviationPerPloidy,
+                majorAlleleSubOnePenaltyMultiplier, majorAlleleSubOneAdditionalPenalty,
                 baselineDeviation);
+
         mAmbiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth);
     }
 
-    public List<ObservedRegion> fitRegion(double purity, double normFactor, @NotNull final Collection<ObservedRegion> observedRegions)
+    public List<ObservedRegion> fitRegion(double purity, double normFactor, final Collection<ObservedRegion> observedRegions)
     {
         final Predicate<ObservedRegion> valid = observedRegion -> isAllowedRegion(mCobaltChromosomes, observedRegion);
         return observedRegions.stream().filter(valid).map(x -> fitRegion(purity, normFactor, x)).collect(Collectors.toList());
     }
 
     @VisibleForTesting
-    static boolean isAllowedRegion(@NotNull final CobaltChromosomes cobaltChromosomes, final GenomeRegion region)
+    static boolean isAllowedRegion(final CobaltChromosomes cobaltChromosomes, final GenomeRegion region)
     {
         return cobaltChromosomes.contains(region.chromosome());
     }

@@ -13,7 +13,7 @@ if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
 fi
 
-svs_tsv=${output_dir}/${tumor_id}.linx.svs.tsv
+svs_tsv=${output_dir}/${tumor_id}.linx.germline.svs.tsv
 
 if [[ -f "${svs_tsv}" ]]; then
   echo "Skipping Linx germline for ${tumor_id}, since SV annotations file ${svs_tsv} exists"

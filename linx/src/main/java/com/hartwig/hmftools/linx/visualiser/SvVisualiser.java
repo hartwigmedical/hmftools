@@ -116,14 +116,14 @@ public class SvVisualiser implements AutoCloseable
 
             for(Integer clusterId : reportableClusterIds)
             {
-                submitCluster(Lists.newArrayList(clusterId), true);
+                submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
             }
         }
-        else if(!mConfig.Clusters.isEmpty() || !mConfig.Chromosomes.isEmpty())
+        else if(!mConfig.ClusterIds.isEmpty() || !mConfig.Chromosomes.isEmpty())
         {
-            if(!mConfig.Clusters.isEmpty())
+            if(!mConfig.ClusterIds.isEmpty())
             {
-                submitCluster(mConfig.Clusters, false);
+                submitCluster(mConfig.ClusterIds, mConfig.ChainIds, false);
             }
 
             if(!mConfig.Chromosomes.isEmpty())
@@ -137,7 +137,7 @@ public class SvVisualiser implements AutoCloseable
 
             for (Integer clusterId : clusterIds)
             {
-                submitCluster(Lists.newArrayList(clusterId), true);
+                submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
             }
 
             final Set<String> chromosomes = Sets.newHashSet();
@@ -215,10 +215,18 @@ public class SvVisualiser implements AutoCloseable
                 Collections.emptyList(), false);
     }
 
-    private void submitCluster(final List<Integer> clusterIds, boolean skipSingles)
+    private void submitCluster(final List<Integer> clusterIds, final List<Integer> chainIds, boolean skipSingles)
     {
-        final List<VisSvData> clusterLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
-        final List<VisSegment> clusterSegments = mSampleData.Segments.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
+        final List<VisSvData> clusterLinks = mSampleData.SvData.stream()
+                .filter(x -> clusterIds.contains(x.ClusterId))
+                .filter(x -> chainIds.isEmpty() || chainIds.contains(x.ChainId))
+                .collect(toList());
+
+        final List<VisSegment> clusterSegments = mSampleData.Segments.stream()
+                .filter(x -> clusterIds.contains(x.ClusterId))
+                .filter(x -> chainIds.isEmpty() || chainIds.contains(x.ChainId))
+                .collect(toList());
+
         final List<VisGeneExon> clusterExons =
                 mSampleData.Exons.stream().filter(x -> clusterIds.contains(x.ClusterId)).distinct().collect(toList());
 
@@ -228,13 +236,13 @@ public class SvVisualiser implements AutoCloseable
 
         if(clusterLinks.isEmpty())
         {
-            VIS_LOGGER.warn("Cluster {} not present in file", clusterIdsStr);
+            VIS_LOGGER.warn("cluster {} not present in file", clusterIdsStr);
             return;
         }
 
         if(clusterLinks.size() == 1 && skipSingles && clusterExons.isEmpty())
         {
-            VIS_LOGGER.debug("Skipping simple cluster {}", clusterIdsStr);
+            VIS_LOGGER.debug("skipping simple cluster {}", clusterIdsStr);
             return;
         }
 
@@ -262,7 +270,7 @@ public class SvVisualiser implements AutoCloseable
             fileId += clusterIds.size() > 1 ? ".clusters-" : ".cluster-";
             fileId += clusterIdsStr;
 
-            if(mConfig.Clusters.size() == 1)
+            if(mConfig.ClusterIds.size() == 1)
             {
                 final String resolvedTypeString = clusterLinks.get(0).ClusterResolvedType.toString();
                 fileId += "." + resolvedTypeString;

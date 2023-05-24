@@ -333,10 +333,12 @@ public class ReadContextCounter implements VariantHotspot
 
                 logReadEvidence(sampleId, record, match.toString(), readIndex);
 
+                /*
                 if(SG_LOGGER.isTraceEnabled() && sampleId != null)
                 {
                     qualityCalc.logReadQualCalcs(this, readIndex, record, adjustedNumOfEvents);
                 }
+                */
 
                 countStrandedness(record);
 
@@ -421,12 +423,14 @@ public class ReadContextCounter implements VariantHotspot
                 mShortened++;
         }
 
+        /*
         if(rawContext.RefSupport)
             matchStr = "REF";
         else if(rawContext.AltSupport)
             matchStr = "ALT";
 
         logReadEvidence(sampleId, record, matchStr, readIndex);
+        */
 
         return matchType;
     }

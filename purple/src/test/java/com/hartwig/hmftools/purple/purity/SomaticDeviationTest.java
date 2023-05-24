@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.purity;
 
+import static com.hartwig.hmftools.purple.TestUtils.buildPurityAdjuster;
+
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.purple.Gender;
@@ -14,7 +16,7 @@ public class SomaticDeviationTest
     @Test
     public void testMaxPloidy()
     {
-        PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.FEMALE, 0.12, 0.98);
+        PurityAdjuster purityAdjuster = buildPurityAdjuster(Gender.FEMALE, 0.12, 0.98);
         int maxReads = SomaticDeviation.INSTANCE.maxConceivableReads(purityAdjuster, 2, depth(18, 55), 3.0965, 2.2021);
         assertEquals(16, maxReads);
 
@@ -28,7 +30,7 @@ public class SomaticDeviationTest
     @Test
     public void testMaxConceivableReadsIsZeroWithNegativeTumorCopyNumber()
     {
-        PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.FEMALE, 0.12, 0.98);
+        PurityAdjuster purityAdjuster = buildPurityAdjuster(Gender.FEMALE, 0.12, 0.98);
         int maxReads = SomaticDeviation.INSTANCE.maxConceivableReads(purityAdjuster, 2, depth(18, 55), -0.1, -0.1);
         assertEquals(0, maxReads);
     }

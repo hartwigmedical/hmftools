@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS_DESC;
 import static com.hartwig.hmftools.linx.LinxConfig.GERMLINE;
-import static com.hartwig.hmftools.linx.visualiser.circos.Highlights.populateKnownSites;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -28,15 +26,12 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.ConfigUtils;
-import com.hartwig.hmftools.common.utils.FileReaderUtils;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.linx.visualiser.circos.Highlights;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.core.util.FileUtils;
 import org.jetbrains.annotations.NotNull;
 
 public class VisualiserConfig
@@ -59,7 +54,8 @@ public class VisualiserConfig
 
     // filters and plotting options
     public final boolean IncludeLineElements;
-    public final List<Integer> Clusters;
+    public final List<Integer> ClusterIds;
+    public final List<Integer> ChainIds;
     public final List<String> Chromosomes;
     public final Set<String> Genes;
     public final List<ChrBaseRegion> SpecificRegions;
@@ -70,7 +66,8 @@ public class VisualiserConfig
     private static final String SAMPLE = "sample";
     private static final String VIS_FILE_DIRECTORY = "vis_file_dir";
     private static final String LOAD_COHORT_FILES = "load_cohort_files";
-    private static final String CLUSTERS = "clusterId";
+    private static final String CLUSTER_IDS = "clusterId";
+    private static final String CHAIN_IDS = "chainId";
     private static final String CHROMOSOMES = "chromosome";
     private static final String GENE = "gene";
     private static final String PLOT_OUT = "plot_out";
@@ -103,7 +100,8 @@ public class VisualiserConfig
         EnsemblDataDir = cmd.getOptionValue(ENSEMBL_DATA_DIR);
 
         SpecificRegions = ChrBaseRegion.loadSpecificRegions(cmd);
-        Clusters = parseClusters(cmd);
+        ClusterIds = parseClusterIds(cmd);
+        ChainIds = parseChainIds(cmd);
         Chromosomes = parseChromosomes(cmd);
         Genes = Sets.newHashSet();
 
@@ -145,13 +143,25 @@ public class VisualiserConfig
         PlotClusterGenes = cmd.hasOption(PLOT_CLUSTER_GENES);
     }
 
-    private static List<Integer> parseClusters(final CommandLine cmd) throws ParseException
+    private static List<Integer> parseClusterIds(final CommandLine cmd)
     {
         List<Integer> result = Lists.newArrayList();
 
-        if(cmd.hasOption(CLUSTERS))
+        if(cmd.hasOption(CLUSTER_IDS))
         {
-            Arrays.stream(cmd.getOptionValue(CLUSTERS).split(DELIM, -1)).forEach(x -> result.add(Integer.parseInt(x)));
+            Arrays.stream(cmd.getOptionValue(CLUSTER_IDS).split(DELIM, -1)).forEach(x -> result.add(Integer.parseInt(x)));
+        }
+
+        return result;
+    }
+
+    private static List<Integer> parseChainIds(final CommandLine cmd)
+    {
+        List<Integer> result = Lists.newArrayList();
+
+        if(cmd.hasOption(CHAIN_IDS))
+        {
+            Arrays.stream(cmd.getOptionValue(CHAIN_IDS).split(DELIM, -1)).forEach(x -> result.add(Integer.parseInt(x)));
         }
 
         return result;
@@ -198,8 +208,9 @@ public class VisualiserConfig
 
         // filters
         options.addOption(GENE, true, "Show canonical transcript for genes (separated by ','");
-        options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");
-        options.addOption(CHROMOSOMES, true, "Only generate image for specified comma separated chromosomes");
+        options.addOption(CLUSTER_IDS, true, "Limit to specified cluster IDs (separated by ',')");
+        options.addOption(CHAIN_IDS, true, "Limit to specified chain IDs (separated by ','), requires clusterId to be specified");
+        options.addOption(CHROMOSOMES, true, "Limit to specified chromosomes (separated by ',')");
         options.addOption(SPECIFIC_REGIONS, true, SPECIFIC_REGIONS_DESC);
 
         // options
@@ -224,5 +235,4 @@ public class VisualiserConfig
         }
         return value;
     }
-
 }

@@ -80,6 +80,7 @@ public class SampleData
                 mConfig.SampleDataDir + COHORT_VIS_FUSIONS_FILE : VisFusion.generateFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
 
         List<VisSvData> svData = VisSvData.read(svDataFile).stream().filter(x -> x.SampleId.equals(mConfig.Sample)).collect(toList());
+        boolean svDataFiltered = false;
 
         if(!mConfig.SpecificRegions.isEmpty())
         {
@@ -88,7 +89,7 @@ public class SampleData
                             .anyMatch(y -> y.containsPosition(x.ChrStart, x.PosStart) || y.containsPosition(x.ChrEnd, x.PosEnd)))
                     .collect(toList());
 
-            if(mConfig.Clusters.isEmpty())
+            if(mConfig.ClusterIds.isEmpty())
             {
                 // if clusters have not been specified, then add these to the set to be plotted
                 svsInRegions.forEach(x -> addClusterId(x.ClusterId));
@@ -98,11 +99,19 @@ public class SampleData
                 // otherwise only show SVs for the specified clusters which are also in the specified regions
                 svData = svsInRegions;
             }
+
+            svDataFiltered = true;
         }
 
-        if(!mConfig.Clusters.isEmpty())
+        if(!mConfig.ClusterIds.isEmpty())
         {
-            svData = svData.stream().filter(x -> mConfig.Clusters.contains(x.ClusterId)).collect(toList());
+            svData = svData.stream().filter(x -> mConfig.ClusterIds.contains(x.ClusterId)).collect(toList());
+            svDataFiltered = true;
+
+            if(!mConfig.ChainIds.isEmpty())
+            {
+                svData = svData.stream().filter(x -> mConfig.ChainIds.contains(x.ChainId)).collect(toList());
+            }
         }
 
         SvData = svData;
@@ -134,16 +143,16 @@ public class SampleData
             List<LinxSvAnnotation> svAnnotations = Files.exists(Paths.get(svAnnotationsFile)) ?
                     LinxSvAnnotation.read(svAnnotationsFile) : LinxSvAnnotation.read(svAnnotationsFileGermline);
 
-            if(!mConfig.SpecificRegions.isEmpty())
+            if(svDataFiltered)
             {
                 svAnnotations = svAnnotations.stream().filter(x -> SvData.stream().anyMatch(y -> y.SvId == x.svId())).collect(toList());
             }
 
-            if(mConfig.PlotClusterGenes && !mConfig.Clusters.isEmpty())
+            if(mConfig.PlotClusterGenes && !mConfig.ClusterIds.isEmpty())
             {
                 for(LinxSvAnnotation svAnnotation : svAnnotations)
                 {
-                    if(mConfig.Clusters.contains(svAnnotation.clusterId()))
+                    if(mConfig.ClusterIds.contains(svAnnotation.clusterId()))
                     {
                         if(!svAnnotation.geneStart().isEmpty())
                             Arrays.stream(svAnnotation.geneStart().split(ITEM_DELIM)).forEach(x -> mConfig.Genes.add(x));
@@ -153,7 +162,7 @@ public class SampleData
                     }
                 }
             }
-            else if(!mConfig.Genes.isEmpty() && mConfig.Clusters.isEmpty() && mConfig.RestrictClusterByGene)
+            else if(!mConfig.Genes.isEmpty() && mConfig.ClusterIds.isEmpty() && mConfig.RestrictClusterByGene)
             {
                 for(LinxSvAnnotation svAnnotation : svAnnotations)
                 {
@@ -174,7 +183,7 @@ public class SampleData
                 }
             }
 
-            if(!mConfig.SpecificRegions.isEmpty() && mConfig.Clusters.isEmpty())
+            if(!mConfig.SpecificRegions.isEmpty() && mConfig.ClusterIds.isEmpty())
             {
                 // limit to those clusters covered by an SV in the specific regions
                 for(LinxSvAnnotation svAnnotation : svAnnotations)
@@ -184,13 +193,13 @@ public class SampleData
             }
         }
 
-        Exons.addAll(additionalExons(mConfig, mConfig.Genes, Exons, mConfig.Clusters));
+        Exons.addAll(additionalExons(mConfig, mConfig.Genes, Exons, mConfig.ClusterIds));
     }
 
     private void addClusterId(final int clusterId)
     {
-        if(!mConfig.Clusters.contains(clusterId))
-            mConfig.Clusters.add(clusterId);
+        if(!mConfig.ClusterIds.contains(clusterId))
+            mConfig.ClusterIds.add(clusterId);
     }
 
     public Set<Integer> findReportableClusters()

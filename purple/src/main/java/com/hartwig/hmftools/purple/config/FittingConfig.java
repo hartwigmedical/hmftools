@@ -53,17 +53,16 @@ public class FittingConfig
     private static final String PLOIDY_PENALTY_MIN_STANDARD_DEVIATION = "ploidy_penalty_min_standard_deviation_per_ploidy";
     private static final String PLOIDY_PENALTY_MIN = "ploidy_penalty_min";
 
-    double PLOIDY_PENALTY_FACTOR_DEFAULT = 0.4;
-    double PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT = 0.05;
-    double PLOIDY_PENALTY_MIN_STANDARD_DEVIATION_DEFAULT = 1.5;
-    double PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT = 1;
-    double PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT = 1.5;
-    double PLOIDY_PENALTY_MIN_DEFAULT = 0.1;
+    private static final double PLOIDY_PENALTY_FACTOR_DEFAULT = 0.4;
+    private static final double PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT = 0.05;
+    private static final double PLOIDY_PENALTY_MIN_STANDARD_DEVIATION_DEFAULT = 1.5;
+    private static final double PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT = 1;
+    private static final double PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT = 1.5;
+    private static final double PLOIDY_PENALTY_MIN_DEFAULT = 0.1;
 
     // SV recovery
     public static final String CFG_MIN_MATE_QUAL_SCORE = "recovery_mate_min_qual";
     public static final String CFG_MIN_SGL_QUAL_SCORE = "recovery_sgl_min_qual";
-
 
     public FittingConfig(@NotNull final CommandLine cmd)
     {

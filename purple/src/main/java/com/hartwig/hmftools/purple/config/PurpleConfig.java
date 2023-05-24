@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
@@ -43,6 +44,7 @@ public class PurpleConfig
     public final ChartConfig Charting;
     public final boolean TargetRegionsMode;
     public final Map<VariantTier,Integer> TierQualFilters;
+    public final int Threads;
 
     // debug only
     public final boolean FilterSomaticsOnGene;
@@ -113,6 +115,7 @@ public class PurpleConfig
         Fitting = new FittingConfig(cmd);
         SomaticFitting = new SomaticFitConfig(cmd);
         TargetRegionsMode = cmd.hasOption(TARGET_REGION_BED);
+        Threads = parseThreads(cmd, 1);
 
         RunDrivers = DriverGenePanelConfig.isConfigured(cmd);
         DriversOnly = cmd.hasOption(DRIVERS_ONLY);

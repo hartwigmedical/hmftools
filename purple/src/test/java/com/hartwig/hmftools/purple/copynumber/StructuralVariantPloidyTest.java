@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.copynumber;
 
+import static com.hartwig.hmftools.purple.TestUtils.buildPurityAdjuster;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.Optional;
@@ -16,7 +18,7 @@ import org.junit.Test;
 public class StructuralVariantPloidyTest
 {
     static final String CHROMOSOME = "X";
-    static final PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1d, 1d);
+    static final PurityAdjuster PURE = buildPurityAdjuster(Gender.FEMALE, 1d, 1d);
 
     private static final double EPSILON = 1e-10;
     private static final double PLOIDY = 1;

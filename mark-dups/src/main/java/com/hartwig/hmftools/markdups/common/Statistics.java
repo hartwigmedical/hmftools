@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.markdups.common;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 import com.hartwig.hmftools.markdups.consensus.UmiConfig;
 import com.hartwig.hmftools.markdups.consensus.DuplicateGroup;
@@ -37,6 +39,9 @@ public class Statistics
     public final Map<Integer,Integer> DuplicateFrequencies;
     public final List<UmiGroupCounts> UmiGroupFrequencies;
     public final List<PositionFragmentsData> PositionFragments;
+    public int[][] UmiPositionBaseFrequencies;
+
+    public static final int UMI_BASE_COUNT = Nucleotides.DNA_BASES.length + 1; // will record any Ns
 
     public Statistics()
     {
@@ -51,6 +56,7 @@ public class Statistics
         DuplicateFrequencies = Maps.newHashMap();
         UmiGroupFrequencies = Lists.newArrayList();
         PositionFragments = Lists.newArrayList();
+        UmiPositionBaseFrequencies = null;
     }
 
     public void merge(final Statistics other)
@@ -105,6 +111,22 @@ public class Statistics
 
             posFragData.Frequency += otherPosFragData.Frequency;
 
+        }
+
+        if(other.UmiPositionBaseFrequencies != null)
+        {
+            if(UmiPositionBaseFrequencies == null)
+            {
+                UmiPositionBaseFrequencies = new int[other.UmiPositionBaseFrequencies.length][UMI_BASE_COUNT];
+            }
+
+            for(int p = 0; p < UmiPositionBaseFrequencies.length; ++p)
+            {
+                for(int b = 0; b < UMI_BASE_COUNT; ++b)
+                {
+                    UmiPositionBaseFrequencies[p][b] += other.UmiPositionBaseFrequencies[p][b];
+                }
+            }
         }
     }
 
@@ -199,8 +221,10 @@ public class Statistics
         }
     }
 
-    public void recordUmiBaseDiffs(final UmiConfig umiConfig, final List<DuplicateGroup> umiGroups)
+    public void recordUmiBaseStats(final UmiConfig umiConfig, final List<DuplicateGroup> umiGroups)
     {
+        umiGroups.forEach(x -> recordUmiBaseFrequencies(x));
+
         // evaluate 1 or 2 UMI groups, including those with a single fragment which may have been under-clustered
         if(umiGroups.size() == 1)
         {
@@ -210,6 +234,36 @@ public class Statistics
         {
             recordUmiGroupStats(umiConfig, umiGroups.get(0), umiGroups.get(1));
         }
+    }
+
+    private void recordUmiBaseFrequencies(final DuplicateGroup umiGroup)
+    {
+        String umiId = umiGroup.id();
+
+        if(UmiPositionBaseFrequencies == null)
+            UmiPositionBaseFrequencies = new int[umiId.length()][UMI_BASE_COUNT];
+
+        for(int p = 0; p < min(umiId.length(), UmiPositionBaseFrequencies.length); ++p)
+        {
+            int baseIndex = getBaseIndex(umiGroup.id().charAt(p));
+
+            if(baseIndex >= 0)
+                ++UmiPositionBaseFrequencies[p][baseIndex];
+        }
+    }
+
+    private static int getBaseIndex(final char base)
+    {
+        switch(base)
+        {
+            case 'A': return 0;
+            case 'C': return 1;
+            case 'G': return 2;
+            case 'T': return 3;
+            case 'N': return 4;
+        }
+
+        return -1;
     }
 
     private void recordUmiGroupStats(final UmiConfig umiConfig, final DuplicateGroup umiGroup)
@@ -293,7 +347,7 @@ public class Statistics
     {
         try
         {
-            String filename = config.formFilename("duplicate_stats");
+            String filename = config.formFilename("duplicate_freq");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("DuplicateReadCount,Frequency");
@@ -316,14 +370,14 @@ public class Statistics
         }
     }
 
-    public void writeUmiStats(final MarkDupsConfig config)
+    public void writeUmiBaseDiffStats(final MarkDupsConfig config)
     {
         try
         {
-            String filename = config.formFilename("umi_stats");
+            String filename = config.formFilename("umi_edit_distance");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("DuplicateGroupCount,ReadCount,GroupCount");
+            writer.write("UmiCountWithCoords,DuplicateReadCount,Frequency");
 
             for(int i = 0; i <= MAX_EDIT_DISTANCE; ++i)
             {
@@ -352,14 +406,43 @@ public class Statistics
         }
     }
 
+    public void writeUmiBaseFrequencyStats(final MarkDupsConfig config)
+    {
+        try
+        {
+            String filename = config.formFilename("umi_nucleotide_freq");
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write("UmiPosition,ACount,CCount,GCount,TCount,NCount");
+            writer.newLine();
+
+            for(int p = 0; p < UmiPositionBaseFrequencies.length; ++p)
+            {
+                writer.write(format("%d", p+1));
+
+                for(int b = 0; b < UMI_BASE_COUNT; ++b)
+                {
+                    writer.write(format(",%d", UmiPositionBaseFrequencies[p][b]));
+                }
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            MD_LOGGER.error(" failed to write UMI stats: {}", e.toString());
+        }
+    }
     public void writePositionFragmentsData(final MarkDupsConfig config)
     {
         try
         {
-            String filename = config.formFilename("pos_frags_stats");
+            String filename = config.formFilename("umi_coord_freq");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("UniqueFragCoords,UniqueFragments,Count,MaxUmis,MaxUmiDuplicates,MaxUmiDetails");
+            writer.write("UmiCountWithStartPos,UmiCountWithCoords,Frequency,MaxUmis,MaxUmiDuplicates,MaxUmiDetails");
             writer.newLine();
 
             for(PositionFragmentsData posFragData : PositionFragments)
