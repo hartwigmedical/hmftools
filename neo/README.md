@@ -312,6 +312,8 @@ For performance assessment compared to mass spectrometry experiments, we assume 
 ```
  meanTPR = mean(TPR0.025%,TPR0.05%,TPR0.1%,TPR0.2%,TPR0.4%) 
 ```
+
+A detailed comparison of perfrormance to other tools is presented in supplementary note 2 of Martínez-Jiménez, F., Priestley, P., Shale, C. et al. Genetic immune escape landscape in primary and metastatic cancer. Nat Genet 55, 820–831 (2023)[https://www.nature.com/articles/s41588-023-01367-1#Sec29]
  
 ### ADDENDUM 2: Expression adjusted presentation likelihood algorithm 
 #### Training and validation data 
