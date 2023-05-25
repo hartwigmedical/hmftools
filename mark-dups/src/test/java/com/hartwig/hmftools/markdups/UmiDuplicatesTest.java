@@ -293,7 +293,6 @@ public class UmiDuplicatesTest
     {
         // 2 UMI groups and a single fragment with the forward orientation, 1 fragment and UMI group on the reverse
         // are matched off with each other to form 3 final groups in total
-
         int readPos = 100;
         int matePos = 200;
 
@@ -369,6 +368,66 @@ public class UmiDuplicatesTest
 
         PositionFragmentCounts positionFragmentCounts = mChrReaderUMIs.statistics().UmiStats.PositionFragments.get(0);
         assertEquals(2, positionFragmentCounts.PosGroupCount);
+        assertEquals(3, positionFragmentCounts.UniqueFragmentCount);
+        assertEquals(1, positionFragmentCounts.Frequency);
+    }
+
+    @Test
+    public void testSingleUmiGroup2()
+    {
+        // 2 separate groups of single opposite orientation fragments, where each can be collapsed
+        int readPos = 100;
+        int matePos = 200;
+        int matePos2 = 300;
+
+        String umi1 = "AAAAA";
+        String umi2 = "TTTTT";
+        String umi3 = "CCCCC";
+        String umi4 = "GGGGG";
+        String umi5 = "ACGTA";
+
+        SAMRecord read1 = createSamRecord(
+                nextReadId(umi1), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false, false,
+                null, true, TEST_READ_CIGAR);
+
+        SAMRecord read2 = createSamRecord(
+                nextReadId(umi2), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false, false,
+                null, true, TEST_READ_CIGAR);
+        setSecondInPair(read2);
+
+        SAMRecord read3 = createSamRecord(
+                nextReadId(umi3), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos2, false, false,
+                null, true, TEST_READ_CIGAR);
+        setSecondInPair(read3);
+
+        SAMRecord read4 = createSamRecord(
+                nextReadId(umi4), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos2, false, false,
+                null, true, TEST_READ_CIGAR);
+
+        // and one excess read
+        SAMRecord read5 = createSamRecord(
+                nextReadId(umi5), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos2, false, false,
+                null, true, TEST_READ_CIGAR);
+        setSecondInPair(read5);
+
+        mChrReaderUMIs.processRead(read1);
+        mChrReaderUMIs.processRead(read2);
+        mChrReaderUMIs.processRead(read3);
+        mChrReaderUMIs.processRead(read4);
+        mChrReaderUMIs.processRead(read5);
+        mChrReaderUMIs.flushReadPositions();
+
+        PartitionData partitionData = mChrReaderUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
+
+        assertEquals(2, partitionData.umiGroups().size());
+        assertEquals(5, mWriter.recordWriteCount());
+        assertEquals(2, mWriter.recordWriteCountConsensus());
+
+        assertEquals(2, mChrReaderUMIs.statistics().UmiStats.UmiGroups);
+        assertEquals(1, mChrReaderUMIs.statistics().UmiStats.PositionFragments.size());
+
+        PositionFragmentCounts positionFragmentCounts = mChrReaderUMIs.statistics().UmiStats.PositionFragments.get(0);
+        assertEquals(3, positionFragmentCounts.PosGroupCount);
         assertEquals(3, positionFragmentCounts.UniqueFragmentCount);
         assertEquals(1, positionFragmentCounts.Frequency);
     }
