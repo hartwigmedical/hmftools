@@ -27,8 +27,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.samtools.UmiReadType;
-import com.hartwig.hmftools.markdups.common.Fragment;
-import com.hartwig.hmftools.markdups.common.FragmentStatus;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 
@@ -46,7 +44,7 @@ public class DuplicateGroup
     private final boolean[] mReadGroupComplete;
     private final ReadTypeId[] mPrimaryReadTypeIndex; // details for primary and mate reads
     private final String mCoordinatesKey;
-    private boolean mDuplexDetected;
+    private boolean mDualStrand;
 
     private static final int MAX_READ_TYPES = ReadType.values().length;
     private static final int PRIMARY_READ_TYPES = ReadType.MATE.ordinal() + 1;
@@ -61,7 +59,7 @@ public class DuplicateGroup
         mPrimaryReadTypeIndex = new ReadTypeId[PRIMARY_READ_TYPES];
         mFragmentCount = 0;
         mCoordinatesKey = fragment.coordinates().keyOriented();
-        mDuplexDetected = false;
+        mDualStrand = false;
     }
 
     public List<Fragment> fragments() { return mFragments; }
@@ -73,8 +71,7 @@ public class DuplicateGroup
 
     public String id() { return mId; }
 
-    public void registerDuplex() { mDuplexDetected = true; }
-    public boolean duplexDetected() { return mDuplexDetected; }
+    public void registerDualStrand() { mDualStrand = true; }
 
     public void categoriseReads()
     {
@@ -329,7 +326,7 @@ public class DuplicateGroup
                 // set consensus read attributes
                 consensusReadInfo.ConsensusRead.setAttribute(CONSENSUS_READ_ATTRIBUTE, readGroup.size());
 
-                String umiReadType = mDuplexDetected ? UmiReadType.DUPLEX.toString() : UmiReadType.SINGLE.toString();
+                String umiReadType = mDualStrand ? UmiReadType.DUAL_STRAND.toString() : UmiReadType.SINGLE.toString();
                 consensusReadInfo.ConsensusRead.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType);
 
                 reads.add(consensusReadInfo.ConsensusRead);

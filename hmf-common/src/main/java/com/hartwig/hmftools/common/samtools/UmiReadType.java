@@ -4,5 +4,5 @@ public enum UmiReadType
 {
     NONE,
     SINGLE,
-    DUPLEX;
+    DUAL_STRAND;
 }

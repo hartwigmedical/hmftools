@@ -35,6 +35,8 @@ public class FittedRegionFactory
                 majorAlleleSubOnePenaltyMultiplier, majorAlleleSubOneAdditionalPenalty,
                 baselineDeviation);
 
+        // mPloidyDeviation.setUseCache();
+
         mAmbiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth);
     }
 

@@ -426,6 +426,7 @@ public class UmiGroupBuilder
                     }
 
                     // collapsing only occurs between a pair, not 1:M
+                    firstGroup.registerDualStrand();
                     break;
                 }
                 else

@@ -385,5 +385,4 @@ public class DuplicateGroupBuilder
 
         return readBaseCount > 0 ? readBaseQualTotal / (double)readBaseCount : 0;
     }
-
 }
