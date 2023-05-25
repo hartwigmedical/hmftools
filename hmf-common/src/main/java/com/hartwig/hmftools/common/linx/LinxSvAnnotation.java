@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.linx;
 
-import static com.hartwig.hmftools.common.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -74,13 +74,13 @@ public abstract class LinxSvAnnotation
     private static List<LinxSvAnnotation> fromLines(final List<String> lines)
     {
         String header = lines.get(0);
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
         List<LinxSvAnnotation> annotations = Lists.newArrayList();
 
         for(int i = 1; i < lines.size(); ++i)
         {
-            String[] values = lines.get(i).split(DELIMITER);
+            String[] values = lines.get(i).split(TSV_DELIM);
 
             annotations.add(ImmutableLinxSvAnnotation.builder()
                     .vcfId(values[fieldsIndexMap.get("vcfId")])
@@ -110,7 +110,7 @@ public abstract class LinxSvAnnotation
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("vcfId")
                 .add("svId")
                 .add("clusterId")
@@ -135,7 +135,7 @@ public abstract class LinxSvAnnotation
 
     private static String toString(final LinxSvAnnotation svData)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(svData.vcfId()))
                 .add(String.valueOf(svData.svId()))
                 .add(String.valueOf(svData.clusterId()))

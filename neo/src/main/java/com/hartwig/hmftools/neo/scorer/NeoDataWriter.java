@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
@@ -13,6 +14,7 @@ import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.neo.bind.BindData;
 
@@ -48,12 +50,16 @@ public class NeoDataWriter
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            if(mConfig.Samples.size() > 1)
-                writer.write("SampleId,");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            writer.write("NeIds,VariantType,VariantInfo,Gene,Allele,Peptide,FlankUp,FlankDown");
-            writer.write(",Score,Rank,Likelihood,LikelihoodRank,ExpLikelihood,ExpLikelihoodRank,EffectiveTpm");
-            writer.write(",RecogSim,OtherAlleleRecogSim,AlleleCN,AlleleDisrupted");
+            if(mConfig.Samples.size() > 1)
+                sj.add("SampleId");
+
+            sj.add("NeIds").add("VariantType").add("VariantInfo").add("Gene").add("Allele").add("Peptide").add("FlankUp").add("FlankDown");
+            sj.add("Score").add("Rank").add("Likelihood").add("LikelihoodRank").add("ExpLikelihood").add("ExpLikelihoodRank").add("EffectiveTpm");
+            sj.add("RecogSim").add("OtherAlleleRecogSim").add("AlleleCN").add("AlleleDisrupted");
+
+            writer.write(sj.toString());
             writer.newLine();
             return writer;
         }
@@ -85,22 +91,34 @@ public class NeoDataWriter
 
                     AlleleCoverage alleleCoverage = alleleCoverages.stream().filter(x -> x.Allele.equals(bindData.Allele)).findFirst().orElse(null);
 
+                    StringJoiner sj = new StringJoiner(TSV_DELIM);
+
                     if(mConfig.Samples.size() > 1)
-                    {
-                        mPeptideWriter.write(format("%s,",sampleId));
-                    }
+                        sj.add(sampleId);
 
-                    mPeptideWriter.write(format("%s,%s,%s,%s,%s,%s,%s,%s",
-                            peptideScoreData.neoIdsStr(), neoData.VariantType, neoData.VariantInfo, neoData.GeneName,
-                            bindData.Allele, bindData.Peptide, bindData.UpFlank, bindData.DownFlank));
+                    sj.add(peptideScoreData.neoIdsStr());
+                    sj.add(neoData.VariantType.toString());
+                    sj.add(neoData.VariantInfo);
+                    sj.add(neoData.GeneName);
+                    sj.add(bindData.Allele);
+                    sj.add(bindData.Peptide);
+                    sj.add(bindData.UpFlank);
+                    sj.add(bindData.DownFlank);
 
-                    mPeptideWriter.write(format(",%.4f,%.6f,%.6f,%.6f,%.6f,%.6f,%4.3e,%.1f,%.1f",
-                            bindData.score(), bindData.rankPercentile(), bindData.likelihood(), bindData.likelihoodRank(),
-                            bindData.expressionLikelihood(), bindData.expressionLikelihoodRank(), peptideScoreData.effectiveTpm(),
-                            bindData.recognitionSimilarity(), bindData.otherAlleleRecognitionSimilarity()));
+                    sj.add(format("%.4f", bindData.score()));
+                    sj.add(format("%.6f", bindData.rankPercentile()));
+                    sj.add(format("%.6f", bindData.likelihood()));
+                    sj.add(format("%.6f", bindData.likelihoodRank()));
+                    sj.add(format("%.6f", bindData.expressionLikelihood()));
+                    sj.add(format("%.6f", bindData.expressionLikelihoodRank()));
+                    sj.add(format("%4.3e", peptideScoreData.effectiveTpm()));
+                    sj.add(format("%.1f", bindData.recognitionSimilarity()));
+                    sj.add(format("%.1f", bindData.otherAlleleRecognitionSimilarity()));
 
-                    mPeptideWriter.write(format(",%.2f,%s", alleleCoverage.CopyNumber, alleleCoverage.isLost()));
+                    sj.add(format("%.1f", alleleCoverage.CopyNumber));
+                    sj.add(format("%s", alleleCoverage.isLost()));
 
+                    mPeptideWriter.write(sj.toString());
                     mPeptideWriter.newLine();
                 }
             }
@@ -141,16 +159,20 @@ public class NeoDataWriter
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
             if(mConfig.Samples.size() > 1)
-                writer.write("SampleId,");
+                sj.add("SampleId");
 
-            writer.write("NeId,VariantType,VariantInfo,GeneName,UpAminoAcids,NovelAminoAcids,DownAminoAcids,PeptideCount");
-            writer.write(",TpmSource,RnaFrags,RnaDepth,TpmUp,TpmDown,ExpectedTpm,RawEffectiveTpm,EffectiveTpm");
-            writer.write(",TpmCancerUp,TpmCancerDown,TpmPanCancerUp,TpmPanCancerDown");
-            writer.write(",NmdMin,NmdMax,CodingBasesLengthMin,CodingBasesLengthMax,FusedIntronLength,SkippedDonors,SkippedAcceptors");
-            writer.write(",TranscriptsUp,TranscriptsDown,VariantCopyNumber,CopyNumber,SubclonalLikelihood");
+            sj.add("NeId").add("VariantType").add("VariantInfo").add("GeneName")
+                    .add("UpAminoAcids").add("NovelAminoAcids").add("DownAminoAcids")
+                    .add("PeptideCount").add("TpmSource").add("RnaFrags").add("RnaDepth").add("TpmUp").add("TpmDown").add("ExpectedTpm")
+                    .add("RawEffectiveTpm").add("EffectiveTpm").add("TpmCancerUp").add("TpmCancerDown").add("TpmPanCancerUp").add("TpmPanCancerDown")
+                    .add("NmdMin").add("NmdMax").add("CodingBasesLengthMin").add("CodingBasesLengthMax").add("FusedIntronLength")
+                    .add("SkippedDonors").add("SkippedAcceptors")
+                    .add("TranscriptsUp").add("TranscriptsDown").add("VariantCopyNumber").add("CopyNumber").add("SubclonalLikelihood");
 
-
+            writer.write(sj.toString());
             writer.newLine();
             return writer;
         }
@@ -168,34 +190,52 @@ public class NeoDataWriter
 
         try
         {
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
             if(mConfig.Samples.size() > 1)
-                mNeoWriter.write(format("%s,", sampleId));
+                sj.add(sampleId);
 
-            mNeoWriter.write(format("%d,%s,%s,%s,%s,%s,%s",
-                    neoData.Id, neoData.VariantType, neoData.VariantInfo, neoData.GeneName,
-                    neoData.UpAminoAcids, neoData.NovelAminoAcids, neoData.DownAminoAcids));
+            sj.add(String.valueOf(neoData.Id));
+            sj.add(neoData.VariantType.toString());
+            sj.add(neoData.VariantInfo);
+            sj.add(neoData.GeneName);
+            sj.add(neoData.UpAminoAcids);
+            sj.add(neoData.NovelAminoAcids);
+            sj.add(neoData.DownAminoAcids);
 
-            mNeoWriter.write(format(",%d", neoData.peptides().size()));
+            sj.add(String.valueOf(neoData.peptides().size()));
 
             final NeoRnaData rnaData = neoData.RnaData;
 
-            mNeoWriter.write(format(",%s,%d,%.0f,%4.3e,%4.3e,%4.3e,%4.3e,%4.3e",
-                    tmpSource, rnaData.fragmentSupport(), rnaData.averageBaseDepth(),
-                    rnaData.transExpression()[FS_UP], rnaData.transExpression()[FS_DOWN],
-                    neoData.expectedTpm(), neoData.rawEffectiveTpm(), neoData.effectiveTpm()));
+            sj.add(tmpSource.toString());
+            sj.add(String.valueOf(rnaData.fragmentSupport()));
+            sj.add(format("%.0f", rnaData.averageBaseDepth()));
+            sj.add(format("%4.3e", rnaData.transExpression()[FS_UP]));
+            sj.add(format("%4.3e", rnaData.transExpression()[FS_DOWN]));
+            sj.add(format("%4.3e", neoData.expectedTpm()));
+            sj.add(format("%4.3e", neoData.rawEffectiveTpm()));
+            sj.add(format("%4.3e", neoData.effectiveTpm()));
 
-            mNeoWriter.write(format(",%4.3e,%4.3e,%4.3e,%4.3e",
-                    rnaData.tpmCancer()[FS_UP], rnaData.tpmCancer()[FS_DOWN],
-                    rnaData.tpmPanCancer()[FS_UP], rnaData.tpmPanCancer()[FS_DOWN]));
+            sj.add(format("%4.3e", rnaData.tpmCancer()[FS_UP]));
+            sj.add(format("%4.3e", rnaData.tpmCancer()[FS_DOWN]));
+            sj.add(format("%4.3e", rnaData.tpmPanCancer()[FS_UP]));
+            sj.add(format("%4.3e", rnaData.tpmPanCancer()[FS_DOWN]));
 
-            mNeoWriter.write(format(",%d,%d,%d,%d,%d,%d,%d",
-                    neoData.NmdBases[FS_UP], neoData.NmdBases[FS_DOWN], neoData.CodingBasesLength[FS_UP], neoData.CodingBasesLength[FS_DOWN],
-                    neoData.FusedIntronLength, neoData.SkippedAcceptorsDonors[FS_UP], neoData.SkippedAcceptorsDonors[FS_DOWN]));
+            sj.add(String.valueOf(neoData.NmdBases[FS_UP]));
+            sj.add(String.valueOf(neoData.NmdBases[FS_DOWN]));
+            sj.add(String.valueOf(neoData.CodingBasesLength[FS_UP]));
+            sj.add(String.valueOf(neoData.CodingBasesLength[FS_DOWN]));
+            sj.add(String.valueOf(neoData.FusedIntronLength));
+            sj.add(String.valueOf(neoData.SkippedAcceptorsDonors[FS_UP]));
+            sj.add(String.valueOf(neoData.SkippedAcceptorsDonors[FS_DOWN]));
 
-            mNeoWriter.write(format(",%s,%s,%.4f,%.4f,%.4f",
-                    transcriptsToStr(neoData.Transcripts[FS_UP]), transcriptsToStr(neoData.Transcripts[FS_DOWN]),
-                    neoData.VariantCopyNumber, neoData.CopyNumber, neoData.SubclonalLikelihood));
+            sj.add(transcriptsToStr(neoData.Transcripts[FS_UP]));
+            sj.add(transcriptsToStr(neoData.Transcripts[FS_DOWN]));
+            sj.add(format("%.4f", neoData.VariantCopyNumber));
+            sj.add(format("%.4f", neoData.CopyNumber));
+            sj.add(format("%.4f", neoData.SubclonalLikelihood));
 
+            mNeoWriter.write(sj.toString());
             mNeoWriter.newLine();
         }
         catch (IOException e)

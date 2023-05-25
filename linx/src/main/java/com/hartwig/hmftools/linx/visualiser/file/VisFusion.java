@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
-import static com.hartwig.hmftools.common.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getIntValue;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getValue;
@@ -97,14 +97,14 @@ public class VisFusion
     private static List<VisFusion> fromLines(List<String> lines)
     {
         String header = lines.get(0);
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
         List<VisFusion> data = Lists.newArrayList();
 
         for(String line : lines)
         {
-            String[] values = line.split(DELIMITER);
+            String[] values = line.split(TSV_DELIM);
 
             data.add(new VisFusion(
                     getValue(fieldsIndexMap, "SampleId", "", values),
@@ -131,7 +131,7 @@ public class VisFusion
 
     public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("SampleId")
                 .add("ClusterId")
                 .add("Reportable")
@@ -154,7 +154,7 @@ public class VisFusion
 
     public static String toString(final VisFusion data)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(data.SampleId))
                 .add(String.valueOf(data.ClusterId))
                 .add(String.valueOf(data.Reportable))

@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.neo;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -69,8 +71,6 @@ public class NeoEpitopeFile
     public static final String FLD_NE_CN = "CopyNumber";
     public static final String FLD_NE_SC_LIKELIHOOD = "SubclonalLikelihood";
 
-    public static final String DELIMITER = ",";
-    public static final String ITEM_DELIM = ";";
     public static final String VAR_INFO_DELIM = ":";
     private static final String FUSION_INFO_DELIM = ";";
 
@@ -112,7 +112,7 @@ public class NeoEpitopeFile
         CodingBasePositions[FS_DOWN] = new int[] {codingBaseDownPosStart, codingBaseDownPosEnd};
     }
 
-    private static final String FILE_EXTENSION = ".neo.neo_data.csv";
+    private static final String FILE_EXTENSION = ".neo.neo_data.tsv";
 
     public static String generateFilename(final String basePath, final String sample)
     {
@@ -148,7 +148,7 @@ public class NeoEpitopeFile
 
         lines.remove(0);
 
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
         int neIdIndex = fieldsIndexMap.get(FLD_NE_ID);
         int varTypeIndex = fieldsIndexMap.get(FLD_NE_VAR_TYPE);
@@ -188,7 +188,7 @@ public class NeoEpitopeFile
 
         for(String line : lines)
         {
-            String[] values = line.split(DELIMITER, -1);
+            String[] values = line.split(TSV_DELIM, -1);
 
             neoepitopes.add(new NeoEpitopeFile(
                     Integer.parseInt(values[neIdIndex]), NeoEpitopeType.valueOf(values[varTypeIndex]), values[varInfoIndex],
@@ -208,7 +208,7 @@ public class NeoEpitopeFile
 
     public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(FLD_NE_ID)
                 .add(FLD_NE_VAR_TYPE)
                 .add(FLD_NE_VAR_INFO)
@@ -249,7 +249,7 @@ public class NeoEpitopeFile
 
     public static String toString(final NeoEpitopeFile neo)
     {
-        StringJoiner sj = new StringJoiner(DELIMITER);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         sj.add(String.valueOf(neo.Id));
         sj.add(neo.VariantType.toString());

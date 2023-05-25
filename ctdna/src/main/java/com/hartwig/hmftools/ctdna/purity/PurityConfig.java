@@ -4,6 +4,9 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
@@ -12,8 +15,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSepar
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.ctdna.common.CommonUtils.DELIMETER;
-import static com.hartwig.hmftools.ctdna.common.CommonUtils.ITEM_DELIM;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION;
 import static com.hartwig.hmftools.ctdna.purity.SampleData.ctDnaSamplesFromStr;
 
@@ -103,7 +104,7 @@ public class PurityConfig
                 final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
 
                 String header = fileContents.get(0);
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMETER);
+                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
                 fileContents.remove(0);
 
                 int patientIndex = fieldsIndexMap.get("PatientId");
@@ -115,7 +116,7 @@ public class PurityConfig
                     if(line.startsWith("#") || line.isEmpty())
                         continue;
 
-                    String[] values = line.split(DELIMETER, -1);
+                    String[] values = line.split(CSV_DELIM, -1);
 
                     Samples.add(new SampleData(
                             values[patientIndex], values[tumorIndex], ctDnaSamplesFromStr(values[ctdnaIndex])));
@@ -165,7 +166,7 @@ public class PurityConfig
         if(OutputId != null)
             fileName += "." + OutputId;
 
-        fileName += ".csv";
+        fileName += CSV_EXTENSION;
 
         return fileName;
     }

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.linx;
 
-import static com.hartwig.hmftools.common.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -75,13 +75,13 @@ public abstract class LinxFusion
         final String header = lines.get(0);
         lines.remove(0);
 
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
         List<LinxFusion> fusions = Lists.newArrayList();
 
         for(int i = 0; i < lines.size(); ++i)
         {
-            String[] values = lines.get(i).split(DELIMITER);
+            String[] values = lines.get(i).split(TSV_DELIM);
 
             String reportableReasons = fieldsIndexMap.containsKey("reportableReasons") ?
                     values[fieldsIndexMap.get("reportableReasons")] : "";
@@ -120,7 +120,7 @@ public abstract class LinxFusion
 
     private static String header()
     {
-        return new StringJoiner(LinxCluster.DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("fivePrimeBreakendId")
                 .add("threePrimeBreakendId")
                 .add("name")
@@ -150,7 +150,7 @@ public abstract class LinxFusion
 
     private static String toString(final LinxFusion fusion)
     {
-        return new StringJoiner(LinxCluster.DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(fusion.fivePrimeBreakendId()))
                 .add(String.valueOf(fusion.threePrimeBreakendId()))
                 .add(String.valueOf(fusion.name()))

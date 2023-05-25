@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
-import static com.hartwig.hmftools.common.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getDoubleValue;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getIntValue;
@@ -88,14 +88,14 @@ public class VisCopyNumber implements GenomeRegion
     private static List<VisCopyNumber> fromLines(final List<String> lines)
     {
         String header = lines.get(0);
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
         List<VisCopyNumber> data = Lists.newArrayList();
 
         for(String line : lines)
         {
-            String[] values = line.split(DELIMITER);
+            String[] values = line.split(TSV_DELIM);
 
             data.add(new VisCopyNumber(
                     getValue(fieldsIndexMap, "SampleId", "", values),
@@ -111,7 +111,7 @@ public class VisCopyNumber implements GenomeRegion
 
     public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("SampleId")
                 .add("Chromosome")
                 .add("Start")
@@ -123,7 +123,7 @@ public class VisCopyNumber implements GenomeRegion
 
     public static String toString(final VisCopyNumber cnData)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(cnData.SampleId))
                 .add(String.valueOf(cnData.Chromosome))
                 .add(String.valueOf(cnData.Start))

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
-import static com.hartwig.hmftools.common.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getIntValue;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getValue;
@@ -91,14 +91,14 @@ public class VisProteinDomain implements GenomeRegion
     private static List<VisProteinDomain> fromLines(List<String> lines)
     {
         String header = lines.get(0);
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
         List<VisProteinDomain> data = Lists.newArrayList();
 
         for(String line : lines)
         {
-            String[] values = line.split(DELIMITER);
+            String[] values = line.split(TSV_DELIM);
 
             data.add(new VisProteinDomain(
                     getValue(fieldsIndexMap, "SampleId", "", values),
@@ -115,7 +115,7 @@ public class VisProteinDomain implements GenomeRegion
 
     public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("SampleId")
                 .add("ClusterId")
                 .add("Transcript")
@@ -128,7 +128,7 @@ public class VisProteinDomain implements GenomeRegion
 
     public static String toString(final VisProteinDomain proteinData)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(proteinData.SampleId))
                 .add(String.valueOf(proteinData.ClusterId))
                 .add(String.valueOf(proteinData.Transcript))

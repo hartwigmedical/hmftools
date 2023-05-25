@@ -2,7 +2,7 @@ package com.hartwig.hmftools.ctdna.purity;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.ctdna.common.CommonUtils.DELIMETER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.formatPurityValue;
 
 import java.util.StringJoiner;
@@ -67,7 +67,7 @@ public class SomaticVariantResult
 
     public static String header()
     {
-        StringJoiner sj = new StringJoiner(DELIMETER);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add("SomaticPurity");
         sj.add("SomaticProbability");
         sj.add("TotalVariants");
@@ -83,9 +83,9 @@ public class SomaticVariantResult
         return sj.toString();
     }
 
-    public String toCsv()
+    public String toTsv()
     {
-        StringJoiner sj = new StringJoiner(DELIMETER);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(formatPurityValue(SomaticPurity));
         sj.add(formatPurityValue(Probability));
         sj.add(format("%d", TotalVariants));

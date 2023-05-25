@@ -2,7 +2,6 @@ package com.hartwig.hmftools.isofox.unmapped;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.startEndStr;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.util.StringJoiner;
 

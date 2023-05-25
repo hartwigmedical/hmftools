@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.utils.sv;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -13,7 +14,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -140,7 +140,6 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
     public static final String SPECIFIC_CHROMOSOMES = "specific_chr";
     public static final String SPECIFIC_CHROMOSOMES_DESC = "Restrict to chromosome(s) separated by ';'";
 
-    public static final String ITEM_DELIM = ";";
     public static final String SUB_ITEM_DELIM = ":";
     public static final String POS_ITEM_DELIM = "-";
 

@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.neo.scorer;
 
-import static java.lang.String.format;
-
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_AA_DOWN;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_AA_NOVEL;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_AA_UP;
@@ -25,6 +22,7 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_CN;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_INFO;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_TYPE;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.extractTranscriptNames;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
@@ -65,7 +63,7 @@ public class DataLoader
 
             final List<String> lines = Files.readAllLines(new File(neoEpitopeFile).toPath());
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
             lines.remove(0);
 
             int neIdIndex = fieldsIndexMap.get(FLD_NE_ID);
@@ -93,7 +91,7 @@ public class DataLoader
 
             for(String line : lines)
             {
-                final String[] values = line.split(DELIMITER, -1);
+                final String[] values = line.split(TSV_DELIM, -1);
 
                 int neId = Integer.parseInt(values[neIdIndex]);
 

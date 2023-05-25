@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.utils;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -23,7 +24,6 @@ public class ConfigUtils
 {
     public static final String LOG_DEBUG = "log_debug";
     public static final String LOG_LEVEL = "log_level";
-    public static final String CSV_DELIM = ",";
 
     public static final String SAMPLE_ID_FILE = "sample_id_file";
 

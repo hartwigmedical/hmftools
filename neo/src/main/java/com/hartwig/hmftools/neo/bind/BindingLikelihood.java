@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE_LEN;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
@@ -115,7 +115,7 @@ public class BindingLikelihood
         {
             final List<String> lines = Files.readAllLines(new File(filename).toPath());
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), BIND_DELIM);
             lines.remove(0);
 
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
@@ -126,7 +126,7 @@ public class BindingLikelihood
 
             for(String line : lines)
             {
-                String[] items = line.split(DELIM, -1);
+                String[] items = line.split(BIND_DELIM, -1);
                 String allele = items[alleleIndex];
                 int peptideLength = Integer.parseInt(items[pepLenIndex]);
 

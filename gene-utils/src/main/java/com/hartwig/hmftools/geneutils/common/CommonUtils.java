@@ -31,8 +31,6 @@ public final class CommonUtils
     public static final String RESOURCE_REPO_DIR_DESC = "The directory holding the public HMF resources repo";
     public static final String ENSEMBL_DIR = "ensembl_data_cache";
 
-    public static final String FILE_DELIM = "\t";
-
     public static void logVersion()
     {
         final VersionInfo version = new VersionInfo("gene-utils.version");

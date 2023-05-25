@@ -3,9 +3,9 @@ package com.hartwig.hmftools.linx.ext_compare;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getProximity;
 import static com.hartwig.hmftools.linx.ext_compare.CfBreakendData.NO_ID;
 import static com.hartwig.hmftools.linx.types.SvVarData.CR_DELIM;
@@ -13,12 +13,11 @@ import static com.hartwig.hmftools.linx.types.SvVarData.CR_DELIM;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
-
-import org.apache.commons.compress.utils.Lists;
 
 public class CfSampleData
 {

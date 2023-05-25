@@ -3,7 +3,7 @@ package com.hartwig.hmftools.neo.bind;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_DOWN_FLANK;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_TPM;
@@ -355,7 +355,7 @@ public class RandomPeptideDistribution
         {
             final List<String> lines = Files.readAllLines(new File(mConfig.ScoreDistributionFile).toPath());
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), BIND_DELIM);
             lines.remove(0);
 
             for(String line : lines)
@@ -405,7 +405,7 @@ public class RandomPeptideDistribution
         {
             final List<String> lines = Files.readAllLines(new File(filename).toPath());
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), BIND_DELIM);
             lines.remove(0);
 
             for(String line : lines)
@@ -449,7 +449,7 @@ public class RandomPeptideDistribution
         {
             List<String> lines = Files.readAllLines(new File(filename).toPath());
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), BIND_DELIM);
             lines.remove(0);
 
             int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
@@ -463,7 +463,7 @@ public class RandomPeptideDistribution
 
                 for(String line : lines)
                 {
-                    String[] values = line.split(DELIM, -1);
+                    String[] values = line.split(BIND_DELIM, -1);
                     String peptide = values[peptideIndex];
 
                     int peptideLength = peptide.length();
@@ -490,7 +490,7 @@ public class RandomPeptideDistribution
 
                     for(String line : lines)
                     {
-                        String[] values = line.split(DELIM, -1);
+                        String[] values = line.split(BIND_DELIM, -1);
                         String peptide = values[peptideIndex].substring(0, peptideLength);
                         peptideList.add(new PeptideData(peptide, "", "", 0));
                     }

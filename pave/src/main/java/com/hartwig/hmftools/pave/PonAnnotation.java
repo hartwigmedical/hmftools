@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.pave;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedReader;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
 
 import java.io.BufferedReader;
 import java.io.IOException;

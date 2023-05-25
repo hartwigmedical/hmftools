@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.linx;
 
-import static com.hartwig.hmftools.common.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -86,7 +86,7 @@ public abstract class LinxBreakend
     private static List<LinxBreakend> fromLines(final List<String> lines)
     {
         String header = lines.get(0);
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
         List<LinxBreakend> breakends = Lists.newArrayList();
@@ -97,7 +97,7 @@ public abstract class LinxBreakend
 
         for(String line : lines)
         {
-            String[] values = line.split(DELIMITER);
+            String[] values = line.split(TSV_DELIM);
 
             breakends.add(ImmutableLinxBreakend.builder()
                     .id(Integer.parseInt(values[fieldsIndexMap.get("id")]))
@@ -134,7 +134,7 @@ public abstract class LinxBreakend
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("id")
                 .add("svId")
                 .add("isStart")
@@ -166,7 +166,7 @@ public abstract class LinxBreakend
 
     private static String toString(final LinxBreakend breakend)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(breakend.id()))
                 .add(String.valueOf(breakend.svId()))
                 .add(String.valueOf(breakend.isStart()))

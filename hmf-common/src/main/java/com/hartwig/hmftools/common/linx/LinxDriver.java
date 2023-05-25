@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.linx;
 
-import static com.hartwig.hmftools.common.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -60,14 +60,14 @@ public abstract class LinxDriver
     private static List<LinxDriver> fromLines(final List<String> lines)
     {
         String header = lines.get(0);
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
         List<LinxDriver> drivers = Lists.newArrayList();
 
         for(int i = 0; i < lines.size(); ++i)
         {
-            String[] values = lines.get(i).split(DELIMITER);
+            String[] values = lines.get(i).split(TSV_DELIM);
 
             drivers.add(ImmutableLinxDriver.builder()
                     .clusterId(Integer.parseInt(values[fieldsIndexMap.get("clusterId")]))
@@ -81,7 +81,7 @@ public abstract class LinxDriver
 
     private static String header()
     {
-        return new StringJoiner(LinxCluster.DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("clusterId")
                 .add("gene")
                 .add("eventType")
@@ -90,7 +90,7 @@ public abstract class LinxDriver
 
     private static String toString(final LinxDriver driver)
     {
-        return new StringJoiner(LinxCluster.DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(driver.clusterId()))
                 .add(String.valueOf(driver.gene()))
                 .add(String.valueOf(driver.eventType()))

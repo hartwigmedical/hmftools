@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_COUNT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_AMINO_ACID;
 import static com.hartwig.hmftools.neo.bind.BindConstants.aminoAcidIndex;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -139,7 +139,7 @@ public class BindScoreMatrix
         {
             final List<String> lines = Files.readAllLines(Paths.get(filename));
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), BIND_DELIM);
             lines.remove(0);
 
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
@@ -152,7 +152,7 @@ public class BindScoreMatrix
 
             for(String line : lines)
             {
-                String[] items = line.split(DELIM, -1);
+                String[] items = line.split(BIND_DELIM, -1);
 
                 // Allele,PeptideLength,AminoAcid,P0,P1,P2,P3,P4,P5,P6,P7,P8
                 //B4001,9,A,1.0286,-4.7395,0.4656,-0.1505,-0.3065,-0.0971,-0.3378,0.4915,-3.4338

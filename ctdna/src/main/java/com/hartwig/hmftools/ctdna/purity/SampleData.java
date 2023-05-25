@@ -2,7 +2,7 @@ package com.hartwig.hmftools.ctdna.purity;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.ctdna.common.CommonUtils.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 
 import java.util.Arrays;
 import java.util.List;

@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_BOT
 import static com.hartwig.hmftools.common.linx.FusionPhasedType.INFRAME;
 import static com.hartwig.hmftools.common.linx.FusionPhasedType.OUT_OF_FRAME;
 import static com.hartwig.hmftools.common.linx.FusionPhasedType.SKIPPED_EXONS;
-import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 
 import java.util.List;
 import java.util.StringJoiner;

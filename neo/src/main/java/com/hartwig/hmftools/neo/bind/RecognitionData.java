@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_IMMUNOGENIC;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
@@ -54,7 +54,7 @@ public class RecognitionData
             String header = lines.get(0);
             lines.remove(0);
 
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, BIND_DELIM);
 
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
             int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
@@ -63,7 +63,7 @@ public class RecognitionData
 
             for(String line :lines)
             {
-                final String[] values = line.split(DELIMITER, -1);
+                final String[] values = line.split(CSV_DELIM, -1);
 
                 String allele = cleanAllele(values[alleleIndex]);
                 String peptide = values[peptideIndex];

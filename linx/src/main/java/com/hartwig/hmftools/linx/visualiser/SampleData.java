@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx.visualiser;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiser.VIS_LOGGER;
 import static com.hartwig.hmftools.linx.visualiser.file.VisDataWriter.COHORT_VIS_COPY_NUMBER_FILE;
 import static com.hartwig.hmftools.linx.visualiser.file.VisDataWriter.COHORT_VIS_FUSIONS_FILE;

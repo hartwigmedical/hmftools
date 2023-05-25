@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
@@ -60,7 +60,7 @@ public class ValidationRoutines
         mValidationAlleles = Lists.newArrayList();
 
         if(cmd.hasOption(TEST_ALLELES_FILE))
-            mValidationAlleles.addAll(loadDelimitedIdFile(cmd.getOptionValue(TEST_ALLELES_FILE), FLD_ALLELE, DELIM));
+            mValidationAlleles.addAll(loadDelimitedIdFile(cmd.getOptionValue(TEST_ALLELES_FILE), FLD_ALLELE, BIND_DELIM));
 
         mAlleleTrainingData = Maps.newHashMap();
         mAlleleBindCounts = Maps.newHashMap();

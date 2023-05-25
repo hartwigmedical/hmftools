@@ -11,7 +11,6 @@ public class SvCommon
 
     public static final String DELIM = ",";
     public static final String BED_DELIM = "\t";
-    public static final String ITEM_DELIM = ";";
     public static final String SUB_ITEM_DELIM = ":";
 
     private static final long MEGABYTE = 1024L * 1024L;

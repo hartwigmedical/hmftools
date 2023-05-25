@@ -34,8 +34,7 @@ public final class CommonUtils
 
     public static final String BAM_FILE_TYPE = "bam";
 
-    public static final String DELIM = ",";
-    public static final String ITEM_DELIM = ";";
+    public static final String BT_DELIM = ",";
 
     public static final Logger BT_LOGGER = LogManager.getLogger(MetricsConfig.class);
 

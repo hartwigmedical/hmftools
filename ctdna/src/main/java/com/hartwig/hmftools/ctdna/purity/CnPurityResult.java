@@ -2,7 +2,7 @@ package com.hartwig.hmftools.ctdna.purity;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.ctdna.common.CommonUtils.DELIMETER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.formatPurityValue;
 
 import java.util.StringJoiner;
@@ -38,7 +38,7 @@ public class CnPurityResult
 
     public static String header()
     {
-        StringJoiner sj = new StringJoiner(DELIMETER);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add("CopyNumberPurity");
         sj.add("CnFitCoeff");
         sj.add("CnFitIntercept");
@@ -49,9 +49,9 @@ public class CnPurityResult
         return sj.toString();
     }
 
-    public String toCsv()
+    public String toTsv()
     {
-        StringJoiner sj = new StringJoiner(DELIMETER);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(formatPurityValue(EstimatedPurity));
         sj.add(format("%.4f", FitCoefficient));
         sj.add(format("%.4f", FitIntercept));

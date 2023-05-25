@@ -2,8 +2,8 @@ package com.hartwig.hmftools.isofox.novel.cohort;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.util.List;
 import java.util.Map;
@@ -14,7 +14,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
 public class AltSjCohortData
 {

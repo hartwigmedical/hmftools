@@ -2,12 +2,13 @@ package com.hartwig.hmftools.common.neo;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -47,8 +48,7 @@ public class NeoEpitopeFusion
         Transcripts = transcripts;
     }
 
-    private static final String FILE_EXTENSION = ".linx.neo_epitope.tsv";
-    public static final String NE_FUSION_COHORT_FILE = "LNX_NEO_EPITOPES.csv";
+    private static final String FILE_EXTENSION = ".linx.neoepitope.tsv";
 
     public static String generateFilename(final String basePath, final String sample)
     {
@@ -81,7 +81,7 @@ public class NeoEpitopeFusion
         final String header = lines.get(0);
         lines.remove(0);
 
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
         List<NeoEpitopeFusion> fusions = Lists.newArrayList();
 
@@ -106,7 +106,7 @@ public class NeoEpitopeFusion
 
         for(String line : lines)
         {
-            String[] values = line.split(DELIMITER);
+            String[] values = line.split(TSV_DELIM);
 
             fusions.add(new NeoEpitopeFusion(
                     values[geneIdUpIndex], values[geneNameUpIndex], values[chrUpIndex],
@@ -122,7 +122,7 @@ public class NeoEpitopeFusion
 
     public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("geneIdUp")
                 .add("geneNameUp")
                 .add("chromosomeUp")
@@ -146,7 +146,7 @@ public class NeoEpitopeFusion
 
     public static String toString(final NeoEpitopeFusion fusion)
     {
-        StringJoiner sj = new StringJoiner(DELIMITER);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {

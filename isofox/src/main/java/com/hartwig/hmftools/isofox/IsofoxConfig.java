@@ -10,9 +10,10 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -30,7 +31,6 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_LENGTH;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.isofox.unmapped.UmrCohortFrequency.UMR_COHORT_FREQUENCY_FILE;
 
 import java.io.File;
@@ -85,7 +85,7 @@ public class IsofoxConfig
     private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
 
     // neo-epitopes
-    private static final String NEO_EPITOPE_FILE = "neoepitope_file";
+    private static final String NEO_DIR = "neo_dir";
 
     // debug and performance
     private static final String GENE_READ_LIMIT = "gene_read_limit";
@@ -116,7 +116,7 @@ public class IsofoxConfig
     public final boolean WriteSpliceSiteData;
 
     public final String ExpCountsFile;
-    public final String NeoEpitopeFile;
+    public final String NeoDir;
     public final String UnmappedCohortFreqFile;
     public final String ExpGcRatiosFile;
     public final boolean ApplyFragmentLengthAdjust;
@@ -208,7 +208,7 @@ public class IsofoxConfig
             ExpGcRatiosFile = null;
         }
 
-        NeoEpitopeFile = cmd.getOptionValue(NEO_EPITOPE_FILE);
+        NeoDir = cmd.getOptionValue(NEO_DIR);
         UnmappedCohortFreqFile = cmd.getOptionValue(UMR_COHORT_FREQUENCY_FILE);
 
         WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
@@ -313,7 +313,7 @@ public class IsofoxConfig
     {
         return configPathValid(cmd, OUTPUT_DIR) && configPathValid(cmd, REF_GENOME)  && configPathValid(cmd, ENSEMBL_DATA_DIR)
                 && configPathValid(cmd, GENE_ID_FILE) && configPathValid(cmd, BAM_FILE) && configPathValid(cmd, EXP_COUNTS_FILE)
-                && configPathValid(cmd, EXP_GC_RATIOS_FILE) && configPathValid(cmd, NEO_EPITOPE_FILE);
+                && configPathValid(cmd, EXP_GC_RATIOS_FILE) && configPathValid(cmd, NEO_DIR);
     }
 
     public static boolean configPathValid(final CommandLine cmd, final String configItem)
@@ -383,7 +383,7 @@ public class IsofoxConfig
         FragmentSizeData = Lists.newArrayList();
         ExpCountsFile = null;
         ExpGcRatiosFile = null;
-        NeoEpitopeFile = null;
+        NeoDir = null;
         UnmappedCohortFreqFile = null;
 
         WriteExonData = false;
@@ -437,7 +437,7 @@ public class IsofoxConfig
 
         options.addOption(EXP_COUNTS_FILE, true, "File with generated expected expression rates per transcript");
         options.addOption(EXP_GC_RATIOS_FILE, true, "File with generated expected GC ratios per transcript");
-        options.addOption(NEO_EPITOPE_FILE, true, "File with neo-epitopes to measure fragment support");
+        options.addOption(NEO_DIR, true, "Neoepitope directory");
         options.addOption(UMR_COHORT_FREQUENCY_FILE, true, "Unmapped reads cohort frequency file");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
         options.addOption(SINGLE_MAP_QUAL, true, "Optional - map quality for reads mapped to a single location (default=255)");

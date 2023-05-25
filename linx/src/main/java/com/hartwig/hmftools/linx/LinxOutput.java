@@ -26,7 +26,6 @@ public class LinxOutput
     private static final String LOG_CHAIN_MAX_SIZE = "log_chain_size";
 
     public static final char ITEM_DELIM_CHR = ';';
-    public static final String ITEM_DELIM = ";";
 
     public LinxOutput(final CommandLine cmd, boolean defaultWrite)
     {

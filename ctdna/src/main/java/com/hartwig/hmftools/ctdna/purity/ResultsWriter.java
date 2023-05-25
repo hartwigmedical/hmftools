@@ -10,9 +10,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.common.variant.VariantTier;
-import com.hartwig.hmftools.common.variant.VariantType;
 
 public class ResultsWriter
 {
@@ -68,8 +65,8 @@ public class ResultsWriter
                 mSampleWriter.write(format("%s,", patientId));
 
             mSampleWriter.write(format("%s,%.2f,%.2f", sampleId, purityContext.bestFit().purity(), purityContext.bestFit().ploidy()));
-            mSampleWriter.write(format(",%s", cnPurityResult.toCsv()));
-            mSampleWriter.write(format(",%s", somaticVariantResult.toCsv()));
+            mSampleWriter.write(format(",%s", cnPurityResult.toTsv()));
+            mSampleWriter.write(format(",%s", somaticVariantResult.toTsv()));
             mSampleWriter.newLine();
         }
         catch(IOException e)

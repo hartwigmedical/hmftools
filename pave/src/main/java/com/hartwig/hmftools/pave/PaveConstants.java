@@ -19,5 +19,4 @@ public class PaveConstants
     public static final int PROMOTOR_UPSTREAM_DISTANCE = 300;
 
     public static final String DELIM = ",";
-    public static final String ITEM_DELIM = ";";
 }

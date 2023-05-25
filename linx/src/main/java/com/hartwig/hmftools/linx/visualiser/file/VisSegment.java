@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
-import static com.hartwig.hmftools.common.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getBoolValue;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getDoubleValue;
@@ -122,14 +122,14 @@ public class VisSegment implements GenomeRegion
     private static List<VisSegment> fromLines(final List<String> lines)
     {
         String header = lines.get(0);
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
         List<VisSegment> data = Lists.newArrayList();
 
         for(String line : lines)
         {
-            String[] values = line.split(DELIMITER);
+            String[] values = line.split(TSV_DELIM);
 
             data.add(new VisSegment(
                     getValue(fieldsIndexMap, "SampleId", "", values),
@@ -148,7 +148,7 @@ public class VisSegment implements GenomeRegion
 
     public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("SampleId")
                 .add("ClusterId")
                 .add("ChainId")
@@ -162,7 +162,7 @@ public class VisSegment implements GenomeRegion
 
     public static String toString(final VisSegment segment)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(segment.SampleId))
                 .add(String.valueOf(segment.ClusterId))
                 .add(String.valueOf(segment.ChainId))

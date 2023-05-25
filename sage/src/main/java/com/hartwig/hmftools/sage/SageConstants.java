@@ -71,6 +71,4 @@ public class SageConstants
     public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(240, 0.025,
             10, 15, 6, 9,
             0.04, 0.04);
-
-    public static final String ITEM_DELIM = ";";
 }

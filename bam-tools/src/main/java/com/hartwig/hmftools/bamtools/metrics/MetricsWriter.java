@@ -119,9 +119,9 @@ public final class MetricsWriter
             String filename = config.formFilename("metrics");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write(metricsHeader(CommonUtils.DELIM));
+            writer.write(metricsHeader(CommonUtils.BT_DELIM));
             writer.newLine();
-            writer.write(metricsData(metrics, CommonUtils.DELIM));
+            writer.write(metricsData(metrics, CommonUtils.BT_DELIM));
             writer.newLine();
 
             writer.close();

@@ -82,7 +82,6 @@ public class LilacConstants
 
     // technical
     public static final String DELIM = ",";
-    public static final String ITEM_DELIM = ";";
 
     // common routines using constants
     public static List<Integer> getAminoAcidExonBoundaries(final String gene)

@@ -5,17 +5,16 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELES;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PATIENT_ID;
-import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.REQUIRED_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
@@ -238,14 +237,14 @@ public class GartnerDataPrep
             String header = lines.get(0);
             lines.remove(0);
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, BIND_DELIM);
 
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELES);
             int patientIndex = fieldsIndexMap.get(FLD_PATIENT_ID);
 
             for(String line : lines)
             {
-                String[] values = line.split(DELIM, -1);
+                String[] values = line.split(BIND_DELIM, -1);
                 String patient = values[patientIndex];
                 String allelesStr = values[alleleIndex];
 
@@ -275,7 +274,7 @@ public class GartnerDataPrep
             String header = lines.get(0);
             lines.remove(0);
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, BIND_DELIM);
 
             for(String line : lines)
             {
@@ -308,7 +307,7 @@ public class GartnerDataPrep
 
         public MutationData(final Map<String,Integer> fieldsIndexMap, final String line)
         {
-            String[] values = line.split(DELIM, -1);
+            String[] values = line.split(BIND_DELIM, -1);
 
             NeId = Integer.parseInt(values[fieldsIndexMap.get("NeId")]);
             VariantKey = values[fieldsIndexMap.get("VariantKey")];

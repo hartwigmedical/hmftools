@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.neo.scorer;
 
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.NEO_FILE_ID;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -100,7 +102,7 @@ public class NeoScorerConfig
         String filename = OutputDir;
 
         if(Samples.size() == 1)
-            filename += Samples.get(0).Id + ".neo";
+            filename += Samples.get(0).Id + "." + NEO_FILE_ID;
         else
             filename += "neo_cohort";
 
@@ -108,7 +110,7 @@ public class NeoScorerConfig
             filename += "." + OutputId;
 
         filename += "." + fileId;
-        filename += ".csv";
+        filename += TSV_EXTENSION;
 
         return filename;
     }

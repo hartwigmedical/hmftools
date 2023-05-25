@@ -37,8 +37,6 @@ import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadGroup;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -80,7 +78,8 @@ public class NeoEpitopeReader
 
         mBamSlicer = new BamSlicer(minMapQuality, keepDuplicates, keepSupplementaries, keepSecondaries);
 
-        loadNeoEpitopes(mConfig.NeoEpitopeFile);
+        String neoepitopeFile = NeoEpitopeFile.generateFilename(mConfig.NeoDir, mConfig.SampleId);
+        loadNeoEpitopes(neoepitopeFile);
         initialiseWriter();
     }
 

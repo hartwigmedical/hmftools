@@ -2,7 +2,7 @@ package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.EXP_TYPE_TPM_LEVEL;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_DATA_TYPE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_TPM_BUCKET;
@@ -78,7 +78,7 @@ public class ExpressionLikelihood
             // Type,Bucket,BindingRate,TotalCount
             final List<String> lines = Files.readAllLines(Paths.get(filename));
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), BIND_DELIM);
             lines.remove(0);
 
             int dataTypeIndex = fieldsIndexMap.get(FLD_DATA_TYPE);
@@ -87,7 +87,7 @@ public class ExpressionLikelihood
             
             for(String line : lines)
             {
-                String[] items = line.split(DELIM, -1);
+                String[] items = line.split(BIND_DELIM, -1);
 
                 if(!items[dataTypeIndex].equals(EXP_TYPE_TPM_LEVEL))
                     continue;

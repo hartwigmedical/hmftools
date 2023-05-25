@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
@@ -142,7 +142,7 @@ public class BindData
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
             String header = fileReader.readLine();
 
-            final String[] columns = header.split(DELIMITER,-1);
+            final String[] columns = header.split(CSV_DELIM,-1);
 
             int alleleIndex = -1;
             int peptideIndex = -1;
@@ -185,7 +185,7 @@ public class BindData
 
             while((line = fileReader.readLine()) != null)
             {
-                final String[] values = line.split(DELIMITER, -1);
+                final String[] values = line.split(CSV_DELIM, -1);
 
                 String allele = cleanAllele(values[alleleIndex]);
                 String peptide = values[peptideIndex];

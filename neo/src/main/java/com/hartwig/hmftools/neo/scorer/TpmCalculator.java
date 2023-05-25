@@ -9,6 +9,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.AA_SELENOCYSTEINE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
@@ -325,7 +326,7 @@ public class TpmCalculator
 
         for(String line : lines)
         {
-            String[] values = line.split(NeoEpitopeFile.DELIMITER, 3);
+            String[] values = line.split(CSV_DELIM, 3);
 
             mPoissonRangeValues.put(
                     Integer.parseInt( values[0]), new PoissonRangeValues(Double.parseDouble(values[1]), Double.parseDouble(values[2])));

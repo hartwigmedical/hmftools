@@ -3,7 +3,7 @@ package com.hartwig.hmftools.neo.bind;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -59,7 +59,7 @@ public class HlaSequences
                 HlaSequences.class.getResourceAsStream("/ref/hla_allele_bind_positions.csv")))
                 .lines().collect(Collectors.toList());
 
-        String[] columns = lines.get(0).split(DELIM);
+        String[] columns = lines.get(0).split(BIND_DELIM);
         lines.remove(0);
 
         int positionCount = columns.length - 1;
@@ -71,7 +71,7 @@ public class HlaSequences
 
         for(String line : lines)
         {
-            String[] items = line.split(DELIM);
+            String[] items = line.split(BIND_DELIM);
 
             if(items.length != positionCount + 1)
             {
@@ -104,7 +104,7 @@ public class HlaSequences
         {
             final List<String> lines = Files.readAllLines(new File(filename).toPath());
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), BIND_DELIM);
             lines.remove(0);
 
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
@@ -112,7 +112,7 @@ public class HlaSequences
 
             for(String line : lines)
             {
-                String[] items = line.split(DELIM);
+                String[] items = line.split(BIND_DELIM);
 
                 String allele = items[alleleIndex];
                 String sequence = items[seqIndex];

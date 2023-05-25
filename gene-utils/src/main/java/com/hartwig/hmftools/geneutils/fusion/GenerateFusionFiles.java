@@ -11,11 +11,12 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.FILE_DELIM;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR_DESC;
@@ -291,7 +292,7 @@ public class GenerateFusionFiles
 
             for(FusionBedData fusionBedData : fusionBedDataList)
             {
-                StringJoiner fusionData = new StringJoiner(FILE_DELIM);
+                StringJoiner fusionData = new StringJoiner(TSV_DELIM);
 
                 fusionData.add(refGenomeVersion.versionedChromosome(fusionBedData.chrStart()));
                 fusionData.add(String.valueOf(fusionBedData.posStartStart()));
@@ -359,7 +360,7 @@ public class GenerateFusionFiles
             String[] overridesStr = overrides.split(" ", -1);
 
             String igRangeStr = overridesStr[0].replaceAll(OVERRIDE_IG_RANGE + "=", "");
-            String[] igRangeItems = igRangeStr.split(KnownFusionData.ITEM_DELIM);
+            String[] igRangeItems = igRangeStr.split(ITEM_DELIM);
             strandUp = Byte.parseByte(igRangeItems[0]);
             byte upStrandReversed = strandUp == POS_STRAND ? NEG_STRAND : POS_STRAND;
             chrUp = igRangeItems[1];
@@ -404,13 +405,13 @@ public class GenerateFusionFiles
             List<String> lines = Files.readAllLines(Paths.get(mKnownFusionDbFile));
             String header = lines.get(0);
 
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, FILE_DELIM);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
             List<FusionRefData> fusions = Lists.newArrayList();
 
             for(int i = 1; i < lines.size(); ++i)
             {
                 String line = lines.get(i);
-                String[] values = line.split(FILE_DELIM, -1);
+                String[] values = line.split(TSV_DELIM, -1);
 
                 if(values.length < 10)
                 {

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.neo.utils;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.BufferedReader;
@@ -46,7 +46,7 @@ public class AminoAcidFrequency
                 AminoAcidFrequency.class.getResourceAsStream("/ref/amino_acid_frequencies.csv")))
                 .lines().collect(Collectors.toList());
 
-        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), CSV_DELIM);
         lines.remove(0);
 
         int aminoAcidIndex = fieldsIndexMap.get("AminoAcid");
@@ -54,7 +54,7 @@ public class AminoAcidFrequency
 
         for(String line : lines)
         {
-            final String[] items = line.split(DELIMITER, -1);
+            final String[] items = line.split(CSV_DELIM, -1);
 
             char aminoAcid = items[aminoAcidIndex].charAt(0);
             double percent = Double.parseDouble(items[percentIndex]);

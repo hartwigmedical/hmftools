@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.analysis;
 
-import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 
 import java.util.List;
 

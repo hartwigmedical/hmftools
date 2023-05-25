@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DATA_TYPE_POS_WEIGHTS;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_AMINO_ACID;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_DATA_TYPE;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_AMINO_ACID;
@@ -212,7 +212,7 @@ public class FlankScores
         {
             final List<String> lines = Files.readAllLines(Paths.get(filename));
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), BIND_DELIM);
             lines.remove(0);
 
             int aaIndex = fieldsIndexMap.get(FLD_AMINO_ACID);
@@ -221,7 +221,7 @@ public class FlankScores
 
             for(String line : lines)
             {
-                String[] items = line.split(DELIM, -1);
+                String[] items = line.split(BIND_DELIM, -1);
 
                 if(!items[dataTypeIndex].equals(DATA_TYPE_POS_WEIGHTS))
                     continue;

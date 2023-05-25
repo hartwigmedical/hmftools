@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.fusion;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KF_LOGGER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -60,7 +61,6 @@ public class KnownFusionData
     public static final String ALT_DATA = "ALT";
 
     public static final String FILE_DELIM = ",";
-    public static final String ITEM_DELIM = ";";
     private static final String OVERRIDES_DELIM = " ";
     private static final String OVERRIDES_ID_DELIM = "=";
 
