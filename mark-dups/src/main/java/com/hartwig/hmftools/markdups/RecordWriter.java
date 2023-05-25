@@ -31,7 +31,7 @@ import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
-import com.hartwig.hmftools.markdups.consensus.DuplicateGroup;
+import com.hartwig.hmftools.markdups.common.DuplicateGroup;
 
 import org.jetbrains.annotations.Nullable;
 

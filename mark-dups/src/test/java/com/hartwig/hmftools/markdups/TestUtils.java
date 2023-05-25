@@ -76,4 +76,10 @@ public final class TestUtils
             read.getBaseQualities()[i] = (byte)value;
     }
 
+    public static void setSecondInPair(final SAMRecord read)
+    {
+        read.setFirstOfPairFlag(false);
+        read.setSecondOfPairFlag(true);
+    }
+
 }

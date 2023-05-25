@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.markdups;
 
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
-import static com.hartwig.hmftools.markdups.common.DuplicateGroups.calcBaseQualAverage;
-import static com.hartwig.hmftools.markdups.common.DuplicateGroups.findPrimaryFragment;
+import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.calcBaseQualAverage;
+import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.findPrimaryFragment;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.NO_COORDS;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.markdups.TestUtils.DEFAULT_QUAL;
@@ -123,7 +123,7 @@ public class FragmentUtilsTest
         read.setAttribute(MATE_CIGAR_ATTRIBUTE, "100M");
 
         fragmentCoords = getFragmentCoordinates(read);
-        assertEquals("1_200_2_100_N", fragmentCoords.Key);
+        assertEquals("1_200_2_100_N", fragmentCoords.keyOriented());
         assertEquals(200, fragmentCoords.InitialPosition);
 
         // mate in earlier position, and fragment reversed

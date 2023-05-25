@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.markdups.consensus.DuplicateGroup;
 
 public class PartitionResults
 {

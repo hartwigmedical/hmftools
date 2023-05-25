@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.markdups.consensus;
+package com.hartwig.hmftools.markdups.umi;
 
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_MAX_UMI_BASE_DIFF;
-import static com.hartwig.hmftools.markdups.consensus.UmiUtils.exceedsUmiIdDiff;
+import static com.hartwig.hmftools.markdups.umi.UmiUtils.exceedsUmiIdDiff;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,6 +22,7 @@ public class UmiConfig
     public final boolean Enabled;
     public final boolean Duplex; // collapse duplex UMI groups
     public final String DuplexDelim;
+    public final boolean CollapseReversed;
     public final boolean BaseStats;
     public final boolean HighlightConsensus; // purely for viewing in IGV
     public final int PermittedBaseDiff;
@@ -46,6 +47,7 @@ public class UmiConfig
         Enabled = enabled;
         Duplex = duplex;
         DuplexDelim = duplexDelim;
+        CollapseReversed = true;
         HighlightConsensus = highlight;
         BaseStats = baseStats;
         PermittedBaseDiff = DEFAULT_MAX_UMI_BASE_DIFF;

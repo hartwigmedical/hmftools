@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarBaseLength;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
@@ -12,7 +11,7 @@ import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_FAI
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.SUPPLEMENTARY;
 import static com.hartwig.hmftools.markdups.consensus.IndelConsensusReads.alignedOrSoftClip;
 import static com.hartwig.hmftools.markdups.consensus.IndelConsensusReads.selectPrimaryRead;
-import static com.hartwig.hmftools.markdups.consensus.UmiConfig.READ_ID_DELIM;
+import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;

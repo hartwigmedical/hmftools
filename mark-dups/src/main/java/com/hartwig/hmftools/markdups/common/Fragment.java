@@ -220,7 +220,7 @@ public class Fragment
     public String toString()
     {
         return String.format("id(%s) reads(%d) status(%s) coords(%s) present(%s)", //  mate(%s:%d)
-                id(), mReads.size(), mStatus, mCoordinates.Key,
+                id(), mReads.size(), mStatus, mCoordinates.keyOriented(),
                 mAllReadsPresent ? "all" : (mAllPrimaryReadsPresent ? "primary" : "incomplete"));
     }
 }

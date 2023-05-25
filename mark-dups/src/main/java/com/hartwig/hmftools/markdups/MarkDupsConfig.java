@@ -6,8 +6,10 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
@@ -33,7 +35,7 @@ import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.common.FilterReadsType;
 import com.hartwig.hmftools.markdups.consensus.GroupIdGenerator;
-import com.hartwig.hmftools.markdups.consensus.UmiConfig;
+import com.hartwig.hmftools.markdups.umi.UmiConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -105,7 +107,16 @@ public class MarkDupsConfig
         BamFile = cmd.getOptionValue(BAM_FILE);
         RefGenomeFile = cmd.getOptionValue(REF_GENOME);
         RefGenome = loadRefGenome(RefGenomeFile);
-        OutputDir = parseOutputDir(cmd);
+
+        if(cmd.hasOption(OUTPUT_DIR))
+        {
+            OutputDir = parseOutputDir(cmd);
+        }
+        else
+        {
+            OutputDir = checkAddDirSeparator(Paths.get(BamFile).getParent().toString());
+        }
+
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
         if(SampleId == null || BamFile == null || OutputDir == null || RefGenomeFile == null)

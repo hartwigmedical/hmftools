@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.markdups.common;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
@@ -9,8 +8,6 @@ import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.calcFragmentStatus;
-import static com.hartwig.hmftools.markdups.consensus.UmiUtils.buildUmiGroups;
-import static com.hartwig.hmftools.markdups.consensus.UmiUtils.collapseOnDuplexMatches;
 
 import java.util.Collections;
 import java.util.List;
@@ -21,25 +18,27 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 import com.hartwig.hmftools.markdups.consensus.GroupIdGenerator;
-import com.hartwig.hmftools.markdups.consensus.UmiConfig;
-import com.hartwig.hmftools.markdups.consensus.DuplicateGroup;
+import com.hartwig.hmftools.markdups.umi.UmiConfig;
+import com.hartwig.hmftools.markdups.umi.UmiGroupBuilder;
 
 import htsjdk.samtools.SAMRecord;
 
-public class DuplicateGroups
+public class DuplicateGroupBuilder
 {
     //private static final int HIGH_DEPTH_THRESHOLD = 10000;
     private final UmiConfig mUmiConfig;
     private final Statistics mStats;
     private final boolean mFormConsensus;
     private final GroupIdGenerator mIdGenerator;
+    private final UmiGroupBuilder mUmiGroupBuilder;
 
-    public DuplicateGroups(final MarkDupsConfig config)
+    public DuplicateGroupBuilder(final MarkDupsConfig config)
     {
-        mUmiConfig = config.UMIs;
         mFormConsensus = config.FormConsensus;
         mIdGenerator = config.IdGenerator;
+        mUmiConfig = config.UMIs;
         mStats = new Statistics();
+        mUmiGroupBuilder = new UmiGroupBuilder(config.UMIs, mStats.UmiStats);
     }
 
     public Statistics statistics() { return mStats; }
@@ -47,7 +46,8 @@ public class DuplicateGroups
 
     public static void findDuplicateFragments(
             final List<Fragment> fragments, final List<Fragment> resolvedFragments,
-            final List<List<Fragment>> positionDuplicateGroups, final List<CandidateDuplicates> candidateDuplicatesList)
+            final List<List<Fragment>> positionDuplicateGroups, final List<CandidateDuplicates> candidateDuplicatesList,
+            boolean requireOrientationMatch)
     {
         // take all the fragments at this initial fragment position and classify them as duplicates, non-duplicates (NONE) or unclear
         // note: all fragments will be given a classification, and resolved fragments are removed from the input fragment list
@@ -96,7 +96,7 @@ public class DuplicateGroups
             {
                 Fragment fragment2 = fragments.get(j);
 
-                FragmentStatus status = calcFragmentStatus(fragment1, fragment2);
+                FragmentStatus status = calcFragmentStatus(fragment1, fragment2, requireOrientationMatch);
 
                 if(applyHighDepthLogic && status == CANDIDATE && proximateFragmentSizes(fragment1, fragment2))
                     status = DUPLICATE;
@@ -258,9 +258,6 @@ public class DuplicateGroups
         if(rawDuplicateGroups == null)
             return Collections.EMPTY_LIST;
 
-        if(mUmiConfig.Enabled && !inExcludedRegion)
-            return processUmiGroups(rawDuplicateGroups, captureStats, singleFragments);
-
         if(captureStats)
         {
             for(List<Fragment> fragments : rawDuplicateGroups)
@@ -270,125 +267,14 @@ public class DuplicateGroups
             }
         }
 
+        if(mUmiConfig.Enabled && !inExcludedRegion)
+            return mUmiGroupBuilder.processUmiGroups(rawDuplicateGroups, singleFragments, captureStats);
+
         if(mFormConsensus && !inExcludedRegion)
             return processConsensusGroups(rawDuplicateGroups);
 
         processNonUmiGroups(rawDuplicateGroups, inExcludedRegion);
         return null;
-    }
-
-    private List<DuplicateGroup> processUmiGroups(
-            final List<List<Fragment>> duplicateGroups, boolean captureStats, final List<Fragment> singleFragments)
-    {
-        List<DuplicateGroup> allUmiGroups = Lists.newArrayList();
-
-        int nonDuplicateFragCount = singleFragments.size();
-        int posGroupCount = duplicateGroups.size() + nonDuplicateFragCount; // count of unique fragments sharing the same start pos
-        int uniqueFragmentCount = nonDuplicateFragCount; // count of fragments with matching coordinates (after UMI collapsing)
-        int maxDuplicatePosCount = 0;
-
-        int maxUmiFragmentCount = 0;
-        DuplicateGroup maxUmiGroup = null;
-
-        Map<String,List<DuplicateGroup>> coordGroups = mUmiConfig.BaseStats ? Maps.newHashMap() : null;
-
-        for(List<Fragment> fragments : duplicateGroups)
-        {
-            List<DuplicateGroup> umiGroups = buildUmiGroups(fragments, mUmiConfig);
-
-            // collect stats including single groups
-            if(captureStats)
-            {
-                ++mStats.DuplicateGroups;
-
-                if(mUmiConfig.BaseStats)
-                {
-                    coordGroups.put(fragments.get(0).coordinates().Key, umiGroups);
-                }
-
-                maxDuplicatePosCount = max(maxDuplicatePosCount, umiGroups.size());
-            }
-
-            allUmiGroups.addAll(umiGroups);
-        }
-
-        if(mUmiConfig.BaseStats)
-        {
-            // include single fragments for this analysis
-            for(Fragment fragment : singleFragments)
-            {
-                List<DuplicateGroup> coordGroup = coordGroups.get(fragment.coordinates().Key);
-
-                if(coordGroup == null)
-                {
-                    coordGroup = Lists.newArrayList();
-                    coordGroups.put(fragment.coordinates().Key, coordGroup);
-                }
-
-                coordGroup.add(new DuplicateGroup(mUmiConfig.extractUmiId(fragment.id()), fragment));
-            }
-
-            for(List<DuplicateGroup> coordGroup : coordGroups.values())
-            {
-                if(coordGroup.size() == 1 && coordGroup.get(0).fragmentCount() == 1)
-                    continue;
-
-                mStats.recordUmiBaseStats(mUmiConfig, coordGroup);
-            }
-        }
-
-        if(mUmiConfig.Duplex)
-        {
-            // include single fragments which may be the reverse of each other or a group
-            for(Fragment fragment : singleFragments)
-            {
-                allUmiGroups.add(new DuplicateGroup(mUmiConfig.extractUmiId(fragment.id()), fragment));
-            }
-
-            collapseOnDuplexMatches(allUmiGroups, mUmiConfig);
-        }
-
-        if(captureStats)
-        {
-            uniqueFragmentCount += allUmiGroups.size();
-        }
-
-        List<DuplicateGroup> finalUmiGroups = Lists.newArrayList();
-
-        for(DuplicateGroup umiGroup : allUmiGroups)
-        {
-            if(umiGroup.fragmentCount() == 1)
-            {
-                // drop any single fragments
-                Fragment fragment = umiGroup.fragments().get(0);
-                fragment.setStatus(NONE);
-                fragment.setUmi(null);
-                continue;
-            }
-
-            umiGroup.categoriseReads();
-
-            finalUmiGroups.add(umiGroup);
-
-            if(captureStats)
-            {
-                ++mStats.UmiGroups;
-                mStats.addDuplicateGroup(umiGroup.fragmentCount());
-            }
-
-            if(umiGroup.fragmentCount() > maxUmiFragmentCount)
-            {
-                maxUmiGroup = umiGroup;
-                maxUmiFragmentCount = umiGroup.fragmentCount();
-            }
-        }
-
-        if(captureStats)
-        {
-            mStats.recordFragmentPositions(posGroupCount, uniqueFragmentCount, maxDuplicatePosCount, maxUmiGroup);
-        }
-
-        return finalUmiGroups;
     }
 
     private List<DuplicateGroup> processConsensusGroups(final List<List<Fragment>> rawDuplicateGroups)

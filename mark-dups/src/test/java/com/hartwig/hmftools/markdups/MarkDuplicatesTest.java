@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_CIGAR;
+import static com.hartwig.hmftools.markdups.TestUtils.setSecondInPair;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -57,10 +58,7 @@ public class MarkDuplicatesTest
 
         SAMRecord read1 = createSamRecord(
                 mReadIdGen.nextId(), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false, false,
-                new SupplementaryReadData(CHR_1, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        read1.setMateNegativeStrandFlag(true);
-        read1.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+                new SupplementaryReadData(CHR_1, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1), true, TEST_READ_CIGAR);
 
         mChromosomeReader.processRead(read1);
         mChromosomeReader.flushReadPositions();
@@ -73,8 +71,7 @@ public class MarkDuplicatesTest
         SAMRecord mate1 = createSamRecord(
                 read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
                 false, null);
-        mate1.setFirstOfPairFlag(false);
-        mate1.setSecondOfPairFlag(true);
+        setSecondInPair(mate1);
 
         mChromosomeReader.processRead(mate1);
         assertEquals(1, partitionData.resolvedFragmentStateMap().size());
@@ -122,8 +119,7 @@ public class MarkDuplicatesTest
         SAMRecord mate1 = createSamRecord(
                 read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
                 false, new SupplementaryReadData(CHR_1, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-        mate1.setFirstOfPairFlag(false);
-        mate1.setSecondOfPairFlag(true);
+        setSecondInPair(mate1);
 
         mChromosomeReader.processRead(mate1);
         mChromosomeReader.onChromosomeComplete();
@@ -182,14 +178,12 @@ public class MarkDuplicatesTest
         SAMRecord mate1 = createSamRecord(
                 read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
                 false, null);
-        mate1.setFirstOfPairFlag(false);
-        mate1.setSecondOfPairFlag(true);
+        setSecondInPair(mate1);
 
         SAMRecord mate2 = createSamRecord(
                 read2.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
                 false, null);
-        mate2.setFirstOfPairFlag(false);
-        mate2.setSecondOfPairFlag(true);
+        setSecondInPair(mate2);
 
         mChromosomeReader.processRead(mate1);
         assertEquals(0, mWriter.recordWriteCount());
@@ -244,14 +238,12 @@ public class MarkDuplicatesTest
         SAMRecord mate1 = createSamRecord(
                 read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
                 false, null);
-        mate1.setFirstOfPairFlag(false);
-        mate1.setSecondOfPairFlag(true);
+        setSecondInPair(mate1);
 
         SAMRecord mate2 = createSamRecord(
                 read2.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
                 false, null);
-        mate2.setFirstOfPairFlag(false);
-        mate2.setSecondOfPairFlag(true);
+        setSecondInPair(mate2);
 
         chrReaderConsensus.processRead(mate1);
         assertEquals(2, mWriter.recordWriteCount());
@@ -349,14 +341,12 @@ public class MarkDuplicatesTest
         SAMRecord mate1 = createSamRecord(
                 readId1, CHR_3, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, readPos, true,
                 false, null);
-        mate1.setFirstOfPairFlag(false);
-        mate1.setSecondOfPairFlag(true);
+        setSecondInPair(mate1);
 
         SAMRecord mate2 = createSamRecord(
                 readId2, CHR_3, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, readPos, true,
                 false, null);
-        mate2.setFirstOfPairFlag(false);
-        mate2.setSecondOfPairFlag(true);
+        setSecondInPair(mate2);
 
         chr3Reader.processRead(mate1);
         chr3Reader.processRead(mate2);
@@ -406,14 +396,12 @@ public class MarkDuplicatesTest
         SAMRecord mate3 = createSamRecord(
                 readId3, CHR_2, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
                 false, null);
-        mate3.setFirstOfPairFlag(false);
-        mate3.setSecondOfPairFlag(true);
+        setSecondInPair(mate3);
 
         SAMRecord mate4 = createSamRecord(
                 readId4, CHR_2, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
                 false, null);
-        mate4.setFirstOfPairFlag(false);
-        mate4.setSecondOfPairFlag(true);
+        setSecondInPair(mate4);
 
         chr2Reader.processRead(mate3);
         chr2Reader.processRead(mate4);

@@ -82,13 +82,16 @@ public class FragmentUtils
         if(!firstRead.getReadPairedFlag() || firstRead.getReadUnmappedFlag() || firstRead.getMateUnmappedFlag())
         {
             // include the fragment length
-            return new FragmentCoordinates(formKey(readCoordStr, firstRead.getInferredInsertSize()), readStrandPosition);
+            return new FragmentCoordinates(formKey(readCoordStr, firstRead.getInferredInsertSize()), readStrandPosition, true);
         }
 
         if(mateRead == null)
         {
             if(!useMateCigar || !firstRead.hasAttribute(MATE_CIGAR_ATTRIBUTE))
-                return new FragmentCoordinates(readCoordStr, readStrandPosition, true);
+            {
+                // the fragment orientation will  be accurately set once both reads are collated
+                return new FragmentCoordinates(readCoordStr, readStrandPosition, firstRead.getFirstOfPairFlag(), true);
+            }
         }
 
         boolean mateForwardStrand = !firstRead.getMateNegativeStrandFlag();
@@ -123,17 +126,17 @@ public class FragmentUtils
         boolean lowerReadFirst = readLowerPos ? firstRead.getFirstOfPairFlag() : !firstRead.getFirstOfPairFlag();
 
         return readLowerPos ?
-                new FragmentCoordinates(formKey(readCoordStr, mateCoordStr, lowerReadFirst), readStrandPosition)
-                : new FragmentCoordinates(formKey(mateCoordStr, readCoordStr, lowerReadFirst), mateStrandPosition);
+                new FragmentCoordinates(formKey(readCoordStr, mateCoordStr), readStrandPosition, lowerReadFirst)
+                : new FragmentCoordinates(formKey(mateCoordStr, readCoordStr), mateStrandPosition, lowerReadFirst);
     }
 
-    public static FragmentStatus calcFragmentStatus(final Fragment first, final Fragment second)
+    public static FragmentStatus calcFragmentStatus(final Fragment first, final Fragment second, boolean requireOrientationMatch)
     {
         if(first.unpaired() != second.unpaired())
             return NONE;
 
         if(!first.coordinates().Incomplete && !second.coordinates().Incomplete)
-            return first.coordinates().Key.equals(second.coordinates().Key) ? DUPLICATE : NONE;
+            return first.coordinates().matches(second.coordinates(), requireOrientationMatch) ? DUPLICATE : NONE;
 
         if(first.initialPosition() != second.initialPosition())
             return NONE;

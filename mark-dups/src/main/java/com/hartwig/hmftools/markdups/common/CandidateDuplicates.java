@@ -54,7 +54,7 @@ public class CandidateDuplicates
     public boolean allFragmentsReady() { return mFragments.stream().allMatch(x -> x.primaryReadsPresent()); }
     public boolean finalised() { return mFinalised; }
 
-    public List<List<Fragment>> finaliseFragmentStatus()
+    public List<List<Fragment>> finaliseFragmentStatus(boolean requireOrientationMatch)
     {
         if(mFinalised || !allFragmentsReady())
             return null;
@@ -92,7 +92,7 @@ public class CandidateDuplicates
                 if(fragment2.status().isDuplicate()) // already a part of a group
                     continue;
 
-                FragmentStatus status = calcFragmentStatus(fragment1, fragment2);
+                FragmentStatus status = calcFragmentStatus(fragment1, fragment2, requireOrientationMatch);
 
                 if(status == DUPLICATE)
                 {

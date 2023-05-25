@@ -111,12 +111,12 @@ public class MarkDuplicates
 
             if(mConfig.UMIs.Enabled)
             {
-                combinedStats.writePositionFragmentsData(mConfig);
+                combinedStats.UmiStats.writePositionFragmentsData(mConfig);
 
                 if(mConfig.UMIs.BaseStats)
                 {
-                    combinedStats.writeUmiBaseDiffStats(mConfig);
-                    combinedStats.writeUmiBaseFrequencyStats(mConfig);
+                    combinedStats.UmiStats.writeUmiBaseDiffStats(mConfig);
+                    combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
                 }
             }
         }

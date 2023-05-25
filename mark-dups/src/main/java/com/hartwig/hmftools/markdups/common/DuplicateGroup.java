@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.markdups.consensus;
+package com.hartwig.hmftools.markdups.common;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 
@@ -27,6 +28,9 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.markdups.common.Fragment;
+import com.hartwig.hmftools.markdups.common.FragmentStatus;
+import com.hartwig.hmftools.markdups.consensus.ConsensusReadInfo;
+import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -56,13 +60,16 @@ public class DuplicateGroup
         mReadGroupComplete = new boolean[MAX_READ_TYPES];
         mPrimaryReadTypeIndex = new ReadTypeId[PRIMARY_READ_TYPES];
         mFragmentCount = 0;
-        mCoordinatesKey = fragment.coordinates().Key;
+        mCoordinatesKey = fragment.coordinates().keyOriented();
         mDuplexDetected = false;
     }
 
     public List<Fragment> fragments() { return mFragments; }
+    public void addFragment(final Fragment fragment) { mFragments.add(fragment); }
     public int fragmentCount() { return mFragmentCount > 0 ? mFragmentCount : mFragments.size(); }
+
     public String coordinatesKey() { return mCoordinatesKey; }
+    public FragmentCoordinates fragmentCoordinates() { return !mFragments.isEmpty() ? mFragments.get(0).coordinates() : null; }
 
     public String id() { return mId; }
 
@@ -107,6 +114,7 @@ public class DuplicateGroup
         {
             mReadIds.add(fragment.id());
             fragment.setUmi(mId);
+            fragment.setStatus(DUPLICATE);
 
             // add non-supps first to establish the correct primary read type info
             fragment.reads().stream().filter(x -> !x.getSupplementaryAlignmentFlag()).forEach(x -> addRead(x));

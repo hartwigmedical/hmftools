@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.markdups;
 
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
-import static com.hartwig.hmftools.markdups.common.DuplicateGroups.findDuplicateFragments;
+import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.findDuplicateFragments;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
@@ -47,13 +47,13 @@ public class FragmentClassificationTest
                 false, false, null);
         initialiseFragmentCoordinates(frag2);
 
-        assertEquals(CANDIDATE, calcFragmentStatus(frag1, frag2));
+        assertEquals(CANDIDATE, calcFragmentStatus(frag1, frag2, true));
 
         frag2 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 201,
                 true, false, null);
         initialiseFragmentCoordinates(frag2);
 
-        assertEquals(NONE, calcFragmentStatus(frag1, frag2));
+        assertEquals(NONE, calcFragmentStatus(frag1, frag2, true));
 
         frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
                 true, false, null);
@@ -63,7 +63,7 @@ public class FragmentClassificationTest
                 true, false, null);
         initialiseFragmentCoordinates(frag2);
 
-        assertEquals(CANDIDATE, calcFragmentStatus(frag1, frag2));
+        assertEquals(CANDIDATE, calcFragmentStatus(frag1, frag2, true));
 
         // diff positions at end
         frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, "100M", CHR_1, 200,
@@ -74,7 +74,7 @@ public class FragmentClassificationTest
                 true, false, null);
         initialiseFragmentCoordinates(frag2);
 
-        assertEquals(NONE, calcFragmentStatus(frag1, frag2));
+        assertEquals(NONE, calcFragmentStatus(frag1, frag2, true));
 
         // diff mate orientations
         frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_CIGAR, false,
@@ -85,7 +85,7 @@ public class FragmentClassificationTest
                 CHR_1, 200, true, TEST_READ_CIGAR);
         initialiseFragmentCoordinates(frag2);
 
-        assertEquals(NONE, calcFragmentStatus(frag1, frag2));
+        assertEquals(NONE, calcFragmentStatus(frag1, frag2, true));
 
         // unpaired matching
         frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, "", 0,
@@ -96,12 +96,12 @@ public class FragmentClassificationTest
                 false, false, null);
         initialiseFragmentCoordinates(frag2);
 
-        assertEquals(DUPLICATE, calcFragmentStatus(frag1, frag2));
+        assertEquals(DUPLICATE, calcFragmentStatus(frag1, frag2, true));
 
         frag2.reads().get(0).setInferredInsertSize(100);
         initialiseFragmentCoordinates(frag2);
 
-        assertEquals(NONE, calcFragmentStatus(frag1, frag2));
+        assertEquals(NONE, calcFragmentStatus(frag1, frag2, true));
 
         // mates present and matching
         frag1 = createFragment(mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1000,
@@ -122,7 +122,7 @@ public class FragmentClassificationTest
 
         assertTrue(frag2.primaryReadsPresent());
 
-        assertEquals(DUPLICATE, calcFragmentStatus(frag1, frag2));
+        assertEquals(DUPLICATE, calcFragmentStatus(frag1, frag2, true));
     }
 
     @Test
@@ -146,7 +146,7 @@ public class FragmentClassificationTest
         List<CandidateDuplicates> candidateDuplicatesList = Lists.newArrayList();
         List<List<Fragment>> duplicateGroups = Lists.newArrayList();
 
-        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
+        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList, false);
 
         assertEquals(1, resolvedFragments.size());
         assertEquals(frag3, resolvedFragments.get(0));
@@ -164,7 +164,7 @@ public class FragmentClassificationTest
         candidateDuplicatesList.clear();
         duplicateGroups.clear();
 
-        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
+        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList, false);
 
         assertEquals(1, resolvedFragments.size());
         assertEquals(frag3, resolvedFragments.get(0));
@@ -198,7 +198,7 @@ public class FragmentClassificationTest
         resolvedFragments.clear();
         candidateDuplicatesList.clear();
 
-        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
+        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList, false);
 
         assertEquals(0, resolvedFragments.size());
 
@@ -243,7 +243,7 @@ public class FragmentClassificationTest
         candidateDuplicatesList.clear();
         duplicateGroups.clear();
 
-        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
+        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList, false);
 
         assertEquals(0, resolvedFragments.size());
         assertEquals(1, candidateDuplicatesList.size());
@@ -288,7 +288,7 @@ public class FragmentClassificationTest
         candidateDuplicatesList.clear();
         duplicateGroups.clear();
 
-        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList);
+        findDuplicateFragments(fragments, resolvedFragments, duplicateGroups, candidateDuplicatesList, false);
 
         assertEquals(1, resolvedFragments.size());
         assertTrue(resolvedFragments.contains(frag9));

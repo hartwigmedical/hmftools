@@ -4,7 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.markdups.common.DuplicateGroups.calcBaseQualAverage;
+import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.calcBaseQualAverage;
 import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.NO_BASE;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MATCH;
