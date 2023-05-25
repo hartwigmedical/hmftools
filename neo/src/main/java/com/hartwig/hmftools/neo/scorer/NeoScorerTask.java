@@ -146,7 +146,7 @@ public class NeoScorerTask implements Callable
 
         List<RnaNeoEpitope> rnaNeoDataList = loadRnaNeoData(sample, mConfig.IsofoxDir);
 
-        List<SomaticVariant> somaticVariants = null;
+        List<SomaticVariant> somaticVariants = Lists.newArrayList();
 
         if(!mConfig.RnaSomaticVcf.isEmpty())
         {
