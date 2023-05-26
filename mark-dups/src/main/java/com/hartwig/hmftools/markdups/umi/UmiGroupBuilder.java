@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.markdups.common.DuplicateGroup;
 import com.hartwig.hmftools.markdups.common.Fragment;
+import com.hartwig.hmftools.markdups.common.FragmentStatus;
 
 public class UmiGroupBuilder
 {
@@ -204,8 +205,6 @@ public class UmiGroupBuilder
         // UMI stats require evaluation of uncollapsed UMI groups with the same coordinates
         // at the same time organise UMI groups by the coordinates
 
-        int maxDuplicatePosCount = 0;
-
         boolean formCoordGroups = mUmiConfig.BaseStats || (duplicateGroups.size() + singleFragments.size() > 1);
 
         List<CoordinateGroup> coordinateGroups = formCoordGroups ? Lists.newArrayList() : null;
@@ -215,8 +214,6 @@ public class UmiGroupBuilder
         for(List<Fragment> fragments : duplicateGroups)
         {
             List<DuplicateGroup> umiGroups = buildUmiGroups(fragments, mUmiConfig);
-
-            maxDuplicatePosCount = max(maxDuplicatePosCount, umiGroups.size());
 
             if(formCoordGroups)
             {
@@ -277,8 +274,11 @@ public class UmiGroupBuilder
 
         if(captureStats)
         {
-            int uniqueCoordCount = 0;
+            int uniqueCoordCount = 0; // count of distinct coordinates after collapsing
+
+            // count of final primary fragments (UMIs and singles)
             int uniqueFragmentCount = 0;
+            int maxCoordUmiCount = 0;
 
             if(formCoordGroups)
             {
@@ -288,6 +288,7 @@ public class UmiGroupBuilder
                     {
                         uniqueFragmentCount += coordGroup.ForwardGroups.size();
                         ++uniqueCoordCount;
+                        maxCoordUmiCount = max(maxCoordUmiCount, coordGroup.ForwardGroups.size());
                     }
 
                     if(coordGroup.ReverseGroups != null)
@@ -296,18 +297,19 @@ public class UmiGroupBuilder
 
                         if(!coordGroup.ReverseGroups.isEmpty())
                             ++uniqueCoordCount;
+
+                        maxCoordUmiCount = max(maxCoordUmiCount, coordGroup.ReverseGroups.size());
                     }
                 }
             }
             else
             {
-                uniqueCoordCount = duplicateGroups.size() + singleFragments.size();
-                uniqueFragmentCount = finalUmiGroups.size() + singleFragments.size();
+                // should be 1 distinct coordinate
+                int ungroupedFragmentCount = (int)singleFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).count();
+                uniqueFragmentCount = ungroupedFragmentCount + finalUmiGroups.size();
+                uniqueCoordCount = duplicateGroups.size() + ungroupedFragmentCount;
             }
 
-            // int nonDuplicateFragCount = singleFragments.size();
-            // int posGroupCount = duplicateGroups.size() + nonDuplicateFragCount; // count of unique fragments sharing the same start pos
-            // int uniqueFragmentCount = nonDuplicateFragCount; // count of fragments with matching coordinates (after UMI collapsing)
             int maxUmiFragmentCount = 0;
             DuplicateGroup maxUmiGroup = null;
 
@@ -322,7 +324,7 @@ public class UmiGroupBuilder
                 }
             }
 
-            mStats.recordFragmentPositions(uniqueCoordCount, uniqueFragmentCount, maxDuplicatePosCount, maxUmiGroup);
+            mStats.recordFragmentPositions(uniqueCoordCount, uniqueFragmentCount, maxCoordUmiCount, maxUmiGroup);
         }
 
         return finalUmiGroups;
@@ -480,117 +482,4 @@ public class UmiGroupBuilder
 
         mStats.recordUmiBaseStats(mUmiConfig, groups);
     }
-
-    /*
-    private List<DuplicateGroup> processUmiGroupsOld(
-            final List<List<Fragment>> duplicateGroups, boolean captureStats, final List<Fragment> singleFragments)
-    {
-        List<DuplicateGroup> allUmiGroups = Lists.newArrayList();
-
-        int nonDuplicateFragCount = singleFragments.size();
-        int posGroupCount = duplicateGroups.size() + nonDuplicateFragCount; // count of unique fragments sharing the same start pos
-        int uniqueFragmentCount = nonDuplicateFragCount; // count of fragments with matching coordinates (after UMI collapsing)
-        int maxDuplicatePosCount = 0;
-
-        int maxUmiFragmentCount = 0;
-        DuplicateGroup maxUmiGroup = null;
-
-        Map<String,List<DuplicateGroup>> coordGroups = mUmiConfig.BaseStats ? Maps.newHashMap() : null;
-
-        for(List<Fragment> fragments : duplicateGroups)
-        {
-            List<DuplicateGroup> umiGroups = buildUmiGroups(fragments, mUmiConfig);
-
-            // collect stats including single groups
-            if(captureStats)
-            {
-                if(mUmiConfig.BaseStats)
-                {
-                    coordGroups.put(fragments.get(0).coordinates().Key, umiGroups);
-                }
-
-                maxDuplicatePosCount = max(maxDuplicatePosCount, umiGroups.size());
-            }
-
-            allUmiGroups.addAll(umiGroups);
-        }
-
-        if(mUmiConfig.BaseStats)
-        {
-            // include single fragments for this analysis
-            for(Fragment fragment : singleFragments)
-            {
-                List<DuplicateGroup> coordGroup = coordGroups.get(fragment.coordinates().Key);
-
-                if(coordGroup == null)
-                {
-                    coordGroup = Lists.newArrayList();
-                    coordGroups.put(fragment.coordinates().Key, coordGroup);
-                }
-
-                coordGroup.add(new DuplicateGroup(mUmiConfig.extractUmiId(fragment.id()), fragment));
-            }
-
-            for(List<DuplicateGroup> coordGroup : coordGroups.values())
-            {
-                if(coordGroup.size() == 1 && coordGroup.get(0).fragmentCount() == 1)
-                    continue;
-
-                mStats.recordUmiBaseStats(mUmiConfig, coordGroup);
-            }
-        }
-
-        if(mUmiConfig.Duplex)
-        {
-            // include single fragments which may be the reverse of each other or a group
-            for(Fragment fragment : singleFragments)
-            {
-                allUmiGroups.add(new DuplicateGroup(mUmiConfig.extractUmiId(fragment.id()), fragment));
-            }
-
-            // collapseOnDuplexMatches(allUmiGroups, mUmiConfig);
-        }
-
-        if(captureStats)
-        {
-            uniqueFragmentCount += allUmiGroups.size();
-        }
-
-        List<DuplicateGroup> finalUmiGroups = Lists.newArrayList();
-
-        for(DuplicateGroup umiGroup : allUmiGroups)
-        {
-            if(umiGroup.fragmentCount() == 1)
-            {
-                // drop any single fragments
-                Fragment fragment = umiGroup.fragments().get(0);
-                fragment.setStatus(NONE);
-                fragment.setUmi(null);
-                continue;
-            }
-
-            umiGroup.categoriseReads();
-
-            finalUmiGroups.add(umiGroup);
-
-            if(captureStats)
-            {
-                ++mStats.UmiGroups;
-            }
-
-            if(umiGroup.fragmentCount() > maxUmiFragmentCount)
-            {
-                maxUmiGroup = umiGroup;
-                maxUmiFragmentCount = umiGroup.fragmentCount();
-            }
-        }
-
-        if(captureStats)
-        {
-            mStats.recordFragmentPositions(posGroupCount, uniqueFragmentCount, maxDuplicatePosCount, maxUmiGroup);
-        }
-
-        return finalUmiGroups;
-    }
-    */
 }

@@ -4,19 +4,19 @@ import static java.lang.String.format;
 
 public class PositionFragmentCounts
 {
-    public final int PosGroupCount;
+    public final int UniqueCoordCount;
     public final int UniqueFragmentCount;
     public int Frequency;
-    public int MaxPosUmiCount;
+    public int MaxCoordUmiCount;
     public int MaxUmiReadsCount; // max reads collapsed into a UMI group
     public String UmiGroupDetails;
 
-    public PositionFragmentCounts(final int posGroupCount, final int uniqueFragmentCount)
+    public PositionFragmentCounts(final int uniqueCoordCount, final int uniqueFragmentCount)
     {
-        PosGroupCount = posGroupCount;
+        UniqueCoordCount = uniqueCoordCount;
         UniqueFragmentCount = uniqueFragmentCount;
         Frequency = 0;
-        MaxPosUmiCount = 0;
+        MaxCoordUmiCount = 0;
         MaxUmiReadsCount = 0;
         UmiGroupDetails = "";
     }
@@ -24,6 +24,6 @@ public class PositionFragmentCounts
     public String toString()
     {
         return format("pos(%d) unique(%d) count(%d) max(umi=%d reads=%d)",
-                PosGroupCount, UniqueFragmentCount, Frequency, MaxPosUmiCount, MaxUmiReadsCount);
+                UniqueCoordCount, UniqueFragmentCount, Frequency, MaxCoordUmiCount, MaxUmiReadsCount);
     }
 }

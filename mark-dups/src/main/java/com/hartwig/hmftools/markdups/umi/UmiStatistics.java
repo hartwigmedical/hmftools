@@ -63,12 +63,12 @@ public class UmiStatistics
 
         for(PositionFragmentCounts otherPosFragData : other.PositionFragments)
         {
-            PositionFragmentCounts posFragData = getOrCreatePositionFragmentData(otherPosFragData.PosGroupCount, otherPosFragData.UniqueFragmentCount);
+            PositionFragmentCounts posFragData = getOrCreatePositionFragmentData(otherPosFragData.UniqueCoordCount, otherPosFragData.UniqueFragmentCount);
 
             if(posFragData.Frequency == 0)
             {
                 posFragData.UmiGroupDetails = otherPosFragData.UmiGroupDetails;
-                posFragData.MaxPosUmiCount = otherPosFragData.MaxPosUmiCount;
+                posFragData.MaxCoordUmiCount = otherPosFragData.MaxCoordUmiCount;
                 posFragData.MaxUmiReadsCount = otherPosFragData.MaxUmiReadsCount;
             }
 
@@ -105,25 +105,25 @@ public class UmiStatistics
             return round(frequency/1000) * 1000;
     }
 
-    private PositionFragmentCounts getOrCreatePositionFragmentData(int posGroupCount, int duplicatePosCount)
+    private PositionFragmentCounts getOrCreatePositionFragmentData(int uniqueCoordCount, int uniqueFragmentCount)
     {
         PositionFragmentCounts matchedPosFragments = PositionFragments.stream()
-                .filter(x -> x.PosGroupCount == posGroupCount && x.UniqueFragmentCount == duplicatePosCount).findFirst().orElse(null);
+                .filter(x -> x.UniqueCoordCount == uniqueCoordCount && x.UniqueFragmentCount == uniqueFragmentCount).findFirst().orElse(null);
 
         if(matchedPosFragments == null)
         {
-            matchedPosFragments = new PositionFragmentCounts(posGroupCount, duplicatePosCount);
+            matchedPosFragments = new PositionFragmentCounts(uniqueCoordCount, uniqueFragmentCount);
             PositionFragments.add(matchedPosFragments);
         }
 
         return matchedPosFragments;
     }
 
-    public void recordFragmentPositions(int posGroupCount, int duplicatePosCount, int maxDuplicatePosCount, final DuplicateGroup duplicateGroup)
+    public void recordFragmentPositions(int uniqueCoordCount, int uniqueFragmentCount, int maxCoordUmiCount, final DuplicateGroup duplicateGroup)
     {
-        PositionFragmentCounts posFragData = getOrCreatePositionFragmentData(posGroupCount, duplicatePosCount);
+        PositionFragmentCounts posFragData = getOrCreatePositionFragmentData(uniqueCoordCount, uniqueFragmentCount);
         ++posFragData.Frequency;
-        posFragData.MaxPosUmiCount = max(posFragData.MaxPosUmiCount, maxDuplicatePosCount);
+        posFragData.MaxCoordUmiCount = max(posFragData.MaxCoordUmiCount, maxCoordUmiCount);
 
         if(duplicateGroup != null && duplicateGroup.fragmentCount() > posFragData.MaxUmiReadsCount)
         {
@@ -319,14 +319,14 @@ public class UmiStatistics
             String filename = config.formFilename("umi_coord_freq");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("UmiCountWithStartPos,UmiCountWithCoords,Frequency,MaxUmis,MaxUmiDuplicates,MaxUmiDetails");
+            writer.write("UniqueCoordsWithStartPos,UniquePrimariesWithStartPos,Frequency,MaxCoordUmiCount,MaxUmiReads,MaxUmiDetails");
             writer.newLine();
 
             for(PositionFragmentCounts posFragData : PositionFragments)
             {
                 writer.write(format("%d,%d,%d,%d,%d,%s",
-                        posFragData.PosGroupCount, posFragData.UniqueFragmentCount, posFragData.Frequency,
-                        posFragData.MaxPosUmiCount, posFragData.MaxUmiReadsCount, posFragData.UmiGroupDetails));
+                        posFragData.UniqueCoordCount, posFragData.UniqueFragmentCount, posFragData.Frequency,
+                        posFragData.MaxCoordUmiCount, posFragData.MaxUmiReadsCount, posFragData.UmiGroupDetails));
 
                 writer.newLine();
             }
