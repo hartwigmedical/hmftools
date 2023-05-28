@@ -236,10 +236,10 @@ ${scripts_dir}/run_sage_somatic ${sage_jar} \
 # Pave somatic
 if [ "${reference_id}" != "none" ]; then
   pave_somatic_dir=${sample_dir}/pave_somatic
-  pave_vcf=${pave_somatic_dir}/${tumor_id}.sage.somatic.pave.vcf.gz
+  pave_vcf=${pave_somatic_dir}/${tumor_id}.pave.somatic.vcf.gz
 else
   pave_somatic_dir=${sample_dir}/pave
-  pave_vcf=${pave_somatic_dir}/${tumor_id}.sage.pave.vcf.gz
+  pave_vcf=${pave_somatic_dir}/${tumor_id}.pave.vcf.gz
 fi
 
 ${scripts_dir}/run_pave_somatic ${pave_jar} \
@@ -265,7 +265,7 @@ if [ "${reference_id}" != "none" ]; then
   # Pave germline
   sage_germline_vcf=${sage_germline_dir}/${tumor_id}.sage.germline.vcf.gz
   pave_germline_dir=${sample_dir}/pave_germline
-  pave_germline_vcf=${pave_germline_dir}/${tumor_id}.sage.germline.pave.vcf.gz
+  pave_germline_vcf=${pave_germline_dir}/${tumor_id}.pave.germline.vcf.gz
 
   ${scripts_dir}/run_pave_germline ${pave_jar} \
     ${tumor_id}  \
