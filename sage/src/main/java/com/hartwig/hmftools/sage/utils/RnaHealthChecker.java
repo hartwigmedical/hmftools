@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -16,8 +17,6 @@ import static com.hartwig.hmftools.common.utils.Integers.median;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -30,6 +29,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 
@@ -40,11 +40,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class RnaHealthChecker
@@ -204,9 +201,12 @@ public class RnaHealthChecker
 
             try
             {
-                final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
+                VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
-                VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
+                if(!vcfFileReader.fileValid())
+                    return;
+
+                VCFHeader vcfHeader = vcfFileReader.vcfHeader();
 
                 if(vcfHeader.getGenotypeSamples().stream().noneMatch(x -> x.equals(sampleId))
                 || vcfHeader.getGenotypeSamples().stream().noneMatch(x -> x.equals(rnaSampleId)))
@@ -215,7 +215,7 @@ public class RnaHealthChecker
                     return;
                 }
 
-                for(VariantContext variantContext : reader.iterator())
+                for(VariantContext variantContext : vcfFileReader.iterator())
                 {
                     if(variantContext.isFiltered())
                         continue;
@@ -301,14 +301,14 @@ public class RnaHealthChecker
             else
                 fileName += "cohort";
 
-            fileName += ".rna_health_check.csv";
+            fileName += ".rna_health_check" + TSV_EXTENSION;
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
             if(mSampleIds.size() > 1)
-                writer.write("SampleId,");
+                writer.write("SampleId\t");
 
-            writer.write("VariantCount,GeneVariantCount,RnaDepthSupport,RnaDepthMedian,RnaAlleleSupport,RnaAlleleMedian");
+            writer.write("VariantCount\tGeneVariantCount\tRnaDepthSupport\tRnaDepthMedian\tRnaAlleleSupport\tRnaAlleleMedian");
             writer.newLine();
 
             return writer;
@@ -325,7 +325,7 @@ public class RnaHealthChecker
         try
         {
             if(mSampleIds.size() > 1)
-                mWriter.write(format("%s,", sampleId));
+                mWriter.write(format("%s\t", sampleId));
 
             int depthAboveThreshold = 0;
             int supportAboveThresholds = 0;
@@ -340,7 +340,7 @@ public class RnaHealthChecker
                 }
             }
 
-            mWriter.write(format("%d,%d,%d,%.1f,%d,%.1f",
+            mWriter.write(format("%d\t%d\t%d\t%.1f\t%d\t%.1f",
                     summaryData.VariantCount, summaryData.GeneVariantCount,
                     depthAboveThreshold, summaryData.medianDepth(), supportAboveThresholds, summaryData.medianSupport()));
 

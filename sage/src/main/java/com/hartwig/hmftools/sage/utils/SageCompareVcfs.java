@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.utils;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
@@ -13,8 +14,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +34,7 @@ import static com.hartwig.hmftools.sage.utils.DiffType.hasValueDiff;
 import static com.hartwig.hmftools.sage.utils.VariantData.comparePositions;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -44,10 +44,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 
 public class SageCompareVcfs
 {
@@ -111,7 +108,10 @@ public class SageCompareVcfs
             System.exit(1);
         }
 
-        if(!Files.exists(Paths.get(mOriginalVcf)) || !Files.exists(Paths.get(mNewVcf)))
+        VcfFileReader origReader = new VcfFileReader(mOriginalVcf);
+        VcfFileReader newReader = new VcfFileReader(mNewVcf);
+
+        if(!origReader.fileValid() || !newReader.fileValid())
         {
             SG_LOGGER.error("invalid VCF paths: original({}) and new({})", mOriginalVcf, mNewVcf);
             System.exit(1);
@@ -119,99 +119,89 @@ public class SageCompareVcfs
 
         SG_LOGGER.info("comparing VCFs: orig({}) vs new({})", mOriginalVcf, mNewVcf);
 
-        AbstractFeatureReader<VariantContext, LineIterator> origReader = AbstractFeatureReader.getFeatureReader(mOriginalVcf, new VCFCodec(), false);
-        AbstractFeatureReader<VariantContext, LineIterator> newReader = AbstractFeatureReader.getFeatureReader(mNewVcf, new VCFCodec(), false);
+        Iterator origIter = origReader.iterator();
+        Iterator newIter = newReader.iterator();
 
-        try
+        VariantData origVar = VariantData.fromContext((VariantContext)origIter.next());
+        VariantData newVar = VariantData.fromContext((VariantContext)newIter.next());
+
+        List<VariantData> origVariants = Lists.newArrayList();
+        List<VariantData> newVariants = Lists.newArrayList();
+
+        int nextLog = LOG_COUNT;
+
+        while(newVar != null || origVar != null)
         {
-            Iterator origIter = origReader.iterator();
-            Iterator newIter = newReader.iterator();
+            int totalComparisons = totalComparisons();
 
-            VariantData origVar = VariantData.fromContext((VariantContext)origIter.next());
-            VariantData newVar = VariantData.fromContext((VariantContext)newIter.next());
-
-            List<VariantData> origVariants = Lists.newArrayList();
-            List<VariantData> newVariants = Lists.newArrayList();
-
-            int nextLog = LOG_COUNT;
-
-            while(newVar != null || origVar != null)
+            if(totalComparisons >= nextLog)
             {
-                int totalComparisons = totalComparisons();
+                nextLog += LOG_COUNT;
+                SG_LOGGER.info("processed {} variants", totalComparisons);
+            }
 
-                if(totalComparisons >= nextLog)
+            if(!origVariants.isEmpty() && !newVariants.isEmpty())
+            {
+                boolean positionMatch = false;
+
+                if(origVar != null && comparePositions(origVariants.get(0), origVar) == 0)
                 {
-                    nextLog += LOG_COUNT;
-                    SG_LOGGER.info("processed {} variants", totalComparisons);
+                    origVariants.add(origVar);
+                    origVar = getNextVariant(origIter);
+                    positionMatch = true;
                 }
 
-                if(!origVariants.isEmpty() && !newVariants.isEmpty())
+                if(newVar != null && comparePositions(newVariants.get(0), newVar) == 0)
                 {
-                    boolean positionMatch = false;
-
-                    if(origVar != null && comparePositions(origVariants.get(0), origVar) == 0)
-                    {
-                        origVariants.add(origVar);
-                        origVar = getNextVariant(origIter);
-                        positionMatch = true;
-                    }
-
-                    if(newVar != null && comparePositions(newVariants.get(0), newVar) == 0)
-                    {
-                        newVariants.add(newVar);
-                        positionMatch = true;
-                        newVar = getNextVariant(newIter);
-                    }
-
-                    if(positionMatch)
-                        continue; // keep looking for more at this position
-
-                    // run comparisons within this group
-                    compareVariants(origVariants, newVariants);
-                    continue;
+                    newVariants.add(newVar);
+                    positionMatch = true;
+                    newVar = getNextVariant(newIter);
                 }
 
-                if(newVar != null && origVar != null)
+                if(positionMatch)
+                    continue; // keep looking for more at this position
+
+                // run comparisons within this group
+                compareVariants(origVariants, newVariants);
+                continue;
+            }
+
+            if(newVar != null && origVar != null)
+            {
+                int posCompare = comparePositions(origVar, newVar);
+
+                if(posCompare == 0)
                 {
-                    int posCompare = comparePositions(origVar, newVar);
+                    origVariants.add(origVar);
+                    newVariants.add(newVar);
 
-                    if(posCompare == 0)
-                    {
-                        origVariants.add(origVar);
-                        newVariants.add(newVar);
+                    // check for others at this exact position
 
-                        // check for others at this exact position
-
-                        origVar = getNextVariant(origIter);
-                        newVar = getNextVariant(newIter);
-                    }
-                    else if(posCompare < 0)
-                    {
-                        // original SV has a lower positions
-                        writeUnmatchedVariant(origVar, false);
-                        origVar = getNextVariant(origIter);
-                    }
-                    else
-                    {
-                        writeUnmatchedVariant(newVar, true);
-                        newVar = getNextVariant(newIter);
-                    }
+                    origVar = getNextVariant(origIter);
+                    newVar = getNextVariant(newIter);
                 }
-                else if(newVar != null)
+                else if(posCompare < 0)
+                {
+                    // original SV has a lower positions
+                    writeUnmatchedVariant(origVar, false);
+                    origVar = getNextVariant(origIter);
+                }
+                else
                 {
                     writeUnmatchedVariant(newVar, true);
                     newVar = getNextVariant(newIter);
                 }
-                else if(origVar != null)
-                {
-                    writeUnmatchedVariant(origVar, false);
-                    origVar = getNextVariant(origIter);
-                }
             }
-        }
-        catch(IOException e)
-        {
-            SG_LOGGER.error("error reading vcf files: {}", e.toString());
+            else if(newVar != null)
+            {
+                writeUnmatchedVariant(newVar, true);
+                newVar = getNextVariant(newIter);
+            }
+            else if(origVar != null)
+            {
+                writeUnmatchedVariant(origVar, false);
+                origVar = getNextVariant(origIter);
+            }
         }
 
         SG_LOGGER.info("summary: total variants({}) compared({} diffs={}) unmatched(orig={} new={})",
@@ -354,13 +344,13 @@ public class SageCompareVcfs
             if(mOutputId != null)
                 fileName += "." + mOutputId;
 
-            fileName += ".csv";
+            fileName += TSV_EXTENSION;
 
             SG_LOGGER.info("writing comparison file: {}", fileName);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("Chromosome,Position,Ref,Alt,Tier,DiffType,OrigValue,NewValue,OrigQual,NewQual,SharedFilters,MaxDepth");
+            writer.write("Chromosome\tPosition\tRef\tAlt\tTier\tDiffType\tOrigValue\tNewValue\tOrigQual\tNewQual\tSharedFilters\tMaxDepth");
             writer.newLine();
 
             return writer;
@@ -402,9 +392,9 @@ public class SageCompareVcfs
         {
             VariantData var = origVar != null ? origVar : newVar;
 
-            mWriter.write(String.format("%s,%d,%s,%s,%s", var.Chromosome, var.Position, var.Ref, var.Alt, var.tier()));
+            mWriter.write(String.format("%s\t%d\t%s\t%s\t%s", var.Chromosome, var.Position, var.Ref, var.Alt, var.tier()));
 
-            mWriter.write(String.format(",%s,%s,%s", diffType, origValue, newValue));
+            mWriter.write(String.format("\t%s\t%s\t%s", diffType, origValue, newValue));
 
             Set<String> sharedFilters = Sets.newHashSet();
             int maxDepth = 0;
@@ -424,7 +414,7 @@ public class SageCompareVcfs
             if(sharedFilters.isEmpty())
                 sharedFilters.add(PASS);
 
-            mWriter.write(String.format(",%.0f,%.0f,%s,%d",
+            mWriter.write(String.format("\t%.0f\t%.0f\t%s\t%d",
                     origVar != null ? origVar.qual() : -1, newVar != null ? newVar.qual() : -1, filtersStr(sharedFilters), maxDepth));
 
             mWriter.newLine();
