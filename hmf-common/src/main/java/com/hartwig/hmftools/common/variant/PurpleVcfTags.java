@@ -47,6 +47,9 @@ public final class PurpleVcfTags
     public static final String UNCLEAR_GERMLINE_FLAG = "UNCLEAR_GERMLINE";
     public static final String UNCLEAR_GERMLINE_FLAG_DESCRIPTION = "Tumor-only unclear germline status";
 
+    public static final String PANEL_GERMLINE_INFO = "GVAF_MIN";
+    public static final String PANEL_GERMLINE_INFO_DESCRIPTION = "Panel germline VAF minimums";
+
     public static VCFHeader addGermlineHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader template)
     {
         template.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));

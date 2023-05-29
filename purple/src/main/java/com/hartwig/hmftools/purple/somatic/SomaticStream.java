@@ -55,6 +55,7 @@ public class SomaticStream
     private boolean mEnabled;
     private final String mOutputVCF;
     private final TumorMutationalLoad mTumorMutationalLoad;
+    private final PanelGermlineClassifier mPanelGermlineClassifier;
     private final MicrosatelliteIndels mMicrosatelliteIndels;
     private final SomaticVariantDrivers mDrivers;
     private final SomaticVariantCache mSomaticVariants;
@@ -90,6 +91,7 @@ public class SomaticStream
         mOutputVCF = PurpleCommon.purpleSomaticVcfFile(config.OutputDir, config.TumorId);
         mEnabled = somaticVariants.hasData();
         mTumorMutationalLoad = new TumorMutationalLoad(mReferenceData.TargetRegions);
+        mPanelGermlineClassifier = new PanelGermlineClassifier(mReferenceData.TargetRegions, mConfig);
         mMicrosatelliteIndels = new MicrosatelliteIndels(mReferenceData.TargetRegions);
         mDrivers = new SomaticVariantDrivers(mGenePanel);
         mSomaticVariants = somaticVariants;
@@ -171,7 +173,7 @@ public class SomaticStream
             final VCFHeader header = populateHeader(readHeader, mConfig.Version);
 
             if(mConfig.tumorOnlyMode() && mConfig.TargetRegionsMode)
-                TumorMutationalLoad.enrichHeader(header);
+                PanelGermlineClassifier.enrichHeader(header);
 
             mVcfWriter.writeHeader(header);
 
@@ -220,7 +222,8 @@ public class SomaticStream
 
                 if(isValidChromosome && variant.isPass())
                 {
-                    mTumorMutationalLoad.processVariant(variant, purityAdjuster.purity());
+                    mPanelGermlineClassifier.processVariant(variant, purityAdjuster.purity());
+                    mTumorMutationalLoad.processVariant(variant);
                     mMicrosatelliteIndels.processVariant(variant);
                     checkDrivers(variant, true); // sets reportable flag if applicable
 
@@ -241,6 +244,7 @@ public class SomaticStream
 
             mVcfWriter.close();
             mRChartData.write();
+            mPanelGermlineClassifier.close();
 
             calculateVariantLoadValues();
 
