@@ -535,6 +535,7 @@ public class UmiDuplicatesTest
         SAMRecord read2 = createSamRecord(
                 nextReadId(umi1), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false, false,
                 null, true, TEST_READ_CIGAR);
+        setSecondInPair(read2);
 
         mChrReaderUMIs.processRead(read1);
         mChrReaderUMIs.processRead(read2);
@@ -553,6 +554,9 @@ public class UmiDuplicatesTest
         assertEquals(1, positionFragmentCounts.UniqueCoordCount);
         assertEquals(1, positionFragmentCounts.UniqueFragmentCount);
         assertEquals(1, positionFragmentCounts.Frequency);
+
+        assertEquals(1, mChrReaderUMIs.statistics().DuplicateFrequencies.size());
+        assertEquals(1, mChrReaderUMIs.statistics().DuplicateFrequencies.get(2).DualStrandFrequency);
 
         String umi2 = "GGGGG";
 
@@ -625,13 +629,17 @@ public class UmiDuplicatesTest
         assertEquals(5, mWriter.recordWriteCount());
         assertEquals(2, mWriter.recordWriteCountConsensus());
 
-        assertEquals(2  , mChrReaderDuplexUMIs.statistics().UmiStats.UmiGroups);
+        assertEquals(2, mChrReaderDuplexUMIs.statistics().UmiStats.UmiGroups);
         assertEquals(1, mChrReaderDuplexUMIs.statistics().UmiStats.PositionFragments.size());
 
         PositionFragmentCounts positionFragmentCounts = mChrReaderDuplexUMIs.statistics().UmiStats.PositionFragments.get(0);
         assertEquals(2, positionFragmentCounts.UniqueCoordCount);
         assertEquals(2, positionFragmentCounts.UniqueFragmentCount);
         assertEquals(1, positionFragmentCounts.Frequency);
+
+        assertEquals(2, mChrReaderDuplexUMIs.statistics().DuplicateFrequencies.size());
+        assertEquals(1, mChrReaderDuplexUMIs.statistics().DuplicateFrequencies.get(2).DualStrandFrequency);
+        assertEquals(1, mChrReaderDuplexUMIs.statistics().DuplicateFrequencies.get(3).DualStrandFrequency);
     }
 
     private String nextReadId(final String umiId)

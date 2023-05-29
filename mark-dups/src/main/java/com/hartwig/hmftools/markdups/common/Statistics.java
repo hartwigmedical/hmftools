@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.markdups.common;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.common.DuplicateFrequency.roundFrequency;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -32,7 +31,7 @@ public class Statistics
     public long InterPartition;
     public long MissingMateCigar;
 
-    public final Map<Integer,Integer> DuplicateFrequencies;
+    public final Map<Integer,DuplicateFrequency> DuplicateFrequencies;
 
     public final UmiStatistics UmiStats;
 
@@ -61,37 +60,45 @@ public class Statistics
         InterPartition += other.InterPartition;
         MissingMateCigar += other.MissingMateCigar;
 
-        for(Map.Entry<Integer,Integer> entry : other.DuplicateFrequencies.entrySet())
+        for(DuplicateFrequency dupFreq : other.DuplicateFrequencies.values())
         {
-            Integer count = DuplicateFrequencies.get(entry.getKey());
-            DuplicateFrequencies.put(entry.getKey(), count == null ? entry.getValue() : count + entry.getValue());
+            addFrequency(dupFreq.DuplicateCount, dupFreq.Frequency, dupFreq.DualStrandFrequency);
         }
 
         UmiStats.merge(other.UmiStats);
     }
 
-    private static int roundFrequency(int frequency)
-    {
-        if(frequency <= 10)
-            return frequency;
-        else if(frequency <= 100)
-            return round(frequency/10) * 10;
-        else if(frequency <= 1000)
-            return round(frequency/100) * 100;
-        else
-            return round(frequency/1000) * 1000;
-    }
-
     public void addFrequency(int frequency)
     {
-        int rounded = roundFrequency(frequency);
-        Integer count = DuplicateFrequencies.get(rounded);
-        DuplicateFrequencies.put(rounded, count == null ? 1 : count + 1);
+        addFrequency(frequency, 1, 0);
+    }
+
+    private void addFrequency(int duplicateCount, int count, int dualStrandCount)
+    {
+        int rounded = roundFrequency(duplicateCount);
+        DuplicateFrequency dupFreq = DuplicateFrequencies.get(rounded);
+
+        if(dupFreq == null)
+        {
+            dupFreq = new DuplicateFrequency(duplicateCount);
+            DuplicateFrequencies.put(rounded, dupFreq);
+        }
+
+        dupFreq.Frequency += count;
+        dupFreq.DualStrandFrequency += dualStrandCount;
+    }
+
+    public void addUmiGroup(final int fragmentCount, boolean hasDualStrand)
+    {
+        addFrequency(fragmentCount, 1, hasDualStrand ? 1 : 0);
+        ++DuplicateGroups;
+        DuplicateReads += fragmentCount - 1;
     }
 
     public void addDuplicateGroup(final int fragmentCount)
     {
         addFrequency(fragmentCount);
+        ++DuplicateGroups;
         DuplicateReads += fragmentCount - 1; // excluding the primary fragment
     }
 
@@ -110,7 +117,7 @@ public class Statistics
 
             for(Integer frequency : frequencies)
             {
-                MD_LOGGER.debug("duplicate frequency({}={})", frequency, DuplicateFrequencies.get(frequency));
+                MD_LOGGER.debug("duplicate frequency({}={})", frequency, DuplicateFrequencies.get(frequency).Frequency);
             }
         }
     }
@@ -123,6 +130,10 @@ public class Statistics
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("DuplicateReadCount\tFrequency");
+
+            if(config.UMIs.Enabled)
+                writer.write("\tDualStrandFrequency");
+
             writer.newLine();
 
             List<Integer> frequencies = DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
@@ -130,7 +141,13 @@ public class Statistics
 
             for(Integer frequency : frequencies)
             {
-                writer.write(format("%d\t%d", frequency, DuplicateFrequencies.get(frequency)));
+                DuplicateFrequency dupFreq = DuplicateFrequencies.get(frequency);
+
+                writer.write(format("%d\t%d", frequency, dupFreq.Frequency));
+
+                if(config.UMIs.Enabled)
+                    writer.write(format("\t%d", dupFreq.DualStrandFrequency));
+
                 writer.newLine();
             }
 

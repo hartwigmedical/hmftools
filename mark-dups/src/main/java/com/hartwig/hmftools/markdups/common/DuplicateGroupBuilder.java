@@ -258,17 +258,28 @@ public class DuplicateGroupBuilder
         if(rawDuplicateGroups == null)
             return Collections.EMPTY_LIST;
 
+        if(mUmiConfig.Enabled && !inExcludedRegion)
+        {
+            List<DuplicateGroup> umiGroups = mUmiGroupBuilder.processUmiGroups(rawDuplicateGroups, singleFragments, captureStats);
+
+            if(captureStats)
+            {
+                for(DuplicateGroup umiGroup: umiGroups)
+                {
+                    mStats.addUmiGroup(umiGroup.fragmentCount(), umiGroup.hasDualStrand());
+                }
+            }
+
+            return umiGroups;
+        }
+
         if(captureStats)
         {
             for(List<Fragment> fragments : rawDuplicateGroups)
             {
-                ++mStats.DuplicateGroups;
                 mStats.addDuplicateGroup(fragments.size());
             }
         }
-
-        if(mUmiConfig.Enabled && !inExcludedRegion)
-            return mUmiGroupBuilder.processUmiGroups(rawDuplicateGroups, singleFragments, captureStats);
 
         if(mFormConsensus && !inExcludedRegion)
             return processConsensusGroups(rawDuplicateGroups);

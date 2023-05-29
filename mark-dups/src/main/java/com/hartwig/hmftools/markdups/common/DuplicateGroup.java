@@ -72,6 +72,7 @@ public class DuplicateGroup
     public String id() { return mId; }
 
     public void registerDualStrand() { mDualStrand = true; }
+    public boolean hasDualStrand() { return mDualStrand; }
 
     public void categoriseReads()
     {
