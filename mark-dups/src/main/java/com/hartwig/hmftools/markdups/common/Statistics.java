@@ -122,7 +122,7 @@ public class Statistics
             String filename = config.formFilename("duplicate_freq");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("DuplicateReadCount,Frequency");
+            writer.write("DuplicateReadCount\tFrequency");
             writer.newLine();
 
             List<Integer> frequencies = DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
@@ -130,7 +130,7 @@ public class Statistics
 
             for(Integer frequency : frequencies)
             {
-                writer.write(format("%d,%d", frequency, DuplicateFrequencies.get(frequency)));
+                writer.write(format("%d\t%d", frequency, DuplicateFrequencies.get(frequency)));
                 writer.newLine();
             }
 

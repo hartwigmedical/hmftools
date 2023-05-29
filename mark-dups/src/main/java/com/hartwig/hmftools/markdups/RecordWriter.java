@@ -220,13 +220,14 @@ public class RecordWriter
             String filename = mConfig.formFilename("reads");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("ReadId,Chromosome,PosStart,PosEnd,Cigar");
-            writer.write(",InsertSize,MateChr,MatePosStart,Duplicate,CalcDuplicate,MateCigar,Coords");
+            writer.write("ReadId\tChromosome\tPosStart\tPosEnd\tCigar");
+            writer.write("\tInsertSize\tMateChr\tMatePosStart\tDuplicate\tCalcDuplicate\tMateCigar\tCoords");
 
             if(mConfig.UMIs.Enabled)
-                writer.write(",Umi,UmiType");
+                writer.write("\tUmi\tUmiType");
 
-            writer.write(",AvgBaseQual,MapQual,SuppData,Flags,FirstInPair,ReadReversed,Unmapped,MateUnmapped,Supplementary,Secondary");
+            writer.write("\tAvgBaseQual\tMapQual\tSuppData\tFlags");
+            writer.write("\tFirstInPair\tReadReversed\tUnmapped\tMateUnmapped\tSupplementary\tSecondary");
 
             writer.newLine();
 
@@ -263,25 +264,25 @@ public class RecordWriter
 
         try
         {
-            mReadWriter.write(format("%s,%s,%d,%d,%s",
+            mReadWriter.write(format("%s\t%s\t%d\t%d\t%s",
                     read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(), read.getCigar()));
 
             SupplementaryReadData suppData = SupplementaryReadData.from(read.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
-            mReadWriter.write(format(",%d,%s,%d,%s,%s,%s,%s",
+            mReadWriter.write(format("\t%d\t%s\t%d\t%s\t%s\t%s\t%s",
                     abs(read.getInferredInsertSize()), read.getMateReferenceName(), read.getMateAlignmentStart(),
                     read.getDuplicateReadFlag(), fragmentStatus, read.hasAttribute(MATE_CIGAR_ATTRIBUTE), fragmentCoordinates));
 
             if(mConfig.UMIs.Enabled)
             {
                 String umiType = read.getStringAttribute(UMI_TYPE_ATTRIBUTE);
-                mReadWriter.write(format(",%s,%s", umiId != null ? umiId : "", umiType != null ? umiType : UmiReadType.NONE));
+                mReadWriter.write(format("\t%s\t%s", umiId != null ? umiId : "", umiType != null ? umiType : UmiReadType.NONE));
             }
 
-            mReadWriter.write(format(",%.2f,%d,%s,%d",
+            mReadWriter.write(format("\t%.2f\t%d\t%s\t%d",
                     avgBaseQual, read.getMappingQuality(), suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
 
-            mReadWriter.write(format(",%s,%s,%s,%s,%s,%s",
+            mReadWriter.write(format("\t%s\t%s\t%s\t%s\t%s\t%s",
                     read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), read.getReadUnmappedFlag(),
                     read.getMateUnmappedFlag(), read.getSupplementaryAlignmentFlag(), read.isSecondaryAlignment()));
 

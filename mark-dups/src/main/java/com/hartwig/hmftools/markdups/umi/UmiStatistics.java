@@ -254,22 +254,22 @@ public class UmiStatistics
             String filename = config.formFilename("umi_edit_distance");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("UmiCountWithCoords,DuplicateReadCount,Frequency");
+            writer.write("UmiCountWithCoords\tDuplicateReadCount\tFrequency");
 
             for(int i = 0; i <= MAX_EDIT_DISTANCE; ++i)
             {
-                writer.write(format(",ED_%d", i));
+                writer.write(format("\tED_%d", i));
             }
 
             writer.newLine();
 
             for(UmiGroupCounts umiGroupCounts : UmiGroupFrequencies)
             {
-                writer.write(format("%d,%d,%d", umiGroupCounts.DuplicateGroupCount, umiGroupCounts.ReadCount, umiGroupCounts.GroupCount));
+                writer.write(format("%d\t%d\t%d", umiGroupCounts.DuplicateGroupCount, umiGroupCounts.ReadCount, umiGroupCounts.GroupCount));
 
                 for(int i = 0; i <= MAX_EDIT_DISTANCE; ++i)
                 {
-                    writer.write(format(",%d", umiGroupCounts.EditDistanceFrequency[i]));
+                    writer.write(format("\t%d", umiGroupCounts.EditDistanceFrequency[i]));
                 }
 
                 writer.newLine();
@@ -290,7 +290,7 @@ public class UmiStatistics
             String filename = config.formFilename("umi_nucleotide_freq");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("UmiPosition,ACount,CCount,GCount,TCount,NCount");
+            writer.write("UmiPosition\tACount\tCCount\tGCount\tTCount\tNCount");
             writer.newLine();
 
             for(int p = 0; p < UmiPositionBaseFrequencies.length; ++p)
@@ -299,7 +299,7 @@ public class UmiStatistics
 
                 for(int b = 0; b < UMI_BASE_COUNT; ++b)
                 {
-                    writer.write(format(",%d", UmiPositionBaseFrequencies[p][b]));
+                    writer.write(format("\t%d", UmiPositionBaseFrequencies[p][b]));
                 }
 
                 writer.newLine();
@@ -319,12 +319,12 @@ public class UmiStatistics
             String filename = config.formFilename("umi_coord_freq");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("UniqueCoordsWithStartPos,UniquePrimariesWithStartPos,Frequency,MaxCoordUmiCount,MaxUmiReads,MaxUmiDetails");
+            writer.write("UniqueCoordsWithStartPos\tUniquePrimariesWithStartPos\tFrequency\tMaxCoordUmiCount\tMaxUmiReads\tMaxUmiDetails");
             writer.newLine();
 
             for(PositionFragmentCounts posFragData : PositionFragments)
             {
-                writer.write(format("%d,%d,%d,%d,%d,%s",
+                writer.write(format("%d\t%d\t%d\t%d\t%d\t%s",
                         posFragData.UniqueCoordCount, posFragData.UniqueFragmentCount, posFragData.Frequency,
                         posFragData.MaxCoordUmiCount, posFragData.MaxUmiReadsCount, posFragData.UmiGroupDetails));
 
