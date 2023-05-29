@@ -168,8 +168,8 @@ public class PartitionData
                 return;
         }
 
-        if(fragment.status() != NONE && umiEnabled())
-            return;
+        // if(fragment.status() != NONE && umiEnabled()) // fragments in UMI groups don't get through this routine
+        //    return;
 
         ResolvedFragmentState resolvedState = fragmentState(fragment);
         mFragmentStatus.put(fragment.id(), resolvedState);

@@ -37,7 +37,6 @@ public class ConsensusReads
 
     private final int[] mOutcomeCounts;
 
-    private boolean mHighlightConsensusReads;
     private boolean mValidateConsensusReads;
 
     private static final String CONSENSUS_PREFIX = "CNS_";
@@ -47,13 +46,11 @@ public class ConsensusReads
         mBaseBuilder = new BaseBuilder(refGenome);
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
         mOutcomeCounts = new int[ConsensusOutcome.values().length];
-        mHighlightConsensusReads = false;
         mValidateConsensusReads = false;
     }
 
-    public void setDebugOptions(boolean highlightConsensusReads, boolean validateConsensusReads)
+    public void setDebugOptions(boolean validateConsensusReads)
     {
-        mHighlightConsensusReads = highlightConsensusReads;
         mValidateConsensusReads = validateConsensusReads;
     }
 
@@ -110,9 +107,6 @@ public class ConsensusReads
         ++mOutcomeCounts[consensusState.outcome().ordinal()];
 
         SAMRecord consensusRead = createConsensusRead(consensusState, reads, groupIdentifier);
-
-        if(mHighlightConsensusReads)
-            consensusRead.setMappingQuality(0);
 
         if(mValidateConsensusReads)
         {

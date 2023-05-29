@@ -75,7 +75,7 @@ public class MarkDuplicates
         int maxLogFragments = (mConfig.RunChecks || mConfig.PerfDebug) ? 100 : 0;
         int totalUnwrittenFragments = 0;
         ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
-        consensusReads.setDebugOptions(mConfig.UMIs.HighlightConsensus, mConfig.RunChecks);
+        consensusReads.setDebugOptions(mConfig.RunChecks);
 
         for(PartitionData partitionData : partitionDataStore.partitions())
         {

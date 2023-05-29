@@ -314,15 +314,11 @@ public class MarkDuplicatesTest
 
         SAMRecord read1 = createSamRecord(
                 readId1, CHR_2, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3, matePos, false, false,
-                new SupplementaryReadData(CHR_1, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        read1.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+                new SupplementaryReadData(CHR_1, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1), false, TEST_READ_CIGAR);
 
         SAMRecord read2 = createSamRecord(
                 readId2, CHR_2, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3, matePos, false, false,
-                new SupplementaryReadData(CHR_1, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        read2.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+                new SupplementaryReadData(CHR_1, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1), false, TEST_READ_CIGAR);
 
         // now the primaries, as candidates
         chr2Reader.processRead(read1);
@@ -371,15 +367,11 @@ public class MarkDuplicatesTest
 
         SAMRecord read3 = createSamRecord(
                 readId3, CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, matePos, false, false,
-                new SupplementaryReadData(CHR_3, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        read3.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+                new SupplementaryReadData(CHR_3, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1), false, TEST_READ_CIGAR);
 
         SAMRecord read4 = createSamRecord(
                 readId4, CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, matePos, false, false,
-                new SupplementaryReadData(CHR_3, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
-
-        read4.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
+                new SupplementaryReadData(CHR_3, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1), false, TEST_READ_CIGAR);
 
         // now the primaries, as candidates
         chr1Reader.processRead(read3);
@@ -425,5 +417,51 @@ public class MarkDuplicatesTest
         assertTrue(partitionData.duplicateGroupMap().isEmpty());
         assertTrue(partitionData.incompleteFragmentMap().isEmpty());
         assertTrue(partitionData.resolvedFragmentStateMap().isEmpty());
+
+        // now the primaries in the excluded region and the mates later
+
+        String readId5 = mReadIdGen.nextId();
+        String readId6 = mReadIdGen.nextId();
+
+        readPos = 600;
+        matePos = 200;
+
+        SAMRecord read5 = createSamRecord(
+                readId5, CHR_2, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3, matePos, false, false,
+                null, false, TEST_READ_CIGAR);
+
+        SAMRecord read6 = createSamRecord(
+                readId6, CHR_2, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3, matePos, false, false,
+                null, false, TEST_READ_CIGAR);
+
+        // now the primaries, as candidates
+        chr2Reader.processRead(read5);
+        chr2Reader.processRead(read6);
+        chr2Reader.flushReadPositions();
+
+        partitionData = partitionDataStore.getOrCreatePartitionData("2_0");
+
+        assertEquals(2, partitionData.resolvedFragmentStateMap().size());
+
+        assertEquals(8, mWriter.recordWriteCount());
+        assertEquals(3, mWriter.recordWriteCountConsensus());
+
+        SAMRecord mate5 = createSamRecord(
+                readId5, CHR_3, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, readPos, true,
+                false, null);
+        setSecondInPair(mate5);
+
+        SAMRecord mate6 = createSamRecord(
+                readId6, CHR_3, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, readPos, true,
+                false, null);
+        setSecondInPair(mate6);
+
+        chr3Reader.processRead(mate5);
+        chr3Reader.processRead(mate6);
+        chr3Reader.flushPendingIncompletes();
+
+        assertTrue(partitionData.resolvedFragmentStateMap().isEmpty());
+
+        assertEquals(10, mWriter.recordWriteCount());
     }
 }

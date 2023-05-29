@@ -24,7 +24,6 @@ public class UmiConfig
     public final String DuplexDelim;
     public final boolean CollapseReversed;
     public final boolean BaseStats;
-    public final boolean HighlightConsensus; // purely for viewing in IGV
     public final int PermittedBaseDiff;
 
     private int mUmiLength; // set and accessed in a thread-safe way
@@ -36,19 +35,17 @@ public class UmiConfig
     private static final String UMI_DUPLEX = "umi_duplex";
     private static final String UMI_DUPLEX_DELIM = "umi_duplex_delim";
     private static final String UMI_DEFINED_IDS = "umi_defined_ids";
-    private static final String UMI_HIGHLIGHT = "umi_highlight";
     private static final String UMI_BASE_DIFF_STATS = "umi_base_diff_stats";
 
     public static final char READ_ID_DELIM = ':';
     public static final String READ_ID_DELIM_STR = String.valueOf(READ_ID_DELIM);
 
-    public UmiConfig(boolean enabled, boolean duplex, final String duplexDelim, boolean highlight, boolean baseStats)
+    public UmiConfig(boolean enabled, boolean duplex, final String duplexDelim, boolean baseStats)
     {
         Enabled = enabled;
         Duplex = duplex;
         DuplexDelim = duplexDelim;
         CollapseReversed = true;
-        HighlightConsensus = highlight;
         BaseStats = baseStats;
         PermittedBaseDiff = DEFAULT_MAX_UMI_BASE_DIFF;
         mUmiLength = 0;
@@ -64,7 +61,6 @@ public class UmiConfig
                 cmd.hasOption(UMI_ENABLED),
                 cmd.hasOption(UMI_DUPLEX),
                 cmd.getOptionValue(UMI_DUPLEX_DELIM, String.valueOf(Constants.DEFAULT_DUPLEX_UMI_DELIM)),
-                cmd.hasOption(UMI_HIGHLIGHT),
                 cmd.hasOption(UMI_BASE_DIFF_STATS));
 
         String definedUmiIdsFilename = cmd.getOptionValue(UMI_DEFINED_IDS);
@@ -132,7 +128,6 @@ public class UmiConfig
         options.addOption(UMI_ENABLED, false, "Use UMIs for duplicates");
         options.addOption(UMI_DUPLEX, false, "UMI duplex enabled");
         options.addOption(UMI_DEFINED_IDS, true, "Optional set of defined UMI IDs in file");
-        options.addOption(UMI_HIGHLIGHT, false, "Set consensus read to map-qual 0 to highlight in IGV");
         options.addOption(UMI_BASE_DIFF_STATS, false, "Record base difference stats");
     }
 }

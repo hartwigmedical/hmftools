@@ -83,7 +83,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mReadPositions = new ReadPositionsCache(region.Chromosome, config.BufferSize, !config.NoMateCigar, this);
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mConsensusReads = new ConsensusReads(config.RefGenome);
-        mConsensusReads.setDebugOptions(config.UMIs.HighlightConsensus, config.RunChecks);
+        mConsensusReads.setDebugOptions(config.RunChecks);
 
         if(!mConfig.SpecificRegions.isEmpty())
         {

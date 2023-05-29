@@ -175,9 +175,9 @@ public class MarkDupsConfig
         PerfDebug = cmd.hasOption(PERF_DEBUG);
         RunChecks = cmd.hasOption(RUN_CHECKS);
 
-        if(RunChecks || UMIs.HighlightConsensus)
+        if(RunChecks)
         {
-            MD_LOGGER.info("running debug options: read-checks({}) consensus-highlight({})", RunChecks, UMIs.HighlightConsensus);
+            MD_LOGGER.info("running debug options: read-checks({})", RunChecks);
         }
     }
 
@@ -262,7 +262,7 @@ public class MarkDupsConfig
         BufferSize = bufferSize;
         BamStringency = ValidationStringency.STRICT;
 
-        UMIs = new UmiConfig(umiEnabled, duplexUmi, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), false, false);
+        UMIs = new UmiConfig(umiEnabled, duplexUmi, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), false);
         FormConsensus = formConsensus;
         NoMateCigar = false;
         IdGenerator = new GroupIdGenerator();
