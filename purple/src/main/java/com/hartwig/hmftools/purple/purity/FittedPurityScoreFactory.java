@@ -58,30 +58,6 @@ public final class FittedPurityScoreFactory
 
         FittedPurityScore fittedPurityScore = builder.build();
         return fittedPurityScore;
-
-        /*
-        purities.stream().max(FittedPurityScoreFactory::comparePloidy).ifPresent(x -> builder.maxPloidy(x.ploidy()));
-        purities.stream().min(FittedPurityScoreFactory::comparePloidy).ifPresent(x -> builder.minPloidy(x.ploidy()));
-        purities.stream().max(FittedPurityScoreFactory::comparePurity).ifPresent(x -> builder.maxPurity(x.purity()));
-        purities.stream().min(FittedPurityScoreFactory::comparePurity).ifPresent(x -> builder.minPurity(x.purity()));
-        purities.stream()
-                .max(FittedPurityScoreFactory::compareDiploidProportion)
-                .ifPresent(x -> builder.maxDiploidProportion(x.diploidProportion()));
-        purities.stream()
-                .min(FittedPurityScoreFactory::compareDiploidProportion)
-                .ifPresent(x -> builder.minDiploidProportion(x.diploidProportion()));
-
-        return builder.build();
-
-        FittedPurityScore fittedPurityScore = builder.build();
-
-        if(minPurity != fittedPurityScore.minPurity() || maxPurity != fittedPurityScore.maxPurity()
-        || minPloidy != fittedPurityScore.minPloidy() || maxPloidy != fittedPurityScore.maxPloidy()
-        || minDp != fittedPurityScore.minDiploidProportion() || maxDp != fittedPurityScore.maxDiploidProportion())
-        {
-            // assert(false);
-        }
-        */
     }
 
     public static double polyclonalProportion(final Collection<PurpleCopyNumber> regions)
@@ -99,21 +75,6 @@ public final class FittedPurityScoreFactory
         }
 
         return totalCount == 0 ? 0 : 1d * polyclonalCount / totalCount;
-    }
-
-    private static int comparePurity(final FittedPurity o1, final FittedPurity o2)
-    {
-        return Double.compare(o1.purity(), o2.purity());
-    }
-
-    private static int comparePloidy(final FittedPurity o1, final FittedPurity o2)
-    {
-        return Double.compare(o1.ploidy(), o2.ploidy());
-    }
-
-    private static int compareDiploidProportion(final FittedPurity o1, final FittedPurity o2)
-    {
-        return Double.compare(o1.diploidProportion(), o2.diploidProportion());
     }
 
     @VisibleForTesting
