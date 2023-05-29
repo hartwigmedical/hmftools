@@ -5,67 +5,97 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Comparators;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.cobalt.Chromosome;
+import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
+import com.hartwig.hmftools.cobalt.CobaltColumns;
 import com.hartwig.hmftools.cobalt.CobaltConstants;
+import com.hartwig.hmftools.cobalt.CobaltUtils;
 import com.hartwig.hmftools.cobalt.ratio.RatioBuilder;
 import com.hartwig.hmftools.common.cobalt.ImmutableReadRatio;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
+
+import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import tech.tablesaw.api.*;
+
 public class LowCoverageRatioBuilder implements RatioBuilder
 {
-    private final ArrayListMultimap<Chromosome,ReadRatio> mLowCoverageRatios;
+    private final Table mLowCoverageRatios;
 
-    public LowCoverageRatioBuilder(final @NotNull Multimap<Chromosome, LowCovBucket> consolidateBoundaries, final ListMultimap<Chromosome, ReadRatio> rawRatios)
+    public LowCoverageRatioBuilder(final Table inputRatios, int consolidationCount,
+            final ChromosomePositionCodec chromosomePosCodec)
     {
-        CB_LOGGER.info("using {} sparse consolidated buckets, from {} raw ratios", consolidateBoundaries.size(), rawRatios.size());
+        this(inputRatios,
+                Objects.requireNonNull(consolidateIntoBuckets(inputRatios, consolidationCount)),
+                chromosomePosCodec);
+    }
 
-        mLowCoverageRatios = ArrayListMultimap.create();
+    public LowCoverageRatioBuilder(final Table inputRatios,
+            final @NotNull Multimap<String, LowCovBucket> consolidateBoundaries,
+            final ChromosomePositionCodec chromosomePosCodec)
+    {
+        CB_LOGGER.info("using {} sparse consolidated buckets, from {} input ratios",
+                consolidateBoundaries.size(), inputRatios.rowCount());
+
+        mLowCoverageRatios = CobaltUtils.createRatioTable();
 
         // calculate median for sample
-        populateLowCoverageRatio(rawRatios, consolidateBoundaries);
+        populateLowCoverageRatio(inputRatios, consolidateBoundaries);
+
+        chromosomePosCodec.addEncodedChrPosColumn(mLowCoverageRatios, true);
     }
 
     // we use on target ratios only for now
     @Override
-    public ArrayListMultimap<Chromosome, ReadRatio> ratios() { return mLowCoverageRatios; }
+    public Table ratios() { return mLowCoverageRatios; }
 
     // we create a pan window ratio by taking the median count of super windows that combine multiple windows
     private void populateLowCoverageRatio(
-        final ListMultimap<Chromosome, ReadRatio> rawRatios, Multimap<Chromosome, LowCovBucket> consolidateBoundaries)
+        final Table rawRatios, Multimap<String, LowCovBucket> consolidateBoundaries)
     {
-        ArrayListMultimap<Chromosome, ReadRatio> consolidatedRatios = ArrayListMultimap.create();
-
-        for (Chromosome chromosome : rawRatios.keySet())
+        for (String chromosome : rawRatios.stringColumn(CobaltColumns.CHROMOSOME).unique())
         {
             List<Double> bucketGcRatios = new ArrayList<>();
 
             Iterator<LowCovBucket> bucketItr = consolidateBoundaries.get(chromosome).iterator();
+
+            if (!bucketItr.hasNext())
+            {
+                CB_LOGGER.fatal("low cov bucket for chromosome {} not found", chromosome);
+                continue;
+            }
+
             LowCovBucket bucket = bucketItr.next();
 
-            // we need this to make sure we get consistent chromosome name (1 vs chr1)
-            String chromosomeStr = rawRatios.get(chromosome).get(0).chromosome();
+            Table chrRatios = rawRatios.where(rawRatios.stringColumn(CobaltColumns.CHROMOSOME).isEqualTo(chromosome));
 
-            for (ReadRatio readRatio : rawRatios.get(chromosome))
+            // make sure position is sorted
+            Validate.isTrue(Comparators.isInStrictOrder(chrRatios.longColumn(CobaltColumns.ENCODED_CHROMOSOME_POS).asList(),
+                    Comparator.naturalOrder()));
+
+            for (Row row : chrRatios)
             {
-                // todo: make sure this is sorted
-                if (readRatio.ratio() >= 0)
+                if (row.getDouble(CobaltColumns.RATIO) >= 0)
                 {
-                    if (readRatio.position() > bucket.endPosition)
+                    if (row.getInt(CobaltColumns.POSITION) > bucket.endPosition)
                     {
-                        ReadRatio unnormalizedRatio = calcConsolidatedRatio(chromosomeStr, bucket, bucketGcRatios);
+                        ReadRatio unnormalizedRatio = calcConsolidatedRatio(chromosome, bucket, bucketGcRatios);
 
                         if (unnormalizedRatio != null)
                         {
-                            consolidatedRatios.put(chromosome, unnormalizedRatio);
+                            Row newRow = mLowCoverageRatios.appendRow();
+                            newRow.setString(CobaltColumns.CHROMOSOME, chromosome);
+                            newRow.setInt(CobaltColumns.POSITION, unnormalizedRatio.position());
+                            newRow.setDouble(CobaltColumns.RATIO, unnormalizedRatio.ratio());
                         }
                         bucketGcRatios.clear();
 
@@ -76,102 +106,26 @@ public class LowCoverageRatioBuilder implements RatioBuilder
                         }
                         else
                         {
-                            // no more bucket for this chromosome, move to next chromosome
+                            // if no more bucket we just break out
                             break;
                         }
                     }
-                    bucketGcRatios.add(readRatio.ratio());
+                    bucketGcRatios.add(row.getDouble(CobaltColumns.RATIO));
                 }
             }
 
             // add the last bucket
-            ReadRatio unnormalizedRatio = calcConsolidatedRatio(chromosomeStr, bucket, bucketGcRatios);
+            ReadRatio unnormalizedRatio = calcConsolidatedRatio(chromosome, bucket, bucketGcRatios);
 
             if (unnormalizedRatio != null)
             {
-                consolidatedRatios.put(chromosome, unnormalizedRatio);
+                Row newRow = mLowCoverageRatios.appendRow();
+                newRow.setString(CobaltColumns.CHROMOSOME, chromosome);
+                newRow.setInt(CobaltColumns.POSITION, unnormalizedRatio.position());
+                newRow.setDouble(CobaltColumns.RATIO, unnormalizedRatio.ratio());
             }
         }
-
-        mLowCoverageRatios.clear();
-        mLowCoverageRatios.putAll(consolidatedRatios);
     }
-
-    /*
-    private void gaussianKernelRatio(
-            final ListMultimap<Chromosome, ReadRatio> rawRatios, final double sigma)
-    {
-        ArrayListMultimap<Chromosome,ReadRatio> unnormalizedRatios = ArrayListMultimap.create();
-
-        for (Chromosome chromosome : rawRatios.keySet())
-        {
-            int firstWindowStart = -1;
-            int lastWindowStart = -1;
-
-            List<Double> bucketGcRatios = new ArrayList<>();
-
-            // we need this to make sure we get consistent chromosome name (1 vs chr1)
-            String chromosomeStr = rawRatios.get(chromosome).get(0).chromosome();
-
-            // TODO remove outlier
-
-            for (ReadRatio readRatio : rawRatios.get(chromosome))
-            {
-                // todo: make sure this is sorted
-                if (readRatio.ratio() >= 0)
-                {
-                    if (firstWindowStart == -1)
-                    {
-                        firstWindowStart = readRatio.position();
-                    }
-
-                    lastWindowStart = readRatio.position();
-                    bucketGcRatios.add(readRatio.ratio());
-
-                    if (bucketGcRatios.size() == consolidationSize)
-                    {
-                        if (firstWindowStart != -1)
-                        {
-                            ReadRatio unnormalizedRatio = calcConsolidatedRatio(
-                                    chromosomeStr, firstWindowStart, lastWindowStart + CobaltConstants.WINDOW_SIZE, bucketGcRatios);
-
-                            if (unnormalizedRatio != null)
-                            {
-                                unnormalizedRatios.put(chromosome, unnormalizedRatio);
-                            }
-                        }
-
-                        firstWindowStart = -1;
-                        bucketGcRatios.clear();
-                    }
-                }
-            }
-
-            ReadRatio unnormalizedRatio = calcConsolidatedRatio(
-                    chromosomeStr, firstWindowStart, lastWindowStart + CobaltConstants.WINDOW_SIZE, bucketGcRatios);
-
-            if (unnormalizedRatio != null)
-                unnormalizedRatios.put(chromosome, unnormalizedRatio);
-        }
-
-        // now we want to normalise all of those off target gc ratios by the median
-        List<Double> values = new ArrayList<>();
-        unnormalizedRatios.values().forEach(x -> values.add(x.ratio()));
-        double median = Doubles.median(values);
-
-        CB_LOGGER.debug("normalizing {} off target windows ratio by median: {}", unnormalizedRatios.size(), median);
-
-        mLowCoverageRatios.clear();
-
-        //for ((key, value) in unnormalizedRatios.entries())
-        for (Map.Entry<Chromosome,ReadRatio> entry : unnormalizedRatios.entries())
-        {
-            ReadRatio readRatio = entry.getValue();
-            double normalizedRatio = readRatio.ratio() / median;
-
-            mLowCoverageRatios.put(entry.getKey(), ImmutableReadRatio.builder().from(readRatio).ratio(normalizedRatio).build());
-        }
-    }*/
 
     @Nullable
     private static ReadRatio calcConsolidatedRatio(
@@ -183,11 +137,15 @@ public class LowCoverageRatioBuilder implements RatioBuilder
         CB_LOGGER.debug("consolidated window: {}:{} ({} - {}), num sub windows: {}, mean ratio: {}",
                 chromosome, bucket.bucketPosition, bucket.startPosition, bucket.endPosition, windowGcRatios.size(), format("%.4f", mean));
 
-        return !Double.isNaN(mean) ? ImmutableReadRatio.builder().chromosome(chromosome).position(bucket.bucketPosition).ratio(mean).build() : null;
+        if (mean <= 1e-10 || Double.isNaN(mean))
+        {
+            return null;
+        }
+        return ImmutableReadRatio.builder().chromosome(chromosome).position(bucket.bucketPosition).ratio(mean).build();
     }
 
     @Nullable
-    public static Multimap<Chromosome, LowCovBucket> calcConsolidateBuckets(final ListMultimap<Chromosome, ReadRatio> rawRatios,
+    public static Multimap<String, LowCovBucket> calcConsolidateBuckets(final Table rawRatios,
             final double medianReadCount)
     {
         int consolidationCount = calcConsolidationCount(medianReadCount);
@@ -207,20 +165,20 @@ public class LowCoverageRatioBuilder implements RatioBuilder
     // given the consolidation count, which is the number of 1k window we want in each bucket, we go through the windows and
     // and find the ranges of the consolidated buckets. We do this to skip through windows with invalid ratios.
     @Nullable
-    static ArrayListMultimap<Chromosome, LowCovBucket> consolidateIntoBuckets(final ListMultimap<Chromosome, ReadRatio> rawRatios,
+    static ArrayListMultimap<String, LowCovBucket> consolidateIntoBuckets(final Table rawRatios,
             final int consolidationCount)
     {
         if (consolidationCount == 1)
             return null;
 
-        ArrayListMultimap<Chromosome, LowCovBucket> boundaries = ArrayListMultimap.create();
+        ArrayListMultimap<String, LowCovBucket> boundaries = ArrayListMultimap.create();
 
-        for (Chromosome chromosome : rawRatios.keySet())
+        for (String chromosome : rawRatios.stringColumn(CobaltColumns.CHROMOSOME).unique())
         {
-            List<Integer> nonMaskedPositions = rawRatios.get(chromosome).stream()
-                    .filter(o -> o.ratio() >= 0.0)
-                    .mapToInt(ReadRatio::position).boxed()
-                    .collect(Collectors.toList());
+            List<Integer> nonMaskedPositions = rawRatios.where(
+                    rawRatios.stringColumn(CobaltColumns.CHROMOSOME).isEqualTo(chromosome)
+                    .and(rawRatios.doubleColumn(CobaltColumns.RATIO).isNonNegative()))
+                    .intColumn(CobaltColumns.POSITION).asList();
 
             List<LowCovBucket> consolidatedBuckets = consolidateIntoBuckets(nonMaskedPositions, consolidationCount);
 
@@ -259,6 +217,9 @@ public class LowCoverageRatioBuilder implements RatioBuilder
     // given the list of non masked windows, get the list of consolidated buckets
     static List<LowCovBucket> consolidateIntoBuckets(List<Integer> windowPositions, int consolidationCount)
     {
+        // make sure position is sorted
+        Validate.isTrue(Comparators.isInStrictOrder(windowPositions, Comparator.naturalOrder()));
+
         List<LowCovBucket> buckets = new ArrayList<>();
 
         if (windowPositions.isEmpty())

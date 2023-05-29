@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.cobalt.ratio;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cobalt.ImmutableReadRatio;
-import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,17 +13,17 @@ class DiploidRatioNormalization
     private int mEndIndex;
 
     private final long mMaxWindowDistance;
-    private final List<ReadRatio> mRatios;
-    private final List<ReadRatio> mResults;
+    private final List<Double> mRatios;
+    private final List<Double> mResults;
     private final RollingMedian mRollingMedian;
 
     DiploidRatioNormalization(final double expectedRatio, int maxWindowDistance, int minWindowCoverage,
-            final List<ReadRatio> ratios)
+            final List<Double> ratios)
     {
         mStartIndex = 0;
         mEndIndex = -1;
 
-        mResults = Lists.newArrayList();
+        mResults = new ArrayList<>();
         mRollingMedian = new RollingMedian();
 
         mMaxWindowDistance = maxWindowDistance;
@@ -33,36 +31,39 @@ class DiploidRatioNormalization
 
         for(int currentIndex = 0; currentIndex < ratios.size(); currentIndex++)
         {
-            final ReadRatio current = ratios.get(currentIndex);
+            final Double current = ratios.get(currentIndex);
 
             removeExpiredRatios(currentIndex);
             addNewRatios(currentIndex);
 
             double medianRatio = mRollingMedian.median();
-            double correctedRatio = isValid(current) && mRollingMedian.size() >= minWindowCoverage
-                    ? expectedRatio * current.ratio() / medianRatio
-                    : current.ratio();
+            Double correctedRatio = current;
 
-            mResults.add(ImmutableReadRatio.builder().from(current).ratio(correctedRatio).build());
+            if (isValid(current) && mRollingMedian.size() >= minWindowCoverage)
+            {
+                correctedRatio = expectedRatio * current / medianRatio;
+            }
+
+            mResults.add(correctedRatio);
         }
     }
 
     @NotNull
-    List<ReadRatio> get()
+    List<Double> get()
     {
         return mResults;
     }
 
-    private boolean isValid(@NotNull final ReadRatio ratio)
+    private boolean isValid(final Double ratio)
     {
-        return Doubles.greaterThan(ratio.ratio(), 0);
+        return ratio != null && Doubles.greaterThan(ratio, 0);
     }
 
     private void addNewRatios(int currentIndex)
     {
         for(int laterIndex = mEndIndex + 1; laterIndex < mRatios.size(); laterIndex++)
         {
-            final ReadRatio later = mRatios.get(laterIndex);
+            final Double later = mRatios.get(laterIndex);
 
             if(distance(currentIndex, laterIndex) <= mMaxWindowDistance)
             {
@@ -75,12 +76,12 @@ class DiploidRatioNormalization
         }
     }
 
-    private void addToMedian(@NotNull final ReadRatio current)
+    private void addToMedian(final Double current)
     {
         mEndIndex++;
         if(isValid(current))
         {
-            mRollingMedian.add(current.ratio());
+            mRollingMedian.add(current);
         }
     }
 
@@ -88,14 +89,14 @@ class DiploidRatioNormalization
     {
         for(int earlierIndex = mStartIndex; earlierIndex < currentIndex; earlierIndex++)
         {
-            final ReadRatio earlier = mRatios.get(earlierIndex);
+            final Double earlier = mRatios.get(earlierIndex);
             final boolean isValid = isValid(earlier);
 
             if(!isValid || distance(currentIndex, earlierIndex) > mMaxWindowDistance)
             {
                 if(isValid)
                 {
-                    mRollingMedian.remove(earlier.ratio());
+                    mRollingMedian.remove(earlier);
                 }
                 mStartIndex++;
             }

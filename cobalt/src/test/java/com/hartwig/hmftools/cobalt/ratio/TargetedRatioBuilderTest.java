@@ -2,23 +2,20 @@ package com.hartwig.hmftools.cobalt.ratio;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.Chromosome;
+import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
+import com.hartwig.hmftools.cobalt.CobaltColumns;
 import com.hartwig.hmftools.cobalt.targeted.TargetedRatioBuilder;
-import com.hartwig.hmftools.common.cobalt.ImmutableReadRatio;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.genome.position.GenomePositions;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
+
+import tech.tablesaw.api.*;
 
 public class TargetedRatioBuilderTest
 {
@@ -28,41 +25,66 @@ public class TargetedRatioBuilderTest
     @Test
     public void testOnTargetRatio()
     {
-        final ListMultimap<Chromosome, ReadRatio> ratios = create(
-                readRatio(1001, 0),
-                readRatio(2001, 0.5),
-                readRatio(11001, 4.0),
-                readRatio(12001, 19.5),
-                readRatio(23001, 0));
+        var chromosomePositionCodec = new ChromosomePositionCodec();
 
-        final Map<GenomePosition, Double> targetEnrichmentRatios = new TreeMap<>();
+        final Table ratios = Table.create(
+                StringColumn.create("chromosome"),
+                IntColumn.create("position"),
+                DoubleColumn.create("ratio"),
+                IntColumn.create("gcBucket"),
+                BooleanColumn.create("isMappable"),
+                BooleanColumn.create("isAutosome"));
 
-        targetEnrichmentRatios.put(GenomePositions.create(CHROMOSOME.contig, 2001), 2.0);
-        targetEnrichmentRatios.put(GenomePositions.create(CHROMOSOME.contig, 12001), 10.0);
-        List<GenomePosition> targetRegions = new ArrayList<>(targetEnrichmentRatios.keySet());
+        addReadRatio(ratios, 1001, 0, 45);
+        addReadRatio(ratios, 2001, 0.5, 45);
+        addReadRatio(ratios, 11001, 4.0, 45);
+        addReadRatio(ratios, 12001, 19.5, 45);
+        addReadRatio(ratios, 23001, 0, 45);
 
-        var ratioBuilder = new TargetedRatioBuilder(targetRegions, targetEnrichmentRatios, ratios);
+        chromosomePositionCodec.addEncodedChrPosColumn(ratios, false);
 
-        ListMultimap<Chromosome, ReadRatio> onTargetRatios = ratioBuilder.onTargetRatios();
+        final Table targetEnrichmentRatios = Table.create(
+                StringColumn.create(CobaltColumns.CHROMOSOME),
+                IntColumn.create(CobaltColumns.POSITION),
+                DoubleColumn.create(CobaltColumns.RELATIVE_ENRICHMENT),
+                BooleanColumn.create("offTarget"));
 
-        assertEquals(2, onTargetRatios.size());
+        Row row = targetEnrichmentRatios.appendRow();
+        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.contig);
+        row.setInt(CobaltColumns.POSITION, 2001);
+        row.setDouble(CobaltColumns.RELATIVE_ENRICHMENT, 2.0);
+        row.setBoolean("offTarget", false);
 
-        ReadRatio readRatio2001 = onTargetRatios.get(CHROMOSOME).get(0);
-        ReadRatio readRatio12001 = onTargetRatios.get(CHROMOSOME).get(1);
+        row = targetEnrichmentRatios.appendRow();
+        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.contig);
+        row.setInt(CobaltColumns.POSITION, 12001);
+        row.setDouble(CobaltColumns.RELATIVE_ENRICHMENT, 10.0);
+        row.setBoolean("offTarget", false);
 
-        assertEquals(2001, readRatio2001.position());
+        chromosomePositionCodec.addEncodedChrPosColumn(targetEnrichmentRatios, true);
+
+        var ratioBuilder = new TargetedRatioBuilder(ratios, targetEnrichmentRatios, chromosomePositionCodec);
+
+        Table onTargetRatios = ratioBuilder.onTargetRatios();
+
+        assertEquals(2, onTargetRatios.rowCount());
+
+        Row readRatio2001 = onTargetRatios.row(0);
+        Row readRatio12001 = onTargetRatios.row(1);
+
+        assertEquals(2001, readRatio2001.getInt(CobaltColumns.POSITION));
 
         // ratio = raw ratio / target enrichment / median of raw ratios that overlap with targeted
 
         // median of the unnormalized gc ratio is 10.0
         // so read ratio = 0.5 / 2.0 / 10 = 0.025
-        assertEquals(0.025, readRatio2001.ratio(), EPSILON);
+        assertEquals(0.22727272727, readRatio2001.getDouble(CobaltColumns.RATIO), EPSILON);
 
-        assertEquals(12001, readRatio12001.position());
+        assertEquals(12001, readRatio12001.getInt(CobaltColumns.POSITION));
 
         // median of the unnormalized gc ratio is 10.0
         // so read ratio = 19.5 / 10.0 / 10 = 0.195
-        assertEquals(0.195, readRatio12001.ratio(), EPSILON);
+        assertEquals(1.7727272727272725, readRatio12001.getDouble(CobaltColumns.RATIO), EPSILON);
     }
 
     @NotNull
@@ -73,9 +95,14 @@ public class TargetedRatioBuilderTest
         return ratios;
     }
 
-    @NotNull
-    private static ReadRatio readRatio(int position, double ratio)
+    private static void addReadRatio(Table table, int position, double ratio, int gcBucket)
     {
-        return ImmutableReadRatio.builder().chromosome(CHROMOSOME.contig).position(position).ratio(ratio).build();
+        Row row = table.appendRow();
+        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.contig);
+        row.setInt(CobaltColumns.POSITION, position);
+        row.setDouble(CobaltColumns.RATIO, ratio);
+        row.setInt("gcBucket", gcBucket);
+        row.setBoolean("isMappable", true);
+        row.setBoolean("isAutosome", true);
     }
 }

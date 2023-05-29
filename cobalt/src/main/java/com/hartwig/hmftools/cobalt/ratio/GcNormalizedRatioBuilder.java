@@ -2,63 +2,122 @@ package com.hartwig.hmftools.cobalt.ratio;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 
-import java.util.Optional;
+import static tech.tablesaw.aggregate.AggregateFunctions.count;
+import static tech.tablesaw.aggregate.AggregateFunctions.median;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.cobalt.Chromosome;
-import com.hartwig.hmftools.common.cobalt.ReadRatio;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.hartwig.hmftools.cobalt.CobaltColumns;
+import com.hartwig.hmftools.common.genome.gc.GCBucket;
 import com.hartwig.hmftools.common.genome.gc.GCMedianReadCount;
-import com.hartwig.hmftools.common.genome.gc.GCProfile;
-import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
-import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
+import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
+import com.hartwig.hmftools.common.utils.Doubles;
 
-public class GcNormalizedRatioBuilder implements RatioBuilder
+import tech.tablesaw.aggregate.NumericAggregateFunction;
+import tech.tablesaw.api.*;
+
+public class GcNormalizedRatioBuilder
 {
-    private final GCMedianReadCount mGCMedianReadCount;
-    private final ArrayListMultimap<Chromosome, ReadRatio> mGcRatios;
+    private static final int MIN_BUCKET = 20;
+    private static final int MAX_BUCKET = 60;
 
-    public GcNormalizedRatioBuilder(final Multimap<Chromosome, GCProfile> gcProfiles,
-            final Multimap<Chromosome, ReadRatio> counts,
-            boolean useInterpolatedMedian)
+    private final Table mGCMedianReadCount;
+    private final double mSampleMedianReadCount;
+    private final double mSampleMeanReadCount;
+    private final Table mGcRatios;
+
+    // apply gc normalisation, the input ratios must have chromosome, position, ratio, gcBucket, isMappable
+    public GcNormalizedRatioBuilder(Table inputRatios, boolean useInterpolatedMedian)
     {
         CB_LOGGER.info("Applying ratio gc normalization");
 
-        final GenomeRegionSelector<GCProfile> gcProfileSelector = GenomeRegionSelectorFactory.create(gcProfiles.values());
+        // create a gc normalisation df
 
-        final GCRatioNormalization gcRatioNormalization = new GCRatioNormalization(useInterpolatedMedian);
+        // skipped masked regions
+        Table gcMedianCalcDf = inputRatios.where(
+                inputRatios.doubleColumn("ratio").isNonNegative()
+                .and(inputRatios.intColumn("gcBucket").isBetweenExclusive(MIN_BUCKET, MAX_BUCKET))
+                .and(inputRatios.booleanColumn("isMappable").asSelection())
+                .and(inputRatios.booleanColumn("isAutosome").asSelection()));
 
-        for(Chromosome chromosome : counts.keySet())
+        NumericAggregateFunction aggFunc;
+
+        if (useInterpolatedMedian)
         {
-            for(ReadRatio readCount : counts.get(chromosome))
+            aggFunc = new NumericAggregateFunction("interpolatedMedian")
             {
-                if (readCount.ratio() < 0.0)
+                @Override
+                public Double summarize(NumericColumn<?> column)
                 {
-                    // skipped masked regions
-                    continue;
+                    return Doubles.interpolatedMedian(column.asDoubleColumn().removeMissing().asList());
                 }
-
-                final Optional<GCProfile> optionalGCProfile = gcProfileSelector.select(readCount);
-                if(optionalGCProfile.isPresent())
-                {
-                    final GCProfile gcProfile = optionalGCProfile.get();
-                    gcRatioNormalization.addPosition(chromosome, gcProfile, readCount.ratio());
-                }
-            }
+            };
+        }
+        else
+        {
+            // use normal median
+            aggFunc = median;
         }
 
-        mGCMedianReadCount = gcRatioNormalization.gcMedianReadCount();
-        mGcRatios = gcRatioNormalization.build(mGCMedianReadCount);
+        // get the sample median and mean
+        mSampleMedianReadCount = aggFunc.summarize(gcMedianCalcDf.doubleColumn("ratio"));
+        mSampleMeanReadCount = gcMedianCalcDf.doubleColumn("ratio").mean();
+
+        // groupby gcBucket and apply median, to create a table with columns
+        // gcBucket, gcMedianCount, windowCount
+        gcMedianCalcDf = gcMedianCalcDf.selectColumns("gcBucket", "ratio")
+                .summarize("ratio", aggFunc, count)
+                .by("gcBucket");
+        gcMedianCalcDf.column(1).setName("gcMedianCount");
+        gcMedianCalcDf.column(2).setName("windowCount");
+
+        // merge in the gc median count
+        Table ratiosWithMedianCount = inputRatios.joinOn("gcBucket").leftOuter(gcMedianCalcDf);
+
+        double medianNormalisation = mSampleMedianReadCount / mSampleMeanReadCount;
+
+        DoubleColumn gcNormalisedRatio = ratiosWithMedianCount.doubleColumn(CobaltColumns.RATIO)
+                .multiply(medianNormalisation)
+                .divide(ratiosWithMedianCount.doubleColumn("gcMedianCount"));
+
+        ratiosWithMedianCount.replaceColumn(gcNormalisedRatio.setName(CobaltColumns.RATIO));
+
+        // resort it, the join messes up with the ordering
+        ratiosWithMedianCount = ratiosWithMedianCount.sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
+
+        mGCMedianReadCount = gcMedianCalcDf;
+        mGcRatios = ratiosWithMedianCount;
     }
 
-    @Override
-    public ArrayListMultimap<Chromosome, ReadRatio> ratios()
+    public Table ratios()
     {
         return mGcRatios;
     }
 
-    public GCMedianReadCount gcMedianReadCount()
+    public Table gcMedianReadCountTable()
     {
         return mGCMedianReadCount;
+    }
+
+    public double getSampleMedianReadCount()
+    {
+        return mSampleMedianReadCount;
+    }
+
+    public double getSampleMeanReadCount()
+    {
+        return mSampleMeanReadCount;
+    }
+
+    // convert the gc median read count table to the object representation
+    public GCMedianReadCount gcMedianReadCount()
+    {
+        final Map<GCBucket, Double> medianPerBucket = new HashMap<>();
+        for (Row row : mGCMedianReadCount)
+        {
+            medianPerBucket.put(new ImmutableGCBucket(row.getInt("gcBucket")), row.getDouble("gcMedianCount"));
+        }
+        return new GCMedianReadCount(mSampleMeanReadCount, mSampleMedianReadCount, medianPerBucket);
     }
 }
