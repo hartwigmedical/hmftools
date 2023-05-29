@@ -205,7 +205,7 @@ public class SageConfig
         Quality = new QualityConfig(cmd);
         QualityRecalibration = new QualityRecalibrationConfig(cmd);
 
-        TrackUMIs = AppendMode && cmd.hasOption(TRACK_UMIS);
+        TrackUMIs = cmd.hasOption(TRACK_UMIS);
 
         PanelOnly = containsFlag(cmd, PANEL_ONLY);
         LogLpsData = cmd.hasOption(LOG_LPS_DATA);
