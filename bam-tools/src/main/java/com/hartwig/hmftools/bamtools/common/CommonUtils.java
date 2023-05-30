@@ -2,6 +2,7 @@ package com.hartwig.hmftools.bamtools.common;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
@@ -108,7 +109,7 @@ public final class CommonUtils
         if(fileType.equals(BAM_FILE_TYPE))
             filename += ".bam";
         else
-            filename += ".csv";
+            filename += TSV_EXTENSION;
 
         return filename;
     }

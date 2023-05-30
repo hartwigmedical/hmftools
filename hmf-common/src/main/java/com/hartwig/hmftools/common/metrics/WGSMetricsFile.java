@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.metrics;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -35,7 +36,6 @@ public final class WGSMetricsFile
     private static final String COVERAGE_60X_COLUMN = "PCT_60X";
 
     public static final String FILE_EXTENSION = ".wgsmetrics";
-    public static final String DELIM = "\t";
 
     public static String generateFilename(final String basePath, final String sampleId)
     {
@@ -63,8 +63,8 @@ public final class WGSMetricsFile
         if(headerLine == null)
             throw new IOException("invalid WGS metrics file: " + filename);
 
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(headerLine, DELIM);
-        String[] values = valuesLine.split(DELIM, -1);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(headerLine, TSV_DELIM);
+        String[] values = valuesLine.split(TSV_DELIM, -1);
 
         // NOTE: adapter and 1x coverage not exist in older versions
 

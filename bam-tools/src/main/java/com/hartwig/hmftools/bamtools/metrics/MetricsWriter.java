@@ -3,7 +3,6 @@ package com.hartwig.hmftools.bamtools.metrics;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.DELIM;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.GENOME_TERRITORY_COLUMN;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.MAD_COVERAGE_COLUMN;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.MEAN_COVERAGE_COLUMN;
@@ -11,6 +10,7 @@ import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.MEDIAN_COVERAGE
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.PCT_EXC_ADAPTER_COLUMN;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.PCT_EXC_TOTAL_COLUMN;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.SD_COVERAGE_COLUMN;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
@@ -19,13 +19,10 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.bamtools.common.CommonUtils;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 
 public final class MetricsWriter
 {
-    private static final String OLD_STYLE_DELIM = DELIM;
-
     public static void writeResults(final CombinedStats combinedStats, final MetricsConfig config)
     {
         if(config.WriteOldStyle)
@@ -42,9 +39,9 @@ public final class MetricsWriter
 
     private static final List<Integer> COVERAGE_LEVELS = Lists.newArrayList(1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100);
 
-    private static String metricsHeader(final String delim)
+    private static String metricsHeader()
     {
-        StringJoiner header = new StringJoiner(delim);
+        StringJoiner header = new StringJoiner(TSV_DELIM);
 
         header.add(GENOME_TERRITORY_COLUMN);
         header.add(MEAN_COVERAGE_COLUMN);
@@ -72,9 +69,9 @@ public final class MetricsWriter
         return header.toString();
     }
 
-    private static String metricsData(final CoverageMetrics metrics, final String delim)
+    private static String metricsData(final CoverageMetrics metrics)
     {
-        StringJoiner tsvData = new StringJoiner(delim);
+        StringJoiner tsvData = new StringJoiner(TSV_DELIM);
 
         final Statistics statistics = metrics.statistics();
 
@@ -119,9 +116,9 @@ public final class MetricsWriter
             String filename = config.formFilename("metrics");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write(metricsHeader(CommonUtils.BT_DELIM));
+            writer.write(metricsHeader());
             writer.newLine();
-            writer.write(metricsData(metrics, CommonUtils.BT_DELIM));
+            writer.write(metricsData(metrics));
             writer.newLine();
 
             writer.close();
@@ -140,7 +137,7 @@ public final class MetricsWriter
             String filename = config.formFilename("coverage");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Coverage,Count");
+            writer.write("Coverage\tCount");
             writer.newLine();
 
             // collapse for long distributions
@@ -155,7 +152,7 @@ public final class MetricsWriter
 
                     if(nextCoverage > currentCoverage)
                     {
-                        writer.write(format("%d,%d", currentCoverage, coverageTotal));
+                        writer.write(format("%d\t%d", currentCoverage, coverageTotal));
                         writer.newLine();
 
                         currentCoverage = nextCoverage;
@@ -166,14 +163,14 @@ public final class MetricsWriter
                 }
 
                 // write the last entry or bucket's data
-                writer.write(format("%d,%d", currentCoverage, coverageTotal));
+                writer.write(format("%d\t%d", currentCoverage, coverageTotal));
                 writer.newLine();
             }
             else
             {
                 for(int i = 0; i < metrics.CoverageFrequency.length; ++i)
                 {
-                    writer.write(format("%d,%d", i, metrics.CoverageFrequency[i]));
+                    writer.write(format("%d\t%d", i, metrics.CoverageFrequency[i]));
                     writer.newLine();
                 }
 
@@ -195,12 +192,12 @@ public final class MetricsWriter
             String filename = config.formFilename("frag_lengths");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("FragmentLength,Count");
+            writer.write("FragmentLength\tCount");
             writer.newLine();
 
             for(LengthFrequency lengthFrequency : fragmentLengths.lengthFrequencies())
             {
-                writer.write(String.format("%d,%d", lengthFrequency.Length, lengthFrequency.Frequency));
+                writer.write(String.format("%d\t%d", lengthFrequency.Length, lengthFrequency.Frequency));
                 writer.newLine();
             }
 
@@ -234,21 +231,21 @@ public final class MetricsWriter
             writer.write("## METRICS CLASS");
             writer.newLine();
 
-            writer.write(metricsHeader(OLD_STYLE_DELIM));
+            writer.write(metricsHeader());
             writer.newLine();
-            writer.write(metricsData(metrics, OLD_STYLE_DELIM));
+            writer.write(metricsData(metrics));
             writer.newLine();
             writer.newLine();
 
             writer.write("## HISTOGRAM");
             writer.newLine();
 
-            writer.write("coverage" + DELIM + "high_quality_coverage_count");
+            writer.write("coverage" + TSV_DELIM + "high_quality_coverage_count");
             writer.newLine();
 
             for(int i = 0; i < metrics.CoverageFrequency.length; ++i)
             {
-                writer.write(format("%d%s%d", i, DELIM, metrics.CoverageFrequency[i]));
+                writer.write(format("%d\t%d", i, metrics.CoverageFrequency[i]));
                 writer.newLine();
             }
 

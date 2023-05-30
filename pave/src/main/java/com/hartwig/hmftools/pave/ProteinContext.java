@@ -4,9 +4,9 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.codon.Codons.CODON_LENGTH;
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -100,14 +100,14 @@ public class ProteinContext
         return refCodingBasePosition;
     }
 
-    public static String csvHeader()
+    public static String tsvHeader()
     {
-        return "HgvsProtein,RefCodonBases,AltCodonBases,CodonIndex,RefAA,AltAA,NetAARange,NetRefAA,NetAltAA,IsDup";
+        return "HgvsProtein\tRefCodonBases\tAltCodonBases\tCodonIndex\tRefAA\tAltAA\tNetAARange\tNetRefAA\tNetAltAA\tIsDup";
     }
 
-    public String toCsv()
+    public String toTsv()
     {
-        StringJoiner sj = new StringJoiner(DELIM);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         sj.add(Hgvs);
         sj.add(RefCodonBases);

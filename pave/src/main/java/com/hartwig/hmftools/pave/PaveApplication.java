@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
@@ -12,12 +13,9 @@ import static com.hartwig.hmftools.pave.PaveConfig.PON_ARTEFACTS_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILTERS;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.PonAnnotation.PON_ARTEFACT_FILTER;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
-
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -41,10 +39,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 
 public class PaveApplication
 {
@@ -352,14 +347,14 @@ public class PaveApplication
             String transFileName = mConfig.OutputDir + mConfig.SampleId + fileSuffix;
             mCsvTranscriptWriter = createBufferedWriter(transFileName, false);
 
-            StringJoiner sj = new StringJoiner(DELIM);
-            sj.add(VariantData.csvHeader());
-            sj.add(VariantData.extraDataCsvHeader());
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(VariantData.tsvHeader());
+            sj.add(VariantData.extraDataHeader());
 
-            sj.add("GeneId,GeneName");
-            sj.add(VariantTransImpact.csvHeader());
-            sj.add(CodingContext.csvHeader());
-            sj.add(ProteinContext.csvHeader());
+            sj.add("GeneId\tGeneName");
+            sj.add(VariantTransImpact.tsvHeader());
+            sj.add(CodingContext.tsvHeader());
+            sj.add(ProteinContext.tsvHeader());
 
             mCsvTranscriptWriter.write(sj.toString());
             mCsvTranscriptWriter.newLine();
@@ -388,11 +383,11 @@ public class PaveApplication
                 if(impact.TransData == null)
                     continue;
 
-                mCsvTranscriptWriter.write(String.format("%s,%s", variant.csvData(), variant.extraDataCsv(mConfig.SampleId)));
+                mCsvTranscriptWriter.write(String.format("%s\t%s", variant.tsvData(), variant.extraDataTsv(mConfig.SampleId)));
 
-                mCsvTranscriptWriter.write(String.format(",%s,%s,%s,%s,%s",
-                        impact.TransData.GeneId, geneName, impact.toCsv(), impact.codingContext().toCsv(),
-                        impact.proteinContext() != null ? impact.proteinContext().toCsv() : ProteinContext.empty()));
+                mCsvTranscriptWriter.write(String.format("\t%s\t%s\t%s\t%s\t%s",
+                        impact.TransData.GeneId, geneName, impact.toTsv(), impact.codingContext().toTsv(),
+                        impact.proteinContext() != null ? impact.proteinContext().toTsv() : ProteinContext.empty()));
 
                 mCsvTranscriptWriter.newLine();
             }

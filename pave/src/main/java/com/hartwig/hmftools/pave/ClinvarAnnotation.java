@@ -13,6 +13,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -55,6 +56,7 @@ public class ClinvarAnnotation
 
     public void annotateVariant(final VariantData variant)
     {
+        // Clinvar entries for both v37 and v38 do not have the chromosome prefix
         String chromosome = RefGenomeFunctions.stripChrPrefix(variant.Chromosome);
 
         List<ClinvarEntry> entries = mChrEntries.get(chromosome);
@@ -92,7 +94,9 @@ public class ClinvarAnnotation
         if(filename == null)
             return;
 
-        if(!Files.exists(Paths.get(filename)))
+        VcfFileReader vcfFileReader = new VcfFileReader(filename);
+
+        if(!vcfFileReader.fileValid())
         {
             mHasValidData = false;
             return;
@@ -100,10 +104,7 @@ public class ClinvarAnnotation
 
         try
         {
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
-                    filename, new VCFCodec(), false);
-
-            for(VariantContext context : reader.iterator())
+            for(VariantContext context : vcfFileReader.iterator())
             {
                 if(context.getAlleles().size() < 2)
                     continue;
@@ -134,7 +135,7 @@ public class ClinvarAnnotation
             PV_LOGGER.info("loaded {} Clinvar entries from file({})",
                     mChrEntries.values().stream().mapToInt(x -> x.size()).sum(), filename);
         }
-        catch(IOException e)
+        catch(Exception e)
         {
             PV_LOGGER.error("failed to read Clinvar VCF file: {}",  e.toString());
             mHasValidData = false;

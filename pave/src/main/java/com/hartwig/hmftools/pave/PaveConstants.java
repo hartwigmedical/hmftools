@@ -17,6 +17,4 @@ public class PaveConstants
     // currently only TERT sets coding impact upstream of the coding start
     public static final List<String> PROMOTOR_UPSTREAM_GENE_IDS = Lists.newArrayList("ENSG00000164362");
     public static final int PROMOTOR_UPSTREAM_DISTANCE = 300;
-
-    public static final String DELIM = ",";
 }
