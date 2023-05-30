@@ -2,8 +2,8 @@ package com.hartwig.hmftools.compar;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.CommonUtils.DATA_DELIM;
-import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.compar.DiffFunctions.diffsStr;
 
 import java.util.List;
@@ -27,17 +27,17 @@ public class Mismatch
 
     public static String commonHeader()
     {
-        return "Category,MismatchType,Key,Differences";
+        return "Category\tMismatchType\tKey\tDifferences";
     }
 
     public static String header()
     {
-        return commonHeader() + ",AllValues";
+        return commonHeader() + "\tAllValues";
     }
 
-    public static String commonCsv(final Mismatch mismatch)
+    public static String commonTsv(final Mismatch mismatch)
     {
-        StringJoiner sj = new StringJoiner(DATA_DELIM);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         if(mismatch.RefItem != null)
             sj.add(mismatch.RefItem.category().toString());
@@ -54,11 +54,11 @@ public class Mismatch
         return sj.toString();
     }
 
-    public String toCsv(boolean writeFieldValues, final List<String> comparedFieldsNames)
+    public String toTsv(boolean writeFieldValues, final List<String> comparedFieldsNames)
     {
-        StringJoiner sj = new StringJoiner(DATA_DELIM);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-        sj.add(commonCsv(this));
+        sj.add(commonTsv(this));
 
         sj.add(diffsStr(DiffValues));
 

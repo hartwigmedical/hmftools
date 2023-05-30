@@ -4,7 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import java.util.Map;

@@ -32,8 +32,6 @@ import com.hartwig.hmftools.compar.mutation.SomaticVariantComparer;
 
 public class CommonUtils
 {
-    public static final String DATA_DELIM = ",";
-    public static final String ITEM_DELIM = ";";
     public static final String SUB_ITEM_DELIM = "=";
 
     public static final String FLD_REPORTED = "Reported";

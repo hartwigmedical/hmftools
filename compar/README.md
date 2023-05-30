@@ -36,6 +36,8 @@ output_dir | Path for output file
 Filter | Description
 ---|---
 output_id | Optional: outfile file suffix
+driver_gene_panel | Used to check alternate transcript changes and to limit analysis of somatics and gene copy number comparisons
+restrict_to_drivers | Limit analysis to genes within the panel
 
 ### Sample ID Mappings
 If the same patient has different sample IDs for different runs and these are used for all filenames, then specify these mappings in the sample ID file, eg:

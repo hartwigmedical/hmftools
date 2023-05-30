@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.L
 import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -22,8 +23,6 @@ import static com.hartwig.hmftools.compar.Category.PANEL_CATEGORIES;
 import static com.hartwig.hmftools.compar.Category.PURPLE_CATEGORIES;
 import static com.hartwig.hmftools.compar.Category.purpleCategories;
 import static com.hartwig.hmftools.compar.Category.linxCategories;
-import static com.hartwig.hmftools.compar.CommonUtils.DATA_DELIM;
-import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.FileSources.fromConfig;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_DEFAULT_ARGS;
@@ -130,7 +129,7 @@ public class ComparConfig
         }
         else
         {
-            final String[] catDataList = cmd.getOptionValue(CATEGORIES).split(DATA_DELIM);
+            final String[] catDataList = cmd.getOptionValue(CATEGORIES).split(CSV_DELIM);
 
             for(String catData : catDataList)
             {
@@ -280,7 +279,7 @@ public class ComparConfig
             String header = lines.get(0);
             lines.remove(0);
 
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
 
             int sampleIndex = fieldsIndexMap.get(COL_SAMPLE_ID);
             Integer refSampleIndex = fieldsIndexMap.get(COL_REF_SAMPLE_ID);
@@ -288,7 +287,7 @@ public class ComparConfig
 
             for(String line : lines)
             {
-                String[] values = line.split(DATA_DELIM, -1);
+                String[] values = line.split(CSV_DELIM, -1);
 
                 String sampleId = values[sampleIndex];
 
@@ -336,7 +335,7 @@ public class ComparConfig
         for(String sourceName : SourceNames)
         {
             String dbConfigValue = cmd.getOptionValue(formConfigSourceStr(DB_SOURCE, sourceName));
-            String[] dbItems = dbConfigValue.split(ITEM_DELIM, -1);
+            String[] dbItems = dbConfigValue.split(CSV_DELIM, -1);
 
             if(dbItems.length != 3)
             {

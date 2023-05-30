@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar;
 
-import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 
 import java.util.List;
 import java.util.Set;
