@@ -5,9 +5,6 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_ARTEFACTS_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
@@ -17,11 +14,9 @@ import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.PonAnnotation.PON_ARTEFACT_FILTER;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -57,7 +52,7 @@ public class PaveApplication
     private Reportability mReportability;
 
     private VcfWriter mVcfWriter;
-    private BufferedWriter mCsvTranscriptWriter;
+    private final TranscriptWriter mTranscriptWriter;
 
     public PaveApplication(final CommandLine cmd)
     {
@@ -92,10 +87,16 @@ public class PaveApplication
         mVcfWriter = null;
         initialiseVcfWriter();
 
-        if(mConfig.WriteTranscriptCsv)
-            initialiseTranscriptWriter();
+        mTranscriptWriter = new TranscriptWriter(mConfig);
 
-        try { version.write(mConfig.OutputDir); } catch(IOException e) {}
+        try
+        {
+            version.write(mConfig.OutputDir);
+        }
+        catch(IOException e)
+        {
+            System.exit(1);
+        }
     }
 
     public void run()
@@ -140,7 +141,7 @@ public class PaveApplication
 
         processVcfFile(mConfig.SampleId);
 
-        closeBufferedWriter(mCsvTranscriptWriter);
+        mTranscriptWriter.close();
 
         PV_LOGGER.info("sample({}) annotation complete", mConfig.SampleId);
     }
@@ -238,13 +239,13 @@ public class PaveApplication
 
         mVcfWriter.writeVariant(variant.context(), variant, variantImpact);
 
-        if(!mConfig.WriteTranscriptCsv)
+        if(!mConfig.WriteTranscriptFile)
             return;
 
         for(Map.Entry<String,List<VariantTransImpact>> entry : variant.getImpacts().entrySet())
         {
             final String geneName = entry.getKey();
-            writeVariantTranscriptData(variant, geneName);
+            mTranscriptWriter.writeVariantData(variant, geneName);
         }
     }
 
@@ -339,65 +340,6 @@ public class PaveApplication
                 mClinvar.hasData(), mBlacklistings.hasData(), mConfig.SetReportable);
     }
 
-    private void initialiseTranscriptWriter()
-    {
-        try
-        {
-            String fileSuffix = ".pave.transcript.csv";
-            String transFileName = mConfig.OutputDir + mConfig.SampleId + fileSuffix;
-            mCsvTranscriptWriter = createBufferedWriter(transFileName, false);
-
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(VariantData.tsvHeader());
-            sj.add(VariantData.extraDataHeader());
-
-            sj.add("GeneId\tGeneName");
-            sj.add(VariantTransImpact.tsvHeader());
-            sj.add(CodingContext.tsvHeader());
-            sj.add(ProteinContext.tsvHeader());
-
-            mCsvTranscriptWriter.write(sj.toString());
-            mCsvTranscriptWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            PV_LOGGER.error("failed to initialise CSV file output: {}", e.toString());
-            return;
-        }
-    }
-
-    private void writeVariantTranscriptData(final VariantData variant, final String geneName)
-    {
-        if(mCsvTranscriptWriter == null)
-            return;
-
-        List<VariantTransImpact> geneImpacts = variant.getGeneImpacts(geneName);
-
-        if(geneImpacts == null)
-            return;
-
-        try
-        {
-            for(VariantTransImpact impact : geneImpacts)
-            {
-                if(impact.TransData == null)
-                    continue;
-
-                mCsvTranscriptWriter.write(String.format("%s\t%s", variant.tsvData(), variant.extraDataTsv(mConfig.SampleId)));
-
-                mCsvTranscriptWriter.write(String.format("\t%s\t%s\t%s\t%s\t%s",
-                        impact.TransData.GeneId, geneName, impact.toTsv(), impact.codingContext().toTsv(),
-                        impact.proteinContext() != null ? impact.proteinContext().toTsv() : ProteinContext.empty()));
-
-                mCsvTranscriptWriter.newLine();
-            }
-        }
-        catch(IOException e)
-        {
-            PV_LOGGER.error("failed to write variant CSV file: {}", e.toString());
-            return;
-        }
-    }
 
     public static void main(@NotNull final String[] args) throws ParseException
     {

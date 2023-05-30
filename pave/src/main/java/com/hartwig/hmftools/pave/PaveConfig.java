@@ -23,7 +23,6 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +37,7 @@ public class PaveConfig
     public final String OutputDir;
     public final String OutputVcfFile;
 
-    public final boolean WriteTranscriptCsv;
+    public final boolean WriteTranscriptFile;
     public final boolean WriteDiffs;
     public final boolean OnlyCanonical;
     public final boolean ReadPassOnly;
@@ -59,7 +58,7 @@ public class PaveConfig
     private static final String READ_PASS_ONLY = "read_pass_only";
     private static final String WRITE_PASS_ONLY = "write_pass_only";
     private static final String WRITE_DIFFS = "write_diffs";
-    private static final String WRITE_TRANSCRIPT_CSV = "write_transcript_csv";
+    private static final String WRITE_TRANSCRIPT_DATA = "write_transcript_data";
     private static final String SET_REPORTABLE = "set_reportable";
 
     public static final Logger PV_LOGGER = LogManager.getLogger(PaveConfig.class);
@@ -73,7 +72,7 @@ public class PaveConfig
 
         OutputVcfFile = cmd.getOptionValue(OUTPUT_VCF_FILE);
 
-        WriteTranscriptCsv = cmd.hasOption(WRITE_TRANSCRIPT_CSV);
+        WriteTranscriptFile = SampleId != null && cmd.hasOption(WRITE_TRANSCRIPT_DATA);
         WriteDiffs = cmd.hasOption(WRITE_DIFFS);
         OnlyCanonical = cmd.hasOption(ONLY_CANONCIAL);
         ReadPassOnly = cmd.hasOption(READ_PASS_ONLY);
@@ -126,7 +125,7 @@ public class PaveConfig
         options.addOption(PON_FILTERS, true, "PON filters per tier, format: TIER:MAX_SAMPLES:MAX_COUNT separated by ';'");
 
         options.addOption(WRITE_DIFFS, false, "Only write transcript diffs to CSV file");
-        options.addOption(WRITE_TRANSCRIPT_CSV, false, "Write variant impacts per transcript to CSV");
+        options.addOption(WRITE_TRANSCRIPT_DATA, false, "Write variant impacts per transcript to TSV");
         options.addOption(ONLY_CANONCIAL, false, "Only check canonical transcripts");
         options.addOption(READ_PASS_ONLY, false, "Filter incoming variants to PASS only");
         options.addOption(WRITE_PASS_ONLY, false, "Only annotate passing variants");

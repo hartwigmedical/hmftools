@@ -53,7 +53,7 @@ output_vcf_file | Specify the output VCF filename
 only_canonical | Only annotate impacts on canonical transcripts
 read_pass_only | Only process passing variants
 write_pass_only | Only write passing variants
-write_transcript_csv | Write a detailed CSV file for each impacted transcript
+write_transcript_data | Write a detailed TSV file for each impacted transcript
 
 ```
 java -jar pave.jar 
