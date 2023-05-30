@@ -12,8 +12,7 @@ import com.hartwig.hmftools.sage.common.SageVariant;
 public final class DedupIndel
 {
     /*
-    - replaces test for local realign set, DedupIndel and DedupRealign
-    - Replace the concept of ‘LRS’ with direct comparison of variants in the same LPS where the CORE at least partially overlap
+    - make a direct comparison of variants in the same LPS where the CORE at least partially overlap
       and where at least 1 of the variants must be an INDEL.
       For each case where this occurs:
         - Calculate the read context and flank of each variant excluding the variant
@@ -28,36 +27,27 @@ public final class DedupIndel
                 .filter(x -> x.hasLocalPhaseSets())
                 .collect(Collectors.toList());
 
-        int index = 0;
-        while(index < candidates.size() - 1)
+        for(int i = 0; i < candidates.size() - 1; ++i)
         {
-            SageVariant firstVariant = candidates.get(index);
-
-            // look for an overlapping MNV
+            SageVariant firstVariant = candidates.get(i);
             int firstCoreEnd = firstVariant.readContext().indexedBases().corePositionEnd();
 
-            int nextIndex = index + 1;
-
-            while(nextIndex < candidates.size())
+            for(int j = i + 1; j < candidates.size(); ++j)
             {
-                SageVariant nextVariant = candidates.get(nextIndex);
+                SageVariant nextVariant = candidates.get(j);
 
-                // cores must overlap
+                // cores must overlap or a delete contains another variant
                 int nextCoreStart = nextVariant.readContext().indexedBases().corePositionStart();
-                if(nextCoreStart > firstCoreEnd)
+                boolean firstDeletesSecond = firstVariant.isDelete() && deleteContainsVariant(firstVariant, nextVariant);
+
+                if(nextCoreStart > firstCoreEnd && !firstDeletesSecond)
                     break;
 
                 if(!validPair(firstVariant, nextVariant))
-                {
-                    ++nextIndex;
                     continue;
-                }
 
                 dedupPair(firstVariant, nextVariant);
-                ++nextIndex;
             }
-
-            ++index;
         }
     }
 
