@@ -82,12 +82,12 @@ public class ProteinContext
 
     public int impactedRefCodingBasePosition(int seIndex, boolean isInframeIndel)
     {
-        int refCodingBasePosition = refCodingBasePosition(seIndex);;
+        int refCodingBasePosition = refCodingBasePosition(seIndex);
 
         if(!isInframeIndel)
             return refCodingBasePosition;
 
-        // special case for inframe INDELs which have included a full ref codon at the start and end to aid with AA evaluatino
+        // special case for inframe INDELs which have included a full ref codon at the start and end to aid with AA evaluation
         int netCodonImpact = NetCodonIndexRange[SE_END] - NetCodonIndexRange[SE_START] + 1;
         int refCodonLengthDiff = abs(RefCodonBases.length() - AltCodonBases.length());
 

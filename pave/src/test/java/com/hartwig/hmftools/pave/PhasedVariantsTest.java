@@ -423,6 +423,102 @@ public class PhasedVariantsTest
         assertFalse(impactIgnore3.hasEffect(PHASED_INFRAME_DELETION));
     }
 
+    @Test
+    public void testRefCondonOverlap()
+    {
+        // variants remain as-is since do not overlap each other's impacted ref or alt codons
+
+        TranscriptData transData = createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] { 0, 100 }, 80, 10, 190, false, "");
+
+        // positions:      012345678901234567890123     456789012345     67890
+        String refBases = "XCCCCCCCCCCAAAAAAAAAACCC" + "GGTGGCGGCGGC" + "AAAAATTTTTAAAAATTTTT";
+
+        int pos = 26;
+        String ref = refBases.substring(pos, pos + 7);
+        String alt = refBases.substring(pos, pos + 1);
+        VariantData varIgnore1 = new VariantData(CHR_1, pos, ref, alt);
+        varIgnore1.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact1 = classifyVariant(varIgnore1, transData);
+        assertTrue(impact1.hasEffect(INFRAME_DELETION));
+
+        pos = 35;
+        ref = refBases.substring(pos, pos + 1);
+        alt = "T";
+        VariantData var1 = new VariantData(CHR_1, pos, ref, alt);
+        var1.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact2 = classifyVariant(var1, transData);
+        assertTrue(impact2.hasEffect(MISSENSE));
+
+        mClassifier.processPhasedVariants(NO_LOCAL_PHASE_SET);
+
+        assertFalse(impact1.phasedFrameshift());
+        assertTrue(impact1.hasEffect(INFRAME_DELETION));
+        assertFalse(impact2.phasedFrameshift());
+        assertTrue(impact2.hasEffect(MISSENSE));
+    }
+
+    @Test
+    public void testMixedOverlaps()
+    {
+        TranscriptData transData = createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] { 0, 100 }, 80, 10, 190, false, "");
+        // positions:      01234567890123456789012     34567890123456789012345678901234567
+        String refBases = "XCCCCCCCCCCAAAAAAAAAACC" + "TTGAGAAGTCTGCCAGCACTGAGAGGAAAATTAAC" + "AAAAATTTTTAAAAATTTTT";
+
+        int pos = 23;
+        String ref = refBases.substring(pos, pos + 8);
+        String alt = refBases.substring(pos, pos + 1);
+        VariantData var1 = new VariantData(CHR_1, pos, ref, alt);
+        var1.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact1 = classifyVariant(var1, transData);
+        assertTrue(impact1.hasEffect(FRAMESHIFT));
+
+        pos = 34;
+        ref = refBases.substring(pos, pos + 1);
+        alt = "T";
+        VariantData var2 = new VariantData(CHR_1, pos, ref, alt);
+        var2.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact2 = classifyVariant(var2, transData);
+        assertTrue(impact2.hasEffect(SYNONYMOUS));
+
+        pos = 35;
+        ref = refBases.substring(pos, pos + 1);
+        alt = ref + "T";
+        VariantData var3 = new VariantData(CHR_1, pos, ref, alt);
+        var3.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact3 = classifyVariant(var3, transData);
+        assertTrue(impact3.hasEffect(FRAMESHIFT));
+
+        pos = 36;
+        ref = refBases.substring(pos, pos + 13);
+        alt = refBases.substring(pos, pos + 1);
+        VariantData var4 = new VariantData(CHR_1, pos, ref, alt);
+        var4.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact4 = classifyVariant(var4, transData);
+        assertTrue(impact4.hasEffect(INFRAME_DELETION));
+
+        // the last variant doesn't overlap
+        pos = 53;
+        ref = refBases.substring(pos, pos + 1);
+        alt = "A";
+        VariantData var5 = new VariantData(CHR_1, pos, ref, alt);
+        var5.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact5 = classifyVariant(var5, transData);
+        assertTrue(impact5.hasEffect(SYNONYMOUS));
+
+        mClassifier.processPhasedVariants(NO_LOCAL_PHASE_SET);
+
+        assertFalse(impact2.codingContext().IsFrameShift);
+        assertFalse(impact2.hasEffect(FRAMESHIFT));
+        assertTrue(impact2.phasedFrameshift());
+        assertTrue(impact1.hasEffect(PHASED_INFRAME_DELETION));
+        assertTrue(impact2.hasEffect(PHASED_INFRAME_DELETION));
+        assertTrue(impact3.hasEffect(PHASED_INFRAME_DELETION));
+        assertTrue(impact4.hasEffect(PHASED_INFRAME_DELETION));
+        assertTrue(impact5.hasEffect(SYNONYMOUS));
+    }
+
     private VariantTransImpact classifyVariant(final VariantData var, final TranscriptData transData)
     {
         VariantTransImpact impact = mClassifier.classifyVariant(var, transData);

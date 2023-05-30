@@ -218,6 +218,7 @@ public class PhasedVariantClassifier
         String combinedRefCodons = "";
         String combinedAltCodons = "";
         int minCodonIndex = -1;
+        int lastImpactedRefCodonEnd = 0;
         int lastRefCodonEnd = 0;
 
         for(int i = 0; i < transImpacts.size(); ++i)
@@ -232,20 +233,24 @@ public class PhasedVariantClassifier
             if(!transImpact.hasCodingBases())
                 continue;
 
-            int refCodonStart = impactedRefCodingBasePosition(transImpact, SE_START);
-            int refCodonEnd = impactedRefCodingBasePosition(transImpact, SE_END);
+            // a distinction is made between the recorded ref codon bases and those actually involved in / impact by the variant
+            // for the purposes of checking for an overlap, the impact bases are compared
+            int impactedRefCodonStart = impactedRefCodingBasePosition(transImpact, SE_START);
+            int impactedRefCodonEnd = impactedRefCodingBasePosition(transImpact, SE_END);
+            int refCodonStart = transImpact.proteinContext().refCodingBaseStart();
+            int refCodonEnd = transImpact.proteinContext().refCodingBaseEnd();
 
             VariantTransImpact nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
 
-            int nextRefCodonStart = nextTransImpact != null && nextTransImpact.hasCodingBases()
+            int nextImpactedRefCodonStart = nextTransImpact != null && nextTransImpact.hasCodingBases()
                     ? impactedRefCodingBasePosition(nextTransImpact, SE_START) : 0;
 
-            boolean overlapsOnStart = lastRefCodonEnd > 0 && refCodonStart <= lastRefCodonEnd;
-            boolean overlapsOnEnd = nextRefCodonStart > 0 && refCodonEnd >= nextRefCodonStart;
+            boolean overlapsOnStart = lastImpactedRefCodonEnd > 0 && impactedRefCodonStart <= lastImpactedRefCodonEnd;
+            boolean overlapsOnEnd = nextImpactedRefCodonStart > 0 && impactedRefCodonEnd >= nextImpactedRefCodonStart;
 
             PV_LOGGER.trace("lps({}) var({}) codons({} -> {}) range({} - {}) overlaps(start={} end={})",
                     localPhaseSet, variant, transImpact.proteinContext().RefCodonBases, transImpact.proteinContext().AltCodonBases,
-                    refCodonStart, refCodonEnd, overlapsOnStart, overlapsOnEnd);
+                    impactedRefCodonStart, impactedRefCodonEnd, overlapsOnStart, overlapsOnEnd);
 
             if(minCodonIndex < 0)
                 minCodonIndex = transImpact.proteinContext().CodonIndex;
@@ -305,6 +310,7 @@ public class PhasedVariantClassifier
             }
 
             lastRefCodonEnd = max(refCodonEnd, lastRefCodonEnd);
+            lastImpactedRefCodonEnd = max(impactedRefCodonEnd, lastImpactedRefCodonEnd);
         }
 
         if(!isCodonMultiple(combinedRefCodons.length()) || !isCodonMultiple(combinedAltCodons.length()))

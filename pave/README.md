@@ -38,17 +38,17 @@ GenesAffected | Count of genes which the variant overlaps
 Argument | Description 
 ---|---
 sample | Sample ID
-vcf_file | Input somatic variant VCF
+vcf_file | Input variant VCF
 ref_genome | Reference genome fasta file
 ensembl_data_dir | Path to Ensembl data cache directory
 driver_gene_panel|Driver Gene Panel
 ref_genome_version | 37 (default) or 38
-output_dir | Output directory for VCF and transcript CSV
 
 ### Optional Arguments
 
 Argument | Description 
 ---|---
+output_dir | Output directory for VCF and transcript CSV, will use input VCF directory if not specified
 output_vcf_file | Specify the output VCF filename
 only_canonical | Only annotate impacts on canonical transcripts
 read_pass_only | Only process passing variants
