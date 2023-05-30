@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.pave.compare.ImpactDiffType.ANY;
 import static com.hartwig.hmftools.pave.compare.ImpactDiffType.CODING_EFFECT;
 
@@ -101,7 +100,6 @@ public class ComparisonConfig
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37(default) or V38");
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
         addEnsemblDir(options);
-        addDatabaseCmdLineArgs(options);
         addLoggingOptions(options);
         addOutputOptions(options);
 

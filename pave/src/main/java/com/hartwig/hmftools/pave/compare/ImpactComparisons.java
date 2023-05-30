@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +17,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.pave.GeneDataCache;
 
 import org.apache.commons.cli.CommandLine;
@@ -32,7 +30,6 @@ public class ImpactComparisons
 {
     private final ComparisonConfig mConfig;
     private final GeneDataCache mGeneDataCache;
-    private final DatabaseAccess mDbAccess;
     private final ComparisonWriter mWriter;
     private final RefGenomeInterface mRefGenome;
 
@@ -44,7 +41,6 @@ public class ImpactComparisons
                 cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion, cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), false);
 
         mRefGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
-        mDbAccess = createDatabaseAccess(cmd);
 
         mWriter = new ComparisonWriter(mGeneDataCache, mConfig);
     }
@@ -57,9 +53,9 @@ public class ImpactComparisons
             System.exit(1);
         }
 
-        if(mDbAccess == null && mConfig.ReferenceVariantsFile == null)
+        if(mConfig.ReferenceVariantsFile == null)
         {
-            PV_LOGGER.error("neither DB nor ref variants file configured, exiting");
+            PV_LOGGER.error("no ref variants file configured, exiting");
             System.exit(1);
         }
 
@@ -83,7 +79,7 @@ public class ImpactComparisons
             for(int i = 0; i < min(mConfig.SampleIds.size(), mConfig.Threads); ++i)
             {
                 sampleTasks.add(new SampleComparisonTask(
-                        i, mConfig, mRefGenome, mDbAccess, mWriter, mGeneDataCache, sampleVariantsCache));
+                        i, mConfig, mRefGenome, mWriter, mGeneDataCache, sampleVariantsCache));
             }
 
             int taskIndex = 0;
@@ -103,7 +99,7 @@ public class ImpactComparisons
         else
         {
             SampleComparisonTask sampleTask = new SampleComparisonTask(
-                    0, mConfig, mRefGenome, mDbAccess, mWriter, mGeneDataCache, sampleVariantsCache);
+                    0, mConfig, mRefGenome, mWriter, mGeneDataCache, sampleVariantsCache);
 
             sampleTask.getSampleIds().addAll(mConfig.SampleIds);
 
