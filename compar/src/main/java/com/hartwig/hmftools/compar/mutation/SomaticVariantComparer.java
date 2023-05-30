@@ -12,6 +12,9 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
+import static com.hartwig.hmftools.compar.MismatchType.INVALID_BOTH;
+import static com.hartwig.hmftools.compar.MismatchType.INVALID_NEW;
+import static com.hartwig.hmftools.compar.MismatchType.INVALID_REF;
 import static com.hartwig.hmftools.compar.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;
@@ -20,6 +23,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somatic
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +43,7 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.DiffThresholds;
 import com.hartwig.hmftools.compar.FileSources;
+import com.hartwig.hmftools.compar.InvalidDataItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
@@ -74,11 +79,16 @@ public class SomaticVariantComparer implements ItemComparer
         final List<SomaticVariantData> allRefVariants = Lists.newArrayList();
         final List<SomaticVariantData> allNewVariants = Lists.newArrayList();
 
+        boolean usesNonPurpleVcfs = false;
+        boolean hasRefItems = false;
+        boolean hasNewItems = false;
+
         for(int i = 0; i <= 1; ++i)
         {
             final List<SomaticVariantData> variants = (i == 0) ? allRefVariants : allNewVariants;
 
             final String sourceName = mConfig.SourceNames.get(i);
+
             String sourceSampleId = mConfig.sourceSampleId(sourceName, sampleId);
 
             if(!mConfig.DbConnections.isEmpty())
@@ -91,10 +101,30 @@ public class SomaticVariantComparer implements ItemComparer
                 List<SomaticVariantData> fileVariants = loadVariants(sourceSampleId, FileSources.sampleInstance(fileSources, sourceSampleId));
 
                 if(fileVariants == null)
-                    return false;
+                    continue;
 
                 variants.addAll(fileVariants);
+                usesNonPurpleVcfs |= !fileSources.SomaticVcf.isEmpty();
             }
+
+            if(sourceName.equals(REF_SOURCE))
+                hasRefItems = true;
+            else
+                hasNewItems = true;
+        }
+
+        if(!hasRefItems || !hasNewItems)
+        {
+            InvalidDataItem invalidDataItem = new InvalidDataItem(category());
+
+            if(!hasRefItems && !hasNewItems)
+                mismatches.add(new Mismatch(invalidDataItem, null, INVALID_BOTH, Collections.EMPTY_LIST));
+            else if(!hasRefItems)
+                mismatches.add(new Mismatch(invalidDataItem, null, INVALID_REF, Collections.EMPTY_LIST));
+            else if(!hasNewItems)
+                mismatches.add(new Mismatch(invalidDataItem, null, INVALID_NEW, Collections.EMPTY_LIST));
+
+            return false;
         }
 
         final Map<String,List<SomaticVariantData>> refVariantsMap = buildVariantMap(allRefVariants);
@@ -168,7 +198,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                     if(matchLevel != REPORTABLE || eitherReportable)
                     {
-                        Mismatch mismatch = refVariant.findDiffs(matchedVariant, mConfig.Thresholds, isUnfiltered);
+                        Mismatch mismatch = refVariant.findDiffs(matchedVariant, mConfig.Thresholds, isUnfiltered, usesNonPurpleVcfs);
 
                         if(mismatch != null)
                             mismatches.add(mismatch);
@@ -192,7 +222,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                 if(unfilteredVariant != null)
                 {
-                    mismatches.add(newVariant.findDiffs(unfilteredVariant, mConfig.Thresholds, true));
+                    mismatches.add(newVariant.findDiffs(unfilteredVariant, mConfig.Thresholds, true, usesNonPurpleVcfs));
                 }
                 else
                 {
@@ -309,11 +339,9 @@ public class SomaticVariantComparer implements ItemComparer
     {
         final List<SomaticVariantData> variants = Lists.newArrayList();
 
-        CompoundFilter filter = new CompoundFilter(true);
-        filter.add(new PassingVariantFilter());
-
         // use the Purple suffix if not specified
-        String vcfFile = PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId);
+        String vcfFile = !fileSources.SomaticVcf.isEmpty() ?
+                fileSources.SomaticVcf : PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId);
 
         VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
@@ -325,10 +353,18 @@ public class SomaticVariantComparer implements ItemComparer
 
         for(VariantContext variantContext : vcfFileReader.iterator())
         {
-            if(!filter.test(variantContext))
+            if(variantContext.isFiltered())
                 continue;
 
             SomaticVariantData variant = SomaticVariantData.fromContext(variantContext);
+
+            if(variant.Gene.isEmpty())
+                continue;
+
+            if(mConfig.RestrictToDrivers && !mConfig.DriverGenes.contains(variant.Gene))
+                continue;
+
+            variants.add(variant);
 
             if(fileSources.RequiresLiftover && mConfig.LiftoverCache.hasMappings())
             {
@@ -337,9 +373,6 @@ public class SomaticVariantComparer implements ItemComparer
                 if(newPosition != UNMAPPED_POSITION)
                     variant.setComparisonCoordinates(RefGenomeFunctions.enforceChrPrefix(variant.Chromosome), newPosition);
             }
-
-            if(!variant.Gene.isEmpty())
-                variants.add(variant);
         }
 
         CMP_LOGGER.debug("sample({}) loaded {} somatic variants", sampleId, variants.size());

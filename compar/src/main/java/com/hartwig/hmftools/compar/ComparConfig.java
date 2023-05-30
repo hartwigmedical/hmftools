@@ -64,6 +64,7 @@ public class ComparConfig
 
     public final Set<String> DriverGenes;
     public final Set<String> AlternateTranscriptDriverGenes;
+    public final boolean RestrictToDrivers;
 
     public final DiffThresholds Thresholds;
 
@@ -88,6 +89,7 @@ public class ComparConfig
 
     public static final String SAMPLE = "sample";
     public static final String WRITE_DETAILED_FILES = "write_detailed";
+    public static final String RESTRICT_TO_DRIVERS = "restrict_to_drivers";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
 
@@ -202,6 +204,13 @@ public class ComparConfig
             {
                 CMP_LOGGER.error("failed to load driver gene panel file: {}", e.toString());
             }
+        }
+
+        RestrictToDrivers = !DriverGenes.isEmpty() && cmd.hasOption(RESTRICT_TO_DRIVERS);
+
+        if(RestrictToDrivers)
+        {
+            CMP_LOGGER.info("restricting comparison to {} driver genes", DriverGenes.size());
         }
 
         LiftoverCache = new GenomeLiftoverCache();
@@ -390,6 +399,7 @@ public class ComparConfig
         options.addOption(formConfigSourceStr(FILE_SOURCE, REF_SOURCE), true, "File locations for reference data");
         options.addOption(formConfigSourceStr(FILE_SOURCE, NEW_SOURCE), true, "File locations for new data");
         options.addOption(WRITE_DETAILED_FILES, false, "Write per-type details files");
+        options.addOption(RESTRICT_TO_DRIVERS, false, "Restrict any comparison involving genes to driver gene panel");
         addThreadOptions(options);
         GenomeLiftoverCache.addConfig(options);
 
@@ -416,6 +426,7 @@ public class ComparConfig
         Thresholds = new DiffThresholds();
         DriverGenes = Sets.newHashSet();
         AlternateTranscriptDriverGenes = Sets.newHashSet();
+        RestrictToDrivers = false;
         mSampleIdMappings = Maps.newHashMap();
         LiftoverCache = new GenomeLiftoverCache();
     }

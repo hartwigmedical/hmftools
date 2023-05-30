@@ -15,6 +15,7 @@ public class FileSources
     public final String Cuppa;
     public final String Lilac;
     public final String Chord;
+    public final String SomaticVcf;
     public final String SomaticUnfilteredVcf;
 
     public final boolean RequiresLiftover;
@@ -26,12 +27,13 @@ public class FileSources
     public static final String CUPPA_DIR = "cuppa_dir";
     public static final String LILAC_DIR = "lilac_dir";
     public static final String CHORD_DIR = "chord_dir";
+    public static final String SOMATIC_VCF = "somatic_vcf";
     public static final String SOMATIC_UNFILTERED_VCF = "somatic_unfiltered_vcf";
 
     public static final String REQUIRES_LIFTOVER = "liftover";
 
     public FileSources(final String source, final String linx, final String purple, final String linxGermline, final String cuppa,
-            final String lilac, final String chord, final String somaticUnfilteredVcf, boolean requiresLiftover)
+            final String lilac, final String chord, final String somaticVcf, final String somaticUnfilteredVcf, boolean requiresLiftover)
     {
         Source = source;
         Linx = linx;
@@ -40,6 +42,7 @@ public class FileSources
         Cuppa = cuppa;
         Lilac = lilac;
         Chord = chord;
+        SomaticVcf = somaticVcf;
         SomaticUnfilteredVcf = somaticUnfilteredVcf;
         RequiresLiftover = requiresLiftover;
     }
@@ -54,6 +57,7 @@ public class FileSources
                 fileSources.Cuppa.replaceAll("\\*", sampleId),
                 fileSources.Lilac.replaceAll("\\*", sampleId),
                 fileSources.Chord.replaceAll("\\*", sampleId),
+                fileSources.SomaticVcf.replaceAll("\\*", sampleId),
                 fileSources.SomaticUnfilteredVcf.replaceAll("\\*", sampleId),
                 fileSources.RequiresLiftover);
     }
@@ -79,6 +83,7 @@ public class FileSources
         String cuppaDir = getDirectory(sampleDir, PipelineToolDirectories.CUPPA_DIR);
         String lilacDir = getDirectory(sampleDir, PipelineToolDirectories.LILAC_DIR);
         String chordDir = getDirectory(sampleDir, PipelineToolDirectories.CHORD_DIR);
+        String somaticVcf = "";
         String somaticUnfilteredVcf = "";
 
         boolean requiresLiftover = false;
@@ -123,6 +128,10 @@ public class FileSources
             {
                 cuppaDir = value;
             }
+            else if(type.equals(SOMATIC_VCF))
+            {
+                somaticVcf = value;
+            }
             else if(type.equals(SOMATIC_UNFILTERED_VCF))
             {
                 somaticUnfilteredVcf = value;
@@ -130,7 +139,8 @@ public class FileSources
         }
 
         return new FileSources(
-                sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, somaticUnfilteredVcf, requiresLiftover);
+                sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir,
+                somaticVcf, somaticUnfilteredVcf, requiresLiftover);
     }
 
     private static String getDirectory(final String sampleDir, final String typeDir)

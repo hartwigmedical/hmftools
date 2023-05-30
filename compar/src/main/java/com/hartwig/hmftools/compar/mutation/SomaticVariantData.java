@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar.mutation;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
@@ -115,27 +117,27 @@ public class SomaticVariantData implements ComparableItem
     @Override
     public String key()
     {
-        return String.format("%s:%d %s>%s %s", Chromosome, Position, Ref, Alt, Type);
+        return format("%s:%d %s>%s %s", Chromosome, Position, Ref, Alt, Type);
     }
 
     @Override
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(String.format("%s", Reported));
-        values.add(String.format("%s", HotspotStatus));
-        values.add(String.format("%s", Tier));
-        values.add(String.format("%s", Biallelic));
-        values.add(String.format("%s", Gene));
-        values.add(String.format("%s", CanonicalEffect));
-        values.add(String.format("%s", CanonicalCodingEffect));
-        values.add(String.format("%s", CanonicalHgvsCodingImpact));
-        values.add(String.format("%s", CanonicalHgvsProteinImpact));
-        values.add(String.format("%s", OtherReportedEffects));
-        values.add(String.format("%d", Qual));
+        values.add(format("%s", Reported));
+        values.add(format("%s", HotspotStatus));
+        values.add(format("%s", Tier));
+        values.add(format("%s", Biallelic));
+        values.add(format("%s", Gene));
+        values.add(format("%s", CanonicalEffect));
+        values.add(format("%s", CanonicalCodingEffect));
+        values.add(format("%s", CanonicalHgvsCodingImpact));
+        values.add(format("%s", CanonicalHgvsProteinImpact));
+        values.add(format("%s", OtherReportedEffects));
+        values.add(format("%d", Qual));
 
-        values.add(String.format("%.2f", SubclonalLikelihood));
-        values.add(String.format("%s", HasLPS));
+        values.add(format("%.2f", SubclonalLikelihood));
+        values.add(format("%s", HasLPS));
 
         return values;
     }
@@ -172,10 +174,10 @@ public class SomaticVariantData implements ComparableItem
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
     {
-        return findDiffs(other, thresholds, false);
+        return findDiffs(other, thresholds, false, false);
     }
 
-    protected Mismatch findDiffs(final ComparableItem other, final DiffThresholds thresholds, boolean isUnfiltered)
+    protected Mismatch findDiffs(final ComparableItem other, final DiffThresholds thresholds, boolean isUnfiltered, boolean nonPurple)
     {
         final SomaticVariantData otherVar = (SomaticVariantData) other;
 
@@ -183,19 +185,23 @@ public class SomaticVariantData implements ComparableItem
 
         checkDiff(diffs, FLD_QUAL, Qual, otherVar.Qual, thresholds);
         checkDiff(diffs, FLD_REPORTED, Reported, otherVar.Reported);
-        checkDiff(diffs, FLD_HOTSPOT, HotspotStatus.toString(), otherVar.HotspotStatus.toString());
         checkDiff(diffs, FLD_TIER, Tier.toString(), otherVar.Tier.toString());
 
         if(!isUnfiltered)
         {
-            checkDiff(diffs, FLD_BIALLELIC, Biallelic, otherVar.Biallelic);
+            // assumes Pave annotated - could possibly check VCF for presence of tags
             checkDiff(diffs, FLD_GENE, Gene, otherVar.Gene);
             checkDiff(diffs, FLD_CANON_EFFECT, CanonicalEffect, otherVar.CanonicalEffect);
             checkDiff(diffs, FLD_CODING_EFFECT, CanonicalCodingEffect, otherVar.CanonicalCodingEffect);
             checkDiff(diffs, FLD_HGVS_CODING, CanonicalHgvsCodingImpact, otherVar.CanonicalHgvsCodingImpact);
             checkDiff(diffs, FLD_HGVS_PROTEIN, CanonicalHgvsProteinImpact, otherVar.CanonicalHgvsProteinImpact);
-            checkDiff(diffs, FLD_OTHER_REPORTED, OtherReportedEffects, otherVar.OtherReportedEffects);
+        }
 
+        if(!isUnfiltered && !nonPurple)
+        {
+            checkDiff(diffs, FLD_HOTSPOT, HotspotStatus.toString(), otherVar.HotspotStatus.toString());
+            checkDiff(diffs, FLD_BIALLELIC, Biallelic, otherVar.Biallelic);
+            checkDiff(diffs, FLD_OTHER_REPORTED, OtherReportedEffects, otherVar.OtherReportedEffects);
             checkDiff(diffs, FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, otherVar.SubclonalLikelihood, thresholds);
         }
 
@@ -208,7 +214,7 @@ public class SomaticVariantData implements ComparableItem
         {
             // suggest was filtered downstream of Sage , eg Pave or Purple so indicate this
             if(Filters.isEmpty() && otherVar.Filters.isEmpty())
-                diffs.add(String.format("%s(%s/%s)", FILTER_DIFF, PASS, "FILTERED"));
+                diffs.add(format("%s(%s/%s)", FILTER_DIFF, PASS, "FILTERED"));
         }
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
@@ -321,4 +327,6 @@ public class SomaticVariantData implements ComparableItem
                 canonicalGeneName, canonicalTranscript, canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact,
                 canonicalHgvsProteinImpact, canonicalSpliceRegion, otherReportableEffects, worstCodingEffect, genesAffected);
     }
+
+    public String toString() { return format("%s gene(%s:%s)", key(), Gene, CanonicalCodingEffect); }
 }

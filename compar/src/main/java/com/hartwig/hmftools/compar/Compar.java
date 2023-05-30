@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.compar;
 
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
@@ -55,6 +56,8 @@ public class Compar
             System.exit(1);
         }
 
+        long startTimeMs = System.currentTimeMillis();
+
         List<ComparTask> sampleTasks = Lists.newArrayList();
 
         if(mConfig.Threads > 1)
@@ -90,7 +93,17 @@ public class Compar
 
         mWriter.close();
 
-        CMP_LOGGER.info("comparison complete");
+        if(mConfig.multiSample())
+        {
+            long timeTakenMs = System.currentTimeMillis() - startTimeMs;
+            double timeTakeMins = timeTakenMs / 60000.0;
+
+            CMP_LOGGER.info("comparison of {} samples complete, mins({})", mConfig.SampleIds.size(), format("%.3f", timeTakeMins));
+        }
+        else
+        {
+            CMP_LOGGER.info("comparison complete");
+        }
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
