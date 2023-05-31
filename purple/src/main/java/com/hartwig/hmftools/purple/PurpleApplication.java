@@ -610,8 +610,7 @@ public class PurpleApplication
             final AmplificationDrivers amplificationDrivers = new AmplificationDrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
             final DeletionDrivers delDrivers = new DeletionDrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
 
-            boolean applyTargetModeDeletionCriteria = false; // was mConfig.TargetRegionsMode in v3.8x
-            somaticDriverCatalog.addAll(delDrivers.deletions(geneCopyNumbers, applyTargetModeDeletionCriteria));
+            somaticDriverCatalog.addAll(delDrivers.deletions(geneCopyNumbers, mConfig.TargetRegionsMode));
 
             // partial AMPs are only allowed for WGS
             somaticDriverCatalog.addAll(amplificationDrivers.amplifications(

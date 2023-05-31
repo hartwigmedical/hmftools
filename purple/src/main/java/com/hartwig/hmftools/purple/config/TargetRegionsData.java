@@ -46,7 +46,7 @@ public class TargetRegionsData
     public static final double DEFAULT_MSI_4_BASE_AF = 0.08;
     public static final int DEFAULT_CODING_BASE_FACTOR = 150000;
     public static final double PANEL_SOMATIC_LIKELIHOOD_DIFF_LOW = 0.08;
-    public static final double PANEL_SOMATIC_LIKELIHOOD_DIFF_HIGH = -0.03;
+    public static final double PANEL_SOMATIC_LIKELIHOOD_DIFF_HIGH = -0.05;
 
     public TargetRegionsData(final String bedFile, final String ratiosFile, final String msiIndelsFile)
     {

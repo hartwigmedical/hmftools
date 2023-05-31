@@ -63,8 +63,7 @@ public class SoftFilterConfig
         MaxGermlineRelativeQual = maxGermlineRelativeQual;
     }
 
-    @NotNull
-    public static Options createOptions(@NotNull final String prefix, @NotNull final SoftFilterConfig defaultValue)
+    public static Options createOptions(final String prefix, final SoftFilterConfig defaultValue)
     {
         final Options options = new Options();
 
