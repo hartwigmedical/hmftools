@@ -47,8 +47,11 @@ public final class PurpleVcfTags
     public static final String UNCLEAR_GERMLINE_FLAG = "UNCLEAR_GERMLINE";
     public static final String UNCLEAR_GERMLINE_FLAG_DESCRIPTION = "Tumor-only unclear germline status";
 
-    public static final String PANEL_GERMLINE_INFO = "GVAF_MIN";
-    public static final String PANEL_GERMLINE_INFO_DESCRIPTION = "Panel germline VAF minimums";
+    public static final String PANEL_GERMLINE_VAF_DISTANCE = "VAF_DIS_MIN";
+    public static final String PANEL_GERMLINE_VAF_DISTANCE_DESC = "Panel germline VAF distance, somatic VAF distance";
+
+    public static final String PANEL_SOMATIC_LIKELIHOOD = "SOM_LH";
+    public static final String PANEL_SOMATIC_LIKELIHOOD_DESC = "Panel somatic likelihood [HIGH,MEDIUM,LOW]";
 
     public static VCFHeader addGermlineHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader template)
     {

@@ -13,9 +13,12 @@ import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -47,6 +50,7 @@ public class ProteomeWriter
 {
     private final EnsemblDataCache mEnsemblDataCache;
     private final RefGenomeInterface mRefGenome;
+    private final RefGenomeVersion mRefGenomeVersion;
     private final boolean mCanonicalOnly;
 
     private static final String CANONICAL_ONLY = "canonical_only";
@@ -57,6 +61,7 @@ public class ProteomeWriter
     {
         mCanonicalOnly = cmd.hasOption(CANONICAL_ONLY);
 
+        mRefGenomeVersion = RefGenomeVersion.from(cmd);
         mEnsemblDataCache = new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), RefGenomeVersion.V37);
         mEnsemblDataCache.setRequiredData(true, false, false, mCanonicalOnly);
 
@@ -112,6 +117,8 @@ public class ProteomeWriter
         boolean inCoding = false;
         String aminoAcids = "";
 
+        String chromosome = mRefGenomeVersion.versionedChromosome(geneData.Chromosome);
+
         if(transData.Strand == POS_STRAND)
         {
             StringBuilder codingBases = new StringBuilder();
@@ -144,7 +151,7 @@ public class ProteomeWriter
                     }
                 }
 
-                codingBases.append(mRefGenome.getBaseString(geneData.Chromosome, exonCodingStart, exonCodingEnd));
+                codingBases.append(mRefGenome.getBaseString(chromosome, exonCodingStart, exonCodingEnd));
             }
 
             aminoAcids = Codons.aminoAcidFromBases(codingBases.toString());
@@ -180,7 +187,7 @@ public class ProteomeWriter
                     }
                 }
 
-                codingBases = mRefGenome.getBaseString(geneData.Chromosome, exonCodingStart, exonCodingEnd) + codingBases;
+                codingBases = mRefGenome.getBaseString(chromosome, exonCodingStart, exonCodingEnd) + codingBases;
             }
 
             aminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(codingBases));
@@ -224,8 +231,8 @@ public class ProteomeWriter
     {
         final Options options = new Options();
         addEnsemblDir(options);
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(OUTPUT_DIR, true, "Output directory");
+        addRefGenomeConfig(options);
+        addOutputDir(options);
         options.addOption(CANONICAL_ONLY, false, "Only write canonical proteome");
 
         final CommandLine cmd = createCommandLine(args, options);

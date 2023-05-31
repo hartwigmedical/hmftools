@@ -7,16 +7,21 @@ import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_GERMLINE_INFO;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_GERMLINE_INFO_DESCRIPTION;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_GERMLINE_VAF_DISTANCE;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_GERMLINE_VAF_DISTANCE_DESC;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD_DESC;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.UNCLEAR_GERMLINE_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.UNCLEAR_GERMLINE_FLAG_DESCRIPTION;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.config.TargetRegionsData.PANEL_SOMATIC_LIKELIHOOD_DIFF_HIGH;
+import static com.hartwig.hmftools.purple.config.TargetRegionsData.PANEL_SOMATIC_LIKELIHOOD_DIFF_LOW;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.variant.PanelSomaticLikelihood;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.TargetRegionsData;
@@ -35,13 +40,15 @@ public class PanelGermlineClassifier
     {
         mTargetRegions = targetRegions;
 
-        mWriter = targetRegions.hasTargetRegions() ? initialiseWriter(config) : null;
+        // mWriter = targetRegions.hasTargetRegions() ? initialiseWriter(config) : null;
+        mWriter = null; // disabled, was for temporary analysis
     }
 
     public static VCFHeader enrichHeader(final VCFHeader template)
     {
         template.addMetaDataLine(new VCFInfoHeaderLine(UNCLEAR_GERMLINE_FLAG, 0, VCFHeaderLineType.Flag, UNCLEAR_GERMLINE_FLAG_DESCRIPTION));
-        template.addMetaDataLine(new VCFInfoHeaderLine(PANEL_GERMLINE_INFO, 2, VCFHeaderLineType.Float, PANEL_GERMLINE_INFO_DESCRIPTION));
+        template.addMetaDataLine(new VCFInfoHeaderLine(PANEL_GERMLINE_VAF_DISTANCE, 2, VCFHeaderLineType.Float, PANEL_GERMLINE_VAF_DISTANCE_DESC));
+        template.addMetaDataLine(new VCFInfoHeaderLine(PANEL_SOMATIC_LIKELIHOOD, 1, VCFHeaderLineType.String, PANEL_SOMATIC_LIKELIHOOD_DESC));
         return template;
     }
 
@@ -52,10 +59,6 @@ public class PanelGermlineClassifier
 
         double rawAf = getGenotypeAttributeAsDouble(variant.context().getGenotype(0), VCFConstants.ALLELE_FREQUENCY_KEY, 0);
 
-        // if(rawAf > mTargetRegions.maxAF())
-        //    return;
-
-        double variantCn = variant.copyNumber(); // of the segment it's on
         double segmentCn = variant.decorator().adjustedCopyNumber();
         double tumorMinorCn = variant.decorator().minorAlleleCopyNumber();
         double tumorMajorCn = segmentCn - tumorMinorCn;
@@ -105,6 +108,9 @@ public class PanelGermlineClassifier
         double somaticMinDiff = abs(somaticMajorDiff) < abs(somaticMinorDiff) ? somaticMajorDiff : somaticMinorDiff;
         somaticMinDiff = abs(somaticHomDiff) < abs(somaticMinDiff) ? somaticHomDiff : somaticMinDiff;
 
+        if(rawAf < somaticVaf1)
+            somaticMinDiff = 0; // the subclonal case
+
         boolean closestDiffGermline = abs(germlineMinDiff) < abs(somaticMinDiff);
 
         /*
@@ -117,12 +123,30 @@ public class PanelGermlineClassifier
         */
 
         double[] diffValues = new double[] { germlineMinDiff, somaticMinDiff };
-        variant.context().getCommonInfo().putAttribute(PANEL_GERMLINE_INFO, diffValues);
+        variant.context().getCommonInfo().putAttribute(PANEL_GERMLINE_VAF_DISTANCE, diffValues);
 
         if(isUnclearGermline)
         {
             variant.context().getCommonInfo().putAttribute(UNCLEAR_GERMLINE_FLAG, true);
         }
+
+        PanelSomaticLikelihood somaticLikelihood;
+        double somaticGermlineDiff = abs(somaticMinDiff) - abs(germlineMinDiff);
+
+        if(variant.isHotspot() || somaticGermlineDiff < PANEL_SOMATIC_LIKELIHOOD_DIFF_HIGH)
+        {
+            somaticLikelihood = PanelSomaticLikelihood.HIGH;
+        }
+        else if(somaticGermlineDiff > PANEL_SOMATIC_LIKELIHOOD_DIFF_LOW)
+        {
+            somaticLikelihood = PanelSomaticLikelihood.LOW;
+        }
+        else
+        {
+            somaticLikelihood = PanelSomaticLikelihood.MEDIUM;
+        }
+
+        variant.context().getCommonInfo().putAttribute(PANEL_SOMATIC_LIKELIHOOD, somaticLikelihood);
 
         writeVariantData(
                 variant, purity, rawAf, tumorMajorCn, tumorMinorCn, germlineVafMajor, germlineVafMinor, somaticVafMajor, somaticVafMinor,

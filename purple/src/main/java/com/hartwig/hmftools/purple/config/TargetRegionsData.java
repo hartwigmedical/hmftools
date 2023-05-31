@@ -40,13 +40,13 @@ public class TargetRegionsData
     public static final List<String> TMB_GENE_EXCLUSIONS = Lists.newArrayList("HLA-A","HLA-B","HLA-C","PIM1","BCL2");
 
     // target-region TML, TMB and MSI-Indels
-    // public static final double TARGET_REGIONS_CN_DIFF = 0.5;
-    // public static final double TARGET_REGIONS_CN_PERC_DIFF = 0.2;
     public static final double DEFAULT_MAX_AF = 0.9;
     public static final double DEFAULT_MAX_AF_DIFF = 0.08;
     public static final double DEFAULT_MSI_2_3_BASE_AF = 0.15;
     public static final double DEFAULT_MSI_4_BASE_AF = 0.08;
     public static final int DEFAULT_CODING_BASE_FACTOR = 150000;
+    public static final double PANEL_SOMATIC_LIKELIHOOD_DIFF_LOW = 0.08;
+    public static final double PANEL_SOMATIC_LIKELIHOOD_DIFF_HIGH = -0.03;
 
     public TargetRegionsData(final String bedFile, final String ratiosFile, final String msiIndelsFile)
     {
