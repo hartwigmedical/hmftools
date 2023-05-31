@@ -116,7 +116,7 @@ public class MismatchWriter
             for(Mismatch mismatch : mismatches)
             {
                 if(sampleId != null && mConfig.multiSample())
-                    writer.write(String.format("%s,", sampleId));
+                    writer.write(String.format("%s\t", sampleId));
 
                 writer.write(mismatch.toTsv(hasSpecificWriter, comparer.comparedFieldNames()));
                 writer.newLine();
