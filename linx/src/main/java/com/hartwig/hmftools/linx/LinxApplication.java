@@ -124,7 +124,7 @@ public class LinxApplication
                 ensemblDataCache.setRestrictedGeneIdList(config.RestrictedGeneIds);
                 ensemblLoadOk = ensemblDataCache.load(false);
             }
-            else if(!config.RunFusions && config.RunDrivers && !config.HomDisAllGenes)
+            else if(!config.RunFusions && config.RunDrivers)
             {
                 // only load transcripts for the driver gene panel
                 ensemblLoadOk = ensemblDataCache.load(true);

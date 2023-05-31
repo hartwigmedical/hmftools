@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
@@ -67,7 +69,6 @@ public class LinxConfig
     public final CommandLine CmdLineArgs;
     public final boolean RunFusions;
     public final boolean RunDrivers;
-    public final boolean HomDisAllGenes;
 
     public final int Threads;
 
@@ -77,10 +78,6 @@ public class LinxConfig
     public static final String VCF_FILE = "sv_vcf";
     public static final String SAMPLE = "sample";
     public static final String UPLOAD_TO_DB = "upload_to_db"; // true by default when in single-sample mode, false for batch
-
-    public static final String CHECK_DRIVERS = "check_drivers";
-    public static final String CHECK_FUSIONS = "check_fusions";
-    public static final String HOM_DIS_ALL_GENES = "hom_dis_all_genes";
 
     // clustering analysis options
     private static final String CLUSTER_BASE_DISTANCE = "proximity_distance";
@@ -147,7 +144,7 @@ public class LinxConfig
 
         IsGermline = cmd.hasOption(GERMLINE);
 
-        RunFusions = cmd.hasOption(CHECK_FUSIONS);
+        RunFusions = cmd.hasOption(KNOWN_FUSIONS_FILE);
 
         Output = new LinxOutput(cmd, isSingleSample() && !IsGermline);
 
@@ -166,8 +163,7 @@ public class LinxConfig
         AnnotationExtensions = AnnotationExtension.fromConfig(cmd.getOptionValue(ANNOTATION_EXTENSIONS, ""));
 
         DriverGenes = loadDriverGenes(cmd);
-        RunDrivers = cmd.hasOption(CHECK_DRIVERS) && !DriverGenes.isEmpty();
-        HomDisAllGenes = cmd.hasOption(HOM_DIS_ALL_GENES);
+        RunDrivers = !DriverGenes.isEmpty();
 
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
         Threads = parseThreads(cmd);
@@ -286,7 +282,6 @@ public class LinxConfig
         DriverGenes = Lists.newArrayList();
         RestrictedGeneIds = Lists.newArrayList();
         RunDrivers = false;
-        HomDisAllGenes = false;
         RunFusions = false;
         Threads = 0;
     }
@@ -326,9 +321,6 @@ public class LinxConfig
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         options.addOption(UPLOAD_TO_DB, true, "Upload all LINX data to DB (true/false), single-sample default=true, batch-mode default=false");
         options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default), or 38");
-        options.addOption(CHECK_DRIVERS, false, "Check SVs against drivers catalog");
-        options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
-        options.addOption(HOM_DIS_ALL_GENES, false, "Run fusion detection");
         options.addOption(VCF_FILE, true, "Path to the PURPLE structural variant VCF file");
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");

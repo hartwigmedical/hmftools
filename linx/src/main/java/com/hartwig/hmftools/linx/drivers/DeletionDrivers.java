@@ -37,13 +37,11 @@ public class DeletionDrivers
 {
     private final DriverDataCache mDataCache;
     private final Map<String,List<String>> mReportableDisruptionGeneTranscripts;
-    private final boolean mHomDisAllGenes;
 
-    public DeletionDrivers(final Map<String,List<String>> disruptionGeneTranscripts, final DriverDataCache dataCache, boolean homDisAllGenes)
+    public DeletionDrivers(final Map<String,List<String>> disruptionGeneTranscripts, final DriverDataCache dataCache)
     {
         mDataCache = dataCache;
         mReportableDisruptionGeneTranscripts = disruptionGeneTranscripts;
-        mHomDisAllGenes = homDisAllGenes;
     }
 
     public void annotateDeleteEvent(final DriverGeneData dgData)
@@ -229,7 +227,7 @@ public class DeletionDrivers
 
                 final List<BreakendGeneData> genesList = breakend.getSV().getGenesList(breakend.usesStart()).stream()
                         .filter(x -> !delDriverGeneIds.contains(x.geneId()))
-                        .filter(x -> mHomDisAllGenes || mReportableDisruptionGeneTranscripts.containsKey(x.geneId()))
+                        .filter(x -> mReportableDisruptionGeneTranscripts.containsKey(x.geneId()))
                         .collect(Collectors.toList());
 
                 if(genesList.isEmpty())
