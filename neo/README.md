@@ -151,13 +151,12 @@ RNADepth | Total RNA coverage at the last base of the upstream AA sequence
 VariantCopyNumber | Allele copies of the point mutation or structural variant 
 CopyNumber | Total chromosomal copies at variant location 
 SubclonalLikelihood | Subclonal likelihood of variant (for point mutations only) 
-NmdMin | Smallest # of coding bases from stop codon to exon splice junction across all downstream transcripts (not presently used) 
-NmdMax | Largest # of coding bases from stop codon to exon splice junction across all downstream transcripts (not presently used) 
+NmdMin | Smallest # of coding bases from stop codon to exon splice junction across all downstream transcripts 
+NmdMax | Largest # of coding bases from stop codon to exon splice junction across all downstream transcripts 
 CodingBasesMinLength | # of coding bases for shortest fused transcript combination (not presently used) 
 CodingBasesMaxLength | # of coding bases for longest fused transcript combination (not presently used) 
 FusedIntronLength | Length of fused Intron (not presently used) 
-SkippedDonors | # of splice donors skipped to from fusion transcript (not presently used) 
-SkippedAcceptors | # of splice acceptors skipped to from fusion transcript (not presently used) 
+SkippedAcceptorsDonors | # of splice acceptors & donors skipped in transcripts other than those in the fusion transcripts 
 
 #### Neoepitope presentation & scoring
 

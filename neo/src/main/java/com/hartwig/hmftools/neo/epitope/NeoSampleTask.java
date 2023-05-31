@@ -14,11 +14,16 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
+import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.VAR_TRANS_IMPACT_ANNOTATION;
+import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.fromVariantContext;
 import static com.hartwig.hmftools.neo.NeoCommon.DOWNSTREAM_PRE_GENE_DISTANCE;
 import static com.hartwig.hmftools.neo.NeoCommon.IMMUNE_TRANSCRIPT_PREFIXES;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.initialiseNeoepitopeWriter;
 import static com.hartwig.hmftools.neo.epitope.NeoEpitopeFinder.writeNeoepitopes;
+import static com.hartwig.hmftools.neo.epitope.PointMutationData.checkVariantEffects;
 import static com.hartwig.hmftools.neo.epitope.PointMutationData.isRelevantMutation;
 import static com.hartwig.hmftools.neo.epitope.SvNeoEpitope.svIsNonDisruptiveInCodingTranscript;
 
@@ -39,15 +44,18 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-import htsjdk.variant.vcf.VCFCodec;
 
 public class NeoSampleTask implements Callable
 {
@@ -109,43 +117,75 @@ public class NeoSampleTask implements Callable
             return pointMutations;
         }
 
+        VcfFileReader reader = new VcfFileReader(somaticVcf);
+
+        if(!reader.fileValid())
+        {
+            System.exit(1);
+        }
+
         try
         {
-            CompoundFilter filter = new CompoundFilter(true);
-            filter.add(new PassingVariantFilter());
-
-            SomaticVariantFactory variantFactory = new SomaticVariantFactory(filter);
-
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(somaticVcf, new VCFCodec(), false);
-
-            for(VariantContext variant : reader.iterator())
+            for(VariantContext variantContext : reader.iterator())
             {
-                if(filter.test(variant))
+                if(variantContext.isFiltered())
+                    continue;
+
+                VariantContextDecorator variant = new VariantContextDecorator(variantContext);
+
+                // must have a gene impact
+                boolean hasValidGeneImpact = false;
+                String geneName = "";
+                CodingEffect worstCodingEffect = NONE;
+
+                VariantImpact variantImpact = variant.variantImpact();
+
+                if(!variantImpact.CanonicalGeneName.isEmpty())
                 {
-                    final SomaticVariant somaticVariant = variantFactory.createVariant(mSampleId, variant).orElse(null);
-
-                    if(somaticVariant == null)
-                        continue;
-
-                    if(somaticVariant.gene().isEmpty() || mGeneTransCache.getGeneDataByName(somaticVariant.gene()) == null)
-                        continue;
-
-                    if(!isRelevantMutation(somaticVariant))
-                        continue;
-
-                    pointMutations.add(new PointMutationData(
-                            somaticVariant.chromosome(), somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt(),
-                            somaticVariant.gene(), somaticVariant.worstCodingEffect(),
-                            somaticVariant.variantCopyNumber(), somaticVariant.adjustedCopyNumber(), somaticVariant.subclonalLikelihood(),
-                            somaticVariant.localPhaseSets() != null ? somaticVariant.topLocalPhaseSet() : -1));
+                    if(mGeneTransCache.getGeneDataByName(variantImpact.CanonicalGeneName) != null && isRelevantMutation(variantImpact))
+                    {
+                        worstCodingEffect = variantImpact.WorstCodingEffect;
+                        geneName = variantImpact.CanonicalGeneName;
+                        hasValidGeneImpact = true;
+                    }
                 }
+
+                if(!hasValidGeneImpact && variantContext.hasAttribute(VAR_TRANS_IMPACT_ANNOTATION))
+                {
+                    List<VariantTranscriptImpact> transImpacts = fromVariantContext(variantContext);
+
+                    for(VariantTranscriptImpact transcriptImpact : transImpacts)
+                    {
+                        if(mGeneTransCache.getGeneDataByName(transcriptImpact.GeneName) == null)
+                            continue;
+
+                        CodingEffect codingEffect = checkVariantEffects(transcriptImpact);
+
+                        if(codingEffect != NONE)
+                        {
+                            worstCodingEffect = codingEffect;
+                            geneName = transcriptImpact.GeneName;
+                            hasValidGeneImpact = true;
+                            break;
+                        }
+                    }
+                }
+
+                if(!hasValidGeneImpact)
+                    continue;
+
+                pointMutations.add(new PointMutationData(
+                        variant.chromosome(), variant.position(), variant.ref(), variant.alt(), geneName, worstCodingEffect,
+                        variant.variantCopyNumber(), variant.adjustedCopyNumber(),
+                        variantContext.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0)));
             }
 
             NE_LOGGER.debug("loaded {} somatic variants from file({})", pointMutations.size(), somaticVcf);
         }
-        catch(IOException e)
+        catch(Exception e)
         {
             NE_LOGGER.error(" failed to read somatic VCF file({}): {}", somaticVcf, e.toString());
+            System.exit(1);
         }
 
         return pointMutations;

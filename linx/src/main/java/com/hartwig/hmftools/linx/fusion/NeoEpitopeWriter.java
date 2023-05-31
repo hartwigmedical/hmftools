@@ -153,7 +153,7 @@ public class NeoEpitopeWriter
         }
     }
 
-    private final List<BreakendTransData> findValidTranscripts(final BreakendGeneData gene, int linkExtensionLength, int maxUpstreamDistance)
+    private List<BreakendTransData> findValidTranscripts(final BreakendGeneData gene, int linkExtensionLength, int maxUpstreamDistance)
     {
         final List<BreakendTransData> validTrans = Lists.newArrayList();
 

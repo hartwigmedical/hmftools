@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.neo.epitope;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
+import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 
 public class PointMutationData
 {
@@ -18,11 +21,10 @@ public class PointMutationData
     public final double VariantCopyNumber;
     public final double CopyNumber;
     public final double SubclonalLikelihood;
-    public final int LocalPhaseSet;
 
     public PointMutationData(
             final String chromosome, final int position, final String ref, final String alt, final String gene,
-            final CodingEffect effect, double variantCopyNumber, double copyNumber, double subclonalLikelihood, int localPhaseSet)
+            final CodingEffect effect, double variantCopyNumber, double copyNumber, double subclonalLikelihood)
     {
         Chromosome = chromosome;
         Position = position;
@@ -33,17 +35,16 @@ public class PointMutationData
         VariantCopyNumber = variantCopyNumber;
         CopyNumber = copyNumber;
         SubclonalLikelihood = subclonalLikelihood;
-        LocalPhaseSet = localPhaseSet;
     }
 
-    public static boolean isRelevantMutation(final SomaticVariant somaticVariant)
+    public static boolean isRelevantMutation(final VariantImpact impact)
     {
-        if(somaticVariant.worstCodingEffect() == NONSENSE_OR_FRAMESHIFT)
+        if(impact.WorstCodingEffect == NONSENSE_OR_FRAMESHIFT)
         {
-            return somaticVariant.canonicalEffect().contains(VariantConsequence.FRAMESHIFT_VARIANT.parentTerm())
-                    || somaticVariant.canonicalEffect().contains(VariantConsequence.STOP_LOST.parentTerm());
+            return impact.CanonicalEffect.contains(VariantConsequence.FRAMESHIFT_VARIANT.parentTerm())
+                    || impact.CanonicalEffect.contains(VariantConsequence.STOP_LOST.parentTerm());
         }
-        else if(somaticVariant.worstCodingEffect() == MISSENSE)
+        else if(impact.WorstCodingEffect == MISSENSE)
         {
             return true;
         }
@@ -51,5 +52,19 @@ public class PointMutationData
         {
             return false;
         }
+    }
+
+    public static CodingEffect checkVariantEffects(final VariantTranscriptImpact transcriptImpact)
+    {
+        if(transcriptImpact.Effects.contains(VariantConsequence.FRAMESHIFT_VARIANT.parentTerm()))
+            return NONSENSE_OR_FRAMESHIFT;
+
+        if(transcriptImpact.Effects.contains(VariantConsequence.STOP_LOST.parentTerm()))
+            return NONSENSE_OR_FRAMESHIFT;
+
+        if(transcriptImpact.Effects.contains(VariantConsequence.MISSENSE_VARIANT.parentTerm()))
+            return MISSENSE;
+
+        return NONE;
     }
 }
