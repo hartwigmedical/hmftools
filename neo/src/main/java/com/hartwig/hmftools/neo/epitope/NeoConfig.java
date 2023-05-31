@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.neo.epitope;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -51,7 +53,7 @@ public class NeoConfig
 
     public static final String WRITE_TRANS_DATA = "write_trans_data";
 
-    public static final int DEFAULT_AMINO_ACID_REF_COUNT = 18;
+    public static final int DEFAULT_AMINO_ACID_REF_COUNT = 15;
 
     public NeoConfig(final CommandLine cmd)
     {
@@ -103,7 +105,10 @@ public class NeoConfig
         options.addOption(LINX_DIR, true, "Linx neoepitope directory");
         options.addOption(SOMATIC_VCF, true, "Purple somatic VCF (use '*') as required");
         options.addOption(WRITE_TRANS_DATA, false, "Write transcript data for each neo-epitope");
-        options.addOption(REQ_AMINO_ACIDS, true, "Number of amino acids in neo-epitopes (default: 18)");
+
+        options.addOption(
+                REQ_AMINO_ACIDS, true, format("Number of amino acids in neo-epitopes (default %d)", + DEFAULT_AMINO_ACID_REF_COUNT));
+
         addLoggingOptions(options);
         addOutputOptions(options);
         addThreadOptions(options);

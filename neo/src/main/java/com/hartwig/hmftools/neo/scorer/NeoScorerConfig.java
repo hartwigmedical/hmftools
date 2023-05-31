@@ -46,6 +46,7 @@ public class NeoScorerConfig
     public final int Threads;
 
     public static final String SAMPLE = "sample";
+    public static final String CANCER_TYPE = "cancer_type";
     public static final String SAMPLE_DATA_DIR = "sample_data_dir";
     public static final String NEO_DIR = "neo_dir";
     public static final String PURPLE_DIR = "purple_dir";
@@ -82,7 +83,7 @@ public class NeoScorerConfig
         CohortSampleTpmFile = cmd.getOptionValue(COHORT_SAMPLE_TPM_FILE);
         CohortTpmMediansFile = cmd.getOptionValue(COHORT_TPM_MEDIANS_FILE);
 
-        LikelihoodThreshold = Double.parseDouble(cmd.getOptionValue(LIKELIHOOD_THRESHOLD, "0.02"));
+        LikelihoodThreshold = Double.parseDouble(cmd.getOptionValue(LIKELIHOOD_THRESHOLD, "0"));
         SimilarityThreshold = Double.parseDouble(cmd.getOptionValue(SIMILARITY_THRESHOLD, "10"));
 
         OutputId = cmd.getOptionValue(OUTPUT_ID);
@@ -94,6 +95,11 @@ public class NeoScorerConfig
         {
             String[] types = cmd.getOptionValue(WRITE_TYPES).split(";");
             Arrays.stream(types).map(x -> OutputType.valueOf(x)).forEach(x -> WriteTypes.add(x));
+        }
+        else
+        {
+            WriteTypes.add(OutputType.NEOEPITOPE);
+            WriteTypes.add(OutputType.ALLELE_PEPTIDE);
         }
     }
 
@@ -119,6 +125,7 @@ public class NeoScorerConfig
     {
         addSampleIdFile(options);
         options.addOption(SAMPLE, true, "Sample ID for single sample");
+        options.addOption(CANCER_TYPE, true, "Cancer type for sample, matching those in cohort TPM medians file");
         options.addOption(SAMPLE_DATA_DIR, true, "Directory for sample files");
         options.addOption(NEO_DIR, true, "Directory for sample neo-epitope files");
         options.addOption(PURPLE_DIR, true, "Directory for sample Purple files");
@@ -135,7 +142,7 @@ public class NeoScorerConfig
         ScoreConfig.addCmdLineArgs(options);
         ConfigUtils.addLoggingOptions(options);
         EnsemblDataCache.addEnsemblDir(options);
-        options.addOption(LIKELIHOOD_THRESHOLD, true, "Rank threshold to write full peptide data");
+        options.addOption(LIKELIHOOD_THRESHOLD, true, "Rank threshold to write full peptide data, default 0 (not applied)");
         options.addOption(SIMILARITY_THRESHOLD, true, "Immunogenic similarity threshold to write full peptide data");
 
         options.addOption(WRITE_TYPES, true, "Valid types: ALLELE_PEPTIDE, PEPTIDE, NEOEPITOPE, SAMPLE_SUMMARY sep by ';'");

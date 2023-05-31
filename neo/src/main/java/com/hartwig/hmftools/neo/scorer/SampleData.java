@@ -4,6 +4,9 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.CANCER_TYPE;
+import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.ISOFOX_DIR;
+import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.RNA_SOMATIC_VCF;
 import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.SAMPLE;
 
 import java.io.File;
@@ -71,11 +74,9 @@ public class SampleData
         }
         else if(cmd.hasOption(SAMPLE))
         {
-            String sampleData = cmd.getOptionValue(SAMPLE);
-            String[] values = sampleData.split(CSV_DELIM, -1);
-            String sampleId = values[0];
-            String cancerType = values.length >= 2 ?  values[1] : "";
-            boolean hasRna = values.length >= 3 ? Boolean.parseBoolean(values[2]) : false;
+            String sampleId = cmd.getOptionValue(SAMPLE);
+            String cancerType = cmd.getOptionValue(CANCER_TYPE, "");
+            boolean hasRna = cmd.hasOption(ISOFOX_DIR) && cmd.hasOption(RNA_SOMATIC_VCF);
             samples.add(new SampleData(sampleId, cancerType, hasRna));
         }
 

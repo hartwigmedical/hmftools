@@ -242,9 +242,8 @@ fi
 
 # Finally Neo-Scorer
 
-sample_data="${sample_id},${cancer_type},true"
-
-args="-sample ${sample_data} \
+args="-sample ${sample_id} \
+    -cancer_type ${cancer_type} \
     -neo_dir ${output_dir} \
     -isofox_dir ${isofox_dir} \
     -lilac_dir ${lilac_dir} \
@@ -254,8 +253,6 @@ args="-sample ${sample_data} \
     -score_file_dir ${binding_dir} \
     -score_file_id ${binding_ref_version} \
     -cancer_tpm_medians_file ${cohort_tpm_medians} \
-    -rank_threshold 0 \
-    -write_types ALLELE_PEPTIDE;NEOEPITOPE \
     -output_dir ${output_dir} \
     -log_debug"
 

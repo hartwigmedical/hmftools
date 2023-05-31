@@ -8,25 +8,116 @@ The neoepitope pipeline (Neo) works in 2 main steps to form a comprehensive set 
 </p>
 Although Neo annotates with expression information from RNA (where available), the neoepitope predictions are currently based solely on mutations found in DNA. Hence we specifically ignore RNA events such as circular RNA, RNA editing, endogenous retroviruses and alternative splicing as we are unable to determine if these are tumor specific. High confidence fusions detected in RNA but not found in DNA are also currently ignored (see future improvements). Neo also miss protein level events including non-canonical reading frames, post translational amino acid modifications & proteasomal peptide splicing. 
 
-## Usage
+## Commands
+
+For an example neoepitope pipeline covering the commands below see:
+https://github.com/hartwigmedical/hmftools/blob/master/pipeline/scripts/run_neo_pipeline
+
+### Linx fusion neoepitopes
+
+Add the config option 'write_neo_epitopes' to the Linx command, eg:
 
 ```
-TO DO
+java -jar linx.jar 
+    -sample SAMPLE_ID 
+    -ref_genome_version 37
+    -ensembl_data_dir /path_to_ensembl_data_cache/ 
+    -purple_dir /path_to_purple_data_files/
+    -known_fusion_file known_fusion_data.csv
+    -driver_gene_panel DriverGenePanel.tsv
+    -output_dir /path_to_linx_output/ 
+    -write_neo_epitopes 
 ```
 
-### Mandatory Arguments
+This will additional write a file of the gene fusion neoepitopes:
+SAMPLE_ID.linx.neoepitope.tsv
 
-TO DO
+### Neo neoepitope candidates
+
+Call Neo to process the Purple somatic VCF and Linx fusion neoepitopes file
+
+```
+java -cp neo.jar com.hartwig.hmftools.neo.cohort.NeoEpitopeAnnotator
+    -sample SAMPLE_ID 
+    -ref_genome_version 37 
+    -ref_genome /ref_genome_fasta/
+    -ensembl_data_dir /path_to_ensembl_data_cache/ 
+    -linx_dir /path_to_linx_output/
+    -somatic_vcf /path_to_purple_somatic_vcf/
+    -output_dir /path_to_neo_output/ 
+```
 
 Argument | Description 
 ---|--- 
+req_amino_acids | Number of amino acids up and downstream of the variant to include in the neoepitope (default: 15)
 
-### Optional Arguments
+Output file:
+SAMPLE_ID.neo.neo_data.tsv
 
-TO DO
+### Isofox fusion neoepitope RNA annotation
+
+If RNA is available, find evidence supporting the fusion neoepitopes:
+
+```
+java -java isofox.jar
+    -sample SAMPLE_ID 
+    -ref_genome_version 37 
+    -ref_genome /ref_genome_fasta/
+    -ensembl_data_dir /path_to_ensembl_data_cache/ 
+    -functions NEO_EPITOPES
+    -neo_dir /path_to_neo_output/
+    -bam_file /path_to_rna_bam/
+    -output_dir /path_to_isofox_output/ 
+```
+
+Output file:
+SAMPLE_ID.isf.neoepitope.tsv
+
+### Sage somatic variant RNA annotation
+
+If RNA is available, find evidence supporting the somatic variants. Run SageAppend on the Purple somatic VCF.
+
+### Neo neoepitope scoring
+
+Call Neo to evaluate the neoepitope allele peptides. This requires all previous steps plus Lilac allele coverage.
+(See https://github.com/hartwigmedical/hmftools/tree/master/lilac)
+
+Peptide binding likelihood reference data is required for this step and can be downloaded here:
+[HMFTools-Resources > Neoepitope Pipeline](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/neo_pipeline/):
+
+```
+java -cp neo.jar com.hartwig.hmftools.neo.scorer.NeoScorer
+    -sample SAMPLE_ID
+    -cancer_type Lung
+    -ref_genome_version 37 
+    -ref_genome /ref_genome_fasta/
+    -ensembl_data_dir /path_to_ensembl_data_cache/ 
+    -score_file_dir /path_to_neo_bind_ref_data/
+    -score_file_id cmb_02
+    -cancer_tpm_medians_file /path_to_rna_cohort_transcript_medians.csv/
+    -neo_dir /path_to_neo_output/
+    -isofox_dir /path_to_isofox_output/
+    -lilac_dir /path_to_lilac_output/
+    -purple_dir /path_to_purple_output/
+    -rna_somatic_vcf /path_to_purple_rna_somatic_vcf/
+    -output_dir /path_to_neo_output/ 
+```
 
 Argument | Description 
----|---
+---|--- 
+score_file_dir | Directory containing scoring reference data (see HMF public resources 'neo_pipeline')
+score_file_id | An indicator of the version of the binding reference data
+cancer_tpm_medians_file | HMF RNA cohort transcript median TPM file
+cancer_type | Cancer type for sample, matching those in cohort TPM medians file, if omitted the pan-cancer medium TPMs will be used
+write_types | Values from ALLELE_PEPTIDE (all allele+peptide combinations), NEOEPITOPE (neoepitopes from which peptides are derived)
+rank_threshold | A likelihood threshold to write allele+peptide, set as zero or omit to write all to file
+rna_sample_suffix | The sample ID suffix for the RNA sample in the Sage Append somatic VCF, default expected RNA sample ID is 'SAMPLE_ID_RNA'
+
+Output file:
+SAMPLE_ID.neo.neoepitope.tsv
+SAMPLE_ID.neo.peptide_scores.tsv
+
+
  
 ## Algorithm
 ### Inputs
