@@ -102,7 +102,9 @@ public final class VariantContextFactory
                 .alleles(NO_CALL);
 
         if(counter.umiTypeCounts() != null)
+        {
             builder.attribute(UMI_TYPE_COUNTS, counter.umiTypeCounts());
+        }
 
         return builder.make();
     }

@@ -211,6 +211,7 @@ public class ReadContextCounter implements VariantHotspot
 
     public List<Integer> localPhaseSets() { return mLocalPhaseSets; }
     public List<int[]> lpsCounts() { return mLpsCounts; }
+
     public int[] umiTypeCounts() { return mUmiTypeCounts; }
 
     public boolean exceedsMaxCoverage() { return mCounts[RC_TOTAL] >= MaxCoverage; }
@@ -343,7 +344,7 @@ public class ReadContextCounter implements VariantHotspot
                 countStrandedness(record);
 
                 if(sageConfig.TrackUMIs)
-                    countUmiType(record);
+                    countUmiType(record, false);
 
                 checkImproperCount(record);
                 return SUPPORT;
@@ -373,7 +374,7 @@ public class ReadContextCounter implements VariantHotspot
             registerRawSupport(rawContext);
 
             if(sageConfig.TrackUMIs)
-                countUmiType(record);
+                countUmiType(record, false);
 
             return SUPPORT;
         }
@@ -404,6 +405,9 @@ public class ReadContextCounter implements VariantHotspot
             mCounts[RC_REF]++;
             mQualities[RC_REF] += quality;
             matchType = NO_SUPPORT;
+
+            if(sageConfig.TrackUMIs)
+                countUmiType(record, true);
         }
         else if(rawContext.AltSupport)
         {
@@ -700,21 +704,26 @@ public class ReadContextCounter implements VariantHotspot
             mReverseStrand++;
     }
 
-    private void countUmiType(final SAMRecord record)
+    private void countUmiType(final SAMRecord record, final boolean isRef)
     {
         if(mUmiTypeCounts == null)
-            mUmiTypeCounts = new int[UmiReadType.values().length];
+        {
+            // 3 ref values followed by the 3 alt values
+            mUmiTypeCounts = new int[UmiReadType.values().length * 2];
+        }
+
+        int indexOffset = isRef ? 0 : 3;
 
         String umiType = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
 
         if(umiType == null)
         {
-            ++mUmiTypeCounts[UmiReadType.NONE.ordinal()];
+            ++mUmiTypeCounts[UmiReadType.NONE.ordinal() + indexOffset];
             return;
         }
 
         UmiReadType umiReadType = UmiReadType.valueOf(umiType);
-        ++mUmiTypeCounts[umiReadType.ordinal()];
+        ++mUmiTypeCounts[umiReadType.ordinal() + indexOffset];
     }
 
     private int getMaxRealignDistance(final SAMRecord record)
