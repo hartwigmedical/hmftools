@@ -100,7 +100,7 @@ MSIndelsPerMb = 220 * # of MSI variants / # of MSI sites in panel
 
 ### PURPLE TML & TMB estimate
 
-A custom model is used for TMB estimated in targeted mode. The main challenges of the model is to Variants are included in the TMB estimate that meet the following criteria:
+A custom model is used for TMB estimated in targeted mode. The main challenges of the model is to determine variants are included in the TMB estimate. PURPLE selects variants that meet the following criteria:
 - Coding effect <> NONE
 - GNDFreq <0.00005
 - GENE in PANEL and not in {HLA-A,HLA-B,HLA-C,PIM1,BCL2} 
