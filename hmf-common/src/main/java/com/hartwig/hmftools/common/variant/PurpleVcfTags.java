@@ -44,9 +44,6 @@ public final class PurpleVcfTags
     public static final String KATAEGIS_FLAG = "KT";
     public static final String KATAEGIS_FLAG_DESCRIPTION = "Forward/reverse kataegis id";
 
-    public static final String UNCLEAR_GERMLINE_FLAG = "UNCLEAR_GERMLINE";
-    public static final String UNCLEAR_GERMLINE_FLAG_DESCRIPTION = "Tumor-only unclear germline status";
-
     public static final String PANEL_GERMLINE_VAF_DISTANCE = "VAF_DIS_MIN";
     public static final String PANEL_GERMLINE_VAF_DISTANCE_DESC = "Panel germline VAF distance, somatic VAF distance";
 

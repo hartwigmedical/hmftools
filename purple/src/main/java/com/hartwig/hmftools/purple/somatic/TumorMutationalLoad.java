@@ -4,13 +4,17 @@ import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
+import static com.hartwig.hmftools.common.variant.PanelSomaticLikelihood.HIGH;
+import static com.hartwig.hmftools.common.variant.PanelSomaticLikelihood.LOW;
+import static com.hartwig.hmftools.common.variant.PanelSomaticLikelihood.MEDIUM;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.UNCLEAR_GERMLINE_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.CODING_BASES_PER_GENOME;
 import static com.hartwig.hmftools.purple.config.TargetRegionsData.TMB_GENE_EXCLUSIONS;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.PanelSomaticLikelihood;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.purple.config.TargetRegionsData;
 
@@ -77,13 +81,16 @@ public class TumorMutationalLoad
         if(gnomadFreq > 0)
             return;
 
-        if(variant.context().getCommonInfo().hasAttribute(UNCLEAR_GERMLINE_FLAG))
-        {
-            ++mUnclearVariants;
-        }
-        else
+        PanelSomaticLikelihood somaticLikelihood = variant.context().hasAttribute(PANEL_SOMATIC_LIKELIHOOD) ?
+                PanelSomaticLikelihood.valueOf(variant.context().getAttributeAsString(PANEL_SOMATIC_LIKELIHOOD, "")) : LOW;
+
+        if(somaticLikelihood == HIGH)
         {
             ++mBurden;
+        }
+        else if(somaticLikelihood == MEDIUM)
+        {
+            ++mUnclearVariants;
         }
 
         if(variantImpact.WorstCodingEffect.equals(CodingEffect.MISSENSE))

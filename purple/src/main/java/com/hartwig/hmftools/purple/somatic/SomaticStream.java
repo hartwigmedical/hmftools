@@ -32,9 +32,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.config.ReferenceData;
@@ -55,7 +53,7 @@ public class SomaticStream
     private boolean mEnabled;
     private final String mOutputVCF;
     private final TumorMutationalLoad mTumorMutationalLoad;
-    private final PanelGermlineClassifier mPanelGermlineClassifier;
+    private final SomaticGermlineLikelihood mSomaticGermlineLikelihood;
     private final MicrosatelliteIndels mMicrosatelliteIndels;
     private final SomaticVariantDrivers mDrivers;
     private final SomaticVariantCache mSomaticVariants;
@@ -91,7 +89,7 @@ public class SomaticStream
         mOutputVCF = PurpleCommon.purpleSomaticVcfFile(config.OutputDir, config.TumorId);
         mEnabled = somaticVariants.hasData();
         mTumorMutationalLoad = new TumorMutationalLoad(mReferenceData.TargetRegions);
-        mPanelGermlineClassifier = new PanelGermlineClassifier(mReferenceData.TargetRegions, mConfig);
+        mSomaticGermlineLikelihood = new SomaticGermlineLikelihood(mConfig);
         mMicrosatelliteIndels = new MicrosatelliteIndels(mReferenceData.TargetRegions);
         mDrivers = new SomaticVariantDrivers(mGenePanel);
         mSomaticVariants = somaticVariants;
@@ -172,8 +170,8 @@ public class SomaticStream
 
             final VCFHeader header = populateHeader(readHeader, mConfig.Version);
 
-            if(mConfig.tumorOnlyMode() && mConfig.TargetRegionsMode)
-                PanelGermlineClassifier.enrichHeader(header);
+            if(mConfig.tumorOnlyMode())
+                SomaticGermlineLikelihood.enrichHeader(header);
 
             mVcfWriter.writeHeader(header);
 
@@ -222,7 +220,7 @@ public class SomaticStream
 
                 if(isValidChromosome && variant.isPass())
                 {
-                    mPanelGermlineClassifier.processVariant(variant, purityAdjuster.purity());
+                    mSomaticGermlineLikelihood.processVariant(variant, purityAdjuster.purity());
                     mTumorMutationalLoad.processVariant(variant);
                     mMicrosatelliteIndels.processVariant(variant);
                     checkDrivers(variant, true); // sets reportable flag if applicable
@@ -244,7 +242,6 @@ public class SomaticStream
 
             mVcfWriter.close();
             mRChartData.write();
-            mPanelGermlineClassifier.close();
 
             calculateVariantLoadValues();
 
