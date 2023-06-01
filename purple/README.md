@@ -607,16 +607,16 @@ Regardless of the clinvar signals, a variant will be set to `BENIGN_BLACKLIST` i
 Valid values are `PATHOGENIC`, `LIKELY_PATHOGENIC`, `BENIGN`, `LIKELY_BENIGN`, `BENIGN_BLACKLIST`, `CONFLICTING`, `UNKNOWN`.
 
 #### Genotype
-The genotype enrichment can set the GT field of the germline sample to `0/1` (HET), `1/1` (HOM) or leave it unchanged as `./.` and filter the variant as `LOW_VAF` or 'LOW_TUMOR_VCN'. A variant is filtered as 'LOW_VAF' if AltReadCount < 0.3*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.002. A variant is filtered as 'LOW_TUMOR_VCN' if the quality is below 120 for HOTSPOT or 200 for PANEL and the variant and the implied variant copy number (VCN) in the tumor is < 0.5.
+The genotype enrichment can set the GT field of the germline sample to `0/1` (HET), `1/1` (HOM) or leave it unchanged as `./.` and filter the variant as `LOW_VAF` or `LOW_TUMOR_VCN`. A variant is filtered as `LOW_VAF` if AltReadCount < 0.3*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.002. A variant is filtered as `LOW_TUMOR_VCN` if the quality is below 120 for HOTSPOT or 200 for PANEL and the variant and the implied variant copy number (VCN) in the tumor is < 0.5.
 
 Alternatively, the variant GT will be set to `1/1` (HOM)  if (totalReadCount==AltReadCount) OR (AltReadCount > 0.75*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.005) in BOTH tumor and normal and `0/1` (HET) otherwise.  AdjustedVAF is set to 1 for Homozygous germline variants.
 
 #### Reported
 The reported flag controls if the variant should appear in the driver catalog.   In the gene panel configuration reporting may be configured per gene independently for known hotspots and also other likely pathogenic germline variants (specifically nonsense/frameshift or splice variants that are not annotated as BENIGN or LIKELY BENIGN in CLINVAR).    For both types of events, the configuration allows the following per gene reporting options:
-- 'NONE' - never report for this gene
-- 'ANY' - always report events for this gene
-- 'WILDTYPE_LOST' - report only if the wildtype is predicted to be lost in the tumor for this gene either via LOH or a somatic 2nd hit
-- 'VARIANT_NOT_LOST' - report only if the variant is predicted to be NOT lost in the tumor for this gene:
+- `NONE` - never report for this gene
+- `ANY` - always report events for this gene
+- `WILDTYPE_LOST` - report only if the wildtype is predicted to be lost in the tumor for this gene either via LOH or a somatic 2nd hit
+- `VARIANT_NOT_LOST` - report only if the variant is predicted to be NOT lost in the tumor for this gene:
 
 ### 12. Driver Identification
 
@@ -647,7 +647,7 @@ score |  Score of fit (lower is better)
 diploidProportion | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele
 ploidy | Average ploidy of the tumor sample after adjusting for purity
 [gender](#1-sex-determination) | One of `MALE` or `FEMALE`
-status | Either PASS or one or more warning or fail status.  Warnings include 'WARN_DELETED_GENES', 'WARN_HIGH_COPY_NUMBER_NOISE', 'FAIL_CONTAMINATION', FAIL_NO_TUMOR, 'WARN_GENDER_MISMATCH' or 'WARN_LOW_PURITY
+status | Either PASS or one or more warning or fail status.  Warnings include `WARN_DELETED_GENES`, `WARN_HIGH_COPY_NUMBER_NOISE`, `FAIL_CONTAMINATION`, `FAIL_NO_TUMOR`, `WARN_GENDER_MISMATCH` or `WARN_LOW_PURITY`
 polyclonalProportion | Proportion of copy number regions that are more than 0.25 from a whole copy number
 minPurity | Minimum purity with score within 10% of best
 maxPurity | Maximum purity with score within 10% of best
