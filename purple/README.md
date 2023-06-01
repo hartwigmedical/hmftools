@@ -518,7 +518,7 @@ Following the successful recovery any structural variants we will rerun the segm
 ### 8. Identify germline gene deletions
 
 PURPLE searches for candidate germline gene deletions based on the combined tumor normal raw segmented copy number files.  
-For the purposes of purity and ploidy fitting and copy number smoothing each segment is already annotated according to its genotype in the germline based on its observedNormal ratio, ie, one of DIPLOID ( = 0.8 - 1.2), HET_DELETION (0.1-0.85), HOM_DELETION (<0.1), AMPLIFICATION (1.15-2.2) or NOISE. 
+For the purposes of purity and ploidy fitting and copy number smoothing each segment is already annotated according to its genotype in the germline based on its observedNormal ratio, ie, one of DIPLOID (0.85-1.15), HET_DELETION (0.1-0.85), HOM_DELETION (<0.1), AMPLIFICATION (1.15-2.2) or NOISE.
 Any driver gene panel gene with a HET_DELETION or HOM_DELETION segment overlapping (within +/- 500 bases to allow for depth window resolution) an exonic region is marked as a germline gene deletion.    
 
 Deletions  are filtered with the following criteria
