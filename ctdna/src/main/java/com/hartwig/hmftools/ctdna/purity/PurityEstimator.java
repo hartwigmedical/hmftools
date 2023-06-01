@@ -19,7 +19,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.jetbrains.annotations.NotNull;
 
 public class PurityEstimator
 {
@@ -108,13 +107,8 @@ public class PurityEstimator
             if(mConfig.PurityMethods.contains(PurityMethod.SOMATIC))
             {
                 somaticVariants = new SomaticVariants(mConfig, mResultsWriter, sample);
-
-                String somaticVcf = mConfig.SomaticVcf.replaceAll("\\*", sample.TumorId);
-
-                if(!somaticVariants.processVcf(somaticVcf))
-                {
+                if(!somaticVariants.loadVariants())
                     System.exit(1);
-                }
             }
 
             CopyNumberProfile copyNumberProfile = null;
@@ -136,7 +130,7 @@ public class PurityEstimator
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(final String[] args) throws ParseException
     {
         final Options options = new Options();
         PurityConfig.addCommandLineOptions(options);
@@ -148,11 +142,10 @@ public class PurityEstimator
         PurityEstimator purityEstimator = new PurityEstimator(cmd);
         purityEstimator.run();
 
-        CT_LOGGER.info("Patient purity estimator complete");
+        CT_LOGGER.info("CtDNA purity estimator complete");
     }
 
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
+    private static CommandLine createCommandLine(final String[] args, final Options options) throws ParseException
     {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);

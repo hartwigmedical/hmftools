@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.ctdna.purity;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
-import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
@@ -21,6 +19,7 @@ import static com.hartwig.hmftools.ctdna.purity.SampleData.ctDnaSamplesFromStr;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -61,8 +60,11 @@ public class PurityConfig
     private static final String WRITE_CN_RATIOS = "write_cn_ratios";
     private static final String NOISE_READS_PER_MILLION = "noise_per_mill";
 
+
     public PurityConfig(final CommandLine cmd)
     {
+        SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
+
         Samples = Lists.newArrayList();
         loadSampleData(cmd);
 
@@ -78,8 +80,8 @@ public class PurityConfig
             Arrays.stream(PurityMethod.values()).forEach(x -> PurityMethods.add(x));
         }
 
-        SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
-        SomaticVcf = cmd.hasOption(SOMATIC_VCF) ? cmd.getOptionValue(SOMATIC_VCF) : format("%s/*.purple.somatic.ctdna.vcf.gz", SampleDataDir);
+        // SomaticVcf = cmd.hasOption(SOMATIC_VCF) ? cmd.getOptionValue(SOMATIC_VCF) : format("%s/*.purple.somatic.ctdna.vcf.gz", SampleDataDir);
+        SomaticVcf = cmd.getOptionValue(SOMATIC_VCF, "");
         PurpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR, SampleDataDir));
         CobaltDir = checkAddDirSeparator(cmd.getOptionValue(COBALT_DIR, SampleDataDir));
         OutputDir = checkAddDirSeparator(cmd.getOptionValue(OUTPUT_DIR, SampleDataDir));
@@ -99,6 +101,9 @@ public class PurityConfig
         {
             String filename = cmd.getOptionValue(SAMPLE_ID_FILE);
 
+            if(!Files.exists(Paths.get(filename)))
+                filename = SampleDataDir + filename;
+
             try
             {
                 final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
@@ -110,6 +115,7 @@ public class PurityConfig
                 int patientIndex = fieldsIndexMap.get("PatientId");
                 int tumorIndex = fieldsIndexMap.get("TumorId");
                 int ctdnaIndex = fieldsIndexMap.get("CtDnaSampleIds");
+                Integer vcfIndex = fieldsIndexMap.get("VcfTag");
 
                 for(String line : fileContents)
                 {
@@ -118,32 +124,26 @@ public class PurityConfig
 
                     String[] values = line.split(CSV_DELIM, -1);
 
+                    String vcfTag = vcfIndex != null ? values[vcfIndex] : "";
+
                     Samples.add(new SampleData(
-                            values[patientIndex], values[tumorIndex], ctDnaSamplesFromStr(values[ctdnaIndex])));
+                            values[patientIndex], values[tumorIndex], ctDnaSamplesFromStr(values[ctdnaIndex]), vcfTag));
                 }
             }
             catch (IOException e)
             {
                 CT_LOGGER.error("failed to read sample data file({}): {}", filename, e.toString());
             }
-
         }
         else
         {
             Samples.add(new SampleData(
                     cmd.getOptionValue(PATIENT_ID),
                     cmd.getOptionValue(TUMOR_ID),
-                    ctDnaSamplesFromStr(cmd.getOptionValue(CTDNA_SAMPLES))));
+                    ctDnaSamplesFromStr(cmd.getOptionValue(CTDNA_SAMPLES)), ""));
         }
 
         CT_LOGGER.info("loaded {} samples:", Samples.size());
-
-        /*
-        for(SampleData sample : Samples)
-        {
-            CT_LOGGER.info("sample: {}", sample.toString());
-        }
-        */
     }
 
     public boolean multipleSamples() { return Samples.size() > 1; }
@@ -166,7 +166,7 @@ public class PurityConfig
         if(OutputId != null)
             fileName += "." + OutputId;
 
-        fileName += CSV_EXTENSION;
+        fileName += TSV_EXTENSION;
 
         return fileName;
     }

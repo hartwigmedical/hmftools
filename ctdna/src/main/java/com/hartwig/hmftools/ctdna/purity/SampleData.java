@@ -14,19 +14,21 @@ public class SampleData
     public final String PatientId;
     public final String TumorId;
     public final List<String> CtDnaSamples;
+    public final String VcfTag;
 
-    public SampleData(final String patientId, final String tumorId, final List<String> ctDnaSamples)
+    public SampleData(final String patientId, final String tumorId, final List<String> ctDnaSamples, final String vcfTag)
     {
         PatientId = patientId;
         TumorId = tumorId;
         CtDnaSamples = ctDnaSamples;
+        VcfTag = vcfTag;
     }
 
     public String toString()
     {
         StringJoiner sj = new StringJoiner(", ");
         CtDnaSamples.forEach(x -> sj.add(x));
-        return format("patient(%s) tumor(%s) ctDnaSamples(%s)", PatientId, TumorId, sj.toString());
+        return format("patient(%s) tumor(%s) ctDnaSamples(%s)", PatientId, TumorId, sj);
     }
 
     public static List<String> ctDnaSamplesFromStr(final String ctDnaSamples)

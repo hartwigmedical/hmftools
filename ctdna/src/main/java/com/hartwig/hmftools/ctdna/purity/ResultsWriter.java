@@ -39,11 +39,11 @@ public class ResultsWriter
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
             if(mConfig.multipleSamples())
-                writer.write("PatientId,");
+                writer.write("PatientId\t");
 
-            writer.write("SampleId,TumorPurity,TumorPloidy");
-            writer.write(format(",%s", CnPurityResult.header()));
-            writer.write(format(",%s", SomaticVariantResult.header()));
+            writer.write("SampleId\tTumorPurity\tTumorPloidy");
+            writer.write(format("\t%s", SomaticVariantResult.header()));
+            writer.write(format("\t%s", CnPurityResult.header()));
             writer.newLine();
 
             return writer;
@@ -62,11 +62,11 @@ public class ResultsWriter
         try
         {
             if(mConfig.multipleSamples())
-                mSampleWriter.write(format("%s,", patientId));
+                mSampleWriter.write(format("%s\t", patientId));
 
-            mSampleWriter.write(format("%s,%.2f,%.2f", sampleId, purityContext.bestFit().purity(), purityContext.bestFit().ploidy()));
-            mSampleWriter.write(format(",%s", cnPurityResult.toTsv()));
-            mSampleWriter.write(format(",%s", somaticVariantResult.toTsv()));
+            mSampleWriter.write(format("%s\t%.2f\t%.2f", sampleId, purityContext.bestFit().purity(), purityContext.bestFit().ploidy()));
+            mSampleWriter.write(format("\t%s", somaticVariantResult.toTsv()));
+            mSampleWriter.write(format("\t%s", cnPurityResult.toTsv()));
             mSampleWriter.newLine();
         }
         catch(IOException e)

@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_PARTIAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_REALIGNED;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_REF;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_TOTAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
@@ -709,7 +710,7 @@ public class ReadContextCounter implements VariantHotspot
         if(mUmiTypeCounts == null)
         {
             // 3 ref values followed by the 3 alt values
-            mUmiTypeCounts = new int[UmiReadType.values().length * 2];
+            mUmiTypeCounts = new int[UMI_TYPE_COUNT];
         }
 
         int indexOffset = isRef ? 0 : 3;

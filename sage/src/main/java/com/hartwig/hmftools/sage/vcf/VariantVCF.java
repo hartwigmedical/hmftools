@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT_DESCRIPTION;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY_DESCRIPTION;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS_DESCRIPTION;
 
@@ -175,7 +176,7 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
-                UMI_TYPE_COUNTS, 6, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESCRIPTION));
+                UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESCRIPTION));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_EVENTS, 1, VCFHeaderLineType.Integer, READ_CONTEXT_EVENTS_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "Read context core"));
@@ -219,7 +220,7 @@ public class VariantVCF implements AutoCloseable
         if(!header.hasFormatLine(UMI_TYPE_COUNTS))
         {
             header.addMetaDataLine(new VCFFormatHeaderLine(
-                    UMI_TYPE_COUNTS, 6, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESCRIPTION));
+                    UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESCRIPTION));
         }
     }
 

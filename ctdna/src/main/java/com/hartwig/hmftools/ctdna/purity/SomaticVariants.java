@@ -8,11 +8,14 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELI
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_REALIGNED;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MAX_REPEAT_COUNT;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MIN_QUAL_PER_AD;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MAX_SUBCLONAL_LIKELIHOOD;
+import static com.hartwig.hmftools.ctdna.purity.PurityConstants.PURPLE_CTDNA_SOMATIC_VCF_ID;
 import static com.hartwig.hmftools.ctdna.purity.SomaticVariantResult.INVALID_RESULT;
 
 import java.util.List;
@@ -36,7 +39,6 @@ public class SomaticVariants
     private final ResultsWriter mResultsWriter;
 
     private final SampleData mSample;
-    private final List<String> mProcessSamples;
     private final List<SomaticVariant> mVariants;
 
     public SomaticVariants(final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample)
@@ -45,24 +47,27 @@ public class SomaticVariants
         mResultsWriter = resultsWriter;
         mSample = sample;
 
-        mProcessSamples = Lists.newArrayList();
         mVariants = Lists.newArrayList();
     }
 
-    public boolean processVcf(final String somaticVcf)
+    public boolean loadVariants()
     {
-        List<String> requiredSampleIds = Lists.newArrayList();
-        if(!mProcessSamples.contains(mSample.TumorId))
-            requiredSampleIds.add(mSample.TumorId);
+        String somaticVcf = mConfig.SomaticVcf;
 
-        mSample.CtDnaSamples.stream().filter(x -> !mProcessSamples.contains(x)).forEach(x -> requiredSampleIds.add(x));
+        if(somaticVcf.isEmpty())
+        {
+            somaticVcf = mConfig.SampleDataDir + mSample.TumorId + PURPLE_CTDNA_SOMATIC_VCF_ID;
 
-        if(requiredSampleIds.isEmpty())
-            return true;
+            if(!mSample.VcfTag.isEmpty())
+                somaticVcf += mSample.VcfTag + ".";
+
+            somaticVcf += "vcf.gz";
+        }
 
         CT_LOGGER.debug("loading somatic variant VCF: {}", somaticVcf);
 
-        List<String> targetSampleIds = Lists.newArrayList();
+        List<String> targetSampleIds = Lists.newArrayList(mSample.TumorId);
+        mSample.CtDnaSamples.forEach(x -> targetSampleIds.add(x));
 
         VcfFileReader vcfFileReader = new VcfFileReader(somaticVcf);
 
@@ -74,10 +79,13 @@ public class SomaticVariants
 
         VCFHeader vcfHeader = vcfFileReader.vcfHeader();
 
-        for(String sampleName : vcfHeader.getGenotypeSamples())
+        for(String sampleId : targetSampleIds)
         {
-            if(requiredSampleIds.contains(sampleName))
-                targetSampleIds.add(sampleName);
+            if(!vcfHeader.getGenotypeSamples().contains(sampleId))
+            {
+                CT_LOGGER.error("patient({}) missing sample({}) in vcf({})", mSample.PatientId, sampleId, somaticVcf);
+                return false;
+            }
         }
 
         int filteredCount = 0;
@@ -156,7 +164,9 @@ public class SomaticVariants
                 }
             }
 
-            somaticVariant.Samples.add(new GenotypeFragments(genotype.getSampleName(), alleleCount, depth, qualTotal));
+            Object umiTypesRaw = genotype.getExtendedAttribute(UMI_TYPE_COUNTS, null);
+
+            somaticVariant.Samples.add(new GenotypeFragments(genotype.getSampleName(), alleleCount, depth, qualTotal, umiTypesRaw));
         }
     }
 
@@ -169,12 +179,14 @@ public class SomaticVariants
         int totalVariants = 0;
         int calcVariants = 0;
 
+        int[] umiTypeCounts = new int[UMI_TYPE_COUNT];
+
         for(SomaticVariant variant : mVariants)
         {
-            GenotypeFragments sampleData = variant.findGenotypeData(sampleId);
-            GenotypeFragments tumorData = variant.findGenotypeData(mSample.TumorId);
+            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
+            GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
 
-            if(sampleData == null || tumorData == null)
+            if(sampleFragData == null || tumorFragData == null)
                 continue;
 
             ++totalVariants;
@@ -182,41 +194,50 @@ public class SomaticVariants
             // if(!(sampleData.qualPerAlleleFragment() >= MIN_QUAL_PER_AD || sampleData.AlleleCount == 0))
             //    continue;
 
-            sampleCounts.VariantDepths.add(sampleData.Depth);
-            tumorCounts.VariantDepths.add(tumorData.Depth);
+            sampleCounts.VariantDepths.add(sampleFragData.Depth);
+            tumorCounts.VariantDepths.add(tumorFragData.Depth);
+
+            int umiIndex = 0;
+            umiTypeCounts[umiIndex] += sampleFragData.UmiTypeCounts[umiIndex++];
+            umiTypeCounts[umiIndex] += sampleFragData.UmiTypeCounts[umiIndex++];
+            umiTypeCounts[umiIndex] += sampleFragData.UmiTypeCounts[umiIndex++];
 
             boolean useForTotals = variant.PassFilters
-                    && (sampleData.qualPerAlleleFragment() >= MIN_QUAL_PER_AD || sampleData.AlleleCount == 0);
+                    && (sampleFragData.qualPerAlleleFragment() >= MIN_QUAL_PER_AD || sampleFragData.AlleleCount == 0);
 
             if(useForTotals)
             {
                 ++calcVariants;
 
-                sampleCounts.AllelelQualTotal += sampleData.QualTotal;
-                sampleCounts.AlleleFragmentTotal += sampleData.AlleleCount;
+                sampleCounts.AllelelQualTotal += sampleFragData.QualTotal;
+                sampleCounts.AlleleFragments += sampleFragData.AlleleCount;
 
-                if(sampleData.Depth > 0)
-                    sampleCounts.NonZeroVariantDepths.add(sampleData.Depth);
+                if(sampleFragData.Depth > 0)
+                    sampleCounts.NonZeroVariantDepths.add(sampleFragData.Depth);
 
-                if(tumorData.Depth > 0)
-                    tumorCounts.NonZeroVariantDepths.add(tumorData.Depth);
+                if(tumorFragData.Depth > 0)
+                    tumorCounts.NonZeroVariantDepths.add(tumorFragData.Depth);
 
-                tumorCounts.AllelelQualTotal += tumorData.QualTotal;
-                tumorCounts.AlleleFragmentTotal += tumorData.AlleleCount;
+                tumorCounts.AllelelQualTotal += tumorFragData.QualTotal;
+                tumorCounts.AlleleFragments += tumorFragData.AlleleCount;
+
+                umiTypeCounts[umiIndex] += sampleFragData.UmiTypeCounts[umiIndex++];
+                umiTypeCounts[umiIndex] += sampleFragData.UmiTypeCounts[umiIndex++];
+                umiTypeCounts[umiIndex] += sampleFragData.UmiTypeCounts[umiIndex];
             }
 
             if(mConfig.IncludeFilteredVariants || useForTotals)
             {
                 String filter = variant.PassFilters && useForTotals ? "PASS" : (!variant.PassFilters ? "FILTERED" : "NO_FRAGS");
 
-                mResultsWriter.writeVariant(mSample.PatientId, sampleId, variant, sampleData, filter);
+                mResultsWriter.writeVariant(mSample.PatientId, sampleId, variant, sampleFragData, filter);
             }
         }
 
         if(totalVariants == 0)
             return INVALID_RESULT;
 
-        double sampleDepthTotal = sampleCounts.depthTotal();
+        int sampleDepthTotal = sampleCounts.depthTotal();
         if(sampleDepthTotal == 0)
             return INVALID_RESULT;
 
@@ -227,7 +248,7 @@ public class SomaticVariants
         double tumorPurity = purityContext.bestFit().purity();
         double tumorPloidy = purityContext.bestFit().ploidy();
 
-        double tumorVaf = tumorCounts.AlleleFragmentTotal / tumorDepthTotal;
+        double tumorVaf = tumorCounts.AlleleFragments / tumorDepthTotal;
         double adjustedTumorVaf = tumorVaf * (tumorPloidy * tumorPurity + 2 * (1 - tumorPurity)) / tumorPurity / tumorPloidy;
 
         // ctDNA_TF = 2 * cfDNA_VAF / [ PLOIDY * ADJ_PRIMARY_VAF + cfDNA_VAF * ( 2 - PLOIDY)]
@@ -235,57 +256,27 @@ public class SomaticVariants
 
         double noise = sampleDepthTotal / 1000000.0 * mConfig.NoiseReadsPerMillion;
 
-        double sampleVaf = max(sampleCounts.AlleleFragmentTotal - noise, 0) / sampleDepthTotal;
+        double sampleVaf = max(sampleCounts.AlleleFragments - noise, 0) / (double)sampleDepthTotal;
 
         double samplePurity = 2 * sampleVaf / (tumorPloidy * adjustedTumorVaf + sampleVaf * (2 - tumorPloidy));
 
-        double qualPerAllele = sampleCounts.AllelelQualTotal / (double)sampleCounts.AlleleFragmentTotal;
+        double qualPerAllele = sampleCounts.AllelelQualTotal / (double)sampleCounts.AlleleFragments;
 
         double probability = 1;
 
-        if(sampleCounts.AlleleFragmentTotal > noise && noise > 0)
+        if(sampleCounts.AlleleFragments > noise && noise > 0)
         {
             PoissonDistribution poisson = new PoissonDistribution(noise);
-            probability = 1 - poisson.cumulativeProbability(sampleCounts.AlleleFragmentTotal - 1);
+            probability = 1 - poisson.cumulativeProbability(sampleCounts.AlleleFragments - 1);
         }
 
+        int umiIndex = 0;
         return new SomaticVariantResult(
-                true, totalVariants, calcVariants, sampleCounts.AlleleFragmentTotal, qualPerAllele,
+                true, totalVariants, calcVariants, sampleDepthTotal,
+                umiTypeCounts[umiIndex++], umiTypeCounts[umiIndex++], umiTypeCounts[umiIndex++],
+                sampleCounts.AlleleFragments, umiTypeCounts[umiIndex++], umiTypeCounts[umiIndex++], umiTypeCounts[umiIndex], qualPerAllele,
                 sampleCounts.medianDepth(false), sampleCounts.NonZeroVariantDepths.size(), sampleCounts.medianDepth(true),
                 tumorVaf, adjustedTumorVaf, sampleVaf, samplePurity, probability);
-    }
-
-    private class SomaticVariantCounts
-    {
-        public int AlleleFragmentTotal;
-        public double AllelelQualTotal;
-
-        public final List<Integer> VariantDepths;
-        public final List<Integer> NonZeroVariantDepths;
-
-        public SomaticVariantCounts()
-        {
-            VariantDepths = Lists.newArrayList();
-            NonZeroVariantDepths = Lists.newArrayList();
-            AlleleFragmentTotal = 0;
-            AllelelQualTotal = 0;
-        }
-
-        public int depthTotal()
-        {
-            return VariantDepths.stream().mapToInt(x -> x).sum();
-        }
-
-        public double medianDepth(boolean useNonZero)
-        {
-            return useNonZero ? median(NonZeroVariantDepths) : median(VariantDepths);
-        }
-
-        public String toString()
-        {
-            return format("AF(%d) avgQualTotal(%.1f) depthCounts(nonzero=%d all=%d)",
-                    AlleleFragmentTotal, AllelelQualTotal, NonZeroVariantDepths.size(), VariantDepths.size());
-        }
     }
 
     private boolean filterVariant(final VariantContextDecorator variant, double subclonalLikelihood)

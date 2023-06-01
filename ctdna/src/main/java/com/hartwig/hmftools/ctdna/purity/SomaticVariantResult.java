@@ -10,12 +10,22 @@ import java.util.StringJoiner;
 public class SomaticVariantResult
 {
     public final int TotalVariants;
-    public final int CalcVariants;
-    public final int AlleleFragmentTotal;
+    public final int CalcVariants; // used in purity fit - passes filters and either avg qual > threshold or has no allele fragments
+
+    public final int TotalFragments;
+    public final int UmiRefNone;
+    public final int UmiRefSingle;
+    public final int UmiRefDual;
+    public final int AlleleFragments; //
+    public final int UmiAlleleNone;
+    public final int UmiAlleleSingle;
+    public final int UmiAlleleDual;
     public final double DepthMedian;
     public final int NonZeroDepthCount;
     public final double NonZeroDepthMedian;
+
     public final double QualPerAdTotal;
+
     public final double TumorVaf;
     public final double AdjustedTumorVaf;
     public final double SampleVaf;
@@ -27,13 +37,22 @@ public class SomaticVariantResult
     public static final SomaticVariantResult INVALID_RESULT = new SomaticVariantResult(false);
 
     public SomaticVariantResult(
-            boolean valid, int totalVariants, int calcVariants, int alleleFragmentTotal, double qualPerAdTotal,
-            double depthMedian, int nonZeroDepthCount, double nonZeroDepthMedian,
+            boolean valid, int totalVariants, int calcVariants,
+            int totalFragments, int umiRefNone, int umiRefSingle, int umiRefDual,
+            int alleleFragments, int umiAlleleNone, int umiAlleleSingle, int umiAlleleDual,
+            double qualPerAdTotal, double depthMedian, int nonZeroDepthCount, double nonZeroDepthMedian,
             double tumorVaf, double adjustedTumorVaf, double sampleVaf, double somaticPurity, double probability)
     {
         TotalVariants = totalVariants;
         CalcVariants = calcVariants;
-        AlleleFragmentTotal = alleleFragmentTotal;
+        TotalFragments = totalFragments;
+        UmiRefNone = umiRefNone;
+        UmiRefSingle = umiRefSingle;
+        UmiRefDual = umiRefDual;
+        AlleleFragments = alleleFragments;
+        UmiAlleleNone = umiAlleleNone;
+        UmiAlleleSingle = umiAlleleSingle;
+        UmiAlleleDual = umiAlleleDual;
         QualPerAdTotal = qualPerAdTotal;
         DepthMedian = depthMedian;
         NonZeroDepthCount = nonZeroDepthCount;
@@ -51,7 +70,14 @@ public class SomaticVariantResult
         mValid = valid;
         TotalVariants = 0;
         CalcVariants = 0;
-        AlleleFragmentTotal = 0;
+        TotalFragments = 0;
+        UmiRefNone = 0;
+        UmiRefSingle = 0;
+        UmiRefDual = 0;
+        UmiAlleleNone = 0;
+        UmiAlleleSingle = 0;
+        UmiAlleleDual = 0;
+        AlleleFragments = 0;
         QualPerAdTotal = 0;
         DepthMedian = 0;
         NonZeroDepthCount = 0;
@@ -72,14 +98,21 @@ public class SomaticVariantResult
         sj.add("SomaticProbability");
         sj.add("TotalVariants");
         sj.add("CalcVariants");
-        sj.add("DepthMedian");
-        sj.add("NonZeroDepthCount");
-        sj.add("NonZeroDepthMedian");
-        sj.add("AlleleFragmentTotal");
+        sj.add("TotalFragments");
+        sj.add("UmiRefNone");
+        sj.add("UmiRefSingle");
+        sj.add("UmiRefDual");
+        sj.add("AlleleFragments");
+        sj.add("UmiAlleleNone");
+        sj.add("UmiAlleleSingle");
+        sj.add("UmiAlleleDual");
         sj.add("QualPerAdTotal");
         sj.add("TumorVaf");
         sj.add("AdjustedTumorVaf");
         sj.add("SampleVaf");
+        sj.add("DepthMedian");
+        sj.add("NonZeroDepthCount");
+        sj.add("NonZeroDepthMedian");
         return sj.toString();
     }
 
@@ -90,14 +123,21 @@ public class SomaticVariantResult
         sj.add(formatPurityValue(Probability));
         sj.add(format("%d", TotalVariants));
         sj.add(format("%d", CalcVariants));
-        sj.add(format("%.1f", DepthMedian));
-        sj.add(format("%d", NonZeroDepthCount));
-        sj.add(format("%.1f", NonZeroDepthMedian));
-        sj.add(format("%d", AlleleFragmentTotal));
+        sj.add(format("%d", TotalFragments));
+        sj.add(format("%d", UmiRefNone));
+        sj.add(format("%d", UmiRefSingle));
+        sj.add(format("%d", UmiRefDual));
+        sj.add(format("%d", AlleleFragments));
+        sj.add(format("%d", UmiAlleleNone));
+        sj.add(format("%d", UmiAlleleSingle));
+        sj.add(format("%d", UmiAlleleDual));
         sj.add(format("%.1f", QualPerAdTotal));
         sj.add(formatPurityValue(TumorVaf));
         sj.add(formatPurityValue(AdjustedTumorVaf));
         sj.add(formatPurityValue(SampleVaf));
+        sj.add(format("%.1f", DepthMedian));
+        sj.add(format("%d", NonZeroDepthCount));
+        sj.add(format("%.1f", NonZeroDepthMedian));
 
         return sj.toString();
     }
