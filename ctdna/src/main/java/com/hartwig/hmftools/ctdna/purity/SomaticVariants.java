@@ -191,9 +191,6 @@ public class SomaticVariants
 
             ++totalVariants;
 
-            // if(!(sampleData.qualPerAlleleFragment() >= MIN_QUAL_PER_AD || sampleData.AlleleCount == 0))
-            //    continue;
-
             sampleCounts.VariantDepths.add(sampleFragData.Depth);
             tumorCounts.VariantDepths.add(tumorFragData.Depth);
 
@@ -260,7 +257,7 @@ public class SomaticVariants
 
         double samplePurity = 2 * sampleVaf / (tumorPloidy * adjustedTumorVaf + sampleVaf * (2 - tumorPloidy));
 
-        double qualPerAllele = sampleCounts.AllelelQualTotal / (double)sampleCounts.AlleleFragments;
+        double qualPerAllele = sampleCounts.AlleleFragments > 0 ? sampleCounts.AllelelQualTotal / (double)sampleCounts.AlleleFragments : 0;
 
         double probability = 1;
 

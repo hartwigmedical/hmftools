@@ -28,6 +28,10 @@ public class PurityEstimator
     public PurityEstimator(final CommandLine cmd)
     {
         mConfig = new PurityConfig(cmd);
+
+        if(mConfig.Samples.isEmpty())
+            System.exit(1);
+
         mResultsWriter = new ResultsWriter(mConfig);
     }
 

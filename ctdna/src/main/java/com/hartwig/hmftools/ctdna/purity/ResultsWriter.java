@@ -17,7 +17,6 @@ public class ResultsWriter
     private final BufferedWriter mSampleWriter;
     private final BufferedWriter mVariantWriter;
     private final BufferedWriter mCnRatioWriter;
-    private final BufferedWriter mGcRatioWriter;
 
     public ResultsWriter(final PurityConfig config)
     {
@@ -25,9 +24,6 @@ public class ResultsWriter
         mSampleWriter = initialiseWriter();
         mVariantWriter = config.WriteVariants ? initialiseVariantWriter() : null;
         mCnRatioWriter = config.WriteCnRatios ? initialiseCnRatioWriter() : null;
-
-        mGcRatioWriter = null;
-        // mGcRatioWriter = config.WriteCnRatios ? initialiseGcRatioWriter() : null;
     }
 
     private BufferedWriter initialiseWriter()
@@ -84,9 +80,9 @@ public class ResultsWriter
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
             if(mConfig.multipleSamples())
-                writer.write("PatientId,");
+                writer.write("PatientId\t");
 
-            writer.write("SampleId,Chromosome,Position,Ref,Alt,Filter,Tier,Type,RepeatCount,Mappability,SubclonalPerc,AD,DP,QualPerAD");
+            writer.write("SampleId\tChromosome\tPosition\tRef\tAlt\tFilter\tTier\tType\tRepeatCount\tMappability\tSubclonalPerc\tAD\tDP\tQualPerAD");
             writer.newLine();
 
             return writer;
@@ -108,15 +104,15 @@ public class ResultsWriter
         try
         {
             if(mConfig.multipleSamples())
-                mVariantWriter.write(format("%s,", patientId));
+                mVariantWriter.write(format("%s\t", patientId));
 
-            mVariantWriter.write(format("%s,%s,%d,%s,%s,%s",
+            mVariantWriter.write(format("%s\t%s\t%d\t%s\t%s\t%s",
                     sampleId, variant.Chromosome, variant.Position, variant.Ref, variant.Alt, filter));
 
-            mVariantWriter.write(format(",%s,%s,%d,%.3f,%.3f",
+            mVariantWriter.write(format("\t%s\t%s\t%d\t%.3f\t%.3f",
                     variant.Tier, variant.Type, variant.RepeatCount, variant.Mappability, variant.SubclonalPerc));
 
-            mVariantWriter.write(format(",%d,%d,%.1f", sampleData.AlleleCount, sampleData.Depth, sampleData.qualPerAlleleFragment()));
+            mVariantWriter.write(format("\t%d\t%d\t%.1f", sampleData.AlleleCount, sampleData.Depth, sampleData.qualPerAlleleFragment()));
 
             mVariantWriter.newLine();
         }
@@ -135,9 +131,9 @@ public class ResultsWriter
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
             if(mConfig.multipleSamples())
-                writer.write("PatientId,");
+                writer.write("PatientId\t");
 
-            writer.write("SampleId,Chromosome,SegmentStart,SegmentEnd,CopyNumber,GcRatioCount,GcRatioMedian,GcRatioMean");
+            writer.write("SampleId\tChromosome\tSegmentStart\tSegmentEnd\tCopyNumber\tGcRatioCount\tGcRatioMedian\tGcRatioMean");
             writer.newLine();
             return writer;
         }
@@ -158,9 +154,9 @@ public class ResultsWriter
         try
         {
             if(mConfig.multipleSamples())
-                mCnRatioWriter.write(format("%s,", patientId));
+                mCnRatioWriter.write(format("%s\t", patientId));
 
-            mCnRatioWriter.write(format("%s,%s,%d,%d,%.2f,%d,%.4f,%.4f",
+            mCnRatioWriter.write(format("%s\t%s\t%d\t%d\t%.2f\t%d\t%.4f\t%.4f",
                     sampleId, cnSegment.Chromosome, cnSegment.SegmentStart, cnSegment.SegmentEnd, cnSegment.CopyNumber,
                     cnSegment.count(), cnSegment.median(), cnSegment.mean()));
             mCnRatioWriter.newLine();
@@ -171,52 +167,11 @@ public class ResultsWriter
         }
     }
 
-    private BufferedWriter initialiseGcRatioWriter()
-    {
-        try
-        {
-            String fileName = mConfig.formFilename("gc_ratio_data");
-
-            BufferedWriter writer = createBufferedWriter(fileName, false);
-
-            writer.write("SampleId,Chromosome,Position,SegmentStart,SegmentEnd,CopyNumber,TumorGcRatio");
-            writer.newLine();
-            return writer;
-        }
-        catch(IOException e)
-        {
-            CT_LOGGER.error("failed to initialise copy number segment file: {}", e.toString());
-            return null;
-        }
-    }
-
-    private void writeGcRatioData(final String sampleId, final CopyNumberGcData cnSegment)
-    {
-        if(mGcRatioWriter == null)
-            return;
-
-        try
-        {
-            for(GcRatioData gcRatioData : cnSegment.ratios())
-            {
-                mGcRatioWriter.write(format("%s,%s,%d,%d,%d,%.4f,%.4f",
-                        sampleId, cnSegment.Chromosome, gcRatioData.Position, cnSegment.SegmentStart, cnSegment.SegmentEnd,
-                        cnSegment.CopyNumber, gcRatioData.TumorGcRatio));
-                mGcRatioWriter.newLine();
-            }
-        }
-        catch(IOException e)
-        {
-            CT_LOGGER.error("failed to write copy number GC ratio file: {}", e.toString());
-        }
-    }
-
     public void close()
     {
         closeBufferedWriter(mVariantWriter);
         closeBufferedWriter(mSampleWriter);
         closeBufferedWriter(mCnRatioWriter);
-        closeBufferedWriter(mGcRatioWriter);
     }
 
     public static String formatPurityValue(double purity)

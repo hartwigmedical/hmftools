@@ -124,7 +124,7 @@ public class PurityConfig
 
                     String[] values = line.split(CSV_DELIM, -1);
 
-                    String vcfTag = vcfIndex != null ? values[vcfIndex] : "";
+                    String vcfTag = vcfIndex != null && vcfIndex < values.length ? values[vcfIndex] : "";
 
                     Samples.add(new SampleData(
                             values[patientIndex], values[tumorIndex], ctDnaSamplesFromStr(values[ctdnaIndex]), vcfTag));
