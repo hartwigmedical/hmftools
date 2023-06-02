@@ -56,9 +56,20 @@ public class TumorMutationalLoad
 
     public void processVariant(final SomaticVariant variant)
     {
-        if(!mTargetRegions.hasTargetRegions())
+        if(mTargetRegions.hasTargetRegions())
+        {
+            processTargetedRegionVariant(variant);
             return;
+        }
 
+        ++mBurden;
+
+        if(variant.variantImpact().WorstCodingEffect.equals(CodingEffect.MISSENSE))
+            mLoad++;
+    }
+
+    private void processTargetedRegionVariant(final SomaticVariant variant)
+    {
         // test criteria to count a variant towards TMB
         final VariantImpact variantImpact = variant.variantImpact();
 
