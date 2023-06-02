@@ -229,6 +229,12 @@ public class DuplicateGroup
                 }
             }
 
+            if(index >= mPrimaryReadTypeIndex.length)
+            {
+                MD_LOGGER.error("group({}) non-supp read unmatched: {}", this, readToString(read));
+                return index;
+            }
+
             mPrimaryReadTypeIndex[index] = new ReadTypeId(
                     read.getReferenceName(),
                     read.getReadUnmappedFlag() ? 0 : getUnclippedPosition(read), read.getAlignmentStart(),

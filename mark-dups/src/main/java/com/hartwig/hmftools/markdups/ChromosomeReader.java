@@ -77,7 +77,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
 
-        mBamSlicer = new BamSlicer(0, true, true, true);
+        mBamSlicer = new BamSlicer(0, true, true, false);
         mBamSlicer.setKeepUnmapped();
 
         mReadPositions = new ReadPositionsCache(region.Chromosome, config.BufferSize, !config.NoMateCigar, this);

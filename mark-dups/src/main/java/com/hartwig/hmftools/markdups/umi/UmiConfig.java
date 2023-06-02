@@ -129,5 +129,6 @@ public class UmiConfig
         options.addOption(UMI_DUPLEX, false, "UMI duplex enabled");
         options.addOption(UMI_DEFINED_IDS, true, "Optional set of defined UMI IDs in file");
         options.addOption(UMI_BASE_DIFF_STATS, false, "Record base difference stats");
+        options.addOption(UMI_DUPLEX_DELIM, true, "UMI duplex delimiter (default '-'");
     }
 }

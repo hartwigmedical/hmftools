@@ -324,7 +324,8 @@ public class UmiGroupBuilder
                 }
             }
 
-            mStats.recordFragmentPositions(uniqueCoordCount, uniqueFragmentCount, maxCoordUmiCount, maxUmiGroup);
+            if(uniqueCoordCount > 0 && uniqueFragmentCount > 0)
+                mStats.recordFragmentPositions(uniqueCoordCount, uniqueFragmentCount, maxCoordUmiCount, maxUmiGroup);
         }
 
         return finalUmiGroups;
@@ -451,13 +452,19 @@ public class UmiGroupBuilder
     @VisibleForTesting
     public static boolean hasDuplexUmiMatch(final String first, final String second, final String duplexDelim, int permittedDiff)
     {
-        String[] umiParts1 = first.split(duplexDelim, 2);
-        String[] umiParts2 = second.split(duplexDelim, 2);
+        String[] umiParts1 = splitUmi(first, duplexDelim);
+        String[] umiParts2 = splitUmi(second, duplexDelim);
 
         if(umiParts1.length != 2 || umiParts2.length != 2)
             return false;
 
         return !exceedsUmiIdDiff(umiParts1[0], umiParts2[1], permittedDiff) && !exceedsUmiIdDiff(umiParts1[1], umiParts2[0], permittedDiff);
+    }
+
+    private static String[] splitUmi(final String duplexUmi, final String duplexDelim)
+    {
+        int delimIndex = duplexUmi.indexOf(duplexDelim);
+        return new String[] { duplexUmi.substring(0, delimIndex), duplexUmi.substring(delimIndex + 1) };
     }
 
     private void captureUmiGroupStats(final List<Object> fragGroups)
