@@ -69,8 +69,16 @@ public class LowCoverageRatioBuilder implements RatioBuilder
                         }
                         bucketGcRatios.clear();
 
-                        // move to next bucket
-                        bucket = bucketItr.next();
+                        if (bucketItr.hasNext())
+                        {
+                            // move to next bucket
+                            bucket = bucketItr.next();
+                        }
+                        else
+                        {
+                            // no more bucket for this chromosome, move to next chromosome
+                            break;
+                        }
                     }
                     bucketGcRatios.add(readRatio.ratio());
                 }
