@@ -92,7 +92,7 @@ public class GermlineVariantData implements ComparableItem
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }
 
-    private static final List<String> findVariantDiffs(
+    private static List<String> findVariantDiffs(
             final GermlineVariant refVar, final GermlineVariant otherVar, final DiffThresholds thresholds)
     {
         final List<String> diffs = Lists.newArrayList();
