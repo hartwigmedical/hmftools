@@ -77,8 +77,6 @@ public class RatioSupplier
 
             // just convert read count to ratios
 
-            // add all the columns we need for the CSV
-            //breakEndTable.addColumns
             // We start by setting ratio as the read count
             readRatios = readCounts.copy();
             readRatios.addColumns(readRatios.intColumn(CobaltColumns.READ_COUNT).asDoubleColumn().setName(CobaltColumns.RATIO));
@@ -88,29 +86,15 @@ public class RatioSupplier
             // merge in the gc profile
             readRatios = readRatios.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).leftOuter(gcProfiles);
 
-            /*
-            gcNormalizedRatioBuilder = new GcNormalizedRatioBuilder(gcProfiles, readRatios);
-            readRatios = gcNormalizedRatioBuilder.ratios();
-            if (targetRegionEnrichment != null)
-            {
-                CB_LOGGER.info("using targeted ratio");
-                readRatios = new TargetedRatioBuilder(targetRegionEnrichment.regions(), targetRegionEnrichment.regionEnrichment(), readRatios).ratios();
-            }
-             */
-
-            // TODO: fix this
-            gcNormalizedRatioBuilder = new GcNormalizedRatioBuilder(readRatios, true);
-
             // on target ratios
             if (targetRegionEnrichment != null)
             {
                 CB_LOGGER.info("using targeted ratio");
                 readRatios = new TargetedRatioBuilder(readRatios, targetRegionEnrichment, chromosomePosCodec).ratios();
             }
-            else
-            {
-                readRatios = gcNormalizedRatioBuilder.ratios();
-            }
+
+            gcNormalizedRatioBuilder = new GcNormalizedRatioBuilder(readRatios, true);
+            readRatios = gcNormalizedRatioBuilder.ratios();
 
             switch (sparseBucketPolicy)
             {

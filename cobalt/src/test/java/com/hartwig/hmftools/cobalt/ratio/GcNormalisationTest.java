@@ -24,12 +24,13 @@ public class GcNormalisationTest
     public void testGcNormaliser()
     {
         Table ratios = Table.create(
-                StringColumn.create("chromosome"),
-                IntColumn.create("position"),
-                DoubleColumn.create("ratio"),
-                IntColumn.create("gcBucket"),
-                BooleanColumn.create("isMappable"),
-                BooleanColumn.create("isAutosome"));
+                StringColumn.create(CobaltColumns.CHROMOSOME),
+                IntColumn.create(CobaltColumns.POSITION),
+                IntColumn.create(CobaltColumns.READ_COUNT),
+                DoubleColumn.create(CobaltColumns.RATIO),
+                IntColumn.create(CobaltColumns.GC_BUCKET),
+                BooleanColumn.create(CobaltColumns.IS_MAPPABLE),
+                BooleanColumn.create(CobaltColumns.IS_AUTOSOME));
 
         addReadRatio(ratios, 1001, 0, 45);
         addReadRatio(ratios, 2001, 5, 45);
@@ -54,10 +55,11 @@ public class GcNormalisationTest
         Row row = table.appendRow();
         row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.contig);
         row.setInt(CobaltColumns.POSITION, position);
+        row.setInt(CobaltColumns.READ_COUNT, 10);
         row.setDouble(CobaltColumns.RATIO, ratio);
-        row.setInt("gcBucket", gcBucket);
-        row.setBoolean("isMappable", true);
-        row.setBoolean("isAutosome", true);
+        row.setInt(CobaltColumns.GC_BUCKET, gcBucket);
+        row.setBoolean(CobaltColumns.IS_MAPPABLE, true);
+        row.setBoolean(CobaltColumns.IS_AUTOSOME, true);
     }
 
     private static void assertRatio(Table table, int rowIndex, int expectedPosition, double expectedRatio)

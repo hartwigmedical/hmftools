@@ -21,8 +21,10 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
+import tech.tablesaw.api.DoubleColumn;
 import tech.tablesaw.api.Table;
 import tech.tablesaw.columns.numbers.NumberPredicates;
 
@@ -51,18 +53,18 @@ public class TargetedRatioBuilder implements RatioBuilder
         // resort it, the join messes up with the ordering
         ratiosWithTargetRegion = ratiosWithTargetRegion.sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
 
-        CB_LOGGER.info("ratios with targetd region: {}", ratiosWithTargetRegion);
+        CB_LOGGER.debug("ratios with targeted region: {}", ratiosWithTargetRegion);
 
         populateOnTargetRatios(ratiosWithTargetRegion, targetRegionEnrichment);
-        populateOffTargetRatios(ratiosWithTargetRegion, CobaltConstants.OFF_TARGET_WINDOW_SIZE, targetRegionEnrichment);
-        CB_LOGGER.info("{} on target GC ratios, {} off target GC ratios", mOnTargetRatios.rowCount(), mOffTargetRatios.rowCount());
+        // populateOffTargetRatios(ratiosWithTargetRegion, CobaltConstants.OFF_TARGET_WINDOW_SIZE, targetRegionEnrichment);
+        CB_LOGGER.debug("{} on target GC ratios, {} off target GC ratios", mOnTargetRatios.rowCount(), mOffTargetRatios.rowCount());
 
         // populateCombinedRatios(mOnTargetRatios, mOffTargetRatios);
     }
 
     // we use on target ratios only for now
     @Override
-    public Table ratios() { return mOffTargetRatios; }
+    public Table ratios() { return mOnTargetRatios; }
 
     public Table onTargetRatios() { return mOnTargetRatios; }
     public Table offTargetRatios() { return mOffTargetRatios; }
@@ -70,58 +72,6 @@ public class TargetedRatioBuilder implements RatioBuilder
     private void populateCombinedRatios(final Table ratios1, final Table ratios2)
     {
         mCombinedRatios = ratios1.append(ratios2);
-
-        /*Set<Chromosome> chromosomes = Sets.newIdentityHashSet();
-
-        chromosomes.addAll(ratios1.keySet());
-        chromosomes.addAll(ratios2.keySet());
-
-        for(Chromosome chromosome : chromosomes)
-        {
-            int i1 = 0;
-            int i2 = 0;
-
-            List<ReadRatio> list1 = ratios1.get(chromosome);
-            List<ReadRatio> list2 = ratios2.get(chromosome);
-
-            while (i1 < list1.size() && i2 < list2.size())
-            {
-                ReadRatio readRatio1 = list1.get(i1);
-                ReadRatio readRatio2 = list2.get(i2);
-
-                if(readRatio1.position() < readRatio2.position())
-                {
-                    mCombinedRatios.put(chromosome, readRatio1);
-                    ++i1;
-                }
-                else if(readRatio1.position() > readRatio2.position())
-                {
-                    mCombinedRatios.put(chromosome, readRatio2);
-                    ++i2;
-                }
-                else
-                {
-                    // shouldn't be here
-                    CB_LOGGER.error("on target and off target ratio at same position: {}:{}",
-                        readRatio1.chromosome(), readRatio1.position());
-
-                    throw new RuntimeException("on target and off target ratio at same position");
-                }
-            }
-
-            // put the rest in
-            while(i1 < list1.size())
-            {
-                mCombinedRatios.put(chromosome, list1.get(i1));
-                ++i1;
-            }
-            while(i2 < list2.size())
-            {
-                mCombinedRatios.put(chromosome, list2.get(i2));
-                ++i2;
-            }
-        }
-         */
     }
 
     private void populateOnTargetRatios(final Table rawRatios, final Table targetRelativeEnrichment)
@@ -130,68 +80,20 @@ public class TargetedRatioBuilder implements RatioBuilder
         // we filter out all the regions with 0 gc normalised ratios, as they do not actually
         // correctly reflect the amount of enrichment, and also very rare
 
-        /*
-        List<Double> targetRegionsGcRatios = new ArrayList<>();
-
-        for(Map.Entry<Chromosome,ReadRatio> entry : rawRatios.entries())
-        {
-            ReadRatio readRatio = entry.getValue();
-
-            if(readRatio.ratio() <= 0)
-                continue;
-
-            if(!targetRelativeEnrichment.containsKey(readRatio))
-                continue;
-
-            targetRegionsGcRatios.add(readRatio.ratio());
-        }
-
-        double targetRegionGcRatioMedian = 1.0;
-
-        if(!targetRegionsGcRatios.isEmpty())
-        {
-            targetRegionGcRatioMedian = Doubles.median(targetRegionsGcRatios);
-        }
-        else
-        {
-            CB_LOGGER.warn("target region gc ratios is empty");
-        }
+        Table onTargetRatios = rawRatios.copy();
+        double targetRegionGcRatioMedian = onTargetRatios.doubleColumn(CobaltColumns.RATIO).filter(NumberPredicates.isNonNegative).median();
 
         CB_LOGGER.printf(Level.INFO, "targeted mode GC ratio median: %.3f", targetRegionGcRatioMedian);
-         */
 
-        Table onTargetRatios = rawRatios.copy();
-        double median = onTargetRatios.doubleColumn("ratio").filter(NumberPredicates.isNonNegative).median();
+        // normalise the ratio by relative enrichment and targeted region median
+        DoubleColumn onTargetRatioColumn = onTargetRatios.doubleColumn(CobaltColumns.RATIO)
+                .divide(onTargetRatios.doubleColumn("relativeEnrichment"))
+                .divide(targetRegionGcRatioMedian)
+                .setName(CobaltColumns.RATIO);
 
-        // normalise the ratio by relative enrichment
-        replaceColumn(onTargetRatios, "ratio",
-                onTargetRatios.doubleColumn("ratio")
-                        .divide(onTargetRatios.doubleColumn("relativeEnrichment")));
+        onTargetRatios.replaceColumn(onTargetRatioColumn);
 
-        // apply gc normalisation
-        GcNormalizedRatioBuilder gcNormalizedRatioBuilder = new GcNormalizedRatioBuilder(onTargetRatios, false);
-        mOnTargetRatios = gcNormalizedRatioBuilder.ratios();
-
-        /*
-        mOnTargetRatios = rawRatios.copy();
-
-        for(Map.Entry<Chromosome,ReadRatio> entry : rawRatios.entries())
-        {
-            ReadRatio readRatio = entry.getValue();
-
-            Double relativeEnrichment = targetRelativeEnrichment.get(readRatio);
-
-            if(relativeEnrichment == null)
-                continue;
-
-            double enrichmentAdjRatio = readRatio.ratio() / targetRegionGcRatioMedian / relativeEnrichment;
-
-            CB_LOGGER.debug(format("%s:%d relative enrichment: %.3f, on target ratio: %.3f",
-                    readRatio.chromosome(), readRatio.position(), relativeEnrichment, enrichmentAdjRatio));
-
-            mOnTargetRatios.put(entry.getKey(), ImmutableReadRatio.builder().from(readRatio).ratio(enrichmentAdjRatio).build());
-        }
-         */
+        mOnTargetRatios = onTargetRatios;
     }
 
     // we create a pan window ratio by taking the median count of super windows that combine multiple windows
@@ -212,17 +114,17 @@ public class TargetedRatioBuilder implements RatioBuilder
 
         CB_LOGGER.info("off target after enrichment normalisation: \n{}", offTargetRatios);
 
+        // next we do low coverage
+        offTargetRatios = new LowCoverageRatioBuilder(offTargetRatios, 1000, mChromosomePosCodec).ratios();
+
+        CB_LOGGER.info("off target after consolidation: \n{}", offTargetRatios);
+
         // apply gc normalisation
         GcNormalizedRatioBuilder gcNormalizedRatioBuilder = new GcNormalizedRatioBuilder(offTargetRatios, true);
         offTargetRatios = gcNormalizedRatioBuilder.ratios();
 
         CB_LOGGER.info("off target gc normalisation: \n{}", gcNormalizedRatioBuilder.gcMedianReadCountTable());
         CB_LOGGER.info("off target after gc normalisation: \n{}", offTargetRatios);
-
-        // next we do low coverage
-        offTargetRatios = new LowCoverageRatioBuilder(offTargetRatios, 500, mChromosomePosCodec).ratios();
-
-        CB_LOGGER.info("off target after consolidation: \n{}", offTargetRatios);
 
         mOffTargetRatios = offTargetRatios;
 
@@ -308,9 +210,9 @@ public class TargetedRatioBuilder implements RatioBuilder
         int windowMid = windowStart + offTargetWindowSize / 2;
 
         // check for targeted regions, we want to remove them
-        for(GenomePosition targetRegion : targetRegions)
+        for (GenomePosition targetRegion : targetRegions)
         {
-            if(targetRegion.chromosome().equals(chromosome) && windowStart <= targetRegion.position() && windowEnd > targetRegion.position())
+            if (targetRegion.chromosome().equals(chromosome) && windowStart <= targetRegion.position() && windowEnd > targetRegion.position())
             {
                 // this window contains a target region
                 int removeStart = targetRegion.position() - 2 * CobaltConstants.WINDOW_SIZE;
@@ -322,7 +224,7 @@ public class TargetedRatioBuilder implements RatioBuilder
             }
         }
 
-        if(windowGcRatios.size() < minNumGcRatios)
+        if (windowGcRatios.size() < minNumGcRatios)
         {
             // if we don't have enough sub windows with valid values then we skip this
             CB_LOGGER.trace( "off target window: {}:{} ({} - {}), not enough sub window",

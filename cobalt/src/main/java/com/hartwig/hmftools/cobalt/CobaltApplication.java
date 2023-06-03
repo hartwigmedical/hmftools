@@ -219,11 +219,6 @@ public class CobaltApplication implements AutoCloseable
             row.setBoolean("isAutosome", HumanChromosome.fromString(gcProfile.chromosome()).isAutosome());
         }
 
-        // set gc bucket
-        IntColumn gcBucketCol = gcProfileTable.doubleColumn("gcContent")
-                .multiply(100).round().asIntColumn().setName("gcBucket");
-        gcProfileTable.addColumns(gcBucketCol);
-
         return gcProfileTable;
     }
 }

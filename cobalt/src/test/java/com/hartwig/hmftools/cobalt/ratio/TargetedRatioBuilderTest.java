@@ -28,12 +28,13 @@ public class TargetedRatioBuilderTest
         var chromosomePositionCodec = new ChromosomePositionCodec();
 
         final Table ratios = Table.create(
-                StringColumn.create("chromosome"),
-                IntColumn.create("position"),
-                DoubleColumn.create("ratio"),
-                IntColumn.create("gcBucket"),
-                BooleanColumn.create("isMappable"),
-                BooleanColumn.create("isAutosome"));
+                StringColumn.create(CobaltColumns.CHROMOSOME),
+                IntColumn.create(CobaltColumns.POSITION),
+                DoubleColumn.create(CobaltColumns.RATIO),
+                DoubleColumn.create(CobaltColumns.GC_CONTENT),
+                IntColumn.create(CobaltColumns.GC_BUCKET),
+                BooleanColumn.create(CobaltColumns.IS_MAPPABLE),
+                BooleanColumn.create(CobaltColumns.IS_AUTOSOME));
 
         addReadRatio(ratios, 1001, 0, 45);
         addReadRatio(ratios, 2001, 0.5, 45);
@@ -78,13 +79,13 @@ public class TargetedRatioBuilderTest
 
         // median of the unnormalized gc ratio is 10.0
         // so read ratio = 0.5 / 2.0 / 10 = 0.025
-        assertEquals(0.22727272727, readRatio2001.getDouble(CobaltColumns.RATIO), EPSILON);
+        assertEquals(0.025, readRatio2001.getDouble(CobaltColumns.RATIO), EPSILON);
 
         assertEquals(12001, readRatio12001.getInt(CobaltColumns.POSITION));
 
         // median of the unnormalized gc ratio is 10.0
         // so read ratio = 19.5 / 10.0 / 10 = 0.195
-        assertEquals(1.7727272727272725, readRatio12001.getDouble(CobaltColumns.RATIO), EPSILON);
+        assertEquals(0.195, readRatio12001.getDouble(CobaltColumns.RATIO), EPSILON);
     }
 
     @NotNull
@@ -101,8 +102,9 @@ public class TargetedRatioBuilderTest
         row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.contig);
         row.setInt(CobaltColumns.POSITION, position);
         row.setDouble(CobaltColumns.RATIO, ratio);
-        row.setInt("gcBucket", gcBucket);
-        row.setBoolean("isMappable", true);
-        row.setBoolean("isAutosome", true);
+        row.setDouble(CobaltColumns.GC_CONTENT, gcBucket / 100.0);
+        row.setInt(CobaltColumns.GC_BUCKET, gcBucket);
+        row.setBoolean(CobaltColumns.IS_MAPPABLE, true);
+        row.setBoolean(CobaltColumns.IS_AUTOSOME, true);
     }
 }
