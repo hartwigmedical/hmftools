@@ -222,35 +222,41 @@ public class EnsemblCacheCompare
 
     private void compareTranscripts(final GeneData geneData, final TranscriptData transDataRef, final TranscriptData transDataNew)
     {
-        List<TranscriptDiff> diffs = Lists.newArrayList();
+        List<String> diffs = Lists.newArrayList();
+
+        if(transDataRef.IsCanonical != transDataNew.IsCanonical)
+        {
+            diffs.add(format("isCanonical(%s/%s)", transDataRef.IsCanonical, transDataNew.IsCanonical));
+        }
 
         if(transDataRef.nonCoding() != transDataNew.nonCoding())
         {
-            diffs.add(TranscriptDiff.CODING_NON_CODING);
+            diffs.add(format("isCoding(%s/%s)", !transDataRef.nonCoding(), !transDataNew.nonCoding()));
+        }
+
+        if(!transDataRef.nonCoding() && !transDataNew.nonCoding())
+        {
+            if(!transDataRef.CodingStart.equals(transDataNew.CodingStart) || !transDataRef.CodingEnd.equals(transDataNew.CodingEnd))
+            {
+                diffs.add(format("codingRegion(%d-%d/%d-%d)",
+                        transDataRef.CodingStart, transDataRef.CodingEnd, transDataNew.CodingStart, transDataNew.CodingEnd));
+            }
         }
 
         if(transDataRef.exons().size() != transDataNew.exons().size())
         {
-            diffs.add(TranscriptDiff.EXONS);
+            diffs.add(format("exons(%d/%d)", transDataRef.exons().size(), transDataNew.exons().size()));
         }
 
         if(!transDataRef.BioType.equals(transDataNew.BioType))
         {
-            diffs.add(TranscriptDiff.BIOTYPE);
-        }
-
-        if(!transDataNew.nonCoding() && !transDataRef.nonCoding())
-        {
-            if(!transDataRef.CodingStart.equals(transDataNew.CodingStart) || !transDataRef.CodingEnd.equals(transDataNew.CodingEnd))
-            {
-                diffs.add(TranscriptDiff.CODING_REGION);
-            }
+            diffs.add(format("bioType(%s/%s)", transDataRef.BioType, transDataNew.BioType));
         }
 
         if(!diffs.isEmpty())
         {
             StringJoiner sj = new StringJoiner(";");
-            diffs.forEach(x -> sj.add(x.toString()));
+            diffs.forEach(x -> sj.add(x));
             writeTranscriptMismatch(geneData, transDataRef, transDataNew, sj.toString());
         }
     }
@@ -311,14 +317,8 @@ public class EnsemblCacheCompare
             else
                 mismatchType = MismatchType.NEW_ONLY;
 
-            String transInfo = format("loc(%s:%d-%d) strand(%d) protein(%s/%s) exons(%d/%d) codingRegion(%d:%d/%d:%d)",
-                    geneData.Chromosome, validTransData.TransStart, validTransData.TransEnd, validTransData.Strand,
-                    transDataRef != null ? transDataRef.BioType : "", transDataNew != null ? transDataNew.BioType : "",
-                    transDataRef != null ? transDataRef.exons().size() : 0, transDataNew != null ? transDataNew.exons().size() : 0,
-                    transDataRef != null &&  transDataRef.CodingStart != null ? transDataRef.CodingStart : 0,
-                    transDataRef != null &&  transDataRef.CodingEnd != null ? transDataRef.CodingEnd : 0,
-                    transDataNew != null &&  transDataNew.CodingStart != null ? transDataNew.CodingStart : 0,
-                    transDataNew != null &&  transDataNew.CodingEnd != null ? transDataNew.CodingEnd : 0);
+            String transInfo = format("loc(%s:%d-%d) strand(%d) canonical(%s)",
+                    geneData.Chromosome, validTransData.TransStart, validTransData.TransEnd, validTransData.Strand, validTransData.IsCanonical);
 
             mWriter.write(format("%s\t%s\t%s\t%s\t%s\t%s\t%s",
                     DiffScope.TRANSCRIPT, geneData.GeneName, validTransData.GeneId, validTransData.TransName, mismatchType, transInfo, diffs));
@@ -328,38 +328,6 @@ public class EnsemblCacheCompare
         catch(IOException e)
         {
             GU_LOGGER.error("error writing Ensembl cache comparison file: {}", e.toString());
-        }
-    }
-
-    private void writeMappingData(
-            final GeneData geneData, final TranscriptData transDataSrc,
-            final List<TranscriptData> transDataDests, final String matchInfo)
-    {
-        try
-        {
-            mWriter.write(format("%s,%s,%s,%s",
-                    geneData.GeneId, geneData.GeneName, transDataSrc.TransName, matchInfo));
-
-            if(transDataDests.isEmpty())
-            {
-                mWriter.write(",0,false,true,");
-            }
-            else
-            {
-                TranscriptData newCanonical = transDataDests.stream().filter(x -> x.IsCanonical).findFirst().orElse(null);
-                boolean changedCanonical = newCanonical == null || !newCanonical.TransName.equals(transDataSrc.TransName);
-                StringJoiner sj = new StringJoiner(";");
-                transDataDests.forEach(x -> sj.add(x.TransName));
-
-                mWriter.write(format(",%s,%s,%s,%s",
-                        transDataDests.size(), newCanonical != null, changedCanonical, sj.toString()));
-            }
-
-            mWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            GU_LOGGER.error("error writing Ensembl transcript mapping file: {}", e.toString());
         }
     }
 
