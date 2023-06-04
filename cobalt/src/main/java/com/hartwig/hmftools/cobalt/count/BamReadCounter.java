@@ -10,44 +10,44 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.cobalt.Chromosome;
+import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
+import com.hartwig.hmftools.cobalt.CobaltColumns;
 
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SamReaderFactory;
+import tech.tablesaw.api.*;
 
 public class BamReadCounter
 {
     private final int mWindowSize;
     private final int mMinMappingQuality;
 
-    Multimap<Chromosome, ReadCount> mReferenceCounts = null;
-    Multimap<Chromosome, ReadCount> mTumorCounts = null;
-
-    GCMedianReadCountBuilder mReferenceMedianReadCountBuilder;
-
-    GCMedianReadCountBuilder mTumorMedianReadCountBuilder;
+    Table mReferenceCounts = null;
+    Table mTumorCounts = null;
 
     private final ExecutorService mExecutorService;
     private final SamReaderFactory mReaderFactory;
     private final Collection<Chromosome> mChromosomes;
 
-    public Multimap<Chromosome, ReadCount> getReferenceCounts() { return mReferenceCounts; }
-    public Multimap<Chromosome, ReadCount> getTumorCounts() { return mTumorCounts; }
+    private final ChromosomePositionCodec mChromosomePosCodec;
+
+    public Table getReferenceCounts() { return mReferenceCounts; }
+    public Table getTumorCounts() { return mTumorCounts; }
 
     public BamReadCounter(
             final int windowSize, final int minMappingQuality,
             final ExecutorService executorService, final SamReaderFactory readerFactory,
-            final Collection<Chromosome> chromosomes)
+            final Collection<Chromosome> chromosomes,
+            ChromosomePositionCodec chromosomePosCodec)
     {
         mWindowSize = windowSize;
         mMinMappingQuality = minMappingQuality;
         mExecutorService = executorService;
         mReaderFactory = readerFactory;
         mChromosomes = chromosomes;
+        mChromosomePosCodec = chromosomePosCodec;
     }
 
     public void generateCounts(
@@ -102,18 +102,29 @@ public class BamReadCounter
         return futures;
     }
 
-    private static Multimap<Chromosome, ReadCount> fromFutures(List<Future<ChromosomeReadCount>> futures)
+    private Table fromFutures(List<Future<ChromosomeReadCount>> futures)
             throws ExecutionException, InterruptedException
     {
-        final ListMultimap<Chromosome, ReadCount> readCounts = ArrayListMultimap.create();
-        for(Future<ChromosomeReadCount> future : futures)
+        final Table readCounts = Table.create(
+                StringColumn.create(CobaltColumns.CHROMOSOME),
+                IntColumn.create(CobaltColumns.POSITION),
+                IntColumn.create(CobaltColumns.READ_COUNT));
+
+        for (Future<ChromosomeReadCount> future : futures)
         {
             final ChromosomeReadCount readCount = future.get();
             final Chromosome chromosome = readCount.chromosome();
-            final List<ReadCount> result = readCount.readCount();
 
-            readCounts.putAll(chromosome, result);
+            for (ReadCount rc : readCount.readCount())
+            {
+                Row row = readCounts.appendRow();
+                row.setString(CobaltColumns.CHROMOSOME, chromosome.contig);
+                row.setInt(CobaltColumns.POSITION, rc.position());
+                row.setInt(CobaltColumns.READ_COUNT, rc.readCount());
+            }
         }
+
+        mChromosomePosCodec.addEncodedChrPosColumn(readCounts, false);
 
         return readCounts;
     }

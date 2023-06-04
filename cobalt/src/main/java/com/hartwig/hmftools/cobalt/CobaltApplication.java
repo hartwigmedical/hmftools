@@ -4,11 +4,11 @@ import static java.time.format.DateTimeFormatter.ISO_ZONED_DATE_TIME;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.WINDOW_SIZE;
+import static com.hartwig.hmftools.cobalt.CobaltUtils.rowToCobaltRatio;
 import static com.hartwig.hmftools.cobalt.RatioSegmentation.applyRatioSegmentation;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -16,19 +16,18 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.stream.Collectors;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParametersDelegate;
 import com.beust.jcommander.UnixStyleUsageFormatter;
-import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.count.BamReadCounter;
-import com.hartwig.hmftools.cobalt.targeted.TargetRegionEnrichment;
 import com.hartwig.hmftools.cobalt.ratio.RatioSupplier;
-import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFactory;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator;
@@ -40,6 +39,8 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
+import tech.tablesaw.api.*;
+import tech.tablesaw.io.csv.CsvReadOptions;
 
 public class CobaltApplication implements AutoCloseable
 {
@@ -106,24 +107,29 @@ public class CobaltApplication implements AutoCloseable
 
             final Collection<Chromosome> chromosomes = loadChromosomes(readerFactory);
 
-            final Multimap<Chromosome, GCProfile> gcProfiles = loadGCContent(chromosomes);
+            var chromosomePosCodec = new ChromosomePositionCodec();
 
             final BamReadCounter bamReadCounter = new BamReadCounter(
                     WINDOW_SIZE, mConfig.MinMappingQuality,
-                    executorService, readerFactory, chromosomes);
+                    executorService, readerFactory, chromosomes, chromosomePosCodec);
 
             bamReadCounter.generateCounts(mConfig.ReferenceBamPath, mConfig.TumorBamPath);
 
+            final Table gcProfiles = loadGCContent(chromosomePosCodec);
+
             final RatioSupplier ratioSupplier = new RatioSupplier(mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir,
-                    gcProfiles, chromosomes, bamReadCounter.getReferenceCounts(), bamReadCounter.getTumorCounts());
+                    gcProfiles, chromosomes, bamReadCounter.getReferenceCounts(), bamReadCounter.getTumorCounts(),
+                    chromosomePosCodec);
 
             if (mConfig.TargetRegionPath != null)
             {
-                TargetRegionEnrichment targetRegionEnrichment = TargetRegionEnrichment.load(mConfig.TargetRegionPath);
+                CsvReadOptions options = CsvReadOptions.builder(mConfig.TargetRegionPath).separator('\t').build();
+                Table targetRegionEnrichment = Table.read().usingOptions(options);
+                chromosomePosCodec.addEncodedChrPosColumn(targetRegionEnrichment, true);
                 ratioSupplier.setTargetRegionEnrichment(targetRegionEnrichment);
             }
 
-            Multimap<Chromosome, CobaltRatio> ratios;
+            Table ratios;
 
             switch (mConfig.mode())
             {
@@ -141,7 +147,7 @@ public class CobaltApplication implements AutoCloseable
                     mConfig.OutputDir, mConfig.TumorId != null ? mConfig.TumorId : mConfig.ReferenceId);
             CB_LOGGER.info("Persisting cobalt ratios to {}", outputFilename);
             mVersionInfo.write(mConfig.OutputDir);
-            CobaltRatioFile.write(outputFilename, ratios.values());
+            CobaltRatioFile.write(outputFilename, ratios.stream().map(r -> rowToCobaltRatio(r, chromosomePosCodec)).collect(Collectors.toList()));
 
             applyRatioSegmentation(executorService, mConfig.OutputDir, outputFilename, mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
         }
@@ -186,9 +192,33 @@ public class CobaltApplication implements AutoCloseable
     }
 
     @NotNull
-    public Multimap<Chromosome, GCProfile> loadGCContent(Collection<Chromosome> chromosomes) throws IOException
+    public Table loadGCContent(ChromosomePositionCodec chromosomePosCodec) throws IOException
     {
+        Table gcProfileTable = Table.create(List.of(
+                LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
+                DoubleColumn.create("gcContent"),
+                BooleanColumn.create("isMappable"),
+                BooleanColumn.create("isAutosome")));
+
         Collection<GCProfile> gcProfileList = GCProfileFactory.loadGCContent(WINDOW_SIZE, mConfig.GcProfilePath).values();
-        return CobaltUtils.toChromosomeMultiMap(gcProfileList, chromosomes, GCProfile::chromosome);
+
+        for (GCProfile gcProfile : gcProfileList)
+        {
+            Row row = gcProfileTable.appendRow();
+            long chrPosIndex = chromosomePosCodec.encodeChromosomePosition(gcProfile.chromosome(), gcProfile.start());
+            if (chrPosIndex > 0)
+            {
+                row.setLong(CobaltColumns.ENCODED_CHROMOSOME_POS, chrPosIndex);
+            }
+            else
+            {
+                throw new RuntimeException("Unknown chromosome: " + gcProfile.chromosome());
+            }
+            row.setDouble("gcContent", gcProfile.gcContent());
+            row.setBoolean("isMappable", gcProfile.isMappable());
+            row.setBoolean("isAutosome", HumanChromosome.fromString(gcProfile.chromosome()).isAutosome());
+        }
+
+        return gcProfileTable;
     }
 }

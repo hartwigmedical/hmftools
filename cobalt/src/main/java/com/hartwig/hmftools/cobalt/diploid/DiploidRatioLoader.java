@@ -11,10 +11,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.hartwig.hmftools.cobalt.Chromosome;
-import com.hartwig.hmftools.common.cobalt.ImmutableReadRatio;
-import com.hartwig.hmftools.common.cobalt.ReadRatio;
+import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
+import com.hartwig.hmftools.cobalt.CobaltColumns;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,23 +23,30 @@ import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.tribble.readers.LineIterator;
 
+import tech.tablesaw.api.*;
+
 public class DiploidRatioLoader implements Consumer<Locatable>
 {
-    private final ArrayListMultimap<Chromosome, ReadRatio> mResult = ArrayListMultimap.create();
-    private final List<ReadRatio> mContigResult = new ArrayList<>();
+    private final Table mResult = Table.create(
+            StringColumn.create(CobaltColumns.CHROMOSOME), IntColumn.create(CobaltColumns.POSITION), DoubleColumn.create(CobaltColumns.RATIO));
+    private final Table mContigResult = mResult.emptyCopy();
     private final Collection<Chromosome> mChromosomeList;
+
+    private final ChromosomePositionCodec mChromosomePosCodec;
 
     private String mChromosome = null;
     private int mStart = 0;
 
-    public DiploidRatioLoader(final Collection<Chromosome> chromosomes)
+    public DiploidRatioLoader(final Collection<Chromosome> chromosomes, ChromosomePositionCodec chromosomePosCodec)
     {
         mChromosomeList = chromosomes;
+        mChromosomePosCodec = chromosomePosCodec;
     }
 
-    public DiploidRatioLoader(final Collection<Chromosome> chromosomes, final String diploidBedPath) throws IOException
+    public DiploidRatioLoader(final Collection<Chromosome> chromosomes, final String diploidBedPath,
+            ChromosomePositionCodec chromosomePosCodec) throws IOException
     {
-        this(chromosomes);
+        this(chromosomes, chromosomePosCodec);
         List<BEDFeature> bedFeatures = new ArrayList<>();
 
         CB_LOGGER.info("Reading diploid regions from {}", diploidBedPath);
@@ -76,14 +82,12 @@ public class DiploidRatioLoader implements Consumer<Locatable>
         int position = start;
         while(position < end)
         {
-            mContigResult.add(create(contig, position));
+            Row row = mContigResult.appendRow();
+            row.setString("chromosome", contig);
+            row.setInt("position", position);
+            row.setDouble("ratio", 1);
             position += WINDOW_SIZE;
         }
-    }
-
-    private static ReadRatio create(String contig, int position)
-    {
-        return ImmutableReadRatio.builder().chromosome(contig).position(position).ratio(1).build();
     }
 
     private void finaliseCurrent()
@@ -94,7 +98,7 @@ public class DiploidRatioLoader implements Consumer<Locatable>
             {
                 if (mChromosome.equals(c.contig))
                 {
-                    mResult.putAll(c, mContigResult);
+                    mResult.append(mContigResult);
                     break;
                 }
             }
@@ -104,9 +108,10 @@ public class DiploidRatioLoader implements Consumer<Locatable>
     }
 
     @NotNull
-    public ArrayListMultimap<Chromosome, ReadRatio> build()
+    public Table build()
     {
         finaliseCurrent();
+        mChromosomePosCodec.addEncodedChrPosColumn(mResult, false);
         return mResult;
     }
 }

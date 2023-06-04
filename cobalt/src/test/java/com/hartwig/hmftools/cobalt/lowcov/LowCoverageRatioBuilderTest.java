@@ -6,13 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.cobalt.Chromosome;
-import com.hartwig.hmftools.common.cobalt.ImmutableReadRatio;
-import com.hartwig.hmftools.common.cobalt.ReadRatio;
+import com.hartwig.hmftools.cobalt.CobaltColumns;
 
 import org.junit.Test;
+
+import tech.tablesaw.api.*;
 
 public class LowCoverageRatioBuilderTest
 {
@@ -82,27 +80,28 @@ public class LowCoverageRatioBuilderTest
     @Test
     public void testCalcConsolidateBoundaryRatios()
     {
-        final ListMultimap<Chromosome, ReadRatio> rawRatios = ArrayListMultimap.create();
+        final Table rawRatios = Table.create(
+                StringColumn.create(CobaltColumns.CHROMOSOME),
+                IntColumn.create(CobaltColumns.POSITION),
+                DoubleColumn.create(CobaltColumns.RATIO));
 
-        Chromosome chr = new Chromosome("chr1", 23310);
-
-
+        Row row;
         // add in some chromosome read ratio
-        rawRatios.put(chr, ImmutableReadRatio.builder().chromosome(chr.contig).position(1001).ratio(1.0).build());
-        rawRatios.put(chr, ImmutableReadRatio.builder().chromosome(chr.contig).position(2001).ratio(-1.0).build());
-        rawRatios.put(chr, ImmutableReadRatio.builder().chromosome(chr.contig).position(3001).ratio(1.0).build());
-        rawRatios.put(chr, ImmutableReadRatio.builder().chromosome(chr.contig).position(5001).ratio(1.0).build());
-        rawRatios.put(chr, ImmutableReadRatio.builder().chromosome(chr.contig).position(9001).ratio(1.0).build());
+        appendReadRatio(rawRatios, "chr1", 1001, 1.0);
+        appendReadRatio(rawRatios, "chr1", 2001, -1.0);
+        appendReadRatio(rawRatios, "chr1", 3001, 1.0);
+        appendReadRatio(rawRatios, "chr1", 5001, 1.0);
+        appendReadRatio(rawRatios, "chr1", 9001, 1.0);
 
-        rawRatios.put(chr, ImmutableReadRatio.builder().chromosome(chr.contig).position(10001).ratio(1.0).build());
-        rawRatios.put(chr, ImmutableReadRatio.builder().chromosome(chr.contig).position(12001).ratio(-1.0).build());
-        rawRatios.put(chr, ImmutableReadRatio.builder().chromosome(chr.contig).position(13001).ratio(1.0).build());
-        rawRatios.put(chr, ImmutableReadRatio.builder().chromosome(chr.contig).position(14001).ratio(1.0).build());
-        rawRatios.put(chr, ImmutableReadRatio.builder().chromosome(chr.contig).position(16001).ratio(1.0).build());
+        appendReadRatio(rawRatios, "chr1", 10001, 1.0);
+        appendReadRatio(rawRatios, "chr1", 12001, -1.0);
+        appendReadRatio(rawRatios, "chr1", 13001, 1.0);
+        appendReadRatio(rawRatios, "chr1", 14001, 1.0);
+        appendReadRatio(rawRatios, "chr1", 16001, 1.0);
 
-        rawRatios.put(chr, ImmutableReadRatio.builder().chromosome(chr.contig).position(19001).ratio(1.0).build());
+        appendReadRatio(rawRatios, "chr1", 19001, 1.0);
 
-        List<LowCovBucket> buckets = Objects.requireNonNull(LowCoverageRatioBuilder.consolidateIntoBuckets(rawRatios, 4)).get(chr);
+        List<LowCovBucket> buckets = Objects.requireNonNull(LowCoverageRatioBuilder.consolidateIntoBuckets(rawRatios, 4)).get("chr1");
 
         assertEquals(3, buckets.size());
 
@@ -118,9 +117,9 @@ public class LowCoverageRatioBuilderTest
         assertEquals(20001, buckets.get(2).endPosition);
 
         // put a masked out ratio at the end, should also work
-        rawRatios.put(chr, ImmutableReadRatio.builder().chromosome(chr.contig).position(20001).ratio(-1.0).build());
+        row = rawRatios.appendRow(); row.setString("chromosome", "chr1"); row.setInt("position", 20001); row.setDouble("ratio", -1.0);
 
-        buckets = Objects.requireNonNull(LowCoverageRatioBuilder.consolidateIntoBuckets(rawRatios, 4)).get(chr);
+        buckets = Objects.requireNonNull(LowCoverageRatioBuilder.consolidateIntoBuckets(rawRatios, 4)).get("chr1");
 
         assertEquals(3, buckets.size());
 
@@ -133,4 +132,11 @@ public class LowCoverageRatioBuilderTest
         assertEquals(20001, buckets.get(2).endPosition);
     }
 
+    private static void appendReadRatio(Table table, String chromosome, int position, double ratio)
+    {
+        Row row = table.appendRow();
+        row.setString(CobaltColumns.CHROMOSOME, chromosome);
+        row.setInt(CobaltColumns.POSITION, position);
+        row.setDouble(CobaltColumns.RATIO, ratio);
+    }
 }

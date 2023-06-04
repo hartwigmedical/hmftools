@@ -10,7 +10,7 @@ public class GlobalSequenceAlignerTest
     @Before
     public void setUp()
     {
-        org.apache.logging.log4j.core.config.Configurator.setRootLevel(org.apache.logging.log4j.Level.TRACE);
+        // org.apache.logging.log4j.core.config.Configurator.setRootLevel(org.apache.logging.log4j.Level.TRACE);
     }
 
     @Test

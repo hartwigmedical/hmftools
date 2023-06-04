@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.utils;
 
 import static java.lang.Math.pow;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -64,12 +65,17 @@ public final class Doubles
     public static double median(final List<Double> values, @NotNull final Predicate<Double> filter)
     {
         final List<Double> reads = values.stream().filter(filter).sorted().collect(Collectors.toList());
-        int count = reads.size();
+        return medianOfSortedDoubles(reads);
+    }
+
+    private static double medianOfSortedDoubles(final List<Double> values)
+    {
+        int count = values.size();
 
         if (count == 0)
             return 0;
 
-        return count % 2 == 0 ? (reads.get(count / 2) + reads.get(count / 2 - 1)) / 2 : reads.get(count / 2);
+        return count % 2 == 0 ? (values.get(count / 2) + values.get(count / 2 - 1)) / 2 : values.get(count / 2);
     }
 
     public static double round(final double value, final int decimalPlaces)
@@ -78,4 +84,49 @@ public final class Doubles
         return Math.round(value / logValue) * logValue;
     }
 
+    public static double interpolatedMedian(Collection<Double> input)
+    {
+        if (input.isEmpty())
+        {
+            return 0;
+        }
+        List<Double> values = input.stream().sorted().collect(Collectors.toList());
+        int count = values.size();
+
+        double median = medianOfSortedDoubles(values);
+
+        // now count how many are below, how many are above
+        int countBelowMed = 0;
+        int countAboveMed = 0;
+
+        int cumulativeCount = 0;
+
+        for (var itr = values.iterator(); itr.hasNext();) {
+
+            double val = itr.next();
+
+            if (cumulativeCount == count / 2.0 && val != median)
+            {
+                // same corner case as median, if it falls between two numbers, say 2 and 3, then
+                // we return 2.5
+                return median;
+            }
+
+            if (Doubles.lessThan(val, median))
+            {
+                countBelowMed++;
+            }
+            else if (Doubles.greaterThan(val, median))
+            {
+                countAboveMed++;
+            }
+
+            cumulativeCount++;
+        }
+
+        double l = ((double)countBelowMed) / count;
+        double r = ((double)countAboveMed) / count;
+
+        return median - 0.5 + (0.5 - l) / (1 - l - r);
+    }
 }
