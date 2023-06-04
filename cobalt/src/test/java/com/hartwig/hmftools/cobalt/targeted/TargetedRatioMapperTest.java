@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.cobalt.ratio;
+package com.hartwig.hmftools.cobalt.targeted;
+
+import static com.hartwig.hmftools.cobalt.CobaltTestUtils.assertDoubleEquals;
 
 import static org.junit.Assert.assertEquals;
 
@@ -9,7 +11,6 @@ import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.Chromosome;
 import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
-import com.hartwig.hmftools.cobalt.targeted.TargetedRatioBuilder;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
 
 import org.jetbrains.annotations.NotNull;
@@ -17,10 +18,9 @@ import org.junit.Test;
 
 import tech.tablesaw.api.*;
 
-public class TargetedRatioBuilderTest
+public class TargetedRatioMapperTest
 {
     private static final Chromosome CHROMOSOME = new Chromosome("chr1", 10000);
-    private static final double EPSILON = 1e-10;
 
     @Test
     public void testOnTargetRatio()
@@ -64,9 +64,9 @@ public class TargetedRatioBuilderTest
 
         chromosomePositionCodec.addEncodedChrPosColumn(targetEnrichmentRatios, true);
 
-        var ratioBuilder = new TargetedRatioBuilder(ratios, targetEnrichmentRatios, chromosomePositionCodec);
+        var ratioMapper = new TargetedRatioMapper(targetEnrichmentRatios, chromosomePositionCodec);
 
-        Table onTargetRatios = ratioBuilder.onTargetRatios();
+        Table onTargetRatios = ratioMapper.onTargetRatios(ratios);
 
         assertEquals(2, onTargetRatios.rowCount());
 
@@ -79,13 +79,13 @@ public class TargetedRatioBuilderTest
 
         // median of the unnormalized gc ratio is 10.0
         // so read ratio = 0.5 / 2.0 / 10 = 0.025
-        assertEquals(0.025, readRatio2001.getDouble(CobaltColumns.RATIO), EPSILON);
+        assertDoubleEquals(0.025, readRatio2001.getDouble(CobaltColumns.RATIO));
 
         assertEquals(12001, readRatio12001.getInt(CobaltColumns.POSITION));
 
         // median of the unnormalized gc ratio is 10.0
         // so read ratio = 19.5 / 10.0 / 10 = 0.195
-        assertEquals(0.195, readRatio12001.getDouble(CobaltColumns.RATIO), EPSILON);
+        assertDoubleEquals(0.195, readRatio12001.getDouble(CobaltColumns.RATIO));
     }
 
     @NotNull
