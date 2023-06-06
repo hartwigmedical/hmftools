@@ -132,8 +132,8 @@ public class ChainFinder
 
         mLinkAllocator = new ChainLinkAllocator(mClusterJcnLimits, mSvBreakendPossibleLinks, mChains, mDoubleMinuteSVs);
 
-        mRuleSelector = new ChainRuleSelector(mLinkAllocator, mClusterJcnLimits,
-                mSvBreakendPossibleLinks, mFoldbacks, mComplexDupCandidates,
+        mRuleSelector = new ChainRuleSelector(
+                mLinkAllocator, mClusterJcnLimits, mSvBreakendPossibleLinks, mFoldbacks, mComplexDupCandidates,
                 mAdjacentMatchingPairs, mAdjacentPairs, mChains);
 
         mLineChainer = new LineChainer(cohortDataWriter);

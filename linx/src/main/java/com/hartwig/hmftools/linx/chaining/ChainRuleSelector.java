@@ -35,8 +35,11 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.DbPair;
@@ -56,7 +59,7 @@ public class ChainRuleSelector
     private boolean mFoldbacksInitialised;
 
     // references from chain-finder
-    private final Map<SvBreakend, List<LinkedPair>> mSvBreakendPossibleLinks;
+    private final Map<SvBreakend,List<LinkedPair>> mSvBreakendPossibleLinks;
     private final ChainJcnLimits mJcnLimits;
     private final SvChainConnections mSvConnectionsMap;
     private final Map<SvVarData,List<LinkedPair>> mComplexDupCandidates;
@@ -67,7 +70,7 @@ public class ChainRuleSelector
 
     public ChainRuleSelector(
             final ChainLinkAllocator linkAllocator,
-                final ChainJcnLimits jcnLimits,
+            final ChainJcnLimits jcnLimits,
             final Map<SvBreakend, List<LinkedPair>> svBreakendPossibleLinks,
             final List<SvVarData> foldbacks,
             final Map<SvVarData,List<LinkedPair>> complexDupCandidates,
@@ -187,8 +190,30 @@ public class ChainRuleSelector
         return proposedLinks;
     }
 
+    public static class BreakendComparator implements Comparator<SvBreakend>
+    {
+        public int compare(final SvBreakend first, final SvBreakend second)
+        {
+            if(first.getSV().id() == second.getSV().id())
+            {
+                if(first.usesStart() == second.usesStart())
+                    return 0;
+                else
+                    return first.usesStart() ? -1 : 1;
+            }
+            else
+            {
+                return first.getSV().id() < second.getSV().id() ? -1 : 1;
+            }
+        }
+    }
+
+
     private List<ProposedLinks> findSingleOptionPairs(List<ProposedLinks> proposedLinks)
     {
+        if(mSvBreakendPossibleLinks.isEmpty())
+            return proposedLinks;
+
         // find all breakends with only one other link option
         if(!proposedLinks.isEmpty())
         {
@@ -225,26 +250,28 @@ public class ChainRuleSelector
             }
         }
 
-        for(Map.Entry<SvBreakend, List<LinkedPair>> entry : mSvBreakendPossibleLinks.entrySet())
+        List<SvBreakend> sortedBreakends = mSvBreakendPossibleLinks.keySet().stream().sorted(new BreakendComparator()).collect(Collectors.toList());
+
+        for(SvBreakend limitingBreakend : sortedBreakends)
         {
-            if(entry.getValue().isEmpty())
+            List<LinkedPair> breakendPairs = mSvBreakendPossibleLinks.get(limitingBreakend);
+
+            if(breakendPairs.isEmpty())
             {
-                LNX_LOGGER.warn("breakend({}) has no possibles left, should be purged", entry.getKey().toString());
+                LNX_LOGGER.warn("breakend({}) has no possibles left, should be purged", limitingBreakend.toString());
                 continue;
             }
 
-            if(entry.getValue().size() >= 2) // disable connections to an INV for now
+            if(breakendPairs.size() >= 2) // disable connections to an INV for now
                 continue;
-
-            SvBreakend limitingBreakend = entry.getKey();
 
             final LinkedPair newPair;
 
-            if(entry.getValue().size() == 2)
+            if(breakendPairs.size() == 2)
             {
                 // consider a link only to an INV as a single option
-                final LinkedPair pair1 = entry.getValue().get(0);
-                final LinkedPair pair2 = entry.getValue().get(1);
+                final LinkedPair pair1 = breakendPairs.get(0);
+                final LinkedPair pair2 = breakendPairs.get(1);
                 final SvVarData otherSv1 = pair1.getOtherSV(limitingBreakend.getSV());
                 final SvVarData otherSv2 = pair2.getOtherSV(limitingBreakend.getSV());
 
@@ -259,7 +286,7 @@ public class ChainRuleSelector
             }
             else
             {
-                newPair = entry.getValue().get(0);
+                newPair = breakendPairs.get(0);
             }
 
             if(mLinkAllocator.hasSkippedPairs(newPair))
