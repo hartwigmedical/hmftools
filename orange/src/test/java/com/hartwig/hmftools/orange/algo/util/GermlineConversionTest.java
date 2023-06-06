@@ -285,6 +285,7 @@ public class GermlineConversionTest {
 
         LinxSvAnnotation germlineStructuralVariant1 = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(5).build();
         LinxSvAnnotation germlineStructuralVariant2 = LinxOrangeTestFactory.svAnnotationBuilder().svId(2).clusterId(6).build();
+        LinxSvAnnotation germlineStructuralVariant3 = LinxOrangeTestFactory.svAnnotationBuilder().svId(3).clusterId(6).build();
         LinxBreakend germlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(8).svId(1).build();
         LinxBreakend reportableGermlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(9).svId(2).build();
 
@@ -294,15 +295,15 @@ public class GermlineConversionTest {
                 .addAllSomaticStructuralVariants(somaticStructuralVariant1, somaticStructuralVariant2)
                 .addAllSomaticBreakends(somaticBreakend, reportableSomaticBreakend)
                 .addReportableSomaticBreakends(reportableSomaticBreakend)
-                .addAllGermlineStructuralVariants(germlineStructuralVariant1, germlineStructuralVariant2)
+                .addAllGermlineStructuralVariants(germlineStructuralVariant1, germlineStructuralVariant2, germlineStructuralVariant3)
                 .addAllGermlineBreakends(germlineBreakend, reportableGermlineBreakend)
                 .addReportableGermlineBreakends(reportableGermlineBreakend)
                 .addGermlineHomozygousDisruptions(germlineHomozygousDisruption)
                 .build();
 
         LinxRecord converted = GermlineConversion.convertLinxGermline(true, linx);
-        assertEquals(4, converted.allSomaticStructuralVariants().size());
-        assertEquals(4, GermlineConversion.findMaxSvId(converted.allSomaticStructuralVariants()));
+        assertEquals(5, converted.allSomaticStructuralVariants().size());
+        assertEquals(5, GermlineConversion.findMaxSvId(converted.allSomaticStructuralVariants()));
         assertEquals(8, GermlineConversion.findMaxClusterId(converted.allSomaticStructuralVariants()));
 
         assertEquals(3, converted.allSomaticBreakends().size());

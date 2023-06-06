@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.orange.algo.util;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -165,8 +168,8 @@ public final class GermlineConversion {
     }
 
     @Nullable
-    private static PurpleDriver findMatchingSomaticDriver(@NotNull PurpleDriver germlineDriver,
-            @NotNull List<PurpleDriver> somaticDrivers, @NotNull PurpleDriverType somaticTypeToFind) {
+    private static PurpleDriver findMatchingSomaticDriver(@NotNull PurpleDriver germlineDriver, @NotNull List<PurpleDriver> somaticDrivers,
+            @NotNull PurpleDriverType somaticTypeToFind) {
         return find(somaticDrivers, somaticTypeToFind, germlineDriver.gene(), germlineDriver.transcript());
     }
 
@@ -174,7 +177,8 @@ public final class GermlineConversion {
     private static PurpleDriver find(@NotNull List<PurpleDriver> drivers, @NotNull PurpleDriverType PurpleDriverTypeToFind,
             @NotNull String geneToFind, @NotNull String transcriptToFind) {
         for (PurpleDriver driver : drivers) {
-            if (driver.driver() == PurpleDriverTypeToFind && driver.gene().equals(geneToFind) && driver.transcript().equals(transcriptToFind)) {
+            if (driver.driver() == PurpleDriverTypeToFind && driver.gene().equals(geneToFind) && driver.transcript()
+                    .equals(transcriptToFind)) {
                 return driver;
             }
         }
@@ -201,7 +205,11 @@ public final class GermlineConversion {
     private static PurpleDriver convertToSomaticDeletionDriver(@NotNull PurpleDriver germlineDriver) {
         assert germlineDriver.driver() == PurpleDriverType.GERMLINE_DELETION;
 
-        return ImmutablePurpleDriver.builder().from(germlineDriver).driver(PurpleDriverType.DEL).likelihoodMethod(PurpleLikelihoodMethod.DEL).build();
+        return ImmutablePurpleDriver.builder()
+                .from(germlineDriver)
+                .driver(PurpleDriverType.DEL)
+                .likelihoodMethod(PurpleLikelihoodMethod.DEL)
+                .build();
     }
 
     @NotNull
@@ -317,15 +325,16 @@ public final class GermlineConversion {
     @NotNull
     private static Map<Integer, Integer> buildClusterIdMapping(@NotNull List<LinxSvAnnotation> allSomaticStructuralVariants,
             @Nullable List<LinxSvAnnotation> allGermlineStructuralVariants) {
-        Map<Integer, Integer> clusterIdMapping = Maps.newHashMap();
         if (allGermlineStructuralVariants != null) {
-            int newId = findMaxClusterId(allSomaticStructuralVariants) + 1;
-            for (LinxSvAnnotation structuralVariant : allGermlineStructuralVariants) {
-                clusterIdMapping.put(structuralVariant.clusterId(), newId);
-                newId++;
-            }
+            int idOffset = findMaxClusterId(allSomaticStructuralVariants);
+            List<Integer> germlineClusterIds =
+                    allGermlineStructuralVariants.stream().map(LinxSvAnnotation::clusterId).distinct().collect(Collectors.toList());
+            return IntStream.range(0, germlineClusterIds.size())
+                    .boxed()
+                    .collect(Collectors.toMap(germlineClusterIds::get, clusterIndex -> clusterIndex + idOffset + 1));
+        } else {
+            return new HashMap<>();
         }
-        return clusterIdMapping;
     }
 
     @VisibleForTesting
