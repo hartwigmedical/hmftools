@@ -104,10 +104,12 @@ public final class HgvsProtein
         switch(effect)
         {
             case SYNONYMOUS:
+            case PHASED_SYNONYMOUS:
                 formSynonymous(proteinContext, sb);
                 break;
 
             case MISSENSE:
+            case PHASED_MISSENSE:
                 formMissense(proteinContext, sb);
                 break;
 

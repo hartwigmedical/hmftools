@@ -19,7 +19,8 @@ public final class VariantDedup {
     private static final Logger LOGGER = LogManager.getLogger(VariantDedup.class);
 
     private static final Set<PurpleVariantEffect> PHASED_EFFECTS =
-            Sets.newHashSet(PurpleVariantEffect.PHASED_INFRAME_DELETION, PurpleVariantEffect.PHASED_INFRAME_INSERTION);
+            Sets.newHashSet(PurpleVariantEffect.PHASED_INFRAME_DELETION, PurpleVariantEffect.PHASED_INFRAME_INSERTION,
+                    PurpleVariantEffect.PHASED_MISSENSE, PurpleVariantEffect.PHASED_SYNONYMOUS);
 
     private VariantDedup() {
     }

@@ -30,9 +30,11 @@ public enum CodingEffect
             case INFRAME_INSERTION:
             case PHASED_INFRAME_DELETION:
             case PHASED_INFRAME_INSERTION:
+            case PHASED_MISSENSE:
                 return MISSENSE;
 
             case SYNONYMOUS:
+            case PHASED_SYNONYMOUS:
                 return SYNONYMOUS;
         }
 

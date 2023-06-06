@@ -13,6 +13,8 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_I
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_MISSENSE;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
@@ -291,9 +293,19 @@ public class PhasedVariantClassifier
                     return;
                 }
 
+                String previousExtraAltBases = "";
+
+                if(lastRefCodonEnd > refCodonEnd)
+                {
+                    previousExtraAltBases = combinedAltCodons.substring(lastRefCodonEnd - refCodonEnd + 1);
+                }
+
                 combinedAltCodons = combinedAltCodons.substring(0, combinedAltCodons.length() - prevAltBasesTrimmed);
 
                 combinedAltCodons += transImpact.proteinContext().AltCodonBases.substring(currentAltBasesTrimmed);
+
+                // restore the trimmed ref bases which the previous variant(s) had
+                combinedAltCodons += previousExtraAltBases;
             }
             else
             {
@@ -339,7 +351,7 @@ public class PhasedVariantClassifier
 
         if(indelBaseTotal == 0)
         {
-            combinedEffect = combinedPc.RefAminoAcids.equals(combinedPc.AltAminoAcids) ? SYNONYMOUS : MISSENSE;
+            combinedEffect = combinedPc.RefAminoAcids.equals(combinedPc.AltAminoAcids) ? PHASED_SYNONYMOUS : PHASED_MISSENSE;
 
             PV_LOGGER.trace("lps({}) varCount({}) combinedEffect({}) from aminoAcids({} -> {})",
                     localPhaseSet, variants.size(), combinedEffect, combinedPc.RefAminoAcids, combinedPc.AltAminoAcids);
@@ -370,7 +382,7 @@ public class PhasedVariantClassifier
         combinedPc.IsPhased = true;
         combinedPc.Hgvs = HgvsProtein.generate(combinedPc, combinedEffects);
 
-        // now convert missense / synonymous to phased inframe to it's clearer what has happened
+        // now convert missense / synonymous to phased inframe so it's clearer what has happened
         if(combinedEffects.contains(SYNONYMOUS) || combinedEffects.contains(MISSENSE))
         {
             combinedEffects.remove(MISSENSE);

@@ -24,8 +24,10 @@ public enum VariantEffect
     MISSENSE("missense_variant", 40),
     PHASED_INFRAME_INSERTION("phased_inframe_insertion", 40),
     PHASED_INFRAME_DELETION("phased_inframe_deletion", 40),
+    PHASED_MISSENSE("phased_missense", 40),
 
     SYNONYMOUS("synonymous_variant", 30),
+    PHASED_SYNONYMOUS("phased_synonymous", 30),
 
     INTRONIC("intron_variant", 10),
     FIVE_PRIME_UTR("5_prime_UTR_variant", 10),

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -336,12 +337,12 @@ public class OrangeAlgo {
         List<String> lines = Files.readAllLines(new File(sageGermlineGeneCoverageTsv).toPath());
         String header = lines.get(0);
 
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, GeneDepthFile.DELIM);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         int geneIndex = fieldsIndexMap.get(GeneDepthFile.COL_GENE);
         int mvlhIndex = fieldsIndexMap.get(GeneDepthFile.COL_MV_LIKELIHOOD);
 
         for (String line : lines.subList(1, lines.size())) {
-            String[] values = line.split(GeneDepthFile.DELIM);
+            String[] values = line.split(TSV_DELIM);
             String gene = values[geneIndex];
             String mvlhString = values[mvlhIndex].substring(0, values[mvlhIndex].length() - 1);
             double missedVariantLikelihood = Double.parseDouble(mvlhString) / 100D;

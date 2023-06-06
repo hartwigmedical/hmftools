@@ -3,6 +3,7 @@ package com.hartwig.hmftools.pave;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
@@ -14,6 +15,8 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_D
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_MISSENSE;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.generateAlt;
@@ -307,10 +310,10 @@ public class PhasedVariantsTest
         assertTrue(impact1.phasedFrameshift());
         assertFalse(impact1.codingContext().IsFrameShift);
         assertFalse(impact1.hasEffect(FRAMESHIFT));
-        assertTrue(impact1.hasEffect(PHASED_INFRAME_DELETION));
+        assertTrue(impact1.hasEffect(PHASED_MISSENSE));
         assertFalse(impact2.codingContext().IsFrameShift);
         assertFalse(impact2.hasEffect(FRAMESHIFT));
-        assertTrue(impact2.hasEffect(PHASED_INFRAME_DELETION));
+        assertTrue(impact2.hasEffect(PHASED_MISSENSE));
 
         // now synonynous
         pos = 20;
@@ -338,10 +341,10 @@ public class PhasedVariantsTest
         assertTrue(impact1.phasedFrameshift());
         assertFalse(impact1.codingContext().IsFrameShift);
         assertFalse(impact1.hasEffect(FRAMESHIFT));
-        assertTrue(impact1.hasEffect(PHASED_INFRAME_DELETION));
+        assertTrue(impact1.hasEffect(PHASED_SYNONYMOUS));
         assertFalse(impact2.codingContext().IsFrameShift);
         assertFalse(impact2.hasEffect(FRAMESHIFT));
-        assertTrue(impact2.hasEffect(PHASED_INFRAME_DELETION));
+        assertTrue(impact2.hasEffect(PHASED_SYNONYMOUS));
     }
 
     @Test
@@ -456,6 +459,53 @@ public class PhasedVariantsTest
         assertTrue(impact1.hasEffect(INFRAME_DELETION));
         assertFalse(impact2.phasedFrameshift());
         assertTrue(impact2.hasEffect(MISSENSE));
+    }
+
+    @Test
+    public void testSpliceEdgeOverlap()
+    {
+        TranscriptData transData = createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] { 0, 20 }, 12, 1, 25, false, "");
+
+        //                              intron
+        //                           10        20        30        40
+        // positions:      01234567890123456789012345678901234567890
+        String refBases = "XATGCATGGGCAGTTTTTTTTTTTTTAAAAATTTTTAAAAATTTTT";
+
+        mRefGenome.RefGenomeMap.put(CHR_2, refBases);
+
+        // start
+        int pos = 8;
+        String ref = refBases.substring(pos, pos + 1);
+        String alt = ref + "A";
+        VariantData var1 = new VariantData(CHR_2, pos, ref, alt);
+        var1.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact1 = classifyVariant(var1, transData);
+        assertTrue(impact1.hasEffect(FRAMESHIFT));
+
+        pos = 9;
+        ref = refBases.substring(pos, pos + 1);
+        alt = "T";
+        VariantData var2 = new VariantData(CHR_2, pos, ref, alt);
+        var2.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact2 = classifyVariant(var2, transData);
+        assertTrue(impact2.hasEffect(SYNONYMOUS));
+
+        pos = 11;
+        ref = refBases.substring(pos, pos + 9); // AGGTAACTT>A
+        alt = refBases.substring(pos, pos + 1);
+        VariantData var3 = new VariantData(CHR_2, pos, ref, alt);
+        var3.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact3 = classifyVariant(var3, transData);
+        assertTrue(impact3.hasEffect(FRAMESHIFT));
+
+        mClassifier.processPhasedVariants(NO_LOCAL_PHASE_SET);
+
+        assertEquals("p.Gln4Ser", impact1.hgvsProtein());
+        assertTrue(impact1.phasedFrameshift());
+        assertTrue(impact1.hasEffect(PHASED_MISSENSE));
+        assertTrue(impact2.hasEffect(PHASED_MISSENSE));
+        assertTrue(impact3.hasEffect(PHASED_MISSENSE));
     }
 
     @Test

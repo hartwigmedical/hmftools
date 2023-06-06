@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_MISSENSE;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.ASSUMED_BIALLELIC_FRACTION;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
@@ -297,10 +298,11 @@ public class SomaticStream
         }
     }
 
-    private static boolean hasPhasedInframeEffect(final SomaticVariant variant)
+    private static boolean hasPhasedEffect(final SomaticVariant variant)
     {
         return variant.variantImpact().CanonicalEffect.contains(PHASED_INFRAME_INSERTION.effect())
-            || variant.variantImpact().CanonicalEffect.contains(PHASED_INFRAME_DELETION.effect());
+            || variant.variantImpact().CanonicalEffect.contains(PHASED_INFRAME_DELETION.effect())
+            || variant.variantImpact().CanonicalEffect.contains(PHASED_MISSENSE.effect());
     }
 
     private void checkPhasedReportableVariants()
@@ -311,7 +313,7 @@ public class SomaticStream
             SomaticVariant variant = mSomaticVariants.variants().get(i);
 
             // first find any reportable phased inframe INDEL
-            if(!variant.context().hasAttribute(REPORTED_FLAG) || !hasPhasedInframeEffect(variant))
+            if(!variant.context().hasAttribute(REPORTED_FLAG) || !hasPhasedEffect(variant))
                 continue;
 
             List<Integer> localPhaseSets = variant.context().getAttributeAsIntList(LOCAL_PHASE_SET, 0);
@@ -337,7 +339,7 @@ public class SomaticStream
 
                     SomaticVariant nextVariant = mSomaticVariants.variants().get(j);
 
-                    if(!nextVariant.isPass() || nextVariant.context().hasAttribute(REPORTED_FLAG) || !hasPhasedInframeEffect(variant))
+                    if(!nextVariant.isPass() || nextVariant.context().hasAttribute(REPORTED_FLAG) || !hasPhasedEffect(variant))
                         continue;
 
                     // must have a coding impact
