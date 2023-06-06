@@ -610,7 +610,7 @@ public class SampleAnalyser implements Callable
         {
             List<SvChain> chains = cluster.getChains();
 
-            for (final SvChain chain : chains)
+            for(final SvChain chain : chains)
             {
                 int chainSvCount = chain.getSvCount();
 
@@ -618,7 +618,7 @@ public class SampleAnalyser implements Callable
                 final List<LinkedPair> chainLinks = chain.getLinkedPairs();
                 boolean isDoubleMinute = chain.isDoubleMinute();
 
-                for (int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
+                for(int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
                 {
                     final LinkedPair pair = chainLinks.get(chainIndex);
 

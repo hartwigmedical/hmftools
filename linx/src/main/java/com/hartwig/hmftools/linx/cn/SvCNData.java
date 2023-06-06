@@ -127,7 +127,7 @@ public class SvCNData {
             if(svJcnCalcDataMap != null)
             {
                 final JcnCalcData jcnData = svJcnCalcDataMap.get(var.id());
-                if (jcnData != null)
+                if(jcnData != null)
                 {
                     double estJcn = jcnData.JcnEstimate;
                     double estUncertainty = jcnData.JcnUncertainty;

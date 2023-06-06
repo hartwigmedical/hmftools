@@ -61,7 +61,7 @@ public class ChainJcnLimits
 
         long[] rangeData = {0, 0};
 
-        for (final List<SegmentJcn> segmentList : mChrAlleleJCNs.values())
+        for(final List<SegmentJcn> segmentList : mChrAlleleJCNs.values())
         {
             for(final SegmentJcn segment : segmentList)
             {
@@ -80,7 +80,7 @@ public class ChainJcnLimits
         int totalSegCount = 0;
         int totalValidSegCount = 0;
 
-        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        for(final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
             final String chromosome = entry.getKey();
             final List<SvBreakend> breakendList = entry.getValue();
@@ -95,7 +95,7 @@ public class ChainJcnLimits
             SvBreakend segStartBreakend = null;
             int segStartIndex = 0;
 
-            for (int i = 0; i < breakendList.size(); ++i)
+            for(int i = 0; i < breakendList.size(); ++i)
             {
                 SvBreakend breakend = breakendList.get(i);
                 SvBreakend nextBreakend = i < breakendList.size() - 1 ? breakendList.get(i + 1) : null;
@@ -148,7 +148,7 @@ public class ChainJcnLimits
         Map<Integer,Integer> jcnFrequency = Maps.newHashMap();
 
         int segCount = endIndex - startIndex + 1;
-        for (int i = startIndex; i <= endIndex; ++i)
+        for(int i = startIndex; i <= endIndex; ++i)
         {
             int majorAP = (int)round(alleleJCNs.get(i).MajorAP);
             int minorAP = (int)round(alleleJCNs.get(i).MinorAP);
@@ -201,7 +201,7 @@ public class ChainJcnLimits
 
         double endClusterJcn = endBreakend.orientation() == -1 ? endBreakend.jcn() : 0;
 
-        for (int i = startIndex; i <= endIndex; ++i)
+        for(int i = startIndex; i <= endIndex; ++i)
         {
             int majorAP = (int) round(alleleJCNs.get(i).MajorAP);
             int minorAP = (int) round(alleleJCNs.get(i).MinorAP);
@@ -223,7 +223,7 @@ public class ChainJcnLimits
         }
 
         // set these values int each segment
-        for (int i = startIndex; i <= endIndex; ++i)
+        for(int i = startIndex; i <= endIndex; ++i)
         {
             alleleJCNs.get(i).AFixedAP = aJcn;
             alleleJCNs.get(i).BUndisruptedAP = bJcnMin;

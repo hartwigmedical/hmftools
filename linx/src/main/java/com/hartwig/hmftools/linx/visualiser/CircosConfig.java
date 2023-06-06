@@ -159,7 +159,7 @@ public class CircosConfig
 
     public long labelSize(long count)
     {
-        if (count > MaxNumberOfDistanceLabels)
+        if(count > MaxNumberOfDistanceLabels)
         {
             return MinLabelSize;
         }
@@ -206,25 +206,25 @@ public class CircosConfig
 
     public boolean isValid()
     {
-        if (MinLabelSize <= 0)
+        if(MinLabelSize <= 0)
         {
             VIS_LOGGER.error("Parameter " + MIN_LABEL_SIZE + " should be > 0");
             return false;
         }
 
-        if (MaxLabelSize < MinLabelSize)
+        if(MaxLabelSize < MinLabelSize)
         {
             VIS_LOGGER.error("Parameter " + MAX_LABEL_SIZE + " should be > " + MIN_LABEL_SIZE);
             return false;
         }
 
-        if (MinLineSize <= 0)
+        if(MinLineSize <= 0)
         {
             VIS_LOGGER.error("Parameter " + MIN_LINE_SIZE + " should be > 0");
             return false;
         }
 
-        if (MaxLineSize < MinLineSize)
+        if(MaxLineSize < MinLineSize)
         {
             VIS_LOGGER.error("Parameter " + MAX_LINE_SIZE + " should be > " + MIN_LINE_SIZE);
             return false;

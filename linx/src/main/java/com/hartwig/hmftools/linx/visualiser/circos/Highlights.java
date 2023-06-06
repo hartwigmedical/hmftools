@@ -23,16 +23,16 @@ public class Highlights
     {
         final List<GenomeRegion> result = Lists.newArrayList();
 
-        for (final GenomeRegion highlight : highlights)
+        for(final GenomeRegion highlight : highlights)
         {
             final String contig = highlight.chromosome();
             final List<GenomeRegion> chromosomeSegments =
                     segments.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
-            if (!chromosomeSegments.isEmpty())
+            if(!chromosomeSegments.isEmpty())
             {
                 int minTrackPosition = chromosomeSegments.stream().mapToInt(GenomeRegion::start).min().orElse(0);
                 int maxTrackPosition = chromosomeSegments.stream().mapToInt(GenomeRegion::end).max().orElse(0);
-                if (highlight.end() >= minTrackPosition && highlight.start() <= maxTrackPosition)
+                if(highlight.end() >= minTrackPosition && highlight.start() <= maxTrackPosition)
                 {
 
                     result.add(GenomeRegions.create(contig,

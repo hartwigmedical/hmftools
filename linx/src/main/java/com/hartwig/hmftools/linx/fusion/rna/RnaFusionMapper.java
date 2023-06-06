@@ -99,12 +99,12 @@ public class RnaFusionMapper
 
         final List<RnaFusionData> rnaFusionList = mSampleRnaData.get(mSampleId);
 
-        if (rnaFusionList == null || rnaFusionList.isEmpty())
+        if(rnaFusionList == null || rnaFusionList.isEmpty())
             return;
 
         LNX_LOGGER.debug("assessing {} RNA fusions", rnaFusionList.size());
 
-        for (final RnaFusionData rnaFusion : rnaFusionList)
+        for(final RnaFusionData rnaFusion : rnaFusionList)
         {
             setRnaFusionData(rnaFusion);
 
@@ -259,7 +259,7 @@ public class RnaFusionMapper
             SvBreakend topDownBreakend = null;
             boolean topCandidateFusionViable = false;
 
-            for (int i = 0; i < viableBreakendPair.get(FS_UP).size(); ++i)
+            for(int i = 0; i < viableBreakendPair.get(FS_UP).size(); ++i)
             {
                 final SvBreakend upBreakend = viableBreakendPair.get(FS_UP).get(i);
                 final BreakendTransData upTrans = viableTranscriptPair.get(FS_UP).get(i);
@@ -267,7 +267,7 @@ public class RnaFusionMapper
                 if(upBreakend.getSV().isSglBreakend())
                     continue;
 
-                for (int j = 0; j < viableBreakendPair.get(FS_DOWN).size(); ++j)
+                for(int j = 0; j < viableBreakendPair.get(FS_DOWN).size(); ++j)
                 {
                     final SvBreakend downBreakend = viableBreakendPair.get(FS_DOWN).get(j);
                     final BreakendTransData downTrans = viableTranscriptPair.get(FS_DOWN).get(j);
@@ -284,7 +284,7 @@ public class RnaFusionMapper
                         possibleFusion = new GeneFusion(upTrans, downTrans, false);
                     }
 
-                    if (topCandidateFusion == null
+                    if(topCandidateFusion == null
                     || isCandidateBetter(topCandidateFusion, topUpBreakend, topDownBreakend, possibleFusion, upBreakend, downBreakend,
                             rnaFusion, topCandidateFusionViable, viableFusion))
                     {
@@ -349,7 +349,7 @@ public class RnaFusionMapper
                 SvBreakend closestBreakend = null;
                 int closestDistance = 0;
 
-                for (int j = 0; j < transcriptList.size(); ++j)
+                for(int j = 0; j < transcriptList.size(); ++j)
                 {
                     final BreakendTransData trans = transcriptList.get(j);
                     final SvBreakend breakend = breakendList.get(j);
@@ -473,12 +473,12 @@ public class RnaFusionMapper
         // if all else is equal, take a viable fusion over one that isn't
         if(beCurrentStart == beCandidateStart && beCurrentEnd == beCandidateEnd)
         {
-            if (currentFusionViable != candidateFusionViable)
+            if(currentFusionViable != candidateFusionViable)
             {
                 return candidateFusionViable;
             }
 
-            if (currentFusion.phaseMatched() != candidateFusion.phaseMatched())
+            if(currentFusion.phaseMatched() != candidateFusion.phaseMatched())
             {
                 return candidateFusion.phaseMatched();
             }

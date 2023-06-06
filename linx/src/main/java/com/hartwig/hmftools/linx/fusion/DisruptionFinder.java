@@ -565,7 +565,7 @@ public class DisruptionFinder implements CohortFileInterface
 
                 if(!otherTransList.isEmpty())
                 {
-                    if (markNonDisruptiveTranscripts(transList, otherTransList, NON_DISRUPT_REASON_SAME_INTRON))
+                    if(markNonDisruptiveTranscripts(transList, otherTransList, NON_DISRUPT_REASON_SAME_INTRON))
                     {
                         foundSameIntronBreakend = true;
 
@@ -700,18 +700,18 @@ public class DisruptionFinder implements CohortFileInterface
                 {
                     for(final ExonData exonData : transData.exons())
                     {
-                        if (exonData.Rank == 1)
+                        if(exonData.Rank == 1)
                             continue;
 
-                        if ((geneData.Strand == 1 && lowerPos <= exonData.Start && upperPos >= exonData.Start)
+                        if((geneData.Strand == 1 && lowerPos <= exonData.Start && upperPos >= exonData.Start)
                         || (geneData.Strand == -1 && lowerPos <= exonData.End && upperPos >= exonData.End))
                         {
                             // allow an exon to be fully traversed if the upstream transcript is pre-coding
-                            if (isPrecodingUpstream && lowerPos <= exonData.Start && upperPos >= exonData.End)
+                            if(isPrecodingUpstream && lowerPos <= exonData.Start && upperPos >= exonData.End)
                             {
-                                if (geneData.Strand == 1 && (transData.CodingStart == null || upperPos < transData.CodingStart))
+                                if(geneData.Strand == 1 && (transData.CodingStart == null || upperPos < transData.CodingStart))
                                     continue;
-                                else if (geneData.Strand == -1 && (transData.CodingEnd == null || lowerPos > transData.CodingEnd))
+                                else if(geneData.Strand == -1 && (transData.CodingEnd == null || lowerPos > transData.CodingEnd))
                                     continue;
                             }
 

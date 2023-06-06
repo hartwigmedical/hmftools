@@ -92,7 +92,7 @@ public class ChainState
     {
         if(isStart && !mConnectionsStart.contains(breakend))
             mConnectionsStart.add(breakend);
-        else if (!isStart && !mConnectionsEnd.contains(breakend))
+        else if(!isStart && !mConnectionsEnd.contains(breakend))
             mConnectionsEnd.add(breakend);
     }
 
@@ -115,12 +115,12 @@ public class ChainState
         }
         else
         {
-            if (Jcn > 10)
+            if(Jcn > 10)
             {
                 return String.format("id(%d) ploidy(%.0f-%.0f-%.0f) counts(s=%.0f e=%.0f)",
                         SV.id(), MinJcn, Jcn, MaxJcn, mBreakendCount[SE_START], mBreakendCount[SE_END]);
             }
-            else if (Jcn < 0.5)
+            else if(Jcn < 0.5)
             {
                 return String.format("id(%d) ploidy(%.2f-%.2f-%.2f) counts(s=%.2f e=%.2f)",
                         SV.id(), MinJcn, Jcn, MaxJcn, mBreakendCount[SE_START], mBreakendCount[SE_END]);

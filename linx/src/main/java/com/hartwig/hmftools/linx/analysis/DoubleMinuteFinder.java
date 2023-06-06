@@ -132,9 +132,9 @@ public class DoubleMinuteFinder implements CohortFileInterface
         final List<SvVarData> candidateDmSVs = Lists.newArrayList();
         final List<SvVarData> candidateFlankedSVs = Lists.newArrayList();
 
-        for (SvVarData var : cluster.getSVs())
+        for(SvVarData var : cluster.getSVs())
         {
-            if (var.jcn() < JCN_THRESHOLD)
+            if(var.jcn() < JCN_THRESHOLD)
                 continue;
 
             double svAdjMAPRatio = getAdjacentMajorAPRatio(var);

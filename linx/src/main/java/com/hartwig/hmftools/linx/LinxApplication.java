@@ -69,7 +69,7 @@ public class LinxApplication
         if(dbAccess == null && !config.hasValidSampleDataSource(cmd))
             return;
 
-        if (samplesList.isEmpty())
+        if(samplesList.isEmpty())
         {
             boolean filterQCPassOnly = cmd.hasOption(FILTER_QC_PASS);
             samplesList = getStructuralVariantSamplesList(dbAccess, filterQCPassOnly);
@@ -175,7 +175,7 @@ public class LinxApplication
             }
 
             int saIndex = 0;
-            for (final String sampleId : samplesList)
+            for(final String sampleId : samplesList)
             {
                 saSampleLists.get(saIndex).add(sampleId);
                 ++saIndex;

@@ -113,19 +113,19 @@ public class VisualiserConfig
         }
 
         final String missing = missingJoiner.toString();
-        if (!missing.isEmpty())
+        if(!missing.isEmpty())
         {
             throw new ParseException("Missing the following parameters: " + missing);
         }
 
         File outputDir = new File(OutputPlotPath);
-        if (!outputDir.exists() && !outputDir.mkdirs())
+        if(!outputDir.exists() && !outputDir.mkdirs())
         {
             throw new IOException("Unable to write to plot directory " + OutputPlotPath);
         }
 
         outputDir = new File(OutputConfPath);
-        if (!outputDir.exists() && !outputDir.mkdirs())
+        if(!outputDir.exists() && !outputDir.mkdirs())
         {
             throw new IOException("Unable to write to data directory " + OutputConfPath);
         }
@@ -228,7 +228,7 @@ public class VisualiserConfig
     public static String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing)
     {
         final String value = cmd.getOptionValue(parameter);
-        if (value == null)
+        if(value == null)
         {
             missing.add(parameter);
             return "";

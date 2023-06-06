@@ -122,13 +122,13 @@ public class CopyNumberAnalyser
         final List<String> samplesList = mSampleIds.isEmpty() ? mDbAccess.readPurpleSampleList() : mSampleIds;
 
         int sampleCount = 0;
-        for (final String sampleId : samplesList)
+        for(final String sampleId : samplesList)
         {
             mPerfCounter.start();
 
             List<StructuralVariantData> svRecords = mDbAccess.readStructuralVariantData(sampleId);
 
-            if (svRecords.isEmpty())
+            if(svRecords.isEmpty())
             {
                 continue;
             }
@@ -163,7 +163,7 @@ public class CopyNumberAnalyser
     {
         try
         {
-            if (mCnSegmentWriter == null)
+            if(mCnSegmentWriter == null)
             {
                 String outputFileName = mOutputPath + "LNX_CN_CHANGE_SEGMENTS.csv";
 
@@ -290,7 +290,7 @@ public class CopyNumberAnalyser
 
                             double avgCopyNumber = cnWindowTotal / CN_SEGMENT_WINDOW_SIZE;
 
-                            if (avgCopyNumber > samplePloidy && !copyNumbersEqual(avgCopyNumber, samplePloidy))
+                            if(avgCopyNumber > samplePloidy && !copyNumbersEqual(avgCopyNumber, samplePloidy))
                                 ++elevatedCnWindows;
 
                             LNX_LOGGER.debug("segment({}) windowStart({}) avgCN({}) elevatedWindows({})",
@@ -323,7 +323,7 @@ public class CopyNumberAnalyser
     {
         try
         {
-            if (mChrArmWriter == null)
+            if(mChrArmWriter == null)
             {
                 String outputFileName = mOutputPath + "LNX_CN_CHR_ARM_DATA.csv";
 
@@ -473,7 +473,7 @@ public class CopyNumberAnalyser
 
             if(cumulativeLength + segLength >= halfArmLength)
             {
-                if (i > 0)
+                if(i > 0)
                 {
                     final double[] prevSegment = cnSegments.get(i-1);
                     double prevCopyNumber = cumulativeLength / halfArmLength * prevSegment[SEG_CN_INDEX];
@@ -510,7 +510,7 @@ public class CopyNumberAnalyser
                 return false;
 
             final SvCNData prevCnData = cnDataList.get(startCnData.getIndex() - 1);
-            if (!copyNumbersEqual(startCnData.CopyNumber, prevCnData.CopyNumber))
+            if(!copyNumbersEqual(startCnData.CopyNumber, prevCnData.CopyNumber))
                 return false;
         }
 
@@ -522,7 +522,7 @@ public class CopyNumberAnalyser
                 return false;
 
             final SvCNData nextCnData = cnDataList.get(endCnData.getIndex() + 1);
-            if (!copyNumbersEqual(endCnData.CopyNumber, nextCnData.CopyNumber))
+            if(!copyNumbersEqual(endCnData.CopyNumber, nextCnData.CopyNumber))
                 return false;
         }
 
@@ -533,7 +533,7 @@ public class CopyNumberAnalyser
     {
         try
         {
-            if (mLohEventWriter == null)
+            if(mLohEventWriter == null)
             {
                 String outputFileName = mOutputPath + "LNX_CN_LOH_EVENTS.csv";
 
@@ -574,7 +574,7 @@ public class CopyNumberAnalyser
     {
         try
         {
-            if (mJcnCalcWriter == null)
+            if(mJcnCalcWriter == null)
             {
                 String outputFileName = mOutputPath + "LNX_CN_JCN_CALC_DATA.csv";
 
@@ -630,7 +630,7 @@ public class CopyNumberAnalyser
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
 
-        if (cmd.hasOption(LOG_DEBUG))
+        if(cmd.hasOption(LOG_DEBUG))
         {
             Configurator.setRootLevel(Level.DEBUG);
         }

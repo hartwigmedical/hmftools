@@ -64,7 +64,7 @@ public class CnSegmentBuilder
         svIdCnDataMap.clear();
 
         int cnId = 0;
-        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        for(final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
             final String chromosome = entry.getKey();
             List<SvBreakend> breakendList = entry.getValue();
@@ -79,7 +79,7 @@ public class CnSegmentBuilder
             int centromerePosition = SvUtilities.getChromosomalArmLength(chromosome, P_ARM);
             int chromosomeLength = SvUtilities.getChromosomeLength(chromosome);
 
-            for (int i = 0; i < breakendList.size(); ++i)
+            for(int i = 0; i < breakendList.size(); ++i)
             {
                 final SvBreakend breakend = breakendList.get(i);
                 final StructuralVariantData svData = breakend.getSV().getSvData();
@@ -270,7 +270,7 @@ public class CnSegmentBuilder
             int centromerePosition = SvUtilities.getChromosomalArmLength(chromosome, P_ARM);
             int chromosomeLength = SvUtilities.getChromosomeLength(chromosome);
 
-            for (int i = 0; i < breakendList.size(); ++i)
+            for(int i = 0; i < breakendList.size(); ++i)
             {
                 SvBreakend breakend = breakendList.get(i);
                 StructuralVariantData svData = breakend.getSV().getSvData();

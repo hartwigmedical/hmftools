@@ -175,7 +175,7 @@ public class ChainUtils
 
         if(connectingFoldbackChainStart)
         {
-            for (final LinkedPair fbPair : fbLinks)
+            for(final LinkedPair fbPair : fbLinks)
             {
                 chain.addLink(fbPair, connectOnStart);
             }
@@ -196,7 +196,7 @@ public class ChainUtils
         // the beginning of the chain will now form the middle
         if(!connectOnStart)
         {
-            for (int index = existingLinks.size() - 1; index >= 0; --index)
+            for(int index = existingLinks.size() - 1; index >= 0; --index)
             {
                 final LinkedPair pair = existingLinks.get(index);
                 chain.addLink(pair, connectOnStart);
@@ -341,7 +341,7 @@ public class ChainUtils
 
             boolean chainsMerged = false;
 
-            for (int index2 = index1 + 1; index2 < chains.size(); ++index2)
+            for(int index2 = index1 + 1; index2 < chains.size(); ++index2)
             {
                 SvChain chain2 = chains.get(index2);
 
@@ -363,7 +363,7 @@ public class ChainUtils
                     final SvLinkedPair chain2Pair = SvLinkedPair.from(
                             chain2.getOpenBreakend(true).getOtherBreakend(), chain2.getOpenBreakend(false).getOtherBreakend());
 
-                    if (chain1.linkWouldCloseChain(chain2Pair))
+                    if(chain1.linkWouldCloseChain(chain2Pair))
                     {
                         skippedChainClosing = true;
                         continue;
@@ -376,7 +376,7 @@ public class ChainUtils
                 if(!jcnMatched && !checkChainSplits && !useChainEndJCNs)
                     continue;
 
-                for (int be1 = SE_START; be1 <= SE_END; ++be1)
+                for(int be1 = SE_START; be1 <= SE_END; ++be1)
                 {
                     boolean c1Start = isStart(be1);
 
@@ -385,7 +385,7 @@ public class ChainUtils
                     if(breakend1 == null)
                         continue;
 
-                    for (int be2 = SE_START; be2 <= SE_END; ++be2)
+                    for(int be2 = SE_START; be2 <= SE_END; ++be2)
                     {
                         boolean c2Start = isStart(be2);
 
@@ -441,7 +441,7 @@ public class ChainUtils
                         if(c2Start)
                         {
                             // merge chains and remove the latter
-                            for (LinkedPair linkedPair : chain2.getLinkedPairs())
+                            for(LinkedPair linkedPair : chain2.getLinkedPairs())
                             {
                                 chain1.addLink(linkedPair, c1Start);
                             }
@@ -449,7 +449,7 @@ public class ChainUtils
                         else
                         {
                             // add in reverse
-                            for (int index = chain2.getLinkedPairs().size() - 1; index >= 0; --index)
+                            for(int index = chain2.getLinkedPairs().size() - 1; index >= 0; --index)
                             {
                                 LinkedPair linkedPair = chain2.getLinkedPairs().get(index);
                                 chain1.addLink(linkedPair, c1Start);
@@ -462,15 +462,15 @@ public class ChainUtils
                         break;
                     }
 
-                    if (chainsMerged)
+                    if(chainsMerged)
                         break;
                 }
 
-                if (chainsMerged)
+                if(chainsMerged)
                     break;
             }
 
-            if (!chainsMerged)
+            if(!chainsMerged)
             {
                 ++index1;
             }

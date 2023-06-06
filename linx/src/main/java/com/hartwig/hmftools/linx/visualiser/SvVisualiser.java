@@ -135,7 +135,7 @@ public class SvVisualiser implements AutoCloseable
         {
             final List<Integer> clusterIds = mSampleData.SvData.stream().map(x -> x.ClusterId).distinct().sorted().collect(toList());
 
-            for (Integer clusterId : clusterIds)
+            for(Integer clusterId : clusterIds)
             {
                 submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
             }
@@ -143,7 +143,7 @@ public class SvVisualiser implements AutoCloseable
             final Set<String> chromosomes = Sets.newHashSet();
             mSampleData.SvData.stream().map(x -> x.ChrStart).filter(HumanChromosome::contains).forEach(chromosomes::add);
             mSampleData.SvData.stream().map(x -> x.ChrEnd).filter(HumanChromosome::contains).forEach(chromosomes::add);
-            for (final String chromosome : chromosomes)
+            for(final String chromosome : chromosomes)
             {
                 submitChromosome(Lists.newArrayList(chromosome));
             }

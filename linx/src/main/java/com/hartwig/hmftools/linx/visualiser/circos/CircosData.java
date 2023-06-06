@@ -80,7 +80,7 @@ public class CircosData
         positionsToScale.addAll(config.InterpolateCopyNumberPositions
                 ? Span.minMaxPositions(unadjustedAlterations)
                 : Span.allPositions(unadjustedAlterations));
-        if (!config.InterpolateExonPositions)
+        if(!config.InterpolateExonPositions)
         {
             positionsToScale.addAll(Span.allPositions(unadjustedGeneExonRegions));
         }

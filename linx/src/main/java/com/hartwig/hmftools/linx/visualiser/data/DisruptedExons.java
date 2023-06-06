@@ -22,7 +22,7 @@ public class DisruptedExons
                 .map(x -> GenomeRegions.create(x.Chromosome, x.ExonStart, x.ExonEnd))
                 .collect(Collectors.toList());
 
-        for (VisFusion fusion : fusions)
+        for(VisFusion fusion : fusions)
         {
             result.addAll(disruptedGeneRegions(fusion, exons));
         }
@@ -38,7 +38,7 @@ public class DisruptedExons
         final List<VisGeneExon> downStreamExons = sortedDownstreamExons(fusion, exons).stream()
                 .filter(x -> x.ExonRank <= fusion.FusedExonDown).collect(Collectors.toList());
 
-        if (upStreamExons.isEmpty() || downStreamExons.isEmpty())
+        if(upStreamExons.isEmpty() || downStreamExons.isEmpty())
         {
             return Collections.emptyList();
         }

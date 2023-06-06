@@ -67,13 +67,13 @@ plot_fusion <- function(fusedExons, fusedProteinDomains) {
     theme(plot.margin = margin(t = 0, b = 0, l = 3, r = 3, unit = "pt"), legend.box.margin = margin(t = 0, b = 0, l = 0, r = 0, unit = "pt")) + 
     theme(legend.position = "none")
 
-  if (nrow(utrRegions) > 0) {
+  if(nrow(utrRegions) > 0) {
     p1 = p1 + 
       geom_rect(data = utrRegions, mapping = aes(xmin = start, xmax = end, ymin = 0, ymax = 1), position = "identity", stat = "identity", alpha = 1, fill = "white") +
       geom_rect(data = utrRegions, mapping = aes(xmin = start, xmax = end, ymin = 0.3, ymax = 0.7), position = "identity", stat = "identity", fill = utrRegions$color)
   }
   
-  if (nrow(otherRegions) > 0) {
+  if(nrow(otherRegions) > 0) {
     p1 = p1 + geom_rect(data = otherRegions, mapping = aes(xmin = start, xmax = end, ymin = 0.3, ymax = 0.7, fill = name), position = "identity", stat = "identity", alpha = 0.8)
   }
   
@@ -96,7 +96,7 @@ clusterFusedExons = read.table(clusterFusedExonPath, sep = '\t', header = T, str
 fusionPlotList = list()
 fusions = unique(clusterFusedExons$fusion)
 
-for (i in c(1:length(fusions))) {
+for(i in c(1:length(fusions))) {
   selectedFusion = fusions[i]
   cat ("Processing", selectedFusion, "\n")
 
@@ -113,7 +113,7 @@ for (i in c(1:length(fusions))) {
 }
 
 nonUTRProteinDomain = clusterProteinDomains %>% filter(name != "UTR/Non-coding")
-if (nrow(nonUTRProteinDomain) > 0) {
+if(nrow(nonUTRProteinDomain) > 0) {
   pLegend = plot_legend(nonUTRProteinDomain)
   pLegend = cowplot::get_legend(pLegend)
 } else {
@@ -132,7 +132,7 @@ pCircos <- ggdraw() + draw_image(imgCircos)
 circosWidth = image_info(imgCircos)$width
 circosHeight = image_info(imgCircos)$height
 
-if (is.na(pLegend)) {
+if(is.na(pLegend)) {
   totalHeight = (circosHeight + fusionHeight) 
   pCombined = plot_grid(pCircos, pFusions, ncol = 1, rel_heights = c(circosHeight, fusionHeight))
 } else {

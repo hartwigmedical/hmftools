@@ -106,13 +106,13 @@ public class ArmCluster
     {
         final List<ArmCluster> armClusters = cluster.getArmClusters();
 
-        for (Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
         {
             List<SvBreakend> breakendList = entry.getValue();
 
             ArmCluster prevArmCluster = null;
 
-            for (int i = 0; i < breakendList.size(); ++i)
+            for(int i = 0; i < breakendList.size(); ++i)
             {
                 final SvBreakend breakend = breakendList.get(i);
                 SvVarData var = breakend.getSV();
@@ -236,7 +236,7 @@ public class ArmCluster
 
         List<SvBreakend> tiBreakends = Lists.newArrayList();
 
-        for (final SvBreakend breakend : mBreakends)
+        for(final SvBreakend breakend : mBreakends)
         {
             if(breakend.getSV().isLineElement(breakend.usesStart()))
             {
@@ -252,7 +252,7 @@ public class ArmCluster
             {
                 final LinkedPair tiPair = breakend.getSV().getLinkedPair(breakend.usesStart());
 
-                if (tiPair != null && mBreakends.contains(tiPair.getOtherBreakend(breakend)))
+                if(tiPair != null && mBreakends.contains(tiPair.getOtherBreakend(breakend)))
                 {
                     tiBreakends.add(breakend);
                     tiBreakends.add(tiPair.getOtherBreakend(breakend));
@@ -303,7 +303,7 @@ public class ArmCluster
         List<SvBreakend> unlinkedBreakends = mBreakends.stream().filter(x -> !tiBreakends.contains(x)).collect(Collectors.toList());
 
         // check for DSBs which were masked by TIs in between
-        for (int i = 0; i < unlinkedBreakends.size() - 1; ++i)
+        for(int i = 0; i < unlinkedBreakends.size() - 1; ++i)
         {
             final SvBreakend be1 = unlinkedBreakends.get(i);
             final SvBreakend be2 = unlinkedBreakends.get(i+1);

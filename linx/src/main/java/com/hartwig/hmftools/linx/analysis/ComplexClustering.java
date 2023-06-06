@@ -143,36 +143,36 @@ public class ComplexClustering
         final List<SvVarData> cluster1Foldbacks = cluster1.getFoldbacks();
         final List<SvVarData> cluster2Foldbacks = cluster2.getFoldbacks();
 
-        if (cluster1Foldbacks.isEmpty() && cluster2Foldbacks.isEmpty())
+        if(cluster1Foldbacks.isEmpty() && cluster2Foldbacks.isEmpty())
             return false;
 
-        if (!cluster1Foldbacks.isEmpty() && !cluster2Foldbacks.isEmpty())
+        if(!cluster1Foldbacks.isEmpty() && !cluster2Foldbacks.isEmpty())
         {
-            for (final SvVarData var1 : cluster1Foldbacks)
+            for(final SvVarData var1 : cluster1Foldbacks)
             {
-                for (int be1 = SE_START; be1 <= SE_END; ++be1)
+                for(int be1 = SE_START; be1 <= SE_END; ++be1)
                 {
                     boolean v1Start = isStart(be1);
 
-                    if (be1 == SE_END && var1.isSglBreakend())
+                    if(be1 == SE_END && var1.isSglBreakend())
                         continue;
 
-                    if (var1.getFoldbackBreakend(v1Start) == null)
+                    if(var1.getFoldbackBreakend(v1Start) == null)
                         continue;
 
-                    for (final SvVarData var2 : cluster2Foldbacks)
+                    for(final SvVarData var2 : cluster2Foldbacks)
                     {
-                        for (int be2 = SE_START; be2 <= SE_END; ++be2)
+                        for(int be2 = SE_START; be2 <= SE_END; ++be2)
                         {
                             boolean v2Start = isStart(be2);
 
-                            if (be2 == SE_END && var2.isSglBreakend())
+                            if(be2 == SE_END && var2.isSglBreakend())
                                 continue;
 
-                            if (var2.getFoldbackBreakend(v2Start) == null)
+                            if(var2.getFoldbackBreakend(v2Start) == null)
                                 continue;
 
-                            if (!var1.chromosome(v1Start).equals(var2.chromosome(v2Start)) || !var1.arm(v1Start).equals(var2.arm(v2Start)))
+                            if(!var1.chromosome(v1Start).equals(var2.chromosome(v2Start)) || !var1.arm(v1Start).equals(var2.arm(v2Start)))
                                 continue;
 
                             if(variantsHaveDifferentJcn(var1, var2))
@@ -208,14 +208,14 @@ public class ComplexClustering
         // now that the candidate arm groups have been established, just need to find a single BND
         // from each cluster that falls into the same par of arm groups
 
-        for (final SvVarData var1 : crossArmList1)
+        for(final SvVarData var1 : crossArmList1)
         {
-            for (final SvVarData var2 : crossArmList2)
+            for(final SvVarData var2 : crossArmList2)
             {
-                if (!haveSameChrArms(var1, var2))
+                if(!haveSameChrArms(var1, var2))
                     continue;
 
-                if (variantsViolateLohHomLoss(var1, var2))
+                if(variantsViolateLohHomLoss(var1, var2))
                     continue;
 
                 if(variantsHaveDifferentJcn(var1, var2))
@@ -264,18 +264,18 @@ public class ComplexClustering
 
             boolean mergedOtherClusters = false;
 
-            for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+            for(final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
             {
                 List<SvBreakend> breakendList = entry.getValue();
 
                 List<SvBreakend> fullBreakendList = mState.getChrBreakendMap().get(entry.getKey());
 
-                for (int i = 0; i < breakendList.size() - 1; ++i)
+                for(int i = 0; i < breakendList.size() - 1; ++i)
                 {
                     final SvBreakend lowerBreakend = breakendList.get(i);
                     SvBreakend upperBreakend = breakendList.get(i + 1);
 
-                    if (lowerBreakend.arm() != upperBreakend.arm())
+                    if(lowerBreakend.arm() != upperBreakend.arm())
                         continue;
 
                     // check for 2 different foldbacks with at least one facing in
@@ -283,27 +283,27 @@ public class ComplexClustering
                             && lowerBreakend.getFoldbackBreakend() != upperBreakend
                             && !(lowerBreakend.orientation() == 1 && upperBreakend.orientation() == -1);
 
-                    if (!isFoldbackPair)
+                    if(!isFoldbackPair)
                     {
                         if(lowerBreakend.orientation() == upperBreakend.orientation())
                         {
                             // exclude this pair if the front breakend is a DB
                             final SvBreakend frontBE = lowerBreakend.orientation() == 1 ? lowerBreakend : upperBreakend;
 
-                            if (frontBE.getDBLink() != null && frontBE.getDBLink().length() < 0)
+                            if(frontBE.getDBLink() != null && frontBE.getDBLink().length() < 0)
                                 continue;
 
                             // all ok
                         }
                         else
                         {
-                            if (i >= breakendList.size() - 2 || breakendList.get(i + 2).orientation() != lowerBreakend.orientation())
+                            if(i >= breakendList.size() - 2 || breakendList.get(i + 2).orientation() != lowerBreakend.orientation())
                                 continue;
 
                             // include this pair if the back breakend is consecutive but masked by a DB
                             final SvBreakend backBE = lowerBreakend.orientation() == -1 ? lowerBreakend : upperBreakend;
 
-                            if (backBE.getDBLink() != null && backBE.getDBLink().length() < 0)
+                            if(backBE.getDBLink() != null && backBE.getDBLink().length() < 0)
                             {
                                 upperBreakend = breakendList.get(i + 2);
                             }
@@ -326,7 +326,7 @@ public class ComplexClustering
 
                     int unclusteredStraddledBreakends = 0;
 
-                    for (int j = chrIndexLower + 1; j <= chrIndexUpper - 1; ++j)
+                    for(int j = chrIndexLower + 1; j <= chrIndexUpper - 1; ++j)
                     {
                         final SvBreakend breakend = fullBreakendList.get(j);
                         final SvCluster otherCluster = breakend.getCluster();
@@ -343,7 +343,7 @@ public class ComplexClustering
 
                     final SvCluster otherCluster = otherBreakend.getCluster();
 
-                    if (otherCluster == cluster || otherCluster.isResolved() || mergedClusters.contains(otherCluster))
+                    if(otherCluster == cluster || otherCluster.isResolved() || mergedClusters.contains(otherCluster))
                         continue;
 
                     if(cluster.getSvCount() > MAX_COMPLEX_CLUSTER_MERGE_SIZE && otherCluster.getSvCount() > MAX_COMPLEX_CLUSTER_MERGE_SIZE)
@@ -414,7 +414,7 @@ public class ComplexClustering
 
             boolean mergedOtherClusters = false;
 
-            for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+            for(final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
             {
                 List<SvBreakend> breakendList = entry.getValue();
 

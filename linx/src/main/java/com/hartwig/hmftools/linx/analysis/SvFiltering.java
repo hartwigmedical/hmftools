@@ -231,7 +231,7 @@ public class SvFiltering
             removalList.stream().forEach(x -> breakendList.remove(x));
 
             // and reset indices after excluding breakends
-            for (int i = 0; i < breakendList.size(); ++i)
+            for(int i = 0; i < breakendList.size(); ++i)
             {
                 final SvBreakend breakend = breakendList.get(i);
                 breakend.setChrPosIndex(i);
