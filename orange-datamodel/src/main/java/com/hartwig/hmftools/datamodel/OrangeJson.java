@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.ServiceLoader;
 
 import com.google.gson.Gson;
@@ -35,16 +36,18 @@ public class OrangeJson {
         for (TypeAdapterFactory factory : ServiceLoader.load(TypeAdapterFactory.class)) {
             gsonBuilder.registerTypeAdapterFactory(factory);
         }
-        gson = gsonBuilder
-                .serializeNulls()
-                .serializeSpecialFloatingPointValues()
-                .create();
+        gson = gsonBuilder.serializeNulls().serializeSpecialFloatingPointValues().create();
     }
 
     @NotNull
     public OrangeRecord read(@NotNull String orangeJsonFilePath) throws IOException {
-        try (var reader = new BufferedReader(new FileReader(orangeJsonFilePath))) {
-            return gson.fromJson(reader, OrangeRecord.class);
+        return read(new FileReader(orangeJsonFilePath));
+    }
+
+    @NotNull
+    public OrangeRecord read(@NotNull Reader reader) throws IOException {
+        try (var bufferedReader = new BufferedReader(reader)) {
+            return gson.fromJson(bufferedReader, OrangeRecord.class);
         }
     }
 
