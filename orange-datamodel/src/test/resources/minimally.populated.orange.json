@@ -521,7 +521,10 @@
     "predictions": [
       {
         "cancerType": "Melanoma",
-        "likelihood": 0.996
+        "likelihood": 0.996,
+        "snvPairwiseClassifier": 0.979,
+        "genomicPositionClassifier": 0.990,
+        "featureClassifier": 0.972
       }
     ],
     "simpleDups32To200B": 0,

@@ -217,6 +217,9 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 
+- NEXT
+    - Bugfix: Maintain linx clusters after ORANGE germline conversion
+    - Include breakdown by classifier in CUPPA predictions
 - [2.4.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.4.1)
     - Fixes java.lang.IllegalStateException occurring when sample has virus integration.
 - [2.4.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.4.0)

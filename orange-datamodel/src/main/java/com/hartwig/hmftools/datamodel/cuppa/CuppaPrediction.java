@@ -14,4 +14,13 @@ public interface CuppaPrediction {
     String cancerType();
 
     double likelihood();
+
+    @Nullable
+    Double snvPairwiseClassifier();
+
+    @Nullable
+    Double genomicPositionClassifier();
+
+    @Nullable
+    Double featureClassifier();
 }

@@ -8,6 +8,8 @@ import static org.junit.Assert.assertNotNull;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -17,12 +19,13 @@ import com.hartwig.hmftools.common.cuppa.DataTypes;
 import com.hartwig.hmftools.common.cuppa.ResultType;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class CuppaPredictionFactoryTest {
+public class CuppaDataFactoryTest {
 
     private static final String CUPPA_TEST_CSV = Resources.getResource("test_run/cuppa/tumor_sample.cup.data.csv").getPath();
 
@@ -33,25 +36,24 @@ public class CuppaPredictionFactoryTest {
         CuppaData cuppaData = CuppaDataFactory.create(CuppaDataFile.read(CUPPA_TEST_CSV));
 
         assertEquals(36, cuppaData.predictions().size());
-        assertEquals(0.996, findByCancerType(cuppaData.predictions(), "Melanoma").likelihood(), EPSILON);
-        assertEquals(0.00013, findByCancerType(cuppaData.predictions(), "Pancreas").likelihood(), EPSILON);
-        assertEquals(0.00013, findByCancerType(cuppaData.predictions(), "Lung: Non-small Cell").likelihood(), EPSILON);
+        Map<String, CuppaPrediction> actualPredictionsByCancerType =
+                cuppaData.predictions().stream().collect(Collectors.toMap(CuppaPrediction::cancerType, entry -> entry));
+
+        for (CuppaPrediction expected : List.of(prediction("Melanoma", 0.996, 0.979, 0.990, 0.972),
+                prediction("Pancreas", 0.00013, 6.75e-28, 6.05e-05, 1.76e-05),
+                prediction("Lung: Non-small Cell", 0.00013, 4.83e-28, 2.89e-05, 0.00503))) {
+            CuppaPrediction actual = actualPredictionsByCancerType.get(expected.cancerType());
+            assertNotNull(actual);
+            assertCuppaPredictionField(expected, actual, CuppaPrediction::likelihood);
+            assertCuppaPredictionField(expected, actual, CuppaPrediction::snvPairwiseClassifier);
+            assertCuppaPredictionField(expected, actual, CuppaPrediction::genomicPositionClassifier);
+            assertCuppaPredictionField(expected, actual, CuppaPrediction::featureClassifier);
+        }
 
         assertEquals(3, cuppaData.simpleDups32To200B());
         assertEquals(8, cuppaData.maxComplexSize());
         assertEquals(0, cuppaData.telomericSGLs());
         assertEquals(3, cuppaData.lineCount());
-    }
-
-    @NotNull
-    private static CuppaPrediction findByCancerType(@NotNull List<CuppaPrediction> predictions, @NotNull String cancerType) {
-        for (CuppaPrediction prediction : predictions) {
-            if (prediction.cancerType().equals(cancerType)) {
-                return prediction;
-            }
-        }
-
-        throw new IllegalStateException("Could not find prediction for cancer type '" + cancerType + "'");
     }
 
     @Test
@@ -73,6 +75,26 @@ public class CuppaPredictionFactoryTest {
     @Test
     public void doNotCrashOnMissingEntries() {
         assertNotNull(CuppaDataFactory.create(Lists.newArrayList()));
+    }
+
+    @NotNull
+    private static ImmutableCuppaPrediction prediction(String cancerType, double likelihood, double snvPairwiseClassifier,
+            double genomicPositionClassifier, double featureClassifier) {
+        return ImmutableCuppaPrediction.builder()
+                .cancerType(cancerType)
+                .likelihood(likelihood)
+                .snvPairwiseClassifier(snvPairwiseClassifier)
+                .genomicPositionClassifier(genomicPositionClassifier)
+                .featureClassifier(featureClassifier)
+                .build();
+    }
+
+    private void assertCuppaPredictionField(CuppaPrediction expected, CuppaPrediction actual, Function<CuppaPrediction, Double> function) {
+        Double expectedValue = function.apply(expected);
+        Double actualValue = function.apply(actual);
+        assertNotNull(expectedValue);
+        assertNotNull(actualValue);
+        assertEquals(expectedValue, actualValue, EPSILON);
     }
 
     @NotNull
