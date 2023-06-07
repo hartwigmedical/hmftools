@@ -241,23 +241,6 @@ public class SomaticVariants
         double tumorVaf = tumorCounts.AlleleFragments / tumorDepthTotal;
         double adjustedTumorVaf = tumorVaf * (tumorPloidy * tumorPurity + 2 * (1 - tumorPurity)) / tumorPurity / tumorPloidy;
 
-        // ctDNA_TF = 2 * cfDNA_VAF / [ PLOIDY * ADJ_PRIMARY_VAF + cfDNA_VAF * ( 2 - PLOIDY)]
-        // ADJ_PRIMARY_VAF= PRIMARY_VAF * [ PURITY*PLOIDY - 2*(1-PURITY)]/PURITY/PLOIDY
-
-        /*
-        double noise = sampleDepthTotal / 1000000.0 * mConfig.NoiseReadsPerMillion;
-        double sampleVaf = max(sampleCounts.AlleleFragments - noise, 0) / (double)sampleDepthTotal;
-        double samplePurity = 2 * sampleVaf / (tumorPloidy * adjustedTumorVaf + sampleVaf * (2 - tumorPloidy));
-
-        double probability = 1;
-
-        if(sampleCounts.AlleleFragments > noise && noise > 0)
-        {
-            PoissonDistribution poisson = new PoissonDistribution(noise);
-            probability = 1 - poisson.cumulativeProbability(sampleCounts.AlleleFragments - 1);
-        }
-        */
-
         FragmentCalcResult allFragsResult = SomaticPurityCalc.calc(
                 tumorPloidy, adjustedTumorVaf, sampleCounts.depthTotal(), sampleCounts.AlleleFragments, mConfig.NoiseReadsPerMillion);
 
@@ -275,15 +258,6 @@ public class SomaticVariants
         return new SomaticVariantResult(
                 true, totalVariants, calcVariants, sampleCounts, umiTypeCounts, qualPerAllele,
                 tumorVaf, adjustedTumorVaf, allFragsResult, dualFragsResult, lodFragsResult);
-
-        /*
-        return new SomaticVariantResult(
-                true, totalVariants, calcVariants, sampleDepthTotal,
-                umiTypeCounts[umiIndex++], umiTypeCounts[umiIndex++], umiTypeCounts[umiIndex++],
-                sampleCounts.AlleleFragments, umiTypeCounts[umiIndex++], umiTypeCounts[umiIndex++], umiTypeCounts[umiIndex], qualPerAllele,
-                sampleCounts.medianDepth(false), sampleCounts.NonZeroVariantDepths.size(), sampleCounts.medianDepth(true),
-                tumorVaf, adjustedTumorVaf, allFragsResult.VAF, allFragsResult.EstimatedPurity, allFragsResult.PurityProbability);
-        */
     }
 
     private boolean filterVariant(final VariantContextDecorator variant, double subclonalLikelihood)

@@ -17,6 +17,9 @@ public final class SomaticPurityCalc
     {
         double noise = totalCount / 1000000.0 * noisePerMillion;
 
+        // ctDNA_TF = 2 * cfDNA_VAF / [ PLOIDY * ADJ_PRIMARY_VAF + cfDNA_VAF * ( 2 - PLOIDY)]
+        // ADJ_PRIMARY_VAF= PRIMARY_VAF * [ PURITY*PLOIDY - 2*(1-PURITY)]/PURITY/PLOIDY
+
         double sampleVaf = totalCount > 0 ? max(alleleCount - noise, 0) / (double)totalCount : 0;
         double estimatedPurity = estimatedPurity(sampleVaf, tumorPloidy, tumorVaf);
 
