@@ -81,13 +81,13 @@ Example file input for sample_cfg:
         "sample_id": "FR16648805",
         "wgs_cobalt_ratios": "WIDE01010081T.cobalt.ratio.tsv.gz",
         "targeted_cobalt_ratios": "FR16648805.cobalt.ratio.tsv.gz",
-        "MALE"
+        "gender": "MALE"
     },
     {
         "sample_id": "FR16648808",
         "wgs_cobalt_ratios": "WIDE01010241T.cobalt.ratio.tsv.gz",
         "targeted_cobalt_ratios": "FR16648808.cobalt.ratio.tsv.gz",
-        "FEMALE"
+        "gender": "FEMALE"
     }
 ]
 ```
