@@ -3,10 +3,8 @@ package com.hartwig.hmftools.cobalt.ratio;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.ROLLING_MEDIAN_MAX_DISTANCE;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.ROLLING_MEDIAN_MIN_COVERAGE;
 
-import java.util.Collection;
 import java.util.List;
 
-import com.hartwig.hmftools.cobalt.Chromosome;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
@@ -17,8 +15,7 @@ import tech.tablesaw.api.*;
 
 public final class DiploidRatioSupplier
 {
-    public static Table calcDiploidRatioResults(
-            final Collection<Chromosome> chromosomeList, final Table normalRatios, final List<MedianRatio> medianRatios)
+    public static Table calcDiploidRatioResults(final Table normalRatios, final List<MedianRatio> medianRatios)
     {
         Table results = normalRatios.emptyCopy();
 
@@ -44,7 +41,7 @@ public final class DiploidRatioSupplier
                             ratios).get();
                 }
 
-                chrTable.replaceColumn(DoubleColumn.create("ratio", adjustedRatios));
+                chrTable.replaceColumn(DoubleColumn.create(CobaltColumns.RATIO, adjustedRatios));
                 results.append(chrTable);
             }
         }

@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.cobalt.lowcov;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 
 import java.util.ArrayList;
@@ -9,7 +7,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Comparators;
@@ -17,10 +14,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
 import com.hartwig.hmftools.cobalt.CobaltConstants;
-import com.hartwig.hmftools.cobalt.CobaltUtils;
-import com.hartwig.hmftools.cobalt.ratio.RatioBuilder;
-import com.hartwig.hmftools.common.cobalt.ImmutableReadRatio;
-import com.hartwig.hmftools.common.cobalt.ReadRatio;
+import com.hartwig.hmftools.cobalt.ratio.RatioMapper;
 
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
@@ -29,41 +23,48 @@ import org.jetbrains.annotations.Nullable;
 import tech.tablesaw.aggregate.AggregateFunctions;
 import tech.tablesaw.api.*;
 
-public class LowCoverageRatioBuilder implements RatioBuilder
+public class LowCoverageRatioMapper implements RatioMapper
 {
     private static final String BUCKET_ID_COLUMN = "lovCovBucketId";
 
-    private Table mLowCoverageRatios;
+    private int mConsolidationCount = 0;
+    private @Nullable Multimap<String, LowCovBucket> mConsolidateBoundaries;
 
     private final ChromosomePositionCodec mChromosomePositionCodec;
 
-    public LowCoverageRatioBuilder(final Table inputRatios, int consolidationCount,
-            final ChromosomePositionCodec chromosomePosCodec)
+
+    public LowCoverageRatioMapper(int consolidationCount, final ChromosomePositionCodec chromosomePosCodec)
     {
-        this(inputRatios,
-                Objects.requireNonNull(consolidateIntoBuckets(inputRatios, consolidationCount)),
-                chromosomePosCodec);
+        mConsolidationCount = consolidationCount;
+        mChromosomePositionCodec = chromosomePosCodec;
     }
 
-    public LowCoverageRatioBuilder(final Table inputRatios,
+    public LowCoverageRatioMapper(
             final @NotNull Multimap<String, LowCovBucket> consolidateBoundaries,
-            final ChromosomePositionCodec chromosomePosCodec)
+            final @NotNull ChromosomePositionCodec chromosomePosCodec)
     {
-        CB_LOGGER.info("using {} sparse consolidated buckets, from {} input ratios",
-                consolidateBoundaries.size(), inputRatios.rowCount());
-
-        mLowCoverageRatios = CobaltUtils.createRatioTable();
+        mConsolidateBoundaries = consolidateBoundaries;
         mChromosomePositionCodec = chromosomePosCodec;
-
-        populateLowCoverageRatio(inputRatios, consolidateBoundaries);
     }
 
     // we use on target ratios only for now
     @Override
-    public Table ratios() { return mLowCoverageRatios; }
+    public Table mapRatios(final Table inputRatios)
+    {
+        if (mConsolidateBoundaries == null)
+        {
+            Validate.isTrue(mConsolidationCount > 1);
+            mConsolidateBoundaries = consolidateIntoBuckets(inputRatios, mConsolidationCount);
+        }
+
+        CB_LOGGER.info("using {} sparse consolidated buckets, from {} input ratios",
+                mConsolidateBoundaries.size(), inputRatios.rowCount());
+
+        return populateLowCoverageRatio(inputRatios, mConsolidateBoundaries);
+    }
 
     // we create a pan window ratio by taking the mean count of super windows that combine multiple windows
-    private void populateLowCoverageRatio(final Table rawRatios, Multimap<String, LowCovBucket> consolidateBoundaries)
+    private Table populateLowCoverageRatio(final Table rawRatios, Multimap<String, LowCovBucket> consolidateBoundaries)
     {
         // make sure the ratios chromosome code are sorted
         Validate.isTrue(Comparators.isInStrictOrder(rawRatios.longColumn(CobaltColumns.ENCODED_CHROMOSOME_POS).asList(),
@@ -174,24 +175,7 @@ public class LowCoverageRatioBuilder implements RatioBuilder
 
         CB_LOGGER.debug("low cov table: {}", lovCovRatio);
 
-        mLowCoverageRatios = lovCovRatio;
-    }
-
-    @Nullable
-    private static ReadRatio calcConsolidatedRatio(
-            final String chromosome, LowCovBucket bucket, final List<Double> windowGcRatios)
-    {
-        //
-        double mean = windowGcRatios.stream().mapToDouble(Double::doubleValue).sum() / windowGcRatios.size();
-
-        CB_LOGGER.debug("consolidated window: {}:{} ({} - {}), num sub windows: {}, mean ratio: {}",
-                chromosome, bucket.bucketPosition, bucket.startPosition, bucket.endPosition, windowGcRatios.size(), format("%.4f", mean));
-
-        if (mean <= 1e-10 || Double.isNaN(mean))
-        {
-            return null;
-        }
-        return ImmutableReadRatio.builder().chromosome(chromosome).position(bucket.bucketPosition).ratio(mean).build();
+        return lovCovRatio;
     }
 
     @Nullable

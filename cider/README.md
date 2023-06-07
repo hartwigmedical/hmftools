@@ -222,6 +222,7 @@ Below steps are required to run the cider_blastn.py script:
 
 ### Other:
 - Support AIRR format output.
+- BLASTN annotation would ideally point to IMGT instead of the 38 reference genome as there is a more complete set of alleles / alts
 
 # Version History and Download Links
 - [0.6](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.6)

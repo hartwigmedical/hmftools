@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.cobalt.Chromosome;
 import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
 
@@ -25,28 +24,26 @@ import htsjdk.tribble.readers.LineIterator;
 
 import tech.tablesaw.api.*;
 
-public class DiploidRatioLoader implements Consumer<Locatable>
+public class DiploidRegionLoader implements Consumer<Locatable>
 {
     private final Table mResult = Table.create(
-            StringColumn.create(CobaltColumns.CHROMOSOME), IntColumn.create(CobaltColumns.POSITION), DoubleColumn.create(CobaltColumns.RATIO));
+            StringColumn.create(CobaltColumns.CHROMOSOME), IntColumn.create(CobaltColumns.POSITION));
     private final Table mContigResult = mResult.emptyCopy();
-    private final Collection<Chromosome> mChromosomeList;
 
     private final ChromosomePositionCodec mChromosomePosCodec;
 
     private String mChromosome = null;
     private int mStart = 0;
 
-    public DiploidRatioLoader(final Collection<Chromosome> chromosomes, ChromosomePositionCodec chromosomePosCodec)
+    public DiploidRegionLoader(ChromosomePositionCodec chromosomePosCodec)
     {
-        mChromosomeList = chromosomes;
         mChromosomePosCodec = chromosomePosCodec;
     }
 
-    public DiploidRatioLoader(final Collection<Chromosome> chromosomes, final String diploidBedPath,
+    public DiploidRegionLoader(final String diploidBedPath,
             ChromosomePositionCodec chromosomePosCodec) throws IOException
     {
-        this(chromosomes, chromosomePosCodec);
+        this(chromosomePosCodec);
         List<BEDFeature> bedFeatures = new ArrayList<>();
 
         CB_LOGGER.info("Reading diploid regions from {}", diploidBedPath);
@@ -83,9 +80,8 @@ public class DiploidRatioLoader implements Consumer<Locatable>
         while(position < end)
         {
             Row row = mContigResult.appendRow();
-            row.setString("chromosome", contig);
-            row.setInt("position", position);
-            row.setDouble("ratio", 1);
+            row.setString(CobaltColumns.CHROMOSOME, contig);
+            row.setInt(CobaltColumns.POSITION, position);
             position += WINDOW_SIZE;
         }
     }
@@ -94,14 +90,7 @@ public class DiploidRatioLoader implements Consumer<Locatable>
     {
         if(mChromosome != null && mStart > 0)
         {
-            for (Chromosome c : mChromosomeList)
-            {
-                if (mChromosome.equals(c.contig))
-                {
-                    mResult.append(mContigResult);
-                    break;
-                }
-            }
+            mResult.append(mContigResult);
         }
 
         mContigResult.clear();
