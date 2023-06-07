@@ -351,7 +351,7 @@ public class PhasedVariantClassifier
 
         if(indelBaseTotal == 0)
         {
-            combinedEffect = combinedPc.RefAminoAcids.equals(combinedPc.AltAminoAcids) ? PHASED_SYNONYMOUS : PHASED_MISSENSE;
+            combinedEffect = combinedPc.RefAminoAcids.equals(combinedPc.AltAminoAcids) ? SYNONYMOUS : MISSENSE;
 
             PV_LOGGER.trace("lps({}) varCount({}) combinedEffect({}) from aminoAcids({} -> {})",
                     localPhaseSet, variants.size(), combinedEffect, combinedPc.RefAminoAcids, combinedPc.AltAminoAcids);

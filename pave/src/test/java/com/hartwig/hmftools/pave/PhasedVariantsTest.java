@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_D
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_MISSENSE;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
@@ -310,10 +310,10 @@ public class PhasedVariantsTest
         assertTrue(impact1.phasedFrameshift());
         assertFalse(impact1.codingContext().IsFrameShift);
         assertFalse(impact1.hasEffect(FRAMESHIFT));
-        assertTrue(impact1.hasEffect(PHASED_MISSENSE));
+        assertTrue(impact1.hasEffect(PHASED_INFRAME_DELETION));
         assertFalse(impact2.codingContext().IsFrameShift);
         assertFalse(impact2.hasEffect(FRAMESHIFT));
-        assertTrue(impact2.hasEffect(PHASED_MISSENSE));
+        assertTrue(impact2.hasEffect(PHASED_INFRAME_DELETION));
 
         // now synonynous
         pos = 20;
@@ -341,10 +341,10 @@ public class PhasedVariantsTest
         assertTrue(impact1.phasedFrameshift());
         assertFalse(impact1.codingContext().IsFrameShift);
         assertFalse(impact1.hasEffect(FRAMESHIFT));
-        assertTrue(impact1.hasEffect(PHASED_SYNONYMOUS));
+        assertTrue(impact1.hasEffect(PHASED_INFRAME_DELETION));
         assertFalse(impact2.codingContext().IsFrameShift);
         assertFalse(impact2.hasEffect(FRAMESHIFT));
-        assertTrue(impact2.hasEffect(PHASED_SYNONYMOUS));
+        assertTrue(impact2.hasEffect(PHASED_INFRAME_DELETION));
     }
 
     @Test
@@ -503,9 +503,9 @@ public class PhasedVariantsTest
 
         assertEquals("p.Gln4Ser", impact1.hgvsProtein());
         assertTrue(impact1.phasedFrameshift());
-        assertTrue(impact1.hasEffect(PHASED_MISSENSE));
-        assertTrue(impact2.hasEffect(PHASED_MISSENSE));
-        assertTrue(impact3.hasEffect(PHASED_MISSENSE));
+        assertTrue(impact1.hasEffect(PHASED_INFRAME_DELETION));
+        assertTrue(impact2.hasEffect(PHASED_INFRAME_DELETION));
+        assertTrue(impact3.hasEffect(PHASED_INFRAME_DELETION));
     }
 
     @Test
