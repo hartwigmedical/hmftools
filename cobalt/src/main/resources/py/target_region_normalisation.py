@@ -109,20 +109,22 @@ Example file input for sample_cfg:
     {
         "sample_id": "FR16648805",
         "wgs_cobalt_ratios": "WIDE01010081T.cobalt.ratio.tsv.gz",
-        "targeted_cobalt_ratios": "FR16648805.cobalt.ratio.tsv.gz"
+        "targeted_cobalt_ratios": "FR16648805.cobalt.ratio.tsv.gz",
+        "gender": "MALE"
     },
     {
         "sample_id": "FR16648808",
         "wgs_cobalt_ratios": "WIDE01010241T.cobalt.ratio.tsv.gz",
         "targeted_cobalt_ratios": "FR16648808.cobalt.ratio.tsv.gz"
+        "gender": "FEMALE"
     }
 ]
-Example file input for target_region:
+Argument for target_region is a bed file what describe all genome regions that are captured:
 chromosome\tstart\tend\texon
 chr1\t2556664 2556733\t0_TNFRSF14_CODING
 chr1\t2557725 2557834\t1_TNFRSF14_CODING
 chr1\t2558342 2558468\t2_TNFRSF14_CODING
-chr1\t2559822 2559978\t3_TNFRSF14_CODING'''
+'''
 
 def main():
 

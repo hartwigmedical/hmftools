@@ -14,11 +14,11 @@ A demo of the targeted pipeline is available [here](https://github.com/hartwigme
 
 The following files are all required in targeted mode and are panel specific:
 
-File Name | Tool | Purpose
--- | -- | --
-targetRegionsNormalisation.tsv | Cobalt | Normalise copy number regions and mask off target regions.
-CodingRegions.bed | Purple | Coding regions to consider for TMB/TML model.
-MSI.Bed | Purple | List of MSI locii to consider in MSI model
+| File Name                      | Tool   | Purpose                                                    |
+|--------------------------------|--------|------------------------------------------------------------|
+| targetRegionsNormalisation.tsv | Cobalt | Normalise copy number regions and mask off target regions. |
+| CodingRegions.bed              | Purple | Coding regions to consider for TMB/TML model.              |
+| MSI.Bed                        | Purple | List of MSI locii to consider in MSI model.                |
 
 The driverGenePanel.tsv, ActionableCodingPanel.bed and CoverageCodingPanel.bed should also all be adapted to match the specific panel
 
@@ -59,12 +59,49 @@ PURPLE
 
 ## Targeted specific methods
 ### Cobalt depth coverage normalisation
-#### Generation of targetRegions CN normalisation file
+#### Steps to targetRegions CN normalisation file
 A tsv file used for COBALT targeted CN normalisation can be prepared from a set of matching tumor targeted BAMs, + optionally a WGS BAM (if available) and a target regions bed file. The process for generating the tsv file is as follows:
 
 1. Set targetRegions = cobalt 1kb depth windows that meet normal GC and mappability criteria and overlap or partially overlap at least 1 region specified in the primary targets bed file
 
 2. Run cobalt on bams from targeted and matching WGS samples. For the targeted samples, calculate the targeted regions enrichment rate as median(tumorGCRatio) of the targetRegions.
+
+3. Run the python script [target_region_normalisation.py](https://github.com/hartwigmedical/hmftools/blob/master/cobalt/src/main/resources/py/target_region_normalisation.py), with the following command:
+```
+python target_region_normalisation.py --output=<output tsv> --sample_cfg=<json sample config> --target_region=<bed file>
+```
+Argument for `sample_cfg` is a json file that contains information for each sample.
+For each sample we need to provide the cobalt ratio outputs generated from both the
+WGS bam file and targeted bam file. 
+
+Example file input for sample_cfg:
+```
+[
+    {
+        "sample_id": "FR16648805",
+        "wgs_cobalt_ratios": "WIDE01010081T.cobalt.ratio.tsv.gz",
+        "targeted_cobalt_ratios": "FR16648805.cobalt.ratio.tsv.gz",
+        "MALE"
+    },
+    {
+        "sample_id": "FR16648808",
+        "wgs_cobalt_ratios": "WIDE01010241T.cobalt.ratio.tsv.gz",
+        "targeted_cobalt_ratios": "FR16648808.cobalt.ratio.tsv.gz",
+        "FEMALE"
+    }
+]
+```
+
+Argument for `target_region` is a bed file what describe all genome regions that are captured:
+```
+chromosome	start	end	exon
+chr1	2556664 2556733	0_TNFRSF14_CODING
+chr1	2557725 2557834	1_TNFRSF14_CODING
+chr1	2558342 2558468	2_TNFRSF14_CODING
+```
+If no WGS is available for normalisation, we use `--assume_diploid` mode. And the `wgs_cobalt_ratios` fields in the input sample config json file can be omitted.
+
+#### What [target_region_normalisation.py](https://github.com/hartwigmedical/hmftools/blob/master/cobalt/src/main/resources/py/target_region_normalisation.py) does
 
 For each depth window in targetRegions, calculate relativeEnrichment across the n samples as:
 ```
