@@ -6,7 +6,8 @@ public class PurityConstants
     public static final double MAX_REPEAT_COUNT = 3;
     public static final int MIN_QUAL_PER_AD = 18;
 
-    public static final int DEFAULT_NOISE_READS_PER_MILLION = 30;
+    public static final double DEFAULT_NOISE_READS_PER_MILLION = 30;
+    public static final double DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND = 1;
 
     public static final String PURPLE_CTDNA_SOMATIC_VCF_ID = ".purple.somatic.ctdna.";
 }

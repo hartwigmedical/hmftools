@@ -22,7 +22,7 @@ public class ResultsWriter
     {
         mConfig = config;
         mSampleWriter = initialiseWriter();
-        mVariantWriter = config.WriteVariants ? initialiseVariantWriter() : null;
+        mVariantWriter = config.WriteSomatics ? initialiseVariantWriter() : null;
         mCnRatioWriter = config.WriteCnRatios ? initialiseCnRatioWriter() : null;
     }
 
