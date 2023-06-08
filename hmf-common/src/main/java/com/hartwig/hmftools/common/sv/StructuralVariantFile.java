@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +21,6 @@ import org.jetbrains.annotations.NotNull;
 public class StructuralVariantFile
 {
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
-    public static final String DELIMITER = "\t";
     private static final String FILE_EXTENSION = ".sv_data.tsv";
 
     @NotNull
@@ -58,7 +58,7 @@ public class StructuralVariantFile
     @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("id")
                 .add("startChromosome")
                 .add("endChromosome")
@@ -118,7 +118,7 @@ public class StructuralVariantFile
     @NotNull
     private static String toString(@NotNull final StructuralVariantData svData)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(svData.id()))
                 .add(String.valueOf(svData.startChromosome()))
                 .add(String.valueOf(svData.endChromosome()))
@@ -178,7 +178,7 @@ public class StructuralVariantFile
     @NotNull
     public static StructuralVariantData fromString(@NotNull final String svData)
     {
-        String[] values = svData.split(DELIMITER);
+        String[] values = svData.split(TSV_DELIM);
 
         int index = 0;
 

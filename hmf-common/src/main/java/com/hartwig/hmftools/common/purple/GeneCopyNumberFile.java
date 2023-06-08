@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.purple;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -58,7 +58,7 @@ public final class GeneCopyNumberFile
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER, "", "")
+        return new StringJoiner(TSV_DELIM, "", "")
                 .add("chromosome")
                 .add("start")
                 .add("end")
@@ -82,7 +82,7 @@ public final class GeneCopyNumberFile
 
     private static String toString(final GeneCopyNumber geneCopyNumber)
     {
-        return new StringJoiner(DELIMITER).add(geneCopyNumber.chromosome())
+        return new StringJoiner(TSV_DELIM).add(geneCopyNumber.chromosome())
                 .add(String.valueOf(geneCopyNumber.start()))
                 .add(String.valueOf(geneCopyNumber.end()))
                 .add(geneCopyNumber.geneName())
@@ -106,7 +106,7 @@ public final class GeneCopyNumberFile
     @VisibleForTesting
     static List<GeneCopyNumber> fromLines(final List<String> lines)
     {
-        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
         lines.remove(0);
 
         int chrIndex = fieldsIndexMap.get("chromosome");
@@ -132,7 +132,7 @@ public final class GeneCopyNumberFile
 
         for(final String line : lines)
         {
-            String[] values = line.split(DELIMITER, -1);
+            String[] values = line.split(TSV_DELIM, -1);
 
             final ImmutableGeneCopyNumber.Builder builder = ImmutableGeneCopyNumber.builder()
                     .chromosome(values[chrIndex])

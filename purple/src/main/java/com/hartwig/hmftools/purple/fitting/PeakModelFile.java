@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.fitting;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +36,7 @@ public final class PeakModelFile
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER, "", "")
+        return new StringJoiner(TSV_DELIM, "", "")
                 .add("peak")
                 .add("bucket")
                 .add("bucketWeight")
@@ -48,7 +48,7 @@ public final class PeakModelFile
 
     private static String toString(final PeakModelData ratio)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(format("%.4f", ratio.Peak))
                 .add(format("%.4f", ratio.Bucket))
                 .add(format("%.4f", ratio.BucketWeight))

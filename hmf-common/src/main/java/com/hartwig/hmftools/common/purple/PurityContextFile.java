@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.purple;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -60,7 +60,7 @@ public final class PurityContextFile
     @NotNull
     static String header()
     {
-        return new StringJoiner(DELIMITER, "", "")
+        return new StringJoiner(TSV_DELIM, "", "")
                 .add("purity")
                 .add("normFactor")
                 .add("score")
@@ -96,7 +96,7 @@ public final class PurityContextFile
         final FittedPurity purity = context.bestFit();
         final FittedPurityScore score = context.score();
 
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(FORMAT.format(purity.purity()))
                 .add(FORMAT.format(purity.normFactor()))
                 .add(FORMAT.format(purity.score()))
@@ -132,8 +132,8 @@ public final class PurityContextFile
 
         List<String> lines = Files.readAllLines(new File(filePath).toPath());
 
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
-        String[] values = lines.get(1).split(DELIMITER, -1);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
+        String[] values = lines.get(1).split(TSV_DELIM, -1);
 
         ImmutablePurityContext.Builder builder = ImmutablePurityContext.builder();
 
