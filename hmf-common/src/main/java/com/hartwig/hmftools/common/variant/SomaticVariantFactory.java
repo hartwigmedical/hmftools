@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.common.variant;
 
+import static com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory.CLNSIG;
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
@@ -229,7 +232,11 @@ public class SomaticVariantFactory implements VariantContextFilter
                 .subclonalLikelihood(context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")))
                 .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))
-                .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false));
+                .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false))
+                .clinvarInfo(context.getAttributeAsString(CLNSIG, ""))
+                .gnomadFrequency(context.getAttributeAsDouble(GNOMAD_FREQ, 0))
+                .somaticLikelihood(SomaticLikelihood.valueOf(
+                        context.getAttributeAsString(PANEL_SOMATIC_LIKELIHOOD, SomaticLikelihood.UNKNOWN.toString())));
 
         if(context.hasAttribute(LOCAL_PHASE_SET))
         {

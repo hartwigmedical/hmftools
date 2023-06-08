@@ -18,21 +18,14 @@ public final class PoissonCalcs
         return calcPoissonNoiseValue(observedCount, requiredProb, DEFAULT_MAX_ITERATIONS);
     }
 
-    private static final double OBSERVED_ZERO_LOW_MEAN = 3.0;
-
     public static double calcPoissonNoiseValue(int observedCount, double requiredProb, int maxIterations)
     {
         // calculate the mean of a Poisson distribution where the observed value would fall at the required probability
         if(observedCount < 0)
             return 0;
 
-        if(observedCount == 0)
-        {
-            if(requiredProb > 0.5)
-                return 0;
-            else
-                return OBSERVED_ZERO_LOW_MEAN;
-        }
+        if(observedCount == 0 && requiredProb > 0.5)
+            return 0;
 
         // find the mean for a Poisson distribution where the observed fragment count is at the required probability level
         int iterations = 0;

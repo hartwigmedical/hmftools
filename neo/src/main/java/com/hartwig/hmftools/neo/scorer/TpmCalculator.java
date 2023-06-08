@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.neo.scorer;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.exp;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
@@ -41,6 +42,7 @@ public class TpmCalculator
 
     public static final double LOW_PROBABILITY = 0.25;
     public static final double HIGH_PROBABILITY = 1 - LOW_PROBABILITY;
+    public static final double LOW_PROBABILITY_ZERO_OBS_MEAN = 1.39;
 
     public static final double EFFECTIVE_TPM_ACTUAL_PERC = 0.8;
 
@@ -339,8 +341,10 @@ public class TpmCalculator
         if(fragmentCount < 0)
             return 0;
 
-        if(fragmentCount == 0 && requiredProb == HIGH_PROBABILITY)
-            return 0;
+        if(fragmentCount == 0)
+        {
+            return requiredProb == HIGH_PROBABILITY ? 0 : LOW_PROBABILITY_ZERO_OBS_MEAN;
+        }
 
         return PoissonCalcs.calcPoissonNoiseValue(fragmentCount, requiredProb);
     }

@@ -11,6 +11,7 @@ public final class SomaticPurityCalc
 {
     public static final double LOW_PROBABILITY = 0.05;
     public static final double HIGH_PROBABILITY = 1 - LOW_PROBABILITY;
+    private static final double OBSERVED_ZERO_LOW_MEAN = 3.0;
 
     public static FragmentCalcResult calc(
             double tumorPloidy, double tumorVaf, int totalCount, int alleleCount, double noisePerMillion)
@@ -37,7 +38,9 @@ public final class SomaticPurityCalc
         if(totalCount > 0)
         {
             double lowProbAlleleCount = PoissonCalcs.calcPoissonNoiseValue(alleleCount, HIGH_PROBABILITY);
-            double highProbAlleleCount = PoissonCalcs.calcPoissonNoiseValue(alleleCount, LOW_PROBABILITY);
+
+            double highProbAlleleCount = alleleCount == 0 ?
+                    OBSERVED_ZERO_LOW_MEAN : PoissonCalcs.calcPoissonNoiseValue(alleleCount, LOW_PROBABILITY);
 
             double sampleVafLow = max(lowProbAlleleCount - noise, 0) / (double) totalCount;
             estimatedPurityLow = estimatedPurity(sampleVafLow, tumorPloidy, tumorVaf);
