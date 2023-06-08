@@ -119,6 +119,7 @@ public class ResultsWriter
         catch(IOException e)
         {
             CT_LOGGER.error("failed to write output file: {}", e.toString());
+            System.exit(1);
         }
     }
 
